@@ -12,7 +12,8 @@ import { ContentCopy } from '@mui/icons-material';
 
 interface ApIkeyPopup {
     open: boolean
-    handlePopupClose: () => void
+    handlePopupClose: () => void;
+    boxShadow?: string;
 }
 
 const klaviyoStyles = {
@@ -66,7 +67,7 @@ const klaviyoStyles = {
     },
 }
 
-const ZapierConnectPopup = ({open, handlePopupClose}: ApIkeyPopup) => {
+const ZapierConnectPopup = ({open, handlePopupClose, boxShadow}: ApIkeyPopup) => {
     const [apiKey, setApiKey] = useState('')
     const [value, setValue] = useState('1')
     const [checked, setChecked] = useState(false);
@@ -141,6 +142,7 @@ const ZapierConnectPopup = ({open, handlePopupClose}: ApIkeyPopup) => {
                     position: 'fixed',
                     zIndex: 1301,
                     top: 0,
+                    boxShadow: boxShadow ? '0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)' : 'none',
                     bottom: 0,
                     // msOverflowStyle: 'none',
                     // scrollbarWidth: 'none',
@@ -155,14 +157,14 @@ const ZapierConnectPopup = ({open, handlePopupClose}: ApIkeyPopup) => {
             slotProps={{
                 backdrop: {
                   sx: {
-                    backgroundColor: 'rgba(0, 0, 0, .2)'
+                    backgroundColor: boxShadow ? boxShadow : 'transparent'
                   }
                 }
               }}
         >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                 <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
-                    Connect to Klaviyo
+                    Connect to Zapier
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
                     <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-klaviyo-to-maximiz" target="_blank"rel="noopener noreferrer" 
@@ -179,7 +181,6 @@ const ZapierConnectPopup = ({open, handlePopupClose}: ApIkeyPopup) => {
                     </IconButton>
                 </Box>
             </Box>
-            <Divider />
             <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
             <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                 <TabContext value={value}>
@@ -346,7 +347,7 @@ const ZapierConnectPopup = ({open, handlePopupClose}: ApIkeyPopup) => {
                     </TabPanel>
                 </TabContext>
                 </Box>
-                <Box sx={{ px: 2, py: 3.5, width: '100%', border: '1px solid #e4e4e4' }}>
+                <Box sx={{ px: 2, py: 2, width: '100%', borderTop: '1px solid #e4e4e4' }}>
                     <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
                     <Button
                         variant="contained"

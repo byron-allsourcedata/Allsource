@@ -1,4 +1,5 @@
 from models.integrations.users_domains_integrations import UserIntegration, Integration
+from models.integrations.external_apps_installations import ExternalAppsInstall
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -34,7 +35,14 @@ class IntegrationsPresistence:
         )
         return user_integration
     
-
+    def get_external_apps_installations_by_shop_hash(self, shop_hash):
+        external_apps_install = self.db.query(ExternalAppsInstall).filter(ExternalAppsInstall.store_hash==shop_hash).first()
+        return external_apps_install
+    
+    def delete_external_apps_installations(self, shop_hash):
+        self.db.query(ExternalAppsInstall).filter(ExternalAppsInstall.store_hash == shop_hash).delete()
+        self.db.commit()
+        
     def get_integration_by_user(self, domain_id: int) -> UserIntegration:
         return self.db.query(UserIntegration).filter(UserIntegration.domain_id == domain_id).all()
     

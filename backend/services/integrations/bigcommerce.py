@@ -4,7 +4,9 @@ import httpx
 from typing import List
 from sqlalchemy.orm import Session
 import requests
+from urllib.parse import urlencode
 from jose import JWTError
+from config.bigcommerce import BigcommerceConfig
 from models.users_domains import UserDomains
 from models.integrations.external_apps_installations import ExternalAppsInstall
 from enums import IntegrationsStatus, SourcePlatformEnum
@@ -60,6 +62,30 @@ class BigcommerceIntegrationsService:
         url = f'{store_hash}/v2/store'
         info = self.__handle_request(url, access_token=access_token)
         return self.__mapped_info(info.json())
+    
+    def bigcommerce_redirect_login(self, store_hash, is_pixel_install, domain, user):
+        params = {
+        "client_id": BigcommerceConfig.client_id,
+        'context': f'stores/{store_hash}',
+        "redirect_uri": BigcommerceConfig.redirect_uri,
+        "response_type": "code",
+        "scope": "store_content_checkout store_v2_content store_v2_default store_v2_information_read_only store_v2_orders_read_only",
+        'state': f'{user.get("id")}:{domain.id}:{is_pixel_install}'
+        }
+        query_string = urlencode(params, safe=':/')
+
+        authorize_url = f"https://login.bigcommerce.com/oauth2/authorize?{query_string}"
+        return {
+            'url': authorize_url
+        }
+    
+    def connect_integration(self, credentials: IntegrationCredentials, domain, user):
+        external_app_install = self.epi_persistence.get_epi_by_filter_one(store_hash=credentials.bigcommerce.shop_domain)
+        if external_app_install:
+            self.add_integration(credentials, domain, user)
+            return {'status': 'SUCCESS'}
+        
+        return self.bigcommerce_redirect_login(credentials.bigcommerce.shop_domain, False, domain, user)
     
 
     def __save_integrations(self, store_hash: str, access_token: str, domain_id, user):
@@ -136,6 +162,7 @@ class BigcommerceIntegrationsService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Request [NON]")
         
         user_integration = self.integrations_persistence.get_integration_by_shop_url(shop_url=payload.get("store_hash"))
+        self.integrations_persistence.delete_external_apps_installations(shop_hash=payload.get("store_hash"))
         if user_integration:
             self.integrations_persistence.delete_integration(user_integration.domain_id, user_integration.service_name)
             
@@ -182,8 +209,8 @@ class BigcommerceIntegrationsService:
         }
 
         script_event_data = {
-            "name": "Bigcommerce Pixel Script",
-            "description": "Script for Bigcommerce pixel tracking",
+            "name": "Maximiz Pixel Script",
+            "description": "Script for Bigcommerce maximiz pixel tracking",
             "src": script_event_url, 
             "auto_uninstall": True,
             "load_method": "default",

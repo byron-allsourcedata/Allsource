@@ -8,6 +8,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from './ToastNotification';
 import LinearProgress from '@mui/material/LinearProgress';
+import { useIntegrationContext } from '@/context/IntegrationContext';
 
 
 interface ConnectMetaPopupProps {
@@ -27,7 +28,7 @@ interface MetaAuidece {
 }
 
 const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) => {
-
+    const { triggerSync } = useIntegrationContext();
     const [value, setValue] = React.useState('1');
     const [listID, setListID] = useState<string>('')
     const [checked, setChecked] = useState(false);
@@ -597,6 +598,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                     resetToDefaultValues();
                     onClose();
                     showToast('Data sync created successfully');
+                    triggerSync();
                 }
             }
 
@@ -691,7 +693,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                 }
             }}
         >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                 <Typography variant="h6" className='first-sub-title' sx={{ textAlign: 'center' }}>
                     Connect to Meta
                 </Typography>
@@ -979,7 +981,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                                             }}
                                         >
                                         {/* Show static options */}
-                                        {adAccounts.map((adAccount) => (
+                                        {adAccounts?.map((adAccount) => (
                                             <MenuItem key={adAccount.id} onClick={() => handleSelectAdAccount(adAccount)} sx={{
                                                 '&:hover': {
                                                     background: 'rgba(80, 82, 178, 0.10)'
@@ -1531,7 +1533,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                     
             </Box>
             {getButton(value) && (
-            <Box sx={{ px: 2, py: 3.5, border: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0, background: '#fff',
+            <Box sx={{ px: 2, py: 3.5,  position: 'fixed', bottom: 0, right: 0, background: '#fff',
                 width: '620px',
                 '@media (max-width: 600px)': {
                         width: '100%',

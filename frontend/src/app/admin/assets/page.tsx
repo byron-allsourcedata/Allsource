@@ -165,125 +165,173 @@ const Assets: React.FC = () => {
 
     return (
         <>
-            <Box sx={assetsStyle.headers}>
-                {loading && (
-                            <Box
-                                sx={{
-                                width: '100%',
-                                position: 'fixed',
-                                top: '5.9rem',
-                                zIndex: 1200,   
-                                }}
-                            >
-                                <BorderLinearProgress variant="indeterminate" />
-                            </Box>
-                )}
-                <Box sx={resellerStyle.logoContainer}>
-                    <Link href="/" underline="none" sx={{ zIndex: 10 }}>
-                        <Image src='/logo.svg' alt='logo' height={80} width={60} />
-                    </Link>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', paddingRight: "2.5em" }}>
-                    <Button
-                        aria-controls={open ? "profile-menu" : undefined}
-                        aria-haspopup="true"
-                        aria-expanded={open ? "true" : undefined}
-                        onClick={handleProfileMenuClick}
-                        sx={{
-                            minWidth: '32px',
-                            padding: '8px',
-                            color: 'rgba(128, 128, 128, 1)',
-                            border: '1px solid rgba(184, 184, 184, 1)',
-                            borderRadius: '3.27px'
-                        }}
-                    >
-                        <Image src={'/Person.svg'} alt="Person" width={18} height={18} />
-                    </Button>
-                    <Menu
-                        id="profile-menu"
-                        anchorEl={anchorEl}
-                        open={open}
-                        onClose={handleProfileMenuClose}
-                        MenuListProps={{
-                            "aria-labelledby": "profile-menu-button",
-                        }}
-                        sx={{
-                            mt: 0.5,
-                            ml: -1
-                        }}
-                    >
-                        <Box sx={{ paddingTop: 1, paddingLeft: 2, paddingRight: 2, paddingBottom: 1 }}>
-                            <Typography
-                                variant="h6"
-                                sx={{
-                                    fontFamily: 'Nunito Sans',
-                                    fontSize: '14px',
-                                    fontWeight: 600,
-                                    lineHeight: '19.6px',
-                                    color: 'rgba(0, 0, 0, 0.89)',
-                                    mb: 0.25
-                                }}
-                            >
-                                {full_name}
-                            </Typography>
-                            <Typography
-                                variant="body2"
-                                color="textSecondary"
-                                sx={{
-                                    fontFamily: 'Nunito Sans',
-                                    fontSize: '14px',
-                                    fontWeight: 600,
-                                    lineHeight: '19.6px',
-                                    color: 'rgba(0, 0, 0, 0.89)',
-                                }}
-                            >
-                                {email}
-                            </Typography>
-                        </Box>
-                        <MenuItem
+        <Box
+            sx={{
+                display: 'grid',
+                gridTemplateAreas: `
+                    "header header"
+                    "sidebar content"
+                `,
+                gridTemplateRows: 'auto 1fr',
+                gridTemplateColumns: '200px 1fr',
+                height: '100vh',
+            }}
+>
+    <Box
+        sx={{
+            gridArea: 'header',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            zIndex: 200,
+            backgroundColor: '#fff',
+            borderBottom: '1px solid rgba(228, 228, 228, 1)',
+        }}
+    >
+        <Box sx={assetsStyle.headers}>
+            <Box sx={resellerStyle.logoContainer}>
+                <Link href="/" underline="none" sx={{ zIndex: 10 }}>
+                    <Image src='/logo.svg' alt='logo' height={80} width={60} />
+                </Link>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', paddingRight: "2.5em" }}>
+                <Button
+                    aria-controls={open ? "profile-menu" : undefined}
+                    aria-haspopup="true"
+                    aria-expanded={open ? "true" : undefined}
+                    onClick={handleProfileMenuClick}
+                    sx={{
+                        minWidth: '32px',
+                        padding: '8px',
+                        color: 'rgba(128, 128, 128, 1)',
+                        border: '1px solid rgba(184, 184, 184, 1)',
+                        borderRadius: '3.27px'
+                    }}
+                >
+                    <Image src={'/Person.svg'} alt="Person" width={18} height={18} />
+                </Button>
+                <Menu
+                    id="profile-menu"
+                    anchorEl={anchorEl}
+                    open={open}
+                    onClose={handleProfileMenuClose}
+                    MenuListProps={{
+                        "aria-labelledby": "profile-menu-button",
+                    }}
+                    sx={{
+                        mt: 0.5,
+                        ml: -1
+                    }}
+                >
+                    <Box sx={{ paddingTop: 1, paddingLeft: 2, paddingRight: 2, paddingBottom: 1 }}>
+                        <Typography
+                            variant="h6"
                             sx={{
                                 fontFamily: 'Nunito Sans',
                                 fontSize: '14px',
-                                fontWeight: 500,
+                                fontWeight: 600,
                                 lineHeight: '19.6px',
+                                color: 'rgba(0, 0, 0, 0.89)',
+                                mb: 0.25
                             }}
-                            onClick={handleSettingsClick}
                         >
-                            Settings
-                        </MenuItem>
-                        <MenuItem
+                            {full_name}
+                        </Typography>
+                        <Typography
+                            variant="body2"
+                            color="textSecondary"
                             sx={{
                                 fontFamily: 'Nunito Sans',
                                 fontSize: '14px',
-                                fontWeight: 500,
+                                fontWeight: 600,
                                 lineHeight: '19.6px',
+                                color: 'rgba(0, 0, 0, 0.89)',
                             }}
-                            onClick={handleSignOut}
                         >
-                            Sign Out
-                        </MenuItem>
-                    </Menu>
+                            {email}
+                        </Typography>
+                    </Box>
+                    <MenuItem
+                        sx={{
+                            fontFamily: 'Nunito Sans',
+                            fontSize: '14px',
+                            fontWeight: 500,
+                            lineHeight: '19.6px',
+                        }}
+                        onClick={handleSettingsClick}
+                    >
+                        Settings
+                    </MenuItem>
+                    <MenuItem
+                        sx={{
+                            fontFamily: 'Nunito Sans',
+                            fontSize: '14px',
+                            fontWeight: 500,
+                            lineHeight: '19.6px',
+                        }}
+                        onClick={handleSignOut}
+                    >
+                        Sign Out
+                    </MenuItem>
+                </Menu>
+            </Box>
+        </Box>
+    </Box>
+
+    <Box
+        sx={{
+            gridArea: 'sidebar',
+            position: 'fixed',
+            top: '5.2rem',
+            left: 0,
+            width: '200px',
+            height: 'calc(100vh - 5.2rem)',
+            borderRight: '1px solid rgba(228, 228, 228, 1)',
+            backgroundColor: '#fff',
+        }}
+    >
+        <SidebarAdmin />
+    </Box>
+
+    <Box
+        sx={{
+            gridArea: 'content',
+            padding: '24px',
+        }}
+    >
+        {loading && (
+            <Box
+                sx={{
+                    position: 'fixed',
+                    top: '5.2rem',
+                    left: '200px',
+                    width: 'calc(100% - 200px)',
+                    zIndex: 1201,
+                }}
+            >
+                <BorderLinearProgress variant="indeterminate" />
+            </Box>
+        )}
+
+        <Grid container spacing={3}>
+            <Grid item xs={12} sx={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '85px' }}>
+                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Typography variant="h4" component="h1" sx={assetsStyle.title}>
+                        Assets
+                    </Typography>
                 </Box>
-            </Box>
-            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                <Grid container width='100%'>
-                    <Grid item xs={12} md={2} sx={{ padding: '0px'}}>
-                        <SidebarAdmin />
-                    </Grid>
-                    <Grid item xs={12} md={10} sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <Typography variant="h4" component="h1" sx={assetsStyle.title}>
-                                Assets
-                            </Typography>
-                        </Box>
-                        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }} >
-                            {assets.map((data, index) => (
-                                <PartnersAsset deleteAsset={handleDeleteAsset} updateOrAddAsset={updateOrAddAsset} key={index} data={data} isAdmin={true} />
-                            ))}
-                        </Box>
-                    </Grid>
-                </Grid>
-            </Box>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                    {assets.map((data, index) => (
+                        <PartnersAsset deleteAsset={handleDeleteAsset} updateOrAddAsset={updateOrAddAsset} key={index} data={data} isAdmin={true} />
+                    ))}
+                </Box>
+            </Grid>
+        </Grid>
+    </Box>
+</Box>
+
+
         </>
 )};
 

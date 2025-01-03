@@ -1,30 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Drawer, Box, Typography, IconButton, TextField, Divider, FormGroup, FormControlLabel, FormControl, FormLabel, Radio, Collapse, Checkbox, Button, List, ListItem, Link, Tab, Tooltip, Switch, RadioGroup, InputLabel, MenuItem, Select, Dialog, DialogActions, DialogContent, DialogTitle, Popover, Menu, SelectChangeEvent, ListItemText, ClickAwayListener, InputAdornment, Grid, LinearProgress } from '@mui/material';
+import { Drawer, Box, Typography, IconButton, TextField, Divider, FormControlLabel, FormControl, FormLabel, Radio, Button, Link, Tab, Tooltip, RadioGroup,  MenuItem, Popover, Menu, ListItemText, ClickAwayListener, InputAdornment, Grid, LinearProgress } from '@mui/material';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
 import Image from 'next/image';
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
-import { showErrorToast, showToast } from './ToastNotification';
-import CustomizedProgressBar from './CustomizedProgressBar';
-import { stringify } from 'querystring';
+import { showToast } from './ToastNotification';
+import { useIntegrationContext } from "@/context/IntegrationContext";
 
-interface Integrations {
-    id: number
-    access_token: string
-    shop_domain: string
-    data_center: string
-    service_name: string
-    suppression: boolean
-}
-
-interface ConnectKlaviyoPopupProps {
+interface ConnectMailChimpPopupProps {
     open: boolean;
     onClose: () => void;
-    data: any
+    data: any;
+    isEdit?: boolean;
 }
-
 
 type KlaviyoList = {
     id: string
@@ -38,7 +28,8 @@ type KlaviyoTags = {
 
 
 
-const MailchimpDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, data }) => {
+const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose, data, isEdit }) => {
+    const { triggerSync } = useIntegrationContext();
     const [loading, setLoading] = useState(false)
     const [value, setValue] = React.useState('1');
     const [checked, setChecked] = useState(false);
@@ -233,9 +224,9 @@ const MailchimpDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, 
                 showToast('Please select a valid option.');
                 return;
             }
-            if (UpdateKlaviuo) {
+            if (isEdit) {
                 const response = await axiosInstance.put(`/data-sync/sync`, {
-                    integrations_users_sync_id: UpdateKlaviuo,
+                    integrations_users_sync_id: data.id,
                     list_id: list?.id,
                     list_name: list?.list_name,
                     leads_type: selectedRadioValue,
@@ -263,6 +254,7 @@ const MailchimpDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, 
                 if (response.status === 201 || response.status === 200) {
                     onClose();
                     showToast('Data sync created successfully');
+                    triggerSync();
                 }
             }
 
@@ -736,7 +728,7 @@ const MailchimpDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, 
                 }
               }}
         >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                 <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
                     Connect to Mailchimp
                 </Typography>
@@ -753,7 +745,6 @@ const MailchimpDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, 
                     </IconButton>
                 </Box>
             </Box>
-            <Divider />
             <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
                 <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                 <TabContext value={value}>
@@ -1696,7 +1687,7 @@ const MailchimpDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, 
                         {/* Button based on selected tab */}
 
                     </Box>
-                    <Box sx={{ px: 2, py: 3.5, width: '100%', border: '1px solid #e4e4e4' }}>
+                    <Box sx={{ px: 2, py: 2, width: '100%', border: '1px solid #e4e4e4' }}>
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
 
                             {getButton(value)}

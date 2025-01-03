@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Drawer, Box, Typography, IconButton, TextField, Divider, FormGroup, FormControlLabel, FormControl, FormLabel, Radio, Collapse, Checkbox, Button, List, ListItem, Link, Tab, Tooltip, Switch, RadioGroup, InputLabel, MenuItem, Select, Dialog, DialogActions, DialogContent, DialogTitle, Popover, Menu, SelectChangeEvent, ListItemText, ClickAwayListener, InputAdornment, Grid, LinearProgress } from '@mui/material';
+import { Drawer, Box, Typography, IconButton, TextField, Divider, FormControlLabel, FormControl, FormLabel, Radio, Button,  Link, Tab, Tooltip,  RadioGroup, MenuItem, Popover, Menu, ListItemText, ClickAwayListener, InputAdornment, Grid, LinearProgress } from '@mui/material';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
@@ -7,25 +7,14 @@ import Image from 'next/image';
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from './ToastNotification';
-import CustomizedProgressBar from './CustomizedProgressBar';
-import { stringify } from 'querystring';
-import { AxiosError } from 'axios';
-
-interface Integrations {
-    id: number
-    access_token: string
-    shop_domain: string
-    data_center: string
-    service_name: string
-    suppression: boolean
-}
+import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface ConnectKlaviyoPopupProps {
     open: boolean;
     onClose: () => void;
-    data: any
+    data: any;
+    isEdit: boolean;
 }
-
 
 type KlaviyoList = {
     id: string
@@ -38,8 +27,8 @@ type KlaviyoTags = {
 }
 
 
-
-const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, data }) => {
+const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, data, isEdit }) => {
+    const { triggerSync } = useIntegrationContext();
     const [loading, setLoading] = useState(false)
     const [value, setValue] = React.useState('1');
     const [checked, setChecked] = useState(false);
@@ -250,9 +239,9 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, d
                 showToast('Please select a valid option.');
                 return;
             }
-            if (UpdateKlaviuo) {
+            if (isEdit) {
                 const response = await axiosInstance.put(`/data-sync/sync`, {
-                    integrations_users_sync_id: UpdateKlaviuo,
+                    integrations_users_sync_id: data.id,
                     list_id: list?.id,
                     list_name: list?.list_name,
                     leads_type: selectedRadioValue,
@@ -281,6 +270,7 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, d
                 if (response.status === 201 || response.status === 200) {
                     onClose();
                     showToast('Data sync created successfully');
+                    triggerSync();
                 }
             }
 
@@ -633,31 +623,6 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, d
         }
     };
 
-    // Add row function
-    const handleAddRow = () => {
-        const newRow: Row = {
-            id: Date.now(), // Unique ID for each new row
-            type: '',
-            value: '',
-            canDelete: true, // This new row can be deleted
-        };
-        setRows([...rows, newRow]);
-    };
-    const handleDropdownOpen = (id: number) => {
-        setOpenDropdown(id); // Set the open state for the current dropdown
-    };
-
-    const handleDropdownMaximizOpen = (id: number) => {
-        setOpenDropdownMaximiz(id)
-    }
-
-    const handleDropdownClose = () => {
-        setOpenDropdown(null); // Reset when dropdown closes
-    };
-
-    const handleDropdownMaximizClose = () => {
-        setOpenDropdownMaximiz(null)
-    }
 
     const validateTab2 = () => {
         if (selectedRadioValue === null) {
@@ -670,7 +635,7 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, d
 
     const handleNewListChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value
-        if (klaviyoList.some(list => list.list_name === value)) {
+        if (klaviyoList?.some(list => list.list_name === value)) {
             setListNameError(true)
             setListNameErrorMessage('List name must be unique')
         }
@@ -1157,15 +1122,17 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, d
                                                                         fullWidth
                                                                         variant="outlined"
                                                                         label='Sender'
-                                                                        value={optionSender?.sender_name}
+                                                                        value={optionSender.sender_name}
                                                                         onChange={(e) => setOptionSender(senders.find(item => item.sender_name === e.target.value))}
                                                                         InputLabelProps={{
                                                                             sx: {
                                                                                 fontFamily: 'Nunito Sans',
-                                                                                fontSize: '12px',
+                                                                                fontSize: '14px',
                                                                                 lineHeight: '16px',
                                                                                 color: 'rgba(17, 17, 19, 0.60)',
                                                                                 top: '-5px',
+                                                                                left: '0px',
+                                                                                margin: 0,
                                                                                 '&.Mui-focused': {
                                                                                     color: '#0000FF',
                                                                                     top: 0
@@ -1204,7 +1171,7 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, d
                                                                         }}
                                                                     >
 
-                                                                        {senders.map((item) => (
+                                                                        {senders?.map((item) => (
                                                                             <MenuItem
                                                                                 key={item.id}
                                                                                 value={item.sender_name}

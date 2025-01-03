@@ -49,8 +49,10 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
           setLatestNotification({
             id: data.notification_id,
             text: data.notification_text,
-          });
-          setNewNotifications(true)
+          })
+        }
+        else if(data.update_subscription && data.status) {
+          showToast(`Subscription updated ${data.status}!`);
         }
         else {
           showToast("Pixel code is installed successfully!");

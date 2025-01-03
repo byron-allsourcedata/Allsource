@@ -100,7 +100,6 @@ export const SettingsSubscription: React.FC = () => {
     const [allPlans, setAllPlans] = useState<any[]>([]);
     const [credits, setCredits] = useState<number>(50000);
     const [selectedPlan, setSelectedPlan] = useState<any>(null);
-
     const [tabValue, setTabValue] = useState(0);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [customPlanPopupOpen, setCustomPlanPopupOpen] = useState(false);
@@ -123,7 +122,7 @@ export const SettingsSubscription: React.FC = () => {
         const period = newValue === 0 ? 'month' : 'year';
         const period_plans = allPlans.filter((plan: any) => plan.interval === period);
         setPlans(period_plans);
-        const activePlan = allPlans.find((plan: any) => plan.is_active) !== undefined;
+        const activePlan = allPlans.find((plan: any) => plan.is_active && plan.title !== 'Free Trial') !== undefined;
         setHasActivePlan(activePlan);
     };
 
@@ -162,6 +161,7 @@ export const SettingsSubscription: React.FC = () => {
     interface StripePlan {
         id: string;
         interval: string;
+        title: string;
         is_active: boolean;
     }
 
@@ -173,7 +173,7 @@ export const SettingsSubscription: React.FC = () => {
                 const response = await axiosInterceptorInstance.get(`/subscriptions/stripe-plans`);
                 setAllPlans(response.data.stripe_plans)
                 const stripePlans: StripePlan[] = response.data.stripe_plans;
-                const activePlan = stripePlans.find(plan => plan.is_active);
+                const activePlan = stripePlans.find(plan => plan.is_active && plan.title !== 'Free Trial');
                 setHasActivePlan(!!activePlan);
                 let interval = 'month'
                 if (activePlan) {
@@ -199,41 +199,41 @@ export const SettingsSubscription: React.FC = () => {
 
     const fetchPrefillData = async () => {
         try {
-          const response = await axiosInstance.get('/calendly');
-          const user = response.data.user;
-    
-          if (user) {
-            const { full_name, email, utm_params } = user;
-            setUtmParams(utm_params)
-          }
+            const response = await axiosInstance.get('/calendly');
+            const user = response.data.user;
+
+            if (user) {
+                const { full_name, email, utm_params } = user;
+                setUtmParams(utm_params)
+            }
         } catch (error) {
-          setUtmParams(null);
+            setUtmParams(null);
         }
-      };
-    
-      const calendlyPopupUrl = () => {
+    };
+
+    const calendlyPopupUrl = () => {
         const baseUrl = "https://calendly.com/maximiz-support/30min";
         const searchParams = new URLSearchParams();
-      
+
         if (utmParams) {
-          try {
-            const parsedUtmParams = typeof utmParams === 'string' ? JSON.parse(utmParams) : utmParams;
-      
-            if (typeof parsedUtmParams === 'object' && parsedUtmParams !== null) {
-              Object.entries(parsedUtmParams).forEach(([key, value]) => {
-                if (value !== null && value !== undefined) {
-                  searchParams.append(key, value as string);
+            try {
+                const parsedUtmParams = typeof utmParams === 'string' ? JSON.parse(utmParams) : utmParams;
+
+                if (typeof parsedUtmParams === 'object' && parsedUtmParams !== null) {
+                    Object.entries(parsedUtmParams).forEach(([key, value]) => {
+                        if (value !== null && value !== undefined) {
+                            searchParams.append(key, value as string);
+                        }
+                    });
                 }
-              });
+            } catch (error) {
+                console.error("Error parsing utmParams:", error);
             }
-          } catch (error) {
-            console.error("Error parsing utmParams:", error);
-          }
         }
-      
+
         const finalUrl = `${baseUrl}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
         return finalUrl;
-      };
+    };
 
 
     const handleChoosePlan = async (stripePriceId: string) => {
@@ -245,7 +245,11 @@ export const SettingsSubscription: React.FC = () => {
             const response = await axiosInterceptorInstance.get(`${path}?price_id=${stripePriceId}`);
             if (response.status === 200) {
                 if (response.data.link !== null && response.data.link !== undefined) {
-                    window.location.href = response.data.link;
+                    if (response.data?.source_platform == 'big_commerce'){
+                        window.open(response.data.link, '_blank');
+                    }else{
+                        window.location.href = response.data.link;
+                    }
                 }
                 if (response.data.status_subscription) {
                     if (response.data.status_subscription === 'active') {
@@ -353,7 +357,6 @@ export const SettingsSubscription: React.FC = () => {
                 const response = await axiosInterceptorInstance.post('/subscriptions/cancel-plan', {
                     reason_unsubscribe: formValues.unsubscribe
                 });
-                console.log(response.data)
                 if (response.status === 200) {
                     switch (response.data) {
                         case 'SUCCESS':
@@ -389,14 +392,6 @@ export const SettingsSubscription: React.FC = () => {
 
             {/* Plans Section */}
             <Box sx={{ marginBottom: 4 }}>
-                {/* <Box sx={{
-                    display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1, mb: 2
-                }}>
-                    <Typography variant="h4" gutterBottom className='first-sub-title' sx={subscriptionStyles.title}>
-                        Plans
-                    </Typography>
-                    <CustomTooltip title={"Plan info"} linkText="Learn more" linkUrl="https://maximiz.ai" />
-                </Box> */}
                 <Box sx={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, marginTop: 4, marginBottom: 2, position: 'relative',
                     '@media (max-width: 600px)': {
@@ -411,7 +406,7 @@ export const SettingsSubscription: React.FC = () => {
                             '& .MuiTabs-indicator': {
                                 background: 'none'
                             },
-                            '@media (max-width: 600px)': {width: '100%'}
+                            '@media (max-width: 600px)': { width: '100%' }
                         }}>
                             <Tab className='first-sub-title' sx={subscriptionStyles.plantabHeading}
                                 label="Monthly" />
@@ -460,7 +455,7 @@ export const SettingsSubscription: React.FC = () => {
                     {filteredPlans.length > 0 ? (
                         filteredPlans.map((plan, index) => (
                             <Box key={index} sx={subscriptionStyles.formWrapper}>
-                                <PlanCard plan={plan} activePlanTitle={activePlan?.title || ''} onChoose={handleChoosePlan} />
+                                <PlanCard plan={plan} activePlanTitle={activePlan?.title || ''} tabValue={tabValue} onChoose={handleChoosePlan} />
                             </Box>
                         ))
                     ) : (
@@ -544,16 +539,6 @@ export const SettingsSubscription: React.FC = () => {
                             }}>$211/</Typography>
                             month</Typography>
                     </Box>
-
-                    {/* <Slider
-                                value={credits}
-                                onChange={handleChangeCredits}
-                                min={10000}
-                                max={100000} // Example max value, adjust as needed
-                                step={10000}
-                                valueLabelDisplay="auto"
-                                aria-labelledby="credits-slider"
-                            /> */}
 
                     <Box sx={{ position: 'relative', width: '100%', marginBottom: '20px', }}>
                         {/* Custom labels above the slider */}
@@ -736,13 +721,13 @@ export const SettingsSubscription: React.FC = () => {
             >
 
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
-                    
+
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
-                    <Typography variant="h6" className='first-sub-title' sx={{ textAlign: 'center' }}>
-                        Custom plan
-                    </Typography>
-                    <CustomTooltip title={"You can download the billing history and share it with your teammates."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/settings/get-custom-subscription-plan" />
-                </Box>
+                        <Typography variant="h6" className='first-sub-title' sx={{ textAlign: 'center' }}>
+                            Custom plan
+                        </Typography>
+                        <CustomTooltip title={"You can download the billing history and share it with your teammates."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/settings/get-custom-subscription-plan" />
+                    </Box>
 
                     <IconButton onClick={handleCustomPlanPopupClose} sx={{ p: 0 }}>
                         <CloseIcon sx={{ width: '20px', height: '20px' }} />

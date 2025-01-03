@@ -12,7 +12,7 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import Image from "next/image";
 import { useNotification } from '../../context/NotificationContext';
 import ReferralOverview from "@/components/ReferralOverview";
-import ReferralSignups from "@/components/ReferralSignups";
+import PartnersAccounts from "@/components/PartnersAccounts";
 import ReferralRewards from "@/components/ReferralRewards";
 import PartnersAssets from "@/components/PartnersAssets"
 
@@ -106,7 +106,7 @@ const Suppressions: React.FC = () => {
             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', position: 'fixed', top: hasNotification ? '7.05rem' : '4.25rem', pt: '12px', pb: '16px', left: '9.1rem', pl: '2rem', zIndex: 1200, backgroundColor: '#fff', justifyContent: 'space-between', width: '100%', ml: 0, "@media (max-width: 900px)": { left: 0, zIndex: 50 }, "@media (max-width: 600px)": { flexDirection: 'column', pl: '1.5rem', display: 'flex', alignItems: 'flex-start', zIndex: 50, width: '97%' }, "@media (max-width: 440px)": { flexDirection: 'column', pt: hasNotification ? '3rem' : '0.75rem', top: hasNotification ? '4.5rem' : '', zIndex: 50, justifyContent: 'flex-start' }, "@media (max-width: 400px)": { pt: hasNotification ? '4.25rem' : '', pb: '6px', } }}>
                 <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', width: '10%', gap: 1, "@media (max-width: 600px)": { mb: 2 }, "@media (max-width: 440px)": { mb: 1 }, }}>
                     <Typography className="first-sub-title">Partners</Typography>
-                    <Box sx={{ "@media (max-width: 600px)": { display: 'none' } }}><CustomTooltip title={"Our Referral program rewards you for bringing new users to our platform. Share your unique referral link with friends and colleagues, and earn incentives for each successful sign-up."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/referral" /></Box>
+                    <Box sx={{ "@media (max-width: 600px)": { display: 'none' } }}><CustomTooltip title={"Collaborate with trusted partners to access exclusive resources and services that drive success."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/referral" /></Box>
                 </Box>
 
                 <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', width: '90%', pr: '20%', alignItems: 'center', "@media (max-width: 900px)": { pr: 0 }, "@media (max-width: 600px)": { width: '97%', pr: '0' } }}>
@@ -177,7 +177,7 @@ const Suppressions: React.FC = () => {
                                         },
                                     }
                                 }}
-                                label="Signups"
+                                label="Accounts"
                             />
                             <Tab className="main-text"
                                 sx={{
@@ -283,7 +283,7 @@ const Suppressions: React.FC = () => {
                     </Box>
                     <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
                         <TabPanel value={tabIndex} index={1}>
-                            <ReferralSignups />
+                            <PartnersAccounts id={2} loading={false} setLoading={() => {}} />
                         </TabPanel>
                     </Box>
                     <Box sx={{ width: '100%', padding: 0, margin: 0 }}>

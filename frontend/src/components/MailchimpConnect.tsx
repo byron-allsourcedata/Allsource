@@ -12,9 +12,10 @@ import { showToast } from "./ToastNotification";
 
 interface CreateOmnisendProps {
     handleClose: () => void
-    onSave: (new_integration: any) => void
+    onSave?: (new_integration: any) => void
     open: boolean
-    initApiKey?: string 
+    initApiKey?: string;
+    boxShadow?: string;
 }
 
 interface IntegrationsCredentials {
@@ -50,8 +51,9 @@ const klaviyoStyles = {
     },
     inputLabel: {
         fontFamily: 'Nunito Sans',
-        fontSize: '12px',
+        fontSize: '14px',
         lineHeight: '16px',
+        left: '2px',
         color: 'rgba(17, 17, 19, 0.60)',
         '&.Mui-focused': {
             color: '#0000FF',
@@ -84,7 +86,7 @@ const klaviyoStyles = {
       },
 }
 
-const MailchimpConnect = ({ handleClose, open, onSave, initApiKey}: CreateOmnisendProps) => {
+const MailchimpConnect = ({ handleClose, open, onSave, initApiKey, boxShadow}: CreateOmnisendProps) => {
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
     const [loading, setLoading] = useState(false)
@@ -92,6 +94,7 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey}: CreateOmnise
     const [checked, setChecked] = useState(false);
     const [tab2Error, setTab2Error] = useState(false);
     const label = { inputProps: { 'aria-label': 'Switch demo' } };
+    const [disableButton, setDisableButton] = useState(false);
     const [selectedRadioValue, setSelectedRadioValue] = useState('');
     const [isDropdownValid, setIsDropdownValid] = useState(false);
 
@@ -158,6 +161,9 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey}: CreateOmnise
     };
 
     const handleApiKeySave = async() => {
+        try{
+        setDisableButton(true)
+        setLoading(true)
         const response = await axiosInstance.post('/integrations/', {
             mailchimp: {
                 api_key: apiKey
@@ -165,9 +171,16 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey}: CreateOmnise
         }, {params: {service_name: 'mailchimp'}})
         if(response.status === 200) {
             showToast('Integration Mailchimp Successfully')
-            onSave({'service_name': 'Mailchimp', 'is_failed': false, access_token: apiKey})
+            if(onSave){
+                onSave({'service_name': 'mailchimp', 'is_failed': false, access_token: apiKey})
+            }
             handleNextTab()
         }
+    } catch (error) {}
+    finally{
+        setDisableButton(false)
+        setLoading(false)
+    }
     }
 
     const highlightConfig: HighlightConfig = {
@@ -206,7 +219,7 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey}: CreateOmnise
                     <Button
                         variant="contained"
                         onClick={handleApiKeySave}
-                        disabled={!apiKey}
+                        disabled={!apiKey || disableButton}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito Sans",
@@ -290,6 +303,7 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey}: CreateOmnise
                     position: 'fixed',
                     zIndex: 1301,
                     top: 0,
+                    boxShadow: boxShadow ? '0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)' : 'none',
                     bottom: 0,
                     msOverflowStyle: 'none',
                     scrollbarWidth: 'none',
@@ -301,13 +315,26 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey}: CreateOmnise
                     }
                 },
             }}
+            slotProps={{
+                backdrop: {
+                  sx: {
+                    backgroundColor: boxShadow? boxShadow : 'rgba(0, 0, 0, 0.01)'
+                  }
+                }
+              }}
         >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4' }}>
                 <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
                     Connect to Mailchimp
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                    <Link href="#" sx={{
+                    <Link href={initApiKey ?
+                        "" :
+                        "https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-mailchimp-to-maximiz"
+                    }
+                    target="_blank"
+                    rel="noopener refferer"
+                    sx={{
                         fontFamily: 'Nunito Sans',
                         fontSize: '14px',
                         fontWeight: '600',
@@ -320,7 +347,6 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey}: CreateOmnise
                     </IconButton>
                 </Box>
             </Box>
-            <Divider />
             <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
                 <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                 <TabContext value={value}>
@@ -562,7 +588,7 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey}: CreateOmnise
                     </TabPanel>
                     </TabContext>
                     </Box>
-                    <Box sx={{ px: 2, py: 3.5, width: '100%', border: '1px solid #e4e4e4' }}>
+                    <Box sx={{ px: 2, py: 2, width: '100%', borderTop: '1px solid #e4e4e4' }}>
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
                                 {getButton(value)}
                         </Box>

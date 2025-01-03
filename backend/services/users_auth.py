@@ -21,6 +21,7 @@ from persistence.user_persistence import UserPersistence
 from schemas.auth_google_token import AuthGoogleData
 from schemas.users import UserSignUpForm, UserLoginForm, ResetPasswordForm, UtmParams
 from services.integrations.base import IntegrationService
+from services.partners import PartnersService
 from schemas.integrations.integrations import ShopifyOrBigcommerceCredentials
 from services.payments_plans import PaymentsPlans
 from . import stripe_service
@@ -36,7 +37,7 @@ logger = logging.getLogger(__name__)
 class UsersAuth:
     def __init__(self, db: Session, payments_service: PaymentsPlans, user_persistence_service: UserPersistence,
                  send_grid_persistence_service: SendgridPersistence, subscription_service: SubscriptionService,
-                 plans_persistence: PlansPersistence, integration_service: IntegrationService
+                 plans_persistence: PlansPersistence, integration_service: IntegrationService, partners_service: PartnersService
                  ):
         self.db = db
         self.payments_service = payments_service
@@ -45,6 +46,7 @@ class UsersAuth:
         self.subscription_service = subscription_service
         self.plan_persistence = plans_persistence
         self.integration_service = integration_service
+        self.partners_service = partners_service
 
     def get_utc_aware_date(self):
         return datetime.now(timezone.utc).replace(microsecond=0)
@@ -134,7 +136,10 @@ class UsersAuth:
         utm_params_cleaned = {key: value for key, value in utm_params_dict.items() if value is not None}
         utm_params_json = json.dumps(utm_params_cleaned) if utm_params_cleaned else None
 
-            
+        source_platform = utm_params_cleaned.get('utm_source')
+        if awin_awc:
+            source_platform = SourcePlatformEnum.AWIN.value
+        
         user_object = Users(
             email=user_form.get('email'),
             is_email_confirmed=user_form.get('is_email_confirmed', False),
@@ -148,7 +153,7 @@ class UsersAuth:
             added_on=datetime.now(),
             stripe_payment_url=stripe_payment_url,
             awin_awc = awin_awc,
-            source_platform = SourcePlatformEnum.AWIN.value if awin_awc else None,
+            source_platform = source_platform,
             shop_id=shop_id,
             shopify_token=access_token,
             shop_domain=shop_domain,
@@ -161,6 +166,7 @@ class UsersAuth:
 
     def create_account_google(self, auth_google_data: AuthGoogleData):
         teams_token = auth_google_data.teams_token
+        referral_token = auth_google_data.referral_token
         owner_id = None
         status = SignUpStatus.NEED_CHOOSE_PLAN
         client_id = os.getenv("CLIENT_GOOGLE_ID")
@@ -254,8 +260,13 @@ class UsersAuth:
             self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
 
         self.user_persistence_service.email_confirmed(user_object.id)
+
+        if referral_token is not None:
+            self.user_persistence_service.book_call_confirmed(user_object.id)
+            self.user_persistence_service.set_partner_role(user_object.id)
+            self.partners_service.setUser(user_object.email, user_object.id, "Active")
         
-        if ift and ift == 'arwt':
+        if (ift and ift == 'arwt') or user_object.source_platform in (SourcePlatformEnum.BIG_COMMERCE.value, SourcePlatformEnum.SHOPIFY.value):
             self.user_persistence_service.book_call_confirmed(user_object.id)
             self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)
             
@@ -409,6 +420,7 @@ class UsersAuth:
         owner_id = None
         shopify_data = user_form.shopify_data
         teams_token = user_form.teams_token
+        referral_token = user_form.referral_token
         coupon = user_form.coupon
         shopify_access_token = None
         shop_id = None
@@ -485,13 +497,20 @@ class UsersAuth:
         
         if shopify_data:
             self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
+            self.user_persistence_service.email_confirmed(user_object.id)
             
-        if ift and ift == 'arwt':
+        if (ift and ift == 'arwt') or user_object.source_platform in (SourcePlatformEnum.BIG_COMMERCE.value, SourcePlatformEnum.SHOPIFY.value):
             self.user_persistence_service.book_call_confirmed(user_object.id)
             self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)
             
-        if is_with_card is False and teams_token is None:
+        if is_with_card is False and teams_token is None and referral_token is None and shopify_data is None:
             return self._send_email_verification(user_object, token)
+        
+        if referral_token is not None:
+            self.user_persistence_service.book_call_confirmed(user_object.id)
+            self.user_persistence_service.email_confirmed(user_object.id)
+            self.user_persistence_service.set_partner_role(user_object.id)
+            self.partners_service.setUser(user_object.email, user_object.id, "Active")
             
         if teams_token is None:
             return {
@@ -520,8 +539,6 @@ class UsersAuth:
             user_object.shopify_token = shopify_access_token
             user_object.shop_domain = shopify_data.shop
         user_object.source_platform = SourcePlatformEnum.SHOPIFY.value
-        user_object.is_book_call_passed = True
-        user_object.is_email_confirmed = True
         self.db.commit()
        
     def _send_email_verification(self, user_object, token):
