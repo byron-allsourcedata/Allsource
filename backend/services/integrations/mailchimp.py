@@ -1,19 +1,15 @@
-import asyncio
-from datetime import timedelta
-import re
-from persistence.leads_persistence import LeadsPersistence, LeadUser, FiveXFiveUser
+from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
-from persistence.integrations.user_sync import IntegrationsUserSyncPersistence, IntegrationUserSync
+from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.domains import UserDomainsPersistence
 from schemas.integrations.integrations import *
 from schemas.integrations.klaviyo import *
 from fastapi import HTTPException
-from enums import IntegrationsStatus, SourcePlatformEnum
-import httpx
+from schemas.integrations.mailchimp import MailchimpProfile
+from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
 import json
+from utils import extract_first_email, validate_and_format_phone
 from typing import List
-import logging 
-from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 import mailchimp_marketing as MailchimpMarketing
 from mailchimp_marketing.api_client import ApiClientError
 
@@ -26,12 +22,85 @@ class MailchimpIntegrationsService:
         self.integrations_persisntece = integrations_persistence
         self.leads_persistence = leads_persistence
         self.sync_persistence = sync_persistence
-        self.QUEUE_DATA_SYNC = 'data_sync_leads'
         self.client = MailchimpMarketing.Client()
 
     def get_credentials(self, domain_id: int):
         return self.integrations_persisntece.get_credentials_for_service(domain_id, SourcePlatformEnum.MAILCHIMP.value)
     
+    def create_list(self, list_data, domain_id):
+        credential = self.get_credentials(domain_id)
+        response = None
+        self.client.set_config({
+            'api_key': credential.access_token,
+            'server': credential.data_center
+        })
+        list_info = {
+            "name": list_data.name,
+            "permission_reminder": "You are receiving this email because you signed up for updates.",
+            "email_type_option": True,
+            "contact": {
+                "company": "Default Company",
+                "address1": "123 Default St.",
+                "city": "Default City",
+                "state": "Default State",
+                "zip": "00000",
+                "country": "US"
+            },
+            "campaign_defaults": {
+            "from_name": "Maximiz",
+            "from_email": "login@maximiz.ai",
+            "subject": "Welcome to Our Updates",
+            "language": "en"
+            }
+        }
+        custom_fields = [
+            {"name": "Gender", "tag": "GENDER", "type": "text"},
+            {"name": "Company Domain", "tag": "COMPANY_DOMAIN", "type": "text"},
+            {"name": "Company SIC", "tag": "COMPANY_SIC", "type": "text"},
+            {"name": "Company LinkedIn URL", "tag": "COMPANY_LI_URL", "type": "text"},
+            {"name": "Company Revenue", "tag": "COMPANY_REV", "type": "text"},
+            {"name": "Company Employee Count", "tag": "COMPANY_EMP", "type": "text"},
+            {"name": "Net Worth", "tag": "NET_WORTH", "type": "text"},
+            {"name": "Last Updated", "tag": "LAST_UPDATED", "type": "text"},
+            {"name": "Personal Emails Last Seen", "tag": "PE_LAST_SEEN", "type": "text"},
+            {"name": "Company Last Updated", "tag": "COMPANY_LAST_UPD", "type": "text"},
+            {"name": "Job Title Last Updated", "tag": "JOB_TITLE_LAST", "type": "text"},
+            {"name": "Age Min", "tag": "AGE_MIN", "type": "text"},
+            {"name": "Age Max", "tag": "AGE_MAX", "type": "text"},
+            {"name": "Additional Personal Emails", "tag": "ADD_PERSONAL_EMAILS", "type": "text"},
+            {"name": "LinkedIn URL", "tag": "LINKEDIN_URL", "type": "text"},
+            {"name": "Married", "tag": "MARRIED", "type": "text"},
+            {"name": "Children", "tag": "CHILDREN", "type": "text"},
+            {"name": "Income Range", "tag": "INCOME_RANGE", "type": "text"},
+            {"name": "Homeowner", "tag": "HOMEOWNER", "type": "text"},
+            {"name": "Seniority Level", "tag": "SENIORITY", "type": "text"},
+            {"name": "Department", "tag": "DEPARTMENT", "type": "text"},
+            {"name": "Primary Industry", "tag": "PRIMARY_INDUSTRY", "type": "text"},
+            {"name": "Work History", "tag": "WORK_HISTORY", "type": "text"},
+            {"name": "Education History", "tag": "EDUCATION_HISTORY", "type": "text"},
+            {"name": "Company Description", "tag": "COMPANY_DESC", "type": "text"},
+            {"name": "Related Domains", "tag": "RELATED_DOMAINS", "type": "text"},
+            {"name": "Social Connections", "tag": "SOCIAL_CONN", "type": "text"},
+            {"name": "DPV Code", "tag": "DPV_CODE", "type": "text"}
+        ]
+        try:
+            response = self.client.lists.create_list(list_info)
+            list_id = response['id']
+            for field in custom_fields:
+                self.client.lists.add_list_merge_field(list_id, field)
+                print(f"Added custom field: {field['name']}")
+
+        except ApiClientError as error:
+            if error.status_code == 403:
+                raise HTTPException(status_code=403, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
+            if error.status_code == 401:
+                credential.error_message = 'Invalid API Key'
+                credential.is_failed = True
+                self.integrations_persisntece.db.commit()
+                raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREDENTAILS_INVALID.value})
+
+        return self.__mapped_list(response) if response else None
+
 
     def get_list(self, domain_id: int = None, api_key: str = None, server: str = None):
         if domain_id:
@@ -114,153 +183,50 @@ class MailchimpIntegrationsService:
             'leads_type': leads_type,
             'domain_id': domain_id
         }
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        channel = await connection.channel()
-        await channel.declare_queue(
-            name=self.QUEUE_DATA_SYNC,
-            durable=True
-        )
-        await publish_rabbitmq_message(
-            connection=connection,
-            queue_name=self.QUEUE_DATA_SYNC, 
-            message_body=message)
-        await rabbitmq_connection.close()
-        
-    async def process_lead_sync(self, user_domain_id, behavior_type, lead_user, stage, next_try):
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        channel = await connection.channel()
-        await channel.declare_queue(
-            name=self.QUEUE_DATA_SYNC,
-            durable=True
-        )
-        await publish_rabbitmq_message(connection, self.QUEUE_DATA_SYNC,
-                                    {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
-                                        'id': lead_user.id,
-                                        'five_x_five_user_id': lead_user.five_x_five_user_id
-                                    }, 'stage': stage, 'next_try': next_try})
-        await rabbitmq_connection.close()
 
-
-    async def process_data_sync(self, message):
-        sync = None
-        last_leads_sync = None
-        if message.get('sync'):
-            sync = IntegrationUserSync(**message.get('sync'))
-            if sync:
-                serarch_sync = self.sync_persistence.get_integration_by_sync_id(sync_id=sync.id)
-                if not serarch_sync or serarch_sync.service_name != SourcePlatformEnum.MAILCHIMP.value:
-                    logging.info(f'Sync {sync.id} Mailchimp not matched')
-                    return
-        counter = 0
-        leads_type = message.get('leads_type')
-        domain_id = message.get('domain_id')
-        lead = message.get('lead', None)
-        if domain_id and lead:
-            lead_user =  self.leads_persistence.get_leads_domain(domain_id=domain_id, five_x_five_user_id=lead.get('five_x_five_user_id'))
-            lead = lead_user[0] if lead_user else None
-            if message.get('lead') and not lead:
-                logging.info(f'Contact {message.get("lead").get("five_x_five_user_id") if message.get("lead") else None} in domain id {domain_id} not found')
-                return
-        stage = message.get('stage') if message.get('stage') else 1
-        next_try = message.get('next_try') if message.get('next_try') else None
-
-        domains = self.domain_persistence.get_domain_by_filter(**{'id': domain_id} if domain_id else {})
-        logging.info(f"Retrieved domains: {[domain.id for domain in domains]}",)
-
-        for domain in domains:
-            credentials = self.get_credentials(domain.id)
-            if not credentials:
-                logging.warning("No credentials found for domain id %s.", domain.id)
-                return
+    async def process_data_sync(self, five_x_five_user, access_token, integration_data_sync):
+        profile = self.__create_profile(five_x_five_user, access_token, integration_data_sync)
+        if profile == ProccessDataSyncResult.AUTHENTICATION_FAILED.value or profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+            return profile
             
-            data_syncs_list = self.sync_persistence.get_data_sync_filter_by(
-                domain_id=domain.id,
-                integration_id=credentials.id,
-                is_active=True
-            )
+        return ProccessDataSyncResult.SUCCESS.value
 
-            leads = [lead] if lead else (
-                self.leads_persistence.get_leads_domain(domain.id, behavior_type=leads_type)
-                if leads_type and leads_type != 'allContacts' else
-                self.leads_persistence.get_leads_domain(domain.id)
-            )
-
-            for data_sync_item in data_syncs_list if not sync else [sync]:
-                if lead and lead.behavior_type != data_sync_item.leads_type and data_sync_item.leads_type not in ('allContacts', None):
-                    logging.warning("Lead behavior type mismatch: %s vs %s", lead.behavior_type, data_sync_item.leads_type)
-                    continue
-
-                last_lead_sync_id = data_sync_item.last_lead_sync_id
-                if last_lead_sync_id:
-                    last_leads_sync = self.leads_persistence.get_lead_user_by_up_id(domain_id=domain.id, up_id=last_lead_sync_id)
-                for lead in leads:
-                    if last_leads_sync and lead.five_x_five_user_id < last_leads_sync.five_x_five_user_id:
-                        continue
-                    if stage > 3:
-                        logging.info("Stage limit reached. Exiting.")
-                        return
-                    
-                    if next_try and datetime.now() < datetime.fromisoformat(next_try):
-                        await asyncio.sleep(1)
-                        logging.info("Processing lead sync with next try: %s", next_try)
-                        await self.process_lead_sync(
-                            lead_user=lead,
-                            user_domain_id=domain.id, 
-                            behavior_type=lead.behavior_type, 
-                            stage=stage, 
-                            next_try=next_try  
-                        )
-                        continue
-                    
-                    profile = self.__create_profile(lead.five_x_five_user_id, credentials, data_sync_item.list_id)
-
-                    if not profile:
-                        data_sync_item.sync_status = False
-                        self.sync_persistence.db.commit()
-                        logging.error("Profile creation failed for lead: %s", lead.five_x_five_user_id)
-                        if stage != 3:
-                            next_try_str = (datetime.now() + timedelta(hours=3)).isoformat()
-                            await self.process_lead_sync(
-                                lead_user=lead,
-                                user_domain_id=domain.id, 
-                                behavior_type=lead.behavior_type, 
-                                stage=stage + 1, 
-                                next_try=next_try_str
-                            )
-                        continue
-                    data_sync_item.sync_status = True
-                    self.sync_persistence.db.commit()
-                    counter += 1
-                    logging.info("Profile added successfully for lead: %s", lead.five_x_five_user_id)
-                    last_leads_sync = lead
-                self.sync_persistence.update_sync({
-                    'last_sync_date': datetime.now(),
-                    'last_lead_sync_id': self.leads_persistence.get_lead_data(last_leads_sync.five_x_five_user_id).up_id if counter > 0 else last_lead_sync_id
-                },counter=counter, id=data_sync_item.id)
-                logging.info("Sync updated for item id: %s", data_sync_item.id)
-
-    def __create_profile(self, lead_id: int, credentials, list_id):
-        lead_data = self.leads_persistence.get_lead_data(lead_id)
-        try:
-            lead = self.__mapped_member_into_list(lead_data)
-        except: return
+    def __create_profile(self, five_x_five_user, user_integration, integration_data_sync):
+        profile = self.__mapped_member_into_list(five_x_five_user)
+        if profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+            return profile
+        if integration_data_sync.data_map:
+            properties = self.__map_properties(five_x_five_user, integration_data_sync.data_map)
+        else:
+            properties = {}
         self.client.set_config({
-            'api_key': credentials.access_token,
-            'server': credentials.data_center
+            'api_key': user_integration.access_token,
+            'server': user_integration.data_center
         })
+        json_data = {
+                    'email_address': profile.email,
+                    'status': profile.status,
+                    'email_type': profile.email_type,
+                    "merge_fields": {
+                        "FNAME": profile.first_name,
+                        "LNAME": profile.last_name,
+                        'PHONE': validate_and_format_phone(profile.phone_number) or 'N/A',
+                        'COMPANY': profile.company_name or 'N/A',
+                        "ADDRESS": {
+                            "addr1": profile.location['address'] or 'N/A',
+                            "city": profile.location['city'] or 'N/A',
+                            "state": profile.location['region'] or 'N/A',
+                            "zip": profile.location['zip'] or 'N/A',
+                            },
+                        **properties
+                    },
+        }
         try:
-            response = self.client.lists.add_list_member(list_id, lead)
+            response = self.client.lists.add_list_member(integration_data_sync.list_id, json_data)
         except ApiClientError as error:
-            logging.error(f'{error.text}')
             if error.status_code == 400:
-                return "Already exist"
-            if credentials:
-                credentials.error_message = json.loads(error.text).get('detail')
-                credentials.is_failed = True
-                self.integrations_persisntece.db.commit()
-                return
+                return "Already exists"
+
         return response
 
     def edit_sync(self, leads_type: str, list_id: str, list_name: str, integrations_users_sync_id: int,
@@ -285,19 +251,55 @@ class MailchimpIntegrationsService:
     def __mapped_list(self, list):
         return ListFromIntegration(id=list['id'], list_name=list['name'])
     
-    def __mapped_member_into_list(self, lead: FiveXFiveUser):
+    def __mapped_member_into_list(self, five_x_five_user: FiveXFiveUser):
         first_email = (
-            getattr(lead, 'business_email') or 
-            getattr(lead, 'personal_emails') or 
-            getattr(lead, 'programmatic_business_emails', None)
+            getattr(five_x_five_user, 'business_email') or 
+            getattr(five_x_five_user, 'personal_emails') or 
+            getattr(five_x_five_user, 'programmatic_business_emails', None)
         )
-        return {
-            'email_address': first_email,
-            'status': 'subscribed',
-            'email_type': 'text'
-        }
-
-
-
+        first_email = extract_first_email(first_email) if first_email else None
         
+        first_phone = (
+            getattr(five_x_five_user, 'mobile_phone') or 
+            getattr(five_x_five_user, 'personal_phone') or 
+            getattr(five_x_five_user, 'direct_number') or 
+            getattr(five_x_five_user, 'company_phone', None)
+        )
 
+        location = {
+            "address": getattr(five_x_five_user, 'personal_address') or getattr(five_x_five_user, 'company_address', None),
+            "city": getattr(five_x_five_user, 'personal_city') or getattr(five_x_five_user, 'company_city', None),
+            "region": getattr(five_x_five_user, 'personal_state') or getattr(five_x_five_user, 'company_state', None),
+            "zip": getattr(five_x_five_user, 'personal_zip') or getattr(five_x_five_user, 'company_zip', None),
+        }
+        return MailchimpProfile(
+            email=first_email,
+            phone_number=first_phone,
+            first_name=getattr(five_x_five_user, 'first_name', None),
+            last_name=getattr(five_x_five_user, 'last_name', None),
+            organization=getattr(five_x_five_user, 'company_name', None),
+            location=location,
+            job_title=getattr(five_x_five_user, 'job_title', None),
+            company_name=getattr(five_x_five_user, 'company_name', None),
+            status='subscribed',
+            email_type='text'
+            )
+        
+    def __map_properties(self, five_x_five_user: FiveXFiveUser, data_map: List[DataMap]) -> dict:
+        properties = {}
+        for mapping in data_map:
+            five_x_five_field = mapping.get("type")  
+            new_field = mapping.get("value")  
+            value_field = getattr(five_x_five_user, five_x_five_field, None)
+            if value_field is not None:
+                new_field = new_field.replace(" ", "_").upper()
+                if isinstance(value_field, datetime):
+                    properties[new_field] = value_field.strftime("%Y-%m-%d")
+                else:
+                    if isinstance(value_field, str):
+                        if len(value_field) > 2048:
+                            value_field = value_field[:2048]
+                    properties[new_field] = value_field
+                    
+        return properties
+    

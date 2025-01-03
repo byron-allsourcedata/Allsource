@@ -204,3 +204,18 @@ class IntegrationsStatus(Enum):
 
 class StripeConnectStatus(Enum):
     SUCCESS_CONNECT = "SUCCESS_CONNECT"
+    
+class DataSyncImportedStatus(Enum):
+    SENT = 'sent'
+    SUCCESS = 'success'
+    BEHAVIOR_MISS_MATCH = 'behavior_miss_match' 
+    INCORRECT_FORMAT='incorrect_format'
+
+class ProccessDataSyncResult(Enum):
+    INCORRECT_FORMAT='incorrect_format'
+    FAILED = 'failed'
+    SUCCESS = 'success'
+    LEAD_PROFILE_ERROR = 'lead_profile_error'
+    LIST_NOT_EXISTS = 'list_not_exists'
+    AUTHENTICATION_FAILED = 'authentication_failed'
+    TOO_MANY_REQUESTS = 'too_many_requests'

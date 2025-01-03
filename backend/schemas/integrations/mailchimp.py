@@ -1,6 +1,6 @@
-from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Any
 from datetime import datetime
+from pydantic import BaseModel, EmailStr
 
 class MailchimpCustomer(BaseModel):
     mailchimp_user_id: str
@@ -41,3 +41,15 @@ class MailchimpCustomer(BaseModel):
     marketing_permission_id: Optional[str]
     marketing_permission_text: Optional[str]
     marketing_permission_enabled: Optional[bool]
+
+class MailchimpProfile(BaseModel):
+    email: Optional[EmailStr] = None
+    phone_number: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    organization: Optional[str] = None
+    job_title: Optional[str] = None
+    company_name: Optional[str] = None
+    location: Optional[Any] = None
+    status: Optional[str] = None
+    email_type: Optional[str] = None
