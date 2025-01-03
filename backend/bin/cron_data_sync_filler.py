@@ -121,7 +121,7 @@ def get_previous_imported_leads(session, data_sync_id, data_sync_leads_type):
 async def send_leads_to_rmq(session, rmq_connection, lead_users, data_sync, integration):
     last_lead_id = None
     for lead in lead_users:
-        if integration.service_name != 'omnisend':
+        if integration.service_name != 'sendlane':
             continue
             
         last_lead_id = lead.id

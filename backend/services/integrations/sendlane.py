@@ -1,5 +1,4 @@
-import logging
-import re
+from utils import validate_and_format_phone
 from typing import List
 from fastapi import HTTPException
 import httpx
@@ -13,7 +12,6 @@ from utils import extract_first_email
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
-from models.integrations.users_domains_integrations import UserIntegration
 
 class SendlaneIntegrationService:
 
@@ -193,11 +191,13 @@ class SendlaneIntegrationService:
         json = {
             'contacts': [{**profile.model_dump()}]
         }
-        respsonse = self.__handle_request(f'/lists/{list_id}/contacts', api_key=access_token, json=json, method="POST")
-        if respsonse.status_code == 401:
+        response = self.__handle_request(f'/lists/{list_id}/contacts', api_key=access_token, json=json, method="POST")
+        print(response.status_code)
+        print(response)
+        if response.status_code == 401:
             return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
-        if respsonse.status_code == 202:
-            return respsonse
+        if response.status_code == 202:
+            return response
 
     def __mapped_list(self, list):
         return ListFromIntegration(
@@ -211,28 +211,6 @@ class SendlaneIntegrationService:
             sender_name=sender.get('from_name')
         )
     
-
-    def validate_and_format_phone(self, phone_number: str) -> str:
-        if phone_number:
-            cleaned_phone_number = re.sub(r'\D', '', phone_number)  
-            logging.debug(f"Cleaned phone number: {cleaned_phone_number}") 
-            
-            if len(cleaned_phone_number) == 10: 
-                formatted_phone_number = '+1' + cleaned_phone_number 
-            elif len(cleaned_phone_number) == 11 and cleaned_phone_number.startswith('1'):
-                formatted_phone_number = '+' + cleaned_phone_number  
-            elif len(cleaned_phone_number) < 10:
-                logging.error("Phone number too short: {}".format(cleaned_phone_number))
-                return None  
-            else:
-                logging.error("Invalid phone number length: {}".format(cleaned_phone_number))
-                return None  
-
-            logging.debug(f"Formatted phone number: {formatted_phone_number}")  
-            return formatted_phone_number
-        return None
-
-
     def __mapped_sendlane_contact(self, lead: FiveXFiveUser):
         first_email = (
             getattr(lead, 'business_email') or 
@@ -261,5 +239,5 @@ class SendlaneIntegrationService:
             email=first_email,
             first_name = lead.first_name or "Unknown",
             last_name=lead.last_name or "Unknown",
-            phone=self.validate_and_format_phone(first_phone)
+            phone=validate_and_format_phone(first_phone)
         )

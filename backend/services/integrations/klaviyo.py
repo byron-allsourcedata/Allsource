@@ -12,7 +12,7 @@ from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
 import httpx
 import json
 from typing import List
-import logging 
+from utils import validate_and_format_phone
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 
 
@@ -257,38 +257,19 @@ class KlaviyoIntegrationsService:
         await rabbitmq_connection.close()
 
 
-    async def process_data_sync(self, five_x_five_user, access_token, data_sync):
+    async def process_data_sync(self, five_x_five_user, user_integration, data_sync):
         data_map = data_sync.data_map if data_sync.data_map else None
-        profile = self.__create_profile(five_x_five_user, access_token, data_map)
+        profile = self.__create_profile(five_x_five_user, user_integration.access_token, data_map)
         
         if profile == ProccessDataSyncResult.AUTHENTICATION_FAILED.value or profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
             return profile
         
-        list_response = self.__add_profile_to_list(data_sync.list_id, profile.get('id'), access_token)
+        list_response = self.__add_profile_to_list(data_sync.list_id, profile.get('id'), user_integration.access_token)
         if list_response.status_code == 404:
             return ProccessDataSyncResult.LIST_NOT_EXISTS.value
             
         return ProccessDataSyncResult.SUCCESS.value
 
-    def validate_and_format_phone(self, phone_number: str) -> str:
-        if phone_number:
-            cleaned_phone_number = re.sub(r'\D', '', phone_number)  
-            logging.debug(f"Cleaned phone number: {cleaned_phone_number}") 
-            
-            if len(cleaned_phone_number) == 10: 
-                formatted_phone_number = '+1' + cleaned_phone_number 
-            elif len(cleaned_phone_number) == 11 and cleaned_phone_number.startswith('1'):
-                formatted_phone_number = '+' + cleaned_phone_number  
-            elif len(cleaned_phone_number) < 10:
-                logging.error("Phone number too short: {}".format(cleaned_phone_number))
-                return None  
-            else:
-                logging.error("Invalid phone number length: {}".format(cleaned_phone_number))
-                return None  
-
-            logging.debug(f"Formatted phone number: {formatted_phone_number}")  
-            return formatted_phone_number
-        return None
     
     def get_count_profiles(self, list_id: str, api_key: str):
         url = f'https://a.klaviyo.com/api/lists/{list_id}?additional-fields[list]=profile_count'
@@ -313,6 +294,9 @@ class KlaviyoIntegrationsService:
 
     def __create_profile(self, five_x_five_user, api_key: str, data_map):
         profile = self.__mapped_klaviyo_profile(five_x_five_user)
+        if profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+            return profile
+        
         if data_map:
             properties = self.__map_properties(five_x_five_user, data_map)
         else:
@@ -322,7 +306,7 @@ class KlaviyoIntegrationsService:
                 'type': 'profile',
                 'attributes': {
                     'email': profile.email if profile.email is not None else None,
-                    'phone_number': self.validate_and_format_phone(profile.phone_number) if profile.phone_number is not None else None,
+                    'phone_number': validate_and_format_phone(profile.phone_number) if profile.phone_number is not None else None,
                     'first_name': profile.first_name if profile.first_name is not None else None,
                     'last_name': profile.last_name if profile.last_name is not None else None,
                     'organization': profile.organization if profile.organization is not None else None,
@@ -390,6 +374,8 @@ class KlaviyoIntegrationsService:
             getattr(five_x_five_user, 'programmatic_business_emails', None)
         )
         first_email = extract_first_email(first_email) if first_email else None
+        if not first_email:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
         
         first_phone = (
             getattr(five_x_five_user, 'mobile_phone') or 
