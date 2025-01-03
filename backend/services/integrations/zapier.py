@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from models.integrations.integrations_users_sync import IntegrationUserSync
@@ -8,7 +8,7 @@ from persistence.leads_persistence import LeadsPersistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from fastapi import HTTPException
-from enums import IntegrationsStatus, SourcePlatformEnum
+from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
 from httpx import Client
 
 class ZapierIntegrationService: 
@@ -97,110 +97,16 @@ class ZapierIntegrationService:
                                     }, 'stage': stage, 'next_try': next_try})
         await rabbitmq_connection.close()
 
-    async def process_data_sync(self, message):
-        counter = 0
-        last_leads_sync = None
-        sync = None
-        if message.get('sync'):
-            sync = message.get('sync')
-            sync = self.sync_persistence.get_data_sync_filter_by(id=sync.get('id'))
-            if sync:
-                sync = sync[0]
-                serarch_sync = self.sync_persistence.get_integration_by_sync_id(sync_id=sync.id)
-                if not serarch_sync or serarch_sync.service_name != SourcePlatformEnum.ZAPIER.value:
-                    logging.info(f'Sync {sync.id} Zapier not matched')
-                    return
-        leads_type = message.get('leads_type')
-        domain_id = message.get('domain_id')
-        lead = message.get('lead', None)
-        if domain_id and lead:
-            lead_user =  self.leads_persistence.get_leads_domain(domain_id=domain_id, five_x_five_user_id=lead.get('five_x_five_user_id'))
-            lead = lead_user[0] if lead_user else None
-            if message.get('lead') and not lead:
-                logging.info(f'Contact {message.get("lead").get("five_x_five_user_id") if message.get("lead") else None} in domain id {domain_id} not found')
-                return
-        stage = message.get('stage') if message.get('stage') else 1
-        next_try = message.get('next_try') if message.get('next_try') else None
-
-        domains = self.domain_persistence.get_domain_by_filter(**{'id': domain_id} if domain_id else {})
-        logging.info(f"Retrieved domains: {[domain.id for domain in domains]}",)
-
-        for domain in domains:
-            credentials = self.get_credentials(domain.id)
-            if not credentials:
-                logging.warning("No credentials found for domain id %s.", domain.id)
-                return
+    async def process_data_sync(self, five_x_five_user, access_token, integration_data_sync):
+        profile = self.__create_profile(five_x_five_user, integration_data_sync)
+        if profile == ProccessDataSyncResult.AUTHENTICATION_FAILED.value or profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+            return profile
             
-            data_syncs_list = self.sync_persistence.get_data_sync_filter_by(
-                domain_id=domain.id,
-                integration_id=credentials.id,
-                is_active=True
-            )
+        return ProccessDataSyncResult.SUCCESS.value
+    
 
-            leads = [lead] if lead else (
-                self.leads_persistence.get_leads_domain(domain.id, behavior_type=leads_type)
-                if leads_type and leads_type != 'allContacts' else
-                self.leads_persistence.get_leads_domain(domain.id)
-            )
-
-            for data_sync_item in data_syncs_list if not sync else [sync]:
-                if lead and lead.behavior_type != data_sync_item.leads_type and data_sync_item.leads_type not in ('allContacts', None):
-                    logging.warning("Lead behavior type mismatch: %s vs %s", lead.behavior_type, data_sync_item.leads_type)
-                    continue
-                last_lead_sync_id = data_sync_item.last_lead_sync_id
-                
-                if last_leads_sync:
-                    last_leads_sync = self.leads_persistence.get_lead_user_by_up_id(domain_id=domain.id, up_id=last_lead_sync_id)
-                for lead in leads:
-                    if not message.get('sync') and last_leads_sync and lead.five_x_five_user_id < last_leads_sync.five_x_five_user_id:
-                        logging.info(f'lead {lead.five_x_five_user_id} already sync')
-                        continue
-                    if stage > 3:
-                        logging.info("Stage limit reached. Exiting.")
-                        return
-                    if next_try and datetime.now() < datetime.fromisoformat(next_try):
-                        await asyncio.sleep(1)
-                        logging.info("Processing lead sync with next try: %s", next_try)
-                        await self.process_lead_sync(
-                            lead_user=lead,
-                            user_domain_id=domain.id, 
-                            behavior_type=lead.behavior_type, 
-                            stage=stage, 
-                            next_try=next_try  
-                        )
-                        continue    
-                    profile = self.__create_profile(lead.five_x_five_user_id, data_sync_item)
-                    
-                    if not profile:
-                        data_sync_item.sync_status = False
-                        self.sync_persistence.db.commit()
-                        logging.error("Profile creation failed for lead: %s", lead.five_x_five_user_id)
-                        if stage != 3:
-                            next_try_str = (datetime.now() + timedelta(hours=3)).isoformat()
-                            await self.process_lead_sync(
-                                lead_user=lead,
-                                user_domain_id=domain.id, 
-                                behavior_type=lead.behavior_type, 
-                                stage=stage + 1, 
-                                next_try=next_try_str
-                            )
-                        continue
-                    data_sync_item.sync_status = True
-                    self.sync_persistence.db.commit()
-                    logging.info("Profile added successfully for lead: %s", lead.five_x_five_user_id)
-                    counter += 1
-                    last_leads_sync = lead
-                self.sync_persistence.update_sync({
-                    'last_sync_date': datetime.now(),
-                    'last_lead_sync_id': self.leads_persistence.get_lead_data(last_leads_sync.five_x_five_user_id).up_id if counter > 0 else last_lead_sync_id
-                },counter=counter, id=data_sync_item.id)
-                logging.info("Sync updated for item id: %s", data_sync_item.id)
-                counter = 0
-
-    def __create_profile(self, lead_id: int, sync: IntegrationUserSync):
-        lead_data = self.leads_persistence.get_lead_data(lead_id)
-        # try:
-        response = self.client.post(url=sync.hook_url, json=self.__mapped_lead(lead_data))
+    def __create_profile(self, five_x_five_user, sync: IntegrationUserSync):
+        response = self.client.post(url=sync.hook_url, json=self.__mapped_lead(five_x_five_user))
         if response.status_code != 200:
             logging.error("Error response: %s", response.text)
             if response.status_code in (403, 401):
@@ -208,7 +114,6 @@ class ZapierIntegrationService:
                 self.integration_persistence.db.commit()
                 return
             return response
-        # except: return
         return response.json()
     
     def __mapped_leads_type(self, lead_type):

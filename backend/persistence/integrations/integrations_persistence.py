@@ -62,7 +62,13 @@ class IntegrationsPresistence:
         self.db.commit()
 
     def get_integrations_service(self, **filter_by):
-        return self.db.query(Integration).filter_by(**filter_by).order_by(Integration.service_name.asc()).all()
+        query = self.db.query(Integration)
+        for key, value in filter_by.items():
+            if key == 'service_name':
+                query = query.filter(Integration.service_name.in_(value))
+            else:
+                query = query.filter_by(**{key: value})
+        return query.order_by(Integration.service_name.asc()).all()
     
     def get_all_integrations_filter_by(self, **filter_by):
         return self.db.query(UserIntegration).filter_by(**filter_by).all()

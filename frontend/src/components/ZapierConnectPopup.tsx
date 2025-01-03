@@ -111,11 +111,21 @@ const ZapierConnectPopup = ({open, handlePopupClose, boxShadow}: ApIkeyPopup) =>
             'ZapierAuthWindow', 
             windowParams
         );
+        if (authWindow) {
+            const checkWindowInterval = setInterval(() => {
+                if (authWindow.closed) {
+                    clearInterval(checkWindowInterval);
+                    console.log("Окно закрыто, процесс аутентификации завершен.");
+                    
+                    // Здесь можно добавить логику для обработки данных, полученных после аутентификации
+                    // Например, сделать запрос для получения токена или продолжить авторизацию
+                }
+            }, 1000);
+        } else {
+            console.error("Не удалось открыть окно для аутентификации");
+        }
+    };
     
-        if (authWindow) 
-            authWindow.location.href = 'https://zapier.com/engine/auth/start/App215646CLIAPI@1.0.0/';
-
-    }
 
     if (!open) {
         return

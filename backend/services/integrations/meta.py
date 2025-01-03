@@ -1,23 +1,19 @@
 
 
 import hashlib
-import json
-import logging
-import random
 from schemas.integrations.meta import AdAccountScheme
 from models.five_x_five_users import FiveXFiveUser
-from models.integrations.integrations_users_sync import IntegrationUserSync
-from models.leads_users import LeadUser
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
 from persistence.domains import UserDomainsPersistence
 import httpx
+from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
 from facebook_business.adobjects.adaccount import AdAccount
 from facebook_business.api import FacebookAdsApi
 from fastapi import HTTPException
-from enums import IntegrationsStatus, SourcePlatformEnum
-from datetime import datetime, timedelta
+from datetime import datetime
+from utils import extract_first_email
 from schemas.integrations.integrations import IntegrationCredentials, DataMap, ListFromIntegration
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from typing import List
@@ -219,70 +215,16 @@ class MetaIntegrationsService:
             message_body=message)
         rabbitmq_connection.close()
         
-    def process_data_sync(self, message):
-        counter = 0
-        last_leads_sync = None
-        sync = None
-        if message.get('sync'):
-            sync = IntegrationUserSync(**message.get('sync'))
-            if sync:
-                serarch_sync = self.sync_persistence.get_integration_by_sync_id(sync_id=sync.id)
-                if not serarch_sync or serarch_sync.service_name != SourcePlatformEnum.META.value:
-                    logging.info(f'Sync {sync.id} Meta not matched')
-                    return
-        leads_type = message.get('leads_type')
-        domain_id = message.get('domain_id')
-        lead = message.get('lead', None)
-        if domain_id and lead:
-            lead_user =  self.leads_persistence.get_leads_domain(domain_id=domain_id, five_x_five_user_id=lead.get('five_x_five_user_id'))
-            lead = lead_user[0] if lead_user else None
-            if message.get('lead') and not lead:
-                logging.info(f'Contact {message.get("lead").get("five_x_five_user_id") if message.get("lead") else None} in domain id {domain_id} not found')
-                return
-        domains = self.domain_persistence.get_domain_by_filter(**{'id': domain_id} if domain_id else {})
-        for domain in domains:
-            credentials = self.get_credentials(domain.id)
-            if not credentials:
-                return 
-            data_syncs_list = self.sync_persistence.get_data_sync_filter_by(
-                domain_id=domain.id,
-                integration_id=credentials.id,
-                is_active=True
-            )
-            if lead:
-                leads = [lead]
-            elif not leads_type or leads_type == 'allContacts':
-                leads = self.leads_persistence.get_leads_domain(domain.id) 
-            else:
-                leads = self.leads_persistence.get_leads_domain(domain.id, behavior_type=leads_type)
-            for data_sync_item in data_syncs_list if not sync else [sync]:
-                session_id = random.getrandbits(64)
-                last_lead_sync_id = data_sync_item.last_lead_sync_id
-                if last_lead_sync_id:
-                    last_leads_sync = self.leads_persistence.get_lead_user_by_up_id(domain_id=domain.id, up_id=last_lead_sync_id)
-                for lead in leads:
-                    if not sync and last_leads_sync and lead.five_x_five_user_id < last_leads_sync.five_x_five_user_id:
-                        continue
-                    if lead and lead.behavior_type != data_sync_item.leads_type and data_sync_item.leads_type not in ('allContacts', None):
-                        logging.warning("Lead behavior type mismatch: %s vs %s", lead.behavior_type, data_sync_item.leads_type)
-                        continue
-                    profile = self.__create_user(session_id, lead.five_x_five_user_id, data_sync_item.list_id, credentials.access_token)
-                    if profile.get('type') and profile.get('type') == 'OAuthException':
-                        credentials.is_failed = True
-                        credentials.error_message = 'Login failed'
-                        self.integrations_persisntece.db.commit()
-                    counter += 1
-                    last_leads_sync = lead
-                self.sync_persistence.update_sync({
-                    'last_sync_date': datetime.now(),
-                    'last_lead_sync_id': self.leads_persistence.get_lead_data(last_leads_sync.five_x_five_user_id).up_id if counter > 0 else last_lead_sync_id
-                },counter=counter, id=data_sync_item.id)
-
-
+    def process_data_sync(self, five_x_five_user, access_token, integration_data_sync):
+        profile = self.__create_user(integration_data_sync.session_id, five_x_five_user, integration_data_sync.list_id, access_token)
+        if profile.get('type') and profile.get('type') == 'OAuthException':
+            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
     
-    def __create_user(self, session_id: int, lead_id: int, custom_audience_id: str, access_token: str):
-        lead_data = self.leads_persistence.get_lead_data(lead_id)
+    def __create_user(self, session_id: int, five_x_five_user, custom_audience_id: str, access_token: str):
+        lead_data = self.leads_persistence.get_lead_data(five_x_five_user)
         profile = self.__mapped_meta_user(lead_data)
+        if profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+            return profile
         payload = {
             "schema": [
                 "EMAIL",
@@ -310,6 +252,9 @@ class MetaIntegrationsService:
             getattr(lead, 'personal_emails') or 
             getattr(lead, 'programmatic_business_emails', None)
         )
+        first_email = extract_first_email(first_email) if first_email else None
+        if not first_email:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
         
         first_phone = (
             getattr(lead, 'mobile_phone') or 
