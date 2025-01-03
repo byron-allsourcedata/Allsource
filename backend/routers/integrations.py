@@ -32,7 +32,7 @@ async def get_integrations_service(type: str | None = Query(None), data_sync: bo
         
     source_platform = user.get('source_platform')
     if source_platform in ['big_commerce', 'shopify']:
-        filter['service_name'] = ['klaviyo', 'omnisend']
+        filter['service_name'] = ['klaviyo', 'omnisend', 'mailchimp']
         
     return persistence.get_integrations_service(**filter)
 

@@ -250,6 +250,7 @@ class MetaIntegrationsService:
         first_email = (
             getattr(lead, 'business_email') or 
             getattr(lead, 'personal_emails') or 
+            getattr(lead, 'additional_personal_emails') or
             getattr(lead, 'programmatic_business_emails', None)
         )
         first_email = extract_first_email(first_email) if first_email else None

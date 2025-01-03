@@ -39,8 +39,8 @@ def setup_logging(level):
         datefmt='%Y-%m-%d %H:%M:%S'
     )
 
-def check_correct_data_sync(five_x_five_up_id: str, lead_users_id: int, data_sync_id: int, session: Session):
-    data_sync_imported_lead = session.query(DataSyncImportedLeads).filter(DataSyncImportedLeads.id==data_sync_id).first()
+def check_correct_data_sync(five_x_five_up_id: str, lead_users_id: int, data_sync_imported_id: int, session: Session):
+    data_sync_imported_lead = session.query(DataSyncImportedLeads).filter(DataSyncImportedLeads.id==data_sync_imported_id).first()
     if not data_sync_imported_lead:
         return False
     
@@ -52,7 +52,7 @@ def check_correct_data_sync(five_x_five_up_id: str, lead_users_id: int, data_syn
     
     return True
 
-def get_lead_attributes(session, lead_users_id, integration_id):
+def get_lead_attributes(session, lead_users_id, data_sync_id):
     result = session.query(
         LeadUser, 
         FiveXFiveUser, 
@@ -62,7 +62,7 @@ def get_lead_attributes(session, lead_users_id, integration_id):
     .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id) \
     .join(UserIntegration, UserIntegration.domain_id == LeadUser.domain_id) \
     .join(IntegrationUserSync, IntegrationUserSync.integration_id == UserIntegration.id) \
-    .filter(LeadUser.id == lead_users_id, UserIntegration.id == integration_id) \
+    .filter(LeadUser.id == lead_users_id, IntegrationUserSync.id == data_sync_id) \
     .first()
 
     if result:
@@ -104,9 +104,9 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
         service_name = message_body.get('service_name')
         five_x_five_up_id = message_body.get('five_x_five_up_id')
         lead_users_id = message_body.get('lead_users_id')
+        data_sync_imported_id = message_body.get('data_sync_imported_id')
         data_sync_id = message_body.get('data_sync_id')
-        user_domain_integration_id = message_body.get('integration_id')
-        if not check_correct_data_sync(five_x_five_up_id, lead_users_id, data_sync_id, session):
+        if not check_correct_data_sync(five_x_five_up_id, lead_users_id, data_sync_imported_id, session):
             logging.info(f"Data sync not correct")
             await message.ack()
             return
@@ -121,14 +121,14 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
         }
         
         service = service_map.get(service_name)
-        lead_user, five_x_five_user, user_integration, integration_data_sync = get_lead_attributes(session, lead_users_id, user_domain_integration_id)
+        lead_user, five_x_five_user, user_integration, integration_data_sync = get_lead_attributes(session, lead_users_id, data_sync_id)
         
-        if lead_user and lead_user.behavior_type != integration_data_sync.leads_type and integration_data_sync.leads_type not in ('allContacts', None):
-            logging.info("Lead behavior type mismatch: %s vs %s", lead_user.behavior_type, integration_data_sync.leads_type)
-            import_status = DataSyncImportedStatus.INCORRECT_FORMAT.value
-            update_data_sync_imported_leads(session, import_status, data_sync_id)
-            await message.ack()
-            return
+        # if lead_user and lead_user.behavior_type != integration_data_sync.leads_type and integration_data_sync.leads_type not in ('allContacts', None):
+        #     logging.info("Lead behavior type mismatch: %s vs %s", lead_user.behavior_type, integration_data_sync.leads_type)
+        #     import_status = DataSyncImportedStatus.INCORRECT_FORMAT.value
+        #     update_data_sync_imported_leads(session, import_status, data_sync_id)
+        #     await message.ack()
+        #     return
         
         if service:
             result = await service.process_data_sync(five_x_five_user, user_integration, integration_data_sync)
@@ -148,10 +148,10 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
                     
                 case ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
                     logging.debug(f"authentication_failed: {service_name}")
-                    update_users_integrations(session, ProccessDataSyncResult.AUTHENTICATION_FAILED.value, integration_data_sync.id, user_domain_integration_id)
+                    update_users_integrations(session, ProccessDataSyncResult.AUTHENTICATION_FAILED.value, integration_data_sync.id, integration_data_sync.integration_id)
                     
             if import_status != DataSyncImportedStatus.SENT.value:
-                update_data_sync_imported_leads(session, import_status, data_sync_id)
+                update_data_sync_imported_leads(session, import_status, data_sync_imported_id)
                 
             logging.info(f"Processed message for service: {service_name}")
             await message.ack()

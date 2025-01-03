@@ -216,7 +216,7 @@ class KlaviyoIntegrationsService:
         
         if profile == ProccessDataSyncResult.AUTHENTICATION_FAILED.value or profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
             return profile
-        
+
         list_response = self.__add_profile_to_list(data_sync.list_id, profile.get('id'), user_integration.access_token)
         if list_response.status_code == 404:
             return ProccessDataSyncResult.LIST_NOT_EXISTS.value
@@ -259,7 +259,7 @@ class KlaviyoIntegrationsService:
                 'type': 'profile',
                 'attributes': {
                     'email': profile.email if profile.email is not None else None,
-                    'phone_number': validate_and_format_phone(profile.phone_number) if profile.phone_number is not None else None,
+                    'phone_number': validate_and_format_phone(profile.phone_number).split(', ')[0] if profile.phone_number else None,
                     'first_name': profile.first_name if profile.first_name is not None else None,
                     'last_name': profile.last_name if profile.last_name is not None else None,
                     'organization': profile.organization if profile.organization is not None else None,
@@ -323,7 +323,8 @@ class KlaviyoIntegrationsService:
     def __mapped_klaviyo_profile(self, five_x_five_user: FiveXFiveUser) -> KlaviyoProfile:
         first_email = (
             getattr(five_x_five_user, 'business_email') or 
-            getattr(five_x_five_user, 'personal_emails') or 
+            getattr(five_x_five_user, 'personal_emails') or
+            getattr(five_x_five_user, 'additional_personal_emails') or
             getattr(five_x_five_user, 'programmatic_business_emails', None)
         )
         first_email = extract_first_email(first_email) if first_email else None

@@ -7,12 +7,14 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from dotenv import load_dotenv
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
-from sqlalchemy import create_engine, asc, select
+from sqlalchemy import create_engine, select, and_, or_
 from dotenv import load_dotenv
 from sqlalchemy.orm import sessionmaker, Session
 from datetime import datetime, timezone
 from enums import DataSyncImportedStatus, ProccessDataSyncResult
 from utils import get_utc_aware_date
+from models.leads_users_added_to_cart import LeadsUsersAddedToCart
+from models.leads_users_ordered import LeadsUsersOrdered
 from models.users_domains import UserDomains
 from sqlalchemy.dialects.postgresql import insert
 from models.integrations.integrations_users_sync import IntegrationUserSync
@@ -25,7 +27,7 @@ load_dotenv()
 
 CRON_DATA_SYNC_LEADS = 'cron_data_sync_leads'
 BATCH_SIZE = 100
-SLEEP_INTERVAL = 6 * 60 * 60
+SLEEP_INTERVAL = 60 * 30
 
 def setup_logging(level):
     logging.basicConfig(
@@ -63,28 +65,66 @@ def update_data_sync_integration(session, data_sync_id):
     session.query(IntegrationUserSync).filter(IntegrationUserSync.id == data_sync_id).update(update_data)
     session.commit()
 
-
-
-def fetch_leads_by_domain(session: Session, domain_id: int, limit: int, last_sent_lead_id, data_sync_leads_type):
+def fetch_leads_by_domain(session: Session, domain_id, limit, last_sent_lead_id, data_sync_leads_type):
     if last_sent_lead_id is None:
         last_sent_lead_id = 0
-    
+
     query = session.query(LeadUser.id, LeadUser.behavior_type, FiveXFiveUser.up_id) \
         .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id) \
         .join(UserDomains, UserDomains.id == LeadUser.domain_id) \
-        .filter(LeadUser.domain_id == domain_id, LeadUser.id > last_sent_lead_id, UserDomains.is_enable == True)
-        
-
+        .filter(
+            LeadUser.domain_id == domain_id,
+            LeadUser.id > last_sent_lead_id,
+            UserDomains.is_enable == True
+        )
     if data_sync_leads_type != 'allContacts':
-        query = query.filter(LeadUser.behavior_type == data_sync_leads_type)
-    
-    result = query.limit(limit).all()
+
+        if data_sync_leads_type == 'converted_sales':
+            query = query.filter(LeadUser.is_converted_sales == True)
+
+        elif data_sync_leads_type == 'viewed_product':
+            query = query.filter(
+                and_(
+                    LeadUser.behavior_type == "viewed_product",
+                    LeadUser.is_converted_sales == False
+                )
+            )
+
+        elif data_sync_leads_type == 'visitor':
+            query = query.filter(
+                and_(
+                    LeadUser.behavior_type == "visitor",
+                    LeadUser.is_converted_sales == False
+                )
+            )
+            
+        elif data_sync_leads_type == 'added_to_cart':
+            query = query.outerjoin(
+                LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id
+            ).outerjoin(
+                LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id
+            ).filter(
+                and_(
+                    LeadUser.behavior_type == "product_added_to_cart",
+                    LeadUser.is_converted_sales == False,
+                    LeadsUsersAddedToCart.added_at.isnot(None),
+                    or_(
+                        LeadsUsersAddedToCart.added_at > LeadsUsersOrdered.ordered_at,
+                        and_(
+                            LeadsUsersOrdered.ordered_at.is_(None),
+                            LeadsUsersAddedToCart.added_at.isnot(None)
+                        )
+                    )
+                )
+            )
+            
+    #result = query.order_by(LeadUser.id).limit(limit).all()
+    result = query.order_by(LeadUser.id).all()
     return result or []
 
-
-def update_last_sent_lead(session, integration_id, last_lead_id):
+def update_last_sent_lead(session, data_sync_id, last_lead_id):
     session.query(IntegrationUserSync).filter(
-        IntegrationUserSync.integration_id == integration_id
+        IntegrationUserSync.id == data_sync_id
     ).update({IntegrationUserSync.last_sent_lead_id: last_lead_id})
     session.commit()
     
@@ -94,7 +134,7 @@ def update_data_sync_imported_leads(session, status, data_sync_id):
             })
     session.db.commit()
 
-def get_previous_imported_leads(session, data_sync_id, data_sync_leads_type):
+def get_previous_imported_leads(session, data_sync_id):
     query = session.query(
         LeadUser.id,
         LeadUser.behavior_type,
@@ -111,14 +151,11 @@ def get_previous_imported_leads(session, data_sync_id, data_sync_leads_type):
         LeadUser.is_active == True,
         UserDomains.is_enable == True
     )
-    
-    if data_sync_leads_type != 'allContacts':
-        query = query.filter(LeadUser.behavior_type == data_sync_leads_type)
-        
+       
     return query.all()
 
 
-async def send_leads_to_rmq(session, rmq_connection, lead_users, data_sync, integration):
+async def send_leads_to_rmq(session, rmq_connection, lead_users, data_sync, user_integrations_service_name):
     last_lead_id = None
     for lead in lead_users:
         last_lead_id = lead.id
@@ -128,7 +165,7 @@ async def send_leads_to_rmq(session, rmq_connection, lead_users, data_sync, inte
                 status=DataSyncImportedStatus.SENT.value,
                 five_x_five_up_id=lead.up_id,
                 lead_users_id=lead.id,
-                service_name=integration.service_name,
+                service_name=user_integrations_service_name,
                 data_sync_id=data_sync.id,
                 created_at=datetime.now(timezone.utc),
                 updated_at=datetime.now(timezone.utc)
@@ -148,16 +185,16 @@ async def send_leads_to_rmq(session, rmq_connection, lead_users, data_sync, inte
             data_sync_id = session.execute(existing_id_query).scalar()
         
         processed_lead = {
-                'data_sync_id': data_sync_id, 
+                'data_sync_imported_id': data_sync_id,
+                'data_sync_id': data_sync.id,
                 'lead_users_id': lead.id,
                 'five_x_five_up_id': lead.up_id, 
-                'service_name': integration.service_name,
-                'integration_id': integration.id
+                'service_name': user_integrations_service_name,
                 }
         await send_leads_to_queue(rmq_connection, processed_lead)
     if last_lead_id:
         logging.info(f"last_lead_id = {last_lead_id}")
-        update_last_sent_lead(session, integration.id, last_lead_id)
+        update_last_sent_lead(session, data_sync.id, last_lead_id)
         update_data_sync_integration(session, data_sync.id)
 
 async def process_user_integrations(rmq_connection, session):
@@ -170,7 +207,7 @@ async def process_user_integrations(rmq_connection, session):
         if data_sync.is_active == False:
             continue
         
-        lead_users = get_previous_imported_leads(session, data_sync.id, data_sync.leads_type)
+        lead_users = get_previous_imported_leads(session, data_sync.id)
         logging.info(f"lead_users len = {len(lead_users)}")
         if BATCH_SIZE - len(lead_users) > 0:
             logging.info(f"need import len = {BATCH_SIZE - len(lead_users)}")
@@ -183,7 +220,7 @@ async def process_user_integrations(rmq_connection, session):
         
         logging.debug(f"lead_users len = {len(lead_users)}")
         lead_users = sorted(lead_users, key=lambda x: x.id)
-        await send_leads_to_rmq(session, rmq_connection, lead_users, data_sync, user_integrations[i])
+        await send_leads_to_rmq(session, rmq_connection, lead_users, data_sync, user_integrations[i].service_name)
             
 
 async def main():
@@ -227,7 +264,7 @@ async def main():
 
             await process_user_integrations(rmq_connection, db_session)
 
-            logging.info("Processing completed. Sleeping for 6 hours...")
+            logging.info("Processing completed. Sleeping for 30 minutes...")
         except Exception as err:
             logging.error('Unhandled Exception:', exc_info=True)
         finally:
