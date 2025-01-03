@@ -11,7 +11,6 @@ import Slider from '../components/Slider';
 import Image from 'next/image';
 import ConfirmDeleteDomain from './DeleteDomain';
 import CustomizedProgressBar from './FirstLevelLoader';
-import { useUser } from '@/context/UserContext';
 
 interface Domain {
   id: number;
@@ -239,7 +238,7 @@ const DomainButton: React.FC = () => {
   const handleDropdownClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setDropdownEl(event.currentTarget);
   };
-  
+
   const handleDropdownClose = () => {
     setDropdownEl(null);
   };
@@ -268,13 +267,17 @@ const DomainButton: React.FC = () => {
   const handleDeleteDomain = (domain: Domain) => {
     if (sessionStorage.getItem('current_domain') === domain.domain) {
       sessionStorage.removeItem('current_domain');
-      window.location.reload();
-    } else {
-      setDomains(prevDomains => prevDomains.filter(d => d.id !== domain.id));
     }
+    const savedMe = sessionStorage.getItem('me');
+    const savedDomains = savedMe ? JSON.parse(savedMe).domains : [];
+    const updatedDomains = savedDomains.filter((d: Domain) => d.id !== domain.id);
+    const updatedMe = savedMe ? JSON.parse(savedMe) : {};
+    updatedMe.domains = updatedDomains;
+    sessionStorage.setItem('me', JSON.stringify(updatedMe));
+    setDomains(prevDomains => prevDomains.filter(d => d.id !== domain.id));
+    window.location.reload();
     setDeleteDomainPopup(false);
   };
-
 
   return (
     <>

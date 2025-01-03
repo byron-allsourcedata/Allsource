@@ -70,9 +70,13 @@ const PixelInstallation: React.FC = () => {
   const [opengoogle, setGoogleOpen] = useState(false);
   const [cmsData, setCmsData] = useState<CmsData>({});
   const [opencrm, setCMSOpen] = useState(false);
+  const [sourcePlatform, setSourcePlatform] = useState('')
 
   useEffect(() => {
     const handleRedirect = async () => {
+      const savedMe = sessionStorage.getItem('me');
+      const savedDomains = savedMe ? JSON.parse(savedMe).source_platform : '';
+      setSourcePlatform(savedDomains)
       const query = new URLSearchParams(window.location.search);
       const authorizationCode = query.get('code');
 
@@ -165,7 +169,21 @@ const PixelInstallation: React.FC = () => {
           }
         }}>
           <Grid item xs={12} md={4}>
-            <Button variant="outlined" fullWidth onClick={installManually} sx={buttonStyles}>
+            <Button
+              variant="outlined"
+              fullWidth
+              onClick={installManually}
+              sx={{
+                ...buttonStyles,
+                ...(sourcePlatform === 'shopify' && {
+                  color: 'grey',
+                  borderColor: 'grey',
+                  pointerEvents: 'none',
+                  backgroundColor: 'lightgrey'
+                })
+              }}
+              disabled={sourcePlatform === 'shopify'}
+            >
               <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'space-between', flexDirection: 'row' }}>
                 <Image src={'/install_manually.svg'} alt="Install Manually" width={24} height={24} />
                 <CustomTooltip title={"Manually install to have full control over setup and configuration."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2/how-do-i-install-maximiz-pixel-on-my-website" />
@@ -174,8 +192,23 @@ const PixelInstallation: React.FC = () => {
             </Button>
             <ManualPopup open={openmanually} handleClose={handleManualClose} pixelCode={pixelCode} />
           </Grid>
+
           <Grid item xs={12} md={4}>
-            <Button variant="outlined" fullWidth onClick={installGoogleTag} sx={buttonGoogle}>
+            <Button
+              variant="outlined"
+              fullWidth
+              onClick={installGoogleTag}
+              sx={{
+                ...buttonGoogle,
+                ...(sourcePlatform === 'shopify' && {
+                  color: 'grey',
+                  borderColor: 'grey',
+                  pointerEvents: 'none',
+                  backgroundColor: 'lightgrey'
+                })
+              }}
+              disabled={sourcePlatform === 'shopify'}
+            >
               <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'space-between', flexDirection: 'row' }}>
                 <Image src={'/install_gtm.svg'} className="icon-img" alt="Install on Google Tag Manager" width={24} height={24} />
                 <CustomTooltip title={"Quickly integrate using Google Tag Manager for seamless setup."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2/how-do-i-install-my-pixel-on-google-tag" />
@@ -187,7 +220,7 @@ const PixelInstallation: React.FC = () => {
           <Grid item xs={12} md={4}>
             <Button variant="outlined" fullWidth onClick={installCMS} sx={buttonStyles}>
               <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'space-between', flexDirection: 'row' }}>
-                <Box sx={{display: 'flex', width: '100%', gap:0.25}}>
+                <Box sx={{ display: 'flex', width: '100%', gap: 0.25 }}>
                   <Image src={'/install_cms1.svg'} alt="Install on CMS" width={24} height={24} />
                   <Image src={'/install_cms2.svg'} alt="Install on CMS" width={24} height={24} />
                   <Image src={'/bigcommerce-icon.svg'} className="icon-img" alt="Install on CMS" width={24} height={24} />

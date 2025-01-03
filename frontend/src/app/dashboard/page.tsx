@@ -786,7 +786,7 @@ const Dashboard: React.FC = () => {
             <ProgressSection />
             <PixelInstallation />
             <VerifyPixelIntegration />
-            <RevenueTracking />asdasd
+            <RevenueTracking />
           </Grid>
           <Grid item xs={12} lg={8} sx={{ display: { xs: 'none', md: 'block' }, overflow: 'hidden' }}>
             <Typography

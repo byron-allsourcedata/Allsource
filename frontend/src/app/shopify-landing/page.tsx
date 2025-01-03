@@ -5,7 +5,7 @@ import { Typography, Box, Link } from "@mui/material";
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { shopifyLandingStyle } from "./shopify-landing";
-import { CustomInfoToast } from '../../components/ToastNotification';
+import { CustomInfoToast, showErrorToast, showInfoToast } from '../../components/ToastNotification';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 
 const ShopifyLanding = () => {
@@ -21,8 +21,8 @@ const ShopifyLanding = () => {
 
         const response = await axiosInterceptorInstance.get(`/integrations/shopify/landing?${queryString}`);
         const { token, message } = response.data;
-
         if (token) {
+          showInfoToast('Connect to shopify success!')
           localStorage.clear();
           sessionStorage.clear();
           localStorage.setItem('token', token);
@@ -36,7 +36,7 @@ const ShopifyLanding = () => {
         }
         else if (message && message == 'ERROR_SHOPIFY_TOKEN') {
           let msg = 'Error connect to shopify'
-          CustomInfoToast({ message: msg });
+          showErrorToast(msg);
         }
       } catch (error) {
         console.error('Ошибка при запросе Shopify Landing:', error);
