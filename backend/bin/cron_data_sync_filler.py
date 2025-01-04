@@ -118,8 +118,7 @@ def fetch_leads_by_domain(session: Session, domain_id, limit, last_sent_lead_id,
                 )
             )
             
-    #result = query.order_by(LeadUser.id).limit(limit).all()
-    result = query.order_by(LeadUser.id).all()
+    result = query.order_by(LeadUser.id).limit(limit).all()
     return result or []
 
 def update_last_sent_lead(session, data_sync_id, last_lead_id):
