@@ -24,7 +24,7 @@ const tableHeaders = [
     { key: 'status', label: 'Status', sortable: false },
 ];
 
-const getStatusStyle = (status: any) => {
+const getStatusStyle = (status: string) => {
     switch (status) {
         case "Accepted":
             return {
@@ -388,7 +388,18 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id, loading, setLoad
                                             {tableHeaders.map(({ key, label, sortable }) => (
                                                 <TableCell
                                                     key={key}
-                                                    sx={{...suppressionsStyles.tableColumn, paddingLeft: "16px", cursor: sortable ? 'pointer' : 'default'}}
+                                                    sx={{
+                                                        paddingLeft: "16px", 
+                                                        cursor: sortable ? 'pointer' : 'default',
+                                                        ...suppressionsStyles.tableColumn, 
+                                                        ...(key === 'account_name' && { 
+                                                            position: 'sticky',
+                                                            left: 0,
+                                                            zIndex: 99,
+                                                            backgroundColor: '#fff',
+                                                            
+                                                        })
+                                                    }}
                                                     onClick={sortable ? () => handleSortRequest(key) : undefined}
                                                 >
                                                     <Box sx={{ display: 'flex', alignItems: 'center' }} style={key === "status" || key === "reward_status" ? { justifyContent: "center" } : {}}>
@@ -414,15 +425,15 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id, loading, setLoad
                                     <TableBody>
                                         {accounts.map((data, index) => (
                                             <TableRow key={index} sx={{
-                                                ...suppressionsStyles.tableBodyRow,
-                                                '&:hover': {
-                                                    backgroundColor: '#F7F7F7',
-                                                    '& .sticky-cell': {
-                                                        backgroundColor: '#F7F7F7',
-                                                    }
-                                                },
+                                                ...suppressionsStyles.tableBodyRow
                                             }}>
-                                                <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
+                                                <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, 
+                                                    paddingLeft: "16px",
+                                                    position: 'sticky',
+                                                    left: 0,
+                                                    zIndex: 1,
+                                                    backgroundColor: '#fff'
+                                                }}>
                                                     {data.account_name}
                                                 </TableCell>
 

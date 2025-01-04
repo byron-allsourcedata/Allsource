@@ -7,7 +7,6 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import { suppressionsStyles } from "@/css/suppressions";
 import dayjs from "dayjs";
 import CustomTablePagination from "./CustomTablePagination";
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import Image from "next/image";
 import CalendarPopup from "./CustomCalendar";
 import { DateRangeIcon } from "@mui/x-date-pickers/icons";
@@ -48,7 +47,7 @@ const getStatusStyle = (status: string) => {
                 background: 'rgba(241, 241, 249, 1)',
                 color: 'rgba(80, 82, 178, 1)',
             };
-        case 'Invite sent':
+        case 'Invitation sent':
             return {
                 background: 'rgba(235, 243, 254, 1)',
                 color: 'rgba(20, 110, 246, 1)',
@@ -298,7 +297,6 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
 
 
     return (
-        <>
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', gap: "24px", justifyContent: 'space-between' }}>
             {accountPage 
             ?
@@ -314,10 +312,10 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
             </Box> 
             : 
             <Typography variant="h4" component="h1" sx={{
+                lineHeight: "22.4px",
+                color: "#202124",
                 fontWeight: 'bold',
                 fontSize: '16px',
-                whiteSpace: 'nowrap',
-                textAlign: 'start',
                 fontFamily: 'Nunito Sans'}}>
                 Partners
             </Typography>}
@@ -380,21 +378,20 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
                                                     },
                                                 }
                                             }}
-                                            aria-label="suppression tabs"
-                                        >
+                                            aria-label="partners role tabs"
+                                        >   
                                             <Tab className="main-text"
                                                 sx={{
                                                     textTransform: 'none',
                                                     padding: '4px 1px',
-                                                    pb: '10px',
-                                                    flexGrow: 1,
-                                                    marginRight: '3em',
                                                     minHeight: 'auto',
-                                                    minWidth: 'auto',
+                                                    flexGrow: 1,
+                                                    pb: '10px',
+                                                    textAlign: 'center',
                                                     fontSize: '14px',
                                                     fontWeight: 700,
                                                     lineHeight: '19.1px',
-                                                    textAlign: 'left',
+                                                    minWidth: 'auto',
                                                     mr: 2,
                                                     '&.Mui-selected': {
                                                         color: 'rgba(80, 82, 178, 1)'
@@ -406,20 +403,19 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
                                                         },
                                                     }
                                                 }}
-                                                label="Partner"
+                                                label="Master partners"
                                             />
                                             <Tab className="main-text"
                                                 sx={{
                                                     textTransform: 'none',
                                                     padding: '4px 10px',
-                                                    minHeight: 'auto',
-                                                    flexGrow: 1,
                                                     pb: '10px',
-                                                    textAlign: 'center',
+                                                    flexGrow: 1,
+                                                    minHeight: 'auto',
+                                                    minWidth: 'auto',
                                                     fontSize: '14px',
                                                     fontWeight: 700,
                                                     lineHeight: '19.1px',
-                                                    minWidth: 'auto',
                                                     '&.Mui-selected': {
                                                         color: 'rgba(80, 82, 178, 1)'
                                                     },
@@ -430,7 +426,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
                                                         },
                                                     }
                                                 }}
-                                                label="Master partners"
+                                                label="Partner"
                                             />
                                         </Tabs>
                                         <Box sx={{display: 'flex', gap: "16px"}}>
@@ -566,8 +562,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
                                                     </TableRow>
                                                 </TableHead>
                                                 <TableBody>
-                                                    {partners.map((data, index) => (
-                                                        <>
+                                                    {partners.map((data) => (
                                                         <TableRow key={data.id} sx={{
                                                             ...suppressionsStyles.tableBodyRow,
                                                             '&:hover': {
@@ -577,14 +572,25 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
                                                                 }
                                                             },
                                                         }}>
-                                                            <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
+                                                            <TableCell className='sticky-cell table-data' 
+                                                                sx={{
+                                                                    ...suppressionsStyles.tableBodyColumn, 
+                                                                    cursor: "pointer", 
+                                                                    paddingLeft: "16px",
+                                                                    position: 'sticky',
+                                                                    left: 0,
+                                                                    zIndex: 1, 
+                                                                    "&:hover .icon-button": { display: "contents" }}}
+                                                                onClick={() => {
+                                                                    setId(data.id)
+                                                                    setAccountName(data.partner_name)
+                                                                    setAccountPage(true)
+                                                                    }}>
                                                                 <Box sx={{display: "flex", alignItems: "center", justifyContent: "space-between", color: 'rgba(80, 82, 178, 1)'}}>
                                                                     {data.partner_name}
-                                                                    <IconButton onClick={() => {
-                                                                        setId(data.id)
-                                                                        setAccountName(data.partner_name)
-                                                                        setAccountPage(true)
-                                                                        }} sx={{ ':hover': { backgroundColor: 'transparent'}}} >
+                                                                    <IconButton
+                                                                        className="icon-button"
+                                                                        sx={{ display: 'none', ':hover': {backgroundColor: "transparent"}}} >
                                                                         <Image src='/outband.svg' alt="outband" width={15.98} height={16}/>
                                                                     </IconButton>
                                                                 </Box>
@@ -617,7 +623,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
                                                             <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
                                                                 <Box sx={{display: "flex", justifyContent: "center"}}>
                                                                     <Typography component="div" sx={{
-                                                                        width: "74px",
+                                                                        width: "100px",
                                                                         margin: 0,
                                                                         background: getStatusStyle(data.status).background,
                                                                         padding: '3px 8px',
@@ -635,7 +641,8 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
 
                                                             <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
                                                                 <IconButton onClick={(event) => handleOpenMenu(event, data)} sx={{ ':hover': { backgroundColor: 'transparent', }}} >
-                                                                    <MoreHorizIcon sx={{ width: '22.91px', height: '16.18px',}} />
+                                                                    {/* <MoreHorizIcon sx={{ width: '22.91px', height: '16.18px',}} /> */}
+                                                                    <Image src='/more_horizontal.svg' alt='more' height={16.18} width={22.91} />
                                                                 </IconButton>
                                                                     <Popover
                                                                         open={open}
@@ -703,7 +710,6 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
                                                                     </Popover>
                                                             </TableCell>
                                                         </TableRow>
-                                                        </>
                                                     ))}
                                                 </TableBody>
                                             </Table>
@@ -746,7 +752,6 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
                 </>
             }
         </Box>
-        </>
     );
 };
 

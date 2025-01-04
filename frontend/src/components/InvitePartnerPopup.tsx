@@ -33,6 +33,24 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
     const [companyName, setCompanyName] = useState(""); 
     const [commission, setCommission] = useState(""); 
     const [processing, setProcessing] = useState(false)
+    const [emailError, setEmailError] = useState(false);
+    const [commissionError, setCommissionError] = useState(false);
+  
+    const handleEmailChange = (e: any) => {
+      const value = e.target.value;
+      setEmail(value);
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      setEmailError(!emailRegex.test(value) && value !== "");
+    };
+  
+    const handleCommissionChange = (e: any) => {
+      const value = e.target.value;
+      const isValid = /^[1-9]$|^[1-6][0-9]$|^70$/.test(value);
+      setCommissionError(!isValid && value !== "");
+      if (isValid || value === "") {
+        setCommission(value);
+      }
+    };
 
     const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
         height: 4,
@@ -124,7 +142,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            padding: "0.75em 1em 0.25em 1em",
+            padding: "24px",
             borderBottom: "1px solid #e4e4e4",
             position: "sticky",
             top: 0,
@@ -137,14 +155,15 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
                     fontFamily: "Nunito Sans",
                     fontSize: "16px",
                     fontWeight: "600",
-                    lineHeight: "21.82px"
+                    lineHeight: "21.82px",
+                    color: "#202124"
                 }}
                 >
                 {action === "Add" ? "Invite" : "Edit"} {isMaster ? "master" : "" } partner details
                 </Typography>
                 <Box sx={{ display: "flex", flexDirection: "row" }}>
                     <IconButton onClick={handleClose}>
-                        <CloseIcon />
+                        <CloseIcon  sx={{ width: "16px", height: "16px" }}/>
                     </IconButton>
                 </Box>
             </Box>
@@ -155,7 +174,8 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
                 <Box 
                     sx={{
                         display: "flex",
-                        flexDirection: "column"
+                        flexDirection: "column",
+                        gap: "32px"
                     }}>
                         <Typography
                             sx={{
@@ -163,7 +183,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
                                 fontSize: "16px",
                                 fontWeight: "600",
                                 lineHeight: "21.82px",
-                                margin: "24px 0 40px"
+                                marginTop: "24px"
                             }}
                             >
                             {action == "Add" 
@@ -178,12 +198,11 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
                             label="Full name"
                             placeholder='Full name'
                             sx={{
-                                paddingBottom: "24px",
                                 "& .MuiInputLabel-root.Mui-focused": {
                                     color: "rgba(17, 17, 19, 0.6)",
                                 },
                                 "& .MuiInputLabel-root[data-shrink='false']": {
-                                    transform: "translate(12px, 50%) scale(1)",
+                                    transform: "translate(16px, 50%) scale(1)",
                                 },  
                             }}
                             value={fullName}
@@ -198,16 +217,18 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
                             placeholder='Email'
                             sx={{
                                 width: "556px",
-                                paddingBottom: "24px",
                                 "& .MuiInputLabel-root.Mui-focused": {
                                     color: "rgba(17, 17, 19, 0.6)",
                                 },
                                 "& .MuiInputLabel-root[data-shrink='false']": {
-                                    transform: "translate(12px, 50%) scale(1)",
+                                    transform: "translate(16px, 50%) scale(1)",
                                 },  
                             }}
                             value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            // onChange={(e) => setEmail(e.target.value)}
+                            onChange={handleEmailChange}
+                            error={emailError}
+                            helperText={emailError ? "Please enter a valid email address" : ""}
                         />
 
                         <TextField
@@ -216,12 +237,11 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
                             label="Company name"
                             placeholder='Company name'
                             sx={{
-                                paddingBottom: "24px",
                                 "& .MuiInputLabel-root.Mui-focused": {
                                     color: "rgba(17, 17, 19, 0.6)",
                                 },
                                 "& .MuiInputLabel-root[data-shrink='false']": {
-                                    transform: "translate(12px, 50%) scale(1)",
+                                    transform: "translate(16px, 50%) scale(1)",
                                 },  
                             }}
                             value={companyName}
@@ -238,11 +258,16 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
                                     color: "rgba(17, 17, 19, 0.6)",
                                 },
                                 "& .MuiInputLabel-root[data-shrink='false']": {
-                                    transform: "translate(12px, 50%) scale(1)",
+                                    transform: "translate(16px, 50%) scale(1)",
                                 },  
                             }}
                             value={commission}
-                            onChange={(e) => setCommission(e.target.value)}
+                            // onChange={(e) => setCommission(e.target.value)}
+                            onChange={handleCommissionChange}
+                            error={commissionError}
+                            helperText={
+                            commissionError ? "Commission must be a number between 1 and 70" : ""
+                            }
                         />
                 </Box>
             </Box>
@@ -261,6 +286,17 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
             >
                 <Button variant="outlined" onClick={handleClose} disabled={!buttonContain}  sx={{
                     borderColor: "rgba(80, 82, 178, 1)",
+                    width: "92px",
+                    height: "40px",
+                    ":hover": {
+                        borderColor: "rgba(8, 83, 196, 1)"},
+                    ":active": {
+                        borderColor: "rgba(20, 110, 246, 1)",
+                        border: "1px solid rgba(157, 194, 251, 1)"},
+                    ":disabled": {
+                        borderColor: "rgba(20, 110, 246, 1)",
+                        opacity: 0.4,
+                    },
                 }}>
                     <Typography
                         sx={{
@@ -271,18 +307,28 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
                         fontWeight: "600",
                         fontSize: "14px",
                         lineHeight: "19.6px",
+                        ":hover": {color: "rgba(8, 83, 196, 1)"},
                         }}
                     >
                         Cancel
                     </Typography>
                 </Button> 
                 <Button variant="contained" onClick={handleSubmit} disabled={!buttonContain}  sx={{
-                    backgroundColor: "rgba(80, 82, 178, 1)"
+                    backgroundColor: "rgba(80, 82, 178, 1)",
+                    width: "120px",
+                    height: "40px",
+                    ":hover": {
+                        backgroundColor: "rgba(8, 83, 196, 1)"},
+                    ":active": {
+                        backgroundColor: "rgba(20, 110, 246, 1)",
+                        border: "2px solid rgba(157, 194, 251, 1)"},
+                    ":disabled": {
+                        backgroundColor: "rgba(20, 110, 246, 1)",
+                        opacity: 0.4,
+                    },
                 }}>
                     <Typography
                         sx={{
-                        width: "120px",
-                        // height: "40px",
                         textAlign: "center",
                         color: "rgba(255, 255, 255, 1)",
                         fontFamily: "Nunito Sans",

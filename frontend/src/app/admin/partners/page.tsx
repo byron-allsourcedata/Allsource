@@ -243,12 +243,12 @@ const Assets: React.FC = () => {
                 <Box sx={{ display: "flex", flexDirection: "column"}}>
                     <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
                         <TabPanel value={tabIndex} index={0}>
-                            <PartnersAdmin isMaster={false} loading={loading} setLoading={setLoading} tabIndex={tabIndex} handleTabChange={handleTabChange}/>
+                            <PartnersAdmin isMaster={true} loading={loading} setLoading={setLoading} tabIndex={tabIndex} handleTabChange={handleTabChange}/>
                         </TabPanel>
                     </Box>
                     <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
                         <TabPanel value={tabIndex} index={1}>
-                            <PartnersAdmin isMaster={true} loading={loading} setLoading={setLoading} tabIndex={tabIndex} handleTabChange={handleTabChange}/>
+                            <PartnersAdmin isMaster={false} loading={loading} setLoading={setLoading} tabIndex={tabIndex} handleTabChange={handleTabChange}/>
                         </TabPanel>
                     </Box>
                 </Box>

@@ -164,7 +164,8 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                 <Box 
                     sx={{
                         display: "flex",
-                        flexDirection: "column"
+                        flexDirection: "column",
+                        gap: "32px"
                     }}>
                         <Typography
                             sx={{
@@ -172,7 +173,7 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                                 fontSize: "16px",
                                 fontWeight: "600",
                                 lineHeight: "21.82px",
-                                margin: "24px 0 40px"
+                                marginTop: "24px"
                             }}
                             >
                             {action == "Disable" 
@@ -187,12 +188,11 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                             label="Account name"
                             placeholder='Account name'
                             sx={{
-                                paddingBottom: "24px",
                                 "& .MuiInputLabel-root.Mui-focused": {
                                     color: "rgba(17, 17, 19, 0.6)",
                                 },
                                 "& .MuiInputLabel-root[data-shrink='false']": {
-                                    transform: "translate(12px, 50%) scale(1)",
+                                    transform: "translate(16px, 50%) scale(1)",
                                 },  
                             }}
                             value={fullName}
@@ -209,7 +209,7 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                                     color: "rgba(17, 17, 19, 0.6)",
                                 },
                                 "& .MuiInputLabel-root[data-shrink='false']": {
-                                    transform: "translate(12px, 50%) scale(1)",
+                                    transform: "translate(16px, 50%) scale(1)",
                                 },  
                             }}
                             value={message}
@@ -232,7 +232,18 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                 }}
             >
                 <Button variant="contained" onClick={action === "Terminate" ? handleDeletePartner : handleSubmit} disabled={!buttonContain}  sx={{
-                    backgroundColor: "rgba(80, 82, 178, 1)"
+                    backgroundColor: "rgba(80, 82, 178, 1)",
+                    width: "70px",
+                    height: "40px",
+                    ":hover": {
+                        backgroundColor: "rgba(8, 83, 196, 1)"},
+                    ":active": {
+                        backgroundColor: "rgba(20, 110, 246, 1)",
+                        border: "2px solid rgba(157, 194, 251, 1)"},
+                    ":disabled": {
+                        backgroundColor: "rgba(20, 110, 246, 1)",
+                        opacity: 0.4,
+                    },
                 }}>
                     <Typography
                         sx={{
@@ -250,6 +261,17 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                 </Button> 
                 <Button variant="outlined" onClick={handleClose} disabled={!buttonContain}  sx={{
                     borderColor: "rgba(80, 82, 178, 1)",
+                    width: "67px",
+                    height: "40px",
+                    ":hover": {
+                        borderColor: "rgba(8, 83, 196, 1)"},
+                    ":active": {
+                        borderColor: "rgba(20, 110, 246, 1)",
+                        border: "1px solid rgba(157, 194, 251, 1)"},
+                    ":disabled": {
+                        borderColor: "rgba(20, 110, 246, 1)",
+                        opacity: 0.4,
+                    },
                 }}>
                     <Typography
                         sx={{
