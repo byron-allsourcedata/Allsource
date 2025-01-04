@@ -111,11 +111,22 @@ interface PopupProps {
 const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_client_id, }) => {
   const [selectedCMS, setSelectedCMS] = useState<string | null>(null);
   const [headerTitle, setHeaderTitle] = useState<string>('Install on CMS');
-  const [shop_domain, setDomain] = useState(sessionStorage.getItem('current_domain') || '');
+  const [shop_domain, setDomain] = useState<string>(() => {
+    if (typeof window !== 'undefined' && sessionStorage.getItem('current_domain')) {
+      return sessionStorage.getItem('current_domain') || '';
+    }
+    return '';
+  });  
   const [access_token, setAccessToken] = useState('');
   const [storeHash, setstoreHash] = useState('')
   const [storeHashError, setStoreHashError] = useState(false)
-  const [sourcePlatform, setSourcePlatform] = useState('')
+  const [sourcePlatform, setSourcePlatform] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const savedMe = sessionStorage.getItem('me');
+      return savedMe ? JSON.parse(savedMe).source_platform : '';
+    }
+    return '';
+  });
   const [errors, setErrors] = useState({
     access_token: "",
     shop_domain: "",
@@ -124,9 +135,6 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
 
   useEffect(() => {
     const fetchCredentials = async () => {
-      const savedMe = sessionStorage.getItem('me');
-      const savedDomains = savedMe ? JSON.parse(savedMe).source_platform : '';
-      setSourcePlatform(savedDomains)
       try {
         const response = await axiosInstance.get('/integrations/credentials/shopify');
         if (response.status === 200) {

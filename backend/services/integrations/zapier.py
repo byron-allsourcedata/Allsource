@@ -1,7 +1,5 @@
-import asyncio
 from datetime import datetime
 import logging
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from persistence.domains import UserDomainsPersistence
 from persistence.leads_persistence import LeadsPersistence
@@ -20,7 +18,6 @@ class ZapierIntegrationService:
         self.sync_persistence = sync_persistence
         self.integration_persistence = integration_persistence
         self.client = client
-        self.QUEUE_DATA_SYNC = 'data_sync_leads'
     
     def get_credentials(self, domain_id):
         return self.integration_persistence.get_credentials_for_service(domain_id=domain_id, service_name=SourcePlatformEnum.ZAPIER.value)
@@ -55,28 +52,7 @@ class ZapierIntegrationService:
             'integration_id': credentials.id,
             'hook_url': hook_url
         })
-        message = {
-            'sync':  {
-                    'id': sync.id,
-                    "domain_id": sync.domain_id, 
-                    "integration_id": sync.integration_id, 
-                    "leads_type": sync.leads_type, 
-                },
-            'leads_type': leads_type,
-            'domain_id': domain_id
-        }
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        channel = await connection.channel()
-        await channel.declare_queue(
-            name=self.QUEUE_DATA_SYNC,
-            durable=True
-        )
-        await publish_rabbitmq_message(
-            connection=connection,
-            queue_name=self.QUEUE_DATA_SYNC, 
-            message_body=message)      
-        await rabbitmq_connection.close()  
+         
         return sync
         
     
@@ -87,15 +63,6 @@ class ZapierIntegrationService:
         self.sync_persistence.delete_sync(domain_id=domain_id, list_id=sync[0].id)
         return
     
-    async def process_lead_sync(self, user_domain_id, behavior_type, lead_user, stage, next_try):
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        await publish_rabbitmq_message(connection, self.QUEUE_DATA_SYNC,
-                                    {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
-                                        'id': lead_user.id,
-                                        'five_x_five_user_id': lead_user.five_x_five_user_id
-                                    }, 'stage': stage, 'next_try': next_try})
-        await rabbitmq_connection.close()
 
     async def process_data_sync(self, five_x_five_user, access_token, integration_data_sync):
         profile = self.__create_profile(five_x_five_user, integration_data_sync)
@@ -129,8 +96,6 @@ class ZapierIntegrationService:
             return 'allContact'
         return 'allContact'
     
-    from datetime import datetime
-
     def __mapped_lead(self, lead):
         try: 
             work_history = ','.join(lead.work_history)

@@ -70,13 +70,16 @@ const PixelInstallation: React.FC = () => {
   const [opengoogle, setGoogleOpen] = useState(false);
   const [cmsData, setCmsData] = useState<CmsData>({});
   const [opencrm, setCMSOpen] = useState(false);
-  const [sourcePlatform, setSourcePlatform] = useState('')
+  const [sourcePlatform, setSourcePlatform] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const savedMe = sessionStorage.getItem('me');
+      return savedMe ? JSON.parse(savedMe).source_platform : '';
+    }
+    return '';
+  });
 
   useEffect(() => {
     const handleRedirect = async () => {
-      const savedMe = sessionStorage.getItem('me');
-      const savedDomains = savedMe ? JSON.parse(savedMe).source_platform : '';
-      setSourcePlatform(savedDomains)
       const query = new URLSearchParams(window.location.search);
       const authorizationCode = query.get('code');
 
