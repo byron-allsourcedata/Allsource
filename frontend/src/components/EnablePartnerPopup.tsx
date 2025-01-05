@@ -74,15 +74,13 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
         setProcessing(true);
         setButtonContain(false);
     
-        const formData = new FormData();
-        formData.append("status", "Inactive");
-        
-    
         try {
-            const response = await axiosInstance.put(`admin-partners/${id}/`, formData);
+            const response = await axiosInstance.put(`admin-partners/${id}/`, {status: "inactive", message}, {
+                headers: { 'Content-Type': 'application/json' },
+            });
             if (response.data.status === "SUCCESS") {
                 updateOrAddAsset(response.data.data);
-                showToast("Partner stsatus successfully updated!");
+                showToast("Partner status successfully updated!");
             }
         } catch {
             showErrorToast("Failed to update status. Please try again.");
@@ -114,14 +112,13 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
     }, [message]);
     
     return (
-        <>
         <Drawer anchor="right" open={open}>
         {processing && (
             <Box
                 sx={{
                 width: '100%',
                 position: 'fixed',
-                top: '3.5rem',
+                top: '5rem',
                 zIndex: 1200,   
                 }}
             >
@@ -129,18 +126,18 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
             </Box>
         )}
             <Box
-            sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "0.75em 1em 0.25em 1em",
-            borderBottom: "1px solid #e4e4e4",
-            position: "sticky",
-            top: 0,
-            zIndex: 9900,
-            backgroundColor: "#fff",
-            }}
-        >
+                sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "24px",
+                borderBottom: "1px solid #e4e4e4",
+                position: "sticky",
+                top: 0,
+                zIndex: 9900,
+                backgroundColor: "#fff",
+                }}
+            >
                 <Typography
                 sx={{
                     fontFamily: "Nunito Sans",
@@ -153,7 +150,7 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                 </Typography>
                 <Box sx={{ display: "flex", flexDirection: "row" }}>
                     <IconButton onClick={handleClose}>
-                        <CloseIcon />
+                        <CloseIcon  sx={{ width: "16px", height: "16px" }}/>
                     </IconButton>
                 </Box>
             </Box>
@@ -289,7 +286,6 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                 </Button> 
             </Box>
         </Drawer>
-        </>
     )
 };
 

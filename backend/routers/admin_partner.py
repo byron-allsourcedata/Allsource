@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, Form, Query
+from fastapi import APIRouter, Depends, Query
 from typing import Optional
+from schemas.partners_asset import PartnerCreateRequest, PartnerUpdateRequest
 from dependencies import get_partners_service, check_user_admin, PartnersService
 
 router = APIRouter(dependencies=[Depends(check_user_admin)])
@@ -19,13 +20,16 @@ def partners(
 @router.post("")
 @router.post("/")
 async def create_partner(
-    full_name: str = Form(...),
-    email: str = Form(...),
-    company_name: str = Form(...),
-    commission: str = Form(...),
+    request: PartnerCreateRequest,
     get_partners_service: PartnersService = Depends(get_partners_service)):
     
-    partner = await get_partners_service.create_partner(full_name, email, company_name, commission)
+    partner = await get_partners_service.create_partner(
+        request.full_name,
+        request.email,
+        request.company_name,
+        request.commission,
+        request.isMaster,
+    )
     return partner
 
 
@@ -44,16 +48,16 @@ async def delete_partner(
 @router.put("/{partner_id}/")
 async def update_partner(
     partner_id: int,
-    status: str = Form(None),
-    commission: str = Form(None),
-    message: Optional[str] = Query(None),
+    request: PartnerUpdateRequest,
     get_partners_service: PartnersService = Depends(get_partners_service)):
     
-    if status:
-        if message:
-            partner = await get_partners_service.update_partner(partner_id, "status", status, message)
+    print("QQWEEFE", request)
+
+    if request.status:
+        if request.message:
+            partner = await get_partners_service.update_partner(partner_id, "status", request.status, request.message)
         else:
-            partner = await get_partners_service.update_partner(partner_id, "status", status, "Your account active again")
+            partner = await get_partners_service.update_partner(partner_id, "status", request.status, "Your account active again")
     else: 
-        partner = await get_partners_service.update_partner(partner_id, "commission", commission, message)
+        partner = await get_partners_service.update_partner(partner_id, "commission", request.commission, "Your commission has been changed")
     return partner

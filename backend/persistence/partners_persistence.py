@@ -12,11 +12,13 @@ class PartnersPersistence:
     def get_partners(self, isMaster):
         return self.db.query(Partners).filter(Partners.isMaster == isMaster).all()
     
+
     def get_partners_search(self, isMaster, search_term):
         return self.db.query(Partners).filter(
             (Partners.isMaster == isMaster) & 
             ((Partners.name.ilike(search_term)) | (Partners.email.ilike(search_term)))
         ).all()
+
 
     def get_asset_by_id(self, partner_id):
         return self.db.query(Partners).filter(Partners.id == partner_id).first()
@@ -55,6 +57,7 @@ class PartnersPersistence:
         self.db.refresh(partner)
         return partner
 
+
     def terminate_partner(self, partner_id):
         self.db.query(Partners).filter(
             Partners.id == partner_id).delete()
@@ -67,6 +70,8 @@ class PartnersPersistence:
             token=creating_data["token"],
             email=creating_data["email"],
             name=creating_data["full_name"],
+            company_name=creating_data["company_name"],
+            isMaster=creating_data["isMaster"]
         )
 
         self.db.add(partner)

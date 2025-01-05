@@ -10,8 +10,10 @@ class Partners(Base):
     commission = Column(VARCHAR(16), nullable=False)
     email = Column(VARCHAR(64), nullable=False)
     name = Column(VARCHAR(64), nullable=False)
+    company_name = Column(VARCHAR(64), nullable=False)
+    join_date = Column(TIMESTAMP, nullable=True)
     token = Column(VARCHAR(256), nullable=False)
-    status = Column(VARCHAR(16), default="Invite sent", nullable=False)
+    status = Column(VARCHAR(16), default="invitation sent", nullable=False)
     isMaster = Column(Boolean, default=False, nullable=False)
     created_at = Column(TIMESTAMP, nullable=False)
     updated_at = Column(TIMESTAMP, nullable=False)
@@ -22,7 +24,9 @@ class Partners(Base):
                 "commission": self.commission,
                 "status": self.status,
                 "email": self.email,
-                "name": self.name
+                "name": self.name,
+                "company_name": self.company_name,
+                "join_date": self.join_date
             }
 
 event.listen(Partners, "before_insert", create_timestamps)

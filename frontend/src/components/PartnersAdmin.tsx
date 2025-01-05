@@ -22,7 +22,7 @@ interface PartnerData {
     id: number;
     partner_name: string;
     email: string;
-    join_date: Date;
+    join_date: Date | string;
     commission: string;
     subscription: string;
     sources: string;
@@ -203,11 +203,6 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
                     ? aValue.localeCompare(bValue)
                     : bValue.localeCompare(aValue);
             }
-            if (aValue instanceof Date && bValue instanceof Date) {
-                return newOrder === 'asc'
-                    ? new Date(aValue).getTime() - new Date(bValue).getTime()
-                    : new Date(bValue).getTime() - new Date(aValue).getTime();
-            }
             return 0;
         });
     
@@ -240,12 +235,10 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
     const setEnabled = async () => {
         setLoading(true);
     
-        const formData = new FormData();
-        formData.append("status", "Active");
-        
-    
         try {
-            const response = await axiosInstance.put(`admin-partners/${enabledData.id}/`, formData);
+            const response = await axiosInstance.put(`admin-partners/${enabledData.id}/`, {status: "active"}, {
+                headers: { 'Content-Type': 'application/json' },
+            });
             if (response.data.status === "SUCCESS") {
                 updateOrAddAsset(response.data.data);
                 showToast("Partner status successfully updated!");
@@ -601,7 +594,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
                                                             </TableCell>
 
                                                             <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
-                                                                {dayjs(data.join_date).format('MMM D, YYYY')}
+                                                                {dayjs(data.join_date).isValid() ? dayjs(data.join_date).format('MMM D, YYYY') : '--'}
                                                             </TableCell>
 
                                                             <TableCell className='table-data'sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
@@ -617,7 +610,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
                                                             </TableCell>
 
                                                             <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
-                                                                {dayjs(data.last_payment_date).format('MMM D, YYYY')}
+                                                                {dayjs(data.last_payment_date).isValid() ? dayjs(data.last_payment_date).format('MMM D, YYYY') : '--'}
                                                             </TableCell>
 
                                                             <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
@@ -641,7 +634,6 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
 
                                                             <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
                                                                 <IconButton onClick={(event) => handleOpenMenu(event, data)} sx={{ ':hover': { backgroundColor: 'transparent', }}} >
-                                                                    {/* <MoreHorizIcon sx={{ width: '22.91px', height: '16.18px',}} /> */}
                                                                     <Image src='/more_horizontal.svg' alt='more' height={16.18} width={22.91} />
                                                                 </IconButton>
                                                                     <Popover

@@ -25,6 +25,14 @@ interface FormUploadPopupProps {
     updateOrAddAsset: (partner: PartnerData) => void
 }
 
+interface RequestData {
+    commission: string;
+    email?: string;
+    full_name?: string;
+    company_name?: string;
+    isMaster?: boolean;
+}
+
 const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fileData, onClose, updateOrAddAsset }) => {
     const [action, setAction] = useState("Add");
     const [buttonContain, setButtonContain] = useState(false);
@@ -76,20 +84,26 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
         setProcessing(true);
         setButtonContain(false);
     
-        const formData = new FormData();
-        formData.append("commission", commission);
+        const requestData: RequestData = {
+            commission
+        };
         
     
         try {
             let response;
     
             if (action === "Edit" && fileData && fileData.id) {
-                response = await axiosInstance.put(`admin-partners/${fileData.id}/`, formData);
+                response = await axiosInstance.put(`admin-partners/${fileData.id}/`, requestData, {
+                    headers: { 'Content-Type': 'application/json' },
+                });
             } else {
-                formData.append("email", email);
-                formData.append("full_name", fullName);
-                formData.append("company_name", companyName);
-                response = await axiosInstance.post(`admin-partners/`, formData);
+                requestData.email = email;
+                requestData.full_name = fullName;
+                requestData.company_name = companyName;
+                requestData.isMaster = isMaster;
+                response = await axiosInstance.post(`admin-partners/`, requestData, {
+                    headers: { 'Content-Type': 'application/json' },
+                });
             }
             if (response.data.status === "SUCCESS") {
                 updateOrAddAsset(response.data.data);
@@ -123,14 +137,13 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
     }, [email, fullName, companyName, commission]);
     
     return (
-        <>
         <Drawer anchor="right" open={open}>
         {processing && (
             <Box
                 sx={{
                 width: '100%',
                 position: 'fixed',
-                top: '3.5rem',
+                top: '5rem',
                 zIndex: 1200,   
                 }}
             >
@@ -138,18 +151,18 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
             </Box>
         )}
             <Box
-            sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "24px",
-            borderBottom: "1px solid #e4e4e4",
-            position: "sticky",
-            top: 0,
-            zIndex: 9900,
-            backgroundColor: "#fff",
-            }}
-        >
+                sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "24px",
+                borderBottom: "1px solid #e4e4e4",
+                position: "sticky",
+                top: 0,
+                zIndex: 9900,
+                backgroundColor: "#fff",
+                }}
+            >
                 <Typography
                 sx={{
                     fontFamily: "Nunito Sans",
@@ -225,7 +238,6 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
                                 },  
                             }}
                             value={email}
-                            // onChange={(e) => setEmail(e.target.value)}
                             onChange={handleEmailChange}
                             error={emailError}
                             helperText={emailError ? "Please enter a valid email address" : ""}
@@ -262,7 +274,6 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
                                 },  
                             }}
                             value={commission}
-                            // onChange={(e) => setCommission(e.target.value)}
                             onChange={handleCommissionChange}
                             error={commissionError}
                             helperText={
@@ -343,7 +354,6 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
                 </Button> 
             </Box>
         </Drawer>
-        </>
     )
 };
 

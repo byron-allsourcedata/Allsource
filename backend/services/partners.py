@@ -2,13 +2,13 @@ import logging
 import os
 import hashlib
 import json
-from datetime import datetime
 from fastapi import HTTPException
-from models.partners_asset import PartnersAsset
+from models.partners import Partners
 from persistence.user_persistence import UserPersistence
 from persistence.partners_persistence import PartnersPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
-from schemas.partners_asset import PartnersResponse
+from persistence.plans_persistence import PlansPersistence
+from schemas.partners_asset import PartnersResponse, PartnerUserData
 from datetime import datetime
 from services.sendgrid import SendgridHandler
 from enums import SendgridTemplate
@@ -20,23 +20,25 @@ class PartnersService:
 
     def __init__(self,
         partners_persistence: PartnersPersistence,
-        user_persistence_service: UserPersistence,
-        send_grid_persistence_service: SendgridPersistence):
+        user_persistence: UserPersistence,
+        send_grid_persistence: SendgridPersistence,
+        plans_persistence: PlansPersistence):
         self.partners_persistence = partners_persistence
-        self.user_persistence_service = user_persistence_service
-        self.send_grid_persistence_service = send_grid_persistence_service
-        self.default_user = {
-            "full_name": "Default User",
-            "email": "default@example.com",
-            "source_platform": "N/A",
-            "created_at": datetime.strptime("1880-12-19 12:54:55", "%Y-%m-%d %H:%M:%S"),
-        }
+        self.user_persistence = user_persistence
+        self.send_grid_persistence = send_grid_persistence
+        self.plans_persistence = plans_persistence
 
-    def get_user_info(self, id):
-        if id is not None:
-            return self.user_persistence_service.get_user_by_id(id)
-        else:
-            return self.default_user
+    def get_user_info(self, user_id):
+        user_data = {}
+        user_data["subscription"] = "--"
+        user_data["payment_date"] = None
+        if user_id is not None:
+            # self.user_persistence.get_user_by_id(user_id)
+            # user_data["payment_date"] = datetime.strptime("1880-12-19 12:54:55", "%Y-%m-%d %H:%M:%S")
+            subsciption = self.plans_persistence.get_current_plan(user_id)
+            if (subsciption and subsciption.title):
+                user_data["subscription"] = subsciption.title
+        return user_data
 
 
     def get_partners(self, isMaster, search):
@@ -70,7 +72,7 @@ class PartnersService:
 
     def send_message_in_email(self, message: str, email: str):
         mail_object = SendgridHandler()
-        template_id = self.send_grid_persistence_service.get_template_by_alias(
+        template_id = self.send_grid_persistence.get_template_by_alias(
             SendgridTemplate.PARTNER_TEMPLATE.value)
         mail_object.send_sign_up_mail(
             to_emails=email,
@@ -81,7 +83,7 @@ class PartnersService:
 
     def send_referral_in_email(self, full_name: str, email: str):
         mail_object = SendgridHandler()
-        template_id = self.send_grid_persistence_service.get_template_by_alias(
+        template_id = self.send_grid_persistence.get_template_by_alias(
             SendgridTemplate.PARTNER_TEMPLATE.value)
         md5_token_info = {
             'user_mail': email,
@@ -98,7 +100,7 @@ class PartnersService:
         return md5_hash
     
 
-    async def create_partner(self, full_name: str, email: str, company_name: str, commission: str):
+    async def create_partner(self, full_name: str, email: str, company_name: str, commission: str, isMaster: bool):
         if not full_name or not email or not company_name or not commission:
             raise HTTPException(status_code=404, detail="Partner data not found")
         
@@ -109,7 +111,8 @@ class PartnersService:
                 "email": email,
                 "company_name": company_name,
                 "commission": commission,
-                "token": hash
+                "token": hash,
+                "isMaster": isMaster
             }
 
             created_data = self.partners_persistence.create_partner(creating_data)
@@ -125,12 +128,17 @@ class PartnersService:
             raise HTTPException(status_code=500, detail=f"Unexpected error during creation: {str(e)}")
     
 
-    def setUser(self, email: str, user_id: int, status: str):
+    def setUser(self, email: str, user_id: int, status: str, join_date = None):
         if not email or not user_id or not status:
             raise HTTPException(status_code=404, detail="Partner data not found")
         
         try:
-            updated_data = self.partners_persistence.update_partner_by_email(email=email, user_id=user_id, status=status)
+            if(join_date):
+                updated_data = self.partners_persistence.update_partner_by_email(
+                    email=email, user_id=user_id, status=status, join_date=join_date)
+            else:
+                updated_data = self.partners_persistence.update_partner_by_email(
+                    email=email, user_id=user_id, status=status)
 
             if not updated_data:
                 logger.debug('Database error during updation', e)
@@ -143,7 +151,7 @@ class PartnersService:
             raise HTTPException(status_code=500, detail=f"Unexpected error during updation: {str(e)}")
         
     
-    async def update_partner(self, partner_id: int, field: str, value: str, message):
+    async def update_partner(self, partner_id: int, field: str, value: str, message: str):
         if not partner_id or not field or not value:
             raise HTTPException(status_code=404, detail="Partner data not found")
         
@@ -153,9 +161,6 @@ class PartnersService:
             if not updated_data:
                 logger.debug("Database error during updation")
                 raise HTTPException(status_code=500, detail="Partner not updated")
-            
-            if not message:
-                message="Your commission has been changed"
 
             self.send_message_in_email(message, updated_data.email)
 
@@ -167,15 +172,15 @@ class PartnersService:
 
 
 
-    def domain_mapped(self, partner: PartnersAsset, user: dict):
+    def domain_mapped(self, partner: Partners, user: PartnerUserData):
         return PartnersResponse(
             id=partner.id,
             partner_name=partner.name,
             email=partner.email,
-            join_date=user['created_at'],
+            join_date=partner.join_date,
             commission=partner.commission,
-            subscription="Basic",
-            sources=user.get('source_platform', 'N/A'),
-            last_payment_date="1880-12-19 12:54:55",
-            status=partner.status,
+            subscription=user["subscription"],
+            sources=partner.company_name,
+            last_payment_date=user["payment_date"],
+            status=partner.status.capitalize()
         ).model_dump()

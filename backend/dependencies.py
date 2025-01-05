@@ -180,12 +180,14 @@ def get_integration_service(db: Session = Depends(get_db),
 
 def get_partners_service(
                         partners_persistence: PartnersPersistence = Depends(get_partners_persistence),
-                        user_persistence_service: UserPersistence = Depends(get_user_persistence_service),
-                        send_grid_persistence_service: SendgridPersistence = Depends(get_send_grid_persistence_service)):
+                        user_persistence: UserPersistence = Depends(get_user_persistence_service),
+                        send_grid_persistence: SendgridPersistence = Depends(get_send_grid_persistence_service),
+                        plans_persistence: PlansPersistence = Depends(get_plans_persistence)):
     return PartnersService(
         partners_persistence,
-        user_persistence_service,
-        send_grid_persistence_service
+        user_persistence,
+        send_grid_persistence,
+        plans_persistence
     )
 
 def get_users_auth_service(db: Session = Depends(get_db),

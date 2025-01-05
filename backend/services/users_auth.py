@@ -261,7 +261,8 @@ class UsersAuth:
         if referral_token is not None:
             self.user_persistence_service.book_call_confirmed(user_object.id)
             self.user_persistence_service.set_partner_role(user_object.id)
-            self.partners_service.setUser(user_object.email, user_object.id, "Active")
+            self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)
+            self.partners_service.setUser(user_object.email, user_object.id, "signup", datetime.datetime.now())
         
         if ift and ift == 'arwt':
             self.user_persistence_service.book_call_confirmed(user_object.id)
@@ -506,7 +507,8 @@ class UsersAuth:
             self.user_persistence_service.book_call_confirmed(user_object.id)
             self.user_persistence_service.email_confirmed(user_object.id)
             self.user_persistence_service.set_partner_role(user_object.id)
-            self.partners_service.setUser(user_object.email, user_object.id, "Active")
+            self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)
+            self.partners_service.setUser(user_object.email, user_object.id, "signup", datetime.now())
             
         if teams_token is None:
             return {
@@ -534,6 +536,7 @@ class UsersAuth:
             user_object.shop_id = shop_id
             user_object.shopify_token = shopify_access_token
             user_object.shop_domain = shopify_data.shop
+            self.partners_service.setUser(user_object.email, user_object.id, "active")
         user_object.source_platform = SourcePlatformEnum.SHOPIFY.value
         user_object.is_book_call_passed = True
         user_object.is_email_confirmed = True
