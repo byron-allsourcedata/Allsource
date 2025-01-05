@@ -4,7 +4,7 @@ import Image from "next/image";
 import axiosInterceptorInstance from "../axios/axiosInterceptorInstance";
 import { AxiosError } from "axios";
 import { useSlider } from '../context/SliderContext';
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import ManualPopup from '../components/ManualPopup';
 import GoogleTagPopup from '../components/GoogleTagPopup';
 import CRMPopup from "./CMSPopup";
@@ -70,19 +70,18 @@ const PixelInstallation: React.FC = () => {
   const [opengoogle, setGoogleOpen] = useState(false);
   const [cmsData, setCmsData] = useState<CmsData>({});
   const [opencrm, setCMSOpen] = useState(false);
-  const [sourcePlatform, setSourcePlatform] = useState('');
-
-  useEffect(() => {
+  const sourcePlatform = useMemo(() => {
     if (typeof window !== 'undefined') {
       const savedMe = sessionStorage.getItem('me');
       if (savedMe) {
         try {
           const parsed = JSON.parse(savedMe);
-          setSourcePlatform(parsed.source_platform || '');
-        } catch (error) { }
+          return parsed.source_platform || '';
+        } catch (error) {}
       }
     }
-  }, []);
+    return '';
+  }, [typeof window !== 'undefined' ? sessionStorage.getItem('me') : null]);
 
   useEffect(() => {
     const handleRedirect = async () => {

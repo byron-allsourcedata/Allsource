@@ -1,10 +1,9 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Box, Button, Typography, Modal, IconButton, Divider, Grid, Link, Input, TextField } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import Image from 'next/image';
 import { styles } from '../css/cmsStyles';
-import styled from 'styled-components';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from './ToastNotification';
@@ -120,19 +119,18 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
   const [access_token, setAccessToken] = useState('');
   const [storeHash, setstoreHash] = useState('')
   const [storeHashError, setStoreHashError] = useState(false)
-  const [sourcePlatform, setSourcePlatform] = useState('');
-
-  useEffect(() => {
+  const sourcePlatform = useMemo(() => {
     if (typeof window !== 'undefined') {
       const savedMe = sessionStorage.getItem('me');
       if (savedMe) {
         try {
           const parsed = JSON.parse(savedMe);
-          setSourcePlatform(parsed.source_platform || '');
-        } catch (error) { }
+          return parsed.source_platform || '';
+        } catch (error) {}
       }
     }
-  }, []);
+    return '';
+  }, [typeof window !== 'undefined' ? sessionStorage.getItem('me') : null]);
 
   const [errors, setErrors] = useState({
     access_token: "",

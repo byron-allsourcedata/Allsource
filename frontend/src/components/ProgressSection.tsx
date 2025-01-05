@@ -14,7 +14,7 @@ import CodeIcon from "@mui/icons-material/Code";
 import AppsIcon from "@mui/icons-material/Apps";
 import { useSlider } from "../context/SliderContext";
 import ManualPopup from "../components/ManualPopup";
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import { AxiosError } from "axios";
 import { useUser } from "@/context/UserContext";
@@ -78,19 +78,20 @@ export const ProgressSection: React.FC = () => {
   const isIntegrateDisabled = percentSteps < 90;
   const isSetupDisabled = percentSteps < 50;
   const [isLoading, setIsLoading] = useState(false);
-  const [sourcePlatform, setSourcePlatform] = useState('');
 
-  useEffect(() => {
+  const sourcePlatform = useMemo(() => {
     if (typeof window !== 'undefined') {
       const savedMe = sessionStorage.getItem('me');
       if (savedMe) {
         try {
           const parsed = JSON.parse(savedMe);
-          setSourcePlatform(parsed.source_platform || '');
-        } catch (error) { }
+          return parsed.source_platform || '';
+        } catch (error) {}
       }
     }
-  }, []);
+    return '';
+  }, [typeof window !== 'undefined' ? sessionStorage.getItem('me') : null]);
+
 
   const installManually = async () => {
     try {
