@@ -41,7 +41,12 @@ async def get_integrations_service(type: str | None = Query(None), data_sync: bo
 async def get_integrations_credentials(integration_serivce: IntegrationService = Depends(get_integration_service),
                                        user=Depends(check_user_authorization),
                                        domain=Depends(check_pixel_install_domain)):
-    integration = integration_serivce.get_user_service_credentials(domain.id)
+    filters = []
+    source_platform = user.get('source_platform')
+    if source_platform in ['big_commerce', 'shopify']:
+        filters = ['big_commerce', 'shopify']
+        
+    integration = integration_serivce.get_user_service_credentials(domain.id, filters)
     return integration
 
 

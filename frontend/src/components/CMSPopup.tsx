@@ -116,17 +116,24 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
       return sessionStorage.getItem('current_domain') || '';
     }
     return '';
-  });  
+  });
   const [access_token, setAccessToken] = useState('');
   const [storeHash, setstoreHash] = useState('')
   const [storeHashError, setStoreHashError] = useState(false)
-  const [sourcePlatform, setSourcePlatform] = useState(() => {
+  const [sourcePlatform, setSourcePlatform] = useState('');
+
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedMe = sessionStorage.getItem('me');
-      return savedMe ? JSON.parse(savedMe).source_platform : '';
+      if (savedMe) {
+        try {
+          const parsed = JSON.parse(savedMe);
+          setSourcePlatform(parsed.source_platform || '');
+        } catch (error) { }
+      }
     }
-    return '';
-  });
+  }, []);
+
   const [errors, setErrors] = useState({
     access_token: "",
     shop_domain: "",

@@ -123,13 +123,6 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
         service = service_map.get(service_name)
         lead_user, five_x_five_user, user_integration, integration_data_sync = get_lead_attributes(session, lead_users_id, data_sync_id)
         
-        # if lead_user and lead_user.behavior_type != integration_data_sync.leads_type and integration_data_sync.leads_type not in ('allContacts', None):
-        #     logging.info("Lead behavior type mismatch: %s vs %s", lead_user.behavior_type, integration_data_sync.leads_type)
-        #     import_status = DataSyncImportedStatus.INCORRECT_FORMAT.value
-        #     update_data_sync_imported_leads(session, import_status, data_sync_id)
-        #     await message.ack()
-        #     return
-        
         if service:
             result = await service.process_data_sync(five_x_five_user, user_integration, integration_data_sync)
             import_status = DataSyncImportedStatus.SENT.value

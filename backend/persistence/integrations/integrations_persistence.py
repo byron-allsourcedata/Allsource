@@ -43,8 +43,14 @@ class IntegrationsPresistence:
         self.db.query(ExternalAppsInstall).filter(ExternalAppsInstall.store_hash == shop_hash).delete()
         self.db.commit()
         
-    def get_integration_by_user(self, domain_id: int) -> UserIntegration:
-        return self.db.query(UserIntegration).filter(UserIntegration.domain_id == domain_id).all()
+    def get_integration_by_user(self, domain_id: int, filters) -> list[UserIntegration]:
+        query = self.db.query(UserIntegration).filter(
+            UserIntegration.domain_id == domain_id,
+            UserIntegration.service_name.notin_(filters)
+        )
+        return query.all()
+
+
     
 
     def get_credentials_for_service(self, domain_id: int, service_name: str, **filter_by) -> UserIntegration:
