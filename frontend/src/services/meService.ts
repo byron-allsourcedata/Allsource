@@ -17,6 +17,7 @@ export const fetchUserData = async () => {
           email: userInfo.email,
           full_name: userInfo.full_name,
           partner: userInfo.is_partner,
+          source_platform: userInfo.source_platform || '',
           company_website: userInfo.company_website || '',
           trial: userPlan.is_trial,
           plan_end: userPlan.plan_end,
@@ -24,13 +25,14 @@ export const fetchUserData = async () => {
           is_trial_pending: userPlan.is_trial_pending,
           domains: responseData.user_domains,
           price: userPlan.price,
-          currency: userPlan.currency
+          currency: userPlan.currency,
         }));
         
         return {
           email: userInfo.email,
           full_name: userInfo.full_name,
           partner: userInfo.is_partner,
+          source_platform: userInfo.source_platform,
           company_website: userInfo.company_website,
           trial: userPlan.is_trial,
           days_left: userPlan.plan_end,

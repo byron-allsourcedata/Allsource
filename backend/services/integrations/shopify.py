@@ -44,10 +44,13 @@ class ShopifyIntegrationService:
         self.db = db
         
     def get_shopify_token(self, shopify_data: ShopifyPayloadModel):
-        shopify.Session.setup(api_key=ShopifyConfig.key, secret=ShopifyConfig.secret)
-        session = shopify.Session(shopify_data.shop, ShopifyConfig.api_version)
-        access_token = session.request_token(params=shopify_data.model_dump())
-        return access_token
+        try:
+            shopify.Session.setup(api_key=ShopifyConfig.key, secret=ShopifyConfig.secret)
+            session = shopify.Session(shopify_data.shop, ShopifyConfig.api_version)
+            access_token = session.request_token(params=shopify_data.model_dump())
+            return access_token
+        except Exception as e:
+            pass
     
     def get_charge_by_id(self, user_data, charge_id):
         with shopify.Session.temp(user_data.shop_domain, ShopifyConfig.api_version, user_data.shopify_token):
@@ -100,41 +103,37 @@ class ShopifyIntegrationService:
             }
             """
 
-            try:
-                shop_url = f"https://{shopify_domain}/admin/api/{ShopifyConfig.api_version}/graphql.json"
-                headers = {
-                    'X-Shopify-Access-Token': access_token,
-                    'Content-Type': 'application/json'
-                }
+            shop_url = f"https://{shopify_domain}/admin/api/{ShopifyConfig.api_version}/graphql.json"
+            headers = {
+                'X-Shopify-Access-Token': access_token,
+                'Content-Type': 'application/json'
+            }
 
-                payload = {
-                    'query': mutation,
-                    'variables': variables
-                }
+            payload = {
+                'query': mutation,
+                'variables': variables
+            }
 
-                response = requests.post(shop_url, headers=headers, json=payload)
+            response = requests.post(shop_url, headers=headers, json=payload)
 
-                if response.status_code != 200:
+            if response.status_code != 200:
+                if response.status_code == 401:
+                    return {'status': 'INCOMPLETE', 'message': 'Authentication failed: Invalid API key or access token'}
+                else:
                     raise ValueError(f"Request failed with status code {response.status_code}: {response.text}")
 
-                result = response.json()
+            result = response.json()
 
-                if result.get("data") and result["data"].get("appSubscriptionCreate"):
-                    subscription_data = result["data"]["appSubscriptionCreate"]
-                    if subscription_data.get("userErrors"):
-                        errors = subscription_data["userErrors"]
-                        raise ValueError(f"Errors while creating subscription: {errors}")
-                    
-                    confirmation_url = subscription_data.get("confirmationUrl")
-                    return {"link": confirmation_url}
-                else:
-                    raise ValueError(f"Unexpected response: {result}")
-            
-            except ValueError as e:
-                raise e
-            
-            except Exception as e:
-                raise e
+            if result.get("data") and result["data"].get("appSubscriptionCreate"):
+                subscription_data = result["data"]["appSubscriptionCreate"]
+                if subscription_data.get("userErrors"):
+                    errors = subscription_data["userErrors"]
+                    raise ValueError(f"Errors while creating subscription: {errors}")
+                
+                confirmation_url = subscription_data.get("confirmationUrl")
+                return {"link": confirmation_url}
+            else:
+                raise ValueError(f"Unexpected response: {result}")
             
     def initialize_subscription_charge(self, plan: SubscriptionPlan, user: dict):
         test_mode = True if os.getenv("APP_MODE") == "dev" else False
@@ -334,12 +333,16 @@ class ShopifyIntegrationService:
             state=query_params.get('state'),
             timestamp=query_params.get('timestamp')
         )
+        
         shopify_token = self.get_shopify_token(shopify_payload_model)
         if shopify_token is None:
             result['message'] = OauthShopify.ERROR_SHOPIFY_TOKEN.value
             return result
         
         self.__save_integration(shop_domain=shop, access_token=shopify_token, domain_id=user_integration.domain_id)
+        if shop == user.shop_domain:
+            user.shopify_token = shopify_token
+            self.integration_persistence.db.commit()
         
         token_info = {
                 "id": user.id

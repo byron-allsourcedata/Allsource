@@ -38,8 +38,8 @@ class IntegrationService:
         self.suppression_persistence = suppression_persistence
         self.eai_persistence = epi_persistence
 
-    def get_user_service_credentials(self, domain_id):
-        return self.integration_persistence.get_integration_by_user(domain_id)
+    def get_user_service_credentials(self, domain_id, filters):
+        return self.integration_persistence.get_integration_by_user(domain_id, filters)
 
     def delete_integration(self, service_name: str, domain):
         self.integration_persistence.delete_integration(domain.id, service_name)

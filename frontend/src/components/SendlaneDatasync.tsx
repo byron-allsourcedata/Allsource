@@ -896,7 +896,7 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, d
                                                         }
                                                     }}
                                                 />
-                                                <FormControlLabel value="coverted_sales" control={<Radio sx={{
+                                                <FormControlLabel value="converted_sales" control={<Radio sx={{
                                                     color: '#e4e4e4',
                                                     '&.Mui-checked': {
                                                         color: '#5052b2', // checked color

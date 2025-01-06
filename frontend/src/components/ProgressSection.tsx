@@ -14,11 +14,11 @@ import CodeIcon from "@mui/icons-material/Code";
 import AppsIcon from "@mui/icons-material/Apps";
 import { useSlider } from "../context/SliderContext";
 import ManualPopup from "../components/ManualPopup";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import { AxiosError } from "axios";
 import { useUser } from "@/context/UserContext";
-import { useRouter } from "next/navigation"; 
+import { useRouter } from "next/navigation";
 import CustomizedProgressBar from "./CustomizedProgressBar";
 
 const CustomButton = styled(Button)(({ theme }) => ({
@@ -78,6 +78,20 @@ export const ProgressSection: React.FC = () => {
   const isIntegrateDisabled = percentSteps < 90;
   const isSetupDisabled = percentSteps < 50;
   const [isLoading, setIsLoading] = useState(false);
+
+  const sourcePlatform = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      const savedMe = sessionStorage.getItem('me');
+      if (savedMe) {
+        try {
+          const parsed = JSON.parse(savedMe);
+          return parsed.source_platform || '';
+        } catch (error) {}
+      }
+    }
+    return '';
+  }, [typeof window !== 'undefined' ? sessionStorage.getItem('me') : null]);
+
 
   const installManually = async () => {
     try {
@@ -178,6 +192,7 @@ export const ProgressSection: React.FC = () => {
             />
           </Box>
 
+
           <Typography
             variant="body2"
             color="textSecondary"
@@ -197,7 +212,7 @@ export const ProgressSection: React.FC = () => {
         </Box>
         <List sx={{ mt: "8px", p: "0" }}>
           <CustomButton
-          onClick={ActivateTrial}
+            onClick={ActivateTrial}
             sx={{
               borderRadius: "4px",
               mb: "16px",
@@ -214,14 +229,20 @@ export const ProgressSection: React.FC = () => {
             <ListItemText className="second-sub-title" primary="Activate Trial" />
           </CustomButton>
           <CustomButton
-          onClick={installManually}
-            disabled={isSetupDisabled}
+            onClick={installManually}
+            disabled={sourcePlatform === 'shopify'}
             sx={{
               borderRadius: "4px",
               mb: "16px",
               "@media (max-width: 1199px)": {
                 mb: "16px",
               },
+              ...(sourcePlatform === 'shopify' && {
+                color: 'grey',
+                borderColor: 'grey',
+                pointerEvents: 'none',
+                backgroundColor: 'lightgrey',
+              }),
             }}
           >
             <CustomListItemIcon>
@@ -230,10 +251,10 @@ export const ProgressSection: React.FC = () => {
             <ListItemText className="second-sub-title" primary="Setup pixel" />
           </CustomButton>
           <ManualPopup
-              open={openmanually}
-              handleClose={handleManualClose}
-              pixelCode={pixelCode}
-            />
+            open={openmanually}
+            handleClose={handleManualClose}
+            pixelCode={pixelCode}
+          />
           <CustomButton
             disabled={isIntegrateDisabled}
             onClick={integrations}
@@ -259,20 +280,20 @@ export const ProgressSection: React.FC = () => {
         </List>
       </Box>
       {isLoading && (
-            <Box sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              zIndex: 1,
-            }}>
-              <CustomizedProgressBar />
-            </Box>
-          )}
+        <Box sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1,
+        }}>
+          <CustomizedProgressBar />
+        </Box>
+      )}
     </Box>
   );
 };

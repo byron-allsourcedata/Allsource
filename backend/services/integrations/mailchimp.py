@@ -255,6 +255,7 @@ class MailchimpIntegrationsService:
         first_email = (
             getattr(five_x_five_user, 'business_email') or 
             getattr(five_x_five_user, 'personal_emails') or 
+            getattr(five_x_five_user, 'additional_personal_emails') or
             getattr(five_x_five_user, 'programmatic_business_emails', None)
         )
         first_email = extract_first_email(first_email) if first_email else None

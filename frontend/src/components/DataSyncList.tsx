@@ -576,6 +576,8 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
         return "All Contacts";
       case "viewed_product":
         return "View Product";
+      case "converted_sales":
+        return "Converted sales";
       case "visitor":
         return "Visitors";
       case "added_to_cart":
@@ -659,7 +661,6 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
                       sortable: true,
                     },
                     { key: "platform", label: "Platform" },
-                    // { key: "account_id", label: "Account ID" },
                     { key: "data_sync", label: "Data Sync" },
                     { key: "last_sync", label: "Last Sync" },
                     { key: "sync_status", label: "Sync Status" },
@@ -775,7 +776,6 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
                             {platformIcon(row.platform) || "--"}
                           </Box>
                         </TableCell>
-                        {/* <TableCell sx={datasyncStyle.table_array}>{row.accountId}</TableCell> */}
                         <TableCell sx={datasyncStyle.table_array}>
                           <Box
                             sx={{
@@ -938,82 +938,82 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
                 Delete
               </Button>
               <>
-              <Popover
-                open={isConfirmOpen}
-                anchorEl={confirmAnchorEl}
-                onClose={() => setIsConfirmOpen(false)}
-                anchorOrigin={{
-                  vertical: "bottom",
-                  horizontal: "right",
-                }}
-                transformOrigin={{
-                  vertical: "top",
-                  horizontal: "center",
-                }}
-                PaperProps={{
-                  sx: {
-                    padding: "0.125rem",
-                    width: "15.875rem",
-                    boxShadow: 0,
-                    borderRadius: "8px",
-                    border: "0.5px solid rgba(175, 175, 175, 1)",
-                  },
-                }}
-              >
-                <Typography className="first-sub-title" sx={{ paddingLeft: 2, pt: 1, pb: 0 }}>
-                  Confirm Deletion
-                </Typography>
-                <DialogContent sx={{ padding: 2 }}>
-                  <DialogContentText className="table-data">
-                    Are you sure you want to delete this list data?
-                  </DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                  <Button
-                    className="second-sub-title"
-                    onClick={() => setIsConfirmOpen(false)}
-                    sx={{
-                      backgroundColor: "#fff",
-                      color: "rgba(80, 82, 178, 1) !important",
-                      fontSize: "14px",
-                      textTransform: "none",
-                      padding: "0.75em 1em",
-                      border: "1px solid rgba(80, 82, 178, 1)",
-                      maxWidth: "50px",
-                      maxHeight: "30px",
-                      "&:hover": {
+                <Popover
+                  open={isConfirmOpen}
+                  anchorEl={confirmAnchorEl}
+                  onClose={() => setIsConfirmOpen(false)}
+                  anchorOrigin={{
+                    vertical: "bottom",
+                    horizontal: "right",
+                  }}
+                  transformOrigin={{
+                    vertical: "top",
+                    horizontal: "center",
+                  }}
+                  PaperProps={{
+                    sx: {
+                      padding: "0.125rem",
+                      width: "15.875rem",
+                      boxShadow: 0,
+                      borderRadius: "8px",
+                      border: "0.5px solid rgba(175, 175, 175, 1)",
+                    },
+                  }}
+                >
+                  <Typography className="first-sub-title" sx={{ paddingLeft: 2, pt: 1, pb: 0 }}>
+                    Confirm Deletion
+                  </Typography>
+                  <DialogContent sx={{ padding: 2 }}>
+                    <DialogContentText className="table-data">
+                      Are you sure you want to delete this list data?
+                    </DialogContentText>
+                  </DialogContent>
+                  <DialogActions>
+                    <Button
+                      className="second-sub-title"
+                      onClick={() => setIsConfirmOpen(false)}
+                      sx={{
                         backgroundColor: "#fff",
-                        boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
-                      },
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    className="second-sub-title"
-                    onClick={() => {
-                      handleDelete();
-                      setIsConfirmOpen(false);
-                    }}
-                    sx={{
-                      backgroundColor: "rgba(80, 82, 178, 1)",
-                      color: "#fff !important",
-                      fontSize: "14px",
-                      textTransform: "none",
-                      padding: "0.75em 1em",
-                      border: "1px solid rgba(80, 82, 178, 1)",
-                      maxWidth: "60px",
-                      maxHeight: "30px",
-                      "&:hover": {
+                        color: "rgba(80, 82, 178, 1) !important",
+                        fontSize: "14px",
+                        textTransform: "none",
+                        padding: "0.75em 1em",
+                        border: "1px solid rgba(80, 82, 178, 1)",
+                        maxWidth: "50px",
+                        maxHeight: "30px",
+                        "&:hover": {
+                          backgroundColor: "#fff",
+                          boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
+                        },
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      className="second-sub-title"
+                      onClick={() => {
+                        handleDelete();
+                        setIsConfirmOpen(false);
+                      }}
+                      sx={{
                         backgroundColor: "rgba(80, 82, 178, 1)",
-                        boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
-                      },
-                    }}
-                  >
-                    Delete
-                  </Button>
-                </DialogActions>
-              </Popover>
+                        color: "#fff !important",
+                        fontSize: "14px",
+                        textTransform: "none",
+                        padding: "0.75em 1em",
+                        border: "1px solid rgba(80, 82, 178, 1)",
+                        maxWidth: "60px",
+                        maxHeight: "30px",
+                        "&:hover": {
+                          backgroundColor: "rgba(80, 82, 178, 1)",
+                          boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
+                        },
+                      }}
+                    >
+                      Delete
+                    </Button>
+                  </DialogActions>
+                </Popover>
               </>
               {data.find((row) => row.id === selectedId)?.syncStatus ===
                 false && (

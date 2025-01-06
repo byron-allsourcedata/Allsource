@@ -16,4 +16,5 @@ class DataSyncImportedLeads(Base):
     
     __table_args__ = (
         Index('data_sync_imported_leads_five_x_five_up_id_service_name_data_sy', 'five_x_five_up_id','service_name','data_sync_id','lead_users_id'),
+        Index('data_sync_imported_leads_data_sync_id_status_idx', 'data_sync_id','status'),
     )

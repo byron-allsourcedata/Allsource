@@ -31,7 +31,6 @@ class MetaIntegrationsService:
         self.integrations_persisntece = integrations_persistence
         self.leads_persistence = leads_persistence
         self.sync_persistence = sync_persistence
-        self.QUEUE_DATA_SYNC = 'data_sync_leads'
         self.client = client
         
     def __handle_request(self, method: str, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None, api_key: str = None):
@@ -190,41 +189,24 @@ class MetaIntegrationsService:
             'data_map': [data.model_dump_json() for data in data_map] if data_map else None,
             'created_by': created_by
         })
-        message = {
-            'sync':  {
-                'id': sync.id,
-                "domain_id": sync.domain_id, 
-                "integration_id": sync.integration_id, 
-                "leads_type": sync.leads_type, 
-                "list_id": sync.list_id, 
-                'data_map': sync.data_map
-                },
-            'leads_type': leads_type,
-            'domain_id': domain_id
-        }
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        channel = await connection.channel()
-        await channel.declare_queue(
-            name=self.QUEUE_DATA_SYNC,
-            durable=True
-        )
-        await publish_rabbitmq_message(
-            connection=connection,
-            queue_name=self.QUEUE_DATA_SYNC, 
-            message_body=message)
-        rabbitmq_connection.close()
         
-    def process_data_sync(self, five_x_five_user, access_token, integration_data_sync):
-        profile = self.__create_user(integration_data_sync.session_id, five_x_five_user, integration_data_sync.list_id, access_token)
-        if profile.get('type') and profile.get('type') == 'OAuthException':
-            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
-    
-    def __create_user(self, session_id: int, five_x_five_user, custom_audience_id: str, access_token: str):
-        lead_data = self.leads_persistence.get_lead_data(five_x_five_user)
-        profile = self.__mapped_meta_user(lead_data)
+    async def process_data_sync(self, five_x_five_user, user_integration, integration_data_sync):
+        profile = self.__create_user(five_x_five_user, integration_data_sync.list_id, user_integration.access_token)
+        
         if profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
             return profile
+        
+        if profile.get('error'):
+            if profile.get('error').get('type') == 'OAuthException':
+                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+
+        return ProccessDataSyncResult.SUCCESS.value
+
+    def __create_user(self, five_x_five_user, custom_audience_id: str, access_token: str):
+        profile = self.__mapped_meta_user(five_x_five_user)
+        if profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+            return profile
+        
         payload = {
             "schema": [
                 "EMAIL",
@@ -239,20 +221,22 @@ class MetaIntegrationsService:
             "data": [profile]
         }
         url = f'https://graph.facebook.com/v20.0/{custom_audience_id}/users'
-        response = self.__handle_request('POST', url=url, data={
-            'access_token': access_token,
+        response = self.__handle_request(method='POST', url=url, params={'access_token': access_token}, data={
             'payload': payload,
             'app_id': APP_ID
             })
+
         return response.json()
 
     def __mapped_meta_user(self, lead: FiveXFiveUser):
         first_email = (
             getattr(lead, 'business_email') or 
             getattr(lead, 'personal_emails') or 
+            getattr(lead, 'additional_personal_emails') or
             getattr(lead, 'programmatic_business_emails', None)
         )
         first_email = extract_first_email(first_email) if first_email else None
+
         if not first_email:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
         

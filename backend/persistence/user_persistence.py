@@ -134,7 +134,8 @@ class UserPersistence:
                 'is_email_confirmed': user.is_email_confirmed,
                 'change_email_sent_at': user.change_email_sent_at,
                 'team_owner_id': user.team_owner_id,
-                'password': user.password
+                'password': user.password,
+                'source_platform': user.source_platform
             }
         self.db.rollback()
         return result_user
