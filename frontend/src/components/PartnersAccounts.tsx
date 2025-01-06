@@ -1,5 +1,5 @@
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { Box, Typography, TextField, Button, FormControl, InputLabel, MenuItem, Select, IconButton, InputAdornment, Accordion, AccordionSummary, AccordionDetails, DialogActions, DialogContent, DialogContentText, Popover, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
+import { Box, Typography, TextField, Button, FormControl, InputLabel, Tabs, Tab, IconButton, InputAdornment, Accordion, AccordionSummary, AccordionDetails, DialogActions, DialogContent, DialogContentText, Popover, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import CustomizedProgressBar from "./CustomizedProgressBar";
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
@@ -12,6 +12,7 @@ import CalendarPopup from "./CustomCalendar";
 import { DateRangeIcon } from "@mui/x-date-pickers/icons";
 import SearchIcon from '@mui/icons-material/Search';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
+import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 
 const tableHeaders = [
     { key: 'account_name', label: 'Account name', sortable: false },
@@ -65,15 +66,19 @@ const getStatusStyle = (status: string) => {
 };
 
 interface PartnersAccountsProps {
-    id: number | null;
+    id?: number | null;
+    fromAdmin?: boolean;
+    masterData?: any;
     loading: boolean;
     setLoading: (state: boolean) => void;
+    tabIndex?: number;
+    handleTabChange?: (event: React.SyntheticEvent | null, newIndex: number) => void;
+    setMasterData?: any
 }
 
 
 
-const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id, loading, setLoading}) => {
-
+const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id: partnerId, fromAdmin, masterData, setMasterData, loading, setLoading, tabIndex, handleTabChange }) => {
     const [expanded, setExpanded] = useState<number | false>(false);
     const [accounts, setAccounts] = useState<any[]>([]);
     const [page, setPage] = useState(0);
@@ -86,6 +91,8 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id, loading, setLoad
     const [formattedDates, setFormattedDates] = useState<string>('');
     const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
     const [selectedDateLabel, setSelectedDateLabel] = useState<string>('');
+    const id = partnerId ?? masterData.id
+    const allowedRowsPerPage = [10, 25, 50, 100];
 
     const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setCalendarAnchorEl(event.currentTarget);
@@ -290,18 +297,142 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id, loading, setLoad
                     </Box>
                 ) : (<>
                     <Box>
+                    {fromAdmin && 
+                    <>
+                    <Box sx={{display: "flex", alignItems: "center", gap: "5px", mb: "24px" }}>
+                    <Typography onClick={() => {
+                        if (handleTabChange) {
+                            handleTabChange(null, 0)
+                            setMasterData(null)
+                        }
+                    }}
+                    sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "#808080", cursor: "pointer"}}>
+                        Master Partner {masterData.partner_name ? `- ${masterData.partner_name}` : ""}
+                    </Typography>
+                        {/* <NavigateNextIcon width={16}/>
+                        <Typography sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "#808080"}}>
+                            {accountName}
+                        </Typography> */}
+                    </Box>
+                    <Typography variant="h4" component="h1" sx={{
+                        lineHeight: "22.4px",
+                        color: "#202124",
+                        fontWeight: 'bold',
+                        fontSize: '16px',
+                        mb: "24px",
+                        fontFamily: 'Nunito Sans'}}>
+                        Master Partners
+                    </Typography>
+                    </>}
                         <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', mb: 2, alignItems: 'center', gap: 2 }}>
                             {/* <Typography className="second-sub-title">{selectedDateLabel ? selectedDateLabel : 'All time'}</Typography> */}
-                            <Typography  variant="h4" component="h2"
+                            {fromAdmin 
+                            ?
+                            <Tabs
+                                value={tabIndex}
+                                onChange={handleTabChange}
                                 sx={{
-                                    fontWeight: 'bold',
-                                    fontSize: '16px',
-                                    whiteSpace: 'nowrap',
-                                    textAlign: 'start',
-                                    fontFamily: 'Nunito Sans',                                  
-                                }}>
-                                Accounts
+                                    textTransform: 'none',
+                                    minHeight: 0,
+                                    '& .MuiTabs-indicator': {
+                                        backgroundColor: 'rgba(80, 82, 178, 1)',
+                                        height: '1.4px',
+                                    },
+                                    "@media (max-width: 600px)": {
+                                        border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px', width: '100%', '& .MuiTabs-indicator': {
+                                            height: '0',
+                                        },
+                                    }
+                                }}
+                                aria-label="partners role tabs"
+                            >   
+                                <Tab className="main-text"
+                                    sx={{
+                                        textTransform: 'none',
+                                        padding: '4px 1px',
+                                        minHeight: 'auto',
+                                        flexGrow: 1,
+                                        pb: '10px',
+                                        textAlign: 'center',
+                                        fontSize: '14px',
+                                        fontWeight: 700,
+                                        lineHeight: '19.1px',
+                                        minWidth: 'auto',
+                                        mr: 2,
+                                        '&.Mui-selected': {
+                                            color: 'rgba(80, 82, 178, 1)'
+                                        },
+                                        "@media (max-width: 600px)": {
+                                            mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                                                backgroundColor: 'rgba(249, 249, 253, 1)',
+                                                border: '1px solid rgba(220, 220, 239, 1)'
+                                            },
+                                        }
+                                    }}
+                                    label="Accounts"
+                                />
+                                <Tab className="main-text"
+                                    sx={{
+                                        display: "none",
+                                        textTransform: 'none',
+                                        padding: '4px 1px',
+                                        minHeight: 'auto',
+                                        flexGrow: 1,
+                                        pb: '10px',
+                                        textAlign: 'center',
+                                        fontSize: '14px',
+                                        fontWeight: 700,
+                                        lineHeight: '19.1px',
+                                        minWidth: 'auto',
+                                        mr: 2,
+                                        '&.Mui-selected': {
+                                            color: 'rgba(80, 82, 178, 1)'
+                                        },
+                                        "@media (max-width: 600px)": {
+                                            mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                                                backgroundColor: 'rgba(249, 249, 253, 1)',
+                                                border: '1px solid rgba(220, 220, 239, 1)'
+                                            },
+                                        }
+                                    }}
+                                    label="Master partners"
+                                />
+                                <Tab className="main-text"
+                                    sx={{
+                                        textTransform: 'none',
+                                        padding: '4px 10px',
+                                        pb: '10px',
+                                        flexGrow: 1,
+                                        minHeight: 'auto',
+                                        minWidth: 'auto',
+                                        fontSize: '14px',
+                                        fontWeight: 700,
+                                        lineHeight: '19.1px',
+                                        '&.Mui-selected': {
+                                            color: 'rgba(80, 82, 178, 1)'
+                                        },
+                                        "@media (max-width: 600px)": {
+                                            mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                                                backgroundColor: 'rgba(249, 249, 253, 1)',
+                                                border: '1px solid rgba(220, 220, 239, 1)'
+                                            },
+                                        }
+                                    }}
+                                    label="Partners"
+                                />
+                            </Tabs> 
+                            : 
+                            <Typography  variant="h4" component="h2"
+                                    sx={{
+                                        fontWeight: 'bold',
+                                        fontSize: '16px',
+                                        whiteSpace: 'nowrap',
+                                        textAlign: 'start',
+                                        fontFamily: 'Nunito Sans',                                  
+                                    }}>
+                                    Accounts
                             </Typography>
+                            }
                             <Box sx={{display: 'flex', gap: "16px"}}>
                                             <TextField
                                                 id="input-with-icon-textfield"
@@ -509,9 +640,10 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id, loading, setLoad
                         <CustomTablePagination
                             count={totalCount}
                             page={page}
-                            rowsPerPage={rowsPerPage}
+                            rowsPerPage={allowedRowsPerPage.includes(rowsPerPage) ? rowsPerPage : 10}
                             onPageChange={handlePageChange}
                             onRowsPerPageChange={handleRowsPerPageChange}
+                            rowsPerPageOptions={[10, 25, 50, 100]}
                         />
                     </Box>
                 </>

@@ -17,6 +17,16 @@ def partners(
     return assets
 
 
+@router.get('{id}')
+@router.get('/{id}/')
+def partners_by_partners_id(
+    id: int,
+    get_partners_service: PartnersService = Depends(get_partners_service)):
+    
+    assets = get_partners_service.partners_by_partners_id(id)
+    return assets
+
+
 @router.post("")
 @router.post("/")
 async def create_partner(

@@ -61,9 +61,11 @@ const getStatusStyle = (status: string) => {
 };
 
 interface PartnersAdminProps {
+    masterData?: any;
+    setMasterData?: any;
     isMaster: boolean;
     tabIndex: number;
-    handleTabChange: (event: React.SyntheticEvent, newIndex: number) => void;
+    handleTabChange: (event: React.SyntheticEvent | null, newIndex: number) => void;
     setLoading: (state: boolean) => void;
     loading: boolean
 }
@@ -84,7 +86,8 @@ interface EnabledPartner {
 type CombinedPartnerData = NewPartner & EnabledPartner;
 
 
-const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handleTabChange, setLoading, loading}) => {
+const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData, isMaster: master, tabIndex, handleTabChange, setLoading, loading}) => {
+    const [isMaster, setIsMaster] = useState(master);
     const [expanded, setExpanded] = useState<number | false>(false);
     const [partners, setPartners] = useState<PartnerData[]>([]);
     const [page, setPage] = useState(0);
@@ -105,6 +108,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
     const [selectedRowData, setSelectedRowData] = useState<any>(null);
     const [accountPage, setAccountPage] = useState(false);
     const [id, setId] = useState<number | null>(null);
+    const [partnerName, setPartnerName] = useState<string | null>(null);
     const [accountName, setAccountName] = useState<string | null>(null);
     const [search, setSearch] = useState("");
 
@@ -250,6 +254,18 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
         }
     };
 
+    const fetchRulesId = async (id: number) => {
+        setLoading(true);
+        try {
+            const response = await axiosInstance.get(`/admin-partners/${id}/`)
+            setPartners([...response.data])
+            // setPartnerName()
+        } catch {
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const fetchRules = useCallback(async () => {
         setLoading(true);
         try {
@@ -285,24 +301,50 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
     };
 
     useEffect(() => {
-        fetchRules();
+        if (masterData?.id){
+            fetchRulesId(masterData.id)
+            setPartnerName(masterData.partner_name)
+        }
+        else {
+            fetchRules();
+        }
     }, []);
 
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', gap: "24px", justifyContent: 'space-between' }}>
-            {accountPage 
+            {accountPage || partnerName
             ?
-            <Box sx={{display: "flex", alignItems: "center", gap: "5px" }}>
-                <Typography onClick={() => {setAccountPage(false)}}
-                sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "#808080", cursor: "pointer"}}>
-                    {isMaster ? "Master" : ""} Partner 
-                </Typography>
-                <NavigateNextIcon width={16}/>
-                <Typography sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "#808080"}}>
-                    {accountName} 
-                </Typography>
-            </Box> 
+            <>
+                <Box sx={{display: "flex", alignItems: "center", gap: "5px" }}>
+                    <Typography onClick={() => {
+                        if(masterData) {
+                            handleTabChange(null, 0)
+                        }
+                        setAccountPage(false)
+                        setAccountName(null)
+                    }}
+                    sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "#808080", cursor: "pointer"}}>
+                        {isMaster || masterData ? "Master" : ""} Partner {partnerName ? `- ${partnerName}` : ""}
+                    </Typography>
+                    {accountName && 
+                        <>
+                            <NavigateNextIcon width={16}/>
+                            <Typography sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "#808080"}}>
+                                {accountName}
+                            </Typography>
+                        </>
+                    }
+                </Box>
+                {isMaster && <Typography variant="h4" component="h1" sx={{
+                    lineHeight: "22.4px",
+                    color: "#202124",
+                    fontWeight: 'bold',
+                    fontSize: '16px',
+                    fontFamily: 'Nunito Sans'}}>
+                    Master Partners
+                </Typography>}
+            </>
             : 
             <Typography variant="h4" component="h1" sx={{
                 lineHeight: "22.4px",
@@ -311,6 +353,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
                 fontSize: '16px',
                 fontFamily: 'Nunito Sans'}}>
                 Partners
+                {/* {isMaster ? "Master partner" : "Partners"} */}
             </Typography>}
             {accountPage && <PartnersAccounts id={id} setLoading={setLoading} loading={loading}/>}
             {!accountPage &&
@@ -373,8 +416,34 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
                                             }}
                                             aria-label="partners role tabs"
                                         >   
+                                            {masterData?.id && <Tab className="main-text"
+                                                sx={{
+                                                    textTransform: 'none',
+                                                    padding: '4px 1px',
+                                                    minHeight: 'auto',
+                                                    flexGrow: 1,
+                                                    pb: '10px',
+                                                    textAlign: 'center',
+                                                    fontSize: '14px',
+                                                    fontWeight: 700,
+                                                    lineHeight: '19.1px',
+                                                    minWidth: 'auto',
+                                                    mr: 2,
+                                                    '&.Mui-selected': {
+                                                        color: 'rgba(80, 82, 178, 1)'
+                                                    },
+                                                    "@media (max-width: 600px)": {
+                                                        mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                                                            backgroundColor: 'rgba(249, 249, 253, 1)',
+                                                            border: '1px solid rgba(220, 220, 239, 1)'
+                                                        },
+                                                    }
+                                                }}
+                                                label="Accounts"
+                                            />}
                                             <Tab className="main-text"
                                                 sx={{
+                                                    display: masterData?.id ? "none" : "block",
                                                     textTransform: 'none',
                                                     padding: '4px 1px',
                                                     minHeight: 'auto',
@@ -419,7 +488,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
                                                         },
                                                     }
                                                 }}
-                                                label="Partner"
+                                                label="Partners"
                                             />
                                         </Tabs>
                                         <Box sx={{display: 'flex', gap: "16px"}}>
@@ -575,9 +644,17 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({isMaster, tabIndex, handle
                                                                     zIndex: 1, 
                                                                     "&:hover .icon-button": { display: "contents" }}}
                                                                 onClick={() => {
-                                                                    setId(data.id)
-                                                                    setAccountName(data.partner_name)
-                                                                    setAccountPage(true)
+                                                                    if (isMaster){
+                                                                        setPartnerName(data.partner_name)
+                                                                        setIsMaster(false)
+                                                                        setMasterData(data)
+                                                                        fetchRulesId(data.id)
+                                                                    }
+                                                                    else {
+                                                                        setAccountName(data.partner_name)
+                                                                        setId(data.id)
+                                                                        setAccountPage(true)
+                                                                    }
                                                                     }}>
                                                                 <Box sx={{display: "flex", alignItems: "center", justifyContent: "space-between", color: 'rgba(80, 82, 178, 1)'}}>
                                                                     {data.partner_name}

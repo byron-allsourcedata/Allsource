@@ -28,6 +28,7 @@ class PartnersService:
         self.send_grid_persistence = send_grid_persistence
         self.plans_persistence = plans_persistence
 
+
     def get_user_info(self, user_id):
         user_data = {}
         user_data["subscription"] = "--"
@@ -47,6 +48,21 @@ class PartnersService:
         else:
             search_term = f"%{search}%"
             partners = self.partners_persistence.get_partners_search(isMaster, search_term)
+
+        result = []
+        for partner in partners:
+            user_id = partner.user_id
+            user = self.get_user_info(user_id)
+            result.append(self.domain_mapped(partner, user))
+
+        return result
+    
+
+    def partners_by_partners_id(self, id: int):
+        if not id:
+            raise HTTPException(status_code=404, detail="Partner data not found")
+        
+        partners = self.partners_persistence.get_partners_by_partners_id(id)
 
         result = []
         for partner in partners:
@@ -169,7 +185,6 @@ class PartnersService:
         except Exception as e:
             logger.debug("Error updating partner data", e)
             raise HTTPException(status_code=500, detail=f"Unexpected error during updation: {str(e)}")
-
 
 
     def domain_mapped(self, partner: Partners, user: PartnerUserData):

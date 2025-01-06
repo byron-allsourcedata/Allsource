@@ -13,6 +13,10 @@ class PartnersPersistence:
         return self.db.query(Partners).filter(Partners.isMaster == isMaster).all()
     
 
+    def get_partners_by_partners_id(self, id):
+        return self.db.query(Partners).filter(Partners.master_id == id).all()
+    
+
     def get_partners_search(self, isMaster, search_term):
         return self.db.query(Partners).filter(
             (Partners.isMaster == isMaster) & 
