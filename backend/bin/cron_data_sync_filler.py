@@ -213,6 +213,7 @@ async def process_user_integrations(rmq_connection, session):
             additional_leads = fetch_leads_by_domain(session, data_sync.domain_id, BATCH_SIZE - len(lead_users), data_sync.last_sent_lead_id, data_sync.leads_type)
             lead_users.extend(additional_leads)
 
+        update_data_sync_integration(session, data_sync.id)
         if not lead_users:
             logging.info(f"lead_users empty")
             continue
