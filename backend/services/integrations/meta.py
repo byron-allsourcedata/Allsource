@@ -215,16 +215,19 @@ class MetaIntegrationsService:
             message_body=message)
         rabbitmq_connection.close()
         
-    def process_data_sync(self, five_x_five_user, access_token, integration_data_sync):
-        profile = self.__create_user(integration_data_sync.session_id, five_x_five_user, integration_data_sync.list_id, access_token)
-        if profile.get('type') and profile.get('type') == 'OAuthException':
-            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+    async def process_data_sync(self, five_x_five_user, access_token, integration_data_sync):
+        profile = self.__create_user(five_x_five_user, integration_data_sync.list_id, access_token)
+        if profile.get('error'):
+            if profile.get('error').get('type') == 'OAuthException':
+                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+        
+        return ProccessDataSyncResult.SUCCESS.value
     
-    def __create_user(self, session_id: int, five_x_five_user, custom_audience_id: str, access_token: str):
-        lead_data = self.leads_persistence.get_lead_data(five_x_five_user)
-        profile = self.__mapped_meta_user(lead_data)
+    def __create_user(self, five_x_five_user, custom_audience_id: str, access_token: str):
+        profile = self.__mapped_meta_user(five_x_five_user)
         if profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
             return profile
+        
         payload = {
             "schema": [
                 "EMAIL",
@@ -244,6 +247,7 @@ class MetaIntegrationsService:
             'payload': payload,
             'app_id': APP_ID
             })
+        
         return response.json()
 
     def __mapped_meta_user(self, lead: FiveXFiveUser):

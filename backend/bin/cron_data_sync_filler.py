@@ -75,6 +75,7 @@ def fetch_leads_by_domain(session: Session, domain_id, limit, last_sent_lead_id,
         .filter(
             LeadUser.domain_id == domain_id,
             LeadUser.id > last_sent_lead_id,
+            LeadUser.is_active == True,
             UserDomains.is_enable == True
         )
     if data_sync_leads_type != 'allContacts':
@@ -207,9 +208,8 @@ async def process_user_integrations(rmq_connection, session):
             continue
         
         lead_users = get_previous_imported_leads(session, data_sync.id)
-        logging.info(f"lead_users len = {len(lead_users)}")
+        logging.info(f"Re imported leads= {len(lead_users)}")
         if BATCH_SIZE - len(lead_users) > 0:
-            logging.info(f"need import len = {BATCH_SIZE - len(lead_users)}")
             additional_leads = fetch_leads_by_domain(session, data_sync.domain_id, BATCH_SIZE - len(lead_users), data_sync.last_sent_lead_id, data_sync.leads_type)
             lead_users.extend(additional_leads)
 

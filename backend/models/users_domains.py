@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, BOOLEAN, VARCHAR, TIMESTAMP
+from sqlalchemy import Column, Integer, BOOLEAN, VARCHAR, TIMESTAMP, Index
 
 from .base import Base
 
@@ -16,3 +16,7 @@ class UserDomains(Base):
     is_enable = Column(BOOLEAN, default=True, nullable=False)
     created_at = Column(TIMESTAMP, nullable=False, default=datetime.utcnow)
     api_key = Column(VARCHAR, unique=True, nullable=True)
+    
+    __table_args__ = (
+        Index('users_domains_is_enable_idx', 'is_enable'),
+    )
