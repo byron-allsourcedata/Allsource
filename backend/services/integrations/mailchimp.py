@@ -88,7 +88,6 @@ class MailchimpIntegrationsService:
             list_id = response['id']
             for field in custom_fields:
                 self.client.lists.add_list_merge_field(list_id, field)
-                print(f"Added custom field: {field['name']}")
 
         except ApiClientError as error:
             if error.status_code == 403:
@@ -171,18 +170,6 @@ class MailchimpIntegrationsService:
             'data_map': data_map,
             'created_by': created_by,
         })
-        message = {
-            'sync':  {
-                'id': sync.id,
-                "domain_id": sync.domain_id, 
-                "integration_id": sync.integration_id, 
-                "leads_type": sync.leads_type, 
-                "list_id": sync.list_id, 
-                'data_map': sync.data_map
-                },
-            'leads_type': leads_type,
-            'domain_id': domain_id
-        }
 
     async def process_data_sync(self, five_x_five_user, access_token, integration_data_sync):
         profile = self.__create_profile(five_x_five_user, access_token, integration_data_sync)
@@ -203,6 +190,7 @@ class MailchimpIntegrationsService:
             'api_key': user_integration.access_token,
             'server': user_integration.data_center
         })
+        phone_number = validate_and_format_phone(profile.phone_number)
         json_data = {
                     'email_address': profile.email,
                     'status': profile.status,
@@ -210,7 +198,7 @@ class MailchimpIntegrationsService:
                     "merge_fields": {
                         "FNAME": profile.first_name,
                         "LNAME": profile.last_name,
-                        'PHONE': validate_and_format_phone(profile.phone_number) or 'N/A',
+                        'PHONE': phone_number.split(', ')[-1] if phone_number else 'N/A',
                         'COMPANY': profile.company_name or 'N/A',
                         "ADDRESS": {
                             "addr1": profile.location['address'] or 'N/A',
@@ -259,6 +247,8 @@ class MailchimpIntegrationsService:
             getattr(five_x_five_user, 'programmatic_business_emails', None)
         )
         first_email = extract_first_email(first_email) if first_email else None
+        if not first_email:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
         
         first_phone = (
             getattr(five_x_five_user, 'mobile_phone') or 

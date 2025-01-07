@@ -63,6 +63,22 @@ class SendlaneIntegrationService:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
         return IntegrationsStatus.SUCCESS
     
+    def edit_sync(self, leads_type: str, list_id: str, list_name: str, integrations_users_sync_id: int, domain_id: int, created_by: str):
+        credentials = self.get_credentials(domain_id)
+        data_syncs = self.sync_persistence.get_filter_by(domain_id=domain_id)
+        for sync in data_syncs:
+            if sync.get('integration_id') == credentials.id and sync.get('leads_type') == leads_type:
+                return
+        sync = self.sync_persistence.edit_sync({
+            'integration_id': credentials.id,
+            'list_id': list_id,
+            'list_name': list_name,
+            'domain_id': domain_id,
+            'leads_type': leads_type,
+            'created_by': created_by,
+        }, integrations_users_sync_id)
+
+        return sync
 
     def __get_list(self, api_key):
         response = self.__handle_request(url='/lists', api_key=api_key)
@@ -137,47 +153,9 @@ class SendlaneIntegrationService:
             'data_map': data_map,
             'created_by': created_by,
         })
-        message = {
-            'sync':  {
-                'id': sync.id,
-                "domain_id": sync.domain_id, 
-                "integration_id": sync.integration_id, 
-                "leads_type": sync.leads_type, 
-                "list_id": sync.list_id, 
-                'data_map': sync.data_map
-                },
-            'leads_type': leads_type,
-            'domain_id': domain_id
-        }
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        channel = await connection.channel()
-        await channel.declare_queue(
-            name=self.QUEUE_DATA_SYNC,
-            durable=True
-        )
-        await publish_rabbitmq_message(
-            connection=connection,
-            queue_name=self.QUEUE_DATA_SYNC, 
-            message_body=message)
 
-    async def process_lead_sync(self, user_domain_id, behavior_type, lead_user, stage, next_try):
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        channel = await connection.channel()
-        await channel.declare_queue(
-            name=self.QUEUE_DATA_SYNC,
-            durable=True
-        )
-        await publish_rabbitmq_message(connection, self.QUEUE_DATA_SYNC,
-                                    {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
-                                        'id': lead_user.id,
-                                        'five_x_five_user_id': lead_user.five_x_five_user_id
-                                    }, 'stage': stage, 'next_try': next_try})
-        await rabbitmq_connection.close()
-
-    async def process_data_sync(self, five_x_five_user, access_token, integration_data_sync):
-        profile = self.__create_contact(five_x_five_user, access_token, integration_data_sync.list_id)
+    async def process_data_sync(self, five_x_five_user, user_integration, integration_data_sync):
+        profile = self.__create_contact(five_x_five_user, user_integration.access_token, integration_data_sync.list_id)
         if profile == ProccessDataSyncResult.AUTHENTICATION_FAILED.value or profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
             return profile
             
@@ -188,12 +166,11 @@ class SendlaneIntegrationService:
         profile = self.__mapped_sendlane_contact(five_x_five_user)
         if profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
             return profile
+        
         json = {
             'contacts': [{**profile.model_dump()}]
         }
         response = self.__handle_request(f'/lists/{list_id}/contacts', api_key=access_token, json=json, method="POST")
-        print(response.status_code)
-        print(response)
         if response.status_code == 401:
             return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
         if response.status_code == 202:
@@ -211,12 +188,12 @@ class SendlaneIntegrationService:
             sender_name=sender.get('from_name')
         )
     
-    def __mapped_sendlane_contact(self, lead: FiveXFiveUser):
+    def __mapped_sendlane_contact(self, five_x_five_user: FiveXFiveUser):
         first_email = (
-            getattr(lead, 'business_email') or 
-            getattr(lead, 'personal_emails') or
-            getattr(lead, 'additional_personal_emails') or
-            getattr(lead, 'programmatic_business_emails', None)
+            getattr(five_x_five_user, 'business_email') or 
+            getattr(five_x_five_user, 'personal_emails') or
+            getattr(five_x_five_user, 'additional_personal_emails') or
+            getattr(five_x_five_user, 'programmatic_business_emails', None)
         )
         
         first_email = extract_first_email(first_email) if first_email else None
@@ -224,21 +201,20 @@ class SendlaneIntegrationService:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
         
         first_phone = (
-            getattr(lead, 'mobile_phone') or 
-            getattr(lead, 'personal_phone') or 
-            getattr(lead, 'direct_number') or 
-            getattr(lead, 'company_phone', None)
+            getattr(five_x_five_user, 'mobile_phone') or 
+            getattr(five_x_five_user, 'personal_phone') or 
+            getattr(five_x_five_user, 'direct_number') or 
+            getattr(five_x_five_user, 'company_phone', None)
         )
 
-        if first_phone:
-            first_phone = first_phone.split(',')[-1]
-
         if first_email:
-            first_email = first_email.split(',')[0]
+            first_email = first_email.split(',')[-1].strip()
 
+        phone_number = validate_and_format_phone(first_phone)
+        
         return SendlaneContact(
             email=first_email,
-            first_name = lead.first_name or "Unknown",
-            last_name=lead.last_name or "Unknown",
-            phone=validate_and_format_phone(first_phone)
+            first_name=five_x_five_user.first_name or None,
+            last_name=five_x_five_user.last_name or None,
+            phone=phone_number.split(', ')[-1] if phone_number else None,
         )

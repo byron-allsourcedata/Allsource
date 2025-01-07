@@ -198,18 +198,6 @@ class KlaviyoIntegrationsService:
         if tags_id: 
             self.create_tag_relationships_lists(tags_id=tags_id, list_id=list_id, api_key=credentials.access_token)
 
-
-    async def process_lead_sync(self, user_domain_id, behavior_type, lead_user, stage, next_try):
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        await publish_rabbitmq_message(connection, self.QUEUE_DATA_SYNC,
-                                    {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
-                                        'id': lead_user.id,
-                                        'five_x_five_user_id': lead_user.five_x_five_user_id
-                                    }, 'stage': stage, 'next_try': next_try})
-        await rabbitmq_connection.close()
-
-
     async def process_data_sync(self, five_x_five_user, user_integration, data_sync):
         data_map = data_sync.data_map if data_sync.data_map else None
         profile = self.__create_profile(five_x_five_user, user_integration.access_token, data_map)
@@ -254,17 +242,20 @@ class KlaviyoIntegrationsService:
             properties = self.__map_properties(five_x_five_user, data_map)
         else:
             properties = {}
+
+        phone_number = validate_and_format_phone(profile.phone_number)
+
         json_data = {
             'data': {
                 'type': 'profile',
                 'attributes': {
-                    'email': profile.email if profile.email is not None else None,
-                    'phone_number': validate_and_format_phone(profile.phone_number).split(', ')[0] if profile.phone_number else None,
-                    'first_name': profile.first_name if profile.first_name is not None else None,
-                    'last_name': profile.last_name if profile.last_name is not None else None,
-                    'organization': profile.organization if profile.organization is not None else None,
-                    'location': profile.location if profile.location is not None else None,
-                    'title': profile.title if profile.title is not None else None,
+                    'email': profile.email,
+                    'phone_number': phone_number.split(', ')[-1] if phone_number else None,
+                    'first_name': profile.first_name or None,
+                    'last_name': profile.last_name or None,
+                    'organization': profile.organization or None,
+                    'location': profile.location or None,
+                    'title': profile.title or None,
                     'properties': properties
                 }
             }

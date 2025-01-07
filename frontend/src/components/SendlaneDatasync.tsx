@@ -57,7 +57,7 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, d
     const [klaviyoList, setKlaviyoList] = useState<KlaviyoList[]>([])
     const [senders, setSenders] = useState<any[]>([])
     const [listNameErrorMessage, setListNameErrorMessage] = useState('')
-    const [optionSender, setOptionSender] = useState<any>(null)
+    const [optionSender, setOptionSender] = useState<any>(senders)
     const [customFieldsList, setCustomFieldsList] = useState([{ type: 'Gender', value: 'gender' },
     { type: 'Company Name', value: 'company_name' },
     { type: 'Company Domain', value: 'company_domain' },
