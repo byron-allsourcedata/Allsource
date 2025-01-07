@@ -25,7 +25,7 @@ from models.leads_users import LeadUser
 
 load_dotenv()
 
-CRON_DATA_SYNC_LEADS = 'cron_data_sync_leads'
+CRON_DATA_SYNC_LEADS = 'cron_data_sync_leads_test'
 BATCH_SIZE = 100
 SLEEP_INTERVAL = 60 * 30
 
@@ -118,8 +118,8 @@ def fetch_leads_by_domain(session: Session, domain_id, limit, last_sent_lead_id,
                     )
                 )
             )
-            
-    result = query.order_by(LeadUser.id).limit(limit).all()
+    result = query.order_by(LeadUser.id).all()    
+    #result = query.order_by(LeadUser.id).limit(limit).all()
     return result or []
 
 def update_last_sent_lead(session, data_sync_id, last_lead_id):
@@ -200,12 +200,15 @@ async def send_leads_to_rmq(session, rmq_connection, lead_users, data_sync, user
 async def process_user_integrations(rmq_connection, session):
     user_integrations, data_syncs = fetch_data_syncs(session)
     for i, data_sync in enumerate(data_syncs):
-        if data_sync.sync_status == False or user_integrations[i].is_failed == True:
-            logging.info(f"Skip, Integration is failed {user_integrations[i].is_failed}, Data sync status {data_sync.sync_status}")
+        if user_integrations[i].service_name != 'sendlane':
             continue
         
-        if data_sync.is_active == False:
-            continue
+        # if data_sync.sync_status == False or user_integrations[i].is_failed == True:
+        #     logging.info(f"Skip, Integration is failed {user_integrations[i].is_failed}, Data sync status {data_sync.sync_status}")
+        #     continue
+        
+        # if data_sync.is_active == False:
+        #     continue
         
         lead_users = get_previous_imported_leads(session, data_sync.id)
         logging.info(f"Re imported leads= {len(lead_users)}")
