@@ -39,7 +39,7 @@ class ZapierIntegrationService:
             raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
         return new_integrations
 
-    async def create_data_sync(self, domain_id, leads_type, hook_url):
+    async def create_data_sync(self, domain_id, leads_type, hook_url, list_name, created_by):
         credentials = self.get_credentials(domain_id)
         leads_type = self.__mapped_leads_type(leads_type)
         data_syncs = self.sync_persistence.get_filter_by(domain_id=domain_id)
@@ -48,7 +48,9 @@ class ZapierIntegrationService:
                 return sync
         sync = self.sync_persistence.create_sync({
             'domain_id': domain_id,
+            'list_name': list_name,
             'leads_type': leads_type,
+            'created_by': created_by,
             'integration_id': credentials.id,
             'hook_url': hook_url
         })
