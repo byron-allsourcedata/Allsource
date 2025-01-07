@@ -302,16 +302,15 @@ async def auth(domain = Depends(check_api_key), integration_service: Integration
 
 @router.post('/zapier/webhook', status_code=201)
 async def subscribe_zapier_webhook(hook_data = Body(...), domain = Depends(check_api_key), integrations_service: IntegrationService = Depends(get_integration_service)):
-    print('-------------')
-    print(hook_data)
     with integrations_service as service:
-        return await service.zapier.create_data_sync(domain_id=domain.id, leads_type=hook_data.get('leads_type'), hook_url=hook_data.get('hookUrl')) 
+        return await service.zapier.create_data_sync(domain_id=domain.id, leads_type=hook_data.get('leadsType'), hook_url=hook_data.get('hookUrl'))
+
 
 @router.delete('/zapier/webhook')
-async def unsubscribe_zapier_webhook(sync_id = Body(...), domain = Depends(check_api_key), integrations_service: IntegrationService = Depends(get_integration_service)):
-    print('-------------')
-    print(sync_id)
-    return integrations_service.delete_sync_domain(domain_id=domain.id, list_id=sync_id)
+async def unsubscribe_zapier_webhook(hook_data = Body(...), domain = Depends(check_api_key), integrations_service: IntegrationService = Depends(get_integration_service)):
+    hook_url=hook_data.get('hookUrl')
+    sync = integrations_service.get_sync_by_hook_url(hook_url)
+    return integrations_service.delete_sync_domain(domain_id=domain.id, list_id=sync.id)
 
 @router.get('/zapier/webhook')
 async def get_dont_import_leads(domain = Depends(check_api_key)):
