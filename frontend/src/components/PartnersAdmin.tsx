@@ -91,7 +91,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
     const [expanded, setExpanded] = useState<number | false>(false);
     const [partners, setPartners] = useState<PartnerData[]>([]);
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalCount, setTotalCount] = useState(0);
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
@@ -170,11 +170,8 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
 
     const handleApply = (dates: { start: Date | null; end: Date | null }) => {
         if (dates.start && dates.end) {
-
-            setAppliedDates(dates);
+            setAppliedDates({ ...dates }); 
             setCalendarAnchorEl(null);
-
-
             handleCalendarClose();
         }
         else {
@@ -190,6 +187,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
 
     const handleRowsPerPageChange = (event: React.ChangeEvent<{ value: unknown }>) => {
         setRowsPerPage(parseInt(event.target.value as string, 10));
+        setPage(0);
     };
 
     const handleSortRequest = (key: string) => {
@@ -259,7 +257,6 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
         try {
             const response = await axiosInstance.get(`/admin-partners/${id}/`)
             setPartners([...response.data])
-            // setPartnerName()
         } catch {
         } finally {
             setLoading(false);
@@ -269,14 +266,21 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
     const fetchRules = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await axiosInstance.get("/admin-partners", {params: { isMaster, search }})
-            setPartners([...response.data])
+            const response = await axiosInstance.get("/admin-partners", {
+                params: { 
+                    isMaster, search,
+                    start_date: appliedDates.start ? appliedDates.start.toISOString().split('T')[0] : null,
+                    end_date: appliedDates.end ? appliedDates.end.toISOString().split('T')[0] : null,
+                    page, rowsPerPage
+                }})
+            setPartners([...response.data.items])
+            setTotalCount(response.data.totalCount)
 
         } catch {
         } finally {
             setLoading(false);
         }
-    }, [search]);
+    }, [search, appliedDates]);
 
     const updateOrAddAsset = (updatedPartner: PartnerData) => {
         setPartners((prevAccounts) => {
@@ -308,7 +312,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
         else {
             fetchRules();
         }
-    }, []);
+    }, [appliedDates])
 
 
     return (
@@ -353,7 +357,6 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                 fontSize: '16px',
                 fontFamily: 'Nunito Sans'}}>
                 Partners
-                {/* {isMaster ? "Master partner" : "Partners"} */}
             </Typography>}
             {accountPage && <PartnersAccounts id={id} setLoading={setLoading} loading={loading}/>}
             {!accountPage &&

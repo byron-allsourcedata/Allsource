@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from typing import Optional
+from datetime import date
 from schemas.partners_asset import PartnerCreateRequest, PartnerUpdateRequest
 from dependencies import get_partners_service, check_user_admin, PartnersService
 
@@ -11,10 +12,14 @@ router = APIRouter(dependencies=[Depends(check_user_admin)])
 def partners(
     isMaster: Optional[bool] = Query(None),
     search: Optional[str] = Query(None),
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    page: int = Query(0),
+    rowsPerPage: int = Query(10),
     get_partners_service: PartnersService = Depends(get_partners_service)):
     
-    assets = get_partners_service.get_partners(isMaster, search)
-    return assets
+    assets = get_partners_service.get_partners(isMaster, search, start_date, end_date, page, rowsPerPage)
+    return {"items": assets["items"], "totalCount": assets["totalCount"]}
 
 
 @router.get('{id}')
@@ -60,8 +65,6 @@ async def update_partner(
     partner_id: int,
     request: PartnerUpdateRequest,
     get_partners_service: PartnersService = Depends(get_partners_service)):
-    
-    print("QQWEEFE", request)
 
     if request.status:
         if request.message:

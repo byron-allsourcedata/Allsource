@@ -42,12 +42,17 @@ class PartnersService:
         return user_data
 
 
-    def get_partners(self, isMaster, search):
+    def get_partners(self, isMaster, search, start_date, end_date, page, rowsPerPage):
+        offset = page * rowsPerPage
+        limit = rowsPerPage
+        
         if search is None:
-            partners = self.partners_persistence.get_partners(isMaster)
+            partners = self.partners_persistence.get_partners(isMaster, start_date, end_date, offset, limit)
+            total_count = self.partners_persistence.get_total_count(isMaster)
         else:
             search_term = f"%{search}%"
-            partners = self.partners_persistence.get_partners_search(isMaster, search_term)
+            partners = self.partners_persistence.get_partners_search(isMaster, search_term, start_date, end_date, offset, limit)
+            total_count = self.partners_persistence.get_total_count_search(isMaster, search_term)
 
         result = []
         for partner in partners:
@@ -55,7 +60,7 @@ class PartnersService:
             user = self.get_user_info(user_id)
             result.append(self.domain_mapped(partner, user))
 
-        return result
+        return {"items": result, "totalCount": total_count}
     
 
     def partners_by_partners_id(self, id: int):

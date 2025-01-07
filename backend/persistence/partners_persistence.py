@@ -9,19 +9,44 @@ class PartnersPersistence:
         self.db = db
 
 
-    def get_partners(self, isMaster):
-        return self.db.query(Partners).filter(Partners.isMaster == isMaster).all()
+    def get_partners(self, isMaster, start_date, end_date, offset, limit):
+        query = self.db.query(Partners).filter(Partners.isMaster == isMaster)
+
+        if start_date:
+            query = query.filter(Partners.join_date >= start_date)
+        if end_date:
+            query = query.filter(Partners.join_date <= end_date)
+
+        return query.offset(offset).limit(limit).all()
     
 
     def get_partners_by_partners_id(self, id):
         return self.db.query(Partners).filter(Partners.master_id == id).all()
     
 
-    def get_partners_search(self, isMaster, search_term):
-        return self.db.query(Partners).filter(
+    def get_partners_search(self, isMaster, search_term, start_date, end_date, offset, limit):
+        query = self.db.query(Partners).filter(
             (Partners.isMaster == isMaster) & 
             ((Partners.name.ilike(search_term)) | (Partners.email.ilike(search_term)))
-        ).all()
+        )
+    
+        if start_date:
+            query = query.filter(Partners.join_date >= start_date)
+        if end_date:
+            query = query.filter(Partners.join_date <= end_date)
+
+        return query.offset(offset).limit(limit).all()
+
+
+    def get_total_count(self, isMaster):
+        return self.db.query(Partners).filter(Partners.isMaster == isMaster).count()
+
+
+    def get_total_count_search(self, isMaster, search_term):
+        return self.db.query(Partners).filter(
+            (Partners.isMaster == isMaster) &
+            ((Partners.name.ilike(search_term)) | (Partners.email.ilike(search_term)))
+        ).count()
 
 
     def get_asset_by_id(self, partner_id):
