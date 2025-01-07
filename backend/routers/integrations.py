@@ -307,6 +307,8 @@ async def subscribe_zapier_webhook(hook_data = Body(...), domain = Depends(check
 
 @router.delete('/zapier/webhook')
 async def unsubscribe_zapier_webhook(sync_data = Body(...), domain = Depends(check_api_key), integrations_service: IntegrationService = Depends(get_integration_service)):
+    print('-------------')
+    print(sync_data)
     return integrations_service.delete_sync_domain(domain_id=domain.id, list_id=sync_data.get('sync_id'))
 
 @router.get('/zapier/webhook')
