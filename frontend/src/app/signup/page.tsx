@@ -428,6 +428,7 @@ const Signup: React.FC = () => {
               variant="outlined"
               fullWidth
               margin="normal"
+              autoComplete="new-password"
               value={formValues.password}
               onChange={handleChange}
               error={Boolean(errors.password)}
