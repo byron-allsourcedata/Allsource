@@ -22,9 +22,11 @@ const Signin: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      router.push('/dashboard');
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token');
+      if (token) {
+        router.push('/dashboard');
+      }
     }
   }, [router]);
 
@@ -285,6 +287,7 @@ const Signin: React.FC = () => {
                 sx: loginStyles.inputLabel,
                 focused: false
               }}
+              autoComplete="new-password"
               label="Enter password"
               name="password"
               type={showPassword ? 'text' : 'password'}
@@ -343,7 +346,7 @@ const Signin: React.FC = () => {
 const SigninPage: React.FC = () => {
   return (
     <Suspense fallback={<CustomizedProgressBar />}>
-        <Signin />
+      <Signin />
     </Suspense>
   );
 };
