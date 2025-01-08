@@ -778,17 +778,19 @@ class LeadsPersistence:
                 FiveXFiveUser.business_email_validation_status,
                 FiveXFiveUser.business_email_last_seen,
                 FiveXFiveUser.personal_emails_validation_status,
-                FiveXFiveUser.work_history,
-                FiveXFiveUser.education_history,
-                FiveXFiveUser.company_description,
                 FiveXFiveUser.related_domains,
                 FiveXFiveUser.social_connections,
                 FiveXFiveUser.dpv_code
-            ).filter(FiveXFiveUser.id.in_(five_x_five_user_ids))
+            )
+            .filter(FiveXFiveUser.id.in_(five_x_five_user_ids))
             .all()
         )
         result = [
-            {column: getattr(user, column) for column in user.keys()}
+            {
+                column.name: getattr(user, column.name, None)
+                for column in FiveXFiveUser.__table__.columns
+                if getattr(user, column.name, None) is not None
+            }
             for user in five_x_five_users
         ]
         
