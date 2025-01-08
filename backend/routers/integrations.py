@@ -301,19 +301,23 @@ async def auth(domain = Depends(check_api_key), integration_service: Integration
     
 
 @router.post('/zapier/webhook', status_code=201)
-async def subscribe_zapier_webhook(hook_data = Body(...), domain = Depends(check_api_key), integrations_service: IntegrationService = Depends(get_integration_service)):
+async def subscribe_zapier_webhook(hook_data = Body(...), domain = Depends(check_api_key), integrations_service: IntegrationService = Depends(get_integration_service), 
+                                   user_persistence: UserPersistence = Depends(get_user_persistence_service)):
     with integrations_service as service:
-        return await service.zapier.create_data_sync(domain_id=domain.id, leads_type=hook_data.get('leads_type'), hook_url=hook_data.get('hookUrl')) 
+        
+        user = user_persistence.get_user_by_id(domain.user_id)
+        return await service.zapier.create_data_sync(domain_id=domain.id, leads_type=hook_data.get('leadsType'), hook_url=hook_data.get('hookUrl'), list_name=hook_data.get('listName'), created_by=user.get('full_name'))
+
 
 @router.delete('/zapier/webhook')
-async def unsubscribe_zapier_webhook(sync_data = Body(...), domain = Depends(check_api_key), integrations_service: IntegrationService = Depends(get_integration_service)):
-    return integrations_service.delete_sync_domain(domain_id=domain.id, list_id=sync_data.get('sync_id'))
+async def unsubscribe_zapier_webhook(hook_data = Body(...), domain = Depends(check_api_key), integrations_service: IntegrationService = Depends(get_integration_service)):
+    hook_url=hook_data.get('hookUrl')
+    sync = integrations_service.get_sync_by_hook_url(hook_url)
+    return integrations_service.delete_sync_domain(domain_id=domain.id, list_id=sync[0].id)
 
 @router.get('/zapier/webhook')
-async def get_dont_import_leads(domain = Depends(check_api_key)):
-    with open('../backend/data/integrations/example_lead.json', 'r') as file:
-        example_lead = file.read()
-        return json.loads(example_lead)
+async def get_dont_import_leads(domain = Depends(check_api_key), integrations_service: IntegrationService = Depends(get_integration_service)):
+    return integrations_service.get_leads_for_zapier(domain)
     
 @router.get('/shopify/install/redirect')
 async def oauth_shopify_install_redirect(shop: str, r: Request, integrations_service: IntegrationService = Depends(get_integration_service)):

@@ -12,6 +12,7 @@ interface BigcommerceConntectPopupProps {
     onClose: () => void
     error_message?: string
     initShopHash? : string
+    boxShadow?: string
 }
 
 
@@ -38,8 +39,9 @@ const metaStyles = {
     },
     inputLabel: {
         fontFamily: 'Nunito Sans',
-        fontSize: '12px',
-        lineHeight: '16px',
+        fontSize: '14px',
+        lineHeight: '14px',
+        pl:'4px',
         color: 'rgba(17, 17, 19, 0.60)',
         '&.Mui-focused': {
             color: '#0000FF',
@@ -53,7 +55,7 @@ const metaStyles = {
             fontFamily: 'Roboto',
             color: '#202124',
             fontSize: '14px',
-            lineHeight: '20px',
+            lineHeight: '14px',
             fontWeight: '400'
           },
           '& .MuiOutlinedInput-notchedOutline': {
@@ -73,7 +75,7 @@ const metaStyles = {
       
 }
 
-const BCommerceConnect = ({open, onClose, error_message, initShopHash}: BigcommerceConntectPopupProps) => {
+const BCommerceConnect = ({open, onClose, error_message, initShopHash, boxShadow}: BigcommerceConntectPopupProps) => {
     const [shopHash, setShopHash] = useState('')
     const [loading, setLoading] = useState(false)
     
@@ -94,7 +96,7 @@ const BCommerceConnect = ({open, onClose, error_message, initShopHash}: Bigcomme
                 },
                 {
                     params: {
-                        service_name: 'big_commerce',
+                        service_name: 'bigcommerce',
                     },
                 }
             );
@@ -133,6 +135,7 @@ const BCommerceConnect = ({open, onClose, error_message, initShopHash}: Bigcomme
                     zIndex: 1301,
                     top: 0,
                     bottom: 0,
+                    boxShadow: boxShadow ? '0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)' : 'none',
                     msOverflowStyle: 'none',
                     scrollbarWidth: 'none',
                     '&::-webkit-scrollbar': {
@@ -142,6 +145,13 @@ const BCommerceConnect = ({open, onClose, error_message, initShopHash}: Bigcomme
                         width: '100%',
                     }
                 },
+            }}
+            slotProps={{
+                backdrop: {
+                    sx: {
+                        backgroundColor: boxShadow ? boxShadow : 'transparent'
+                    }
+                }
             }}
         >
             {loading && (
@@ -175,12 +185,15 @@ const BCommerceConnect = ({open, onClose, error_message, initShopHash}: Bigcomme
                     />
                 </Box>
             )}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                 <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
                     Connect to Bigcommerce
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                    <Link href="#" sx={{
+                    <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-bigcommerce-to-maximiz"
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                     sx={{
                         fontFamily: 'Nunito Sans',
                         fontSize: '14px',
                         fontWeight: '600',
@@ -213,7 +226,7 @@ const BCommerceConnect = ({open, onClose, error_message, initShopHash}: Bigcomme
             marginTop: '12px',
             lineHeight: 'normal'
             }}>
-            login to your Bigcommerce
+            Login to your Bigcommerce account
             </Typography>
             {error_message && (<Box display={'flex'} sx={{
                 alignItems: 'center',

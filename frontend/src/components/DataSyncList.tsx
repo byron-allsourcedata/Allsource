@@ -664,7 +664,7 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
                     { key: "data_sync", label: "Data Sync" },
                     { key: "last_sync", label: "Last Sync" },
                     { key: "sync_status", label: "Sync Status" },
-                    { key: "suppression", label: "Suppression" },
+                    { key: "action", label: "Action" },
                   ].map(({ key, label, sortable = false }) => (
                     <TableCell
                       key={key}
@@ -677,7 +677,7 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
                           left: 0,
                           zIndex: 99,
                         }),
-                        ...(key === "suppression" && {
+                        ...(key === "action" && {
                           "::after": {
                             content: "none",
                           },
@@ -1125,6 +1125,7 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
         <ZapierConnectPopup
           open={openZapierConnect}
           handlePopupClose={handleCloseIntegrate}
+          boxShadow="rgba(0, 0, 0, 0.01)"
         />
       </Box>
     </>

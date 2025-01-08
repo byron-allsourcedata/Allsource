@@ -718,11 +718,11 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
       <SendlaneConnect open={openSendlaneConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'sendlane')?.access_token} boxShadow="rgba(0, 0, 0, 0.1)" />
       {OpenAttentiveConnect && (
         <>
-          <AttentiveIntegrationPopup open={OpenAttentiveConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'attentive')?.access_token} boxShadow="rgba(0, 0, 0, 0.1)" />
-        </>
-      )
-      }
-      <ZapierConnectPopup open={openZapierConnect} handlePopupClose={handleClose} />
+        <AttentiveIntegrationPopup open={OpenAttentiveConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'attentive')?.access_token} boxShadow="rgba(0, 0, 0, 0.1)" />
+          </>
+        )
+        }
+      <ZapierConnectPopup open={openZapierConnect} handlePopupClose={handleClose} boxShadow="rgba(0, 0, 0, 0.01)" />
       <AlivbleIntagrationsSlider
         isContactSync={false}
         open={openAvalible}
@@ -886,7 +886,7 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
         onSave={handleSaveSettings}
       />
       <ShopifySettings open={openShopifyConnect} handleClose={handleClose} onSave={handleSaveSettings} />
-      <BCommerceConnect open={openBigcommrceConnect} onClose={handleClose} />
+      <BCommerceConnect open={openBigcommrceConnect} onClose={handleClose} boxShadow="rgba(0, 0, 0, 0.1)" />
       {openOmnisendConnect && <OmnisendConnect open={openOmnisendConnect} handleClose={handleClose} onSave={handleSaveSettings} boxShadow="rgba(0, 0, 0, 0.1)" />}
       <MailchimpConnect open={openMailchinpConnect} handleClose={handleClose} onSave={handleSaveSettings} boxShadow="rgba(0, 0, 0, 0.1)" />
       <SendlaneConnect open={openSendlaneConnect} handleClose={handleClose} onSave={handleSaveSettings} boxShadow="rgba(0, 0, 0, 0.1)" />

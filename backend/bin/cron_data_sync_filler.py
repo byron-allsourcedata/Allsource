@@ -118,7 +118,6 @@ def fetch_leads_by_domain(session: Session, domain_id, limit, last_sent_lead_id,
                     )
                 )
             )
-            
     result = query.order_by(LeadUser.id).limit(limit).all()
     return result or []
 

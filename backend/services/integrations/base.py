@@ -47,6 +47,12 @@ class IntegrationService:
     def get_sync_domain(self, domain_id: int, service_name: str = None, integrations_users_sync_id: int = None):
         return self.integrations_user_sync_persistence.get_filter_by(domain_id=domain_id, service_name=service_name, integrations_users_sync_id=integrations_users_sync_id)
     
+    def get_sync_by_hook_url(self, hook_url):
+        return self.integrations_user_sync_persistence.get_data_sync_filter_by(hook_url=hook_url)
+    
+    def get_leads_for_zapier(self, domain):
+        return self.lead_persistence.get_last_leads_for_zapier(domain.id)
+    
     def delete_sync_domain(self, domain_id: int, list_id, service_name: str = None):
         result = self.integrations_user_sync_persistence.delete_sync(domain_id=domain_id, list_id=list_id)
         if result:
