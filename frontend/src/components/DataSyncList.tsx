@@ -1125,6 +1125,7 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
         <ZapierConnectPopup
           open={openZapierConnect}
           handlePopupClose={handleCloseIntegrate}
+          boxShadow="rgba(0, 0, 0, 0.01)"
         />
       </Box>
     </>

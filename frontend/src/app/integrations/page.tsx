@@ -724,7 +724,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
           </>
         )
         }
-      <ZapierConnectPopup open={openZapierConnect} handlePopupClose={handleClose} />
+      <ZapierConnectPopup open={openZapierConnect} handlePopupClose={handleClose} boxShadow="rgba(0, 0, 0, 0.01)" />
       <AlivbleIntagrationsSlider
         isContactSync={false}
         open={openAvalible}
@@ -888,7 +888,7 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
         onSave={handleSaveSettings}
       />
       <ShopifySettings open={openShopifyConnect} handleClose={handleClose} onSave={handleSaveSettings} />
-      <BCommerceConnect open={openBigcommrceConnect} onClose={handleClose} />
+      <BCommerceConnect open={openBigcommrceConnect} onClose={handleClose} boxShadow="rgba(0, 0, 0, 0.1)" />
       {openOmnisendConnect && <OmnisendConnect open={openOmnisendConnect} handleClose={handleClose} onSave={handleSaveSettings} boxShadow="rgba(0, 0, 0, 0.1)" />}
       <MailchimpConnect open={openMailchinpConnect} handleClose={handleClose} onSave={handleSaveSettings} boxShadow="rgba(0, 0, 0, 0.1)" />
       <SendlaneConnect open={openSendlaneConnect} handleClose={handleClose} onSave={handleSaveSettings} boxShadow="rgba(0, 0, 0, 0.1)" />
