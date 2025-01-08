@@ -86,15 +86,17 @@ class ZapierIntegrationService:
         return response.json()
     
     def __mapped_leads_type(self, lead_type):
-        if (lead_type == 'Visitors'):
+        if lead_type:
+            lead_type = lead_type.lower()
+        if (lead_type == 'visitors'):
             return 'visitor'
-        if (lead_type == 'Added to cart'):
+        if (lead_type == 'added to cart'):
             return 'added_to_cart'
-        if (lead_type == 'Viewed Product'):
+        if (lead_type == 'viewed product'):
             return 'viewed_product'
-        if (lead_type == 'Converted Sales'):
+        if (lead_type == 'converted sales'):
             return 'converted_sales'
-        if (lead_type == 'All contacts'):
+        if (lead_type == 'all contacts'):
             return 'allContact'
         return 'allContact'
     

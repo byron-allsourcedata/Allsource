@@ -316,10 +316,8 @@ async def unsubscribe_zapier_webhook(hook_data = Body(...), domain = Depends(che
     return integrations_service.delete_sync_domain(domain_id=domain.id, list_id=sync[0].id)
 
 @router.get('/zapier/webhook')
-async def get_dont_import_leads(domain = Depends(check_api_key)):
-    with open('../backend/data/integrations/example_lead.json', 'r') as file:
-        example_lead = file.read()
-        return json.loads(example_lead)
+async def get_dont_import_leads(domain = Depends(check_api_key), integrations_service: IntegrationService = Depends(get_integration_service)):
+    return integrations_service.get_leads_for_zapier(domain)
     
 @router.get('/shopify/install/redirect')
 async def oauth_shopify_install_redirect(shop: str, r: Request, integrations_service: IntegrationService = Depends(get_integration_service)):

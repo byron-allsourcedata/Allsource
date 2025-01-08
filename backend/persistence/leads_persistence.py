@@ -719,7 +719,81 @@ class LeadsPersistence:
 
     def get_leads_domain(self, domain_id: int, **filter_by: dict):
         return self.db.query(LeadUser).filter_by(domain_id=domain_id, **filter_by).all()
-
+    
+    def get_last_leads_for_zapier(self, domain_id: int):
+        lead_users = self.db.query(LeadUser).filter_by(domain_id=domain_id).order_by(LeadUser.created_at.desc()).limit(3).all()
+        five_x_five_user_ids = [user.five_x_five_user_id for user in lead_users]
+        five_x_five_users = (
+            self.db.query(
+                FiveXFiveUser.id,
+                FiveXFiveUser.first_name,
+                FiveXFiveUser.programmatic_business_emails,
+                FiveXFiveUser.mobile_phone,
+                FiveXFiveUser.direct_number,
+                FiveXFiveUser.gender,
+                FiveXFiveUser.personal_phone,
+                FiveXFiveUser.business_email,
+                FiveXFiveUser.personal_emails,
+                FiveXFiveUser.last_name,
+                FiveXFiveUser.personal_city,
+                FiveXFiveUser.personal_state,
+                FiveXFiveUser.company_name,
+                FiveXFiveUser.company_domain,
+                FiveXFiveUser.company_phone,
+                FiveXFiveUser.company_sic,
+                FiveXFiveUser.company_address,
+                FiveXFiveUser.company_city,
+                FiveXFiveUser.company_state,
+                FiveXFiveUser.company_zip,
+                FiveXFiveUser.company_linkedin_url,
+                FiveXFiveUser.company_revenue,
+                FiveXFiveUser.company_employee_count,
+                FiveXFiveUser.net_worth,
+                FiveXFiveUser.job_title,
+                FiveXFiveUser.last_updated,
+                FiveXFiveUser.personal_emails_last_seen,
+                FiveXFiveUser.company_last_updated,
+                FiveXFiveUser.job_title_last_updated,
+                FiveXFiveUser.age_min,
+                FiveXFiveUser.age_max,
+                FiveXFiveUser.additional_personal_emails,
+                FiveXFiveUser.linkedin_url,
+                FiveXFiveUser.personal_address,
+                FiveXFiveUser.personal_address_2,
+                FiveXFiveUser.personal_zip,
+                FiveXFiveUser.personal_zip4,
+                FiveXFiveUser.professional_zip,
+                FiveXFiveUser.married,
+                FiveXFiveUser.children,
+                FiveXFiveUser.income_range,
+                FiveXFiveUser.homeowner,
+                FiveXFiveUser.seniority_level,
+                FiveXFiveUser.department,
+                FiveXFiveUser.professional_address,
+                FiveXFiveUser.professional_address_2,
+                FiveXFiveUser.professional_city,
+                FiveXFiveUser.professional_state,
+                FiveXFiveUser.professional_zip4,
+                FiveXFiveUser.primary_industry,
+                FiveXFiveUser.business_email_validation_status,
+                FiveXFiveUser.business_email_last_seen,
+                FiveXFiveUser.personal_emails_validation_status,
+                FiveXFiveUser.work_history,
+                FiveXFiveUser.education_history,
+                FiveXFiveUser.company_description,
+                FiveXFiveUser.related_domains,
+                FiveXFiveUser.social_connections,
+                FiveXFiveUser.dpv_code
+            ).filter(FiveXFiveUser.id.in_(five_x_five_user_ids))
+            .all()
+        )
+        result = [
+            {column: getattr(user, column) for column in user.keys()}
+            for user in five_x_five_users
+        ]
+        
+        return result
+        
     def search_contact(self, start_letter, domain_id):
         letters = start_letter.split()
         FirstNameAlias = aliased(FiveXFiveNames)

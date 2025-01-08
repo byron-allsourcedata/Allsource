@@ -67,26 +67,26 @@ const klaviyoStyles = {
     },
 }
 
-const ZapierConnectPopup = ({open, handlePopupClose, boxShadow}: ApIkeyPopup) => {
+const ZapierConnectPopup = ({ open, handlePopupClose, boxShadow }: ApIkeyPopup) => {
     const [apiKey, setApiKey] = useState('')
     const [value, setValue] = useState('1')
     const [checked, setChecked] = useState(false);
-    
+
     const label = { inputProps: { 'aria-label': 'Switch demo' } };
     const handleCopy = () => {
         navigator.clipboard.writeText(apiKey);
     };
 
     useEffect(() => {
-        const fetchApiKey = async() => {
+        const fetchApiKey = async () => {
             const response = await axiosInstance.get('/domains/api_key')
-            if(response.status === 200) {
+            if (response.status === 200) {
                 setApiKey(response.data)
             }
         }
         fetchApiKey()
     }, [])
-    
+
 
     const handleChangeTab = (event: React.SyntheticEvent, newValue: string) => {
         setValue(newValue);
@@ -97,41 +97,15 @@ const ZapierConnectPopup = ({open, handlePopupClose, boxShadow}: ApIkeyPopup) =>
         setChecked(event.target.checked);
     };
 
-
     const handleLogin = async () => {
-        const width = 800;  
-        const height = 600; 
-        const left = (window.innerWidth - width) / 2;  
-        const top = (window.innerHeight - height) / 2; 
-    
-        const windowParams = `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes`;
-    
-        const authWindow = window.open(
-            'https://zapier.com/engine/auth/start/App215646CLIAPI@1.0.0/',
-            'ZapierAuthWindow', 
-            windowParams
-        );
-        if (authWindow) {
-            const checkWindowInterval = setInterval(() => {
-                if (authWindow.closed) {
-                    clearInterval(checkWindowInterval);
-                    console.log("Окно закрыто, процесс аутентификации завершен.");
-                    
-                    // Здесь можно добавить логику для обработки данных, полученных после аутентификации
-                    // Например, сделать запрос для получения токена или продолжить авторизацию
-                }
-            }, 1000);
-        } else {
-            console.error("Не удалось открыть окно для аутентификации");
-        }
+        window.open('https://zapier.com/developer/public-invite/218089/381bb6814ee3cfdf04f1c30715427b79/', '_blank');
     };
-    
 
     if (!open) {
         return
     }
 
-    return ( 
+    return (
         <Drawer
             anchor="right"
             open={open}
@@ -144,11 +118,6 @@ const ZapierConnectPopup = ({open, handlePopupClose, boxShadow}: ApIkeyPopup) =>
                     top: 0,
                     boxShadow: boxShadow ? '0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)' : 'none',
                     bottom: 0,
-                    // msOverflowStyle: 'none',
-                    // scrollbarWidth: 'none',
-                    // '&::-webkit-scrollbar': {
-                    //     display: 'none',
-                    // },
                     '@media (max-width: 600px)': {
                         width: '100%',
                     }
@@ -156,18 +125,18 @@ const ZapierConnectPopup = ({open, handlePopupClose, boxShadow}: ApIkeyPopup) =>
             }}
             slotProps={{
                 backdrop: {
-                  sx: {
-                    backgroundColor: boxShadow ? boxShadow : 'transparent'
-                  }
+                    sx: {
+                        backgroundColor: boxShadow ? boxShadow : 'transparent'
+                    }
                 }
-              }}
+            }}
         >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                 <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
                     Connect to Zapier
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                    <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-klaviyo-to-maximiz" target="_blank"rel="noopener noreferrer" 
+                    <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-klaviyo-to-maximiz" target="_blank" rel="noopener noreferrer"
                         sx={{
                             fontFamily: 'Nunito Sans',
                             fontSize: '14px',
@@ -182,157 +151,116 @@ const ZapierConnectPopup = ({open, handlePopupClose, boxShadow}: ApIkeyPopup) =>
                 </Box>
             </Box>
             <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
-            <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
-                <TabContext value={value}>
-                    <Box sx={{pb: 4}}>
-                        <TabList centered aria-label="Connect to Zapier Tabs"
-                        TabIndicatorProps={{sx: {backgroundColor: "#5052b2" } }} 
-                        sx={{
-                            "& .MuiTabs-scroller": {
-                                overflowX: 'auto !important',
-                            },
-                            "& .MuiTabs-flexContainer": {
-                            justifyContent:'center',
-                            '@media (max-width: 600px)': {
-                                gap: '16px',
-                                justifyContent:'flex-start'
-                            }
-                        }}} onChange={handleChangeTab}>
-                            <Tab label="Connection" value="1" className='tab-heading' sx={klaviyoStyles.tabHeading} onClick={() => setValue('1')}/>
-                            <Tab label="Suppression Sync" value="2" className='tab-heading' sx={klaviyoStyles.tabHeading} onClick={() => setValue('2')}/>
-                        </TabList>
-                    </Box>
-                    <TabPanel value="1" sx={{ p: 0 }}>
-                        <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
-                            <Box sx={{display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <Image src='/logo.svg' alt='Maximiz' height={26} width={32} />
+                <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
+                    <TabContext value={value}>
+                        <Box sx={{ pb: 4 }}>
+                            <TabList centered aria-label="Connect to Zapier Tabs"
+                                TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
+                                sx={{
+                                    "& .MuiTabs-scroller": {
+                                        overflowX: 'auto !important',
+                                    },
+                                    "& .MuiTabs-flexContainer": {
+                                        justifyContent: 'center',
+                                        '@media (max-width: 600px)': {
+                                            gap: '16px',
+                                            justifyContent: 'flex-start'
+                                        }
+                                    }
+                                }} onChange={handleChangeTab}>
+                                <Tab label="Connection" value="1" className='tab-heading' sx={klaviyoStyles.tabHeading} onClick={() => setValue('1')} />
+                                <Tab label="Suppression Sync" value="2" className='tab-heading' sx={klaviyoStyles.tabHeading} onClick={() => setValue('2')} />
+                            </TabList>
+                        </Box>
+                        <TabPanel value="1" sx={{ p: 0 }}>
+                            <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <Image src='/logo.svg' alt='Maximiz' height={26} width={32} />
+                                    <Typography variant="h6" sx={{
+                                        fontFamily: 'Nunito Sans',
+                                        fontSize: '16px',
+                                        fontWeight: '600',
+                                        color: '#202124'
+                                    }}>API Key</Typography>
+                                </Box>
                                 <Typography variant="h6" sx={{
-                                    fontFamily: 'Nunito Sans',
-                                    fontSize: '16px',
-                                    fontWeight: '600',
-                                    color: '#202124'
-                                }}>API Key</Typography>
-                            </Box>
-                            <Typography variant="h6" sx={{
                                     fontFamily: 'Nunito Sans',
                                     fontSize: '14px',
                                     color: '#202124ad'
                                 }}>Copy your API Key — you’ll need it for Zapier login.</Typography>
-                            <TextField
-                                variant="outlined"
-                                fullWidth
-                                margin="normal"
-                                disabled
-                                value={apiKey}
-                                InputLabelProps={{ sx: klaviyoStyles.inputLabel }}
-                                InputProps={{ sx: klaviyoStyles.formInput, endAdornment: (
-                                    <InputAdornment position="end">
-                                      <IconButton onClick={handleCopy} edge="end">
-                                        <ContentCopy />
-                                      </IconButton>
-                                    </InputAdornment>
-                                  )}}
-                                
-                            />
-                            <Box sx={{display: 'flex', alignItems: 'center', gap: '8px'}} mt={2} mb={2}>
-                                <Image src='/zapier-icon.svg' alt='zapier' height={24} width={24} />
-                                <Typography variant="h6" sx={{
-                                    fontFamily: 'Nunito Sans',
-                                    fontSize: '16px',
-                                    fontWeight: '600',
-                                    color: '#202124',
-                                    // marginTop: '12px',
-                                    lineHeight: 'normal'
-                                }}>
-                                    Login to your Zapier
-                                </Typography>
-                            </Box>
-                            <Box>
-                                <Button
-                                fullWidth
-                                onClick={handleLogin}
-                                variant="contained"
-                                startIcon={<Image src='/zapier-white.svg' alt='zapier' height={24} width={24} />}
-                                sx={{
-                                    backgroundColor: '#f24e1e',
-                                    fontFamily: "Nunito Sans",
-                                    fontSize: '14px',
-                                    fontWeight: '600',
-                                    lineHeight: '17px',
-                                    letterSpacing: '0.25px',
-                                    color: "#fff",
-                                    textTransform: 'none',
-                                    padding: '14.5px 24px',
-                                    '&:hover': {
-                                    backgroundColor: '#f24e1e'
-                                    },
-                                    borderRadius: '6px',
-                                    border: '1px solid #f24e1e',
-                                }}
-                                >
-                                Connect to Zapier
-                                </Button>
-                            </Box>
-                        </Box>
-                              
-                </TabPanel>
-                <TabPanel value="2" sx={{ p: 0 }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <Image src='/zapier-icon.svg' alt='zapier' height={26} width={32} />
+                                <TextField
+                                    variant="outlined"
+                                    fullWidth
+                                    margin="normal"
+                                    disabled
+                                    value={apiKey}
+                                    InputLabelProps={{ sx: klaviyoStyles.inputLabel }}
+                                    InputProps={{
+                                        sx: klaviyoStyles.formInput, endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton onClick={handleCopy} edge="end">
+                                                    <ContentCopy />
+                                                </IconButton>
+                                            </InputAdornment>
+                                        )
+                                    }}
+
+                                />
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }} mt={2} mb={2}>
+                                    <Image src='/zapier-icon.svg' alt='zapier' height={24} width={24} />
                                     <Typography variant="h6" sx={{
                                         fontFamily: 'Nunito Sans',
                                         fontSize: '16px',
                                         fontWeight: '600',
                                         color: '#202124',
+                                        // marginTop: '12px',
                                         lineHeight: 'normal'
-                                    }}>Eliminate Redundancy: Stop Paying for Contacts You Already Own</Typography>
-                                </Box>
-                                <Typography variant="subtitle1" sx={{
-                                    fontFamily: 'Roboto',
-                                    fontSize: '12px',
-                                    fontWeight: '400',
-                                    color: '#808080',
-                                    lineHeight: '20px',
-                                    letterSpacing: '0.06px'
-                                }}>Sync your current list to avoid collecting contacts you already possess.
-                                    Newly added contacts in Zapier will be automatically suppressed each day.</Typography>
-
-
-                                <Box sx={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                    <Typography variant="subtitle1" sx={{
-                                        fontFamily: 'Roboto',
-                                        fontSize: '12px',
-                                        fontWeight: '400',
-                                        color: '#808080',
-                                        lineHeight: 'normal',
-                                        letterSpacing: '0.06px'
                                     }}>
-                                        Enable Automatic Contact Suppression
+                                        Login to your Zapier
                                     </Typography>
-
-                                    {/* Switch Control with Yes/No Labels */}
-                                    <Box position="relative" display="inline-block">
-                                        <Link variant='h6' sx={{
-                                            fontFamily: 'Nunito Sans',
+                                </Box>
+                                <Box>
+                                    <Button
+                                        fullWidth
+                                        onClick={handleLogin}
+                                        variant="contained"
+                                        startIcon={<Image src='/zapier-white.svg' alt='zapier' height={24} width={24} />}
+                                        sx={{
+                                            backgroundColor: '#f24e1e',
+                                            fontFamily: "Nunito Sans",
                                             fontSize: '14px',
                                             fontWeight: '600',
-                                            lineHeight: '20px',
-                                            color: '#5052b2',
-                                            cursor: 'pointer',
-                                            textDecorationColor: '#5052b2'
-                                            }}>Tutorial</Link>
-                                    </Box>
+                                            lineHeight: '17px',
+                                            letterSpacing: '0.25px',
+                                            color: "#fff",
+                                            textTransform: 'none',
+                                            padding: '14.5px 24px',
+                                            '&:hover': {
+                                                backgroundColor: '#f24e1e'
+                                            },
+                                            borderRadius: '6px',
+                                            border: '1px solid #f24e1e',
+                                        }}
+                                    >
+                                        Connect to Zapier
+                                    </Button>
                                 </Box>
-
-
-
-
                             </Box>
-                            <Box sx={{ background: '#efefef', borderRadius: '4px', px: 1.5, py: 1 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <Image src='/info-circle.svg' alt='info-circle' height={20} width={20} />
+
+                        </TabPanel>
+                        <TabPanel value="2" sx={{ p: 0 }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <Image src='/zapier-icon.svg' alt='zapier' height={26} width={32} />
+                                        <Typography variant="h6" sx={{
+                                            fontFamily: 'Nunito Sans',
+                                            fontSize: '16px',
+                                            fontWeight: '600',
+                                            color: '#202124',
+                                            lineHeight: 'normal'
+                                        }}>Eliminate Redundancy: Stop Paying for Contacts You Already Own</Typography>
+                                    </Box>
                                     <Typography variant="subtitle1" sx={{
                                         fontFamily: 'Roboto',
                                         fontSize: '12px',
@@ -340,42 +268,86 @@ const ZapierConnectPopup = ({open, handlePopupClose, boxShadow}: ApIkeyPopup) =>
                                         color: '#808080',
                                         lineHeight: '20px',
                                         letterSpacing: '0.06px'
-                                    }}>By performing this action, all your Zapier contacts will be added to your Grow suppression list, and new contacts will be imported daily around 6pm EST.</Typography>
+                                    }}>Sync your current list to avoid collecting contacts you already possess.
+                                        Newly added contacts in Zapier will be automatically suppressed each day.</Typography>
+
+
+                                    <Box sx={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                        <Typography variant="subtitle1" sx={{
+                                            fontFamily: 'Roboto',
+                                            fontSize: '12px',
+                                            fontWeight: '400',
+                                            color: '#808080',
+                                            lineHeight: 'normal',
+                                            letterSpacing: '0.06px'
+                                        }}>
+                                            Enable Automatic Contact Suppression
+                                        </Typography>
+
+                                        {/* Switch Control with Yes/No Labels */}
+                                        <Box position="relative" display="inline-block">
+                                            <Link variant='h6' sx={{
+                                                fontFamily: 'Nunito Sans',
+                                                fontSize: '14px',
+                                                fontWeight: '600',
+                                                lineHeight: '20px',
+                                                color: '#5052b2',
+                                                cursor: 'pointer',
+                                                textDecorationColor: '#5052b2'
+                                            }}>Tutorial</Link>
+                                        </Box>
+                                    </Box>
+
+
+
+
+                                </Box>
+                                <Box sx={{ background: '#efefef', borderRadius: '4px', px: 1.5, py: 1 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <Image src='/info-circle.svg' alt='info-circle' height={20} width={20} />
+                                        <Typography variant="subtitle1" sx={{
+                                            fontFamily: 'Roboto',
+                                            fontSize: '12px',
+                                            fontWeight: '400',
+                                            color: '#808080',
+                                            lineHeight: '20px',
+                                            letterSpacing: '0.06px'
+                                        }}>By performing this action, all your Zapier contacts will be added to your Grow suppression list, and new contacts will be imported daily around 6pm EST.</Typography>
+                                    </Box>
                                 </Box>
                             </Box>
-                        </Box>
-                    </TabPanel>
-                </TabContext>
+                        </TabPanel>
+                    </TabContext>
                 </Box>
                 <Box sx={{ px: 2, py: 2, width: '100%', borderTop: '1px solid #e4e4e4' }}>
                     <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
-                    <Button
-                        variant="contained"
-                        onClick={handlePopupClose}
-                        sx={{
-                            backgroundColor: '#5052B2',
-                            fontFamily: "Nunito Sans",
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            lineHeight: '20px',
-                            letterSpacing: 'normal',
-                            color: "#fff",
-                            textTransform: 'none',
-                            padding: '10px 24px',
-                            boxShadow:'0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                            '&:hover': {
-                                backgroundColor: '#5052B2'
-                            },
-                            borderRadius: '4px',
-                        }}
-                    >
-                        Close
-                    </Button>
+                        <Button
+                            variant="contained"
+                            onClick={handlePopupClose}
+                            sx={{
+                                backgroundColor: '#5052B2',
+                                fontFamily: "Nunito Sans",
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                lineHeight: '20px',
+                                letterSpacing: 'normal',
+                                color: "#fff",
+                                textTransform: 'none',
+                                padding: '10px 24px',
+                                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                '&:hover': {
+                                    backgroundColor: '#5052B2'
+                                },
+                                borderRadius: '4px',
+                            }}
+                        >
+                            Close
+                        </Button>
                     </Box>
-                </Box>                  
+                </Box>
             </Box>
         </Drawer>
-     );
+    );
 }
- 
+
 export default ZapierConnectPopup;
