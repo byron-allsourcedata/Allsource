@@ -766,7 +766,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                             },
                         }}
                     >
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 32px 24px', borderBottom: '1px solid #e4e4e4' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 32px 21.5px', borderBottom: '1px solid #e4e4e4' }}>
                             <Typography variant="h6" className='first-sub-title' sx={{
                                 textAlign: 'center'
                             }}>
@@ -776,7 +776,6 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                 <CloseIcon sx={{ width: '20px', height: '20px' }} />
                             </IconButton>
                         </Box>
-                        <Divider />
                         <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
                             <Box sx={{ px: 4, py: 3, width: '100%', display: 'flex', flexDirection: 'column', gap: 4 }}>
                                 <Typography variant="h6" className='first-sub-title'>
@@ -796,6 +795,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                     label="Current Password"
                                     type={showCurrentPassword ? 'text' : 'password'}
                                     value={currentPassword}
+                                    autoComplete="new-password"
                                     onChange={(e) => setCurrentPassword(e.target.value)}
                                     fullWidth
                                     margin="normal"
@@ -916,7 +916,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                 />
                             </Box>
                         </Box>
-                        <Box sx={{ px: 2, py: 3.5, width: '100%', border: '1px solid #e4e4e4' }}>
+                        <Box sx={{ px: 2, py: 2, width: '100%', border: '1px solid #e4e4e4' }}>
                             <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
                                 <Button
                                     className='hyperlink-red'

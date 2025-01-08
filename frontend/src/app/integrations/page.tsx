@@ -158,7 +158,6 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
       flexDirection: 'column',
       alignItems: 'center',
       cursor: 'pointer',
-      zIndex: 98
     }}>
       <Tooltip
         open={openToolTip || isHovered}
@@ -197,7 +196,6 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
           cursor: is_integrated ? 'default' : 'pointer',
           width: '8rem',
           height: '8rem',
-          zIndex: 98,
           filter: is_integrated ? 'grayscale(1)' : 'none',
           justifyContent: 'center',
           alignItems: 'center',
@@ -899,7 +897,7 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
 };
 
 
-const PixelManagment = () => {
+const PixelManagment = (integrationsCredentials: any) => {
   const [value, setValue] = useState('1')
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
@@ -982,6 +980,10 @@ const PixelManagment = () => {
       case 'attentive':
         return (
           <Image src={"/attentive.svg"} alt="attentive" width={18} height={18} />
+        )
+      case 'zapier': 
+        return (
+          <Image src={"/zapier-icon.svg"} alt="zapier" width={18} height={18} />
         )
       default:
         return null;
@@ -1134,7 +1136,6 @@ const PixelManagment = () => {
                             position: "sticky",
                             left: 0,
                             zIndex: 99,
-                            backgroundColor: "#fff",
                           }),
                           ...(key === "suppression" && {
                             "::after": {
@@ -1143,7 +1144,7 @@ const PixelManagment = () => {
                           }),
                         }}
                       >
-                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <Box sx={{ display: "flex", alignItems: "start" }}>
                           <Typography
                             variant="body2"
                             sx={{ ...integrationsStyle.table_column, borderRight: "0" }}
@@ -1187,9 +1188,9 @@ const PixelManagment = () => {
                         <TableCell
                           className="sticky-cell"
                           sx={{
-                            ...integrationsStyle.table_array,
+                            ...integrationsStyle.table_column,
                             position: "sticky",
-                            left: "0",
+                            left: 0,
                             zIndex: 9,
                             backgroundColor: "rgba(255, 255, 255, 1)",
                           }}
@@ -1199,10 +1200,9 @@ const PixelManagment = () => {
                               display: "flex",
                               padding: "2px 8px",
                               borderRadius: "2px",
-                              justifyContent: "center",
+                              justifyContent: "start",
                               textTransform: "capitalize",
                               zIndex: 9,
-                              backgroundColor: "#fff"
                             }}
                           >
                             {platformIcon(row.platform)}
@@ -1212,7 +1212,6 @@ const PixelManagment = () => {
                             >
                               {row.platform}
                             </Typography>
-
                           </Box>
                         </TableCell>
                         <TableCell
@@ -1453,10 +1452,12 @@ const Integrations = () => {
     border: '1px solid rgba(235, 235, 235, 1)',
     borderRadius: 2,
     padding: 3,
+    pb:0,
     width: '100%',
     textAlign: 'center',
     flex: 1,
-    fontFamily: 'Nunito Sans'
+    fontFamily: 'Nunito Sans',
+    overflowY: 'auto',
   };
 
   useEffect(() => {
@@ -1556,149 +1557,141 @@ const Integrations = () => {
             },
           }}
         >
-          <Box
-            sx={{
-              flexShrink: 0,
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              position: 'fixed',
-              top: hasNotification ? '8.05rem' : '5.4rem',
-              right: '16px',
-              left: '170px',
-              zIndex: '99',
-              paddingLeft: '30px',
-              paddingRight: '24px',
-              width: '10%',
-              mx: '-24px',
-              "@media (max-width: 900px)": {
-                left: 'unset',
-                p: 0,
-                position: 'unset',
-                top: 'unset',
-                margin: 'unset'
-              },
-              gap: 1,
-              "@media (max-width: 600px)": { mb: 2, width: '100%' },
-            }}
-          >
-            <Typography
-              className="first-sub-title"
-              sx={{
-                fontFamily: "Nunito Sans",
-                fontSize: "16px",
-                lineHeight: "normal",
-                fontWeight: 600,
-                color: "#202124",
-              }}
-            >
-              Integrations
-            </Typography>
-            <CustomTooltip
-              title={"Connect your favourite tools to automate tasks and ensure all your data is accessible in one place."}
-              linkText="Learn more"
-              linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/integration"
-            />
-          </Box>
-          {/* Tabs */}
-          {status !== 'PIXEL_INSTALLATION_NEEDED' && !isLoading && (
-            <Box sx={{ display: 'flex', alignItems: 'center', margin: '0 auto' }}>
-              <TabList
-                centered
-                aria-label="Integrations Tabs"
-                TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
+          <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', position: 'fixed', top: hasNotification ? '7.05rem' : '4.25rem', pt: '12px', pb: '20px', left: '9.1rem', pl: '2rem', zIndex: 1200, backgroundColor: '#fff', justifyContent: 'space-between', width: '100%', ml: 0, "@media (max-width: 900px)": { left: 0, zIndex: 50 }, "@media (max-width: 700px)": { flexDirection: 'column', pl: '1.5rem', display: 'flex', alignItems: 'flex-start', zIndex: 50, width: '97%' }, "@media (max-width: 440px)": { flexDirection: 'column', pt: hasNotification ? '3rem' : '0.75rem', top: hasNotification ? '4.5rem' : '', zIndex: 50, justifyContent: 'flex-start' }, "@media (max-width: 400px)": { pt: hasNotification ? '4.25rem' : '', pb: '6px', } }}>
+            <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', width: '10%', gap: 1, "@media (max-width: 600px)": { mb: 2 }, "@media (max-width: 440px)": { mb: 1 }, }}>
+              <Typography
+                className="first-sub-title"
                 sx={{
-                  textTransform: 'none',
-                  minHeight: 0,
-                  '& .MuiTabs-indicator': {
-                    backgroundColor: 'rgba(80, 82, 178, 1)',
-                    height: '1.4px',
-                  },
-                  "@media (max-width: 600px)": {
-                    border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px', width: '100%', '& .MuiTabs-indicator': {
-                      height: '0',
-                    },
-                  }
+                  fontFamily: "Nunito Sans",
+                  fontSize: "16px",
+                  lineHeight: "normal",
+                  fontWeight: 600,
+                  color: "#202124",
                 }}
-                onChange={handleTabChange}
-                variant="scrollable"
               >
-                <Tab value="1" label="Your Integrations" className="main-text"
+                Integrations
+              </Typography>
+
+              <Box sx={{ "@media (max-width: 600px)": { display: 'none' } }}>
+                <CustomTooltip
+                title={"Connect your favourite tools to automate tasks and ensure all your data is accessible in one place."}
+                linkText="Learn more"
+                linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/integration"
+                />
+              </Box>
+            </Box>
+
+            <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', width: '90%', pr: '20%', alignItems: 'center', "@media (max-width: 900px)": { pr: 0 }, "@media (max-width: 600px)": { width: '97%', pr: '0' } }}>
+              {status === 'PIXEL_INSTALLATION_NEEDED' ? '' : (
+                <TabList
+                  centered
+                  aria-label="Integrations Tabs"
+                  TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
                   sx={{
                     textTransform: 'none',
-                    padding: '4px 10px',
-                    pb: '10px',
-                    flexGrow: 1,
-                    marginRight: '3em',
-                    minHeight: 'auto',
-                    minWidth: 'auto',
-                    fontSize: '14px',
-                    fontWeight: 700,
-                    lineHeight: '19.1px',
-                    textAlign: 'left',
-                    mr: 2,
-                    '&.Mui-selected': {
-                      color: 'rgba(80, 82, 178, 1)'
+                    pt: '8px',
+                    minHeight: 0,
+                    '& .MuiTabs-indicator': {
+                      backgroundColor: 'rgba(80, 82, 178, 1)',
+                      height: '1.4px',
                     },
                     "@media (max-width: 600px)": {
-                      mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                        backgroundColor: 'rgba(249, 249, 253, 1)',
-                        border: '1px solid rgba(220, 220, 239, 1)'
+                      border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px', width: '100%', '& .MuiTabs-indicator': {
+                        height: '0',
                       },
                     }
                   }}
-                />
-                <Tab label="Add an Integration" value="2" className="main-text"
-                  sx={{
-                    textTransform: 'none',
-                    padding: '4px 10px',
-                    pb: '10px',
-                    flexGrow: 1,
-                    marginRight: '3em',
-                    minHeight: 'auto',
-                    minWidth: 'auto',
-                    fontSize: '14px',
-                    fontWeight: 700,
-                    lineHeight: '19.1px',
-                    textAlign: 'left',
-                    mr: 2,
-                    '&.Mui-selected': {
-                      color: 'rgba(80, 82, 178, 1)'
-                    },
-                    "@media (max-width: 600px)": {
-                      mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                        backgroundColor: 'rgba(249, 249, 253, 1)',
-                        border: '1px solid rgba(220, 220, 239, 1)'
+                  onChange={handleTabChange}
+                  variant="scrollable"
+                >
+                  <Tab value="1" label="Your Integrations" className="main-text"
+                    sx={{
+                      textTransform: 'none',
+                      padding: '4px 10px',
+                      pb: '10px',
+                      flexGrow: 1,
+                      marginRight: '3em',
+                      minHeight: 'auto',
+                      minWidth: 'auto',
+                      fontSize: '14px',
+                      fontWeight: 700,
+                      lineHeight: '19.1px',
+                      textAlign: 'left',
+                      mr: 2,
+                      '&.Mui-selected': {
+                        color: 'rgba(80, 82, 178, 1)'
                       },
-                    }
-                  }} />
-                <Tab label="Pixel Management" value="3" className="main-text"
-                  sx={{
-                    textTransform: 'none',
-                    padding: '4px 10px',
-                    pb: '10px',
-                    flexGrow: 1,
-                    marginRight: '3em',
-                    minHeight: 'auto',
-                    minWidth: 'auto',
-                    fontSize: '14px',
-                    fontWeight: 700,
-                    lineHeight: '19.1px',
-                    textAlign: 'left',
-                    mr: 2,
-                    '&.Mui-selected': {
-                      color: 'rgba(80, 82, 178, 1)'
-                    },
-                    "@media (max-width: 600px)": {
-                      mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                        backgroundColor: 'rgba(249, 249, 253, 1)',
-                        border: '1px solid rgba(220, 220, 239, 1)'
+                      "@media (max-width: 600px)": {
+                        mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                          backgroundColor: 'rgba(249, 249, 253, 1)',
+                          border: '1px solid rgba(220, 220, 239, 1)'
+                        },
+                      }
+                    }}
+                  />
+                  <Tab label="Add an Integration" value="2" className="main-text"
+                    sx={{
+                      textTransform: 'none',
+                      padding: '4px 10px',
+                      pb: '10px',
+                      flexGrow: 1,
+                      marginRight: '3em',
+                      minHeight: 'auto',
+                      minWidth: 'auto',
+                      fontSize: '14px',
+                      fontWeight: 700,
+                      lineHeight: '19.1px',
+                      textAlign: 'left',
+                      mr: 2,
+                      '&.Mui-selected': {
+                        color: 'rgba(80, 82, 178, 1)'
                       },
-                    }
-                  }} />
-              </TabList>
+                      "@media (max-width: 600px)": {
+                        mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                          backgroundColor: 'rgba(249, 249, 253, 1)',
+                          border: '1px solid rgba(220, 220, 239, 1)'
+                        },
+                      }
+                    }} />
+                  <Tab label="Pixel Management" value="3" className="main-text"
+                    sx={{
+                      textTransform: 'none',
+                      padding: '4px 10px',
+                      pb: '10px',
+                      flexGrow: 1,
+                      marginRight: '3em',
+                      minHeight: 'auto',
+                      minWidth: 'auto',
+                      fontSize: '14px',
+                      fontWeight: 700,
+                      lineHeight: '19.1px',
+                      textAlign: 'left',
+                      mr: 2,
+                      '&.Mui-selected': {
+                        color: 'rgba(80, 82, 178, 1)'
+                      },
+                      "@media (max-width: 600px)": {
+                        mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                          backgroundColor: 'rgba(249, 249, 253, 1)',
+                          border: '1px solid rgba(220, 220, 239, 1)'
+                        },
+                      }
+                    }} />
+                </TabList>
+              )}   
             </Box>
-          )}
+
+            {status !== 'PIXEL_INSTALLATION_NEEDED' && !isLoading && activeTab === "3" && (
+            <Box sx={{
+              border: '1px solid #E4E4E4',
+              mt: 2.5,
+              width: '86%',
+              position: 'fixed',
+              top: '7rem',
+              "@media (max-width: 700px)": {display: 'none'}
+              
+            }}></Box>)}    
+          </Box>
         </Box>
         <Box sx={{
           '@media (max-width: 600px)':
@@ -1706,11 +1699,7 @@ const Integrations = () => {
 
           }
         }}>
-          {status !== 'PIXEL_INSTALLATION_NEEDED' && !isLoading && activeTab === "3" && (
-            <Box sx={{
-              border: '1px solid #E4E4E4',
-              mt: 2.5
-            }}></Box>)}
+
           {status === 'PIXEL_INSTALLATION_NEEDED' && !isLoading ? (
             <Box sx={centerContainerStyles}>
               <Typography variant="h5" sx={{ mb: 2, fontSize: '0.9rem' }}>
@@ -1741,7 +1730,7 @@ const Integrations = () => {
             </Box>
           ) : (!isLoading && (
             <>
-              <TabPanel value="1" sx={{ px: 0 }}>
+              <TabPanel value="1" sx={{ mt: 6, "@media (max-width: 600px)": {mt: 10}}}>
                 <UserIntegrationsList
                   integrationsCredentials={integrationsCredentials}
                   changeTab={changeTab}
@@ -1750,15 +1739,19 @@ const Integrations = () => {
                   handleDeleteSettings={handleDeleteSettings}
                 />
               </TabPanel>
-              <TabPanel value="2" sx={{ px: 0 }}>
+              <TabPanel value="2" sx={{ mt: 6, "@media (max-width: 600px)": {mt: 8}}}>
                 <IntegrationsAvaliable
                   integrationsCredentials={integrationsCredentials}
                   integrations={integrations}
                   handleSaveSettings={handleSaveSettings}
                 />
               </TabPanel>
-              <TabPanel value="3" sx={{ px: 0 }}>
-                <PixelManagment />
+              <TabPanel value="3" >
+                <Box sx={{ mt: 6, "@media (max-width: 600px)": {mt: 8}}}>
+                  <PixelManagment
+                  integrationsCredentials={integrationsCredentials}
+                  integrations={integrations} />
+                </Box>
               </TabPanel>
             </>
           ))}
