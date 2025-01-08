@@ -508,7 +508,13 @@ class UsersAuth:
             self.user_persistence_service.email_confirmed(user_object.id)
             self.user_persistence_service.set_partner_role(user_object.id)
             self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)
-            self.partners_service.setUser(user_object.email, user_object.id, "signup", datetime.now())
+            partner = self.partners_service.setUser(user_object.email, user_object.id, "signup", datetime.now())
+            if not partner.get("status"):
+                error = partner.get("error", {}) or {}
+                return {
+                    'is_success': True,
+                    'status': error.get("message", "Unknown error occurred")
+                }
             
         if teams_token is None:
             return {

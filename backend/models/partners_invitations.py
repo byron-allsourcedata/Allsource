@@ -2,8 +2,8 @@ from sqlalchemy import Column, event, Integer, TIMESTAMP, VARCHAR
 from .base import Base, create_timestamps, update_timestamps
 
 
-class Accounts(Base):
-    __tablename__ = "accounts"
+class ParntersInvitations(Base):
+    __tablename__ = "partners_users_invitations"
 
     id = Column(Integer, primary_key=True, nullable=False)
     user_id = Column(Integer, nullable=True)
@@ -23,5 +23,5 @@ class Accounts(Base):
                 "email": self.email,
             }
 
-event.listen(Accounts, "before_insert", create_timestamps)
-event.listen(Accounts, "before_update", update_timestamps)
+event.listen(ParntersInvitations, "before_insert", create_timestamps)
+event.listen(ParntersInvitations, "before_update", update_timestamps)

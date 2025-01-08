@@ -1,15 +1,9 @@
 import logging
-import os
-import hashlib
-import json
-from datetime import datetime
 from fastapi import HTTPException
-from models.accounts import Accounts
-from models.partners_asset import PartnersAsset
+from models.partners_invitations import ParntersInvitations
 from persistence.user_persistence import UserPersistence
 from persistence.partners_persistence import PartnersPersistence
-from persistence.accounts_persistence import AccountsPersistence
-from schemas.partners_asset import PartnersResponse
+from persistence.partners_invations_persistence import ParntersInvitationsPersistence
 from schemas.accounts import AccountResponse
 from datetime import datetime
 from services.sendgrid import SendgridHandler
@@ -21,7 +15,7 @@ logger = logging.getLogger(__name__)
 class AccountsService:
 
     def __init__(self,
-        accounts_persistence: AccountsPersistence):
+        accounts_persistence: ParntersInvitationsPersistence):
         self.accounts_persistence = accounts_persistence
         # self.default_user = {
         #     "full_name": "Default User",
@@ -53,7 +47,7 @@ class AccountsService:
         # return result
 
 
-    def domain_mapped(self, account: Accounts):
+    def domain_mapped(self, account: ParntersInvitations):
         return AccountResponse(
             id=account.id,
             account_name=account.name,

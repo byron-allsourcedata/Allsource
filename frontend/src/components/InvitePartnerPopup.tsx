@@ -105,12 +105,12 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
                     headers: { 'Content-Type': 'application/json' },
                 });
             }
-            if (response.data.status === "SUCCESS") {
-                updateOrAddAsset(response.data.data);
+            if (response.status === 200) {
+                updateOrAddAsset(response.data);
                 showToast("Partner successfully submitted!");
             }
         } catch {
-            showErrorToast("Failed to submit the asset. Please try again.");
+            showErrorToast("Failed to submit the invite. Please try again.");
         } finally {
             handleClose();
             setFullName(""); 

@@ -57,8 +57,7 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
 
         try {
         const response = await axiosInstance.delete(`admin-partners/${id}`, {params: { message }});
-            const status = response.data.status;
-            if (status.status === "SUCCESS") {
+            if (response.status === 200) {
                 removePartnerById(id);
                 showToast("Partner successfully deleted!")
             }

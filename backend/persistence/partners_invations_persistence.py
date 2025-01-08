@@ -1,21 +1,21 @@
 from models.partners import Partners
-from models.accounts import Accounts
+from models.partners_invitations import ParntersInvitations
 from sqlalchemy.orm import Session
 from typing import Optional
 
 
-class AccountsPersistence:
+class ParntersInvitationsPersistence:
 
     def __init__(self, db: Session):
         self.db = db
 
 
     def get_accounts(self):
-        return self.db.query(Accounts).all()
+        return self.db.query(ParntersInvitations).all()
     
 
     def get_accounts_by_partner_id(self, partner_id):
-        return self.db.query(Accounts).filter(Accounts.partner_id == partner_id).all()
+        return self.db.query(ParntersInvitations).filter(ParntersInvitations.partner_id == partner_id).all()
     
 
     

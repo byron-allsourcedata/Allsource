@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, Query
-from typing import Optional
+from fastapi import APIRouter, HTTPException, Depends, Query 
+from typing import Optional, List
 from datetime import date
-from schemas.partners_asset import PartnerCreateRequest, PartnerUpdateRequest
+from schemas.partners import PartnerCreateRequest, PartnerUpdateRequest, PartnersResponse
 from dependencies import get_partners_service, check_user_admin, PartnersService
 
 router = APIRouter(dependencies=[Depends(check_user_admin)])
@@ -9,7 +9,7 @@ router = APIRouter(dependencies=[Depends(check_user_admin)])
 
 @router.get('')
 @router.get('/')
-def partners(
+def get_partners(
     isMaster: Optional[bool] = Query(None),
     search: Optional[str] = Query(None),
     start_date: Optional[date] = Query(None),
@@ -18,22 +18,30 @@ def partners(
     rowsPerPage: int = Query(10),
     get_partners_service: PartnersService = Depends(get_partners_service)):
     
-    assets = get_partners_service.get_partners(isMaster, search, start_date, end_date, page, rowsPerPage)
-    return {"items": assets["items"], "totalCount": assets["totalCount"]}
+    partner = get_partners_service.get_partners(isMaster, search, start_date, end_date, page, rowsPerPage)
+    if not partner.get("status"):
+        error = partner.get("error", {}) or {}
+        raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))
+     
+    return partner.get('data') 
 
 
-@router.get('{id}')
-@router.get('/{id}/')
-def partners_by_partners_id(
+@router.get('{id}', response_model=List[PartnersResponse])
+@router.get('/{id}/', response_model=List[PartnersResponse])
+def get_partners_by_partners_id(
     id: int,
     get_partners_service: PartnersService = Depends(get_partners_service)):
     
-    assets = get_partners_service.partners_by_partners_id(id)
-    return assets
+    partner = get_partners_service.partners_by_partners_id(id)
+    if not partner.get("status"):
+        error = partner.get("error", {}) or {}
+        raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))
+     
+    return partner.get('data') 
 
 
-@router.post("")
-@router.post("/")
+@router.post("", response_model=PartnersResponse)
+@router.post("/", response_model=PartnersResponse)
 async def create_partner(
     request: PartnerCreateRequest,
     get_partners_service: PartnersService = Depends(get_partners_service)):
@@ -45,7 +53,12 @@ async def create_partner(
         request.commission,
         request.isMaster,
     )
-    return partner
+
+    if not partner.get("status"):
+        error = partner.get("error", {}) or {}
+        raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))
+     
+    return partner.get('data') 
 
 
 @router.delete("/{id}")
@@ -55,12 +68,16 @@ async def delete_partner(
     message: Optional[str] = Query(None),
     get_partners_service: PartnersService = Depends(get_partners_service)):
     
-    status = get_partners_service.delete_asset(id, message)
-    return {"status": status, "data": None}
+    partner = get_partners_service.delete_partner(id, message)
+    if not partner.get("status"):
+        error = partner.get("error", {}) or {}
+        raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))
+     
+    return True
 
 
-@router.put("/{partner_id}")
-@router.put("/{partner_id}/")
+@router.put("/{partner_id}", response_model=PartnersResponse)
+@router.put("/{partner_id}/", response_model=PartnersResponse)
 async def update_partner(
     partner_id: int,
     request: PartnerUpdateRequest,
@@ -73,4 +90,9 @@ async def update_partner(
             partner = await get_partners_service.update_partner(partner_id, "status", request.status, "Your account active again")
     else: 
         partner = await get_partners_service.update_partner(partner_id, "commission", request.commission, "Your commission has been changed")
-    return partner
+    
+    if not partner.get("status"):
+        error = partner.get("error", {}) or {}
+        raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))
+     
+    return partner.get('data')
