@@ -32,6 +32,8 @@ class SubscriptionPlan(Base):
     __table_args__ = (
         Index('subscription_plans_title_interval_idx', 'title', 'interval'),
         Index('subscription_plans_title_price_idx', 'title', 'price'),
+        Index('subscription_plans_title_idx', 'title'),
+        Index('subscription_plans_interval_is_active_idx', 'interval', 'is_active'),
     )
 
 
