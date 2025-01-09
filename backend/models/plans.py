@@ -28,11 +28,12 @@ class SubscriptionPlan(Base):
     lead_credit_price = Column(DECIMAL(10, 2), nullable=False)
     priority = Column(INTEGER, nullable=False)
     full_price = Column(NUMERIC(18, 2), nullable=True)
+    alias = Column(VARCHAR(64), nullable=True)
     
     __table_args__ = (
         Index('subscription_plans_title_interval_idx', 'title', 'interval'),
         Index('subscription_plans_title_price_idx', 'title', 'price'),
-        Index('subscription_plans_title_idx', 'title'),
+        Index('subscription_plans_alias_idx', 'alias'),
         Index('subscription_plans_interval_is_active_idx', 'interval', 'is_active'),
     )
 

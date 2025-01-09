@@ -221,5 +221,5 @@ class ProccessDataSyncResult(Enum):
     AUTHENTICATION_FAILED = 'authentication_failed'
     TOO_MANY_REQUESTS = 'too_many_requests'
     
-class PlanName(Enum):
-    INFINITE = "Infinite"
+class AliasPlanName(Enum):
+    INFINITE = "infinite"

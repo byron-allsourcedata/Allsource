@@ -36,8 +36,8 @@ class PlansPersistence:
         else:
             return None
         
-    def get_plan_by_title(self, title: str):
-        plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.title == title).first()
+    def get_plan_by_alias(self, alias: str):
+        plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.alias == alias).first()
         if plan:
             return plan
         
@@ -81,7 +81,7 @@ class PlansPersistence:
 
     def get_user_subscription_with_trial_status(self, user_id):
         result = (
-            self.db.query(UserSubscriptions, SubscriptionPlan.is_free_trial, SubscriptionPlan.trial_days, SubscriptionPlan.currency, SubscriptionPlan.price, SubscriptionPlan.title)
+            self.db.query(UserSubscriptions, SubscriptionPlan.is_free_trial, SubscriptionPlan.trial_days, SubscriptionPlan.currency, SubscriptionPlan.price, SubscriptionPlan.alias)
             .join(User, User.current_subscription_id == UserSubscriptions.id)
             .join(SubscriptionPlan, SubscriptionPlan.id == UserSubscriptions.plan_id)
             .filter(User.id == user_id)

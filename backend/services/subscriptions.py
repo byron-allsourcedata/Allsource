@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timezone
-from enums import PlanName
+from enums import AliasPlanName
 from dateutil.relativedelta import relativedelta
 from sqlalchemy.orm import Session
 import os
@@ -101,11 +101,11 @@ class SubscriptionService:
         }
         result = self.plans_persistence.get_user_subscription_with_trial_status(user_id)
         if result:
-            user_subscription, is_free_trial, trail_days, currency, price, title = result
+            user_subscription, is_free_trial, trail_days, currency, price, alias = result
             result_dict['subscription'] = user_subscription
             result_dict['artificial_trial_days'] = trail_days
             result_dict['is_artificial_status'] = is_free_trial
-            result_dict['title'] = title
+            result_dict['alias'] = alias
 
         return result_dict
 
@@ -291,7 +291,7 @@ class SubscriptionService:
         return response
     
     def create_subscription_from_partners(self, user_id):
-        plan = self.plans_persistence.get_plan_by_title(PlanName.INFINITE.value)
+        plan = self.plans_persistence.get_plan_by_alias(AliasPlanName.INFINITE.value)
         created_at = datetime.strptime(get_utc_aware_date_for_postgres(), '%Y-%m-%dT%H:%M:%SZ')
         add_subscription_obj = Subscription(
             domains_limit=plan.domains_limit,
