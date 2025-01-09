@@ -1,5 +1,7 @@
-from fastapi import APIRouter, Depends, Form, Query
-from typing import Optional
+from fastapi import APIRouter, HTTPException, Depends, Query 
+from typing import Optional, List
+from datetime import date
+from schemas.partners import PartnerCreateRequest, PartnerUpdateRequest, PartnersResponse
 from dependencies import get_partners_service, check_user_admin, PartnersService
 
 router = APIRouter(dependencies=[Depends(check_user_admin)])
@@ -7,26 +9,56 @@ router = APIRouter(dependencies=[Depends(check_user_admin)])
 
 @router.get('')
 @router.get('/')
-def partners(
+def get_partners(
     isMaster: Optional[bool] = Query(None),
     search: Optional[str] = Query(None),
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    page: int = Query(0),
+    rowsPerPage: int = Query(10),
     get_partners_service: PartnersService = Depends(get_partners_service)):
     
-    assets = get_partners_service.get_partners(isMaster, search)
-    return assets
+    partner = get_partners_service.get_partners(isMaster, search, start_date, end_date, page, rowsPerPage)
+    if not partner.get("status"):
+        error = partner.get("error", {}) or {}
+        raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))
+     
+    return partner.get('data') 
 
 
-@router.post("")
-@router.post("/")
+@router.get('{id}', response_model=List[PartnersResponse])
+@router.get('/{id}/', response_model=List[PartnersResponse])
+def get_partners_by_partners_id(
+    id: int,
+    get_partners_service: PartnersService = Depends(get_partners_service)):
+    
+    partner = get_partners_service.partners_by_partners_id(id)
+    if not partner.get("status"):
+        error = partner.get("error", {}) or {}
+        raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))
+     
+    return partner.get('data') 
+
+
+@router.post("", response_model=PartnersResponse)
+@router.post("/", response_model=PartnersResponse)
 async def create_partner(
-    full_name: str = Form(...),
-    email: str = Form(...),
-    company_name: str = Form(...),
-    commission: str = Form(...),
+    request: PartnerCreateRequest,
     get_partners_service: PartnersService = Depends(get_partners_service)):
     
-    partner = await get_partners_service.create_partner(full_name, email, company_name, commission)
-    return partner
+    partner = await get_partners_service.create_partner(
+        request.full_name,
+        request.email,
+        request.company_name,
+        request.commission,
+        request.isMaster,
+    )
+
+    if not partner.get("status"):
+        error = partner.get("error", {}) or {}
+        raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))
+     
+    return partner.get('data') 
 
 
 @router.delete("/{id}")
@@ -36,24 +68,31 @@ async def delete_partner(
     message: Optional[str] = Query(None),
     get_partners_service: PartnersService = Depends(get_partners_service)):
     
-    status = get_partners_service.delete_asset(id, message)
-    return {"status": status, "data": None}
+    partner = get_partners_service.delete_partner(id, message)
+    if not partner.get("status"):
+        error = partner.get("error", {}) or {}
+        raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))
+     
+    return True
 
 
-@router.put("/{partner_id}")
-@router.put("/{partner_id}/")
+@router.put("/{partner_id}", response_model=PartnersResponse)
+@router.put("/{partner_id}/", response_model=PartnersResponse)
 async def update_partner(
     partner_id: int,
-    status: str = Form(None),
-    commission: str = Form(None),
-    message: Optional[str] = Query(None),
+    request: PartnerUpdateRequest,
     get_partners_service: PartnersService = Depends(get_partners_service)):
-    
-    if status:
-        if message:
-            partner = await get_partners_service.update_partner(partner_id, "status", status, message)
+
+    if request.status:
+        if request.message:
+            partner = await get_partners_service.update_partner(partner_id, "status", request.status, request.message)
         else:
-            partner = await get_partners_service.update_partner(partner_id, "status", status, "Your account active again")
+            partner = await get_partners_service.update_partner(partner_id, "status", request.status, "Your account active again")
     else: 
-        partner = await get_partners_service.update_partner(partner_id, "commission", commission, message)
-    return partner
+        partner = await get_partners_service.update_partner(partner_id, "commission", request.commission, "Your commission has been changed")
+    
+    if not partner.get("status"):
+        error = partner.get("error", {}) or {}
+        raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))
+     
+    return partner.get('data')

@@ -27,7 +27,7 @@ from persistence.settings_persistence import SettingsPersistence
 from persistence.suppression_persistence import SuppressionPersistence
 from persistence.partners_asset_persistence import PartnersAssetPersistence
 from persistence.partners_persistence import PartnersPersistence
-from persistence.accounts_persistence import AccountsPersistence
+from persistence.partners_invations_persistence import ParntersInvitationsPersistence
 from persistence.user_persistence import UserPersistence
 from persistence.integrations.external_apps_installations import ExternalAppsInstallationsPersistence
 from persistence.referral_persistence import ReferralPersistence
@@ -79,11 +79,13 @@ def get_partners_assets_service(partners_asset_persistence: PartnersAssetPersist
 def get_partners_persistence(db: Session = Depends(get_db)) -> PartnersPersistence:
     return PartnersPersistence(db)
 
-def get_accounts_persistence(db: Session = Depends(get_db)) -> AccountsPersistence:
-    return AccountsPersistence(db)
+def get_partners_invitations_persistence(db: Session = Depends(get_db)) -> ParntersInvitationsPersistence:
+    return ParntersInvitationsPersistence(db)
 
-def get_accounts_service(accounts_persistence: AccountsPersistence = Depends(get_accounts_persistence)):
-    return AccountsService(accounts_persistence=accounts_persistence)
+def get_accounts_service(
+        accounts_persistence: ParntersInvitationsPersistence = Depends(get_partners_invitations_persistence),
+    partners_persistence: PartnersPersistence =  Depends(get_partners_persistence)):
+    return AccountsService(accounts_persistence=accounts_persistence, partners_persistence=partners_persistence)
 
 def get_plans_persistence(db: Session = Depends(get_db)):
     return PlansPersistence(db=db)
@@ -188,12 +190,14 @@ def get_integration_service(db: Session = Depends(get_db),
 
 def get_partners_service(
                         partners_persistence: PartnersPersistence = Depends(get_partners_persistence),
-                        user_persistence_service: UserPersistence = Depends(get_user_persistence_service),
-                        send_grid_persistence_service: SendgridPersistence = Depends(get_send_grid_persistence_service)):
+                        user_persistence: UserPersistence = Depends(get_user_persistence_service),
+                        send_grid_persistence: SendgridPersistence = Depends(get_send_grid_persistence_service),
+                        plans_persistence: PlansPersistence = Depends(get_plans_persistence)):
     return PartnersService(
         partners_persistence,
-        user_persistence_service,
-        send_grid_persistence_service
+        user_persistence,
+        send_grid_persistence,
+        plans_persistence
     )
 
 def get_users_auth_service(db: Session = Depends(get_db),
@@ -303,7 +307,7 @@ def check_user_setting_access(Authorization: Annotated[str, Header()],
         )
     return user
 
-def check_user_partners_access(Authorization: Annotated[str, Header()],
+def check_user_partner(Authorization: Annotated[str, Header()],
                                            user_persistence_service: UserPersistence = Depends(
                                                get_user_persistence_service)) -> Token:
     user = check_user_authentication(Authorization, user_persistence_service)

@@ -14,6 +14,7 @@ import { showErrorToast, showToast } from '@/components/ToastNotification';
 import { styled } from '@mui/material/styles';
 import { width } from "@mui/system";
 import  PartnersAdmin from '@/components/PartnersAdmin'
+import  PartnersAccounts from '@/components/PartnersAccounts'
 
 const SidebarAdmin = dynamic(() => import('../../../components/SidebarAdmin'), {
     suspense: true,
@@ -40,6 +41,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
 };
 
 const Assets: React.FC = () => {
+    const [masterData, setMasterData] = useState<any>(null)
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [loading, setLoading] = useState(false);
     const open = Boolean(anchorEl);
@@ -51,7 +53,7 @@ const Assets: React.FC = () => {
     const email = userEmail || meData.email;
     const { resetTrialData } = useTrial();
     const [tabIndex, setTabIndex] = useState(0);
-    const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
+    const handleTabChange = (event: React.SyntheticEvent | null, newIndex: number) => {
         setTabIndex(newIndex);
     };
 
@@ -242,13 +244,18 @@ const Assets: React.FC = () => {
             <Grid item xs={12} sx={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '85px' }}>
                 <Box sx={{ display: "flex", flexDirection: "column"}}>
                     <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
-                        <TabPanel value={tabIndex} index={0}>
-                            <PartnersAdmin isMaster={false} loading={loading} setLoading={setLoading} tabIndex={tabIndex} handleTabChange={handleTabChange}/>
+                        {masterData?.id && <TabPanel value={tabIndex} index={0}>
+                            <PartnersAccounts fromAdmin={true} masterData={masterData} setMasterData={setMasterData} loading={loading} setLoading={setLoading} tabIndex={tabIndex} handleTabChange={handleTabChange}/>
+                        </TabPanel>}
+                    </Box>
+                    <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
+                        <TabPanel value={tabIndex} index={masterData?.id ? 1 : 0}>
+                            <PartnersAdmin masterData={masterData} setMasterData={setMasterData} isMaster={true} loading={loading} setLoading={setLoading} tabIndex={tabIndex} handleTabChange={handleTabChange}/>
                         </TabPanel>
                     </Box>
                     <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
-                        <TabPanel value={tabIndex} index={1}>
-                            <PartnersAdmin isMaster={true} loading={loading} setLoading={setLoading} tabIndex={tabIndex} handleTabChange={handleTabChange}/>
+                        <TabPanel value={tabIndex} index={masterData?.id ? 2 : 1}>
+                            <PartnersAdmin masterData={masterData} isMaster={false} loading={loading} setLoading={setLoading} tabIndex={tabIndex} handleTabChange={handleTabChange}/>
                         </TabPanel>
                     </Box>
                 </Box>
