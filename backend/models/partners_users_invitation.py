@@ -2,7 +2,7 @@ from sqlalchemy import Column, event, Integer, TIMESTAMP, VARCHAR
 from .base import Base, create_timestamps, update_timestamps
 
 
-class ParntersInvitations(Base):
+class ParntersUsersInvitation(Base):
     __tablename__ = "partners_users_invitations"
 
     id = Column(Integer, primary_key=True, nullable=False)
@@ -10,7 +10,7 @@ class ParntersInvitations(Base):
     partner_id = Column(Integer, nullable=True)
     email = Column(VARCHAR(64), nullable=False)
     name = Column(VARCHAR(64), nullable=False)
-    status = Column(VARCHAR(16), default="Invite sent", nullable=False)
+    status = Column(VARCHAR(16), default="invite sent", nullable=False)
     created_at = Column(TIMESTAMP, nullable=False)
     updated_at = Column(TIMESTAMP, nullable=False)
     
@@ -23,5 +23,5 @@ class ParntersInvitations(Base):
                 "email": self.email,
             }
 
-event.listen(ParntersInvitations, "before_insert", create_timestamps)
-event.listen(ParntersInvitations, "before_update", update_timestamps)
+event.listen(ParntersUsersInvitation, "before_insert", create_timestamps)
+event.listen(ParntersUsersInvitation, "before_update", update_timestamps)

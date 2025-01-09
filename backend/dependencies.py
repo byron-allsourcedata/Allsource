@@ -79,11 +79,13 @@ def get_partners_assets_service(partners_asset_persistence: PartnersAssetPersist
 def get_partners_persistence(db: Session = Depends(get_db)) -> PartnersPersistence:
     return PartnersPersistence(db)
 
-def get_parnters_invitations_persistence(db: Session = Depends(get_db)) -> ParntersInvitationsPersistence:
+def get_partners_invitations_persistence(db: Session = Depends(get_db)) -> ParntersInvitationsPersistence:
     return ParntersInvitationsPersistence(db)
 
-def get_accounts_service(accounts_persistence: ParntersInvitationsPersistence = Depends(get_parnters_invitations_persistence)):
-    return AccountsService(accounts_persistence=accounts_persistence)
+def get_accounts_service(
+        accounts_persistence: ParntersInvitationsPersistence = Depends(get_partners_invitations_persistence),
+    partners_persistence: PartnersPersistence =  Depends(get_partners_persistence)):
+    return AccountsService(accounts_persistence=accounts_persistence, partners_persistence=partners_persistence)
 
 
 def get_plans_persistence(db: Session = Depends(get_db)):
@@ -295,7 +297,7 @@ def check_user_setting_access(Authorization: Annotated[str, Header()],
         )
     return user
 
-def check_user_partners_access(Authorization: Annotated[str, Header()],
+def check_user_partner(Authorization: Annotated[str, Header()],
                                            user_persistence_service: UserPersistence = Depends(
                                                get_user_persistence_service)) -> Token:
     user = check_user_authentication(Authorization, user_persistence_service)

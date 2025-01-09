@@ -77,8 +77,8 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
             const response = await axiosInstance.put(`admin-partners/${id}/`, {status: "inactive", message}, {
                 headers: { 'Content-Type': 'application/json' },
             });
-            if (response.data.status === "SUCCESS") {
-                updateOrAddAsset(response.data.data);
+            if (response.status === 200) {
+                updateOrAddAsset(response.data);
                 showToast("Partner status successfully updated!");
             }
         } catch {

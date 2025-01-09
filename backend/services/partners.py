@@ -2,7 +2,6 @@ import logging
 import os
 import hashlib
 import json
-from fastapi import HTTPException
 from models.partners import Partners
 from persistence.user_persistence import UserPersistence
 from persistence.partners_persistence import PartnersPersistence

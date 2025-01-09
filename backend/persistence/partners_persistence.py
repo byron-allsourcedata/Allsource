@@ -53,7 +53,7 @@ class PartnersPersistence:
         return self.db.query(Partners).filter(Partners.id == partner_id).first()
     
 
-    def get_asset_by_email(self, email):
+    def get_partner_by_email(self, email):
         return self.db.query(Partners).filter(Partners.email == email).first()
     
 

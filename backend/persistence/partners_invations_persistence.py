@@ -1,5 +1,5 @@
 from models.partners import Partners
-from models.partners_invitations import ParntersInvitations
+from models.partners_users_invitation import ParntersUsersInvitation
 from sqlalchemy.orm import Session
 from typing import Optional
 
@@ -11,13 +11,8 @@ class ParntersInvitationsPersistence:
 
 
     def get_accounts(self):
-        return self.db.query(ParntersInvitations).all()
+        return self.db.query(ParntersUsersInvitation).all()
     
 
     def get_accounts_by_partner_id(self, partner_id):
-        return self.db.query(ParntersInvitations).filter(ParntersInvitations.partner_id == partner_id).all()
-    
-
-    
-
-    
+        return self.db.query(ParntersUsersInvitation).filter(ParntersUsersInvitation.partner_id == partner_id).all()

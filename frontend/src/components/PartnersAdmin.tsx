@@ -238,11 +238,11 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
         setLoading(true);
     
         try {
-            const response = await axiosInstance.put(`admin-partners/${enabledData.id}/`, {status: "active"}, {
+            const response = await axiosInstance.put(`admin-partners/${selectedRowData.id}/`, {status: "active"}, {
                 headers: { 'Content-Type': 'application/json' },
             });
-            if (response.data.status === "SUCCESS") {
-                updateOrAddAsset(response.data.data);
+            if (response.status === 200) {
+                updateOrAddAsset(response.data);
                 showToast("Partner status successfully updated!");
             }
         } catch {
@@ -735,7 +735,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                                             <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {}}>
                                                                                 <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Reward history"/>
                                                                             </ListItemButton>
-                                                                            {data.status === "Active" 
+                                                                            {selectedRowData?.status === "Active" 
                                                                             ?   <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
                                                                                     handleNoticeOpenPopup()
                                                                                     setEnabledData({ 
@@ -767,7 +767,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                                                     id: selectedRowData.id,
                                                                                     email: selectedRowData.email,
                                                                                     fullName: selectedRowData.partner_name,
-                                                                                    companyName: "Company",
+                                                                                    companyName: selectedRowData.sources,
                                                                                     commission: selectedRowData.commission,
                                                                                 });
                                                                                 handleFormOpenPopup()
