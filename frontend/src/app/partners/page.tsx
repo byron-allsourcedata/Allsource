@@ -284,6 +284,7 @@ const Suppressions: React.FC = () => {
                     <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
                         <TabPanel value={tabIndex} index={1}>
                             <PartnersAccounts loading={false} setLoading={() => {}} />
+
                         </TabPanel>
                     </Box>
                     <Box sx={{ width: '100%', padding: 0, margin: 0 }}>

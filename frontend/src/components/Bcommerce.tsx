@@ -12,6 +12,7 @@ interface BigcommerceConntectPopupProps {
     onClose: () => void
     error_message?: string
     initShopHash? : string
+    boxShadow?: string
 }
 
 
@@ -38,8 +39,9 @@ const metaStyles = {
     },
     inputLabel: {
         fontFamily: 'Nunito Sans',
-        fontSize: '12px',
-        lineHeight: '16px',
+        fontSize: '14px',
+        lineHeight: '14px',
+        pl:'4px',
         color: 'rgba(17, 17, 19, 0.60)',
         '&.Mui-focused': {
             color: '#0000FF',
@@ -53,7 +55,7 @@ const metaStyles = {
             fontFamily: 'Roboto',
             color: '#202124',
             fontSize: '14px',
-            lineHeight: '20px',
+            lineHeight: '14px',
             fontWeight: '400'
           },
           '& .MuiOutlinedInput-notchedOutline': {
@@ -73,51 +75,48 @@ const metaStyles = {
       
 }
 
-const BCommerceConnect = ({open, onClose, error_message, initShopHash}: BigcommerceConntectPopupProps) => {
+const BCommerceConnect = ({open, onClose, error_message, initShopHash, boxShadow}: BigcommerceConntectPopupProps) => {
     const [shopHash, setShopHash] = useState('')
     const [loading, setLoading] = useState(false)
-    const [externalStoreHash, setExternalStoreHash] = useState<any[]>([])
     
     const handleShopHashChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value
         setShopHash(value)
     }
 
-    const handleClick = async() => {
-        if(externalStoreHash.some(eai => eai.store_hash == shopHash))
-        {
-            const response = await axiosInstance.post('/integrations/', {
-                bigcommerce: {
-                    shop_domain: shopHash
-                }
-            }, {
-                params: {
-                    service_name: 'big_commerce'
-                }
-            })
-        }
-        else {
-            const response = await axiosInstance.get('/integrations/bigcommerce/oauth', {params: {store_hash: shopHash}})
-            window.location.href = response.data.url;
-        }
-    }
-
-    useEffect(() => {
-        if(open && !initShopHash) {
-            const fetchData = async() => {
-                const response = await axiosInstance.get('/integrations/eai', {
+    const handleClick = async () => {
+        setLoading(true);
+        try {
+            const response = await axiosInstance.post(
+                '/integrations/connect',
+                {
+                    bigcommerce: {
+                        shop_domain: shopHash,
+                    },
+                },
+                {
                     params: {
-                        platform: 'big_commerce'
-                    }
-                })
-                if(response.status == 200) {
-                    setExternalStoreHash(response.data)
+                        service_name: 'bigcommerce',
+                    },
                 }
+            );
+    
+            const { url, status } = response.data || {};
+    
+            if (url) {
+                window.location.href = url;
+            } else if (status === 'SUCCESS') {
+                showToast('The integration with BigCommerce was successful')
+            } else {
+                console.warn('Unexpected response format:', response.data);
             }
-            fetchData()
+        } catch (error) {
+            console.error('Error connecting integration:', error);
+        } finally {
+            setLoading(false);
         }
-    }, [open, initShopHash])
-
+    };
+    
     useEffect(() => {
         if (open && initShopHash) {
             setShopHash(initShopHash)
@@ -136,6 +135,7 @@ const BCommerceConnect = ({open, onClose, error_message, initShopHash}: Bigcomme
                     zIndex: 1301,
                     top: 0,
                     bottom: 0,
+                    boxShadow: boxShadow ? '0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)' : 'none',
                     msOverflowStyle: 'none',
                     scrollbarWidth: 'none',
                     '&::-webkit-scrollbar': {
@@ -146,13 +146,54 @@ const BCommerceConnect = ({open, onClose, error_message, initShopHash}: Bigcomme
                     }
                 },
             }}
+            slotProps={{
+                backdrop: {
+                    sx: {
+                        backgroundColor: boxShadow ? boxShadow : 'transparent'
+                    }
+                }
+            }}
         >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+            {loading && (
+                <Box
+                    sx={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(255, 255, 255, 0.8)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 1000,
+                    }}
+                >
+                    <Box
+                        sx={{
+                            border: '8px solid #f3f3f3',
+                            borderTop: '8px solid #3498db',
+                            borderRadius: '50%',
+                            width: '40px',
+                            height: '40px',
+                            animation: 'spin 1s linear infinite',
+                            '@keyframes spin': {
+                                '0%': {transform: 'rotate(0deg)'},
+                                '100%': {transform: 'rotate(360deg)'},
+                            },
+                        }}
+                    />
+                </Box>
+            )}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                 <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
                     Connect to Bigcommerce
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                    <Link href="#" sx={{
+                    <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-bigcommerce-to-maximiz"
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                     sx={{
                         fontFamily: 'Nunito Sans',
                         fontSize: '14px',
                         fontWeight: '600',
@@ -185,7 +226,7 @@ const BCommerceConnect = ({open, onClose, error_message, initShopHash}: Bigcomme
             marginTop: '12px',
             lineHeight: 'normal'
             }}>
-            login to your Bigcommerce
+            Login to your Bigcommerce account
             </Typography>
             {error_message && (<Box display={'flex'} sx={{
                 alignItems: 'center',
@@ -196,7 +237,6 @@ const BCommerceConnect = ({open, onClose, error_message, initShopHash}: Bigcomme
             fontFamily: 'Nunito Sans',
             fontSize: '14px',
             fontWeight: '600',
-            // color: '#202124',
             marginTop: '12px',
             lineHeight: 'normal'
             }}>
@@ -217,7 +257,6 @@ const BCommerceConnect = ({open, onClose, error_message, initShopHash}: Bigcomme
                 fullWidth
                 value={shopHash}
                 onChange={handleShopHashChange}
-                error={!!shopHash}
                 margin="normal"
                 InputLabelProps={{ sx: metaStyles.inputLabel }}
                 InputProps={{ sx: metaStyles.formInput }}

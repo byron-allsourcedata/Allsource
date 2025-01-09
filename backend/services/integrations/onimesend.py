@@ -1,18 +1,17 @@
-import asyncio
 import logging
 import httpx
+import re
 from typing import List
+from datetime import datetime
 from schemas.integrations.omnisend import Identifiers, OmnisendProfile
 from schemas.integrations.integrations import DataMap, IntegrationCredentials
 from persistence.leads_persistence import LeadsPersistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.domains import UserDomainsPersistence
-from models.leads_users import LeadUser
-from models.integrations.integrations_users_sync import IntegrationUserSync
+from utils import extract_first_email
+from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
 from models.five_x_five_users import FiveXFiveUser
-from enums import IntegrationsStatus, SourcePlatformEnum
-from datetime import datetime, timedelta
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 class OmnisendIntegrationService:
@@ -110,128 +109,21 @@ class OmnisendIntegrationService:
             message_body=message)
         rabbitmq_connection.close()
         
-    
-
-    async def process_lead_sync(self, user_domain_id, behavior_type, lead_user, stage, next_try):
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        channel = await connection.channel()
-        await channel.declare_queue(
-            name=self.QUEUE_DATA_SYNC,
-            durable=True
-        )
-        await publish_rabbitmq_message(connection, self.QUEUE_DATA_SYNC,
-                                    {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
-                                        'id': lead_user.id,
-                                        'five_x_five_user_id': lead_user.five_x_five_user_id
-                                    }, 'stage': stage, 'next_try': next_try})
-        await rabbitmq_connection.close()
-
-    async def process_data_sync(self, message):
-        counter = 0
-        last_leads_sync = None
-        sync = None
-        if message.get('sync'):
-            sync = IntegrationUserSync(**message.get('sync'))
-            if sync:
-                serarch_sync = self.sync_persistence.get_integration_by_sync_id(sync_id=sync.id)
-                if not serarch_sync or serarch_sync.service_name != SourcePlatformEnum.OMNISEND.value:
-                    logging.info(f'Sync {sync.id} Omnisend not matched')
-                    return
-        leads_type = message.get('leads_type')
-        domain_id = message.get('domain_id')
-        lead = message.get('lead', None)
-        if domain_id and lead:
-            lead_user =  self.leads_persistence.get_leads_domain(domain_id=domain_id, five_x_five_user_id=lead.get('five_x_five_user_id'))
-            lead = lead_user[0] if lead_user else None
-            if message.get('lead') and not lead:
-                logging.info(f'Contact {message.get("lead").get("five_x_five_user_id") if message.get("lead") else None} in domain id {domain_id} not found')
-                return
-        stage = message.get('stage') if message.get('stage') else 1
-        next_try = message.get('next_try') if message.get('next_try') else None
-
-        domains = self.domain_persistence.get_domain_by_filter(**{'id': domain_id} if domain_id else {})
-        logging.info(f"Retrieved domains: {[domain.id for domain in domains]}",)
-
-        for domain in domains:
-            credentials = self.get_credentials(domain.id)
-            if not credentials:
-                logging.warning("No credentials found for domain id %s.", domain.id)
-                return
+    async def process_data_sync(self, five_x_five_user, user_integration, data_sync):    
+        profile = self.__create_profile(five_x_five_user, user_integration.access_token, data_sync.data_map)
+        
+        if profile == ProccessDataSyncResult.AUTHENTICATION_FAILED.value or profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+            return profile
             
-            data_syncs_list = self.sync_persistence.get_data_sync_filter_by(
-                domain_id=domain.id,
-                integration_id=credentials.id,
-                is_active=True
-            )
-
-            leads = [lead] if lead else (
-                self.leads_persistence.get_leads_domain(domain.id, behavior_type=leads_type)
-                if leads_type and leads_type != 'allContacts' else
-                self.leads_persistence.get_leads_domain(domain.id)
-            )
-
-            for data_sync_item in data_syncs_list if not sync else [sync]:
-                if lead and lead.behavior_type != data_sync_item.leads_type and data_sync_item.leads_type not in ('allContacts', None):
-                    logging.warning("Lead behavior type mismatch: %s vs %s", lead.behavior_type, data_sync_item.leads_type)
-                    continue
-                last_lead_sync_id = data_sync_item.last_lead_sync_id
-                data_map = data_sync_item.data_map if data_sync_item.data_map else None
-                if last_leads_sync:
-                    last_leads_sync = self.leads_persistence.get_lead_user_by_up_id(domain_id=domain.id, up_id=last_lead_sync_id)
-                for lead in leads:
-                    if last_leads_sync and lead.five_x_five_user_id < last_leads_sync.five_x_five_user_id:
-                        continue
-                    if stage > 3:
-                        logging.info("Stage limit reached. Exiting.")
-                        return
-                    
-                    if next_try and datetime.now() < datetime.fromisoformat(next_try):
-                        await asyncio.sleep(1)
-                        logging.info("Processing lead sync with next try: %s", next_try)
-                        await self.process_lead_sync(
-                            lead_user=lead,
-                            user_domain_id=domain.id, 
-                            behavior_type=lead.behavior_type, 
-                            stage=stage, 
-                            next_try=next_try  
-                        )
-                        continue
-                    
-                    profile = self.__create_profile(lead.five_x_five_user_id, credentials, data_map)
-                    if not profile:
-                        data_sync_item.sync_status = False
-                        self.sync_persistence.db.commit()
-                        logging.error("Profile creation failed for lead: %s", lead.five_x_five_user_id)
-                        if stage != 3:
-                            next_try_str = (datetime.now() + timedelta(hours=3)).isoformat()
-                            await self.process_lead_sync(
-                                lead_user=lead,
-                                user_domain_id=domain.id, 
-                                behavior_type=lead.behavior_type, 
-                                stage=stage + 1, 
-                                next_try=next_try_str
-                            )
-                        continue
-                    data_sync_item.sync_status = True
-                    self.sync_persistence.db.commit()
-                    logging.info("Profile added successfully for lead: %s", lead.five_x_five_user_id)
-                    counter += 1
-                    last_leads_sync = lead
-                self.sync_persistence.update_sync({
-                    'last_sync_date': datetime.now(),
-                    'last_lead_sync_id': self.leads_persistence.get_lead_data(last_leads_sync.five_x_five_user_id).up_id if counter > 0 else last_lead_sync_id
-                },counter=counter, id=data_sync_item.id)
-                logging.info("Sync updated for item id: %s", data_sync_item.id)
-
-    def __create_profile(self, lead_id: int, credentials, data_map):
-        lead_data = self.leads_persistence.get_lead_data(lead_id)
-        try:
-            profile = self.__mapped_profile(lead_data)
-            identifiers = self.__mapped_identifiers(lead_data)
-        except: return
+        return ProccessDataSyncResult.SUCCESS.value
+    
+    def __create_profile(self, five_x_five_user, access_token, data_map):
+        profile = self.__mapped_profile(five_x_five_user)
+        identifiers = self.__mapped_identifiers(five_x_five_user)
+        if identifiers == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+            return identifiers
         if data_map:
-            properties = self.__map_properties(lead_data, data_map)
+            properties = self.__map_properties(five_x_five_user, data_map)
         else:
             properties = {}
         json_data = {
@@ -248,37 +140,33 @@ class OmnisendIntegrationService:
             ]
         }
         json_data = {k: v for k, v in json_data.items() if v is not None}
-        try:
-            response = self.__handle_request('/contacts', method='POST', api_key=credentials.access_token, json=json_data)
-            if response.status_code != 200:
-                if response.status_code in (403, 401):
-                    credentials.error_message = 'Invalid API Key'
-                    self.integration_persistence.db.commit()
-                    return
-                logging.error("Error response: %s", response.text)
-                return  
-        except: return
+        response = self.__handle_request('/contacts', method='POST', api_key=access_token, json=json_data)
+        if response.status_code != 200:
+            if response.status_code in (403, 401):
+                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+            if response.status_code == 400:
+                return ProccessDataSyncResult.INCORRECT_FORMAT.value
+            logging.error("Error response: %s", response.text)
         return response.json()
-
+    
 
     def __mapped_identifiers(self, lead: FiveXFiveUser):
         first_email = (
             getattr(lead, 'business_email') or 
-            getattr(lead, 'personal_emails') or 
+            getattr(lead, 'personal_emails') or
+            getattr(lead, 'additional_personal_emails') or
             getattr(lead, 'programmatic_business_emails', None)
         )
-        
-        # first_phone = (
-        #     getattr(lead, 'mobile_phone') or 
-        #     getattr(lead, 'personal_phone') or 
-        #     getattr(lead, 'direct_number') or 
-        #     getattr(lead, 'company_phone', None)
-        # )
-
+        first_email = extract_first_email(first_email) if first_email else None
+        if not first_email:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
         return Identifiers(id=first_email)
     
 
-    def __mapped_profile(self, lead: FiveXFiveUser) -> OmnisendProfile :
+    def __mapped_profile(self, lead: FiveXFiveUser) -> OmnisendProfile:
+        gender = getattr(lead, 'gender', None)
+        if gender not in ['m', 'f']:
+            gender = None
         return OmnisendProfile(
             address=getattr(lead, 'personal_address') or getattr(lead, 'company_address', None),
             city=getattr(lead, 'personal_city') or getattr(lead, 'company_city', None),
@@ -286,16 +174,40 @@ class OmnisendIntegrationService:
             postalCode=getattr(lead, 'personal_zip') or getattr(lead, 'company_zip', None),
             firstName=getattr(lead, 'first_name', None),
             lastName=getattr(lead, 'last_name', None),
-            gender=getattr(lead, 'gender', None).lower()
+            gender=gender.lower() if gender else None
         )
-    
 
-    def __map_properties(self, lead: FiveXFiveUser, data_map: List[DataMap]) -> dict:
+    def edit_sync(self, leads_type: str, integrations_users_sync_id: int,
+                  data_map: List[DataMap], domain_id: int, created_by: str):
+        credentials = self.get_credentials(domain_id)
+        data_syncs = self.sync_persistence.get_filter_by(domain_id=domain_id)
+        for sync in data_syncs:
+            if sync.get('integration_id') == credentials.id and sync.get('leads_type') == leads_type:
+                return
+        sync = self.sync_persistence.edit_sync({
+            'integration_id': credentials.id,
+            'domain_id': domain_id,
+            'leads_type': leads_type,
+            'data_map': data_map,
+            'created_by': created_by,
+        }, integrations_users_sync_id)
+
+        return sync
+
+    def __map_properties(self, five_x_five_user: FiveXFiveUser, data_map: List[DataMap]) -> dict:
         properties = {}
         for mapping in data_map:
             five_x_five_field = mapping.get("type")  
-            new_field = mapping.get("type")  
-            value_field = getattr(lead, five_x_five_field, None)
+            new_field = mapping.get("value")  
+            value_field = getattr(five_x_five_user, five_x_five_field, None)
             if value_field is not None:
-                properties[new_field] = value_field
+                new_field = new_field.replace(" ", "_")
+                if isinstance(value_field, datetime):
+                    properties[new_field] = value_field.strftime("%Y-%m-%d")
+                else:
+                    if isinstance(value_field, str):
+                        if len(value_field) > 2048:
+                            value_field = value_field[:2048]
+                    properties[new_field] = value_field
+                    
         return properties

@@ -11,11 +11,12 @@ import PartnersAsset from '@/components/PartnersAsset';
 interface AssetsData {
     id: number;
     file_url: string;
-    preview_url: string;
+    preview_url: string | null;
     type: string;
     title: string;
     file_extension: string;
     file_size: string;
+    video_duration: string;
     isFavorite: boolean;
 }
 
@@ -24,11 +25,18 @@ interface PartnersAssetsData {
     asset: AssetsData[] | [];
 }
 
+const initialValue = [
+    {type: "Videos", asset: []}, 
+    {type: "Pitch decks", asset: []}, 
+    {type: "Images", asset: []}, 
+    {type: "Documents", asset: []}, 
+]
+
 const PartnersAssets: React.FC = () => {
     const [loading, setLoading] = useState(false);
-    const [assets, setAssets] = useState<PartnersAssetsData[]>([{type: "Videos", asset: []}, {type: "Pitch decks", asset: []}, {type: "Images", asset: []}, {type: "Documents", asset: []}, ]);
+    const [assets, setAssets] = useState<PartnersAssetsData[]>(initialValue);
     const [asset, setAsset] = useState<string>("All");
-    const yearsOptions: string[] = ["All", "Videos", "Pitch decks", "Images", "Documents", "Favorites"];
+    const typeAssets: string[] = ["All", "Videos", "Pitch decks", "Images", "Documents", "Favorites"];
     const [favorites, setFavorites] = useState<PartnersAssetsData[]>([{type: "Favorites", asset: []}])
     const filteredAssets = asset === "All"
             ? assets
@@ -38,6 +46,8 @@ const PartnersAssets: React.FC = () => {
         setAsset(event.target.value)
     };
     const currentUserId = 110;
+
+    const arraysAreEqual = (arr1: PartnersAssetsData[], arr2: PartnersAssetsData[]) => JSON.stringify(arr1) === JSON.stringify(arr2);
 
     const toggleFavorite = (id: number) => {
         setAssets((prevAssets) =>
@@ -49,9 +59,9 @@ const PartnersAssets: React.FC = () => {
             }))
         );
         const allAssets = assets.flatMap((group) => group.asset)
-        const updatedFavorites = favorites[0].asset.some((fav: any) => fav.id === id)
-            ? favorites[0].asset.filter((fav: any) => fav.id !== id)
-            : [...favorites[0].asset, allAssets.find((item) => item.id === id)!];
+        const updatedFavorites = favorites[0].asset.some((fav: AssetsData) => fav.id === id)
+            ? favorites[0].asset.filter((fav: AssetsData) => fav.id !== id)
+            : [...favorites[0].asset, {...allAssets.find((item) => item.id === id)!, isFavorite: true}];
 
         localStorage.setItem(`favorites_${currentUserId}`, JSON.stringify(updatedFavorites));
         setFavorites([{ type: "Favorites", asset: updatedFavorites }]);
@@ -86,14 +96,17 @@ const PartnersAssets: React.FC = () => {
             }
 
         } catch { 
+
         } finally {
             setLoading(false);
         }
     };
 
+
     useEffect(() => {
         fetchRewards()
     }, []);
+
 
     return (
         <>
@@ -145,10 +158,10 @@ const PartnersAssets: React.FC = () => {
                                 )
                             }
                         >
-                            {yearsOptions.map((option, index) => (
+                            {typeAssets.map((type, index) => (
                                 <MenuItem
                                     key={index}
-                                    value={option.toString()}
+                                    value={type.toString()}
                                     sx={{
                                         fontFamily: "Nunito Sans",
                                         fontWeight: 500,
@@ -157,12 +170,12 @@ const PartnersAssets: React.FC = () => {
                                         "&:hover": { backgroundColor: "rgba(80, 82, 178, 0.1)" },
                                     }}
                                 >
-                                    {option}
+                                    {type}
                                 </MenuItem>
                             ))}
                         </Select>
                     </Box>   
-                        {false && !loading ? (
+                        {arraysAreEqual(initialValue, assets) && !loading ? (
                             <Box sx={suppressionsStyles.centerContainerStyles}>
                                 <Typography variant="h5" sx={{
                                     mb: 3,
@@ -190,7 +203,9 @@ const PartnersAssets: React.FC = () => {
                         ) : (
                             <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }} >
                                 {filteredAssets.map((data, index) => (
-                                    <PartnersAsset toggleFavorite={toggleFavorite} key={index} data={data} />
+                                    <PartnersAsset 
+                                        toggleFavorite={toggleFavorite}
+                                        key={index} data={data} />
                                 ))}
                             </Box>
                         )}

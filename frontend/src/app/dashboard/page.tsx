@@ -337,36 +337,6 @@ const SupportSection: React.FC = () => {
           justifyContent="flex-start"
           sx={{ rowGap: "24px", display: "flex" }}
         >
-          <div id="calendly-popup-wrapper" ref={calendlyPopupRef} />
-          {rootElement && (
-            <PopupButton
-              className="book-call-button"
-              styles={{
-                marginLeft: '1.6em',
-                textWrap: "nowrap",
-                color: "rgba(80, 82, 178, 1)",
-                fontFamily: "Nunito Sans",
-                border: "none",
-                textDecoration: "none",
-                fontWeight: 600,
-                fontSize: "14px",
-                lineHeight: "22.4px",
-                backgroundColor: "transparent",
-                textTransform: "none",
-                cursor: "pointer",
-              }}
-              url={calendlyPopupUrl()}
-              rootElement={rootElement}
-              text="Schedule a call with us"
-            />
-          )}
-          <Image
-            src={"/headphones.svg"}
-            alt="headphones"
-            width={20}
-            height={20}
-
-          />
           <Button
             onClick={sendEmail}
             sx={{
@@ -816,7 +786,7 @@ const Dashboard: React.FC = () => {
             <ProgressSection />
             <PixelInstallation />
             <VerifyPixelIntegration />
-            <RevenueTracking />asdasd
+            <RevenueTracking />
           </Grid>
           <Grid item xs={12} lg={8} sx={{ display: { xs: 'none', md: 'block' }, overflow: 'hidden' }}>
             <Typography
@@ -833,7 +803,7 @@ const Dashboard: React.FC = () => {
             </Typography>
             <PixelInstallation />
             <VerifyPixelIntegration />
-            <RevenueTracking />
+            {/* <RevenueTracking /> */}
           </Grid>
           <Grid item xs={12} lg={4} sx={{ display: { xs: 'none', md: 'block' } }}>
             <ProgressSection />

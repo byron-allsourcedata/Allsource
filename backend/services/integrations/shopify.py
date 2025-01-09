@@ -9,6 +9,7 @@ from integrations.shopify import ShopifyConfig
 from fastapi import HTTPException, status
 from models.users_domains import UserDomains
 from models.users import User
+import requests
 from models.plans import SubscriptionPlan
 from ..jwt_service import create_access_token
 from schemas.integrations.shopify import ShopifyCustomer, ShopifyOrderAPI
@@ -43,10 +44,13 @@ class ShopifyIntegrationService:
         self.db = db
         
     def get_shopify_token(self, shopify_data: ShopifyPayloadModel):
-        shopify.Session.setup(api_key=ShopifyConfig.key, secret=ShopifyConfig.secret)
-        session = shopify.Session(shopify_data.shop, ShopifyConfig.api_version)
-        access_token = session.request_token(params=shopify_data.model_dump())
-        return access_token
+        try:
+            shopify.Session.setup(api_key=ShopifyConfig.key, secret=ShopifyConfig.secret)
+            session = shopify.Session(shopify_data.shop, ShopifyConfig.api_version)
+            access_token = session.request_token(params=shopify_data.model_dump())
+            return access_token
+        except Exception as e:
+            pass
     
     def get_charge_by_id(self, user_data, charge_id):
         with shopify.Session.temp(user_data.shop_domain, ShopifyConfig.api_version, user_data.shopify_token):
@@ -60,30 +64,83 @@ class ShopifyIntegrationService:
             shop_id = shop.id
         return shop_id
     
-    def create_new_recurring_charge(self, shopify_domain: str, shopify_access_token: str, plan: SubscriptionPlan, test_mode: bool) -> str:
-        with shopify.Session.temp(shopify_domain, ShopifyConfig.api_version, shopify_access_token):
-            plan_interval = "EVERY_30_DAYS" if plan.interval == "month" else "ANNUAL"
-            new_charge = shopify.RecurringApplicationCharge.create({
+    def create_new_recurring_charge(self, shopify_domain, access_token, plan, test_mode):    
+        with shopify.Session.temp(shopify_domain, ShopifyConfig.api_version, access_token):
+            if plan.interval == "month":
+                interval = "EVERY_30_DAYS"
+            else:
+                interval = "ANNUAL"
+
+            variables = {
                 "name": plan.title,
-                "return_url": os.getenv("STRIPE_SUCCESS_URL"),
-                "price": float(plan.price),
-                "currency_code": plan.currency.upper(),
-                "interval": plan_interval,
+                "returnUrl": os.getenv("STRIPE_SUCCESS_URL"),
+                "lineItems": [{
+                    "plan": {
+                        "appRecurringPricingDetails": {
+                            "price": {
+                                "amount": float(plan.full_price),
+                                "currencyCode": "USD"
+                            },
+                            "interval": interval
+                        }
+                    }
+                }],
                 "test": test_mode
-            })
-        
-        if new_charge is None:
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={'status': 'Failed to create new charge'})
-        
-        link = new_charge.attributes.get("confirmation_url")
-        return {"link": link}
-    
+            }
+
+            mutation = """
+            mutation AppSubscriptionCreate($name: String!, $lineItems: [AppSubscriptionLineItemInput!]!, $returnUrl: URL!, $test: Boolean!) {
+                appSubscriptionCreate(name: $name, returnUrl: $returnUrl, lineItems: $lineItems, test: $test) {
+                    userErrors {
+                        field
+                        message
+                    }
+                    appSubscription {
+                        id
+                    }
+                    confirmationUrl
+                }
+            }
+            """
+
+            shop_url = f"https://{shopify_domain}/admin/api/{ShopifyConfig.api_version}/graphql.json"
+            headers = {
+                'X-Shopify-Access-Token': access_token,
+                'Content-Type': 'application/json'
+            }
+
+            payload = {
+                'query': mutation,
+                'variables': variables
+            }
+
+            response = requests.post(shop_url, headers=headers, json=payload)
+
+            if response.status_code != 200:
+                if response.status_code == 401:
+                    return {'status': 'INCOMPLETE', 'message': 'Authentication failed: Invalid API key or access token'}
+                else:
+                    raise ValueError(f"Request failed with status code {response.status_code}: {response.text}")
+
+            result = response.json()
+
+            if result.get("data") and result["data"].get("appSubscriptionCreate"):
+                subscription_data = result["data"]["appSubscriptionCreate"]
+                if subscription_data.get("userErrors"):
+                    errors = subscription_data["userErrors"]
+                    raise ValueError(f"Errors while creating subscription: {errors}")
+                
+                confirmation_url = subscription_data.get("confirmationUrl")
+                return {"link": confirmation_url}
+            else:
+                raise ValueError(f"Unexpected response: {result}")
+            
     def initialize_subscription_charge(self, plan: SubscriptionPlan, user: dict):
         test_mode = True if os.getenv("APP_MODE") == "dev" else False
         if user.get('shopify_token') is None:
             return {'status': 'INCOMPLETE', 'message': 'Shopify token not found, please install Shopify app'}
         
-        return self.create_new_recurring_charge(shopify_domain=user.get('shop_domain'), shopify_access_token=user.get('shopify_token'), plan=plan, test_mode=test_mode)
+        return self.create_new_recurring_charge(shopify_domain=user.get('shop_domain'), access_token=user.get('shopify_token'), plan=plan, test_mode=test_mode)
     
     def cancel_current_subscription(self, user: User):
         if user.get('shopify_token') is None:
@@ -276,12 +333,16 @@ class ShopifyIntegrationService:
             state=query_params.get('state'),
             timestamp=query_params.get('timestamp')
         )
+        
         shopify_token = self.get_shopify_token(shopify_payload_model)
         if shopify_token is None:
             result['message'] = OauthShopify.ERROR_SHOPIFY_TOKEN.value
             return result
         
         self.__save_integration(shop_domain=shop, access_token=shopify_token, domain_id=user_integration.domain_id)
+        if shop == user.shop_domain:
+            user.shopify_token = shopify_token
+            self.integration_persistence.db.commit()
         
         token_info = {
                 "id": user.id

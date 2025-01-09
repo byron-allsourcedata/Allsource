@@ -60,12 +60,14 @@ class UsersService:
             return {
                 "email": team_member.get('email'),
                 "full_name": team_member.get('full_name'),
-                "is_partner": team_member.get('is_partner')
+                "is_partner": team_member.get('is_partner'),
+                "source": team_member.get('source_platform')
             }
         return {
             "email": self.user.get('email'),
             "full_name": self.user.get('full_name'),
-            "is_partner": self.user.get('is_partner')
+            "is_partner": self.user.get('is_partner'),
+            "source_platform": self.user.get('source_platform')
         }
 
     def add_percent_to_domain(self, domain: UserDomains, activate_percent):

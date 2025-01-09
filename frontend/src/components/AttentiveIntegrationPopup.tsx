@@ -9,12 +9,15 @@ import CustomizedProgressBar from "./CustomizedProgressBar";
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showToast } from "./ToastNotification";
+import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface CreateAttentiveProps {
     handleClose: () => void
     onSave: (integration: any) => void 
     open: boolean
     initApiKey?: string 
+    boxShadow?: string;
+    isEdit?: boolean;
 }
 
 
@@ -75,7 +78,8 @@ const attentiveStyles = {
       },
 }
 
-const AttentiveIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: CreateAttentiveProps) => {
+const AttentiveIntegrationPopup = ({ handleClose, open, onSave, initApiKey, isEdit, boxShadow}: CreateAttentiveProps) => {
+    const { triggerSync } = useIntegrationContext();
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
     const [loading, setLoading] = useState(false)
@@ -156,6 +160,7 @@ const AttentiveIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Cre
                     is_failed: false,
                     access_token: apiKey
                 })
+                triggerSync()
                 handleNextTab()
             }
         } catch (error) {
@@ -273,6 +278,7 @@ const AttentiveIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Cre
                     zIndex: 1301,
                     top: 0,
                     bottom: 0,
+                    boxShadow: boxShadow ? '0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)' : 'none',
                     msOverflowStyle: 'none',
                     scrollbarWidth: 'none',
                     '&::-webkit-scrollbar': {
@@ -286,12 +292,12 @@ const AttentiveIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Cre
             slotProps={{
                 backdrop: {
                   sx: {
-                    backgroundColor: 'rgba(0, 0, 0, .1)'
+                    backgroundColor: boxShadow ? boxShadow : 'rgba(0,0,0,0.01)',
                   }
                 }
               }}
         >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4' }}>
                 <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
                     Connect to Attentive
                 </Typography>
@@ -309,7 +315,6 @@ const AttentiveIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Cre
                     </IconButton>
                 </Box>
             </Box>
-            <Divider />
             <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
                 <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                 <TabContext value={value}>
@@ -549,7 +554,7 @@ const AttentiveIntegrationPopup = ({ handleClose, open, onSave, initApiKey}: Cre
                     </TabPanel>
                     </TabContext>
                     </Box>
-                    <Box sx={{ px: 2, py: 3.5, width: '100%', border: '1px solid #e4e4e4' }}>
+                    <Box sx={{ px: 2, py: 2, width: '100%', border: '1px solid #e4e4e4' }}>
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
                                 {getButton(value)}
                         </Box>

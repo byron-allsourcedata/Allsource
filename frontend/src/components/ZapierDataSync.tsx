@@ -213,17 +213,17 @@ const ZapierDataSync = ({ handleClose, open }: CreateKlaviyoProps) => {
                 slotProps={{
                     backdrop: {
                         sx: {
-                            backgroundColor: 'rgba(0, 0, 0, .1)'
+                            backgroundColor: 'rgba(0, 0, 0, 0.01)'
                         }
                     }
                 }}
             >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4' }}>
                     <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
                         Connect to Zapier
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-klaviyo-to-maximiz" target="_blank"rel="noopener noreferrer" 
+                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-zapier-to-maximiz" target="_blank"rel="noopener noreferrer" 
                             sx={{
                                 fontFamily: 'Nunito Sans',
                                 fontSize: '14px',
@@ -237,7 +237,6 @@ const ZapierDataSync = ({ handleClose, open }: CreateKlaviyoProps) => {
                         </IconButton>
                     </Box>
                 </Box>
-                <Divider />
                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
                     <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                                 <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>

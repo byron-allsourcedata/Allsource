@@ -1,8 +1,10 @@
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Optional
 from dependencies import get_partners_assets_service, check_user_partner, get_accounts_service, PartnersAssetService, AccountsService
 
 router = APIRouter(dependencies=[Depends(check_user_partner)])
+
 
 @router.get('/assets')
 @router.get('/assets/')

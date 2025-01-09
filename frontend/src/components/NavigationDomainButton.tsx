@@ -179,7 +179,7 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
           ),
         }} />
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
-      <Button className='hyperlink-red' onClick={handleSubmit} sx={{
+        <Button className='hyperlink-red' onClick={handleSubmit} sx={{
           borderRadius: '4px',
           border: '1px solid #5052b2',
           boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
@@ -220,19 +220,19 @@ const DomainButton: React.FC = () => {
       const savedMe = sessionStorage.getItem('me');
       const savedDomains = savedMe ? JSON.parse(savedMe || '{}').domains : [];
       const savedCurrentDomain = sessionStorage.getItem('current_domain') || '';
-  
+
       if (JSON.stringify(domains) !== JSON.stringify(savedDomains)) {
         setDomains(savedDomains);
       }
-  
+
       if (currentDomain !== savedCurrentDomain) {
         setCurrentDomain(savedCurrentDomain);
       }
-    }, 1000); 
-  
+    }, 1000);
+
     return () => clearInterval(intervalId)
-  }, [domains, currentDomain]); 
-  
+  }, [domains, currentDomain]);
+
 
   const handleSetDomain = (domain: string) => {
     sessionStorage.setItem('current_domain', domain);
@@ -256,13 +256,17 @@ const DomainButton: React.FC = () => {
   const handleDeleteDomain = (domain: Domain) => {
     if (sessionStorage.getItem('current_domain') === domain.domain) {
       sessionStorage.removeItem('current_domain');
-      window.location.reload();
-    } else {
-      setDomains(prevDomains => prevDomains.filter(d => d.id !== domain.id));
     }
+    const savedMe = sessionStorage.getItem('me');
+    const savedDomains = savedMe ? JSON.parse(savedMe).domains : [];
+    const updatedDomains = savedDomains.filter((d: Domain) => d.id !== domain.id);
+    const updatedMe = savedMe ? JSON.parse(savedMe) : {};
+    updatedMe.domains = updatedDomains;
+    sessionStorage.setItem('me', JSON.stringify(updatedMe));
+    setDomains(prevDomains => prevDomains.filter(d => d.id !== domain.id));
+    window.location.reload();
     setDeleteDomainPopup(false);
   };
-
 
   return (
     <>
@@ -281,13 +285,13 @@ const DomainButton: React.FC = () => {
           width: '100%',
           paddingTop: '0.725rem',
           paddingBottom: '0.725rem',
-          pr:1,
+          pr: 1,
           justifyContent: 'space-between'
         }}
       >
         <Typography className='second-sub-title' sx={{
           marginRight: '0.5em',
-          pl:2,
+          pl: 2,
           letterSpacing: '-0.02em',
           textAlign: 'left',
           color: 'rgba(98, 98, 98, 1) !important'
@@ -305,7 +309,7 @@ const DomainButton: React.FC = () => {
         sx={{ '& .MuiMenu-list': { padding: '2px' } }}
       >
         <MenuItem onClick={() => setDomainPopup(true)}>
-        <Typography className='second-sub-title' sx={{color: '#5052B2 !important'}}> + Add Domain</Typography>
+          <Typography className='second-sub-title' sx={{ color: '#5052B2 !important' }}> + Add Domain</Typography>
         </MenuItem>
         <AddDomainPopup
           open={showDomainPopup}

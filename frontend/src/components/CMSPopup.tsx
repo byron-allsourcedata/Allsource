@@ -1,10 +1,9 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Box, Button, Typography, Modal, IconButton, Divider, Grid, Link, Input, TextField } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import Image from 'next/image';
 import { styles } from '../css/cmsStyles';
-import styled from 'styled-components';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from './ToastNotification';
@@ -111,16 +110,34 @@ interface PopupProps {
 const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_client_id, }) => {
   const [selectedCMS, setSelectedCMS] = useState<string | null>(null);
   const [headerTitle, setHeaderTitle] = useState<string>('Install on CMS');
-  const [shop_domain, setDomain] = useState('');
+  const [shop_domain, setDomain] = useState<string>(() => {
+    if (typeof window !== 'undefined' && sessionStorage.getItem('current_domain')) {
+      return sessionStorage.getItem('current_domain') || '';
+    }
+    return '';
+  });
   const [access_token, setAccessToken] = useState('');
   const [storeHash, setstoreHash] = useState('')
   const [storeHashError, setStoreHashError] = useState(false)
+  const sourcePlatform = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      const savedMe = sessionStorage.getItem('me');
+      if (savedMe) {
+        try {
+          const parsed = JSON.parse(savedMe);
+          return parsed.source_platform || '';
+        } catch (error) {}
+      }
+    }
+    return '';
+  }, [typeof window !== 'undefined' ? sessionStorage.getItem('me') : null]);
+
   const [errors, setErrors] = useState({
     access_token: "",
     shop_domain: "",
   });
 
-  
+
   useEffect(() => {
     const fetchCredentials = async () => {
       try {
@@ -179,8 +196,8 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
     }
   };
 
-  const handleSubmitBigcommerce = async() => {
-    const response = await axiosInstance.get('/integrations/bigcommerce/oauth', {params: {store_hash: storeHash}})
+  const handleSubmitBigcommerce = async () => {
+    const response = await axiosInstance.get('/integrations/bigcommerce/oauth', { params: { store_hash: storeHash } })
     window.location.href = response.data.url;
   }
 
@@ -362,7 +379,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                       </Button>
                     </Box>
                   </>
-                ) : ( selectedCMS === 'WordPress' ? (
+                ) : (selectedCMS === 'WordPress' ? (
                   <>
                     <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '2em', }}>
                       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start' }}>
@@ -370,7 +387,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                         <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'center', padding: '1em 0em 1em 1em', fontWeight: '500', '@media (max-width: 600px)': { textAlign: 'left' } }}>Add our offical Maximiz pixel plugin to your Wordpress site.</Typography>
                       </Box>
                       <Box>
-                        <Button component={Link} href="https://maximiz-data.s3.us-east-2.amazonaws.com/maximiz.zip" variant="outlined" sx={{ ml: 5, backgroundColor: 'rgba(80, 82, 178, 1)', color: 'rgba(255, 255, 255, 1)', textTransform: 'none', padding: '1em 2em', border: '1px solid rgba(80, 82, 178, 1)', '&:hover': { backgroundColor: 'rgba(80, 82, 178, 1)' } }}>
+                        <Button component={Link} href="https://wordpress.org/plugins/maximiz/" variant="outlined" sx={{ ml: 5, backgroundColor: 'rgba(80, 82, 178, 1)', color: 'rgba(255, 255, 255, 1)', textTransform: 'none', padding: '1em 2em', border: '1px solid rgba(80, 82, 178, 1)', '&:hover': { backgroundColor: 'rgba(80, 82, 178, 1)' } }}>
                           <Typography className='second-sub-title' sx={{ fontSize: '14px !important', color: '#fff !important', textAlign: 'left', textWrap: 'wrap' }}>Get plugin</Typography>
                         </Button>
                       </Box>
@@ -436,7 +453,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                         <Image src='/3.svg' alt='3' width={28} height={28} />
                         <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em', fontWeight: '500' }}>Verify if Maximiz is receiving data from your site</Typography>
                       </Box>
-                      <Button variant="outlined" sx={{ ml: 5, backgroundColor: 'rgba(255, 255, 255, 1)',  textTransform: 'none', padding: '1em 2em', border: '1px solid rgba(80, 82, 178, 1)' }}>
+                      <Button variant="outlined" sx={{ ml: 5, backgroundColor: 'rgba(255, 255, 255, 1)', textTransform: 'none', padding: '1em 2em', border: '1px solid rgba(80, 82, 178, 1)' }}>
                         <Typography className='second-sub-title' sx={{ fontSize: '14px !important', color: 'rgba(80, 82, 178, 1) !important', lineHeight: '22.4px', textAlign: 'left', textWrap: 'wrap' }}>View installation</Typography>
                       </Button>
                     </Box>
@@ -462,7 +479,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                           sx={styles.formField}
                           onFocus={handleFocus}
                           onBlur={handleBlur}
-                          error={storeHashError}
+
                           InputProps={{ sx: styles.formInput }}
                           onChange={handleStoreHashChange}
                           InputLabelProps={{ sx: styles.inputLabel }}
@@ -499,139 +516,153 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
             </>
           ) : (
             <><Box sx={{ display: 'flex', width: '100%', pt: '2rem' }}>
-                <Typography className='first-sub-title'>
-                  Setup Maximiz by connecting with one of the following CMS
-                </Typography>
-              </Box><Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  padding: '2em 0em 0em 0em',
-                  justifyContent: 'start',
-                  gap: 3,
-                  '@media (max-width: 900px)': {
+              <Typography className='first-sub-title'>
+                Setup Maximiz by connecting with one of the following CMS
+              </Typography>
+            </Box><Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                padding: '2em 0em 0em 0em',
+                justifyContent: 'start',
+                gap: 3,
+                '@media (max-width: 900px)': {
+                  flexDirection: 'column',
+                },
+                '@media (max-width: 600px)': {
+                  flexDirection: 'column',
+                },
+              }}
+            >
+                <Grid
+                  item
+                  xs={12}
+                  md={6}
+                  sx={{
+                    display: 'flex',
                     flexDirection: 'column',
-                  },
-                  '@media (max-width: 600px)': {
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '100%',
+                  }}
+                >
+                  <Button
+                    variant="outlined"
+                    fullWidth
+                    onClick={() => handleButtonClick('Shopify')}
+                    sx={{
+                      ...buttonGoogle,
+                      '@media (max-width: 600px)': {
+                        width: '90%',
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'start',
+                        gap: 1
+                      },
+                    }}
+                  >
+                    <Image
+                      src={'/install_cms1.svg'}
+                      alt="Install on Shopify"
+                      width={38}
+                      height={38}
+                      style={{ marginRight: 4 }}
+                    />
+                    <Typography className='second-sub-title' sx={typographyGoogle}>Shopify</Typography>
+                  </Button>
+                </Grid>
+
+                {/* Disable WordPress and Bigcommerce buttons if sourcePlatform is Shopify */}
+                <Grid
+                  item
+                  xs={12}
+                  md={6}
+                  sx={{
+                    display: 'flex',
                     flexDirection: 'column',
-                  },
-                }}
-              >
-                  <Grid
-                    item
-                    xs={12}
-                    md={6}
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '100%',
+                  }}
+                >
+                  <Button
+                    variant="outlined"
+                    fullWidth
+                    onClick={() => handleButtonClick('WordPress')}
                     sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '100%',
+                      ...buttonStyles,
+                      '@media (max-width: 600px)': {
+                        width: '90%',
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'start',
+                        gap: 1
+                      },
+                      backgroundColor: sourcePlatform === 'shopify' ? 'gray' : '',
+                      color: sourcePlatform === 'shopify' ? 'white' : '',
+                      cursor: sourcePlatform === 'shopify' ? 'not-allowed' : 'pointer',
                     }}
+                    disabled={sourcePlatform === 'shopify'}
                   >
-                    <Button
-                      variant="outlined"
-                      fullWidth
-                      onClick={() => handleButtonClick('Shopify')}
-                      sx={{
-                        ...buttonGoogle,
-                        '@media (max-width: 600px)': {
-                          width: '90%',
-                          display: 'flex',
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          justifyContent: 'start',
-                          gap: 1
-                        },
-                      }}
-                    >
-                      <Image
-                        src={'/install_cms1.svg'}
-                        alt="Install on CMS"
-                        width={38}
-                        height={38}
-                        style={{ marginRight: 4 }} />
-                      <Typography className='second-sub-title' sx={typographyGoogle}>Shopify</Typography>
-                    </Button>
-                  </Grid>
-                  <Grid
-                    item
-                    xs={12}
-                    md={6}
+                    <Image
+                      src={'/install_cms2.svg'}
+                      alt="Install on WordPress"
+                      width={38}
+                      height={38}
+                    />
+                    <Typography className='second-sub-title' sx={{ ...typographyStyles, pt: 1.75 }}>
+                      WordPress
+                    </Typography>
+                  </Button>
+                </Grid>
+
+                <Grid
+                  item
+                  xs={12}
+                  md={6}
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '100%',
+                  }}
+                >
+                  <Button
+                    variant="outlined"
+                    fullWidth
+                    onClick={() => handleButtonClick('Bigcommerce')}
                     sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '100%',
+                      ...buttonStyles,
+                      '@media (max-width: 600px)': {
+                        width: '90%',
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'start',
+                        gap: 1
+                      },
+                      backgroundColor: sourcePlatform === 'shopify' ? 'gray' : '',
+                      color: sourcePlatform === 'shopify' ? 'white' : '',
+                      cursor: sourcePlatform === 'shopify' ? 'not-allowed' : 'pointer',
                     }}
+                    disabled={sourcePlatform === 'shopify'}
                   >
-                    <Button
-                      variant="outlined"
-                      fullWidth
-                      onClick={() => handleButtonClick('WordPress')}
-                      sx={{
-                        ...buttonStyles,
-                        '@media (max-width: 600px)': {
-                          width: '90%',
-                          display: 'flex',
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          justifyContent: 'start',
-                          gap: 1
-                        },
-                      }}
-                    >
-                      <Image
-                        src={'/install_cms2.svg'}
-                        alt="Install on CMS"
-                        width={38}
-                        height={38} />
-                      <Typography className='second-sub-title' sx={{ ...typographyStyles, pt: 1.75 }}>
-                        WordPress
-                      </Typography>
-                    </Button>
-                  </Grid>
-                  <Grid
-                    item
-                    xs={12}
-                    md={6}
-                    sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '100%', 
-                    }}
-                  >
-                    <Button
-                      variant="outlined"
-                      fullWidth
-                      onClick={() => handleButtonClick('Bigcommerce')}
-                      sx={{
-                        ...buttonStyles,
-                        '@media (max-width: 600px)': {
-                          width: '90%',
-                          display: 'flex',
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          justifyContent: 'start',
-                          gap: 1
-                        },
-                      }}
-                    >
-                      <Image
-                        src={'/bigcommerce-icon.svg'}
-                        alt="Install on CMS"
-                        width={38}
-                        height={38} />
-                      <Typography className='second-sub-title' sx={{ ...typographyStyles, pt: 1.75 }}>
-                        Bigcommerce
-                      </Typography>
-                    </Button>
-                  </Grid>
-                </Box></>
+                    <Image
+                      src={'/bigcommerce-icon.svg'}
+                      alt="Install on Bigcommerce"
+                      width={38}
+                      height={38}
+                    />
+                    <Typography className='second-sub-title' sx={{ ...typographyStyles, pt: 1.75 }}>
+                      Bigcommerce
+                    </Typography>
+                  </Button>
+                </Grid>
+              </Box></>
           )}
         </Box>
       </Box>

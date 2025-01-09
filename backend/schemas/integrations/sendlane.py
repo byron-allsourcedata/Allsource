@@ -1,22 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import List, Any, Optional
-
-
-
-# class SendlaneCustomer(BaseModel):
-#     sendlane_user_id: int
-#     email: EmailStr
-#     first_name: str
-#     integration_customer: List[Any]
-#     last_name: str
-#     lifetime_value: int
-#     lists: List[Contact]
-#     phone: str
-#     sms_consent: List[Any]
-#     subcribed: bool
-#     suppressed: bool
-#     tags: List[Contact]
-
+from typing import Optional, Dict
 
 class SendlaneList(BaseModel):
     id: int
@@ -38,3 +21,4 @@ class SendlaneContact(BaseModel):
     last_name: Optional[str] = None
     phone: Optional[str] = None
     email_consent: bool = True
+    
