@@ -58,7 +58,8 @@ class SendgridHandler:
             "Company_name": template_placeholder.get("company_name"),
             "Invoice_number": template_placeholder.get("invoice_number"),
             "Invoice_date": template_placeholder.get("invoice_date"),
-            "Total": template_placeholder.get("total")
+            "Total": template_placeholder.get("total"),
+            "Message": template_placeholder.get("message")
         }
         message.is_multiple = True
         if attachedfile is not None:

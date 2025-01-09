@@ -146,7 +146,8 @@ class SendgridTemplate(Enum):
     TEAM_MEMBERS_TEMPLATE = 'team_members_template'
     PAYMENT_INVOICE_TEMPLATE = 'payment_invoice_template'
     PAYMENT_FAILURE_NOTIFICATION = 'payment_failure_notification'
-    PARTNER_TEMPLATE='partner_template'
+    PARTNER_INVITE_TEMPLATE='partner_invite_template'
+    PARTNER_MESSAGE_TEMPLATE='partner_message_template'
 
 
 class ResetPasswordEnum(Enum):

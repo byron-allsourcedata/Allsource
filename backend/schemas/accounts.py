@@ -1,9 +1,9 @@
 from pydantic import BaseModel
-from typing import Optional
-from datetime import datetime
+from typing import Optional, Union, List
 
-class DomainScheme(BaseModel):
-    domain: str
+class ErrorResponse(BaseModel):
+    code: int
+    message: str
 
 class AccountResponse(BaseModel):
     id: int
@@ -16,3 +16,8 @@ class AccountResponse(BaseModel):
     reward_payout_date: Optional[str] = None
     last_payment_date: Optional[str] = None
     status: str
+
+class AccountsObjectResponse(BaseModel):
+    status: bool
+    error: Optional[ErrorResponse] = None
+    data: Optional[Union[List[AccountResponse], AccountResponse]] = None
