@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timezone
-from enums import AliasPlanName
+from enums import PlanAlias
 from dateutil.relativedelta import relativedelta
 from sqlalchemy.orm import Session
 import os
@@ -291,7 +291,7 @@ class SubscriptionService:
         return response
     
     def create_subscription_from_partners(self, user_id):
-        plan = self.plans_persistence.get_plan_by_alias(AliasPlanName.INFINITE.value)
+        plan = self.plans_persistence.get_plan_by_alias(PlanAlias.PARTNERS.value)
         created_at = datetime.strptime(get_utc_aware_date_for_postgres(), '%Y-%m-%dT%H:%M:%SZ')
         add_subscription_obj = Subscription(
             domains_limit=plan.domains_limit,
