@@ -181,7 +181,7 @@ class WebhookService:
                 else:
                     payment_period = "year"  
         if payment_period:
-            plan = self.subscription_service.get_plan_by_title(plan_name, payment_period)
+            plan = self.subscription_service.get_plan_by_title_and_interval(plan_name, payment_period)
         else:
             plan = self.subscription_service.get_plan_by_title_price(plan_name, payment_amount)
             

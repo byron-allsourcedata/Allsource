@@ -16,7 +16,7 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
 from utils import normalize_url
-from enums import NotificationTitles
+from enums import NotificationTitles, PlanName
 from persistence.leads_persistence import LeadsPersistence
 from persistence.notification import NotificationPersistence
 from models.plans import SubscriptionPlan
@@ -508,7 +508,7 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
             lead_users = session.query(LeadUser).filter_by(user_id=user.id).limit(2).all()
             if len(lead_users) == 1:
                 subscription_result = subscription_service.get_user_subscription_with_trial_status(user.id)
-                if subscription_result['is_artificial_status'] and not subscription_result['subscription'].plan_end:
+                if subscription_result['is_artificial_status'] and not subscription_result['subscription'].plan_end and subscription_result['title'] != PlanName.INFINITE.value:
                     if subscription_result['artificial_trial_days']:
                         date_now = datetime.now(timezone.utc)
                         subscription_result['subscription'].plan_start = date_now.replace(tzinfo=None)

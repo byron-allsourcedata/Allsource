@@ -1,4 +1,4 @@
-from sqlalchemy import Column, event, Integer, DECIMAL
+from sqlalchemy import Column, event, Integer, DECIMAL, Index
 from sqlalchemy.dialects.postgresql import BOOLEAN, INTEGER, NUMERIC, VARCHAR, JSONB
 
 from .base import Base, create_timestamps, update_timestamps
@@ -28,6 +28,11 @@ class SubscriptionPlan(Base):
     lead_credit_price = Column(DECIMAL(10, 2), nullable=False)
     priority = Column(INTEGER, nullable=False)
     full_price = Column(NUMERIC(18, 2), nullable=True)
+    
+    __table_args__ = (
+        Index('subscription_plans_title_interval_idx', 'title', 'interval'),
+        Index('subscription_plans_title_price_idx', 'title', 'price'),
+    )
 
 
 event.listen(SubscriptionPlan, "before_insert", create_timestamps)

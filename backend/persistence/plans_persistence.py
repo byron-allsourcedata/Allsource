@@ -28,13 +28,18 @@ class PlansPersistence:
             return subscription.is_trial
         return None
 
-    def get_plan_by_title(self, title: str, interval: str):
+    def get_plan_by_title_and_interval(self, title: str, interval: str):
         plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.title == title,
                                                       SubscriptionPlan.interval == interval).first()
         if plan:
             return plan
         else:
             return None
+        
+    def get_plan_by_title(self, title: str):
+        plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.title == title).first()
+        if plan:
+            return plan
         
     def get_plan_by_title_price(self, plan_name: str, payment_amount: str):
         plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.title == plan_name,
@@ -76,7 +81,7 @@ class PlansPersistence:
 
     def get_user_subscription_with_trial_status(self, user_id):
         result = (
-            self.db.query(UserSubscriptions, SubscriptionPlan.is_free_trial, SubscriptionPlan.trial_days, SubscriptionPlan.currency, SubscriptionPlan.price)
+            self.db.query(UserSubscriptions, SubscriptionPlan.is_free_trial, SubscriptionPlan.trial_days, SubscriptionPlan.currency, SubscriptionPlan.price, SubscriptionPlan.title)
             .join(User, User.current_subscription_id == UserSubscriptions.id)
             .join(SubscriptionPlan, SubscriptionPlan.id == UserSubscriptions.plan_id)
             .filter(User.id == user_id)

@@ -73,7 +73,7 @@ class PartnersPersistence:
     
 
     def update_partner_by_email(self, email: int, **kwargs) -> Optional[Partners]:
-        partner = self.get_asset_by_email(email)
+        partner = self.get_partner_by_email(email)
 
         if not partner:
             return None

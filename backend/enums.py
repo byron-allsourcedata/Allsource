@@ -220,3 +220,6 @@ class ProccessDataSyncResult(Enum):
     LIST_NOT_EXISTS = 'list_not_exists'
     AUTHENTICATION_FAILED = 'authentication_failed'
     TOO_MANY_REQUESTS = 'too_many_requests'
+    
+class PlanName(Enum):
+    INFINITE = "Infinite"
