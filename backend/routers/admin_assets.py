@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, UploadFile, File, Form
-from schemas.partners_asset import PartnersAssetsInfoResponse
 from dependencies import get_partners_assets_service, check_user_admin, PartnersAssetService
 
 router = APIRouter(dependencies=[Depends(check_user_admin)])
