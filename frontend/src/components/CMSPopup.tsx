@@ -125,13 +125,14 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
       if (savedMe) {
         try {
           const parsed = JSON.parse(savedMe);
+          setSelectedCMS('Shopify')
+          setHeaderTitle('Shopify settings')
           return parsed.source_platform || '';
-        } catch (error) {}
+        } catch (error) { }
       }
     }
     return '';
   }, [typeof window !== 'undefined' ? sessionStorage.getItem('me') : null]);
-
   const [errors, setErrors] = useState({
     access_token: "",
     shop_domain: "",
@@ -283,30 +284,35 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
           {selectedCMS ? (
             <>
               <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'start', height: '100%' }} >
-                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 1, pt: 1 }}>
-                  <Button
-                    onClick={handleBackClick}
-                    sx={{
-                      marginTop: '1em',
-                      padding: 0,
-                      minWidth: 'auto',
-                      width: 'auto',
-                    }}
-                  >
-                    <ArrowBackIcon sx={{ color: 'rgba(80, 82, 178, 1)', padding: 0 }} />
-                  </Button>
-                  <Typography className='table-data' sx={{ ...subtext, marginTop: '0.75em' }}>
-                    Follow the instructions to install in Maximiz
-                  </Typography>
-                </Box>
-
+                {sourcePlatform !== 'shopify' && (
+                  <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 1, pt: 1 }}>
+                    <Button
+                      onClick={handleBackClick}
+                      sx={{
+                        marginTop: '1em',
+                        padding: 0,
+                        minWidth: 'auto',
+                        width: 'auto',
+                      }}
+                    >
+                      <ArrowBackIcon sx={{ color: 'rgba(80, 82, 178, 1)', padding: 0 }} />
+                    </Button>
+                    <Typography className='table-data' sx={{ ...subtext, marginTop: '0.75em' }}>
+                      Follow the instructions to install in Maximiz
+                    </Typography>
+                  </Box>
+                )}
                 {selectedCMS === 'Shopify' ? (
                   <>
                     <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '1em', height: '100%' }}>
+
                       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: 0, justifyContent: 'start' }}>
                         <Image src='/1.svg' alt='1' width={28} height={28} />
-                        <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Shopify shop domain in the designated field. This allows our system to identify your store.</Typography>
+                        {sourcePlatform !== 'shopify' && (
+                          <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Shopify shop domain in the designated field. This allows our system to identify your store.</Typography>
+                        )}
                       </Box>
+
                       <Box
                         component="pre"
                         sx={{ display: 'flex', width: '100%', justifyContent: 'center', margin: 0, pl: 1 }}
@@ -327,11 +333,14 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                           InputProps={{ sx: styles.formInput }}
                           onChange={(e) => setDomain(e.target.value)}
                           InputLabelProps={{ sx: styles.inputLabel }}
+                          disabled={sourcePlatform === 'shopify'}
                         />
                       </Box>
                       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'start' }}>
                         <Image src='/2.svg' alt='2' width={28} height={28} />
-                        <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500', }}>Enter your Shopify API access token. This token is necessary for secure communication between your Shopify store and our application.</Typography>
+                        {sourcePlatform !== 'shopify' && (
+                          <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500', }}>Enter your Shopify API access token. This token is necessary for secure communication between your Shopify store and our application.</Typography>
+                        )}
                       </Box>
                       <Box
                         component="pre"
@@ -348,35 +357,55 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                           value={access_token}
                           onChange={(e) => setAccessToken(e.target.value)}
                           InputLabelProps={{ sx: styles.inputLabel }}
+                          disabled={sourcePlatform === 'shopify'}
                         />
                       </Box>
-                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'start' }}>
-                        <Image src='/3.svg' alt='3' width={28} height={28} />
-                        <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '2em 1em 1em', fontWeight: '500', '@media (max-width: 600px)': { padding: '1em' } }}>Once you have submitted the required information, our system will automatically install the script on your Shopify store. You don’t need to take any further action.</Typography>
-                      </Box>
+                      {sourcePlatform !== 'shopify' && (
+                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'start' }}>
+                          <Image src='/3.svg' alt='3' width={28} height={28} />
+                          <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '2em 1em 1em', fontWeight: '500', '@media (max-width: 600px)': { padding: '1em' } }}>Once you have submitted the required information, our system will automatically install the script on your Shopify store. You don’t need to take any further action.</Typography>
+                        </Box>
+                      )}
                     </Box>
                     <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', maxHeight: '100%', padding: '0em 1em' }}>
-                      <Button
-                        fullWidth
-                        variant="contained"
-                        sx={{
-                          ...styles.submitButton,
-                          marginTop: 'auto',
-                          opacity: isFormValid() ? 1 : 0.6,
-                          pointerEvents: isFormValid() ? "auto" : "none",
-                          backgroundColor: isFormValid()
-                            ? "rgba(80, 82, 178, 1)"
-                            : "rgba(80, 82, 178, 0.4)",
-                          "&.Mui-disabled": {
-                            backgroundColor: "rgba(80, 82, 178, 0.6)",
-                            color: "#fff",
-                          },
-                        }}
-                        onClick={handleSubmit}
-                        disabled={!isFormValid}
-                      >
-                        Install Pixel
-                      </Button>
+                      {sourcePlatform === 'shopify' ? (
+                        <Typography
+                          sx={{
+                            color: "#333",
+                            fontWeight: "500",
+                            fontSize: 16,
+                            textAlign: "center",
+                            padding: '0.5em',
+                            backgroundColor: "transparent",
+                            borderRadius: 2,
+                            marginTop: 'auto',
+                          }}
+                        >
+                          Pixel Installed
+                        </Typography>
+                      ) : (
+                        <Button
+                          fullWidth
+                          variant="contained"
+                          sx={{
+                            ...styles.submitButton,
+                            marginTop: 'auto',
+                            opacity: isFormValid() ? 1 : 0.6,
+                            pointerEvents: isFormValid() ? "auto" : "none",
+                            backgroundColor: isFormValid()
+                              ? "rgba(80, 82, 178, 1)"
+                              : "rgba(80, 82, 178, 0.4)",
+                            "&.Mui-disabled": {
+                              backgroundColor: "rgba(80, 82, 178, 0.6)",
+                              color: "#fff",
+                            },
+                          }}
+                          onClick={handleSubmit}
+                          disabled={!isFormValid}
+                        >
+                          Install Pixel
+                        </Button>
+                      )}
                     </Box>
                   </>
                 ) : (selectedCMS === 'WordPress' ? (
@@ -573,95 +602,89 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                     <Typography className='second-sub-title' sx={typographyGoogle}>Shopify</Typography>
                   </Button>
                 </Grid>
-
-                {/* Disable WordPress and Bigcommerce buttons if sourcePlatform is Shopify */}
-                <Grid
-                  item
-                  xs={12}
-                  md={6}
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '100%',
-                  }}
-                >
-                  <Button
-                    variant="outlined"
-                    fullWidth
-                    onClick={() => handleButtonClick('WordPress')}
-                    sx={{
-                      ...buttonStyles,
-                      '@media (max-width: 600px)': {
-                        width: '90%',
+                {sourcePlatform !== 'shopify' && (
+                  <>
+                    <Grid
+                      item
+                      xs={12}
+                      md={6}
+                      sx={{
                         display: 'flex',
-                        flexDirection: 'row',
+                        flexDirection: 'column',
                         alignItems: 'center',
-                        justifyContent: 'start',
-                        gap: 1
-                      },
-                      backgroundColor: sourcePlatform === 'shopify' ? 'gray' : '',
-                      color: sourcePlatform === 'shopify' ? 'white' : '',
-                      cursor: sourcePlatform === 'shopify' ? 'not-allowed' : 'pointer',
-                    }}
-                    disabled={sourcePlatform === 'shopify'}
-                  >
-                    <Image
-                      src={'/install_cms2.svg'}
-                      alt="Install on WordPress"
-                      width={38}
-                      height={38}
-                    />
-                    <Typography className='second-sub-title' sx={{ ...typographyStyles, pt: 1.75 }}>
-                      WordPress
-                    </Typography>
-                  </Button>
-                </Grid>
+                        justifyContent: 'center',
+                        width: '100%',
+                      }}
+                    >
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        onClick={() => handleButtonClick('WordPress')}
+                        sx={{
+                          ...buttonStyles,
+                          '@media (max-width: 600px)': {
+                            width: '90%',
+                            display: 'flex',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'start',
+                            gap: 1
+                          },
+                        }}
+                      >
+                        <Image
+                          src={'/install_cms2.svg'}
+                          alt="Install on WordPress"
+                          width={38}
+                          height={38}
+                        />
+                        <Typography className='second-sub-title' sx={{ ...typographyStyles, pt: 1.75 }}>
+                          WordPress
+                        </Typography>
+                      </Button>
+                    </Grid>
 
-                <Grid
-                  item
-                  xs={12}
-                  md={6}
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '100%',
-                  }}
-                >
-                  <Button
-                    variant="outlined"
-                    fullWidth
-                    onClick={() => handleButtonClick('Bigcommerce')}
-                    sx={{
-                      ...buttonStyles,
-                      '@media (max-width: 600px)': {
-                        width: '90%',
+                    <Grid
+                      item
+                      xs={12}
+                      md={6}
+                      sx={{
                         display: 'flex',
-                        flexDirection: 'row',
+                        flexDirection: 'column',
                         alignItems: 'center',
-                        justifyContent: 'start',
-                        gap: 1
-                      },
-                      backgroundColor: sourcePlatform === 'shopify' ? 'gray' : '',
-                      color: sourcePlatform === 'shopify' ? 'white' : '',
-                      cursor: sourcePlatform === 'shopify' ? 'not-allowed' : 'pointer',
-                    }}
-                    disabled={sourcePlatform === 'shopify'}
-                  >
-                    <Image
-                      src={'/bigcommerce-icon.svg'}
-                      alt="Install on Bigcommerce"
-                      width={38}
-                      height={38}
-                    />
-                    <Typography className='second-sub-title' sx={{ ...typographyStyles, pt: 1.75 }}>
-                      Bigcommerce
-                    </Typography>
-                  </Button>
-                </Grid>
+                        justifyContent: 'center',
+                        width: '100%',
+                      }}
+                    >
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        onClick={() => handleButtonClick('Bigcommerce')}
+                        sx={{
+                          ...buttonStyles,
+                          '@media (max-width: 600px)': {
+                            width: '90%',
+                            display: 'flex',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'start',
+                            gap: 1
+                          },
+                        }}
+                      >
+                        <Image
+                          src={'/bigcommerce-icon.svg'}
+                          alt="Install on Bigcommerce"
+                          width={38}
+                          height={38}
+                        />
+                        <Typography className='second-sub-title' sx={{ ...typographyStyles, pt: 1.75 }}>
+                          Bigcommerce
+                        </Typography>
+                      </Button>
+                    </Grid>
+                  </>
+                )}
               </Box></>
           )}
         </Box>

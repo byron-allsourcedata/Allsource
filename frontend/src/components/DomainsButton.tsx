@@ -1,6 +1,6 @@
 import { Box, Typography, Button, Menu, MenuItem, TextField, IconButton, InputAdornment, colors } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import CloseIcon from '@mui/icons-material/Close';
 import { showToast } from './ToastNotification';
@@ -213,6 +213,18 @@ const DomainButton: React.FC = () => {
   const [deleteDomain, setDeleteDomain] = useState<Domain | null>(null);
   const [loading, setLoading] = useState(false);
   const [upgradePlanPopup, setUpgradePlanPopup] = useState(false);
+  const sourcePlatform = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      const savedMe = sessionStorage.getItem('me');
+      if (savedMe) {
+        try {
+          const parsed = JSON.parse(savedMe);
+          return parsed.source_platform || '';
+        } catch (error) { }
+      }
+    }
+    return '';
+  }, [typeof window !== 'undefined' ? sessionStorage.getItem('me') : null]);
   useEffect(() => {
     const intervalId = setInterval(() => {
       const savedMe = sessionStorage.getItem('me');
@@ -313,14 +325,18 @@ const DomainButton: React.FC = () => {
         onClose={handleDropdownClose}
         sx={{ '& .MuiMenu-list': { padding: '2px' } }}
       >
-        <MenuItem onClick={() => setDomainPopup(true)}>
-          <Typography className='second-sub-title' sx={{ color: '#5052B2 ' }}> + Add new domain</Typography>
-        </MenuItem>
-        <AddDomainPopup
-          open={showDomainPopup}
-          handleClose={() => setDomainPopup(false)}
-          handleSave={handleSave}
-        />
+        {sourcePlatform !== 'shopify' && (
+          <React.Fragment>
+            <MenuItem onClick={() => setDomainPopup(true)}>
+              <Typography className='second-sub-title' sx={{ color: '#5052B2 ' }}> + Add new domain</Typography>
+            </MenuItem>
+            <AddDomainPopup
+              open={showDomainPopup}
+              handleClose={() => setDomainPopup(false)}
+              handleSave={handleSave}
+            />
+          </React.Fragment>
+        )}
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginTop: '0.5rem' }}>
           <span style={{ border: '1px solid #CDCDCD', marginBottom: '0.5rem', width: '100%' }}></span>
         </Box>

@@ -7,6 +7,7 @@ from datetime import timezone
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from sqlalchemy.orm import Session
+from persistence.domains import UserDomainsPersistence
 from fastapi import HTTPException, status
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from enums import SignUpStatus, LoginStatus, ResetPasswordEnum, \
@@ -37,7 +38,8 @@ logger = logging.getLogger(__name__)
 class UsersAuth:
     def __init__(self, db: Session, payments_service: PaymentsPlans, user_persistence_service: UserPersistence,
                  send_grid_persistence_service: SendgridPersistence, subscription_service: SubscriptionService,
-                 plans_persistence: PlansPersistence, integration_service: IntegrationService, partners_service: PartnersService
+                 plans_persistence: PlansPersistence, integration_service: IntegrationService, partners_service: PartnersService,
+                 domain_persistence: UserDomainsPersistence
                  ):
         self.db = db
         self.payments_service = payments_service
@@ -47,6 +49,8 @@ class UsersAuth:
         self.plan_persistence = plans_persistence
         self.integration_service = integration_service
         self.partners_service = partners_service
+        self.domain_persistence = domain_persistence
+        self.UNLIMITED = -1
 
     def get_utc_aware_date(self):
         return datetime.now(timezone.utc).replace(microsecond=0)
@@ -374,9 +378,15 @@ class UsersAuth:
             token = create_access_token(token_info)
             if shopify_data and shopify_status is None:
                 if user_object.source_platform == SourcePlatformEnum.SHOPIFY.value:
-                    self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
+                    user_subscription = self.subscription_service.get_user_subscription(user_object.id)
+                    if user_subscription.domains_limit != self.UNLIMITED and \
+                    self.domain_persistence.count_domain(user_object.id) >= user_subscription.domains_limit:
+                        shopify_status = OauthShopify.NEED_UPGRADE_PLAN   
                 else:
                     shopify_status = OauthShopify.NON_SHOPIFY_ACCOUNT
+
+                if shopify_status is None:
+                    self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
             
             authorization_data = self.get_user_authorization_information(user_object)
             if authorization_data['status'] == LoginStatus.PAYMENT_NEEDED:
@@ -613,9 +623,15 @@ class UsersAuth:
         
         if shopify_data and shopify_status is None:
             if user_object.source_platform == SourcePlatformEnum.SHOPIFY.value:
-                self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
+                user_subscription = self.subscription_service.get_user_subscription(user_object.id)
+                if user_subscription.domains_limit != self.UNLIMITED and \
+                self.domain_persistence.count_domain(user_object.id) >= user_subscription.domains_limit:
+                    shopify_status = OauthShopify.NEED_UPGRADE_PLAN   
             else:
                 shopify_status = OauthShopify.NON_SHOPIFY_ACCOUNT
+
+            if shopify_status is None:
+                self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
             
         authorization_data = self.get_user_authorization_information(user_object)
         

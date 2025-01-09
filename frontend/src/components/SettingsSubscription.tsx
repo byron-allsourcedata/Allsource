@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Box, Typography, Button, Tabs, Tab, TextField, Slider, IconButton, Drawer, Divider, Chip, Link } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PlanCard from '@/components/PlanCard';
@@ -111,6 +111,18 @@ export const SettingsSubscription: React.FC = () => {
     const [hasActivePlan, setHasActivePlan] = useState<boolean>(false);
     const [showSlider, setShowSlider] = useState(true);
     const [utmParams, setUtmParams] = useState<string | null>(null);
+    const sourcePlatform = useMemo(() => {
+        if (typeof window !== 'undefined') {
+            const savedMe = sessionStorage.getItem('me');
+            if (savedMe) {
+                try {
+                    const parsed = JSON.parse(savedMe);
+                    return parsed.source_platform || '';
+                } catch (error) { }
+            }
+        }
+        return '';
+    }, [typeof window !== 'undefined' ? sessionStorage.getItem('me') : null]);
 
     const handleFilterPopupClose = () => {
         setShowSlider(false);
@@ -245,9 +257,9 @@ export const SettingsSubscription: React.FC = () => {
             const response = await axiosInterceptorInstance.get(`${path}?price_id=${stripePriceId}`);
             if (response.status === 200) {
                 if (response.data.link !== null && response.data.link !== undefined) {
-                    if (response.data?.source_platform == 'big_commerce'){
+                    if (response.data?.source_platform == 'big_commerce') {
                         window.open(response.data.link, '_blank');
-                    }else{
+                    } else {
                         window.location.href = response.data.link;
                     }
                 }
@@ -428,26 +440,27 @@ export const SettingsSubscription: React.FC = () => {
                             />
                         </Tabs>
                     </Box>
+                    {sourcePlatform !== 'shopify' && (
+                        <Button variant="outlined" className='hyperlink-red' sx={{
+                            position: 'absolute',
+                            right: 0,
+                            color: '#5052B2 !important',
+                            borderRadius: '4px',
+                            border: '1px solid #5052B2',
+                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                            textTransform: 'none',
+                            padding: '9px 16px',
+                            '&:hover': {
+                                background: 'transparent'
+                            },
+                            '@media (max-width: 600px)': {
+                                display: 'none'
+                            }
+                        }} onClick={handleCustomPlanPopupOpen}>
+                            Custom Plan
+                        </Button>
+                    )}
 
-                    {/* Custom Plan Button at the end */}
-                    <Button variant="outlined" className='hyperlink-red' sx={{
-                        position: 'absolute',
-                        right: 0,
-                        color: '#5052B2 !important',
-                        borderRadius: '4px',
-                        border: '1px solid #5052B2',
-                        boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                        textTransform: 'none',
-                        padding: '9px 16px',
-                        '&:hover': {
-                            background: 'transparent'
-                        },
-                        '@media (max-width: 600px)': {
-                            display: 'none'
-                        }
-                    }} onClick={handleCustomPlanPopupOpen}>
-                        Custom Plan
-                    </Button>
                 </Box>
 
                 {/* Display Plans */}
@@ -463,26 +476,26 @@ export const SettingsSubscription: React.FC = () => {
                     )}
                 </Box>
             </Box>
-
-            <Button variant="outlined" className='hyperlink-red' sx={{
-                color: '#5052B2 !important',
-                borderRadius: '4px',
-                border: '1px solid #5052B2',
-                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                textTransform: 'none',
-                padding: '9px 16px',
-                marginBottom: '16px',
-                width: '100%',
-                '&:hover': {
-                    background: 'transparent'
-                },
-                '@media (min-width: 601px)': {
-                    display: 'none'
-                }
-            }} onClick={handleCustomPlanPopupOpen}>
-                Custom Plan
-            </Button>
-
+            {sourcePlatform !== 'shopify' && (
+                <Button variant="outlined" className='hyperlink-red' sx={{
+                    color: '#5052B2 !important',
+                    borderRadius: '4px',
+                    border: '1px solid #5052B2',
+                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                    textTransform: 'none',
+                    padding: '9px 16px',
+                    marginBottom: '16px',
+                    width: '100%',
+                    '&:hover': {
+                        background: 'transparent'
+                    },
+                    '@media (min-width: 601px)': {
+                        display: 'none'
+                    }
+                }} onClick={handleCustomPlanPopupOpen}>
+                    Custom Plans
+                </Button>
+            )}
             <Divider sx={{
                 borderColor: '#e4e4e4',
                 '@media (max-width: 600px)': {
@@ -719,21 +732,20 @@ export const SettingsSubscription: React.FC = () => {
                     },
                 }}
             >
-
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
-
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
-                        <Typography variant="h6" className='first-sub-title' sx={{ textAlign: 'center' }}>
-                            Custom plan
-                        </Typography>
-                        <CustomTooltip title={"You can download the billing history and share it with your teammates."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/settings/get-custom-subscription-plan" />
+                {sourcePlatform !== 'shopify' && (
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
+                            <Typography variant="h6" className='first-sub-title' sx={{ textAlign: 'center' }}>
+                                Custom plan
+                            </Typography>
+                            <CustomTooltip title={"You can download the billing history and share it with your teammates."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/settings/get-custom-subscription-plan" />
+                        </Box>
+                        <IconButton onClick={handleCustomPlanPopupClose} sx={{ p: 0 }}>
+                            <CloseIcon sx={{ width: '20px', height: '20px' }} />
+                        </IconButton>
                     </Box>
-
-                    <IconButton onClick={handleCustomPlanPopupClose} sx={{ p: 0 }}>
-                        <CloseIcon sx={{ width: '20px', height: '20px' }} />
-                    </IconButton>
-                </Box>
-
+                )
+                }
                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: 4 }}>
                         <Image src='/custom-plan.svg' alt='custom-plan' width={509} height={329} style={{ width: '100%' }} />

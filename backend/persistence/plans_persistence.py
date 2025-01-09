@@ -3,6 +3,7 @@ from sqlalchemy import case
 from models.plans import SubscriptionPlan
 from models.subscriptions import UserSubscriptions
 from models.users import User
+from enums import SubscriptionStatus
 
 
 class PlansPersistence:
@@ -14,6 +15,7 @@ class PlansPersistence:
 
     def save_reason_unsubscribe(self, reason_unsubscribe, user_id, cancel_scheduled_at):
         subscription = self.get_user_subscription(user_id)
+        subscription.status = SubscriptionStatus.CANCELED.value
         subscription.downgrade_price_id = None
         subscription.downgrade_at = None
         subscription.cancellation_reason = reason_unsubscribe

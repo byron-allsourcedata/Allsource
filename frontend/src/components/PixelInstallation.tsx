@@ -228,14 +228,25 @@ const PixelInstallation: React.FC = () => {
           <Grid item xs={12} md={4}>
             <Button variant="outlined" fullWidth onClick={installCMS} sx={buttonStyles}>
               <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'space-between', flexDirection: 'row' }}>
+
                 <Box sx={{ display: 'flex', width: '100%', gap: 0.25 }}>
-                  <Image src={'/install_cms1.svg'} alt="Install on CMS" width={24} height={24} />
-                  <Image src={'/install_cms2.svg'} alt="Install on CMS" width={24} height={24} />
-                  <Image src={'/bigcommerce-icon.svg'} className="icon-img" alt="Install on CMS" width={24} height={24} />
+                  {sourcePlatform === 'shopify' ? (
+                    <>
+                      <Image src={'/install_cms1.svg'} alt="Install on CMS" width={24} height={24} />
+                    </>
+                  ) : (
+                    <>
+                      <Image src={'/install_cms1.svg'} alt="Install on CMS" width={24} height={24} />
+                      <Image src={'/install_cms2.svg'} alt="Install on CMS" width={24} height={24} />
+                      <Image src={'/bigcommerce-icon.svg'} className="icon-img" alt="Install on CMS" width={24} height={24} />
+                    </>
+                  )}
+
                 </Box>
                 <CustomTooltip title={"Install easily on your CMS for a streamlined integration experience."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2/how-do-i-install-maximiz-pixel-on-shopify-store" />
               </Box>
-              <Typography className="second-sub-title" sx={{ ...typographyStyles, pt: '9px' }}>Install on CMS</Typography>
+              {sourcePlatform === 'shopify' ? <Typography className="second-sub-title" sx={{ ...typographyStyles, pt: '9px' }}>Shopify settings</Typography> :
+                <Typography className="second-sub-title" sx={{ ...typographyStyles, pt: '9px' }}>Install on CMS</Typography>}
             </Button>
             <CRMPopup open={opencrm} handleClose={handleCRMClose} pixelCode={cmsData.manual || ''} pixel_client_id={cmsData.pixel_client_id || ''} />
           </Grid>
