@@ -14,8 +14,8 @@ def partners_assets(
     return assets
 
 
-@router.delete("/{id}", response_model=PartnersAssetsInfoResponse)
-@router.delete("/{id}/", response_model=PartnersAssetsInfoResponse)
+@router.delete("/{id}")
+@router.delete("/{id}/")
 async def delete_asset(
     id: str, 
     get_partners_assets_service: PartnersAssetService = Depends(get_partners_assets_service)):
@@ -24,8 +24,8 @@ async def delete_asset(
     return {"status": status, "data": None}
 
 
-@router.post("", response_model=PartnersAssetsInfoResponse)
-@router.post("/", response_model=PartnersAssetsInfoResponse)
+@router.post("")
+@router.post("/")
 async def create_asset(
     description: str = Form(...),
     type: str = Form(...),
@@ -37,8 +37,8 @@ async def create_asset(
     return created_asset
 
 
-@router.put("/{asset_id}", response_model=PartnersAssetsInfoResponse)
-@router.put("/{asset_id}/", response_model=PartnersAssetsInfoResponse)
+@router.put("/{asset_id}")
+@router.put("/{asset_id}/")
 async def update_asset(
     asset_id: int,
     description: str = Form(...),
