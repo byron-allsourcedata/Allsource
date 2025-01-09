@@ -54,6 +54,7 @@ class UserSignUpFormResponse(BaseModel):
 
 class UserLoginFormResponse(BaseModel):
     status: LoginStatus
+    shopify_status: Optional[str] = None
     token: Optional[str] = None
     stripe_payment_url: Optional[str] = None
 

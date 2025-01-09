@@ -391,20 +391,33 @@ class UsersAuth:
             
             authorization_data = self.get_user_authorization_information(user_object)
             if authorization_data['status'] == LoginStatus.PAYMENT_NEEDED:
-                return {
+                result = {
                     'status': authorization_data['status'].value,
                     'token': token,
                     'stripe_payment_url': authorization_data.get('stripe_payment_url')
                 }
+                if shopify_status:
+                    result['shopify_status'] = shopify_status
+                return result
+
             if authorization_data['status'] != UserAuthorizationStatus.SUCCESS:
-                return {
+                result = {
                     'status': authorization_data['status'].value,
                     'token': token
                 }
-            return {
+                if shopify_status:
+                    result['shopify_status'] = shopify_status
+                    
+                return result
+            
+            result = {
                 'status': LoginStatus.SUCCESS,
                 'token': token
             }
+            if shopify_status:
+                    result['shopify_status'] = shopify_status
+                    
+            return result
         else:
             logger.info("Password Verification Failed")
             return {
@@ -645,20 +658,32 @@ class UsersAuth:
         authorization_data = self.get_user_authorization_information(user_object)
         
         if authorization_data['status'] == LoginStatus.PAYMENT_NEEDED:
-            return {
+            result = {
                 'status': authorization_data['status'].value,
                 'token': token,
                 'stripe_payment_url': authorization_data.get('stripe_payment_url')
             }
+            if shopify_status:
+                result['shopify_status'] = shopify_status
+            return result
+        
         if authorization_data['status'] != LoginStatus.SUCCESS:
-            return {
+            result = {
                 'status': authorization_data['status'].value,
                 'token': token
             }
-        return {
-            'status': shopify_status if shopify_status else LoginStatus.SUCCESS,
-            'token': token
-        }
+            if shopify_status:
+                result['shopify_status'] = shopify_status
+            return result
+        
+        result = {
+                    'status': LoginStatus.SUCCESS,
+                    'token': token
+                }
+        if shopify_status:
+                result['shopify_status'] = shopify_status
+                    
+        return result
 
     def verify_token(self, token):
         try:

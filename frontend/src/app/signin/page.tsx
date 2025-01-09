@@ -116,6 +116,22 @@ const Signin: React.FC = () => {
           }
         }
         if (responseData) {
+          if (responseData.shopify_status) {
+            switch (responseData.shopify_status) {
+              case "NEED_UPGRADE_PLAN":
+                showErrorToast('Unable to add another domain, please upgrade plan');
+                break;
+              case "NON_SHOPIFY_ACCOUNT":
+                showErrorToast('Error adding a domain, sign up for a new shopify account');
+                break;
+              case "ERROR_SHOPIFY_TOKEN":
+                showErrorToast('Error creating a shopify token');
+                break;
+              default:
+                showErrorToast(responseData.shopify_status);
+                break;
+            }
+          }
           switch (responseData.status) {
 
             case "SUCCESS":
@@ -213,7 +229,22 @@ const Signin: React.FC = () => {
                     get_me();
                   }
                 }
-
+                if (responseData.shopify_status) {
+                  switch (responseData.shopify_status) {
+                    case "NEED_UPGRADE_PLAN":
+                      showErrorToast('Unable to add another domain, please upgrade plan');
+                      break;
+                    case "NON_SHOPIFY_ACCOUNT":
+                      showErrorToast('Error adding a domain, sign up for a new shopify account');
+                      break;
+                    case "ERROR_SHOPIFY_TOKEN":
+                      showErrorToast('Error creating a shopify token');
+                      break;
+                    default:
+                      showErrorToast(responseData.shopify_status);
+                      break;
+                  }
+                }
                 switch (response.data.status) {
                   case 'SUCCESS':
                     router.push('/dashboard');
