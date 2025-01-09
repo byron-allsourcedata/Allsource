@@ -1,7 +1,6 @@
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { Box, Typography, TextField, Button, FormControl, InputLabel, MenuItem, Select, IconButton, InputAdornment, Accordion, AccordionSummary, AccordionDetails, DialogActions, DialogContent, DialogContentText, Popover, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
-import CustomizedProgressBar from "./CustomizedProgressBar";
+import { Box, Typography, TextField, Button, FormControl, InputLabel, Tabs, Tab, IconButton, InputAdornment, Accordion, AccordionSummary, AccordionDetails, DialogActions, DialogContent, DialogContentText, Popover, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
+import { useEffect, useState } from "react";
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import { suppressionsStyles } from "@/css/suppressions";
@@ -12,6 +11,7 @@ import CalendarPopup from "./CustomCalendar";
 import { DateRangeIcon } from "@mui/x-date-pickers/icons";
 import SearchIcon from '@mui/icons-material/Search';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
+import { useUser } from '@/context/UserContext';
 
 const tableHeaders = [
     { key: 'account_name', label: 'Account name', sortable: false },
@@ -24,7 +24,7 @@ const tableHeaders = [
     { key: 'status', label: 'Status', sortable: false },
 ];
 
-const getStatusStyle = (status: any) => {
+const getStatusStyle = (status: string) => {
     switch (status) {
         case "Accepted":
             return {
@@ -65,16 +65,20 @@ const getStatusStyle = (status: any) => {
 };
 
 interface PartnersAccountsProps {
-    id: number | null;
+    id?: number | null;
+    fromAdmin?: boolean;
+    masterData?: any;
     loading: boolean;
     setLoading: (state: boolean) => void;
+    tabIndex?: number;
+    handleTabChange?: (event: React.SyntheticEvent | null, newIndex: number) => void;
+    setMasterData?: any
 }
 
 
 
-const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id, loading, setLoading}) => {
-
-    const [expanded, setExpanded] = useState<number | false>(false);
+const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id: partnerId, fromAdmin, masterData, setMasterData, loading, setLoading, tabIndex, handleTabChange }) => {
+    const { email } = useUser();
     const [accounts, setAccounts] = useState<any[]>([]);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -86,6 +90,8 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id, loading, setLoad
     const [formattedDates, setFormattedDates] = useState<string>('');
     const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
     const [selectedDateLabel, setSelectedDateLabel] = useState<string>('');
+    const id = partnerId ?? masterData?.id
+    const allowedRowsPerPage = [10, 25, 50, 100];
 
     const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setCalendarAnchorEl(event.currentTarget);
@@ -166,78 +172,29 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id, loading, setLoad
         setAccounts(sortedAccounts);
     };
 
-    const handleOpenSection = (panel: number) => (
-        event: React.SyntheticEvent,
-        isExpanded: boolean
-    ) => {
-        setExpanded(isExpanded ? panel : false);
-    };
-
     const fetchRules = async () => {
         setLoading(true)
+        let response
 
         try {
-        const response = await axiosInstance.get(`/accounts`, {params: { id }});
-        setAccounts([...response.data])
+            if (email){
+                response = await axiosInstance.get(`/partners/accounts`, { params: {email: encodeURIComponent(email)} });
+            }
+            else {
+                response = await axiosInstance.get(`/admin-accounts`, { params: {id} });
+            }
+            if(response.status === 200) {
+                setAccounts([...response.data])
+            }
         } catch {
-            // showErrorToast("Failed to delete partner. Please try again later.");
+            console.log("ferfrgr")
         } finally {
             setLoading(false)
         }
     }
 
     useEffect(() => {
-        if (id) {
-            fetchRules();
-        }
-        else {
-            // setAccounts([
-            //     {
-            //         account_name: "Lolly",
-            //         email: "abc@gmail.com",
-            //         join_date: "2024-08-27T10:00:00Z",
-            //         plan_amount: '$200',
-            //         reward_status: 'Paid',
-            //         reward_amount: '$2000',
-            //         reward_payout_date: "2024-08-27T10:00:00Z",
-            //         last_payment_date: "2024-08-27T10:00:00Z",
-            //         status: "Free trial",
-            //     },
-            //     {
-            //         account_name: "Lolly",
-            //         email: "abc@gmail.com",
-            //         join_date: "2024-08-27T10:00:00Z",
-            //         plan_amount: '$200',
-            //         reward_status: 'Pending',
-            //         reward_amount: '$2000',
-            //         reward_payout_date: "2024-08-28T10:00:00Z",
-            //         last_payment_date: "2024-08-27T10:00:00Z",
-            //         status: "Active",
-            //     },
-            //     {
-            //         account_name: "Lolly",
-            //         email: "abc@gmail.com",
-            //         join_date: "2024-08-29T10:00:00Z",
-            //         plan_amount: '--',
-            //         reward_status: 'Accepted',
-            //         reward_amount: '$2000',
-            //         reward_payout_date: "2024-08-27T10:00:00Z",
-            //         last_payment_date: "2024-08-27T10:00:00Z",
-            //         status: "Signup",
-            //     },
-            //     {
-            //         account_name: "Lolly",
-            //         email: "abc@gmail.com",
-            //         join_date: "2024-10-27T10:00:00Z",
-            //         plan_amount: '$200',
-            //         reward_status: 'Paid',
-            //         reward_amount: '$2000',
-            //         reward_payout_date: "2024-08-27T10:00:00Z",
-            //         last_payment_date: "2024-08-27T10:00:00Z",
-            //         status: "Pending",
-            //     },
-            // ])
-        }
+        fetchRules();
     }, [id]);
 
     const [referralLink, setReferralLink] = useState('1233213213tttttt');
@@ -263,7 +220,8 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id, loading, setLoad
                 minHeight: '77vh',
                 '@media (max-width: 600px)': {margin: '0rem auto 0rem'}
             }}>
-                {accounts.length === 0 && !loading ? (
+                {accounts.length === 0 && !loading 
+                ? (
                     <Box sx={suppressionsStyles.centerContainerStyles}>
                         <Typography variant="h5" sx={{
                             mb: 3,
@@ -288,222 +246,359 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id, loading, setLoad
                             No Invitee joined from the referreal link.
                         </Typography>
                     </Box>
-                ) : (<>
-                    <Box>
-                        <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', mb: 2, alignItems: 'center', gap: 2 }}>
-                            {/* <Typography className="second-sub-title">{selectedDateLabel ? selectedDateLabel : 'All time'}</Typography> */}
-                            <Typography  variant="h4" component="h2"
-                                sx={{
-                                    fontWeight: 'bold',
-                                    fontSize: '16px',
-                                    whiteSpace: 'nowrap',
-                                    textAlign: 'start',
-                                    fontFamily: 'Nunito Sans',                                  
-                                }}>
-                                Accounts
-                            </Typography>
-                            <Box sx={{display: 'flex', gap: "16px"}}>
-                                            <TextField
-                                                id="input-with-icon-textfield"
-                                                placeholder="Search by account name, emails"
-                                                InputProps={{
-                                                    startAdornment: (
-                                                        <InputAdornment position="start">
-                                                            <SearchIcon />
-                                                        </InputAdornment>
-                                                    ),
-                                                }}
-                                                variant="outlined"
-                                                sx={{
-                                                    flex: 1,
-                                                    width: '360px',
-                                                    '& .MuiOutlinedInput-root': {
-                                                        borderRadius: '4px',
-                                                        height: '40px',
-                                                    },
-                                                    '& input': {
-                                                        paddingLeft: 0,
-                                                    },
-                                                    '& input::placeholder': {
-                                                        fontSize: '14px',
-                                                        color: '#8C8C8C',
-                                                    },
-                                                }}
-                                            />
-                            <Button
-                                aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
-                                aria-haspopup="true"
-                                aria-expanded={isCalendarOpen ? 'true' : undefined}
-                                onClick={handleCalendarClick}
-                                sx={{
-                                    textTransform: 'none',
-                                    color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
-                                    border: formattedDates ? '1.5px solid rgba(80, 82, 178, 1)' : '1.5px solid rgba(184, 184, 184, 1)',
-                                    borderRadius: '4px',
-                                    padding: '8px',
-                                    minWidth: 'auto',
-                                    '@media (max-width: 900px)': {
-                                        border: 'none',
-                                        padding: 0
-                                    },
-                                    '&:hover': {
-                                        border: '1.5px solid rgba(80, 82, 178, 1)',
-                                        '& .MuiSvgIcon-root': {
-                                            color: 'rgba(80, 82, 178, 1)'
-                                        }
-                                    }
-                                }}
-                            >
-                                <DateRangeIcon
-                                    fontSize="medium"
-                                    sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }}
-                                />
-                                <Typography variant="body1" sx={{
-                                    fontFamily: 'Roboto',
-                                    fontSize: '14px',
-                                    fontWeight: '400',
-                                    color: 'rgba(32, 33, 36, 1)',
-                                    lineHeight: '19.6px',
-                                    textAlign: 'left'
-                                }}>
-                                    {formattedDates}
-                                </Typography>
-                                {formattedDates &&
-                                    <Box sx={{ pl: 2, display: 'flex', alignItems: 'center' }}>
-                                        <Image src="/arrow_down.svg" alt="arrow down" width={16} height={16} />
-                                    </Box>
+                ) 
+                : (
+                    <>
+                        <Box>
+                        {fromAdmin && 
+                        <>
+                            <Box sx={{display: "flex", alignItems: "center", gap: "5px", mb: "24px" }}>
+                            <Typography onClick={() => {
+                                if (handleTabChange) {
+                                    handleTabChange(null, 0)
+                                    setMasterData(null)
                                 }
-                            </Button>
+                            }}
+                            sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "#808080", cursor: "pointer"}}>
+                                Master Partner {masterData.partner_name ? `- ${masterData.partner_name}` : ""}
+                            </Typography>
+                                {/* <NavigateNextIcon width={16}/>
+                                <Typography sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "#808080"}}>
+                                    {accountName}
+                                </Typography> */}
+                            </Box>
+                            <Typography variant="h4" component="h1" sx={{
+                                lineHeight: "22.4px",
+                                color: "#202124",
+                                fontWeight: 'bold',
+                                fontSize: '16px',
+                                mb: "24px",
+                                fontFamily: 'Nunito Sans'}}>
+                                Master Partners
+                            </Typography>
+                        </>}
+                            <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', mb: 2, alignItems: 'center', gap: 2 }}>
+                                {fromAdmin 
+                                ?
+                                <Tabs
+                                    value={tabIndex}
+                                    onChange={handleTabChange}
+                                    sx={{
+                                        textTransform: 'none',
+                                        minHeight: 0,
+                                        '& .MuiTabs-indicator': {
+                                            backgroundColor: 'rgba(80, 82, 178, 1)',
+                                            height: '1.4px',
+                                        },
+                                        "@media (max-width: 600px)": {
+                                            border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px', width: '100%', '& .MuiTabs-indicator': {
+                                                height: '0',
+                                            },
+                                        }
+                                    }}
+                                    aria-label="partners role tabs"
+                                >   
+                                    <Tab className="main-text"
+                                        sx={{
+                                            textTransform: 'none',
+                                            padding: '4px 1px',
+                                            minHeight: 'auto',
+                                            flexGrow: 1,
+                                            pb: '10px',
+                                            textAlign: 'center',
+                                            fontSize: '14px',
+                                            fontWeight: 700,
+                                            lineHeight: '19.1px',
+                                            minWidth: 'auto',
+                                            mr: 2,
+                                            '&.Mui-selected': {
+                                                color: 'rgba(80, 82, 178, 1)'
+                                            },
+                                            "@media (max-width: 600px)": {
+                                                mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                                                    backgroundColor: 'rgba(249, 249, 253, 1)',
+                                                    border: '1px solid rgba(220, 220, 239, 1)'
+                                                },
+                                            }
+                                        }}
+                                        label="Accounts"
+                                    />
+                                    <Tab className="main-text"
+                                        sx={{
+                                            display: "none",
+                                            textTransform: 'none',
+                                            padding: '4px 1px',
+                                            minHeight: 'auto',
+                                            flexGrow: 1,
+                                            pb: '10px',
+                                            textAlign: 'center',
+                                            fontSize: '14px',
+                                            fontWeight: 700,
+                                            lineHeight: '19.1px',
+                                            minWidth: 'auto',
+                                            mr: 2,
+                                            '&.Mui-selected': {
+                                                color: 'rgba(80, 82, 178, 1)'
+                                            },
+                                            "@media (max-width: 600px)": {
+                                                mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                                                    backgroundColor: 'rgba(249, 249, 253, 1)',
+                                                    border: '1px solid rgba(220, 220, 239, 1)'
+                                                },
+                                            }
+                                        }}
+                                        label="Master partners"
+                                    />
+                                    <Tab className="main-text"
+                                        sx={{
+                                            textTransform: 'none',
+                                            padding: '4px 10px',
+                                            pb: '10px',
+                                            flexGrow: 1,
+                                            minHeight: 'auto',
+                                            minWidth: 'auto',
+                                            fontSize: '14px',
+                                            fontWeight: 700,
+                                            lineHeight: '19.1px',
+                                            '&.Mui-selected': {
+                                                color: 'rgba(80, 82, 178, 1)'
+                                            },
+                                            "@media (max-width: 600px)": {
+                                                mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                                                    backgroundColor: 'rgba(249, 249, 253, 1)',
+                                                    border: '1px solid rgba(220, 220, 239, 1)'
+                                                },
+                                            }
+                                        }}
+                                        label="Partners"
+                                    />
+                                </Tabs> 
+                                : 
+                                <Typography  variant="h4" component="h2"
+                                        sx={{
+                                            fontWeight: 'bold',
+                                            fontSize: '16px',
+                                            whiteSpace: 'nowrap',
+                                            textAlign: 'start',
+                                            fontFamily: 'Nunito Sans',                                  
+                                        }}>
+                                        Accounts
+                                </Typography>
+                                }
+                                <Box sx={{display: 'flex', gap: "16px"}}>
+                                                <TextField
+                                                    id="input-with-icon-textfield"
+                                                    placeholder="Search by account name, emails"
+                                                    InputProps={{
+                                                        startAdornment: (
+                                                            <InputAdornment position="start">
+                                                                <SearchIcon />
+                                                            </InputAdornment>
+                                                        ),
+                                                    }}
+                                                    variant="outlined"
+                                                    sx={{
+                                                        flex: 1,
+                                                        width: '360px',
+                                                        '& .MuiOutlinedInput-root': {
+                                                            borderRadius: '4px',
+                                                            height: '40px',
+                                                        },
+                                                        '& input': {
+                                                            paddingLeft: 0,
+                                                        },
+                                                        '& input::placeholder': {
+                                                            fontSize: '14px',
+                                                            color: '#8C8C8C',
+                                                        },
+                                                    }}
+                                                />
+                                <Button
+                                    aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
+                                    aria-haspopup="true"
+                                    aria-expanded={isCalendarOpen ? 'true' : undefined}
+                                    onClick={handleCalendarClick}
+                                    sx={{
+                                        textTransform: 'none',
+                                        color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
+                                        border: formattedDates ? '1.5px solid rgba(80, 82, 178, 1)' : '1.5px solid rgba(184, 184, 184, 1)',
+                                        borderRadius: '4px',
+                                        padding: '8px',
+                                        minWidth: 'auto',
+                                        '@media (max-width: 900px)': {
+                                            border: 'none',
+                                            padding: 0
+                                        },
+                                        '&:hover': {
+                                            border: '1.5px solid rgba(80, 82, 178, 1)',
+                                            '& .MuiSvgIcon-root': {
+                                                color: 'rgba(80, 82, 178, 1)'
+                                            }
+                                        }
+                                    }}
+                                >
+                                    <DateRangeIcon
+                                        fontSize="medium"
+                                        sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }}
+                                    />
+                                    <Typography variant="body1" sx={{
+                                        fontFamily: 'Roboto',
+                                        fontSize: '14px',
+                                        fontWeight: '400',
+                                        color: 'rgba(32, 33, 36, 1)',
+                                        lineHeight: '19.6px',
+                                        textAlign: 'left'
+                                    }}>
+                                        {formattedDates}
+                                    </Typography>
+                                    {formattedDates &&
+                                        <Box sx={{ pl: 2, display: 'flex', alignItems: 'center' }}>
+                                            <Image src="/arrow_down.svg" alt="arrow down" width={16} height={16} />
+                                        </Box>
+                                    }
+                                </Button>
+                                </Box>
+                            </Box>
+
+                            <Box sx={{ display: 'flex', }}>
+                                <TableContainer sx={{
+                                    border: '1px solid #EBEBEB',
+                                    borderRadius: '4px 4px 0px 0px',
+                                }}>
+                                    <Table>
+                                        <TableHead>
+                                            <TableRow>
+                                                {tableHeaders.map(({ key, label, sortable }) => (
+                                                    <TableCell
+                                                        key={key}
+                                                        sx={{
+                                                            paddingLeft: "16px", 
+                                                            cursor: sortable ? 'pointer' : 'default',
+                                                            ...suppressionsStyles.tableColumn, 
+                                                            ...(key === 'account_name' && { 
+                                                                position: 'sticky',
+                                                                left: 0,
+                                                                zIndex: 99,
+                                                                backgroundColor: '#fff',
+                                                                
+                                                            })
+                                                        }}
+                                                        onClick={sortable ? () => handleSortRequest(key) : undefined}
+                                                    >
+                                                        <Box sx={{ display: 'flex', alignItems: 'center' }} style={key === "status" || key === "reward_status" ? { justifyContent: "center" } : {}}>
+                                                            <Typography variant="body2" className='table-heading'>{label}</Typography>
+                                                            {sortable && (
+                                                            <IconButton size="small" sx={{ ml: 1 }}>
+                                                                {orderBy === key ? (
+                                                                order === 'asc' ? (
+                                                                    <ArrowUpwardIcon fontSize="inherit" />
+                                                                ) : (
+                                                                    <ArrowDownwardIcon fontSize="inherit" />
+                                                                )
+                                                                ) : (
+                                                                <SwapVertIcon fontSize="inherit" />
+                                                                )}
+                                                            </IconButton>
+                                                            )}
+                                                        </Box>
+                                                    </TableCell>
+                                                    ))}
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {accounts.map((data, index) => (
+                                                <TableRow key={index} sx={{
+                                                    ...suppressionsStyles.tableBodyRow
+                                                }}>
+                                                    <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, 
+                                                        paddingLeft: "16px",
+                                                        position: 'sticky',
+                                                        left: 0,
+                                                        zIndex: 1,
+                                                        backgroundColor: '#fff'
+                                                    }}>
+                                                        {data.account_name}
+                                                    </TableCell>
+
+                                                    <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
+                                                        {data.email}
+                                                    </TableCell>
+
+                                                    <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
+                                                        {dayjs(data.join_date).format('MMM D, YYYY')}
+                                                    </TableCell>
+
+                                                    <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
+                                                        {data.plan_amount}
+                                                    </TableCell>
+
+                                                    <TableCell sx={{ ...suppressionsStyles.tableColumn, paddingLeft: "16px", textAlign: 'center' }}>
+                                                        <Box sx={{display: "flex", justifyContent: "center"}}>
+                                                            <Typography component="div" sx={{
+                                                                width: "74px",
+                                                                margin: "0",
+                                                                background: getStatusStyle(data.status).background,
+                                                                padding: '3px 8px',
+                                                                borderRadius: '2px',
+                                                                fontFamily: 'Roboto',
+                                                                fontSize: '12px',
+                                                                fontWeight: '400',
+                                                                lineHeight: '16px',
+                                                                color: getStatusStyle(data.status).color,
+                                                            }}>
+                                                                {data.reward_status}
+                                                            </Typography>
+                                                        </Box>
+                                                    </TableCell>
+
+                                                    {/* {id && <TableCell className='table-data' sx={suppressionsStyles.tableBodyColumn}>
+                                                        {data.reward_amount}
+                                                    </TableCell>} */}
+
+                                                    <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
+                                                        {dayjs(data.reward_payout_date).format('MMM D, YYYY')}
+                                                    </TableCell>
+
+                                                    <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
+                                                        {dayjs(data.last_payment_date).format('MMM D, YYYY')}
+                                                    </TableCell>
+
+                                                    <TableCell sx={{ ...suppressionsStyles.tableColumn, paddingLeft: "16px", textAlign: 'center'}}>
+                                                        <Box sx={{display: "flex", justifyContent: "center"}}>
+                                                            <Typography component="div" sx={{
+                                                                width: "74px",
+                                                                margin: "0",
+                                                                background: getStatusStyle(data.status).background,
+                                                                padding: '3px 8px',
+                                                                borderRadius: '2px',
+                                                                fontFamily: 'Roboto',
+                                                                fontSize: '12px',
+                                                                fontWeight: '400',
+                                                                lineHeight: '16px',
+                                                                color: getStatusStyle(data.status).color,
+                                                            }}>
+                                                                {data.status}
+                                                            </Typography>
+                                                        </Box>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
                             </Box>
                         </Box>
-
-                        <Box sx={{ display: 'flex', }}>
-                            <TableContainer sx={{
-                                border: '1px solid #EBEBEB',
-                                borderRadius: '4px 4px 0px 0px',
-                            }}>
-                                <Table>
-                                    <TableHead>
-                                        <TableRow>
-                                            {tableHeaders.map(({ key, label, sortable }) => (
-                                                <TableCell
-                                                    key={key}
-                                                    sx={{...suppressionsStyles.tableColumn, paddingLeft: "16px", cursor: sortable ? 'pointer' : 'default'}}
-                                                    onClick={sortable ? () => handleSortRequest(key) : undefined}
-                                                >
-                                                    <Box sx={{ display: 'flex', alignItems: 'center' }} style={key === "status" || key === "reward_status" ? { justifyContent: "center" } : {}}>
-                                                        <Typography variant="body2" className='table-heading'>{label}</Typography>
-                                                        {sortable && (
-                                                        <IconButton size="small" sx={{ ml: 1 }}>
-                                                            {orderBy === key ? (
-                                                            order === 'asc' ? (
-                                                                <ArrowUpwardIcon fontSize="inherit" />
-                                                            ) : (
-                                                                <ArrowDownwardIcon fontSize="inherit" />
-                                                            )
-                                                            ) : (
-                                                            <SwapVertIcon fontSize="inherit" />
-                                                            )}
-                                                        </IconButton>
-                                                        )}
-                                                    </Box>
-                                                </TableCell>
-                                                ))}
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {accounts.map((data, index) => (
-                                            <TableRow key={index} sx={{
-                                                ...suppressionsStyles.tableBodyRow,
-                                                '&:hover': {
-                                                    backgroundColor: '#F7F7F7',
-                                                    '& .sticky-cell': {
-                                                        backgroundColor: '#F7F7F7',
-                                                    }
-                                                },
-                                            }}>
-                                                <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
-                                                    {data.account_name}
-                                                </TableCell>
-
-                                                <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
-                                                    {data.email}
-                                                </TableCell>
-
-                                                <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
-                                                    {dayjs(data.join_date).format('MMM D, YYYY')}
-                                                </TableCell>
-
-                                                <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
-                                                    {data.plan_amount}
-                                                </TableCell>
-
-                                                <TableCell sx={{ ...suppressionsStyles.tableColumn, paddingLeft: "16px", textAlign: 'center' }}>
-                                                    <Box sx={{display: "flex", justifyContent: "center"}}>
-                                                        <Typography component="div" sx={{
-                                                            width: "74px",
-                                                            margin: "0",
-                                                            background: getStatusStyle(data.status).background,
-                                                            padding: '3px 8px',
-                                                            borderRadius: '2px',
-                                                            fontFamily: 'Roboto',
-                                                            fontSize: '12px',
-                                                            fontWeight: '400',
-                                                            lineHeight: '16px',
-                                                            color: getStatusStyle(data.status).color,
-                                                        }}>
-                                                            {data.reward_status}
-                                                        </Typography>
-                                                    </Box>
-                                                </TableCell>
-
-                                                {/* {id && <TableCell className='table-data' sx={suppressionsStyles.tableBodyColumn}>
-                                                    {data.reward_amount}
-                                                </TableCell>} */}
-
-                                                <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
-                                                    {dayjs(data.reward_payout_date).format('MMM D, YYYY')}
-                                                </TableCell>
-
-                                                <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
-                                                    {dayjs(data.last_payment_date).format('MMM D, YYYY')}
-                                                </TableCell>
-
-                                                <TableCell sx={{ ...suppressionsStyles.tableColumn, paddingLeft: "16px", textAlign: 'center'}}>
-                                                    <Box sx={{display: "flex", justifyContent: "center"}}>
-                                                        <Typography component="div" sx={{
-                                                            width: "74px",
-                                                            margin: "0",
-                                                            background: getStatusStyle(data.status).background,
-                                                            padding: '3px 8px',
-                                                            borderRadius: '2px',
-                                                            fontFamily: 'Roboto',
-                                                            fontSize: '12px',
-                                                            fontWeight: '400',
-                                                            lineHeight: '16px',
-                                                            color: getStatusStyle(data.status).color,
-                                                        }}>
-                                                            {data.status}
-                                                        </Typography>
-                                                    </Box>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
+                        <Box sx={{ display: 'flex', justifyContent: 'end' }}>
+                            <CustomTablePagination
+                                count={totalCount}
+                                page={page}
+                                rowsPerPage={allowedRowsPerPage.includes(rowsPerPage) ? rowsPerPage : 10}
+                                onPageChange={handlePageChange}
+                                onRowsPerPageChange={handleRowsPerPageChange}
+                                rowsPerPageOptions={[10, 25, 50, 100]}
+                            />
                         </Box>
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'end' }}>
-                        <CustomTablePagination
-                            count={totalCount}
-                            page={page}
-                            rowsPerPage={rowsPerPage}
-                            onPageChange={handlePageChange}
-                            onRowsPerPageChange={handleRowsPerPageChange}
-                        />
-                    </Box>
-                </>
+                    </>
                 )}
             </Box>
             <CalendarPopup

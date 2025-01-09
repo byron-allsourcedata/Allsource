@@ -57,8 +57,7 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
 
         try {
         const response = await axiosInstance.delete(`admin-partners/${id}`, {params: { message }});
-            const status = response.data.status;
-            if (status.status === "SUCCESS") {
+            if (response.status === 200) {
                 removePartnerById(id);
                 showToast("Partner successfully deleted!")
             }
@@ -74,15 +73,13 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
         setProcessing(true);
         setButtonContain(false);
     
-        const formData = new FormData();
-        formData.append("status", "Inactive");
-        
-    
         try {
-            const response = await axiosInstance.put(`admin-partners/${id}/`, formData);
-            if (response.data.status === "SUCCESS") {
-                updateOrAddAsset(response.data.data);
-                showToast("Partner stsatus successfully updated!");
+            const response = await axiosInstance.put(`admin-partners/${id}/`, {status: "inactive", message}, {
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (response.status === 200) {
+                updateOrAddAsset(response.data);
+                showToast("Partner status successfully updated!");
             }
         } catch {
             showErrorToast("Failed to update status. Please try again.");
@@ -114,14 +111,13 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
     }, [message]);
     
     return (
-        <>
         <Drawer anchor="right" open={open}>
         {processing && (
             <Box
                 sx={{
                 width: '100%',
                 position: 'fixed',
-                top: '3.5rem',
+                top: '5rem',
                 zIndex: 1200,   
                 }}
             >
@@ -129,18 +125,18 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
             </Box>
         )}
             <Box
-            sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "0.75em 1em 0.25em 1em",
-            borderBottom: "1px solid #e4e4e4",
-            position: "sticky",
-            top: 0,
-            zIndex: 9900,
-            backgroundColor: "#fff",
-            }}
-        >
+                sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "24px",
+                borderBottom: "1px solid #e4e4e4",
+                position: "sticky",
+                top: 0,
+                zIndex: 9900,
+                backgroundColor: "#fff",
+                }}
+            >
                 <Typography
                 sx={{
                     fontFamily: "Nunito Sans",
@@ -153,7 +149,7 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                 </Typography>
                 <Box sx={{ display: "flex", flexDirection: "row" }}>
                     <IconButton onClick={handleClose}>
-                        <CloseIcon />
+                        <CloseIcon  sx={{ width: "16px", height: "16px" }}/>
                     </IconButton>
                 </Box>
             </Box>
@@ -164,7 +160,8 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                 <Box 
                     sx={{
                         display: "flex",
-                        flexDirection: "column"
+                        flexDirection: "column",
+                        gap: "32px"
                     }}>
                         <Typography
                             sx={{
@@ -172,7 +169,7 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                                 fontSize: "16px",
                                 fontWeight: "600",
                                 lineHeight: "21.82px",
-                                margin: "24px 0 40px"
+                                marginTop: "24px"
                             }}
                             >
                             {action == "Disable" 
@@ -187,12 +184,11 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                             label="Account name"
                             placeholder='Account name'
                             sx={{
-                                paddingBottom: "24px",
                                 "& .MuiInputLabel-root.Mui-focused": {
                                     color: "rgba(17, 17, 19, 0.6)",
                                 },
                                 "& .MuiInputLabel-root[data-shrink='false']": {
-                                    transform: "translate(12px, 50%) scale(1)",
+                                    transform: "translate(16px, 50%) scale(1)",
                                 },  
                             }}
                             value={fullName}
@@ -209,7 +205,7 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                                     color: "rgba(17, 17, 19, 0.6)",
                                 },
                                 "& .MuiInputLabel-root[data-shrink='false']": {
-                                    transform: "translate(12px, 50%) scale(1)",
+                                    transform: "translate(16px, 50%) scale(1)",
                                 },  
                             }}
                             value={message}
@@ -232,7 +228,18 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                 }}
             >
                 <Button variant="contained" onClick={action === "Terminate" ? handleDeletePartner : handleSubmit} disabled={!buttonContain}  sx={{
-                    backgroundColor: "rgba(80, 82, 178, 1)"
+                    backgroundColor: "rgba(80, 82, 178, 1)",
+                    width: "70px",
+                    height: "40px",
+                    ":hover": {
+                        backgroundColor: "rgba(8, 83, 196, 1)"},
+                    ":active": {
+                        backgroundColor: "rgba(20, 110, 246, 1)",
+                        border: "2px solid rgba(157, 194, 251, 1)"},
+                    ":disabled": {
+                        backgroundColor: "rgba(20, 110, 246, 1)",
+                        opacity: 0.4,
+                    },
                 }}>
                     <Typography
                         sx={{
@@ -250,6 +257,17 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                 </Button> 
                 <Button variant="outlined" onClick={handleClose} disabled={!buttonContain}  sx={{
                     borderColor: "rgba(80, 82, 178, 1)",
+                    width: "67px",
+                    height: "40px",
+                    ":hover": {
+                        borderColor: "rgba(8, 83, 196, 1)"},
+                    ":active": {
+                        borderColor: "rgba(20, 110, 246, 1)",
+                        border: "1px solid rgba(157, 194, 251, 1)"},
+                    ":disabled": {
+                        borderColor: "rgba(20, 110, 246, 1)",
+                        opacity: 0.4,
+                    },
                 }}>
                     <Typography
                         sx={{
@@ -267,7 +285,6 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                 </Button> 
             </Box>
         </Drawer>
-        </>
     )
 };
 

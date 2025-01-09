@@ -72,28 +72,31 @@ const PartnersAssets: React.FC = () => {
         try {
             const userFavorites = JSON.parse(localStorage.getItem(`favorites_${currentUserId}`) || '[]');
 
-            const response = await axiosInstance.get("/partners");
-            const assetsByType = response.data.reduce((acc: Record<string, AssetsData[]>, item: AssetsData) => {
-                if (!acc[item.type]) {
-                    acc[item.type] = [];
-                }
-                const isFavorite = userFavorites.some((fav: AssetsData) => fav.id === item.id);
-                acc[item.type].push({ ...item, isFavorite });
-                return acc;
-            }, {});
+            const response = await axiosInstance.get("/partners/assets");
+            if (response.status === 200) {
+
+                const assetsByType = response.data.reduce((acc: Record<string, AssetsData[]>, item: AssetsData) => {
+                    if (!acc[item.type]) {
+                        acc[item.type] = [];
+                    }
+                    const isFavorite = userFavorites.some((fav: any) => fav.id === item.id);
+                    acc[item.type].push({ ...item, isFavorite });
+                    return acc;
+                }, {});
 
 
-            setAssets([
-                {type: "Videos", asset: assetsByType["video"] || []},
-                {type: "Pitch decks", asset: assetsByType["presentation"] || []},
-                {type: "Images", asset: assetsByType["image"] || []},
-                {type: "Documents", asset: assetsByType["document"] || []},
-            ]);
+                setAssets([
+                    {type: "Videos", asset: assetsByType["video"] || []},
+                    {type: "Pitch decks", asset: assetsByType["presentation"] || []},
+                    {type: "Images", asset: assetsByType["image"] || []},
+                    {type: "Documents", asset: assetsByType["document"] || []},
+                ]);
 
-            setFavorites([{ type: "Favorites", asset: userFavorites }]);
+                setFavorites([{ type: "Favorites", asset: userFavorites }]);
+            }
 
-        } catch (error) {
-            console.error("Error fetching rewards:", error);
+        } catch { 
+
         } finally {
             setLoading(false);
         }
