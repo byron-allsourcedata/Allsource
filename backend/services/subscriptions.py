@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timezone
-from httpx import Client
+from enums import PlanAlias
 from dateutil.relativedelta import relativedelta
 from sqlalchemy.orm import Session
 import os
@@ -18,8 +18,7 @@ from persistence.user_persistence import UserPersistence
 from utils import get_utc_aware_date_for_postgres
 from decimal import *
 from services.stripe_service import determine_plan_name_from_product_id
-from fastapi import Response
-from urllib.parse import urlparse, urlencode
+from urllib.parse import urlencode
 import requests
 
 load_dotenv()
@@ -102,11 +101,12 @@ class SubscriptionService:
         }
         result = self.plans_persistence.get_user_subscription_with_trial_status(user_id)
         if result:
-            user_subscription, is_free_trial, trail_days, currency, price = result
+            user_subscription, is_free_trial, trail_days, currency, price, alias = result
             result_dict['subscription'] = user_subscription
             result_dict['artificial_trial_days'] = trail_days
             result_dict['is_artificial_status'] = is_free_trial
-            return result_dict
+            result_dict['alias'] = alias
+
         return result_dict
 
     def is_user_has_active_subscription(self, user_id):
@@ -197,8 +197,8 @@ class SubscriptionService:
         self.db.flush()
 
     
-    def get_plan_by_title(self, plan_type, interval):
-        return self.plans_persistence.get_plan_by_title(plan_type, interval)
+    def get_plan_by_title_and_interval(self, plan_type, interval):
+        return self.plans_persistence.get_plan_by_title_and_interval(plan_type, interval)
     
     def get_plan_by_title_price(self, plan_name, payment_amount):
         return self.plans_persistence.get_plan_by_title_price(plan_name, payment_amount)
@@ -221,7 +221,7 @@ class SubscriptionService:
         interval = stripe_payload.get("data").get("object").get("plan").get("interval")
         payment_platform_subscription_id = stripe_payload.get("data").get("object").get("id")
         transaction_id = stripe_payload.get("id")
-        plan_id = self.plans_persistence.get_plan_by_title(plan_type, interval).id
+        plan_id = self.plans_persistence.get_plan_by_title_and_interval(plan_type, interval).id
         subscription_transaction_obj = SubscriptionTransactions(
             user_id=user_id,
             start_date=start_date,
@@ -289,6 +289,30 @@ class SubscriptionService:
         headers = {'Referer': refer}
         response = requests.get(request_url, headers=headers)
         return response
+    
+    def create_subscription_from_partners(self, user_id):
+        plan = self.plans_persistence.get_plan_by_alias(PlanAlias.PARTNERS.value)
+        created_at = datetime.strptime(get_utc_aware_date_for_postgres(), '%Y-%m-%dT%H:%M:%SZ')
+        add_subscription_obj = Subscription(
+            domains_limit=plan.domains_limit,
+            integrations_limit=plan.integrations_limit,
+            user_id=user_id,
+            updated_at=created_at.isoformat() + "Z",
+            created_at=created_at.isoformat() + "Z",
+            members_limit=plan.members_limit,
+            status='active',
+            plan_id=plan.id,
+            is_trial=True,
+            lead_credit_price=plan.lead_credit_price
+        )
+        self.db.add(add_subscription_obj)
+        self.db.flush()
+        user = self.db.query(User).filter(User.id == user_id).first()
+        user.activate_steps_percent=50
+        user.leads_credits=plan.leads_credits
+        user.prospect_credits=plan.prospect_credits
+        user.current_subscription_id=add_subscription_obj.id
+        self.db.commit()
 
     def create_subscription_from_free_trial(self, user_id, ftd=None):
         plan = self.plans_persistence.get_free_trial_plan(ftd)

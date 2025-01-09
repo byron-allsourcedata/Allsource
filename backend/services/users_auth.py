@@ -265,10 +265,10 @@ class UsersAuth:
 
         self.user_persistence_service.email_confirmed(user_object.id)
 
-        if referral_token is not None:
+        if referral_token:
             self.user_persistence_service.book_call_confirmed(user_object.id)
             self.user_persistence_service.set_partner_role(user_object.id)
-            self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)
+            self.subscription_service.create_subscription_from_partners(user_id=user_object.id, ftd=ftd)
             self.partners_service.setUser(user_object.email, user_object.id, "signup", datetime.datetime.now())
         
         if (ift and ift == 'arwt') or user_object.source_platform in (SourcePlatformEnum.BIG_COMMERCE.value, SourcePlatformEnum.SHOPIFY.value):
@@ -530,20 +530,14 @@ class UsersAuth:
         if is_with_card is False and teams_token is None and referral_token is None and shopify_data is None:
             return self._send_email_verification(user_object, token)
         
-        if referral_token is not None:
+        if referral_token:
             self.user_persistence_service.book_call_confirmed(user_object.id)
             self.user_persistence_service.email_confirmed(user_object.id)
             self.user_persistence_service.set_partner_role(user_object.id)
-            self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)
-            partner = self.partners_service.setUser(user_object.email, user_object.id, "signup", datetime.now())
-            if not partner.get("status"):
-                error = partner.get("error", {}) or {}
-                return {
-                    'is_success': True,
-                    'status': error.get("message", "Unknown error occurred")
-                }
+            self.subscription_service.create_subscription_from_partners(user_id=user_object.id)
+            self.partners_service.setUser(user_object.email, user_object.id, "signup", datetime.now())
             
-        if teams_token is None:
+        if teams_token:
             return {
                 'is_success': True,
                 'status': SignUpStatus.FILL_COMPANY_DETAILS,

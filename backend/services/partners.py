@@ -156,27 +156,8 @@ class PartnersService:
             return {"status": False, "error":{"code": 500, "message": f"Unexpected error during creation: {str(e)}"}}
     
 
-    def setUser(self, email: str, user_id: int, status: str, join_date = None):
-        if not email or not user_id or not status:
-            return {"status": False, "error": {"code": 404, "message": "Partner data not found"}}
-        
-        try:
-            if(join_date):
-                updated_data = self.partners_persistence.update_partner_by_email(
-                    email=email, user_id=user_id, status=status, join_date=join_date)
-            else:
-                updated_data = self.partners_persistence.update_partner_by_email(
-                    email=email, user_id=user_id, status=status)
-
-            if not updated_data:
-                logger.debug('Database error during updation', e)
-                return {"status": False, "error": {"code": 500, "message": "Partner not updated"}}
-            
-            return {"status": True}
-
-        except Exception as e:
-            logger.debug('Error updating partner data', e)
-            return {"status": False, "error":{"code": 500, "message": f"Unexpected error during updation: {str(e)}"}}
+    def setUser(self, email: str, user_id: int, status: str, join_date = None):        
+        self.partners_persistence.update_partner_by_email(email=email, user_id=user_id, status=status, join_date=join_date)
         
     
     async def update_partner(self, partner_id: int, field: str, value: str, message: str) -> PartnersObjectResponse:
