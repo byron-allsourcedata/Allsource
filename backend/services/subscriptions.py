@@ -302,7 +302,7 @@ class SubscriptionService:
             members_limit=plan.members_limit,
             status='active',
             plan_id=plan.id,
-            is_trial=True,
+            is_trial=False,
             lead_credit_price=plan.lead_credit_price
         )
         self.db.add(add_subscription_obj)
