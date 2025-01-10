@@ -6,7 +6,7 @@ import TabPanel from '@mui/lab/TabPanel';
 import Image from 'next/image';
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
-import { showToast } from './ToastNotification';
+import { showErrorToast, showToast } from './ToastNotification';
 import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface ConnectMailChimpPopupProps {
@@ -199,14 +199,17 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                     service_name: 'mailchimp'
                 }
             });
-
-            if (newListResponse.status !== 201) {
-                throw new Error('Failed to create a new tags')
+            if (newListResponse.data.status === 'CREATED_IS_FAILED') {
+                showErrorToast("You've hit your audience limit. You already have the max amount of audiences allowed in your plan.")
+                throw new Error("You've hit your audience limit. You already have the max amount of audiences allowed in your plan.")
+            }
+            else if (newListResponse.data.status === 'CREDENTIALS_INVALID'){
+                showErrorToast("Credentials invalid, try updating the key.")
+                throw new Error("Credentials invalid, try updating the key.")
             }
 
             return newListResponse.data;
-        } catch (error) {
-        }
+        } catch (error) {}
 
     };
 
@@ -224,40 +227,42 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                 showToast('Please select a valid option.');
                 return;
             }
-            if (isEdit) {
-                const response = await axiosInstance.put(`/data-sync/sync`, {
-                    integrations_users_sync_id: data.id,
-                    list_id: list?.id,
-                    list_name: list?.list_name,
-                    leads_type: selectedRadioValue,
-                    data_map: customFields
-                }, {
-                    params: {
-                        service_name: 'mailchimp'
+
+            if (list){
+                if (isEdit) {
+                    const response = await axiosInstance.put(`/data-sync/sync`, {
+                        integrations_users_sync_id: data.id,
+                        list_id: list?.id,
+                        list_name: list?.list_name,
+                        leads_type: selectedRadioValue,
+                        data_map: customFields
+                    }, {
+                        params: {
+                            service_name: 'mailchimp'
+                        }
+                    });
+                    if (response.status === 201 || response.status === 200) {
+                        onClose();
+                        showToast('Data sync updated successfully');
                     }
-                });
-                if (response.status === 201 || response.status === 200) {
-                    onClose();
-                    showToast('Data sync updated successfully');
-                }
-            } else {
-                const response = await axiosInstance.post('/data-sync/sync', {
-                    list_id: list?.id,
-                    list_name: list?.list_name,
-                    leads_type: selectedRadioValue,
-                    data_map: customFields
-                }, {
-                    params: {
-                        service_name: 'mailchimp'
+                } else {
+                    const response = await axiosInstance.post('/data-sync/sync', {
+                        list_id: list?.id,
+                        list_name: list?.list_name,
+                        leads_type: selectedRadioValue,
+                        data_map: customFields
+                    }, {
+                        params: {
+                            service_name: 'mailchimp'
+                        }
+                    });
+                    if (response.status === 201 || response.status === 200) {
+                        onClose();
+                        showToast('Data sync created successfully');
+                        triggerSync();
                     }
-                });
-                if (response.status === 201 || response.status === 200) {
-                    onClose();
-                    showToast('Data sync created successfully');
-                    triggerSync();
                 }
             }
-
 
         } finally {
             setLoading(false);

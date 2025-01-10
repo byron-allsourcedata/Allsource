@@ -91,12 +91,16 @@ class MailchimpIntegrationsService:
 
         except ApiClientError as error:
             if error.status_code == 403:
-                raise HTTPException(status_code=403, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
+                return ({
+                    'status': IntegrationsStatus.CREATE_IS_FAILED.value
+                })
             if error.status_code == 401:
                 credential.error_message = 'Invalid API Key'
                 credential.is_failed = True
                 self.integrations_persisntece.db.commit()
-                raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREDENTAILS_INVALID.value})
+                return ({
+                    'status': IntegrationsStatus.CREDENTAILS_INVALID.value
+                })
 
         return self.__mapped_list(response) if response else None
 
