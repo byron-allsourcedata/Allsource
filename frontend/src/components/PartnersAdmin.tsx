@@ -88,7 +88,6 @@ type CombinedPartnerData = NewPartner & EnabledPartner;
 
 const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData, isMaster: master, tabIndex, handleTabChange, setLoading, loading}) => {
     const [isMaster, setIsMaster] = useState(master);
-    const [expanded, setExpanded] = useState<number | false>(false);
     const [partners, setPartners] = useState<PartnerData[]>([]);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -196,27 +195,31 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
         const newOrder = isAsc ? 'desc' : 'asc';
         setOrder(newOrder);
         setOrderBy(key);
-
+    
         const sortedAccounts = [...partners].sort((a, b) => {
             const aValue = a[key as keyof typeof a];
             const bValue = b[key as keyof typeof b];
+    
+            const isANullOrDash = aValue === null || aValue === '--';
+            const isBNullOrDash = bValue === null || bValue === '--';
+    
+            if (isANullOrDash && !isBNullOrDash) return newOrder === 'asc' ? 1 : -1;
+            if (isBNullOrDash && !isANullOrDash) return newOrder === 'asc' ? -1 : 1;
     
             if (typeof aValue === 'string' && typeof bValue === 'string') {
                 return newOrder === 'asc'
                     ? aValue.localeCompare(bValue)
                     : bValue.localeCompare(aValue);
             }
+    
+            if (typeof aValue === 'number' && typeof bValue === 'number') {
+                return newOrder === 'asc' ? aValue - bValue : bValue - aValue;
+            }
+    
             return 0;
         });
     
         setPartners(sortedAccounts);
-    };
-
-    const handleOpenSection = (panel: number) => (
-        event: React.SyntheticEvent,
-        isExpanded: boolean
-    ) => {
-        setExpanded(isExpanded ? panel : false);
     };
 
     const handleNoticeOpenPopup = () => {
@@ -278,8 +281,8 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
             const response = await axiosInstance.get("/admin-partners", {
                 params: { 
                     isMaster, search,
-                    start_date: appliedDates.start ? appliedDates.start.toISOString().split('T')[0] : null,
-                    end_date: appliedDates.end ? appliedDates.end.toISOString().split('T')[0] : null,
+                    start_date: appliedDates.start ? appliedDates.start.toLocaleDateString('en-CA') : null,
+                    end_date: appliedDates.end ? appliedDates.end.toLocaleDateString('en-CA') : null,
                     page, rowsPerPage
                 }})
             if (response.status === 200 && response.data.totalCount > 0) {
