@@ -292,13 +292,15 @@ class SubscriptionService:
     
     def create_subscription_from_partners(self, user_id):
         plan = self.plans_persistence.get_plan_by_alias(PlanAlias.PARTNERS.value)
-        created_at = datetime.strptime(get_utc_aware_date_for_postgres(), '%Y-%m-%dT%H:%M:%SZ')
+        plan_start = datetime.now(timezone.utc)
         add_subscription_obj = Subscription(
             domains_limit=plan.domains_limit,
             integrations_limit=plan.integrations_limit,
+            plan_start = plan_start,
+            plan_end = plan_start + relativedelta(months=1),
             user_id=user_id,
-            updated_at=created_at.isoformat() + "Z",
-            created_at=created_at.isoformat() + "Z",
+            updated_at=plan_start.isoformat() + "Z",
+            created_at=plan_start.isoformat() + "Z",
             members_limit=plan.members_limit,
             status='active',
             plan_id=plan.id,
