@@ -269,8 +269,8 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
             const response = await axiosInstance.get("/admin-partners", {
                 params: { 
                     isMaster, search,
-                    start_date: appliedDates.start ? appliedDates.start.toISOString().split('T')[0] : null,
-                    end_date: appliedDates.end ? appliedDates.end.toISOString().split('T')[0] : null,
+                    start_date: appliedDates.start ? appliedDates.start.toLocaleDateString('en-CA') : null,
+                    end_date: appliedDates.end ? appliedDates.end.toLocaleDateString('en-CA') : null,
                     page, rowsPerPage
                 }})
             if (response.status === 200 && response.data.totalCount > 0) {
