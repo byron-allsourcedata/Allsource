@@ -8,6 +8,7 @@ from enums import TeamsInvitationStatus, SignUpStatus
 from models.teams_invitations import TeamInvitation
 from models.users_domains import UserDomains
 from models.users import Users
+from models.partners import Partners
 
 logger = logging.getLogger(__name__)
 
