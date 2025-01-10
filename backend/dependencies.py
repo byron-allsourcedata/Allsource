@@ -286,7 +286,7 @@ def check_user_authorization_without_pixel(Authorization: Annotated[str, Header(
             detail={'status': auth_status.value,
                     'stripe_payment_url': user.get('stripe_payment_url')}
         )
-    if auth_status != UserAuthorizationStatus.SUCCESS and auth_status != UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED:
+    if auth_status != UserAuthorizationStatus.SUCCESS and not user['is_partner'] and auth_status != UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={'status': auth_status.value}
@@ -314,7 +314,7 @@ def check_user_partner(Authorization: Annotated[str, Header()],
     if not user['is_partner']:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail={'status': 'NOT_FOUND'}
+            detail={'status': 'Aссess Forbidden'}
         )
     return user
 
