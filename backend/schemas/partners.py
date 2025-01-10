@@ -33,6 +33,8 @@ class PartnerUpdateRequest(BaseModel):
     message: Optional[str] = None
     status: Optional[str] = None
     commission: Optional[str] = None
+    full_name: Optional[str] = None
+    company_name: Optional[str] = None
 
 class PartnerUserData(BaseModel):
     subscription: Optional[str] = None
