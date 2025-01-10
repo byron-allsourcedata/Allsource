@@ -263,6 +263,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
             }
             else {
                 setErrosResponse(true)
+                setPartners([])
             }
         } catch {
         } finally {
@@ -286,7 +287,9 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                 setTotalCount(response.data.totalCount)   
             }
             else {
+                setPartners([])
                 setErrosResponse(true)
+                setTotalCount(0)
             }
 
         } catch {

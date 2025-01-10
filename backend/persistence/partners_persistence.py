@@ -1,6 +1,7 @@
 from models.partners import Partners
 from sqlalchemy.orm import Session
 from typing import Optional
+from datetime import datetime, timedelta
 
 
 class PartnersPersistence:
@@ -13,8 +14,14 @@ class PartnersPersistence:
         query = self.db.query(Partners).filter(Partners.isMaster == isMaster)
 
         if start_date:
+            if isinstance(start_date, str):
+                start_date = datetime.strptime(start_date, "%Y-%m-%d")
             query = query.filter(Partners.join_date >= start_date)
         if end_date:
+            if isinstance(end_date, str):
+                end_date = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1) - timedelta(seconds=1)
+            else:
+                end_date = datetime.combine(end_date, datetime.max.time())
             query = query.filter(Partners.join_date <= end_date)
 
         return query.offset(offset).limit(limit).all()
@@ -31,8 +38,14 @@ class PartnersPersistence:
         )
     
         if start_date:
+            if isinstance(start_date, str):
+                start_date = datetime.strptime(start_date, "%Y-%m-%d")
             query = query.filter(Partners.join_date >= start_date)
         if end_date:
+            if isinstance(end_date, str):
+                end_date = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1) - timedelta(seconds=1)
+            else:
+                end_date = datetime.combine(end_date, datetime.max.time())
             query = query.filter(Partners.join_date <= end_date)
 
         return query.offset(offset).limit(limit).all()
