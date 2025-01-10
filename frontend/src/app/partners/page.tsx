@@ -66,9 +66,6 @@ const Suppressions: React.FC = () => {
     const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
         setTabIndex(newIndex);
     };
-    const [loading, setLoading] = useState(true)
-    const [status, setStatus] = useState('');
-
 
     return (
         <Box sx={partnersStyle.mainContent}>
@@ -79,7 +76,7 @@ const Suppressions: React.FC = () => {
                 </Box>
 
                 <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', width: '90%', pr: '20%', alignItems: 'center', "@media (max-width: 900px)": { pr: 0 }, "@media (max-width: 600px)": { width: '97%', pr: '0' } }}>
-                        <Tabs
+                    <Tabs
                             value={tabIndex}
                             onChange={handleTabChange}
                             sx={{
@@ -195,33 +192,32 @@ const Suppressions: React.FC = () => {
                                 }}
                                 label="Assets"
                             />
-                        </Tabs>
+
+                    </Tabs>
                 </Box>
 
             </Box>
-                <>
-                    <Box sx={{ width: '100%', padding: 0, "@media (max-width: 600px)": { mt: '4.5rem' }, "@media (max-width: 440px)": { mt: '7.5rem' }, }}>
-                        <TabPanel value={tabIndex} index={0}>
-                            <ReferralOverview />
-                        </TabPanel>
-                    </Box>
-                    <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
-                        <TabPanel value={tabIndex} index={1}>
-                            <PartnersAccounts loading={false} setLoading={() => {}} />
+                <Box sx={{ width: '100%', padding: 0, "@media (max-width: 600px)": { mt: '4.5rem' }, "@media (max-width: 440px)": { mt: '7.5rem' }, }}>
+                    <TabPanel value={tabIndex} index={0}>
+                        <ReferralOverview />
+                    </TabPanel>
+                </Box>
+                <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
+                    <TabPanel value={tabIndex} index={1}>
+                        <PartnersAccounts loading={false} setLoading={() => {}} />
 
-                        </TabPanel>
-                    </Box>
-                    <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
-                        <TabPanel value={tabIndex} index={2}>
-                            <ReferralRewards />
-                        </TabPanel>
-                    </Box>
-                    <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
-                        <TabPanel value={tabIndex} index={3}>
-                            <PartnersAssets />
-                        </TabPanel>
-                    </Box>
-                </>
+                    </TabPanel>
+                </Box>
+                <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
+                    <TabPanel value={tabIndex} index={2}>
+                        <ReferralRewards />
+                    </TabPanel>
+                </Box>
+                <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
+                    <TabPanel value={tabIndex} index={3}>
+                        <PartnersAssets />
+                    </TabPanel>
+                </Box>
         </Box>
     );
 };

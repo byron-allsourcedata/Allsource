@@ -160,12 +160,12 @@ class PartnersService:
         self.partners_persistence.update_partner_by_email(email=email, user_id=user_id, status=status, join_date=join_date)
         
     
-    async def update_partner(self, partner_id: int, field: str, value: str, message: str) -> PartnersObjectResponse:
-        if not partner_id or not field or not value:
+    async def update_partner(self, partner_id: int, field: str, value: str, message: str, partner_name: str, company_name: str) -> PartnersObjectResponse:
+        if not partner_id or not partner_name or not company_name or not field or not value:
             return {"status": False, "error": {"code": 404, "message": "Partner data not found"}}
         
         try:
-            updated_data = self.partners_persistence.update_partner(partner_id=partner_id, **{field: value})
+            updated_data = self.partners_persistence.update_partner(partner_id=partner_id, **{field: value}, partner_name=partner_name, company_name=company_name)
 
             if not updated_data:
                 logger.debug("Database error during updation")
