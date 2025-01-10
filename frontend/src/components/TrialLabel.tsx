@@ -112,7 +112,7 @@ const TrialStatus: React.FC = () => {
       setTextColor('rgba(95, 99, 104, 1)');
       setIconColor('rgba(95, 99, 104, 1)');
     }
-    else if (is_artificial_status) {
+    else if (is_artificial_status && trial_status) {
       if (plan_days !== undefined && plan_days <= 5 && plan_days >= 0) {
         setStatusText(`${plan_days} days Free Trial left`);
         setBackgroundColor('rgba(255, 233, 131, 1)');
