@@ -69,37 +69,6 @@ const Suppressions: React.FC = () => {
     const [loading, setLoading] = useState(true)
     const [status, setStatus] = useState('');
 
-    const installPixel = () => {
-        router.push('/dashboard');
-    };
-
-    const checkPixel = async () => {
-        try {
-            const response = await axiosInstance.get('/check-user-authorization');
-            if (response.data.status === "NEED_BOOK_CALL") {
-                sessionStorage?.setItem("is_slider_opened", "true");
-            }
-        }
-        catch (error) {
-            if (error instanceof AxiosError && error.response?.status === 403) {
-                if (error.response.data.status === 'PIXEL_INSTALLATION_NEEDED') {
-                    setStatus(error.response.data.status);
-                }
-            } else {
-                console.error('Error fetching data:', error);
-            }
-        } finally {
-            setLoading(false)
-        }
-
-    }
-    useEffect(() => {
-        checkPixel()
-    }, [])
-
-    if (loading) {
-        return <CustomizedProgressBar />;
-    }
 
     return (
         <Box sx={partnersStyle.mainContent}>
@@ -110,7 +79,6 @@ const Suppressions: React.FC = () => {
                 </Box>
 
                 <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', width: '90%', pr: '20%', alignItems: 'center', "@media (max-width: 900px)": { pr: 0 }, "@media (max-width: 600px)": { width: '97%', pr: '0' } }}>
-                    {status === 'PIXEL_INSTALLATION_NEEDED' ? '' : (
                         <Tabs
                             value={tabIndex}
                             onChange={handleTabChange}
@@ -228,53 +196,9 @@ const Suppressions: React.FC = () => {
                                 label="Assets"
                             />
                         </Tabs>
-                    )}
                 </Box>
 
             </Box>
-            {status === 'PIXEL_INSTALLATION_NEEDED' ? (
-                <Box sx={centerContainerStyles}>
-                    <Typography variant="h5" className='first-sub-title' sx={{
-                        mb: 3,
-                        fontFamily: "Nunito Sans",
-                        fontSize: "20px",
-                        color: "#4a4a4a",
-                        fontWeight: "600",
-                        lineHeight: "28px"
-                    }}>
-                        Pixel Integration isn&apos;t completed yet!
-                    </Typography>
-                    <Image src='/pixel_installation_needed.svg' alt='Need Pixel Install'
-                        height={250} width={300} />
-                    <Typography variant="body1" className='table-data' sx={{
-                        mt: 3,
-                        fontFamily: "Nunito Sans",
-                        fontSize: "14px",
-                        color: "#808080",
-                        fontWeight: "600",
-                        lineHeight: "20px"
-                    }}>
-                        Install the pixel to unlock and gain valuable insights! Start viewing your leads now
-                    </Typography>
-                    <Button
-                        variant="contained"
-                        onClick={installPixel}
-                        className='second-sub-title'
-                        sx={{
-                            backgroundColor: 'rgba(80, 82, 178, 1)',
-                            textTransform: 'none',
-                            padding: '10px 24px',
-                            mt: 3,
-                            color: '#fff !important',
-                            ':hover': {
-                                backgroundColor: 'rgba(80, 82, 178, 1)'
-                            }
-                        }}
-                    >
-                        Setup Pixel
-                    </Button>
-                </Box>
-            ) : (
                 <>
                     <Box sx={{ width: '100%', padding: 0, "@media (max-width: 600px)": { mt: '4.5rem' }, "@media (max-width: 440px)": { mt: '7.5rem' }, }}>
                         <TabPanel value={tabIndex} index={0}>
@@ -297,7 +221,7 @@ const Suppressions: React.FC = () => {
                             <PartnersAssets />
                         </TabPanel>
                     </Box>
-                </>)}
+                </>
         </Box>
     );
 };
