@@ -523,6 +523,10 @@ class UsersAuth:
             self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
             self.user_persistence_service.email_confirmed(user_object.id)
             
+        if coupon and user_form.spi:
+            self.user_persistence_service.book_call_confirmed(user_object.id)
+            self.user_persistence_service.email_confirmed(user_object.id)
+            
         if (ift and ift == 'arwt') or user_object.source_platform in (SourcePlatformEnum.BIG_COMMERCE.value, SourcePlatformEnum.SHOPIFY.value):
             self.user_persistence_service.book_call_confirmed(user_object.id)
             self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)

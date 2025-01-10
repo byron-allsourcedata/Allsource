@@ -295,7 +295,22 @@ class SettingsService:
             elif user_subscription.cancel_scheduled_at:
                 total_price = None
             else:
-                total_price = f"${plan['amount'] / 100:,.0f}"
+                discount = subscription.get('discount')
+                plan_amount = plan['amount']
+                
+                if discount:
+                    discount_amount = discount['coupon']['amount_off'] if discount['coupon'].get('amount_off') else 0
+                    discount_percent = discount['coupon']['percent_off'] if discount['coupon'].get('percent_off') else 0
+                    if discount_amount:
+                        final_amount = plan_amount - discount_amount
+                    elif discount_percent:
+                        final_amount = plan_amount * (1 - discount_percent / 100)
+                    else:
+                        final_amount = plan_amount
+                else:
+                    final_amount = plan_amount
+
+                total_price = f"${final_amount / 100:,.0f}"
             subscription_details = {
                 'billing_cycle': billing_cycle,
                 'plan_name': plan_name,
