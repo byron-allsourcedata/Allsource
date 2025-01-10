@@ -5,8 +5,7 @@ from fastapi.params import Header
 from typing_extensions import Annotated
 
 from dependencies import get_users_auth_service, get_users_email_verification_service, get_users_service, \
-    check_user_authorization, check_pixel_install_domain, check_user_authentication, get_notification_service, \
-    check_domain
+    check_user_authorization, check_pixel_install_domain, check_user_authentication, get_notification_service, check_domain
 from models.users_domains import UserDomains
 from schemas.auth_google_token import AuthGoogleData
 from schemas.users import UserSignUpForm, UserSignUpFormResponse, UserLoginFormResponse, UserLoginForm, UpdatePassword, \
@@ -25,7 +24,7 @@ router = APIRouter()
 def get_me(user_service: UsersService = Depends(get_users_service)):
     plan = user_service.get_info_plan()
     domains = user_service.get_domains()
-    user_info = user_service.get_my_info()
+    user_info = user_service.get_my_info()  
     return {
         "user_info": user_info,
         "user_plan": plan,
@@ -40,15 +39,13 @@ async def get_notification(notification_service: Notification = Depends(get_noti
 
 
 @router.delete("/notification/delete")
-async def get_notification(request: DeleteNotificationRequest,
-                           notification_service: Notification = Depends(get_notification_service),
+async def get_notification(request: DeleteNotificationRequest, notification_service: Notification = Depends(get_notification_service),
                            user=Depends(check_user_authentication)):
     return notification_service.delete_notification(request, user)
 
 
 @router.post("/notification/dismiss")
-async def get_notification(request: Optional[DismissNotificationsRequest] = None,
-                           notification_service: Notification = Depends(get_notification_service),
+async def get_notification(request: Optional[DismissNotificationsRequest] = None, notification_service: Notification = Depends(get_notification_service),
                            user=Depends(check_user_authentication)):
     return notification_service.dismiss(request, user)
 
@@ -74,7 +71,7 @@ async def create_user(user_form: UserSignUpForm, users_service: UsersAuth = Depe
 async def login_user(user_form: UserLoginForm, users_service: UsersAuth = Depends(get_users_auth_service)):
     user_data = users_service.login_account(user_form)
     return UserLoginFormResponse(status=user_data.get('status'), token=user_data.get("token"),
-                                    stripe_payment_url=user_data.get('stripe_payment_url'))
+                                    stripe_payment_url=user_data.get('stripe_payment_url'), shopify_status=user_data.get('shopify_status'))
 
 
 @router.post("/sign-up-google", response_model=UserSignUpFormResponse)
