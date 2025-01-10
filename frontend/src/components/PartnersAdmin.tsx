@@ -196,16 +196,27 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
         const newOrder = isAsc ? 'desc' : 'asc';
         setOrder(newOrder);
         setOrderBy(key);
-
+    
         const sortedAccounts = [...partners].sort((a, b) => {
             const aValue = a[key as keyof typeof a];
             const bValue = b[key as keyof typeof b];
+    
+            const isANullOrDash = aValue === null || aValue === '--';
+            const isBNullOrDash = bValue === null || bValue === '--';
+    
+            if (isANullOrDash && !isBNullOrDash) return newOrder === 'asc' ? 1 : -1;
+            if (isBNullOrDash && !isANullOrDash) return newOrder === 'asc' ? -1 : 1;
     
             if (typeof aValue === 'string' && typeof bValue === 'string') {
                 return newOrder === 'asc'
                     ? aValue.localeCompare(bValue)
                     : bValue.localeCompare(aValue);
             }
+    
+            if (typeof aValue === 'number' && typeof bValue === 'number') {
+                return newOrder === 'asc' ? aValue - bValue : bValue - aValue;
+            }
+    
             return 0;
         });
     
