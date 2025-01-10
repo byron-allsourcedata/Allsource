@@ -17,7 +17,7 @@ import {
   DialogContent,
   DialogContentText,
 } from "@mui/material";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo } from "react";
 import Image from "next/image";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
@@ -26,11 +26,11 @@ import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ConnectKlaviyo from "@/components/ConnectKlaviyo";
 import ConnectMeta from "@/components/ConnectMeta";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import { leadsStyles } from "@/app/leads/leadsStyles";
+import { leadsStyles } from "@/app/(client)/leads/leadsStyles";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import axios from "axios";
-import { datasyncStyle } from "@/app/data-sync/datasyncStyle";
+import { datasyncStyle } from "@/app/(client)/data-sync/datasyncStyle";
 import MailchimpDatasync from "./MailchimpDatasync";
 import OmnisendDataSync from "./OmnisendDataSync";
 import SendlaneDatasync from "./SendlaneDatasync";
@@ -61,11 +61,12 @@ interface IntegrationsCredentials {
   is_failed?: boolean;
 }
 
-const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
+const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   const { needsSync, setNeedsSync } = useIntegrationContext();
   const [order, setOrder] = useState<"asc" | "desc" | undefined>(undefined);
   const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [Loading, setLoading] = useState(true);
   const [data, setData] = useState<any[]>([]);
   const [allData, setAllData] = useState<any[]>([]);
   const [klaviyoIconPopupOpen, setKlaviyoIconPopupOpen] = useState(false);
@@ -110,6 +111,7 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
 
   useEffect(() => {
     handleIntegrationsSync();
+    setLoading(false)
   }, []);
 
   useEffect(() => {
@@ -551,7 +553,7 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
     } catch (error) { }
   };
 
-  if (isLoading) {
+  if (Loading) {
     return (
       <CustomizedProgressBar />
     );
@@ -589,6 +591,7 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
 
   return (
     <>
+      {isLoading && <CustomizedProgressBar />}
       {service_name && (
         <>
           <Box
@@ -621,6 +624,7 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
             fontSize={"16px"}
             fontWeight={600}
             fontFamily={"Nunito Sans"}
+            textTransform={'capitalize'}
           >
             {service_name} Sync Detail
           </Typography>
@@ -1130,6 +1134,8 @@ const DataSyncList = ({ service_name, filters }: DataSyncProps) => {
       </Box>
     </>
   );
-};
+});
+
+DataSyncList.displayName = 'DataSyncList';
 
 export default DataSyncList;

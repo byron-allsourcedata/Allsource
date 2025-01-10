@@ -8,6 +8,7 @@ from enums import TeamsInvitationStatus, SignUpStatus
 from models.teams_invitations import TeamInvitation
 from models.users_domains import UserDomains
 from models.users import Users
+from models.partners import Partners
 
 logger = logging.getLogger(__name__)
 
@@ -218,4 +219,13 @@ class UserPersistence:
             {Users.connected_stripe_account_id: stripe_connected_account_id},
             synchronize_session=False
         )
+        # Check if the user is a partner
+        user = self.db.query(Users).filter(Users.id == user_id, Users.is_partner.is_(True)).first()
+        if user:
+            # update status partner
+            self.db.query(Partners).filter(Partners.user_id == user_id).update(
+                {Partners.status: "active"},
+                synchronize_session=False
+            )
+
         self.db.commit()
