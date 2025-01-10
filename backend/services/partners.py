@@ -2,6 +2,7 @@ import logging
 import os
 import hashlib
 import json
+from typing import Optional
 from models.partners import Partners
 from persistence.user_persistence import UserPersistence
 from persistence.partners_persistence import PartnersPersistence
@@ -160,12 +161,27 @@ class PartnersService:
         self.partners_persistence.update_partner_by_email(email=email, user_id=user_id, status=status, join_date=join_date)
         
     
-    async def update_partner(self, partner_id: int, field: str, value: str, message: str, partner_name: str, company_name: str) -> PartnersObjectResponse:
-        if not partner_id or not partner_name or not company_name or not field or not value:
+    async def update_partner(
+        self, 
+        partner_id: int, 
+        field: str, 
+        value: str, 
+        message: str, 
+        partner_name: Optional[str] = None, 
+        company_name: Optional[str] = None
+    ) -> PartnersObjectResponse:
+        if not partner_id or not field or not value:
             return {"status": False, "error": {"code": 404, "message": "Partner data not found"}}
-        
+
         try:
-            updated_data = self.partners_persistence.update_partner(partner_id=partner_id, **{field: value}, partner_name=partner_name, company_name=company_name)
+            update_data = {field: value}
+
+            if partner_name is not None:
+                update_data["full_name"] = partner_name
+            if company_name is not None:
+                update_data["company_name"] = company_name
+
+            updated_data = self.partners_persistence.update_partner(partner_id=partner_id, **update_data)
 
             if not updated_data:
                 logger.debug("Database error during updation")
@@ -176,8 +192,9 @@ class PartnersService:
             user = self.get_user_info(updated_data.user_id)
             return {"status": True, "data": self.domain_mapped(updated_data, user)}
         except Exception as e:
-            logger.debug("Error updating partner data", e)
-            return {"status": False, "error":{"code": 500, "message": f"Unexpected error during updation: {str(e)}"}}
+            logger.debug("Error updating partner data", exc_info=True)
+            return {"status": False, "error": {"code": 500, "message": f"Unexpected error during updation: {str(e)}"}}
+
 
 
     def domain_mapped(self, partner: Partners, user: PartnerUserData):

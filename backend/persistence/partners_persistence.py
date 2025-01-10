@@ -79,9 +79,9 @@ class PartnersPersistence:
         for key, value in kwargs.items():
             if hasattr(partner, key) and value is not None:
                 setattr(partner, key, value)
-            
-        if "partner_name" in kwargs and kwargs["partner_name"] is not None:
-            partner.name = kwargs["partner_name"]
+
+        if "full_name" in kwargs and kwargs["full_name"] is not None:
+            partner.name = kwargs["full_name"]
         if "company_name" in kwargs and kwargs["company_name"] is not None:
             partner.company_name = kwargs["company_name"]
 

@@ -81,18 +81,23 @@ async def delete_partner(
 async def update_partner(
     partner_id: int,
     request: PartnerUpdateRequest,
-    get_partners_service: PartnersService = Depends(get_partners_service)):
+    get_partners_service: PartnersService = Depends(get_partners_service),
+):
+    full_name = getattr(request, "full_name", None)
+    company_name = getattr(request, "company_name", None)
 
     if request.status:
-        if request.message:
-            partner = await get_partners_service.update_partner(partner_id, "status", request.status, request.message, request.full_name, request.company_name)
-        else:
-            partner = await get_partners_service.update_partner(partner_id, "status", request.status, "Your account active again", request.full_name, request.company_name)
-    else: 
-        partner = await get_partners_service.update_partner(partner_id, "commission", request.commission, "Your commission has been changed", request.full_name, request.company_name)
-    
+        message = request.message or "Your account active again"
+        partner = await get_partners_service.update_partner(
+            partner_id, "status", request.status, message, full_name, company_name
+        )
+    else:
+        partner = await get_partners_service.update_partner(
+            partner_id, "commission", request.commission, "Your commission has been changed", full_name, company_name
+        )
+
     if not partner.get("status"):
         error = partner.get("error", {}) or {}
         raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))
-     
-    return partner.get('data')
+
+    return partner.get("data")
