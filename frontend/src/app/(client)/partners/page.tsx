@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import Image from "next/image";
-import { useNotification } from '../../../context/NotificationContext';
+import { useNotification } from '@/context/NotificationContext';
 import ReferralOverview from "@/components/ReferralOverview";
 import PartnersAccounts from "@/components/PartnersAccounts";
 import ReferralRewards from "@/components/ReferralRewards";
@@ -59,7 +59,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
     );
 };
 
-const Suppressions: React.FC = () => {
+const Partners: React.FC = () => {
     const { hasNotification } = useNotification();
     const router = useRouter();
     const [tabIndex, setTabIndex] = useState(0);
@@ -222,12 +222,12 @@ const Suppressions: React.FC = () => {
     );
 };
 
-const SuppressionsPage: React.FC = () => {
+const PartnersPage: React.FC = () => {
     return (
         <Suspense fallback={<CustomizedProgressBar />}>
-            <Suppressions />
+            <Partners />
         </Suspense>
     );
 };
 
-export default SuppressionsPage;
+export default PartnersPage;
