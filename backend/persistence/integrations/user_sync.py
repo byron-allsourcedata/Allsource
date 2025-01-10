@@ -88,8 +88,7 @@ class IntegrationsUserSyncPersistence:
                     'syncStatus': sync.sync_status,
                     'type_error': sync.error_message
                 }
-        
-        syncs = query.all()
+        syncs = query.order_by(IntegrationUserSync.id).all()
         return [{
             'id': sync.id,
             'createdDate': sync.created_at.strftime('%b %d, %Y') if sync.created_at else None,
