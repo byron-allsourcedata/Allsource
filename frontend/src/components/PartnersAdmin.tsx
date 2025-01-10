@@ -111,6 +111,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
     const [partnerName, setPartnerName] = useState<string | null>(null);
     const [accountName, setAccountName] = useState<string | null>(null);
     const [search, setSearch] = useState("");
+    const [errorResponse, setErrosResponse] = useState(false);
 
     const tableHeaders = [
         { key: 'partner_name', label: `Partner  ${isMaster ? "master" : ''} name`, sortable: false },
@@ -256,7 +257,13 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
         setLoading(true);
         try {
             const response = await axiosInstance.get(`/admin-partners/${id}/`)
-            setPartners([...response.data])
+            if (response.status === 200 && response.data.length > 0) {
+                setErrosResponse(false)
+                setPartners([...response.data])
+            }
+            else {
+                setErrosResponse(true)
+            }
         } catch {
         } finally {
             setLoading(false);
@@ -273,8 +280,14 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                     end_date: appliedDates.end ? appliedDates.end.toISOString().split('T')[0] : null,
                     page, rowsPerPage
                 }})
-            setPartners([...response.data.items])
-            setTotalCount(response.data.totalCount)
+            if (response.status === 200 && response.data.totalCount > 0) {
+                setErrosResponse(false)
+                setPartners([...response.data.items])
+                setTotalCount(response.data.totalCount)   
+            }
+            else {
+                setErrosResponse(true)
+            }
 
         } catch {
         } finally {
@@ -372,32 +385,6 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                         minHeight: '77vh',
                         '@media (max-width: 600px)': {margin: '0rem auto 0rem'}
                     }}>
-                        {partners.length === 0 && !loading ? (
-                            <Box sx={suppressionsStyles.centerContainerStyles}>
-                                <Typography variant="h5" sx={{
-                                    mb: 3,
-                                    fontFamily: 'Nunito Sans',
-                                    fontSize: "20px",
-                                    color: "#4a4a4a",
-                                    fontWeight: "600",
-                                    lineHeight: "28px"
-                                }}>
-                                    Data not matched yet!
-                                </Typography>
-                                <Image src='/no-data.svg' alt='No Data' height={250} width={300} />
-                                <Typography variant="body1" color="textSecondary"
-                                    sx={{
-                                        mt: 3,
-                                        fontFamily: 'Nunito Sans',
-                                        fontSize: "14px",
-                                        color: "#808080",
-                                        fontWeight: "600",
-                                        lineHeight: "20px"
-                                    }}>
-                                    No Invitee joined from the referreal link.
-                                </Typography>
-                            </Box>
-                        ) : (
                             <>
                                 <Box>
                                     <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', mb: 2, alignItems: 'center', gap: 2 }}>
@@ -500,6 +487,11 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                 placeholder="Search by account name, emails"
                                                 value={search}
                                                 onChange={handleSearchChange}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        fetchRules();
+                                                    }
+                                                }}
                                                 InputProps={{
                                                     startAdornment: (
                                                         <InputAdornment position="start">
@@ -592,7 +584,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                         </Box>
                                     </Box>
 
-                                    <Box sx={{ display: 'flex', }}>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                                         <TableContainer sx={{
                                             border: '1px solid #EBEBEB',
                                             borderRadius: '4px 4px 0px 0px',
@@ -626,166 +618,192 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                         ))}
                                                     </TableRow>
                                                 </TableHead>
-                                                <TableBody>
-                                                    {partners.map((data) => (
-                                                        <TableRow key={data.id} sx={{
-                                                            ...suppressionsStyles.tableBodyRow,
-                                                            '&:hover': {
-                                                                backgroundColor: '#F7F7F7',
-                                                                '& .sticky-cell': {
+                                                    <TableBody>
+                                                        {partners.map((data) => (
+                                                            <TableRow key={data.id} sx={{
+                                                                ...suppressionsStyles.tableBodyRow,
+                                                                '&:hover': {
                                                                     backgroundColor: '#F7F7F7',
-                                                                }
-                                                            },
-                                                        }}>
-                                                            <TableCell className='sticky-cell table-data' 
-                                                                sx={{
-                                                                    ...suppressionsStyles.tableBodyColumn, 
-                                                                    cursor: "pointer", 
-                                                                    paddingLeft: "16px",
-                                                                    position: 'sticky',
-                                                                    left: 0,
-                                                                    zIndex: 1, 
-                                                                    "&:hover .icon-button": { display: "contents" }}}
-                                                                onClick={() => {
-                                                                    if (isMaster){
-                                                                        setPartnerName(data.partner_name)
-                                                                        setIsMaster(false)
-                                                                        setMasterData(data)
-                                                                        fetchRulesId(data.id)
+                                                                    '& .sticky-cell': {
+                                                                        backgroundColor: '#F7F7F7',
                                                                     }
-                                                                    else {
-                                                                        setAccountName(data.partner_name)
-                                                                        setId(data.id)
-                                                                        setAccountPage(true)
-                                                                    }
-                                                                    }}>
-                                                                <Box sx={{display: "flex", alignItems: "center", justifyContent: "space-between", color: 'rgba(80, 82, 178, 1)'}}>
-                                                                    {data.partner_name}
-                                                                    <IconButton
-                                                                        className="icon-button"
-                                                                        sx={{ display: 'none', ':hover': {backgroundColor: "transparent"}}} >
-                                                                        <Image src='/outband.svg' alt="outband" width={15.98} height={16}/>
+                                                                },
+                                                            }}>
+                                                                <TableCell className='sticky-cell table-data' 
+                                                                    sx={{
+                                                                        ...suppressionsStyles.tableBodyColumn, 
+                                                                        cursor: "pointer", 
+                                                                        paddingLeft: "16px",
+                                                                        position: 'sticky',
+                                                                        left: 0,
+                                                                        zIndex: 1, 
+                                                                        "&:hover .icon-button": { display: "contents" }}}
+                                                                    onClick={() => {
+                                                                        if (isMaster){
+                                                                            setPartnerName(data.partner_name)
+                                                                            setIsMaster(false)
+                                                                            setMasterData(data)
+                                                                            fetchRulesId(data.id)
+                                                                        }
+                                                                        else {
+                                                                            setAccountName(data.partner_name)
+                                                                            setId(data.id)
+                                                                            setAccountPage(true)
+                                                                        }
+                                                                        }}>
+                                                                    <Box sx={{display: "flex", alignItems: "center", justifyContent: "space-between", color: 'rgba(80, 82, 178, 1)'}}>
+                                                                        {data.partner_name}
+                                                                        <IconButton
+                                                                            className="icon-button"
+                                                                            sx={{ display: 'none', ':hover': {backgroundColor: "transparent"}}} >
+                                                                            <Image src='/outband.svg' alt="outband" width={15.98} height={16}/>
+                                                                        </IconButton>
+                                                                    </Box>
+                                                                </TableCell>
+
+                                                                <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
+                                                                    {data.email}
+                                                                </TableCell>
+
+                                                                <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
+                                                                    {dayjs(data.join_date).isValid() ? dayjs(data.join_date).format('MMM D, YYYY') : '--'}
+                                                                </TableCell>
+
+                                                                <TableCell className='table-data'sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
+                                                                    {data.commission}
+                                                                </TableCell>
+
+                                                                <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
+                                                                    {data.subscription}
+                                                                </TableCell>
+
+                                                                <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
+                                                                    Direct
+                                                                </TableCell>
+
+                                                                <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
+                                                                    {dayjs(data.last_payment_date).isValid() ? dayjs(data.last_payment_date).format('MMM D, YYYY') : '--'}
+                                                                </TableCell>
+
+                                                                <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
+                                                                    <Box sx={{display: "flex", justifyContent: "center"}}>
+                                                                        <Typography component="div" sx={{
+                                                                            width: "100px",
+                                                                            margin: 0,
+                                                                            background: getStatusStyle(data.status).background,
+                                                                            padding: '3px 8px',
+                                                                            borderRadius: '2px',
+                                                                            fontFamily: 'Roboto',
+                                                                            fontSize: '12px',
+                                                                            fontWeight: '400',
+                                                                            lineHeight: '16px',
+                                                                            color: getStatusStyle(data.status).color,
+                                                                        }}>
+                                                                            {data.status}
+                                                                        </Typography>
+                                                                    </Box>
+                                                                </TableCell>
+
+                                                                <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
+                                                                    <IconButton onClick={(event) => handleOpenMenu(event, data)} sx={{ ':hover': { backgroundColor: 'transparent', }}} >
+                                                                        <Image src='/more_horizontal.svg' alt='more' height={16.18} width={22.91} />
                                                                     </IconButton>
-                                                                </Box>
-                                                            </TableCell>
-
-                                                            <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
-                                                                {data.email}
-                                                            </TableCell>
-
-                                                            <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
-                                                                {dayjs(data.join_date).isValid() ? dayjs(data.join_date).format('MMM D, YYYY') : '--'}
-                                                            </TableCell>
-
-                                                            <TableCell className='table-data'sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
-                                                                {data.commission}
-                                                            </TableCell>
-
-                                                            <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
-                                                                {data.subscription}
-                                                            </TableCell>
-
-                                                            <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
-                                                                {data.sources}
-                                                            </TableCell>
-
-                                                            <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
-                                                                {dayjs(data.last_payment_date).isValid() ? dayjs(data.last_payment_date).format('MMM D, YYYY') : '--'}
-                                                            </TableCell>
-
-                                                            <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
-                                                                <Box sx={{display: "flex", justifyContent: "center"}}>
-                                                                    <Typography component="div" sx={{
-                                                                        width: "100px",
-                                                                        margin: 0,
-                                                                        background: getStatusStyle(data.status).background,
-                                                                        padding: '3px 8px',
-                                                                        borderRadius: '2px',
-                                                                        fontFamily: 'Roboto',
-                                                                        fontSize: '12px',
-                                                                        fontWeight: '400',
-                                                                        lineHeight: '16px',
-                                                                        color: getStatusStyle(data.status).color,
-                                                                    }}>
-                                                                        {data.status}
-                                                                    </Typography>
-                                                                </Box>
-                                                            </TableCell>
-
-                                                            <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
-                                                                <IconButton onClick={(event) => handleOpenMenu(event, data)} sx={{ ':hover': { backgroundColor: 'transparent', }}} >
-                                                                    <Image src='/more_horizontal.svg' alt='more' height={16.18} width={22.91} />
-                                                                </IconButton>
-                                                                    <Popover
-                                                                        open={open}
-                                                                        anchorEl={menuAnchor}
-                                                                        onClose={handleCloseMenu}
-                                                                        anchorOrigin={{
-                                                                            vertical: 'bottom',
-                                                                            horizontal: 'left',
-                                                                        }}
-                                                                        >
-                                                                        <List
-                                                                            sx={{ 
-                                                                                width: '100%', maxWidth: 360}}
+                                                                        <Popover
+                                                                            open={open}
+                                                                            anchorEl={menuAnchor}
+                                                                            onClose={handleCloseMenu}
+                                                                            anchorOrigin={{
+                                                                                vertical: 'bottom',
+                                                                                horizontal: 'left',
+                                                                            }}
                                                                             >
-                                                                            <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {}}>
-                                                                                <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Payment history"/>
-                                                                            </ListItemButton>
-                                                                            <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {}}>
-                                                                                <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Reward history"/>
-                                                                            </ListItemButton>
-                                                                            {selectedRowData?.status === "Active" 
-                                                                            ?   <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
+                                                                            <List
+                                                                                sx={{ 
+                                                                                    width: '100%', maxWidth: 360}}
+                                                                                >
+                                                                                <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {}}>
+                                                                                    <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Payment history"/>
+                                                                                </ListItemButton>
+                                                                                <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {}}>
+                                                                                    <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Reward history"/>
+                                                                                </ListItemButton>
+                                                                                {selectedRowData?.status === "Active" 
+                                                                                ?   <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
+                                                                                        handleNoticeOpenPopup()
+                                                                                        setEnabledData({ 
+                                                                                            id: selectedRowData.id});
+                                                                                        handleCloseMenu()
+                                                                                    }}>
+                                                                                        <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Disable"/>
+                                                                                    </ListItemButton>
+                                                                                :   <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
+                                                                                        setEnabled()
+                                                                                        setEnabledData({ 
+                                                                                            id: selectedRowData.id});
+                                                                                        handleCloseMenu()
+                                                                                    }}>
+                                                                                        <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Enable"/>
+                                                                                    </ListItemButton>
+                                                                                }
+                                                                                <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
                                                                                     handleNoticeOpenPopup()
-                                                                                    setEnabledData({ 
-                                                                                        id: selectedRowData.id});
+                                                                                    setEnabledData({
+                                                                                        id: selectedRowData.id,
+                                                                                        fullName: selectedRowData.partner_name});
                                                                                     handleCloseMenu()
                                                                                 }}>
-                                                                                    <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Disable"/>
+                                                                                    <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Terminate"/>
                                                                                 </ListItemButton>
-                                                                            :   <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
-                                                                                    setEnabled()
-                                                                                    setEnabledData({ 
-                                                                                        id: selectedRowData.id});
+                                                                                <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
+                                                                                    setFileData({
+                                                                                        id: selectedRowData.id,
+                                                                                        email: selectedRowData.email,
+                                                                                        fullName: selectedRowData.partner_name,
+                                                                                        companyName: selectedRowData.sources,
+                                                                                        commission: selectedRowData.commission,
+                                                                                    });
+                                                                                    handleFormOpenPopup()
                                                                                     handleCloseMenu()
                                                                                 }}>
-                                                                                    <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Enable"/>
+                                                                                    <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Edit"/>
                                                                                 </ListItemButton>
-                                                                            }
-                                                                            <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
-                                                                                handleNoticeOpenPopup()
-                                                                                setEnabledData({
-                                                                                    id: selectedRowData.id,
-                                                                                    fullName: selectedRowData.partner_name});
-                                                                                handleCloseMenu()
-                                                                            }}>
-                                                                                <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Terminate"/>
-                                                                            </ListItemButton>
-                                                                            <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
-                                                                                setFileData({
-                                                                                    id: selectedRowData.id,
-                                                                                    email: selectedRowData.email,
-                                                                                    fullName: selectedRowData.partner_name,
-                                                                                    companyName: selectedRowData.sources,
-                                                                                    commission: selectedRowData.commission,
-                                                                                });
-                                                                                handleFormOpenPopup()
-                                                                                handleCloseMenu()
-                                                                            }}>
-                                                                                <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Edit"/>
-                                                                            </ListItemButton>
-                                                                            <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {}}>
-                                                                                <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Log info"/>
-                                                                            </ListItemButton>
-                                                                        </List>
-                                                                    </Popover>
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    ))}
-                                                </TableBody>
+                                                                                <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {}}>
+                                                                                    <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Log info"/>
+                                                                                </ListItemButton>
+                                                                            </List>
+                                                                        </Popover>
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                    </TableBody>
                                             </Table>
                                         </TableContainer>
+                                        {errorResponse && !loading && (
+                                                <Box sx={suppressionsStyles.centerContainerStyles}>
+                                                    <Typography variant="h5" sx={{
+                                                        mb: 3,
+                                                        fontFamily: 'Nunito Sans',
+                                                        fontSize: "20px",
+                                                        color: "#4a4a4a",
+                                                        fontWeight: "600",
+                                                        lineHeight: "28px"
+                                                    }}>
+                                                        Data not matched yet!
+                                                    </Typography>
+                                                    <Image src='/no-data.svg' alt='No Data' height={250} width={300} />
+                                                    <Typography variant="body1" color="textSecondary"
+                                                        sx={{
+                                                            mt: 3,
+                                                            fontFamily: 'Nunito Sans',
+                                                            fontSize: "14px",
+                                                            color: "#808080",
+                                                            fontWeight: "600",
+                                                            lineHeight: "20px"
+                                                        }}>
+                                                        No Invitee joined from the referreal link.
+                                                    </Typography>
+                                                </Box>
+                                                )}
                                     </Box>
                                     <InvitePartnerPopup 
                                         isMaster={isMaster}
@@ -811,7 +829,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                     />
                                 </Box>
                             </>
-                        )}
+                        
                     </Box>
                     <CalendarPopup
                         anchorEl={calendarAnchorEl}

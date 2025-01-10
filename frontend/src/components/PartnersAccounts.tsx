@@ -92,6 +92,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id: partnerId, fromA
     const [selectedDateLabel, setSelectedDateLabel] = useState<string>('');
     const id = partnerId ?? masterData?.id
     const allowedRowsPerPage = [10, 25, 50, 100];
+    const [errorResponse, setErrosResponse] = useState(false);
 
     const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setCalendarAnchorEl(event.currentTarget);
@@ -184,10 +185,13 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id: partnerId, fromA
                 response = await axiosInstance.get(`/admin-accounts`, { params: {id} });
             }
             if(response.status === 200) {
+                setErrosResponse(false)
                 setAccounts([...response.data])
             }
+            else {
+                setErrosResponse(true)
+            }
         } catch {
-            console.log("ferfrgr")
         } finally {
             setLoading(false)
         }
@@ -220,34 +224,6 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id: partnerId, fromA
                 minHeight: '77vh',
                 '@media (max-width: 600px)': {margin: '0rem auto 0rem'}
             }}>
-                {accounts.length === 0 && !loading 
-                ? (
-                    <Box sx={suppressionsStyles.centerContainerStyles}>
-                        <Typography variant="h5" sx={{
-                            mb: 3,
-                            fontFamily: 'Nunito Sans',
-                            fontSize: "20px",
-                            color: "#4a4a4a",
-                            fontWeight: "600",
-                            lineHeight: "28px"
-                        }}>
-                            Data not matched yet!
-                        </Typography>
-                        <Image src='/no-data.svg' alt='No Data' height={250} width={300} />
-                        <Typography variant="body1" color="textSecondary"
-                            sx={{
-                                mt: 3,
-                                fontFamily: 'Nunito Sans',
-                                fontSize: "14px",
-                                color: "#808080",
-                                fontWeight: "600",
-                                lineHeight: "20px"
-                            }}>
-                            No Invitee joined from the referreal link.
-                        </Typography>
-                    </Box>
-                ) 
-                : (
                     <>
                         <Box>
                         {fromAdmin && 
@@ -460,7 +436,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id: partnerId, fromA
                                 </Box>
                             </Box>
 
-                            <Box sx={{ display: 'flex', }}>
+                            <Box sx={{ display: 'flex', flexDirection: "column"}}>
                                 <TableContainer sx={{
                                     border: '1px solid #EBEBEB',
                                     borderRadius: '4px 4px 0px 0px',
@@ -586,6 +562,33 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id: partnerId, fromA
                                         </TableBody>
                                     </Table>
                                 </TableContainer>
+                                {errorResponse && !loading 
+                                && (
+                                    <Box sx={suppressionsStyles.centerContainerStyles}>
+                                        <Typography variant="h5" sx={{
+                                            mb: 3,
+                                            fontFamily: 'Nunito Sans',
+                                            fontSize: "20px",
+                                            color: "#4a4a4a",
+                                            fontWeight: "600",
+                                            lineHeight: "28px"
+                                        }}>
+                                            Data not matched yet!
+                                        </Typography>
+                                        <Image src='/no-data.svg' alt='No Data' height={250} width={300} />
+                                        <Typography variant="body1" color="textSecondary"
+                                            sx={{
+                                                mt: 3,
+                                                fontFamily: 'Nunito Sans',
+                                                fontSize: "14px",
+                                                color: "#808080",
+                                                fontWeight: "600",
+                                                lineHeight: "20px"
+                                            }}>
+                                            No Invitee joined from the referreal link.
+                                        </Typography>
+                                    </Box>
+                                )}
                             </Box>
                         </Box>
                         <Box sx={{ display: 'flex', justifyContent: 'end' }}>
@@ -599,7 +602,6 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id: partnerId, fromA
                             />
                         </Box>
                     </>
-                )}
             </Box>
             <CalendarPopup
                 anchorEl={calendarAnchorEl}
