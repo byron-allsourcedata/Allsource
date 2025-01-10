@@ -7,6 +7,7 @@ import zipfile
 from pathlib import Path
 from PIL import Image
 import ffmpeg
+import shutil
 import subprocess
 from fastapi import HTTPException, UploadFile
 from io import BytesIO
@@ -32,11 +33,19 @@ class PartnersAssetService:
 
 
     def get_assets(self):
-        assets = self.partners_asset_persistence.get_assets()
-        return [
-            self.domain_mapped(asset)
-            for i, asset in enumerate(assets)
-        ]
+        try:
+            assets = self.partners_asset_persistence.get_assets()
+            
+            return {
+                "status": True,
+                "data": [
+                    self.domain_mapped(asset)
+                    for i, asset in enumerate(assets)
+                ]
+            }
+        except Exception as e:
+            logger.debug("Error getting partner assets", e)
+            return {"status": False, "error":{"code": 500, "message": f"Unexpected error during getting: {str(e)}"}}
     
 
     def delete_asset(self, id: int):
@@ -238,30 +247,30 @@ class PartnersAssetService:
     def get_video_duration(self, type: str, file_url: str) -> str:
         if not file_url or type != "video":
             return "00:00"
+
+        temp_dir = "temp_video_dir"
+        os.makedirs(temp_dir, exist_ok=True)
+        temp_file_path = os.path.join(temp_dir, "temp_video_file")
+
         try:
             response = requests.get(file_url, stream=True, timeout=10)
             if response.status_code == 200:
-                local_file = "temp_video_file"
-                with open(local_file, 'wb') as f:
+                with open(temp_file_path, 'wb') as f:
                     for chunk in response.iter_content(chunk_size=8192):
                         f.write(chunk)
-                
-                try:
-                    probe = ffmpeg.probe(local_file)
-                    duration = float(probe['format']['duration'])
-                    os.remove(local_file)
 
-                    minutes, seconds = divmod(int(duration), 60)
-                    return f"{minutes:02}:{seconds:02}"
-                except Exception as err:
-                    logger.debug("Error calculating video duration", err)
-                    os.remove(local_file)
-                    return "00:00"
+                probe = ffmpeg.probe(temp_file_path)
+                duration = float(probe['format']['duration'])
+
+                minutes, seconds = divmod(int(duration), 60)
+                return f"{minutes:02}:{seconds:02}"
             else:
                 return "00:00"
-        except Exception as err:
-            logger.debug("Error fetching video file", err)
+        except Exception:
             return "00:00"
+        finally:
+            if os.path.exists(temp_dir):
+                shutil.rmtree(temp_dir)
 
 
     def domain_mapped(self, asset: PartnersAsset):

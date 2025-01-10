@@ -11,7 +11,11 @@ router = APIRouter(dependencies=[Depends(check_user_partner)])
 def get_partners_assets(
                 get_partners_assets_service: PartnersAssetService = Depends(get_partners_assets_service)):
     assets = get_partners_assets_service.get_assets()
-    return assets
+    if not assets.get("status"):
+        error = assets.get("error", {}) or {}
+        raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))
+     
+    return assets.get('data') 
 
 
 @router.get('/accounts')

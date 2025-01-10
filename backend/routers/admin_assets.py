@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends
 from dependencies import get_partners_assets_service, check_user_admin, PartnersAssetService
 
 router = APIRouter(dependencies=[Depends(check_user_admin)])
@@ -10,7 +10,12 @@ def partners_assets(
     get_partners_assets_service: PartnersAssetService = Depends(get_partners_assets_service)):
     
     assets = get_partners_assets_service.get_assets()
-    return assets
+    
+    if not assets.get("status"):
+        error = assets.get("error", {}) or {}
+        raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))
+     
+    return assets.get('data')  
 
 
 @router.delete("/{id}")

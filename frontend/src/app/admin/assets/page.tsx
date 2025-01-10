@@ -76,24 +76,26 @@ const Assets: React.FC = () => {
         try {
 
             const response = await axiosInstance.get("/admin-assets");
-            const assetsByType = response.data.reduce((acc: Record<string, AssetsData[]>, item: AssetsData) => {
-                if (!acc[item.type]) {
-                    acc[item.type] = [];
-                }
-                acc[item.type].push({ ...item });
-                return acc;
-            }, {});
+            if(response.status === 200) {
+             
+                const assetsByType = response.data.reduce((acc: Record<string, AssetsData[]>, item: AssetsData) => {
+                    if (!acc[item.type]) {
+                        acc[item.type] = [];
+                    }
+                    acc[item.type].push({ ...item });
+                    return acc;
+                }, {});
 
 
-            setAssets([
-                {type: "Videos", asset: assetsByType["video"] || []},
-                {type: "Pitch decks", asset: assetsByType["presentation"] || []},
-                {type: "Images", asset: assetsByType["image"] || []},
-                {type: "Documents", asset: assetsByType["document"] || []},
-            ]);
+                setAssets([
+                    {type: "Videos", asset: assetsByType["video"] || []},
+                    {type: "Pitch decks", asset: assetsByType["presentation"] || []},
+                    {type: "Images", asset: assetsByType["image"] || []},
+                    {type: "Documents", asset: assetsByType["document"] || []},
+                ]);
+            }
 
-        } catch (error) {
-            console.error("Error fetching rewards:", error);
+        } catch {
         } finally {
             setLoading(false);
         }

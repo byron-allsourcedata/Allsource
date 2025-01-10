@@ -9,3 +9,4 @@ class PartnersAssetResponse(BaseModel):
     file_url: str
     file_extension: str
     file_size: str
+    video_duration: str
