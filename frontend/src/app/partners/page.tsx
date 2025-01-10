@@ -66,11 +66,6 @@ const Suppressions: React.FC = () => {
     const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
         setTabIndex(newIndex);
     };
-    // const [loading, setLoading] = useState(true)
-
-    // if (loading) {
-    //     return <CustomizedProgressBar />;
-    // }
 
     return (
         <Box sx={partnersStyle.mainContent}>
@@ -197,6 +192,7 @@ const Suppressions: React.FC = () => {
                                 }}
                                 label="Assets"
                             />
+
                     </Tabs>
                 </Box>
 

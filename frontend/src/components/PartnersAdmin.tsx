@@ -88,7 +88,6 @@ type CombinedPartnerData = NewPartner & EnabledPartner;
 
 const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData, isMaster: master, tabIndex, handleTabChange, setLoading, loading}) => {
     const [isMaster, setIsMaster] = useState(master);
-    const [expanded, setExpanded] = useState<number | false>(false);
     const [partners, setPartners] = useState<PartnerData[]>([]);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -210,13 +209,6 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
         });
     
         setPartners(sortedAccounts);
-    };
-
-    const handleOpenSection = (panel: number) => (
-        event: React.SyntheticEvent,
-        isExpanded: boolean
-    ) => {
-        setExpanded(isExpanded ? panel : false);
     };
 
     const handleNoticeOpenPopup = () => {

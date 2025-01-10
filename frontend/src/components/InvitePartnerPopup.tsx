@@ -50,6 +50,20 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       setEmailError(!emailRegex.test(value) && value !== "");
     };
+
+    const handleNameChange = (e: any) => {
+        setFullName(e.target.value)
+        if(action === "Edit"){
+            setButtonContain(true)
+        }
+    }
+
+    const handleCompanyChange = (e: any) => {
+        setCompanyName(e.target.value)
+        if(action === "Edit"){
+            setButtonContain(true)
+        }
+      };
   
     const handleCommissionChange = (e: any) => {
       const value = e.target.value;
@@ -57,6 +71,9 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
       setCommissionError(!isValid && value !== "");
       if (isValid || value === "") {
         setCommission(value);
+      }
+      if(action === "Edit"){
+        setButtonContain(true)
       }
     };
 
@@ -85,7 +102,9 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
         setButtonContain(false);
     
         const requestData: RequestData = {
-            commission
+            commission,
+            full_name: fullName,
+            company_name: companyName
         };
         
     
@@ -98,8 +117,6 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
                 });
             } else {
                 requestData.email = email;
-                requestData.full_name = fullName;
-                requestData.company_name = companyName;
                 requestData.isMaster = isMaster;
                 response = await axiosInstance.post(`admin-partners/`, requestData, {
                     headers: { 'Content-Type': 'application/json' },
@@ -124,7 +141,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
     useEffect(() => {
         if (fileData && fileData.email) {
             setEmail(fileData.email);
-            setCommission(fileData.commission);
+            setCommission(fileData.commission.toString());
             setCompanyName(fileData.companyName);
             setFullName(fileData.fullName);
             setButtonContain(true)
@@ -206,7 +223,6 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
                         </Typography>    
                                         
                         <TextField
-                            disabled={action === "Edit"}
                             id="outlined-required"
                             label="Full name"
                             placeholder='Full name'
@@ -219,7 +235,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
                                 },  
                             }}
                             value={fullName}
-                            onChange={(e) => setFullName(e.target.value)}
+                            onChange={handleNameChange}
                         />
 
                         <TextField
@@ -244,7 +260,6 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
                         />
 
                         <TextField
-                            disabled={action === "Edit"}
                             id="outlined-required"
                             label="Company name"
                             placeholder='Company name'
@@ -257,7 +272,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
                                 },  
                             }}
                             value={companyName}
-                            onChange={(e) => setCompanyName(e.target.value)}
+                            onChange={handleCompanyChange}
                         />
 
                         <TextField

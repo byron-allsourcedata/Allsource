@@ -85,11 +85,11 @@ async def update_partner(
 
     if request.status:
         if request.message:
-            partner = await get_partners_service.update_partner(partner_id, "status", request.status, request.message)
+            partner = await get_partners_service.update_partner(partner_id, "status", request.status, request.message, request.full_name, request.company_name)
         else:
-            partner = await get_partners_service.update_partner(partner_id, "status", request.status, "Your account active again")
+            partner = await get_partners_service.update_partner(partner_id, "status", request.status, "Your account active again", request.full_name, request.company_name)
     else: 
-        partner = await get_partners_service.update_partner(partner_id, "commission", request.commission, "Your commission has been changed")
+        partner = await get_partners_service.update_partner(partner_id, "commission", request.commission, "Your commission has been changed", request.full_name, request.company_name)
     
     if not partner.get("status"):
         error = partner.get("error", {}) or {}
