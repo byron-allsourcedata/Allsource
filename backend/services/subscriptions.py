@@ -19,6 +19,7 @@ from utils import get_utc_aware_date_for_postgres
 from decimal import *
 from services.stripe_service import determine_plan_name_from_product_id
 from urllib.parse import urlencode
+from utils import timestamp_to_date
 import requests
 
 load_dotenv()
@@ -36,6 +37,35 @@ class SubscriptionService:
     def get_userid_by_customer(self, customer_id):
         return self.db.query(User).filter(User.customer_id == customer_id).first()
     
+    def get_billing_history_shopify(self, user_id, page, per_page):
+        start_index = (page - 1) * per_page
+        
+        billing_history = self.db.query(SubscriptionTransactions) \
+            .filter(SubscriptionTransactions.user_id == user_id) \
+            .order_by(SubscriptionTransactions.created_at.desc()) \
+            .offset(start_index) \
+            .limit(per_page) \
+            .all()
+
+        result = []
+        for billing_data in billing_history:
+            billing_hash = {
+                'date': billing_data.created_at.strftime('%b %d, %Y'),
+                'invoice_id': billing_data.charge_id,
+                'pricing_plan': billing_data.plan_name,
+                'total': billing_data.amount,
+                'status': billing_data.status
+            }
+            result.append(billing_hash)
+
+        count = self.db.query(SubscriptionTransactions) \
+            .filter(SubscriptionTransactions.user_id == user_id) \
+            .count()
+
+        max_page = (count + per_page - 1) // per_page
+
+        return result, count, max_page
+
     def get_user_by_shopify_shop_id(self, shop_id: str):
         return self.db.query(User).filter(User.shop_id == str(shop_id)).first()
 
@@ -172,9 +202,9 @@ class SubscriptionService:
             return True
         return False
     
-    def create_shopify_subscription_transaction(self, subscription_info, user_id, plan: SubscriptionPlan):
+    def create_shopify_subscription_transaction(self, subscription_info, user_id, plan: SubscriptionPlan, charge_id):
         status = subscription_info.get("status", "").lower()
-        if status == 'cancelled':
+        if status in ('cancelled', 'declined'):
             status = 'canceled'
         created_at = datetime.fromisoformat(subscription_info.get("created_at"))
         start_date = created_at
@@ -187,6 +217,7 @@ class SubscriptionService:
             start_date=start_date,
             end_date=end_date,
             currency=plan.currency,
+            charge_id=charge_id,
             plan_id=plan.id,
             plan_name=plan.title,
             created_at=created_at,
