@@ -206,8 +206,8 @@ def bigcommerce_auth(
     shop_hash = token_data.get('context', '').split('/')[1]
     
     if state:
-        user_id, domain_id, is_pixell_install = (state.split(':') + [None, None, None])[:3]
-        redirect_url = BigcommerceConfig.frontend_dashboard_redirect if is_pixell_install else BigcommerceConfig.frontend_redirect
+        user_id, domain_id, is_pixel_install = (state.split(':') + [None, None, None])[:3]
+        redirect_url = BigcommerceConfig.frontend_dashboard_redirect if is_pixel_install else BigcommerceConfig.frontend_redirect
     
         user = user_persistence.get_user_by_id(user_id)
         domain_entry = domain_persistence.get_domain_by_filter(id=domain_id)
