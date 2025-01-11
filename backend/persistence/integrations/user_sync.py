@@ -113,8 +113,15 @@ class IntegrationsUserSyncPersistence:
         return self.db.query(IntegrationUserSync).filter_by(**filter_by).all()
     
     def get_user_by_shop_domain(self, shop_domain):
-        user = self.db.query(Users).join(UserDomains, UserDomains.id == UserIntegration.domain_id).join(Users, Users.id == UserDomains.user_id).filter(UserIntegration.shop_domain == shop_domain).first()
+        user = (
+            self.db.query(Users)
+            .join(UserDomains, UserDomains.user_id == Users.id)
+            .join(UserIntegration, UserIntegration.domain_id == UserDomains.id)
+            .filter(UserIntegration.shop_domain == shop_domain)
+            .first()
+        )
         return user
+
     
     def update_sync(self, update_data: dict, counter, **filter_by):
         update_data['no_of_contacts'] = IntegrationUserSync.no_of_contacts + counter
