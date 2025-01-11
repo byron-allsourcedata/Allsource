@@ -328,8 +328,10 @@ def oauth_bigcommerce_load(signed_payload: Annotated[str, Query()], signed_paylo
         return RedirectResponse(f"{BigcommerceConfig.frontend_sign_up_redirect}?teams_token={team_invitation.token}&user_mail={user_email}")
     
     owner = user_persistence.get_user_by_email(owner_email)
+    if not owner:
+        return RedirectResponse(BigcommerceConfig.frontend_sign_in_redirect)
     md5_token_info = {
-            'id': user.get('id'),
+            'id': user.id,
             'user_mail': user_email,
             'salt': os.getenv('SECRET_SALT')
         }
