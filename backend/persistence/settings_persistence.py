@@ -125,6 +125,9 @@ class SettingsPersistence:
 
     def get_pending_invations_by_userid(self, user_id):
         return self.db.query(TeamInvitation).filter(TeamInvitation.team_owner_id == user_id).all()
+    
+    def get_team_invitation_by_email(self, email):
+        return self.db.query(TeamInvitation).filter(TeamInvitation.mail == email).first()
 
     def exists_team_member(self, user_id, user_mail):
         pending_invitations = (

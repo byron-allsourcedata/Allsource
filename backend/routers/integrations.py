@@ -1,13 +1,15 @@
 import json
 import os
+import hashlib
 from urllib.parse import urlencode
 from fastapi import APIRouter, Depends, Query, HTTPException, status, Body, Request
 from fastapi.responses import RedirectResponse
 from enums import UserAuthorizationStatus
+from persistence.settings_persistence import SettingsPersistence
 from dependencies import get_integration_service, IntegrationService, IntegrationsPresistence, \
             get_user_integrations_presistence, check_user_authorization, check_domain, \
             check_pixel_install_domain, check_user_authentication, get_user_persistence_service, \
-            UserPersistence, get_user_domain_persistence, UserDomainsPersistence, check_api_key
+            UserPersistence, get_user_domain_persistence, UserDomainsPersistence, check_api_key, get_settings_persistence
 from schemas.integrations.integrations import *
 from persistence.domains import UserDomains
 from enums import TeamAccessLevel
@@ -301,8 +303,8 @@ def bigcommerce_auth(
                 )
             )
         )
-            
-    return RedirectResponse(BigcommerceConfig.frontend_sign_up_redirect)
+                 
+    return RedirectResponse(f"{BigcommerceConfig.frontend_sign_up_redirect}?utm_source=big_commerce")
     
 @router.get("/bigcommerce/uninstall", status_code=status.HTTP_200_OK)
 def oauth_bigcommerce_uninstall(signed_payload: Annotated[str, Query()], signed_payload_jwt: Annotated[str, Query()], integration_service: IntegrationService = Depends(get_integration_service)):
@@ -310,11 +312,34 @@ def oauth_bigcommerce_uninstall(signed_payload: Annotated[str, Query()], signed_
         return service.bigcommerce.oauth_bigcommerce_uninstall(signed_payload=signed_payload, signed_payload_jwt=signed_payload_jwt)
 
 @router.get("/bigcommerce/load", status_code=status.HTTP_200_OK)
-def oauth_bigcommerce_load(signed_payload: Annotated[str, Query()], signed_payload_jwt: Annotated[str, Query()], integration_service: IntegrationService = Depends(get_integration_service)):
+def oauth_bigcommerce_load(signed_payload: Annotated[str, Query()], signed_payload_jwt: Annotated[str, Query()], integration_service: IntegrationService = Depends(get_integration_service),
+                           user_persistence: UserPersistence = Depends(get_user_persistence_service), settings_persistence: SettingsPersistence = Depends(get_settings_persistence)):
     with integration_service as service:
-        service.bigcommerce.oauth_bigcommerce_load(signed_payload=signed_payload, signed_payload_jwt=signed_payload_jwt)
-        
-    return RedirectResponse(BigcommerceConfig.frontend_sign_up_redirect)
+        result = service.bigcommerce.oauth_bigcommerce_load(signed_payload=signed_payload, signed_payload_jwt=signed_payload_jwt)
+    
+    user_email = result['user_email']
+    owner_email = result['owner_email']
+    user = user_persistence.get_user_by_email(user_email)
+    if user:
+        return RedirectResponse(BigcommerceConfig.frontend_sign_in_redirect)
+    
+    team_invitation = settings_persistence.get_team_invitation_by_email(user.email)
+    if team_invitation:
+        return RedirectResponse(f"{BigcommerceConfig.frontend_sign_up_redirect}?teams_token={team_invitation.token}&user_mail={user_email}")
+    
+    owner = user_persistence.get_user_by_email(owner_email)
+    md5_token_info = {
+            'id': user.get('id'),
+            'user_mail': user_email,
+            'salt': os.getenv('SECRET_SALT')
+        }
+    json_string = json.dumps(md5_token_info, sort_keys=True)
+    md5_hash = hashlib.md5(json_string.encode()).hexdigest()
+    settings_persistence.save_pending_invations_by_userid(team_owner_id=owner.id, user_mail=user_email,
+                                                                   invited_by_id=owner.id,
+                                                                   access_level=TeamAccessLevel.STANDARD.value, md5_hash=md5_hash)
+    
+    return RedirectResponse(f"{BigcommerceConfig.frontend_sign_up_redirect}?teams_token={md5_hash}&user_mail={user_email}")
 
 @router.get('/zapier')
 async def auth(domain = Depends(check_api_key), integration_service: IntegrationService = Depends(get_integration_service)):
