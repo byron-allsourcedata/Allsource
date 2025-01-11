@@ -323,7 +323,7 @@ def oauth_bigcommerce_load(signed_payload: Annotated[str, Query()], signed_paylo
     if user:
         return RedirectResponse(BigcommerceConfig.frontend_sign_in_redirect)
     
-    team_invitation = settings_persistence.get_team_invitation_by_email(user.email)
+    team_invitation = settings_persistence.get_team_invitation_by_email(user_email)
     if team_invitation:
         return RedirectResponse(f"{BigcommerceConfig.frontend_sign_up_redirect}?teams_token={team_invitation.token}&user_mail={user_email}")
     
