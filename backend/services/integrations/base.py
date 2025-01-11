@@ -53,6 +53,9 @@ class IntegrationService:
     def get_leads_for_zapier(self, domain):
         return self.lead_persistence.get_last_leads_for_zapier(domain.id)
     
+    def get_user_by_shop_domain(self, shop_domain):
+        return self.integrations_user_sync_persistence.get_user_by_shop_domain(shop_domain)
+    
     def delete_sync_domain(self, domain_id: int, list_id, service_name: str = None):
         result = self.integrations_user_sync_persistence.delete_sync(domain_id=domain_id, list_id=list_id)
         if result:

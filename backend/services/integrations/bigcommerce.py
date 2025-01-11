@@ -158,10 +158,10 @@ class BigcommerceIntegrationsService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing required information in payload")
         
         user_email = user.get('email')
-        owner_email = owner.get('email')
+        store_hash = payload.get('store_hash')
         return {
             'user_email': user_email,
-            'owner_email': owner_email
+            'store_hash': store_hash
         }
     
     def oauth_bigcommerce_uninstall(self, signed_payload, signed_payload_jwt):

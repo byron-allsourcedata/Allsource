@@ -179,18 +179,6 @@ async def bigcommerce_redirect_login(store_hash: str = Query(...), is_pixel_inst
     with integration_service as service:
         return service.bigcommerce.bigcommerce_redirect_login(store_hash=store_hash, is_pixel_install=is_pixel_install, domain=domain, user=user)
     
-@router.post("bigcommerce/remove-user-callback")
-async def remove_user_callback(request: Request):
-    body = await request.json()
-    print(json.dumps(body, indent=2))
-    return {"status": "success"}
-
-@router.put("bigcommerce/remove-user-callback")
-async def remove_user_callback(request: Request):
-    body = await request.json()
-    print(json.dumps(body, indent=2))
-    return {"status": "success"}
-
 @router.get("/bigcommerce/remove-user-callback")
 async def remove_user_callback(request: Request):
     params = request.query_params
@@ -318,22 +306,17 @@ def oauth_bigcommerce_load(signed_payload: Annotated[str, Query()], signed_paylo
         result = service.bigcommerce.oauth_bigcommerce_load(signed_payload=signed_payload, signed_payload_jwt=signed_payload_jwt)
     
     user_email = result['user_email']
-    owner_email = result['owner_email']
-    print('--------')
+    store_hash = result['store_hash']
     user = user_persistence.get_user_by_email(user_email)
     if user:
-        print(user)
         return RedirectResponse(BigcommerceConfig.frontend_sign_in_redirect)
     
     team_invitation = settings_persistence.get_team_invitation_by_email(user_email)
     if team_invitation:
         return RedirectResponse(f"{BigcommerceConfig.frontend_sign_up_redirect}?teams_token={team_invitation.token}&user_mail={user_email}")
     
-    owner = user_persistence.get_user_by_email(owner_email)
-    print(owner_email)
-    print(owner)
+    owner = integration_service.get_user_by_shop_domain(store_hash)
     if not owner:
-        print('123')
         return RedirectResponse(BigcommerceConfig.frontend_sign_in_redirect)
     md5_token_info = {
             'id': user.id,
