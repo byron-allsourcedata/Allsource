@@ -20,8 +20,6 @@ from services.users_email_verification import UsersEmailVerificationService
 router = APIRouter()
 
 
-
-
 @router.get("/me")
 def get_me(user_service: UsersService = Depends(get_users_service)):
     plan = user_service.get_info_plan()
@@ -128,7 +126,7 @@ async def check_verification_status(
 
 
 @router.post("/connect-stripe", response_model=StripeConnectResponse)
-async def update_password(connect_account_id: StripeAccountID,
-                          user: UsersService = Depends(get_users_service)):
+async def connect_stripe(connect_account_id: StripeAccountID,
+                         user: UsersService = Depends(get_users_service)):
     result_status = user.add_stripe_account(connect_account_id.stripe_connect_account_id)
     return StripeConnectResponse(status=result_status)

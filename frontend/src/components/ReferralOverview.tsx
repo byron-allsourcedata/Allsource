@@ -236,7 +236,7 @@ const ReferralOverview: React.FC = () => {
                                 <InputLabel
                                     sx={{
                                         fontFamily: 'Roboto',
-                                        fontSize: '14px',
+                                        fontSize: '12.5px',
                                         color: 'rgba(74, 74, 74, 1)',
                                     }}
                                 >

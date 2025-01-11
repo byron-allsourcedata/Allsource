@@ -39,7 +39,7 @@ export const CustomErrorToast = ({ message }: { message: string }) => (
 export const showToast = (message: string, options: ToastOptions = {}) => {
   toast.success(<CustomToast message={message} />, {
     position: "top-right",
-    autoClose: 2000,
+    autoClose: 800,
     hideProgressBar: false,
     closeOnClick: true,
     draggable: true,

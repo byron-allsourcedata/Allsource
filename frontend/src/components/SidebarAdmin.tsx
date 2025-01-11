@@ -25,29 +25,38 @@ const sidebarStyles = {
         flexShrink: 0,
         fontFamily: 'Nunito Sans',
         fontSize: '14px',
-        fontWeight: '500',
+        fontWeight: '400',
         backgroundColor: 'rgba(255, 255, 255, 1)',
-        height: '95vh',
+        borderRight: '1px solid rgba(228, 228, 228, 1)',
+        height: 'calc(100vh - 4.25rem)',
+        maxWidth: '146px',
         display: 'flex',
+        overflow: 'hidden',
         flexDirection: 'column',
         justifyContent: 'start',
+        position: 'relative'
     },
     menu: {
-        display: "flex",
-        flexDirection: "column",
         alignItems: 'center',
         paddingTop: '0 !important',
+        paddingBottom: '2.75rem !important',
         '& .MuiListItem-root': {
-            paddingBottom: '2em',
-            paddingTop: '2em',
+            paddingBottom: '1rem',
+            paddingTop: '1rem',
             '&:hover': {
                 backgroundColor: '#e0e0e0',
             },
         },
-        '&.css-lf3ci7-MuiList-root': {
-            paddingTop: '0px !important',
-            paddingBottom: '0px !important',
+        '& .MuiListItemText-root': {
+            marginTop: '0px !important',
+            marginBottom: '0px !important',
         },
+        '& span.MuiTypography-root': {
+            fontFamily: 'Nunito Sans',
+            fontSize: '0.875rem',
+            fontWeight: 400,
+            lineHeight: 'normal',
+        }
     },
     listItemIcon: {
         minWidth: '24px',
@@ -55,43 +64,53 @@ const sidebarStyles = {
     },
     footer: {
         padding: '1rem',
-        '& .MuiListItem-root': {},
+        '& .MuiListItem-root': {
+
+        },
     },
     settings: {
         alignItems: 'center',
         paddingTop: '0 !important',
         '& .MuiListItem-root': {
-            paddingBottom: '1.5em',
-            paddingTop: '1.5em',
+            paddingBottom: '1rem',
+            paddingTop: '1rem',
             '&:hover': {
                 backgroundColor: '#e0e0e0',
             },
         },
-        '&.css-lf3ci7-MuiList-root': {
-            paddingTop: '0px !important',
-            paddingBottom: '0px !important',
+        '& .MuiListItemText-root': {
+            marginTop: '0px !important',
+            marginBottom: '0px !important',
         },
+        '& span.MuiTypography-root': {
+            fontFamily: 'Nunito Sans',
+            fontSize: '0.875rem',
+            fontWeight: 400,
+            lineHeight: 'normal'
+        }
     },
     setupSection: {
         padding: '1rem',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
-        marginLeft: '0.5em',
-        marginRight: '0.5em',
+        marginLeft: '1rem',
+        marginRight: '1rem',
         border: '1px solid #e4e4e4',
         borderRadius: '8px',
         backgroundColor: '#fff',
-        marginBottom: '2em',
+        marginBottom: '1rem',
         boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
     },
+    ListItem: {
+        minHeight: '4.5em',
+        color:'rgba(59, 59, 59, 1)',
+        ml: '3px'
+    },
     activeItem: {
-        width: "100%",
-        display: "flex",
-        padding: "16px",
-        gap: "16px",
-        borderLeft: '4px solid rgba(80, 82, 178, 1)',
+        borderLeft: '3px solid rgba(80, 82, 178, 1)',
         color: 'rgba(80, 82, 178, 1)',
+        minHeight: '4.5em',
         '& .MuiSvgIcon-root': {
             color: 'rgba(80, 82, 178, 1)',
         },
@@ -109,20 +128,23 @@ const sidebarStyles = {
     },
 };
 
-const SetupSection: React.FC = () => (
-    <Box sx={sidebarStyles.setupSection}>
-        <Box display="flex" alignItems="center" mb={2}>
-            <Image src={'/Vector9.svg'} alt="Setup" width={20} height={20}/>
-            <Typography variant="h6" component="div" ml={1}>
-                Setup
-            </Typography>
-        </Box>
-        <LinearProgress variant="determinate" color='success' value={14} sx={{height: '8px', borderRadius: '4px'}}/>
-        <Typography variant="body2" color="textSecondary" mt={1}>
-            14% complete
-        </Typography>
-    </Box>
-);
+const containerStyles = (hasNotification: boolean) => ( {
+    container: {
+        width: '100%',
+        flexShrink: 0,
+        fontFamily: 'Nunito Sans',
+        fontSize: '14px',
+        fontWeight: '400',
+        backgroundColor: 'rgba(255, 255, 255, 1)',
+        borderRight: '1px solid rgba(228, 228, 228, 1)',
+        height: hasNotification ? 'calc(100vh - 6.85rem)' : 'calc(100vh - 4.25rem)',
+        maxWidth: '146px',
+        display: 'flex',
+        overflow: 'hidden',
+        flexDirection: 'column',
+        justifyContent: 'start',
+        position: 'relative'
+    }})
 
 const SidebarAdmin: React.FC = () => {
     const router = useRouter();
