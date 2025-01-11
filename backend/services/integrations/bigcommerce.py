@@ -217,7 +217,7 @@ class BigcommerceIntegrationsService:
             "location": "footer",
             "visibility": "all_pages",
             "kind": "src",
-            "consent_category": "essential"
+            "consent_category": "targeting"
         }
 
         response_event = self.__handle_request(url, method='POST', access_token=access_token, headers=headers, json=script_event_data)
