@@ -183,6 +183,12 @@ async def remove_user_callback(request: Request):
     print(json.dumps(body, indent=2))
     return {"status": "success"}
 
+@router.put("bigcommerce/remove-user-callback")
+async def remove_user_callback(request: Request):
+    body = await request.json()
+    print(json.dumps(body, indent=2))
+    return {"status": "success"}
+
 @router.get("/bigcommerce/remove-user-callback")
 async def remove_user_callback(request: Request):
     params = request.query_params
