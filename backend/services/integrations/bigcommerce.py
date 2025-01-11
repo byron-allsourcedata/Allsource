@@ -149,6 +149,7 @@ class BigcommerceIntegrationsService:
             payload_jwt = BigcommerceApi.oauth_verify_payload_jwt(signed_payload_jwt, os.getenv("BIGCOMMERCE_CLIENT_SECRET"), os.getenv("BIGCOMMERCE_CLIENT_ID"))
             print('------------')
             print(payload)
+            print('-----------')
             print(payload_jwt)
         except JWTError:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Request [JWT]")
