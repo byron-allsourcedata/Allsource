@@ -319,8 +319,10 @@ def oauth_bigcommerce_load(signed_payload: Annotated[str, Query()], signed_paylo
     
     user_email = result['user_email']
     owner_email = result['owner_email']
+    print('--------')
     user = user_persistence.get_user_by_email(user_email)
     if user:
+        print(user)
         return RedirectResponse(BigcommerceConfig.frontend_sign_in_redirect)
     
     team_invitation = settings_persistence.get_team_invitation_by_email(user_email)
@@ -328,7 +330,10 @@ def oauth_bigcommerce_load(signed_payload: Annotated[str, Query()], signed_paylo
         return RedirectResponse(f"{BigcommerceConfig.frontend_sign_up_redirect}?teams_token={team_invitation.token}&user_mail={user_email}")
     
     owner = user_persistence.get_user_by_email(owner_email)
+    print(owner_email)
+    print(owner)
     if not owner:
+        print('123')
         return RedirectResponse(BigcommerceConfig.frontend_sign_in_redirect)
     md5_token_info = {
             'id': user.id,
