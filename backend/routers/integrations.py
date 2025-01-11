@@ -192,8 +192,13 @@ async def remove_user_callback(request: Request):
 @router.get("/bigcommerce/remove-user-callback")
 async def remove_user_callback(request: Request):
     params = request.query_params
-    print("Received query parameters:", json.dumps(params.items(), indent=2))
-    return {"status": "success", "data": params}
+    store_id = params.get('store_id')
+    user_id = params.get('user_id')
+    email = params.get('email')
+    owner_email = params.get('owner_email')
+    print(f"Store ID: {store_id}, User ID: {user_id}, Email: {email}, Owner Email: {owner_email}")
+
+    return {"status": "success", "message": "User removed successfully"}
     
 @router.get("/bigcommerce/auth/callback")
 def bigcommerce_auth(
