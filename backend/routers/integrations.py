@@ -319,7 +319,7 @@ def oauth_bigcommerce_load(signed_payload: Annotated[str, Query()], signed_paylo
     if not owner:
         return RedirectResponse(BigcommerceConfig.frontend_sign_in_redirect)
     md5_token_info = {
-            'id': user.id,
+            'id': owner.id,
             'user_mail': user_email,
             'salt': os.getenv('SECRET_SALT')
         }
