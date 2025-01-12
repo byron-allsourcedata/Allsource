@@ -66,7 +66,7 @@ const Suppressions: React.FC = () => {
     const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
         setTabIndex(newIndex);
     };
-    const [loading, setLoading] = useState(true)
+    const [loading, setLoading] = useState(false)
     const [status, setStatus] = useState('');
 
     const installPixel = () => {
