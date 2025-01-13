@@ -279,6 +279,7 @@ class UsersAuth:
         
         if referral:
             self.fill_referral_users(referral=referral, user_object=user_object)
+            self.user_persistence_service.book_call_confirmed(user_object.id)
 
         if referral_token:
             self.user_persistence_service.book_call_confirmed(user_object.id)
@@ -560,6 +561,7 @@ class UsersAuth:
             
         if referral:
             self.fill_referral_users(referral=referral, user_object=user_object)
+            self.user_persistence_service.book_call_confirmed(user_object.id)
             
         if is_with_card is False and teams_token is None and referral_token is None and shopify_data is None:
             return self._send_email_verification(user_object, token)
