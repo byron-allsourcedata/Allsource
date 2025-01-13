@@ -36,6 +36,7 @@ const ReferralOverview: React.FC = () => {
 
     const [accountCreatePending, setAccountCreatePending] = useState(false);
     const [error, setError] = useState(false);
+    const [stripeConnect, setStripeConnect] = useState(false);
     const [connectedAccountId, setConnectedAccountId] = useState();
     const [buttonText, setButtonText] = useState('View Dashboard');
     const [referralLink, setReferralLink] = useState('');
@@ -69,6 +70,7 @@ const ReferralOverview: React.FC = () => {
         try {
             const responseOverview = await axiosInstance.get('referral/overview')
             setConnectedAccountId(responseOverview.data.connected_stripe_account_id)
+            setStripeConnect(responseOverview.data.is_stripe_connected)
             const responseDetails = await axiosInstance.get(`referral/details`)
             setDiscountCodeOptions(responseDetails.data.discount_codes)
             const fullReferralLink = `https://dev.maximiz.ai/signup?referral=${responseDetails.data.referral_code}`;
@@ -254,17 +256,18 @@ const ReferralOverview: React.FC = () => {
                                 </Button>
                             </Box>
                         )}
-                        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'start', borderRadius: '4px', padding: '1rem 1.5rem', gap: 4 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'start', borderRadius: '4px', padding: '1rem 1.5rem', gap: 4, opacity: stripeConnect ? 1 : 0.6  }}>
                             <Box sx={{ display: 'flex', justifyContent: 'start', alignItems: 'center', width: '100%' }}>
                                 <Typography className="second-sub-title">
                                     Referral Details
                                 </Typography>
                             </Box>
 
-                            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 3 }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 3, }}>
                                 <FormControl
                                     sx={{
                                         width: '100%',
+                                        
                                     }}
                                 >
                                     <InputLabel
@@ -277,8 +280,9 @@ const ReferralOverview: React.FC = () => {
                                         Discount Code
                                     </InputLabel>
                                     <Select
-                                        value={discountCode?.name || ''}
+                                        value={stripeConnect ? discountCode?.name : ''}
                                         onChange={handleDiscountCodeChange}
+                                        disabled={!stripeConnect}
                                         label="Discount Code"
                                         sx={{
                                             backgroundColor: '#fff',
@@ -325,12 +329,12 @@ const ReferralOverview: React.FC = () => {
                                     variant="outlined"
                                     type="text"
                                     rows={2}
-                                    disabled={!referralLink}
-                                    value={referralLink}
+                                    disabled={!referralLink && !stripeConnect}
+                                    value={stripeConnect ? referralLink : ''}
                                     InputProps={{
                                         style: { color: 'rgba(17, 17, 19, 1)', fontFamily: 'Nunito Sans', fontWeight: 400, fontSize: '14px' },
                                         endAdornment: (
-                                            (referralLink && (
+                                            (referralLink && stripeConnect && (
                                                 <InputAdornment position="end">
                                                     <IconButton onClick={handleCopyClick} edge="end" >
                                                         <ContentCopyIcon fontSize="small" />
