@@ -16,7 +16,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         <Grid item xs={12} md="auto" lg="auto" sx={{ position: "fixed", flexBasis: "200px", overflowX: "hidden", flexShrink: 0, minWidth: "200px" }}>
           <AdminSidebar />
         </Grid>
-        <Grid item xs={12} md lg sx={{ padding: "0px" }}>
+        <Grid item xs={12} md lg sx={{ padding: "0px", ml:20 }}>
           {children}
         </Grid>
       </Grid>
