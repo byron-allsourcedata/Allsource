@@ -232,7 +232,7 @@ class UserPersistence:
         self.db.commit()
 
     def confirm_stripe_connect(self, user_id: int):
-        self.db.query(Users).filter(Users.user_id == user_id).update(
+        self.db.query(Users).filter(Users.id == user_id).update(
             {Users.is_stripe_connected: True},
             synchronize_session=False
         )
