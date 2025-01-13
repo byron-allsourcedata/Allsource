@@ -54,7 +54,7 @@ class Users(Base):
     shop_domain = Column(VARCHAR(64), nullable=True)
     connected_stripe_account_id = Column(VARCHAR(128), nullable=True)
     utm_params = Column(JSON, nullable=True)
-    is_stripe_connected = Column(BOOLEAN, default=False, nullable=True)
+    is_stripe_connected = Column(BOOLEAN, default=False, nullable=False)
 
 
 User = Users
