@@ -5,6 +5,7 @@ import json
 from typing import Optional
 from models.partners import Partners
 from persistence.user_persistence import UserPersistence
+from services.referral import ReferralService
 from persistence.partners_persistence import PartnersPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.plans_persistence import PlansPersistence
@@ -17,15 +18,13 @@ logger = logging.getLogger(__name__)
 
 class PartnersService:
 
-    def __init__(self,
-        partners_persistence: PartnersPersistence,
-        user_persistence: UserPersistence,
-        send_grid_persistence: SendgridPersistence,
-        plans_persistence: PlansPersistence):
+    def __init__(self, partners_persistence: PartnersPersistence, user_persistence: UserPersistence, send_grid_persistence: SendgridPersistence,
+                 plans_persistence: PlansPersistence, referral_service: ReferralService):
         self.partners_persistence = partners_persistence
         self.user_persistence = user_persistence
         self.send_grid_persistence = send_grid_persistence
         self.plans_persistence = plans_persistence
+        self.referral_service = referral_service
 
 
     def get_user_info(self, user_id: int):

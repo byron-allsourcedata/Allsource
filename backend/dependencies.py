@@ -191,16 +191,22 @@ def get_integration_service(db: Session = Depends(get_db),
                               domain_persistence,
                               suppression_persitence, epi_persistence)
 
+def get_referral_service(referral_persistence: ReferralDiscountCodesPersistence = Depends(get_referral_persistence_service),
+                         user_persistence: UserPersistence = Depends(get_user_persistence_service)):
+    return ReferralService(referral_persistence_service=referral_persistence, user_persistence=user_persistence)
+
 def get_partners_service(
                         partners_persistence: PartnersPersistence = Depends(get_partners_persistence),
                         user_persistence: UserPersistence = Depends(get_user_persistence_service),
                         send_grid_persistence: SendgridPersistence = Depends(get_send_grid_persistence_service),
-                        plans_persistence: PlansPersistence = Depends(get_plans_persistence)):
+                        plans_persistence: PlansPersistence = Depends(get_plans_persistence),
+                        referral_service: ReferralService = Depends(get_referral_service)):
     return PartnersService(
-        partners_persistence,
-        user_persistence,
-        send_grid_persistence,
-        plans_persistence
+        partners_persistence=partners_persistence,
+        user_persistence=user_persistence,
+        send_grid_persistence=send_grid_persistence,
+        plans_persistence=plans_persistence,
+        referral_service=referral_service
     )
 
 def get_users_auth_service(db: Session = Depends(get_db),
@@ -502,8 +508,3 @@ def check_api_key(maximiz_api_key = Header(None), domain_persistence: UserDomain
             return domains[0]
         raise HTTPException(status_code=404, detail={'status': DomainStatus.DOMAIN_NOT_FOUND.value})
     raise HTTPException(status_code=401, detail={'status': UserAuthorizationStatus.INVALID_API_KEY.value})
-
-
-def get_referral_service(referral_persistence: ReferralDiscountCodesPersistence = Depends(get_referral_persistence_service),
-                         user_persistence: UserPersistence = Depends(get_user_persistence_service)):
-    return ReferralService(referral_persistence_service=referral_persistence, user_persistence=user_persistence)
