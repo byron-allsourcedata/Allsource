@@ -18,7 +18,7 @@ interface PartnerData {
 }
 
 interface FormUploadPopupProps {
-    isMaster: boolean;
+    isMaster?: boolean;
     open: boolean;
     fileData: {id: number, email: string, fullName: string, companyName: string, commission: string}
     onClose: () => void;

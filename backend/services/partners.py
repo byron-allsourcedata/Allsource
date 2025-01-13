@@ -2,6 +2,7 @@ import logging
 import os
 import hashlib
 import json
+from urllib.parse import unquote
 from typing import Optional
 from models.partners import Partners
 from persistence.user_persistence import UserPersistence
@@ -27,7 +28,7 @@ class PartnersService:
         self.referral_service = referral_service
 
 
-    def get_user_info(self, user_id: int):
+    def get_user_info(self, user_id=None):
         user_data = {}
         user_data["subscription"] = "--"
         user_data["payment_date"] = None
@@ -65,9 +66,34 @@ class PartnersService:
         return {"status": True, "data": {"items": result, "totalCount": total_count}}
     
 
+    def get_partner_partners(self, email, start_date, end_date, page, rowsPerPage) -> PartnersObjectResponse:
+        offset = page * rowsPerPage
+        limit = rowsPerPage
+
+        print("frgfr", email)
+        
+        try:
+            decoded_email = unquote(email)
+            partner = self.partners_persistence.get_partner_by_email(decoded_email)
+            print("sfdewfe", partner.id)
+            partners = self.partners_persistence.get_partners_by_partners_id(partner.id, start_date, end_date, offset, limit)
+            total_count = self.partners_persistence.get_total_count_by_id(partner.id)
+            
+            result = []
+            for partner in partners:
+                user_id = partner.user_id
+                user = self.get_user_info(user_id)
+                result.append(self.domain_mapped(partner, user))
+        
+        except Exception as e:
+            logger.debug("Error getting partner data", e)
+            return {"status": False, "error":{"code": 500, "message": f"Unexpected error during getting: {str(e)}"}}
+        return {"status": True, "data": {"items": result, "totalCount": total_count}}
+    
+
     def partners_by_partners_id(self, id: int) -> PartnersObjectResponse:
         if not id:
-            return {"status": False, "error": {"code": 404, "message": "Partner data not found"}}
+            return {"status": False, "error": {"code": 400, "message": "Invalid request with your partner data"}}
         
         try:
             partners = self.partners_persistence.get_partners_by_partners_id(id)
@@ -86,7 +112,7 @@ class PartnersService:
 
     def delete_partner(self, id: int, message: str) -> PartnersObjectResponse:
         if not id:
-            return {"status": False, "error": {"code": 404, "message": "Partner data not found"}}
+            return {"status": False, "error": {"code": 400, "message": "Invalid request with your partner data"}}
         try:
             partner = self.partners_persistence.get_asset_by_id(id)
             self.partners_persistence.terminate_partner(partner_id=id)
@@ -129,7 +155,7 @@ class PartnersService:
 
     async def create_partner(self, full_name: str, email: str, company_name: str, commission: str, isMaster: bool) -> PartnersObjectResponse:
         if not full_name or not email or not company_name or not commission:
-            return {"status": False, "error": {"code": 404, "message": "Partner data not found"}}
+            return {"status": False, "error": {"code": 400, "message": "Invalid request with your partner data"}}
         
         try:
             hash = self.send_referral_in_email(full_name, email)
@@ -170,7 +196,7 @@ class PartnersService:
         company_name: Optional[str] = None
     ) -> PartnersObjectResponse:
         if not partner_id or not field or not value:
-            return {"status": False, "error": {"code": 404, "message": "Partner data not found"}}
+            return {"status": False, "error": {"code": 400, "message": "Invalid request with your partner data"}}
 
         try:
             update_data = {field: value}
