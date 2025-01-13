@@ -8,7 +8,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
-import { showInfoToast } from "./ToastNotification";
+import { showToast } from "./ToastNotification";
 
 interface FAQItem {
     question: string;
@@ -91,7 +91,7 @@ const ReferralOverview: React.FC = () => {
 
     const handleCopyClick = () => {
         navigator.clipboard.writeText(referralLink).then(() => {
-            showInfoToast('Referral link copied')
+            showToast('Referral link copied')
         }).catch(err => {
         });
     };
