@@ -91,28 +91,28 @@ class PartnersService:
         try:
             partner = self.partners_persistence.get_asset_by_id(id)
             self.partners_persistence.terminate_partner(partner_id=id)
-            self.send_message_in_email(message, partner.email)
+            self.send_message_in_email(partner.name, message, partner.email)
             return {"status": True}
         except Exception as e:
             logger.debug('Error deleting partner', e)
             return {"status": False, "error":{"code": 500, "message": f"Unexpected error during deletion: {str(e)}"}}
     
 
-    def send_message_in_email(self, message: str, email: str):
+    def send_message_in_email(self, full_name: str, message: str, email: str):
         mail_object = SendgridHandler()
         template_id = self.send_grid_persistence.get_template_by_alias(
-            SendgridTemplate.PARTNER_TEMPLATE.value)
+            SendgridTemplate.PARTNER_MESSAGE_TEMPLATE.value)
         mail_object.send_sign_up_mail(
             to_emails=email,
             template_id=template_id,
-            template_placeholder={"plan_name": message, "email": email},
+            template_placeholder={"full_name": full_name, "message": message, "email": email},
         )
     
 
     def send_referral_in_email(self, full_name: str, email: str):
         mail_object = SendgridHandler()
         template_id = self.send_grid_persistence.get_template_by_alias(
-            SendgridTemplate.PARTNER_TEMPLATE.value)
+            SendgridTemplate.PARTNER_INVITE_TEMPLATE.value)
         md5_token_info = {
             'user_mail': email,
             'salt': os.getenv('SECRET_SALT')
@@ -187,7 +187,7 @@ class PartnersService:
                 logger.debug("Database error during updation")
                 return {"status": False, "error": {"code": 500, "message": "Partner not updated"}}
 
-            self.send_message_in_email(message, updated_data.email)
+            self.send_message_in_email(updated_data.name, message, updated_data.email)
 
             user = self.get_user_info(updated_data.user_id)
             return {"status": True, "data": self.domain_mapped(updated_data, user)}

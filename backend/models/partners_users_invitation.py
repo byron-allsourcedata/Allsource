@@ -11,6 +11,7 @@ class ParntersUsersInvitation(Base):
     email = Column(VARCHAR(64), nullable=False)
     name = Column(VARCHAR(64), nullable=False)
     status = Column(VARCHAR(16), default="invite sent", nullable=False)
+    join_date = Column(TIMESTAMP, nullable=True)
     created_at = Column(TIMESTAMP, nullable=False)
     updated_at = Column(TIMESTAMP, nullable=False)
     
@@ -21,6 +22,7 @@ class ParntersUsersInvitation(Base):
                 "partner_id": self.partner_id,
                 "status": self.status,
                 "email": self.email,
+                "join_date": self.join_date
             }
 
 event.listen(ParntersUsersInvitation, "before_insert", create_timestamps)

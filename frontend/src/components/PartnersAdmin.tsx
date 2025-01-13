@@ -392,7 +392,6 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                         minHeight: '77vh',
                         '@media (max-width: 600px)': {margin: '0rem auto 0rem'}
                     }}>
-                            <>
                                 <Box>
                                     <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', mb: 2, alignItems: 'center', gap: 2 }}>
                                         <Tabs
@@ -625,7 +624,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                         ))}
                                                     </TableRow>
                                                 </TableHead>
-                                                    <TableBody>
+                                                <TableBody>
                                                         {partners.map((data) => (
                                                             <TableRow key={data.id} sx={{
                                                                 ...suppressionsStyles.tableBodyRow,
@@ -715,74 +714,10 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                                     <IconButton onClick={(event) => handleOpenMenu(event, data)} sx={{ ':hover': { backgroundColor: 'transparent', }}} >
                                                                         <Image src='/more_horizontal.svg' alt='more' height={16.18} width={22.91} />
                                                                     </IconButton>
-                                                                        <Popover
-                                                                            open={open}
-                                                                            anchorEl={menuAnchor}
-                                                                            onClose={handleCloseMenu}
-                                                                            anchorOrigin={{
-                                                                                vertical: 'bottom',
-                                                                                horizontal: 'left',
-                                                                            }}
-                                                                            >
-                                                                            <List
-                                                                                sx={{ 
-                                                                                    width: '100%', maxWidth: 360}}
-                                                                                >
-                                                                                <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {}}>
-                                                                                    <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Payment history"/>
-                                                                                </ListItemButton>
-                                                                                <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {}}>
-                                                                                    <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Reward history"/>
-                                                                                </ListItemButton>
-                                                                                {selectedRowData?.status === "Active" 
-                                                                                ?   <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
-                                                                                        handleNoticeOpenPopup()
-                                                                                        setEnabledData({ 
-                                                                                            id: selectedRowData.id});
-                                                                                        handleCloseMenu()
-                                                                                    }}>
-                                                                                        <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Disable"/>
-                                                                                    </ListItemButton>
-                                                                                :   <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
-                                                                                        setEnabled()
-                                                                                        setEnabledData({ 
-                                                                                            id: selectedRowData.id});
-                                                                                        handleCloseMenu()
-                                                                                    }}>
-                                                                                        <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Enable"/>
-                                                                                    </ListItemButton>
-                                                                                }
-                                                                                <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
-                                                                                    handleNoticeOpenPopup()
-                                                                                    setEnabledData({
-                                                                                        id: selectedRowData.id,
-                                                                                        fullName: selectedRowData.partner_name});
-                                                                                    handleCloseMenu()
-                                                                                }}>
-                                                                                    <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Terminate"/>
-                                                                                </ListItemButton>
-                                                                                <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
-                                                                                    setFileData({
-                                                                                        id: selectedRowData.id,
-                                                                                        email: selectedRowData.email,
-                                                                                        fullName: selectedRowData.partner_name,
-                                                                                        companyName: selectedRowData.sources,
-                                                                                        commission: selectedRowData.commission,
-                                                                                    });
-                                                                                    handleFormOpenPopup()
-                                                                                    handleCloseMenu()
-                                                                                }}>
-                                                                                    <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Edit"/>
-                                                                                </ListItemButton>
-                                                                                <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {}}>
-                                                                                    <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Log info"/>
-                                                                                </ListItemButton>
-                                                                            </List>
-                                                                        </Popover>
                                                                 </TableCell>
                                                             </TableRow>
                                                         ))}
-                                                    </TableBody>
+                                                </TableBody>
                                             </Table>
                                         </TableContainer>
                                         {errorResponse && !loading && (
@@ -824,7 +759,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                         enabledData={enabledData} 
                                         open={noticePopupOpen} 
                                         onClose={handleNoticeClosePopup}  />
-                                </Box>
+                                    </Box>
                                 <Box sx={{ display: 'flex', justifyContent: 'end' }}>
                                     <CustomTablePagination
                                         count={totalCount}
@@ -835,7 +770,6 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                         rowsPerPageOptions={[10, 25, 50, 100]}
                                     />
                                 </Box>
-                            </>
                         
                     </Box>
                     <CalendarPopup

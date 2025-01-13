@@ -84,7 +84,7 @@ def get_partners_invitations_persistence(db: Session = Depends(get_db)) -> Parnt
 
 def get_accounts_service(
         accounts_persistence: ParntersInvitationsPersistence = Depends(get_partners_invitations_persistence),
-    partners_persistence: PartnersPersistence =  Depends(get_partners_persistence)):
+        partners_persistence: PartnersPersistence = Depends(get_partners_persistence)):
     return AccountsService(accounts_persistence=accounts_persistence, partners_persistence=partners_persistence)
 
 def get_plans_persistence(db: Session = Depends(get_db)):
