@@ -367,3 +367,8 @@ def get_billing_history_by_userid(customer_id, page, per_page):
     max_page = math.ceil(count / per_page)
     billing_history = billing_history[(page - 1) * per_page:min(page * per_page, count)]
     return billing_history, count, max_page
+
+
+def get_stripe_account_info(stripe_account_id):
+    account = stripe.Account.retrieve(stripe_account_id)
+    return account
