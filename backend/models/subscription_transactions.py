@@ -14,6 +14,7 @@ class SubscriptionTransactions(Base):
     platform_subscription_id = Column(VARCHAR, nullable=True)
     stripe_request_created_at = Column(TIMESTAMP, nullable=True)
     transaction_id = Column(VARCHAR, nullable=True)
+    charge_id = Column(VARCHAR, nullable=True)
     status = Column(VARCHAR, nullable=True)
     plan_name = Column(VARCHAR, nullable=True)
     start_date = Column(TIMESTAMP, nullable=True)

@@ -259,7 +259,10 @@ class SettingsService:
     def timestamp_to_date(self, timestamp):
         return datetime.fromtimestamp(timestamp)
 
-    def extract_subscription_details(self, customer_id, prospect_credits, user_id):
+    def extract_subscription_details(self, user):
+        customer_id = user.get('customer_id')
+        prospect_credits = user.get('prospect_credits')
+        user_id = user.get('id')
         subscription = get_billing_details_by_userid(customer_id)
         user_subscription = self.subscription_service.get_user_subscription(user_id=user_id)
         current_plan = self.plan_persistence.get_current_plan(user_id=user_id)
@@ -268,11 +271,17 @@ class SettingsService:
         subscription_details = None
         total_key = 'monthly_total' if current_plan.interval == 'month' else 'yearly_total'
         plan_name = f"{current_plan.title} {'yearly' if current_plan.interval == 'year' else ''}".strip()
+        next_billing_date = None
+        total_sum = None
         if subscription is None and user_subscription:
             if user_subscription.plan_start:
                 billing_cycle = f"{user_subscription.plan_start.strftime('%b %d, %Y')} to {user_subscription.plan_end.strftime('%b %d, %Y')}" 
             else:
                 billing_cycle = 'Free trial'
+                
+            if user.get('source_platform') == 'shopify':
+                next_billing_date = user_subscription.plan_end.strftime('%b %d, %Y')
+                total_sum = current_plan.price
                 
             subscription_details = {
                 'billing_cycle': billing_cycle,
@@ -280,8 +289,8 @@ class SettingsService:
                 'domains': f"{user_limit_domain}/{plan_limit_domain}",
                 'prospect_credits': 'Coming soon',
                 'overage': 'free' if user_subscription.lead_credit_price == -1 else user_subscription.lead_credit_price,
-                'next_billing_date': None,
-                total_key: None,
+                'next_billing_date': next_billing_date,
+                total_key: total_sum,
                 'active': True if user_subscription.status == 'active' else False,
             }
         elif subscription and user_subscription:
@@ -338,8 +347,7 @@ class SettingsService:
     def get_billing(self, user: dict):
         result = {}
         current_plan = self.plan_persistence.get_current_plan(user_id=user.get('id'))
-        result['billing_details'] = self.extract_subscription_details(user.get('customer_id'),
-                                                                      user.get('prospect_credits'), user.get('id'))
+        result['billing_details'] = self.extract_subscription_details(user=user)
         if user.get('source_platform') == 'shopify':
             result['status'] = 'hide'
             return result
@@ -360,13 +368,13 @@ class SettingsService:
         for billing_data in billing_history:
             billing_hash = {}
             if isinstance(billing_data, stripe.Invoice):
-                if billing_data.subtotal <= 0:
+                if billing_data.total <= 0:
                     continue
                 line_items = billing_data.lines.data
                 billing_hash['date'] = self.timestamp_to_date(line_items[0].period.start)
                 billing_hash['invoice_id'] = billing_data.id
                 billing_hash['pricing_plan'] = determine_plan_name_from_product_id(line_items[0].plan.product)
-                billing_hash['total'] = billing_data.subtotal / 100
+                billing_hash['total'] = billing_data.total / 100
                 billing_hash['status'] = self.map_status(billing_data.status)
 
             elif isinstance(billing_data, stripe.Charge):
@@ -397,9 +405,9 @@ class SettingsService:
     def get_billing_history(self, user: dict, page, per_page):
         result = {}
         if user.get('source_platform') == 'shopify':
-            return 'hide'
-        result['billing_history'], result['count'], result['max_page'] = self.extract_billing_history(
-            user.get('customer_id'), page, per_page)
+            result['billing_history'], result['count'], result['max_page'] = self.subscription_service.get_billing_history_shopify(user.get('id'), page, per_page)
+        else:
+            result['billing_history'], result['count'], result['max_page'] = self.extract_billing_history(user.get('customer_id'), page, per_page)
         return result
 
     def add_card(self, user: dict, payment_method_id):

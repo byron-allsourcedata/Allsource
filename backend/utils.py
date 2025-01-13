@@ -8,6 +8,9 @@ def get_utc_aware_date():
 def get_utc_aware_date_for_postgres():
     return get_utc_aware_date().isoformat()[:-6] + "Z"
 
+def timestamp_to_date(timestamp):
+        return datetime.fromtimestamp(timestamp)
+
 def extract_first_email(text: str) -> str:
         email_regex = r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+"
         emails = re.findall(email_regex, text)
