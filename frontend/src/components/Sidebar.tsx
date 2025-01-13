@@ -191,12 +191,26 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
     const pathname = usePathname();
     const [currentDomain, setCurrentDomain] = useState<string | null>(null);
     const [activatePercent, setActivatePercent] = useState<number>(0);
+    const [isPartnerAvailable, setIsPartnerAvailable] = useState(false);
     useEffect(() => {
         const storedDomain = sessionStorage.getItem('current_domain');
         if (storedDomain) {
             setCurrentDomain(storedDomain);
         }
     }, []);
+
+    const checkPartner = () => {
+        setTimeout(() => {
+            const storedMe = sessionStorage.getItem('me');
+            if (storedMe) {
+                const storedData = JSON.parse(storedMe);
+                setIsPartnerAvailable(storedData.partner)
+            }
+            else {
+                setIsPartnerAvailable(false) 
+            }
+        }, 7000) //NEED this test in dev with 2500
+    }   
 
     useEffect(() => {
         if (currentDomain) {
@@ -206,6 +220,10 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
             }
         }
     }, [currentDomain]);
+
+    useEffect(() => {
+        checkPartner()
+    }, []);
     
     const handleNavigation = async (route: string) => {
         try {
@@ -282,7 +300,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                     </ListItemIcon>
                     <ListItemText primary="Suppressions" />
                 </ListItem>
-                {partner && <ListItem button onClick={() => handleNavigation('/partners')} sx={isActive('/partners') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                {isPartnerAvailable && <ListItem button onClick={() => handleNavigation('/partners')} sx={isActive('/partners') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <AccountBoxIcon />
                     </ListItemIcon>

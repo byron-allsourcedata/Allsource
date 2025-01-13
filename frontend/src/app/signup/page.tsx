@@ -15,6 +15,7 @@ import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 const UTM_STORAGE_KEY = 'utm_params'
 
 const Signup: React.FC = () => {
+  const { partner } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
   const is_with_card = searchParams.get('is_with_card');
@@ -69,7 +70,7 @@ const Signup: React.FC = () => {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('token');
       if (token) {
-        router.push('/dashboard');
+        router.push(partner ? '/partners' : '/dashboard');
       }
     }
   }, [router]);
@@ -227,7 +228,7 @@ const Signup: React.FC = () => {
               break;
             case "PIXEL_INSTALLATION_NEEDED":
               get_me()
-              router.push('/dashboard');
+              router.push(partner ? '/partners' : '/dashboard');
               break;
             default:
               get_me()
@@ -320,7 +321,7 @@ const Signup: React.FC = () => {
                 switch (response.data.status) {
                   case 'SUCCESS':
                     get_me()
-                    router.push('/dashboard');
+                    router.push(partner ? '/partners' : '/dashboard');
                     break;
                   case 'NEED_CHOOSE_PLAN':
                     get_me()
@@ -350,7 +351,7 @@ const Signup: React.FC = () => {
                     break;
                   case "PIXEL_INSTALLATION_NEEDED":
                     get_me()
-                    router.push('/dashboard');
+                    router.push(partner ? '/partners' : '/dashboard');
                     break;
                   case "EMAIL_ALREADY_EXISTS":
                     router.push('/signin');

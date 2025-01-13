@@ -38,7 +38,7 @@ const AccountSetup = () => {
   const [fullName, setFullName] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
 
-  const { full_name: userFullName, email: userEmail } = useUser();
+  const { full_name: userFullName, email: userEmail, partner } = useUser();
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -236,7 +236,7 @@ const AccountSetup = () => {
           if (response.data.stripe_payment_url) {
             router.push(`${response.data.stripe_payment_url}`)
           } else {
-            router.push("/dashboard");
+            router.push(partner ? '/partners' : '/dashboard');
           }
           break;
         case "NEED_EMAIL_VERIFIED":
