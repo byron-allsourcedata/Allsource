@@ -368,7 +368,7 @@ const ReferralOverview: React.FC = () => {
                         </Box>
                     </Box>
 
-                    <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', backgroundColor: 'rgba(255, 247, 247, 1)', borderRadius: '4px', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.5rem' }}>
+                    {/* <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', backgroundColor: 'rgba(255, 247, 247, 1)', borderRadius: '4px', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.5rem' }}>
                         <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 2, alignItems: 'center', '@media (max-width: 600px)': { flexDirection: 'column', gap: 3 } }}>
                             <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 2, alignItems: 'center' }}>
                                 <Box sx={{
@@ -409,7 +409,7 @@ const ReferralOverview: React.FC = () => {
                             </Button>
                         </Box>
 
-                    </Box>
+                    </Box> */}
 
                     <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 1, '@media (max-width: 1200px)': { flexDirection: 'column' } }}>
                         <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'center', alignItems: 'start', borderRadius: '4px', padding: '1rem 1.5rem', gap: 2, maxHeight: '245px', '@media (max-width: 900px)': { display: 'none' }, }}>
