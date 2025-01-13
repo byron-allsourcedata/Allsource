@@ -30,7 +30,7 @@ from persistence.partners_persistence import PartnersPersistence
 from persistence.partners_invations_persistence import ParntersInvitationsPersistence
 from persistence.user_persistence import UserPersistence
 from persistence.integrations.external_apps_installations import ExternalAppsInstallationsPersistence
-from persistence.referral_persistence import ReferralPersistence
+from persistence.referral_discount_code_persistence import ReferralDiscountCodesPersistence
 from schemas.auth_token import Token
 from services.accounts import AccountsService
 from services.admin_customers import AdminCustomersService
@@ -79,6 +79,9 @@ def get_partners_assets_service(partners_asset_persistence: PartnersAssetPersist
 def get_partners_persistence(db: Session = Depends(get_db)) -> PartnersPersistence:
     return PartnersPersistence(db)
 
+def get_referral_discount_codes_persistence(db: Session = Depends(get_db)) -> ReferralDiscountCodesPersistence:
+    return ReferralDiscountCodesPersistence(db)
+
 def get_partners_invitations_persistence(db: Session = Depends(get_db)) -> ParntersInvitationsPersistence:
     return ParntersInvitationsPersistence(db)
 
@@ -108,7 +111,7 @@ def get_settings_persistence(db: Session = Depends(get_db)):
 
 
 def get_referral_persistence_service(db: Session = Depends(get_db)):
-    return ReferralPersistence(db=db)
+    return ReferralDiscountCodesPersistence(db=db)
 
 
 def get_user_persistence_service(db: Session = Depends(get_db)):
@@ -210,6 +213,7 @@ def get_users_auth_service(db: Session = Depends(get_db),
                            integration_service: IntegrationService = Depends(
                                get_integration_service),
                            domain_persistence=Depends(get_user_domain_persistence),
+                           referral_persistence_service: ReferralDiscountCodesPersistence = Depends(get_referral_discount_codes_persistence),
                            subscription_service: SubscriptionService = Depends(get_subscription_service),
                            partners_service: PartnersService = Depends(
                                get_partners_service)):
@@ -217,7 +221,7 @@ def get_users_auth_service(db: Session = Depends(get_db),
                      send_grid_persistence_service=send_grid_persistence_service,
                      subscription_service=subscription_service,
                      plans_persistence=plans_persistence, integration_service=integration_service, partners_service=partners_service,
-                     domain_persistence=domain_persistence
+                     domain_persistence=domain_persistence, referral_persistence_service=referral_persistence_service
                      )
 
 def get_admin_customers_service(db: Session = Depends(get_db),
@@ -461,9 +465,11 @@ def get_webhook(subscription_service: SubscriptionService = Depends(get_subscrip
 def get_payments_service(plans_service: PlansService = Depends(get_plans_service),
                          plan_persistence: PlansPersistence = Depends(get_plans_persistence),
                          integration_service: IntegrationService = Depends(get_integration_service),
-                         subscription_service: SubscriptionService = Depends(get_subscription_service)):
+                         subscription_service: SubscriptionService = Depends(get_subscription_service),
+                         referral_discount_codes_persistence: ReferralDiscountCodesPersistence = Depends(get_referral_discount_codes_persistence)):
     return PaymentsService(plans_service=plans_service, plan_persistence=plan_persistence,
-                           subscription_service=subscription_service, integration_service=integration_service)
+                           subscription_service=subscription_service, integration_service=integration_service,
+                           referral_discount_codes_persistence=referral_discount_codes_persistence)
 
 
 def get_company_info_service(db: Session = Depends(get_db), user=Depends(check_user_authentication),
@@ -498,7 +504,6 @@ def check_api_key(maximiz_api_key = Header(None), domain_persistence: UserDomain
     raise HTTPException(status_code=401, detail={'status': UserAuthorizationStatus.INVALID_API_KEY.value})
 
 
-def get_referral_service(user=Depends(check_user_authentication),
-                         referral_persistence: ReferralPersistence = Depends(get_referral_persistence_service)
-                         ):
-    return ReferralService(user=user, referral_persistence_service=referral_persistence)
+def get_referral_service(referral_persistence: ReferralDiscountCodesPersistence = Depends(get_referral_persistence_service),
+                         user_persistence: UserPersistence = Depends(get_user_persistence_service)):
+    return ReferralService(referral_persistence_service=referral_persistence, user_persistence=user_persistence)

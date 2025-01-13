@@ -13,6 +13,7 @@ class AuthGoogleData(BaseModel):
     coupon: Optional[str] = None
     ift: Optional[str] = None
     ftd: Optional[str] = None
+    referral: Optional[str] = None
     utm_params: Optional[UtmParams] = None
 
     

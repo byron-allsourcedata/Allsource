@@ -101,6 +101,7 @@ class SignUpStatus(Enum):
     FILL_COMPANY_DETAILS = 'FILL_COMPANY_DETAILS'
     TEAM_INVITATION_INVALID = 'TEAM_INVITATION_INVALID'
     INCORRECT_STATUS = 'INCORRECT_STATUS'
+    INCORRECT_REFERRAL_CODE = 'INCORRECT_REFERRAL_CODE'
     SUCCESS = 'SUCCESS'
 
 
@@ -224,3 +225,7 @@ class ProccessDataSyncResult(Enum):
     
 class PlanAlias(Enum):
     PARTNERS = 'partners'
+    
+class ProgramType(Enum):
+    PARTNER = 'partner'
+    REFERRAL = 'referral'

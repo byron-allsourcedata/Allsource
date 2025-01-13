@@ -4,6 +4,7 @@ from typing import List
 import stripe
 from config.stripe import StripeConfig
 import pytz
+from persistence.referral_discount_code_persistence import ReferralDiscountCodesPersistence
 from models.plans import SubscriptionPlan
 from enums import SubscriptionStatus, SourcePlatformEnum
 from persistence.plans_persistence import PlansPersistence
@@ -72,11 +73,13 @@ def compare_prices(price_id1: int, price_id2: int) -> int:
 class PaymentsService:
 
     def __init__(self, plans_service: PlansService, plan_persistence: PlansPersistence,
-                 subscription_service: SubscriptionService, integration_service: IntegrationService):
+                 subscription_service: SubscriptionService, integration_service: IntegrationService,
+                 referral_discount_codes_persistence: ReferralDiscountCodesPersistence):
         self.plans_service = plans_service
         self.plan_persistence = plan_persistence
         self.subscription_service = subscription_service
         self.integration_service = integration_service
+        self.referral_discount_codes_persistence = referral_discount_codes_persistence
 
     def upgrade_subscription(self, current_subscription, platform_subscription_id, price_id):
         if current_subscription['schedule']:
@@ -109,16 +112,19 @@ class PaymentsService:
             
         customer_id = self.plans_service.get_customer_id(user)
         trial_period = 0
+        discount_code = None
         if not self.plan_persistence.get_user_subscription(user.get('id')):
             trial_period = self.plan_persistence.get_plan_by_price_id(price_id).trial_days
+            discount_code = self.referral_discount_codes_persistence.get_discount_code(user_id=user.get('id'))
         if get_default_payment_method(customer_id):
-            status_subscription = renew_subscription(price_id, customer_id, trial_period)
+            status_subscription = renew_subscription(price_id, customer_id)
             return {"status_subscription": status_subscription}
         result_url = create_stripe_checkout_session(
             customer_id=self.plans_service.get_customer_id(user),
             line_items=[{"price": price_id, "quantity": 1}],
             mode="subscription",
-            trial_period=trial_period
+            trial_period=trial_period,
+            coupon=discount_code
         )
         result_url['source_platform'] = user.get('source_platform')
         return result_url

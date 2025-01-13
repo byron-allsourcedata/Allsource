@@ -19,6 +19,7 @@ from models.users_account_notification import UserAccountNotification
 from persistence.plans_persistence import PlansPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.user_persistence import UserPersistence
+from persistence.referral_discount_code_persistence import ReferralDiscountCodesPersistence
 from schemas.auth_google_token import AuthGoogleData
 from schemas.users import UserSignUpForm, UserLoginForm, ResetPasswordForm, UtmParams
 from services.integrations.base import IntegrationService
@@ -30,6 +31,7 @@ from .jwt_service import get_password_hash, create_access_token, verify_password
 from .sendgrid import SendgridHandler
 from .stripe_service import create_stripe_checkout_session
 from .subscriptions import SubscriptionService
+from encryption_utils import decrypt_data
 
 EMAIL_NOTIFICATIONS = 'email_notifications'
 logger = logging.getLogger(__name__)
@@ -39,7 +41,7 @@ class UsersAuth:
     def __init__(self, db: Session, payments_service: PaymentsPlans, user_persistence_service: UserPersistence,
                  send_grid_persistence_service: SendgridPersistence, subscription_service: SubscriptionService,
                  plans_persistence: PlansPersistence, integration_service: IntegrationService, partners_service: PartnersService,
-                 domain_persistence: UserDomainsPersistence
+                 domain_persistence: UserDomainsPersistence, referral_persistence_service: ReferralDiscountCodesPersistence
                  ):
         self.db = db
         self.payments_service = payments_service
@@ -50,6 +52,7 @@ class UsersAuth:
         self.integration_service = integration_service
         self.partners_service = partners_service
         self.domain_persistence = domain_persistence
+        self.referral_persistence_service = referral_persistence_service
         self.UNLIMITED = -1
 
     def get_utc_aware_date(self):
@@ -181,6 +184,15 @@ class UsersAuth:
         ift = auth_google_data.ift
         awc = auth_google_data.awc if auth_google_data.awc else auth_google_data.utm_params.awc
         ftd = auth_google_data.ftd
+        referral = auth_google_data.referral
+        
+        if referral:
+            if not self.is_code_validation(referral):
+                logger.error("Invalid referral code")
+                return {
+                    'is_success': True,
+                    'status': SignUpStatus.INCORRECT_REFERRAL_CODE
+                }
         
         if shopify_data:
             try:
@@ -264,6 +276,9 @@ class UsersAuth:
             self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
 
         self.user_persistence_service.email_confirmed(user_object.id)
+        
+        if referral:
+            self.fill_referral_users(referral=referral, user_object=user_object)
 
         if referral_token:
             self.user_persistence_service.book_call_confirmed(user_object.id)
@@ -451,6 +466,16 @@ class UsersAuth:
         awc = user_form.awc if user_form.awc else user_form.utm_params.awc
         ift = user_form.ift
         ftd = user_form.ftd
+        referral = user_form.referral
+        
+        if referral:
+            if not self.is_code_validation(referral):
+                logger.error("Invalid referral code")
+                return {
+                    'is_success': True,
+                    'status': SignUpStatus.INCORRECT_REFERRAL_CODE
+                }
+            
         if shopify_data:
             try:
                 with self.integration_service as service:
@@ -462,11 +487,13 @@ class UsersAuth:
                 if not shopify_access_token or not shop_id:
                     logger.error("Invalid Shopify access token or shop ID.")
                     return {
+                        'is_success': True,
                         'status': OauthShopify.ERROR_SHOPIFY_TOKEN.value
                     }
             except Exception as e:
                 logger.exception("An error occurred while processing Shopify data.")
                 return {
+                    'is_success': True,
                     'status': OauthShopify.ERROR_SHOPIFY_TOKEN.value
                 }
             
@@ -531,6 +558,9 @@ class UsersAuth:
             self.user_persistence_service.book_call_confirmed(user_object.id)
             self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)
             
+        if referral:
+            self.fill_referral_users(referral=referral, user_object=user_object)
+            
         if is_with_card is False and teams_token is None and referral_token is None and shopify_data is None:
             return self._send_email_verification(user_object, token)
         
@@ -570,6 +600,25 @@ class UsersAuth:
             self.partners_service.setUser(user_object.email, user_object.id, "active")
         user_object.source_platform = SourcePlatformEnum.SHOPIFY.value
         self.db.commit()
+    
+    def fill_referral_users(self, referral, user_object):
+        parent_user_id, discount_code_id = decrypt_data(referral).split(':')
+        self.referral_persistence_service.save_referral_users(user_id=user_object.id, parent_user_id=parent_user_id, discount_code_id=discount_code_id)
+    
+    def is_code_validation(self, referral):
+        try:
+            user_id, discount_code_id = decrypt_data(referral).split(':')
+        except:
+            return False
+        user = self.user_persistence_service.get_user_by_id(user_id)
+        if not user:
+            return False
+        
+        referral_discount_code = self.referral_persistence_service.get_referral_discount_code_by_id(discount_code_id)
+        if not referral_discount_code:
+            return False
+        
+        return True
        
     def _send_email_verification(self, user_object, token):
         template_id = self.send_grid_persistence_service.get_template_by_alias(SendgridTemplate.EMAIL_VERIFICATION_TEMPLATE.value)

@@ -28,11 +28,10 @@ def get_default_payment_method(customer_id):
     return default_payment_method_id
 
 
-def renew_subscription(new_price_id, customer_id, trial_period):
+def renew_subscription(new_price_id, customer_id):
     new_subscription = stripe.Subscription.create(
         customer=customer_id,
-        items=[{"price": new_price_id}],
-        trial_period_days=trial_period if trial_period else None
+        items=[{"price": new_price_id}]
     )
     if new_subscription.status == 'trialing':
         return 'active'

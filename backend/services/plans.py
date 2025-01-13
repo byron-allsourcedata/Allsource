@@ -40,7 +40,7 @@ class PlansService:
         stripe_plans = self.plans_persistence.get_stripe_plans()
         user_subscription = self.plans_persistence.get_user_subscription(user_id=user.get('id'))
         current_plan = self.plans_persistence.get_current_plan(user_id=user.get('id'))
-        if current_plan.is_free_trial:
+        if current_plan and current_plan.is_free_trial:
             stripe_plans.append(current_plan)
         response = {"stripe_plans": []}
         plan_order = ["Free Trial", "Launch", "Pro", "Growth"]
