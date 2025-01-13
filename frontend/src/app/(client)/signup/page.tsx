@@ -28,6 +28,7 @@ const Signup: React.FC = () => {
   const coupon = searchParams.get('coupon')
   const ift = searchParams.get('ift')
   const ftd = searchParams.get('ftd')
+  const referral = searchParams.get('referral')
   const initialShopifyData = {
     code: searchParams.get('code') || null,
     hmac: searchParams.get('hmac') || null,
@@ -47,6 +48,7 @@ const Signup: React.FC = () => {
     ...{ spi: spi },
     ...{ ift: ift },
     ...{ ftd: ftd },
+    ...{ referral: referral },
   });
   const [formSubmitted, setFormSubmitted] = useState(false);
 
@@ -200,6 +202,12 @@ const Signup: React.FC = () => {
               showErrorToast('Email is associated with an account. Please login');
               router.push('/signin');
               break;
+            case "ERROR_SHOPIFY_TOKEN":
+              showErrorToast('Error shopify token');
+              break;
+            case "INCORRECT_REFERRAL_CODE":
+              showErrorToast('Incorrect referral code');
+              break;
             case "PASSWORD_NOT_VALID":
               showErrorToast('Password not valid');
               break;
@@ -306,6 +314,7 @@ const Signup: React.FC = () => {
                   ift,
                   ftd,
                   utm_params: utmData,
+                  ...{ referral: referral },
                   ...(isShopifyDataComplete && { shopify_data: initialShopifyData })
                 });
 
@@ -347,6 +356,12 @@ const Signup: React.FC = () => {
                     break;
                   case 'TEAM_INVITATION_INVALID':
                     showErrorToast("The email provided is not valid for team invitation.");
+                    break;
+                  case "ERROR_SHOPIFY_TOKEN":
+                    showErrorToast('Error shopify token');
+                    break;
+                  case "INCORRECT_REFERRAL_CODE":
+                    showErrorToast('Incorrect_referral code');
                     break;
                   case "PIXEL_INSTALLATION_NEEDED":
                     get_me()
