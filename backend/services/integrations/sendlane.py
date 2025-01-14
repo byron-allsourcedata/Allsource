@@ -2,8 +2,8 @@ from utils import validate_and_format_phone
 from typing import List
 from fastapi import HTTPException
 import httpx
+from utils import format_phone_number
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from models.five_x_five_users import FiveXFiveUser
 from schemas.integrations.sendlane import SendlaneContact, SendlaneSender
 from schemas.integrations.integrations import DataMap, IntegrationCredentials, ListFromIntegration
@@ -209,7 +209,7 @@ class SendlaneIntegrationService:
 
         if first_email:
             first_email = first_email.split(',')[-1].strip()
-
+        first_phone = format_phone_number(first_phone)
         phone_number = validate_and_format_phone(first_phone)
         
         return SendlaneContact(

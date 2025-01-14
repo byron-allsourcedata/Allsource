@@ -132,6 +132,23 @@ const Signin: React.FC = () => {
           }
         }
         if (responseData) {
+          switch (responseData.shopify_status) {
+            case "ERROR_SHOPIFY_TOKEN":
+              showErrorToast("Error shopify token");
+              break;
+            case "NEED_UPGRADE_PLAN":
+              showErrorToast("Need upgrade plan");
+              break;
+            case "NON_SHOPIFY_ACCOUNT":
+              showErrorToast("Non shopify account");
+              break;
+            case "NO_USER_CONNECTED":
+              showErrorToast("No user connected");
+              break;
+            case "USER_NOT_FOUND":
+              showErrorToast("User not found");
+              break;
+          }
           switch (responseData.status) {
 
             case "SUCCESS":
@@ -230,7 +247,23 @@ const Signin: React.FC = () => {
                     get_me();
                   }
                 }
-
+                switch (response.data.shopify_status) {
+                  case "ERROR_SHOPIFY_TOKEN":
+                    showErrorToast("Error shopify token");
+                    break;
+                  case "NEED_UPGRADE_PLAN":
+                    showErrorToast("Need upgrade plan");
+                    break;
+                  case "NON_SHOPIFY_ACCOUNT":
+                    showErrorToast("Non shopify account");
+                    break;
+                  case "NO_USER_CONNECTED":
+                    showErrorToast("No user connected");
+                    break;
+                  case "USER_NOT_FOUND":
+                    showErrorToast("User not found");
+                    break;
+                }
                 switch (response.data.status) {
                   case 'SUCCESS':
                     router.push(partner ? '/partners' : '/dashboard');

@@ -1,5 +1,6 @@
 import csv
 import io
+from utils import format_phone_number
 from persistence.leads_persistence import LeadsPersistence
 
 
@@ -168,8 +169,8 @@ class LeadsService:
             relevant_data = [
                 result.first_name or 'None',
                 result.last_name or 'None',
-                result.mobile_phone or 'None',
-                result.personal_phone or 'None',
+                format_phone_number(result.mobile_phone) or 'None',
+                format_phone_number(result.personal_phone) or 'None',
                 result.direct_number or 'None',
                 result.personal_address or 'None',
                 result.personal_city or 'None',
@@ -189,7 +190,7 @@ class LeadsService:
                 result.department or 'None',
                 result.company_name or 'None',
                 result.company_domain or 'None',
-                result.company_phone or 'None',
+                format_phone_number(result.company_phone) or 'None',
                 result.company_description or 'None',
                 result.business_email or 'None',
                 result.business_email_last_seen or 'None',

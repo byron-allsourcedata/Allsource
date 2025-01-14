@@ -8,6 +8,7 @@ from fastapi import HTTPException
 from schemas.integrations.mailchimp import MailchimpProfile
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
 import json
+from utils import format_phone_number
 from utils import extract_first_email, validate_and_format_phone
 from typing import List
 import mailchimp_marketing as MailchimpMarketing
@@ -269,7 +270,7 @@ class MailchimpIntegrationsService:
         }
         return MailchimpProfile(
             email=first_email,
-            phone_number=first_phone,
+            phone_number=format_phone_number(first_phone),
             first_name=getattr(five_x_five_user, 'first_name', None),
             last_name=getattr(five_x_five_user, 'last_name', None),
             organization=getattr(five_x_five_user, 'company_name', None),

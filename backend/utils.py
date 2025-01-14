@@ -10,6 +10,20 @@ def get_utc_aware_date_for_postgres():
 
 def timestamp_to_date(timestamp):
         return datetime.fromtimestamp(timestamp)
+    
+def format_phone_number(phones):
+    if phones:
+        phone_list = phones.split(',')
+        formatted_phones = []
+        for phone in phone_list:
+            phone_str = phone.strip()
+            if phone_str.endswith(".0"):
+                phone_str = phone_str[:-2]
+            if not phone_str.startswith("+"):
+                phone_str = f"+{phone_str}"
+            formatted_phones.append(phone_str)
+
+        return ', '.join(formatted_phones)
 
 def extract_first_email(text: str) -> str:
         email_regex = r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+"

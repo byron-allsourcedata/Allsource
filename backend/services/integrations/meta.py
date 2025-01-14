@@ -15,7 +15,7 @@ from fastapi import HTTPException
 from datetime import datetime
 from utils import extract_first_email
 from schemas.integrations.integrations import IntegrationCredentials, DataMap, ListFromIntegration
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from utils import format_phone_number
 from typing import List
 from config.meta import MetaConfig
 
@@ -246,6 +246,7 @@ class MetaIntegrationsService:
             getattr(lead, 'direct_number') or 
             getattr(lead, 'company_phone', None)
         )
+        first_phone = format_phone_number(first_phone)
 
         def hash_value(value):
             return hashlib.sha256(value.encode('utf-8')).hexdigest() if value else ""

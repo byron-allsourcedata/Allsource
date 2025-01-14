@@ -11,9 +11,9 @@ from utils import extract_first_email
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
 import httpx
 import json
+from utils import format_phone_number
 from typing import List
-from utils import validate_and_format_phone
-from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
+from utils import validate_and_format_phone, format_phone_number
 
 
 class KlaviyoIntegrationsService:
@@ -310,7 +310,7 @@ class KlaviyoIntegrationsService:
         if response.status_code != 200:
             raise HTTPException(status_code=400, detail={'status': "Profiles from Klaviyo could not be retrieved"})
         return [self.__mapped_profile_from_klaviyo(profile) for profile in response.json().get('data')]
-
+    
     def __mapped_klaviyo_profile(self, five_x_five_user: FiveXFiveUser) -> KlaviyoProfile:
         first_email = (
             getattr(five_x_five_user, 'business_email') or 
@@ -337,7 +337,7 @@ class KlaviyoIntegrationsService:
         }
         return KlaviyoProfile(
             email=first_email,
-            phone_number=first_phone,
+            phone_number=format_phone_number(first_phone),
             first_name=getattr(five_x_five_user, 'first_name', None),
             last_name=getattr(five_x_five_user, 'last_name', None),
             organization=getattr(five_x_five_user, 'company_name', None),

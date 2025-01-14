@@ -1,5 +1,5 @@
 from datetime import datetime
-import logging
+from utils import format_phone_number
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from persistence.domains import UserDomainsPersistence
 from persistence.leads_persistence import LeadsPersistence
@@ -102,10 +102,10 @@ class ZapierIntegrationService:
             "id": lead.id,
             "first_name": lead.first_name,
             "programmatic_business_emails": lead.programmatic_business_emails,
-            "mobile_phone": lead.mobile_phone,
+            "mobile_phone": format_phone_number(lead.mobile_phone),
             "direct_number": lead.direct_number,
             "gender": lead.gender.lower() if lead.gender else None,
-            "personal_phone": lead.personal_phone,
+            "personal_phone": format_phone_number(lead.personal_phone),
             "business_email": lead.business_email,
             "personal_emails": lead.personal_emails,
             "last_name": lead.last_name,
@@ -113,7 +113,7 @@ class ZapierIntegrationService:
             "personal_state": lead.personal_state,
             "company_name": lead.company_name,
             "company_domain": lead.company_domain,
-            "company_phone": lead.company_phone,
+            "company_phone": format_phone_number(lead.company_phone),
             "company_sic": lead.company_sic,
             "company_address": lead.company_address,
             "company_city": lead.company_city,

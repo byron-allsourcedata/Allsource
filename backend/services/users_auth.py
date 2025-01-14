@@ -396,9 +396,11 @@ class UsersAuth:
             if shopify_data and shopify_status is None:
                 if user_object.source_platform == SourcePlatformEnum.SHOPIFY.value:
                     user_subscription = self.subscription_service.get_user_subscription(user_object.id)
-                    if user_subscription.domains_limit != self.UNLIMITED and \
-                    self.domain_persistence.count_domain(user_object.id) >= user_subscription.domains_limit:
-                        shopify_status = OauthShopify.NEED_UPGRADE_PLAN   
+                    if user_subscription.domains_limit != self.UNLIMITED:
+                        domain = self.domain_persistence.get_domain_by_filter(domain=shopify_data.shop, user_id=user_object.id)
+                        if domain:
+                            if self.domain_persistence.count_domain(user_object.id) >= user_subscription.domains_limit:
+                                shopify_status = OauthShopify.NEED_UPGRADE_PLAN
                 else:
                     shopify_status = OauthShopify.NON_SHOPIFY_ACCOUNT
 
@@ -695,9 +697,11 @@ class UsersAuth:
         if shopify_data and shopify_status is None:
             if user_object.source_platform == SourcePlatformEnum.SHOPIFY.value:
                 user_subscription = self.subscription_service.get_user_subscription(user_object.id)
-                if user_subscription.domains_limit != self.UNLIMITED and \
-                self.domain_persistence.count_domain(user_object.id) >= user_subscription.domains_limit:
-                    shopify_status = OauthShopify.NEED_UPGRADE_PLAN   
+                if user_subscription.domains_limit != self.UNLIMITED:
+                    domain = self.domain_persistence.get_domain_by_filter(domain=shopify_data.shop, user_id=user_object.id)
+                    if domain:
+                        if self.domain_persistence.count_domain(user_object.id) >= user_subscription.domains_limit:
+                            shopify_status = OauthShopify.NEED_UPGRADE_PLAN
             else:
                 shopify_status = OauthShopify.NON_SHOPIFY_ACCOUNT
 
