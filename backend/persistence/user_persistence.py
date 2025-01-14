@@ -113,6 +113,8 @@ class UserPersistence:
                 'connected_stripe_account_id': user.connected_stripe_account_id,
                 'utm_params': user.utm_params,
                 'is_stripe_connected': user.is_stripe_connected,
+                'stripe_connected_email': user.stripe_connected_email,
+                'stripe_connected_currently_due': user.stripe_connected_currently_due,
             }
         self.db.rollback()
         if result_as_object:
@@ -233,9 +235,21 @@ class UserPersistence:
 
     def confirm_stripe_connect(self, user_id: int):
         self.db.query(Users).filter(Users.id == user_id).update(
-            {Users.is_stripe_connected: True},
+            {Users.is_stripe_connected: True,
+             Users.stripe_connected_currently_due: None},
             synchronize_session=False
         )
         self.db.commit()
         return True
+
+    def update_stripe_info(self, user_id: int, email: str = None, currently_due: list = None):
+        update_data = {}
+        if email:
+            update_data[Users.stripe_connected_email] = email
+        if currently_due:
+            update_data[Users.stripe_connected_currently_due] = currently_due
+
+        if update_data:
+            self.db.query(Users).filter(Users.id == user_id).update(update_data, synchronize_session=False)
+            self.db.commit()
 
