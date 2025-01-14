@@ -127,6 +127,18 @@ def save_city_and_state_to_user(session, personal_city, personal_state, five_x_f
     session.execute(leads_locations)
     session.flush()
 
+def format_phone_number(phones):
+        phone_list = phones.split(',')
+        formatted_phones = []
+        for phone in phone_list:
+            phone_str = phone.strip()
+            if phone_str.endswith(".0"):
+                phone_str = phone_str[:-2]
+            if not phone_str.startswith("+"):
+                phone_str = f"+{phone_str}"
+            formatted_phones.append(phone_str)
+ 
+        return ', '.join(formatted_phones)
 
 async def on_message_received(message, session):
     try:
@@ -176,18 +188,26 @@ async def on_message_received(message, session):
                     age_min = age_max = int(age_range.strip())
                 except ValueError:
                     logging.warning(f"Invalid age range format: {age_range}")
-
+                    
+        mobile_phone = convert_to_none(str(user_json.get('MOBILE_PHONE')))
+        personal_phone = convert_to_none(str(user_json.get('PERSONAL_PHONE')))
+        company_phone = convert_to_none(str(user_json.get('COMPANY_PHONE')))
+        if mobile_phone:
+            mobile_phone = format_phone_number(mobile_phone)
+            personal_phone = format_phone_number(personal_phone)
+            company_phone = format_phone_number(company_phone)
+                                                                               
         five_x_five_user = FiveXFiveUser(
             up_id=convert_to_none(user_json.get('UP_ID')),
             cc_id=convert_to_none(user_json.get('CC_ID')),
             first_name=convert_to_none(user_json.get('FIRST_NAME')),
             programmatic_business_emails=convert_to_none(user_json.get('PROGRAMMATIC_BUSINESS_EMAILS')),
-            mobile_phone=convert_to_none(user_json.get('MOBILE_PHONE')),
+            mobile_phone=mobile_phone,
             direct_number=convert_to_none(user_json.get('DIRECT_NUMBER')),
             gender=convert_to_none(user_json.get('GENDER')),
             age_min=age_min,
             age_max=age_max,
-            personal_phone=convert_to_none(user_json.get('PERSONAL_PHONE')),
+            personal_phone=personal_phone,
             business_email=convert_to_none(user_json.get('BUSINESS_EMAIL')),
             personal_emails=convert_to_none(user_json.get('PERSONAL_EMAILS')),
             last_name=convert_to_none(user_json.get('LAST_NAME')),
@@ -195,7 +215,7 @@ async def on_message_received(message, session):
             personal_state=convert_to_none(user_json.get('PERSONAL_STATE')),
             company_name=convert_to_none(user_json.get('COMPANY_NAME')),
             company_domain=convert_to_none(user_json.get('COMPANY_DOMAIN')),
-            company_phone=convert_to_none(user_json.get('COMPANY_PHONE')),
+            company_phone=company_phone,
             company_sic=convert_to_none(user_json.get('COMPANY_SIC')),
             company_address=convert_to_none(user_json.get('COMPANY_ADDRESS')),
             company_city=convert_to_none(user_json.get('COMPANY_CITY')),
@@ -322,12 +342,11 @@ async def on_message_received(message, session):
         save_emails_to_user(session, emails, five_x_five_user_id, 'personal')
         emails = str(user_json.get('ADDITIONAL_PERSONAL_EMAILS', '')).split(', ')
         save_emails_to_user(session, emails, five_x_five_user_id, 'additional_personal')
-
-        mobile_phone = str(user_json.get('MOBILE_PHONE', '')).split(', ')
-        mobile_phone_set = set(mobile_phone)
-        direct_number = [num for num in str(user_json.get('DIRECT_NUMBER', '')).split(', ') if
+                
+        mobile_phone_set = set(mobile_phone.split(', '))
+        direct_number = [num for num in direct_number.split(', ') if
                          num not in mobile_phone_set]
-        personal_phone = [num for num in str(user_json.get('PERSONAL_PHONE', '')).split(', ') if
+        personal_phone = [num for num in personal_phone.split(', ') if
                           num not in mobile_phone_set]
         save_phones_to_user(session, mobile_phone, five_x_five_user_id, 'mobile_phone')
         save_phones_to_user(session, direct_number, five_x_five_user_id, 'direct_number')
