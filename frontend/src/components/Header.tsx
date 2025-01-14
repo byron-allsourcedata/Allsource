@@ -48,7 +48,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
   const [hasNotification, setHasNotification] = useState(NewRequestNotification);
   const router = useRouter();
   const { newNotification } = useSSE();
-  const { full_name: userFullName, email: userEmail, resetUserData, } = useUser();
+  const { full_name: userFullName, email: userEmail, resetUserData, partner } = useUser();
   const meItem = typeof window !== "undefined" ? sessionStorage.getItem("me") : null;
   const meData = meItem ? JSON.parse(meItem) : { full_name: '', email: '' };
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -95,7 +95,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
   };
 
   const handleLogoClick = () => {
-    router.push("/dashboard");
+    router.push(partner ? '/partners' : '/dashboard');
   };
 
   const handleNotificationIconPopupOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
