@@ -1,7 +1,5 @@
 import csv
 import io
-from datetime import datetime, time
-from models.users import Users
 from persistence.leads_persistence import LeadsPersistence
 
 
@@ -9,6 +7,21 @@ class LeadsService:
     def __init__(self, leads_persistence_service: LeadsPersistence, domain):
         self.leads_persistence_service = leads_persistence_service
         self.domain = domain
+        
+    def format_phone_number(self, phones):
+        phone_list = phones.split(',')
+        formatted_phones = []
+        for phone in phone_list:
+            phone_str = phone.strip()
+            if phone_str.endswith(".0"):
+                phone_str = phone_str[:-2]
+            if not phone_str.startswith("+"):
+                phone_str = f"+{phone_str}"
+            formatted_phones.append(phone_str)
+ 
+        return ', '.join(formatted_phones)
+
+
 
     def get_leads(self, page, per_page, from_date, to_date, regions, page_visits, average_time_sec,
                   recurring_visits, sort_by, sort_order, search_query, from_time, to_time, behavior_type, status):
@@ -50,8 +63,8 @@ class LeadsService:
                     'id': lead[0],
                     'first_name': lead[1],
                     'programmatic_business_emails': lead[2],
-                    'mobile_phone': lead[3],
-                    'personal_phone': lead[4].strip() if lead[4] else None,
+                    'mobile_phone': self.format_phone_number(lead[3]) if lead[3] else None,
+                    'personal_phone': self.format_phone_number(lead[4].strip()) if lead[4] else None,
                     'gender': lead[5],
                     'direct_number': (
                             ', '.join(
@@ -66,7 +79,7 @@ class LeadsService:
                     'personal_state': lead[11],
                     'company_name': lead[12],
                     'company_domain': lead[13],
-                    'company_phone': lead[14],
+                    'company_phone': self.format_phone_number(lead[14]) if lead[14] else None,
                     'company_sic': lead[15],
                     'company_address': lead[16],
                     'company_city': lead[17],
