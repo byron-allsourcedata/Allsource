@@ -16,6 +16,7 @@ import PartnersAccounts from "@/components/PartnersAccounts";
 import ReferralRewards from "@/components/ReferralRewards";
 import PartnersAssets from "@/components/PartnersAssets";
 import PartnersMain from "@/components/PartnersMain";
+import PartnersOverview from "@/components/PartnersOverview";
 import { useUser } from '@/context/UserContext';
 import { setTimeout } from "timers/promises";
 
@@ -283,7 +284,7 @@ const Partners: React.FC = () => {
             </Box>
                 <Box sx={{ width: '100%', padding: 0, "@media (max-width: 600px)": { mt: '4.5rem' }, "@media (max-width: 440px)": { mt: '7.5rem' }, }}>
                     <TabPanel value={tabIndex} index={0}>
-                        <ReferralOverview />
+                        <PartnersOverview isMaster={isMaster}/>
                     </TabPanel>
                 </Box>
                 <Box sx={{ width: '100%', padding: 0, margin: 0 }}>

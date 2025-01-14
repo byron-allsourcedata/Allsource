@@ -21,15 +21,12 @@ interface ReferralDiscountCode {
     discount_amount: number
 }
 
-
-const faqItems: FAQItem[] = [
-    { question: 'How the referral works?', answer: 'Once a user integrates their Stripe account, they can select a predefined discount code for referrals. A referral code is then generated, which the user can share with their contacts. When a contact signs up using this referral code, the user receives a reward.' },
-    { question: 'When will the reward credits be available in my Stripe account?', answer: 'Referral rewards are distributed in the first week of the following month.' },
-    { question: 'Who is the official partner?', answer: 'An official partner who refers new users to Maximiz receives higher rewards compared to a regular referral user.' },
-];
+interface PartnersOverviewProps {
+    isMaster: boolean
+}
 
 
-const ReferralOverview: React.FC = () => {
+const PartnersOverview: React.FC<PartnersOverviewProps>  = ({isMaster}) => {
     const [loading, setLoading] = useState(false);
     const [expanded, setExpanded] = useState<number | false>(false);
 
@@ -55,6 +52,17 @@ const ReferralOverview: React.FC = () => {
             }
         }
     };
+
+    const faqItems: FAQItem[] = !isMaster 
+    ? [
+        { question: 'How the referral works?', answer: 'Once a user integrates their Stripe account, they can select a predefined discount code for referrals. A referral code is then generated, which the partner can share with their contacts. When a contact signs up and buy any subscription plan using this referral code, the partner receives a percentage of commission as agreed.' },
+        { question: 'When will the reward credits be available in my Stripe account?', answer: 'Referral rewards are distributed in the first week of the following month.' },
+        { question: 'Who is the Master Partner?', answer: 'A master partner can invite other partners, set their commission rates, and earn when those partners make new referrals. Additionally, the master partner can also refer users directly and earn commissions.' },
+    ] : 
+    [
+        { question: 'How the referral works?', answer: 'Once a user integrates their Stripe account, they can select a predefined discount code for referrals. A referral code is then generated, which the partner can share with their contacts. When a contact signs up and buy any subscription plan using this referral code, the partner receives a percentage of commission as agreed.' },
+        { question: 'When will the reward credits be available in my Stripe account?', answer: 'Referral rewards are distributed in the first week of the following month.' },
+    ]
 
 
     const handleOpenSection = (panel: number) => (
@@ -472,4 +480,4 @@ const ReferralOverview: React.FC = () => {
     );
 };
 
-export default ReferralOverview;
+export default PartnersOverview;
