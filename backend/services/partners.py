@@ -44,26 +44,24 @@ class PartnersService:
     def get_partners(self, isMaster, search, start_date, end_date, page, rowsPerPage) -> PartnersObjectResponse:
         offset = page * rowsPerPage
         limit = rowsPerPage
-        
+
         try:
-            if search is None:
-                partners = self.partners_persistence.get_partners(isMaster, start_date, end_date, offset, limit)
-                total_count = self.partners_persistence.get_total_count(isMaster)
-            else:
-                search_term = f"%{search}%"
-                partners = self.partners_persistence.get_partners_search(isMaster, search_term, start_date, end_date, offset, limit)
-                total_count = self.partners_persistence.get_total_count_search(isMaster, search_term)
-            
-            result = []
-            for partner in partners:
-                user_id = partner.user_id
-                user = self.get_user_info(user_id)
-                result.append(self.domain_mapped(partner, user))
-        
+            search_term = f"%{search}%" if search else None
+            partners = self.partners_persistence.get_partners(
+                isMaster, search_term, start_date, end_date, offset, limit
+            )
+            total_count = self.partners_persistence.get_total_count(isMaster, search_term)
+
+            result = [
+                self.domain_mapped(partner, self.get_user_info(partner.user_id))
+                for partner in partners
+            ]
+
+            return {"status": True, "data": {"items": result, "totalCount": total_count}}
         except Exception as e:
             logger.debug("Error getting partner data", e)
-            return {"status": False, "error":{"code": 500, "message": f"Unexpected error during getting: {str(e)}"}}
-        return {"status": True, "data": {"items": result, "totalCount": total_count}}
+            return {"status": False, "error": {"code": 500, "message": f"Unexpected error during getting: {str(e)}"}}
+    
     
     def get_partner(self, email) -> PartnersObjectResponse:
         try:
