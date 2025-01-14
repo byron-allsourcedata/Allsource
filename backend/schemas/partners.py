@@ -10,6 +10,7 @@ class PartnersResponse(BaseModel):
     id: int
     partner_name: str
     email: str
+    isMaster: Optional[bool] = False
     join_date: Optional[datetime] = None
     commission: int
     subscription: str
@@ -28,6 +29,7 @@ class PartnerCreateRequest(BaseModel):
     company_name: Optional[str] = None
     commission: str
     isMaster: Optional[bool] = False
+    masterId: Optional[int] = None
 
 class PartnerUpdateRequest(BaseModel):
     message: Optional[str] = None

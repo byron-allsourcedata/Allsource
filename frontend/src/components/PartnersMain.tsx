@@ -61,7 +61,8 @@ const getStatusStyle = (status: string) => {
 };
 
 interface PartnersProps {
-    masterData: PartnerData[];
+    masterId: number;
+    partnersData: PartnerData[];
 }
 
 interface NewPartner {
@@ -77,11 +78,62 @@ interface EnabledPartner {
     fullName?: string
 }
 
+// const IOSSwitch = styled((props: SwitchProps) => (
+//     <Switch focusVisibleClassName=".Mui-focusVisible" disableRipple {...props} />
+// ))(({ theme }) => ({
+//     width: 56,
+//     height: 26,
+//     padding: 0,
+//     '& .MuiSwitch-switchBase': {
+//         padding: 0,
+//         margin: 2,
+//         transitionDuration: '300ms',
+//         '&.Mui-checked': {
+//             transform: 'translateX(30px)',
+//             color: '#fff',
+//             '& + .MuiSwitch-track': {
+//                 backgroundColor: theme.palette.mode === 'dark' ? '#2ECA45' : '#65C466',
+//                 opacity: 1,
+//                 border: 0,
+//             },
+//             '&.Mui-disabled + .MuiSwitch-track': {
+//                 opacity: 0.5,
+//             },
+//         },
+//         '&.Mui-focusVisible .MuiSwitch-thumb': {
+//             color: '#33cf4d',
+//             border: '6px solid #fff',
+//         },
+//         '&.Mui-disabled .MuiSwitch-thumb': {
+//             color:
+//                 theme.palette.mode === 'light'
+//                     ? theme.palette.grey[100]
+//                     : theme.palette.grey[600],
+//         },
+//         '&.Mui-disabled + .MuiSwitch-track': {
+//             opacity: theme.palette.mode === 'light' ? 0.7 : 0.3,
+//         },
+//     },
+//     '& .MuiSwitch-thumb': {
+//         boxSizing: 'border-box',
+//         width: 22,
+//         height: 22,
+//     },
+//     '& .MuiSwitch-track': {
+//         borderRadius: 26 / 2,
+//         backgroundColor: theme.palette.mode === 'light' ? '#E9E9EA' : '#39393D',
+//         opacity: 1,
+//         transition: theme.transitions.create(['background-color'], {
+//             duration: 500,
+//         }),
+//     },
+// }));
+
 type CombinedPartnerData = NewPartner & EnabledPartner;
 
 
-const PartnersMain: React.FC<PartnersProps> = ({masterData}) => {
-    const [partners, setPartners] = useState<PartnerData[]>(masterData);
+const PartnersMain: React.FC<PartnersProps> = ({masterId, partnersData}) => {
+    const [partners, setPartners] = useState<PartnerData[]>(partnersData);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalCount, setTotalCount] = useState(0);
@@ -106,13 +158,14 @@ const PartnersMain: React.FC<PartnersProps> = ({masterData}) => {
     const [errorResponse, setErrosResponse] = useState(false);
 
     const tableHeaders = [
-        { key: 'partner_name', label: `Partner name`, sortable: false },
+        { key: 'account_name', label: `Partner name`, sortable: false },
         { key: 'email', label: 'Email', sortable: false },
         { key: 'join_date', label: 'Join date', sortable: true },
         { key: 'commission', label: 'Commission %', sortable: false },
         { key: 'subscription', label: 'Subscription', sortable: false },
         { key: 'sources', label: 'Sources', sortable: false },
         { key: 'last_payment_date', label: 'Last payment date', sortable: true },
+        { key: 'account_status', label: 'Account status', sortable: false },
         { key: 'status', label: 'Status', sortable: false },
         { key: 'actions', label: 'Actions', sortable: false },
     ];
@@ -120,6 +173,8 @@ const PartnersMain: React.FC<PartnersProps> = ({masterData}) => {
     const handleOpenMenu = (event: any, rowData: any) => {
         setMenuAnchor(event.currentTarget);
         setSelectedRowData(rowData);
+        setFileData({...rowData, fullName: rowData.partner_name, companyName: rowData.sources})
+        handleFormOpenPopup()
     };
 
     const handleCloseMenu = () => {
@@ -265,53 +320,7 @@ const PartnersMain: React.FC<PartnersProps> = ({masterData}) => {
                 '@media (max-width: 600px)': {margin: '0rem auto 0rem'}
             }}>
                 <Box>
-                    <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', mb: 2, alignItems: 'center', gap: 2 }}>
-                        <Box sx={{display: 'flex', gap: "16px"}}>
-                            <Button
-                                aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
-                                aria-haspopup="true"
-                                aria-expanded={isCalendarOpen ? 'true' : undefined}
-                                onClick={handleCalendarClick}
-                                sx={{
-                                    textTransform: 'none',
-                                    color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
-                                    border: formattedDates ? '1.5px solid rgba(80, 82, 178, 1)' : '1.5px solid rgba(184, 184, 184, 1)',
-                                    borderRadius: '4px',
-                                    padding: '8px',
-                                    minWidth: 'auto',
-                                    '@media (max-width: 900px)': {
-                                        border: 'none',
-                                        padding: 0
-                                    },
-                                    '&:hover': {
-                                        border: '1.5px solid rgba(80, 82, 178, 1)',
-                                        '& .MuiSvgIcon-root': {
-                                            color: 'rgba(80, 82, 178, 1)'
-                                        }
-                                    }
-                                }}
-                            >
-                                <DateRangeIcon
-                                    fontSize="medium"
-                                    sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }}
-                                />
-                                <Typography variant="body1" sx={{
-                                    fontFamily: 'Roboto',
-                                    fontSize: '14px',
-                                    fontWeight: '400',
-                                    color: 'rgba(32, 33, 36, 1)',
-                                    lineHeight: '19.6px',
-                                    textAlign: 'left'
-                                }}>
-                                    {formattedDates}
-                                </Typography>
-                                {formattedDates &&
-                                    <Box sx={{ pl: 2, display: 'flex', alignItems: 'center' }}>
-                                        <Image src="/arrow_down.svg" alt="arrow down" width={16} height={16} />
-                                    </Box>
-                                }
-                            </Button>
-                        </Box>
+                    <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', mb: 6, alignItems: 'center', gap: 2 }}>
                     </Box>
 
                     <Box sx={{ display: 'flex', flexDirection: 'column' }}>
@@ -404,6 +413,14 @@ const PartnersMain: React.FC<PartnersProps> = ({masterData}) => {
                                                 </TableCell>
 
                                                 <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
+                                                    {/* <IOSSwitch
+                                                        onChange={() => onSwitchChange(row)}
+                                                        checked={row.is_trial}
+                                                        disabled={row.payment_status === 'SUBSCRIPTION_ACTIVE' || row.payment_status === 'NEED_CONFIRM_EMAIL' || row.payment_status === 'NEED_CONFIRM_EMAIL' || row.payment_status === 'FILL_COMPANY_DETAILS'}
+                                                    /> */}
+                                                </TableCell>
+
+                                                <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
                                                     <Box sx={{display: "flex", justifyContent: "center"}}>
                                                         <Typography component="div" sx={{
                                                             width: "100px",
@@ -422,9 +439,10 @@ const PartnersMain: React.FC<PartnersProps> = ({masterData}) => {
                                                     </Box>
                                                 </TableCell>
 
+
                                                 <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
                                                     <IconButton onClick={(event) => handleOpenMenu(event, data)} sx={{ ':hover': { backgroundColor: 'transparent', }}} >
-                                                        <Image src='/more_horizontal.svg' alt='more' height={16.18} width={22.91} />
+                                                        <Image src='/edit-partner.svg' alt='edit' height={16.18} width={22.91} />
                                                     </IconButton>
                                                 </TableCell>
                                             </TableRow>
@@ -459,7 +477,8 @@ const PartnersMain: React.FC<PartnersProps> = ({masterData}) => {
                                 </Box>
                                 )}
                     </Box>
-                    <InvitePartnerPopup 
+                    <InvitePartnerPopup
+                        masterId={masterId}
                         updateOrAddAsset={updateOrAddAsset}
                         fileData={fileData} 
                         open={formPopupOpen} 

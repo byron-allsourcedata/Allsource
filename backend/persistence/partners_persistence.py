@@ -156,6 +156,9 @@ class PartnersPersistence:
             isMaster=creating_data["isMaster"]
         )
 
+        if "masterId" in creating_data and creating_data["masterId"] is not None:
+            partner.master_id = creating_data["masterId"]
+
         self.db.add(partner)
         self.db.commit()
         self.db.refresh(partner)

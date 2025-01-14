@@ -18,9 +18,10 @@ interface PartnerData {
 }
 
 interface FormUploadPopupProps {
+    masterId?: number;
     isMaster?: boolean;
     open: boolean;
-    fileData: {id: number, email: string, fullName: string, companyName: string, commission: string}
+    fileData?: {id: number, email: string, fullName: string, companyName: string, commission: string}
     onClose: () => void;
     updateOrAddAsset: (partner: PartnerData) => void
 }
@@ -31,9 +32,10 @@ interface RequestData {
     full_name?: string;
     company_name?: string;
     isMaster?: boolean;
+    masterId?: number;
 }
 
-const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fileData, onClose, updateOrAddAsset }) => {
+const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ masterId, isMaster, open, fileData, onClose, updateOrAddAsset }) => {
     const [action, setAction] = useState("Add");
     const [buttonContain, setButtonContain] = useState(false);
     const [fullName, setFullName] = useState(""); 
@@ -112,15 +114,28 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
             let response;
     
             if (action === "Edit" && fileData && fileData.id) {
+                if(masterId) {
+                    response = await axiosInstance.put(`partners/${fileData.id}`, requestData, {
+                        headers: { 'Content-Type': 'application/json' },
+                    });
+                }
                 response = await axiosInstance.put(`admin-partners/${fileData.id}/`, requestData, {
                     headers: { 'Content-Type': 'application/json' },
                 });
             } else {
                 requestData.email = email;
                 requestData.isMaster = isMaster;
-                response = await axiosInstance.post(`admin-partners/`, requestData, {
-                    headers: { 'Content-Type': 'application/json' },
-                });
+                if(masterId) {
+                    requestData.masterId = masterId;
+                    response = await axiosInstance.post(`partners/`, requestData, {
+                        headers: { 'Content-Type': 'application/json' },
+                    });
+                }
+                else {
+                    response = await axiosInstance.post(`admin-partners/`, requestData, {
+                        headers: { 'Content-Type': 'application/json' },
+                    });
+                }
             }
             if (response.status === 200) {
                 updateOrAddAsset(response.data);
@@ -140,6 +155,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
 
     useEffect(() => {
         if (fileData && fileData.email) {
+            console.log({fileData})
             setEmail(fileData.email);
             setCommission(fileData.commission.toString());
             setCompanyName(fileData.companyName);
@@ -246,12 +262,13 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
                             placeholder='Email'
                             sx={{
                                 width: "556px",
+                                "@media (max-width: 620px)": { width: "calc(100vw - 64px)" },
                                 "& .MuiInputLabel-root.Mui-focused": {
                                     color: "rgba(17, 17, 19, 0.6)",
                                 },
                                 "& .MuiInputLabel-root[data-shrink='false']": {
                                     transform: "translate(16px, 50%) scale(1)",
-                                },  
+                                },
                             }}
                             value={email}
                             onChange={handleEmailChange}
@@ -315,12 +332,11 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
                     width: "92px",
                     height: "40px",
                     ":hover": {
-                        borderColor: "rgba(8, 83, 196, 1)"},
+                        borderColor: "rgba(62, 64, 142, 1)"},
                     ":active": {
-                        borderColor: "rgba(20, 110, 246, 1)",
-                        border: "1px solid rgba(157, 194, 251, 1)"},
+                        borderColor: "rgba(80, 82, 178, 1)"},
                     ":disabled": {
-                        borderColor: "rgba(20, 110, 246, 1)",
+                        borderColor: "rgba(80, 82, 178, 1)",
                         opacity: 0.4,
                     },
                 }}>
@@ -333,7 +349,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
                         fontWeight: "600",
                         fontSize: "14px",
                         lineHeight: "19.6px",
-                        ":hover": {color: "rgba(8, 83, 196, 1)"},
+                        ":hover": {color: "rgba(62, 64, 142, 1)"},
                         }}
                     >
                         Cancel
@@ -344,13 +360,12 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ isMaster, open, fi
                     width: "120px",
                     height: "40px",
                     ":hover": {
-                        backgroundColor: "rgba(8, 83, 196, 1)"},
+                        backgroundColor: "rgba(62, 64, 142, 1)"},
                     ":active": {
-                        backgroundColor: "rgba(20, 110, 246, 1)",
-                        border: "2px solid rgba(157, 194, 251, 1)"},
+                        backgroundColor: "rgba(80, 82, 178, 1)"},
                     ":disabled": {
-                        backgroundColor: "rgba(20, 110, 246, 1)",
-                        opacity: 0.4,
+                        backgroundColor: "rgba(80, 82, 178, 1)",
+                        opacity: 0.6,
                     },
                 }}>
                     <Typography
