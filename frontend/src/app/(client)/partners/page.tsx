@@ -1,6 +1,6 @@
 "use client";
 import { Box, Typography, Tabs, Tab, Button } from "@mui/material";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useCallback } from "react";
 import { partnersStyle } from './partnersStyles';
 import CollectionRules from "@/components/SuppressionsCollectingRules";
 import SuppressionRules from "@/components/SuppressionsRules";
@@ -14,7 +14,11 @@ import { useNotification } from '@/context/NotificationContext';
 import ReferralOverview from "@/components/ReferralOverview";
 import PartnersAccounts from "@/components/PartnersAccounts";
 import ReferralRewards from "@/components/ReferralRewards";
-import PartnersAssets from "@/components/PartnersAssets"
+import PartnersAssets from "@/components/PartnersAssets";
+import PartnersMain from "@/components/PartnersMain";
+import PartnersOverview from "@/components/PartnersOverview";
+import { useUser } from '@/context/UserContext';
+import { setTimeout } from "timers/promises";
 
 const centerContainerStyles = {
     display: 'flex',
@@ -37,6 +41,17 @@ const centerContainerStyles = {
 };
 
 
+interface PartnerData {
+    id: number;
+    partner_name: string;
+    email: string;
+    join_date: Date | string;
+    commission: string;
+    subscription: string;
+    sources: string;
+    last_payment_date: string;
+    status: string;
+}
 
 
 interface TabPanelProps {
@@ -61,11 +76,57 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
 
 const Partners: React.FC = () => {
     const { hasNotification } = useNotification();
+    // const { email } = useUser();
+    const [email, setEmail] = useState('');
     const router = useRouter();
+    const [totalCount, setTotalCount] = useState(0);
+    const [masterData, setMasterData] = useState<PartnerData[]>([]);
     const [tabIndex, setTabIndex] = useState(0);
+    const [isMaster, setIsMaster] = useState(false)
+    const [loading, setLoading]  = useState(false);
+    const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
     const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
         setTabIndex(newIndex);
     };
+
+    const fetchRules = useCallback(async () => {
+        setLoading(true)
+
+        try {
+            const response = await axiosInstance.get(`/partners/partners`, { 
+                params: {
+                    email: encodeURIComponent(email ? email : ''),
+                    start_date: appliedDates.start ? appliedDates.start.toLocaleDateString('en-CA') : null,
+                    end_date: appliedDates.end ? appliedDates.end.toLocaleDateString('en-CA') : null,
+                    page, rowsPerPage
+                }});
+            if(response?.status === 200 && response.data.totalCount > 0) {
+                setIsMaster(true) 
+                setMasterData([...response.data.items])
+                setTotalCount(response.data.totalCount)  
+            }
+        } catch {
+        } finally {
+            setLoading(false)
+        }
+    }, [appliedDates, email]);
+
+    useEffect(() => {
+        const storedMe = sessionStorage.getItem('me');
+        if (storedMe) {
+            const storedData = JSON.parse(storedMe);
+            setEmail(storedData.email);
+        }
+        
+    }, []);
+
+    useEffect(() => {
+        if (email) {
+            fetchRules();
+        }
+    }, [email, appliedDates]); 
 
     return (
         <Box sx={partnersStyle.mainContent}>
@@ -144,6 +205,30 @@ const Partners: React.FC = () => {
                                 }}
                                 label="Accounts"
                             />
+                            {isMaster && <Tab className="main-text"
+                                sx={{
+                                    textTransform: 'none',
+                                    padding: '4px 10px',
+                                    minHeight: 'auto',
+                                    flexGrow: 1,
+                                    pb: '10px',
+                                    textAlign: 'center',
+                                    fontSize: '14px',
+                                    fontWeight: 700,
+                                    lineHeight: '19.1px',
+                                    minWidth: 'auto',
+                                    '&.Mui-selected': {
+                                        color: 'rgba(80, 82, 178, 1)'
+                                    },
+                                    "@media (max-width: 600px)": {
+                                        mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                                            backgroundColor: 'rgba(249, 249, 253, 1)',
+                                            border: '1px solid rgba(220, 220, 239, 1)'
+                                        },
+                                    }
+                                }}
+                                label="Partners"
+                            />}
                             <Tab className="main-text"
                                 sx={{
                                     textTransform: 'none',
@@ -199,22 +284,26 @@ const Partners: React.FC = () => {
             </Box>
                 <Box sx={{ width: '100%', padding: 0, "@media (max-width: 600px)": { mt: '4.5rem' }, "@media (max-width: 440px)": { mt: '7.5rem' }, }}>
                     <TabPanel value={tabIndex} index={0}>
-                        <ReferralOverview />
+                        <PartnersOverview isMaster={isMaster}/>
                     </TabPanel>
                 </Box>
                 <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
                     <TabPanel value={tabIndex} index={1}>
                         <PartnersAccounts loading={false} setLoading={() => {}} />
-
                     </TabPanel>
                 </Box>
                 <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
-                    <TabPanel value={tabIndex} index={2}>
+                    <TabPanel value={tabIndex} index={isMaster ? 2 : 1}>
+                        <PartnersMain masterData={masterData} />
+                    </TabPanel>
+                </Box>
+                <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
+                    <TabPanel value={tabIndex} index={isMaster ? 3 : 2}>
                         <ReferralRewards />
                     </TabPanel>
                 </Box>
                 <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
-                    <TabPanel value={tabIndex} index={3}>
+                    <TabPanel value={tabIndex} index={isMaster ? 4 : 3}>
                         <PartnersAssets />
                     </TabPanel>
                 </Box>

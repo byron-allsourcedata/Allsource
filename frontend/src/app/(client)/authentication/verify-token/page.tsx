@@ -4,8 +4,10 @@ import { useEffect, useState, Suspense } from 'react';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showInfoToast, showToast } from '@/components/ToastNotification';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
+import { useUser } from '@/context/UserContext';
 
 const VerifyToken = () => {
+  const { partner } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
@@ -65,7 +67,7 @@ const VerifyToken = () => {
               showErrorToast('The link is incorrect or outdated')
               const localtoken = localStorage.getItem('token')
               if (localtoken) {
-                router.push('/dashboard')
+                router.push(partner ? '/partners' : '/dashboard')
               }
               else {
                 router.push('/signin')

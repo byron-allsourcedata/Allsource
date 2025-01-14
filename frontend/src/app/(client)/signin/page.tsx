@@ -10,10 +10,13 @@ import { showErrorToast } from '../../../components/ToastNotification';
 import { GoogleLogin } from '@react-oauth/google';
 import { fetchUserData } from '@/services/meService';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
+import { useUser } from '@/context/UserContext';
 
 const Signin: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { partner } = useUser();
+  const [isPartnerAvailable, setIsPartnerAvailable] = useState(false);
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => {
@@ -25,10 +28,10 @@ const Signin: React.FC = () => {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('token');
       if (token) {
-        router.push('/dashboard');
+        router.push(partner ? '/partners' : '/dashboard');
       }
     }
-  }, [router]);
+  }, [router, partner]);
 
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -87,6 +90,19 @@ const Signin: React.FC = () => {
     validateField(name, value);
   };
 
+  const checkPartner = () => {
+    setTimeout(() => {
+        const storedMe = sessionStorage.getItem('me');
+        if (storedMe) {
+            const storedData = JSON.parse(storedMe);
+            router.push('/partners')
+        }
+        else {
+          router.push('/dashboard')
+        }
+    }, 7000) //NEED this test in dev with 2500
+}  
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     const newErrors: { [key: string]: string } = {};
@@ -120,7 +136,8 @@ const Signin: React.FC = () => {
 
             case "SUCCESS":
               get_me()
-              router.push('/dashboard');
+              checkPartner()
+              // console.log({})
               break;
             case 'NON_SHOPIFY_ACCOUNT':
               showErrorToast("non shopify account");
@@ -157,7 +174,7 @@ const Signin: React.FC = () => {
 
             case "PIXEL_INSTALLATION_NEEDED":
               get_me()
-              router.push('/dashboard')
+              router.push(partner ? '/partners' : '/dashboard');
               break;
 
             default:
@@ -216,7 +233,7 @@ const Signin: React.FC = () => {
 
                 switch (response.data.status) {
                   case 'SUCCESS':
-                    router.push('/dashboard');
+                    router.push(partner ? '/partners' : '/dashboard');
                     break;
                   case 'NEED_CHOOSE_PLAN':
                     router.push('/settings?section=subscription');
@@ -238,7 +255,7 @@ const Signin: React.FC = () => {
                     showErrorToast("User with this email does not exist");
                     break;
                   case "PIXEL_INSTALLATION_NEEDED":
-                    router.push('/dashboard')
+                    router.push(partner ? '/partners' : '/dashboard');
                     break;
                   default:
                     router.push('/dashboard')

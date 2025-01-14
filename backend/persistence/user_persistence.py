@@ -111,7 +111,8 @@ class UserPersistence:
                 'shop_domain': user.shop_domain,
                 'shopify_token': user.shopify_token,
                 'connected_stripe_account_id': user.connected_stripe_account_id,
-                'utm_params': user.utm_params
+                'utm_params': user.utm_params,
+                'is_stripe_connected': user.is_stripe_connected,
             }
         self.db.rollback()
         if result_as_object:
@@ -229,3 +230,12 @@ class UserPersistence:
             )
 
         self.db.commit()
+
+    def confirm_stripe_connect(self, user_id: int):
+        self.db.query(Users).filter(Users.id == user_id).update(
+            {Users.is_stripe_connected: True},
+            synchronize_session=False
+        )
+        self.db.commit()
+        return True
+

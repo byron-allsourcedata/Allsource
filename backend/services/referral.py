@@ -4,6 +4,7 @@ from persistence.referral_discount_code_persistence import ReferralDiscountCodes
 from dotenv import load_dotenv
 from encryption_utils import encrypt_data
 from persistence.user_persistence import UserPersistence
+from services.stripe_service import get_stripe_account_info
 
 logger = logging.getLogger(__name__)
 load_dotenv()
@@ -15,9 +16,14 @@ class ReferralService:
         self.user_persistence = user_persistence
 
     def get_overview_info(self, user: dict):
-        return  {
-                    'connected_stripe_account_id': user.get('connected_stripe_account_id')
-                }
+        account = get_stripe_account_info(user.get('connected_stripe_account_id'))
+        can_transfer = account.get("capabilities", {}).get("transfers", "") == "active"
+        if can_transfer and not user.get('is_stripe_connect'):
+            self.user_persistence.confirm_stripe_connect(user.get('id'))
+        return {
+                    'connected_stripe_account_id': user.get('connected_stripe_account_id'),
+                    'is_stripe_connected': user.get('is_stripe_connected')
+               }
         
     def get_referral_discount_code_by_id(self, discount_code_id: int, user: dict):
         discount_code = self.referral_persistence_service.get_referral_discount_code_by_id(discount_code_id)

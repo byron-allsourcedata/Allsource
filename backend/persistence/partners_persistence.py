@@ -26,9 +26,41 @@ class PartnersPersistence:
 
         return query.offset(offset).limit(limit).all()
     
+    def get_partners_by_email(self, email, start_date, end_date, offset, limit):
+        query = self.db.query(Partners).filter(Partners.email == email)
 
-    def get_partners_by_partners_id(self, id):
-        return self.db.query(Partners).filter(Partners.master_id == id).all()
+        if start_date:
+            if isinstance(start_date, str):
+                start_date = datetime.strptime(start_date, "%Y-%m-%d")
+            query = query.filter(Partners.join_date >= start_date)
+        if end_date:
+            if isinstance(end_date, str):
+                end_date = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1) - timedelta(seconds=1)
+            else:
+                end_date = datetime.combine(end_date, datetime.max.time())
+            query = query.filter(Partners.join_date <= end_date)
+
+        return query.offset(offset).limit(limit).all()
+    
+
+    def get_partners_by_partners_id(self, id, start_date=None, end_date=None, offset=None, limit=None):
+        query = self.db.query(Partners).filter(Partners.master_id == id)
+        
+        if start_date:
+            if isinstance(start_date, str):
+                start_date = datetime.strptime(start_date, "%Y-%m-%d")
+            query = query.filter(Partners.join_date >= start_date)
+        if end_date:
+            if isinstance(end_date, str):
+                end_date = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1) - timedelta(seconds=1)
+            else:
+                end_date = datetime.combine(end_date, datetime.max.time())
+            query = query.filter(Partners.join_date <= end_date)
+        
+        if not offset and not limit:
+            return query
+        
+        return query.offset(offset).limit(limit).all()
     
 
     def get_partners_search(self, isMaster, search_term, start_date, end_date, offset, limit):
@@ -53,6 +85,9 @@ class PartnersPersistence:
 
     def get_total_count(self, isMaster):
         return self.db.query(Partners).filter(Partners.isMaster == isMaster).count()
+    
+    def get_total_count_by_id(self, id):
+        return self.db.query(Partners).filter(Partners.master_id == id).count()
 
 
     def get_total_count_search(self, isMaster, search_term):
