@@ -1,5 +1,5 @@
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { Box, Typography, TextField, Button, FormControl, InputLabel, MenuItem, Select, IconButton, InputAdornment, Accordion, AccordionSummary, AccordionDetails, SelectChangeEvent } from "@mui/material";
+import { Box, Typography, TextField, Button, FormControl, InputLabel, MenuItem, Select, IconButton, InputAdornment, Accordion, AccordionSummary, AccordionDetails, SelectChangeEvent, Tooltip } from "@mui/material";
 import { useEffect, useState } from "react";
 import CustomizedProgressBar from "./CustomizedProgressBar";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
@@ -9,6 +9,7 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import { showToast } from "./ToastNotification";
+import CustomTooltip from "./customToolTip";
 
 interface FAQItem {
     question: string;
@@ -26,15 +27,16 @@ interface PartnersOverviewProps {
 }
 
 
-const PartnersOverview: React.FC<PartnersOverviewProps>  = ({isMaster}) => {
+const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
     const [loading, setLoading] = useState(false);
     const [expanded, setExpanded] = useState<number | false>(false);
-
+    const [isLoading, setIsLoading] = useState(true);
     const [accountCreatePending, setAccountCreatePending] = useState(false);
     const [error, setError] = useState(false);
+    const [currentDue, setCurrentDue] = useState<string[]>([]);
+    const [stripeEmail, setStripeEmail] = useState('');
     const [stripeConnect, setStripeConnect] = useState(false);
     const [connectedAccountId, setConnectedAccountId] = useState();
-    const [buttonText, setButtonText] = useState('View Dashboard');
     const [referralLink, setReferralLink] = useState('');
     const [discountCodeOptions, setDiscountCodeOptions] = useState<ReferralDiscountCode[]>([]);
     const [discountCode, setDiscountCode] = useState<ReferralDiscountCode>();
@@ -53,16 +55,16 @@ const PartnersOverview: React.FC<PartnersOverviewProps>  = ({isMaster}) => {
         }
     };
 
-    const faqItems: FAQItem[] = !isMaster 
-    ? [
-        { question: 'How the referral works?', answer: 'Once a user integrates their Stripe account, they can select a predefined discount code for referrals. A referral code is then generated, which the partner can share with their contacts. When a contact signs up and buy any subscription plan using this referral code, the partner receives a percentage of commission as agreed.' },
-        { question: 'When will the reward credits be available in my Stripe account?', answer: 'Referral rewards are distributed in the first week of the following month.' },
-        { question: 'Who is the Master Partner?', answer: 'A master partner can invite other partners, set their commission rates, and earn when those partners make new referrals. Additionally, the master partner can also refer users directly and earn commissions.' },
-    ] : 
-    [
-        { question: 'How the referral works?', answer: 'Once a user integrates their Stripe account, they can select a predefined discount code for referrals. A referral code is then generated, which the partner can share with their contacts. When a contact signs up and buy any subscription plan using this referral code, the partner receives a percentage of commission as agreed.' },
-        { question: 'When will the reward credits be available in my Stripe account?', answer: 'Referral rewards are distributed in the first week of the following month.' },
-    ]
+    const faqItems: FAQItem[] = !isMaster
+        ? [
+            { question: 'How the referral works?', answer: 'Once a user integrates their Stripe account, they can select a predefined discount code for referrals. A referral code is then generated, which the partner can share with their contacts. When a contact signs up and buy any subscription plan using this referral code, the partner receives a percentage of commission as agreed.' },
+            { question: 'When will the reward credits be available in my Stripe account?', answer: 'Referral rewards are distributed in the first week of the following month.' },
+            { question: 'Who is the Master Partner?', answer: 'A master partner can invite other partners, set their commission rates, and earn when those partners make new referrals. Additionally, the master partner can also refer users directly and earn commissions.' },
+        ] :
+        [
+            { question: 'How the referral works?', answer: 'Once a user integrates their Stripe account, they can select a predefined discount code for referrals. A referral code is then generated, which the partner can share with their contacts. When a contact signs up and buy any subscription plan using this referral code, the partner receives a percentage of commission as agreed.' },
+            { question: 'When will the reward credits be available in my Stripe account?', answer: 'Referral rewards are distributed in the first week of the following month.' },
+        ]
 
 
     const handleOpenSection = (panel: number) => (
@@ -73,18 +75,20 @@ const PartnersOverview: React.FC<PartnersOverviewProps>  = ({isMaster}) => {
     };
 
     const fetchRules = async () => {
-        setLoading(true);
+        setIsLoading(true)
         try {
             const responseOverview = await axiosInstance.get('referral/overview')
             setConnectedAccountId(responseOverview.data.connected_stripe_account_id)
             setStripeConnect(responseOverview.data.is_stripe_connected)
+            setCurrentDue(responseOverview.data.stripe_connected_currently_due)
+            setStripeEmail(responseOverview.data.stripe_connected_email)
             const responseDetails = await axiosInstance.get(`referral/details`)
             setDiscountCodeOptions(responseDetails.data.discount_codes)
             const fullReferralLink = `https://dev.maximiz.ai/signup?referral=${responseDetails.data.referral_code}`;
             setReferralLink(fullReferralLink);
         } catch (err) {
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
     };
 
@@ -105,6 +109,10 @@ const PartnersOverview: React.FC<PartnersOverviewProps>  = ({isMaster}) => {
         });
     };
 
+    if (isLoading) {
+        return (<CustomizedProgressBar />)
+    }
+
 
     return (
         <>
@@ -122,83 +130,202 @@ const PartnersOverview: React.FC<PartnersOverviewProps>  = ({isMaster}) => {
                     <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 1, '@media (max-width: 600px)': { flexDirection: 'column' } }}>
 
                         {connectedAccountId ? (
-                            <>
-                                <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'start', alignItems: 'start', borderRadius: '4px', pt: 2, pb: 2, gap: 2.5, }}>
-                                    <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 1, padding: 1 }}>
-                                        <Image src={'/stripe-image.svg'} width={60} height={60} alt="stripe-icon" />
-                                        <Typography className="second-sub-title">
-                                            Stripe account details
-                                        </Typography>
-                                    </Box>
-                                    <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 1, pl: 2 }}>
-                                        <Typography className="table-heading">
-                                            Account ID
-                                        </Typography>
-                                        <Typography className="table-data">
-                                            {connectedAccountId}
-                                        </Typography>
-                                    </Box>
-                                    <Button
-                                        variant="outlined"
-                                        sx={{
+                            stripeConnect ? (
+                                <>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'start', alignItems: 'start', borderRadius: '4px', pt: 2, pb: 2, gap: 2.5, }}>
+                                        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 1, padding: 1 }}>
+                                            <Image src={'/stripe-image.svg'} width={60} height={60} alt="stripe-icon" />
+                                            <Typography className="second-sub-title">
+                                                Stripe account details
+                                            </Typography>
+                                        </Box>
+                                        
+                                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 1, pl: 2 }}>
+                                            <Typography className="table-heading">
+                                                Email
+                                            </Typography>
+                                            <Typography className="table-data">
+                                                {stripeEmail}
+                                            </Typography>
+                                        </Box>
+                                        
+                                        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 1, pl: 2 }}>
+                                            <Typography className="table-heading">
+                                                Account ID
+                                            </Typography>
+                                            <Typography className="table-data">
+                                                {connectedAccountId}
+                                            </Typography>
+                                        </Box>
+                                        <Button
+                                            variant="outlined"
+                                            sx={{
 
-                                            mt: 2,
-                                            ml: 2,
-                                            textWrap: 'nowrap',
-                                            backgroundColor: '#fff',
-                                            color: 'rgba(80, 82, 178, 1)',
-                                            fontFamily: "Nunito Sans",
-                                            textTransform: 'none',
-                                            lineHeight: '22.4px',
-                                            fontWeight: '600',
-                                            padding: '0.75em 2em',
-                                            border: '1px solid rgba(80, 82, 178, 1)',
-                                            '&:hover': {
+                                                mt: 2,
+                                                ml: 2,
+                                                textWrap: 'nowrap',
                                                 backgroundColor: '#fff',
-                                                boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)',
-                                                '&.Mui-disabled': {
-                                                    backgroundColor: 'rgba(80, 82, 178, 0.6)',
-                                                    color: 'rgba(80, 82, 178, 1)',
-                                                    cursor: 'not-allowed',
+                                                color: 'rgba(80, 82, 178, 1)',
+                                                fontFamily: "Nunito Sans",
+                                                textTransform: 'none',
+                                                lineHeight: '22.4px',
+                                                fontWeight: '600',
+                                                padding: '0.75em 2em',
+                                                border: '1px solid rgba(80, 82, 178, 1)',
+                                                '&:hover': {
+                                                    backgroundColor: '#fff',
+                                                    boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)',
+                                                    '&.Mui-disabled': {
+                                                        backgroundColor: 'rgba(80, 82, 178, 0.6)',
+                                                        color: 'rgba(80, 82, 178, 1)',
+                                                        cursor: 'not-allowed',
+                                                    }
                                                 }
-                                            }
-                                        }}
-                                        onClick={async () => {
-                                            setAccountCreatePending(true);
-                                            setError(false);
-                                            setLoading(true);
-                                            try {
-                                                const linkResponse = await fetch("/api/account_link", {
-                                                    method: "POST",
-                                                    headers: {
-                                                        "Content-Type": "application/json",
-                                                    },
-                                                    body: JSON.stringify({ account: connectedAccountId })
-                                                });
-                                                const linkData = await linkResponse.json();
+                                            }}
+                                            onClick={async () => {
+                                                setError(false);
+                                                setLoading(true);
+                                                try {
+                                                    const linkResponse = await fetch("/api/account_link", {
+                                                        method: "POST",
+                                                        headers: {
+                                                            "Content-Type": "application/json",
+                                                        },
+                                                        body: JSON.stringify({ account: connectedAccountId })
+                                                    });
+                                                    const linkData = await linkResponse.json();
 
-                                                const { url, type, error: linkError } = linkData;
+                                                    const { url, error: linkError } = linkData;
 
-                                                if (url) {
-                                                    window.open(url, '_blank');
-                                                    setButtonText(type === "onboarding" ? "Add Information" : "View Dashboard");
-                                                }
+                                                    if (url) {
+                                                        window.open(url, '_blank');
+                                                    }
 
-                                                if (linkError) {
+                                                    if (linkError) {
+                                                        setError(true);
+                                                    }
+                                                } catch (err) {
                                                     setError(true);
+                                                    console.error("Error occurred:", err);
+                                                } finally {
+                                                    setLoading(false);
                                                 }
-                                            } catch (err) {
-                                                setAccountCreatePending(false);
-                                                setError(true);
-                                                console.error("Error occurred:", err);
-                                            } finally {
-                                                setLoading(false);
-                                            }
-                                        }} >
-                                        {buttonText}
-                                    </Button>
-                                </Box>
-                            </>
+                                            }} >
+                                            View Dashboard
+                                        </Button>
+                                    </Box>
+                                </>
+                            ) :
+                                (<>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'start', alignItems: 'start', borderRadius: '4px', pt: 2, pb: 2, gap: 2.5, }}>
+                                        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'start', width: '100%' }}>
+                                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 1, paddingLeft: 2 }}>
+                                                <Image src={'/stripe-image.svg'} width={60} height={60} alt="stripe-icon" />
+                                                <Typography className="second-sub-title">
+                                                    Stripe account details
+                                                </Typography>
+                                            </Box>
+                                            {currentDue && ( <Box sx={{ display: 'flex', alignItems: 'start', pr: 2 }}>
+                                                <Tooltip
+                                                    title={
+                                                        <Box>
+                                                            <Typography className="second-sub-title" sx={{ color: '#fff !important', marginBottom: 0.5 }}>
+                                                                Please provide all necessary details:
+                                                            </Typography>
+                                                            <ul style={{ margin: 0, paddingLeft: '1.2em', }}>
+                                                                {currentDue.map((item, index) => (
+                                                                    <li key={index} style={{ color: '#fff', fontFamily: 'Nunito Sans', fontSize: '14px',
+                                                                        lineHeight: 'normal',
+                                                                        fontWeight: 600,
+                                                                        }}>
+                                                                        {item}
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </Box>
+                                                    }
+                                                    arrow
+                                                >
+                                                    <Typography
+                                                        className="paragraph"
+                                                        sx={{ textDecoration: 'underline', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                                    >
+                                                        What data is required?
+                                                    </Typography>
+                                                </Tooltip>
+                                            </Box>
+                                            )}
+                                        </Box>
+                                        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 1, pl: 2, mb: accountCreatePending ? 2 : 0 }}>
+                                            <Typography className="table-heading">
+                                                Account ID
+                                            </Typography>
+                                            <Typography className="table-data">
+                                                {connectedAccountId}
+                                            </Typography>
+                                        </Box>
+                                        {!accountCreatePending && ( <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 1, pl: 2 }}>
+                                            <Typography className="table-heading" sx={{ color: 'rgba(244, 87, 69, 1) !important', pl: 0, textAlign: 'left' }}>
+                                                Referral Details and account transactions are restricted due to incomplete required information.
+                                            </Typography>
+                                        </Box>)}
+                                        <Button
+                                            variant="outlined"
+                                            sx={{
+                                                mt: accountCreatePending ? 2 : 0,
+                                                ml: 2,
+                                                textWrap: 'nowrap',
+                                                backgroundColor: '#fff',
+                                                color: 'rgba(80, 82, 178, 1)',
+                                                fontFamily: "Nunito Sans",
+                                                textTransform: 'none',
+                                                lineHeight: '22.4px',
+                                                fontWeight: '600',
+                                                padding: '0.75em 2em',
+                                                border: '1px solid rgba(80, 82, 178, 1)',
+                                                '&:hover': {
+                                                    backgroundColor: '#fff',
+                                                    boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)',
+                                                    '&.Mui-disabled': {
+                                                        backgroundColor: 'rgba(80, 82, 178, 0.6)',
+                                                        color: 'rgba(80, 82, 178, 1)',
+                                                        cursor: 'not-allowed',
+                                                    }
+                                                }
+                                            }}
+                                            onClick={async () => {
+                                                setError(false);
+                                                setLoading(true);
+                                                try {
+                                                    const linkResponse = await fetch("/api/onboarding", {
+                                                        method: "POST",
+                                                        headers: {
+                                                            "Content-Type": "application/json",
+                                                        },
+                                                        body: JSON.stringify({ account: connectedAccountId, type: 'partners' })
+                                                    });
+                                                    const linkData = await linkResponse.json();
+
+                                                    const { url, error: linkError } = linkData;
+
+                                                    if (url) {
+                                                        window.open(url, '_blank');
+                                                    }
+
+                                                    if (linkError) {
+                                                        setError(true);
+                                                    }
+                                                } catch (err) {
+                                                    setError(true);
+                                                    console.error("Error occurred:", err);
+                                                } finally {
+                                                    setLoading(false);
+                                                }
+                                            }} >
+                                            Add Information
+                                        </Button>
+                                    </Box>
+                                </>)
                         ) : (
                             <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'center', alignItems: 'center', borderRadius: '4px', pt: 2, pb: 2, gap: 2.5, }}>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', gap: 1 }}>
@@ -235,11 +362,27 @@ const PartnersOverview: React.FC<PartnersOverviewProps>  = ({isMaster}) => {
                                         setError(false);
                                         setLoading(true);
                                         try {
+                                            setAccountCreatePending(true);
                                             const accountResponse = await fetch("/api/account", {
                                                 method: "POST",
                                             });
                                             const accountData = await accountResponse.json();
                                             setConnectedAccountId(accountData.account);
+
+                                            const linkResponse = await fetch("/api/onboarding", {
+                                                method: "POST",
+                                                headers: {
+                                                    "Content-Type": "application/json",
+                                                },
+                                                body: JSON.stringify({ account: accountData.account, type: 'partners' })
+                                            });
+                                            const linkData = await linkResponse.json();
+
+                                            const { url } = linkData;
+
+                                            if (url) {
+                                                window.open(url, '_blank');
+                                            }
 
                                             await axiosInstance.post('/connect-stripe', {
                                                 stripe_connect_account_id: accountData.account,
@@ -263,7 +406,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps>  = ({isMaster}) => {
                                 </Button>
                             </Box>
                         )}
-                        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'start', borderRadius: '4px', padding: '1rem 1.5rem', gap: 4, opacity: stripeConnect ? 1 : 0.6  }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'start', borderRadius: '4px', padding: '1rem 1.5rem', gap: 4, opacity: stripeConnect ? 1 : 0.6 }}>
                             <Box sx={{ display: 'flex', justifyContent: 'start', alignItems: 'center', width: '100%' }}>
                                 <Typography className="second-sub-title">
                                     Referral Details
@@ -274,13 +417,13 @@ const PartnersOverview: React.FC<PartnersOverviewProps>  = ({isMaster}) => {
                                 <FormControl
                                     sx={{
                                         width: '100%',
-                                        
+
                                     }}
                                 >
                                     <InputLabel
                                         sx={{
                                             fontFamily: 'Roboto',
-                                            fontSize: '12.5px',
+                                            fontSize: '13px',
                                             color: 'rgba(74, 74, 74, 1)',
                                         }}
                                     >
@@ -290,7 +433,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps>  = ({isMaster}) => {
                                         value={stripeConnect ? discountCode?.name : ''}
                                         onChange={handleDiscountCodeChange}
                                         disabled={!stripeConnect}
-                                        label="Discount Code"
+                                        label="Discount co"
                                         sx={{
                                             backgroundColor: '#fff',
                                             borderRadius: '4px',
@@ -302,15 +445,22 @@ const PartnersOverview: React.FC<PartnersOverviewProps>  = ({isMaster}) => {
                                                     borderColor: 'rgba(208, 213, 221, 1)',
                                                 },
                                             },
+                                            "&.Mui-disabled": {
+                                                pointerEvents: 'none',
+                                                opacity: 0.6,
+                                                "&:hover": {
+                                                    backgroundColor: '#fff',
+                                                },
+                                            },
                                         }}
                                         MenuProps={{
                                             PaperProps: { style: { maxHeight: 200, zIndex: 100 } }
                                         }}
                                         IconComponent={(props) => (
                                             discountCode?.name === '' ? (
-                                                <KeyboardArrowDownIcon {...props} sx={{ color: 'rgba(74, 74, 74, 1)' }} />
-                                            ) : (
                                                 <KeyboardArrowUpIcon {...props} sx={{ color: 'rgba(74, 74, 74, 1)' }} />
+                                            ) : (
+                                                <KeyboardArrowDownIcon {...props} sx={{ color: 'rgba(74, 74, 74, 1)' }} />
                                             )
                                         )}
                                     >
@@ -323,7 +473,6 @@ const PartnersOverview: React.FC<PartnersOverviewProps>  = ({isMaster}) => {
                                                     fontWeight: 500,
                                                     fontSize: '14px',
                                                     lineHeight: '19.6px',
-                                                    '&:hover': { backgroundColor: 'rgba(80, 82, 178, 0.1)' },
                                                 }}
                                             >
                                                 {option.name}
@@ -335,29 +484,46 @@ const PartnersOverview: React.FC<PartnersOverviewProps>  = ({isMaster}) => {
                                     label="Referral Link"
                                     variant="outlined"
                                     type="text"
-                                    rows={2}
                                     disabled={!referralLink && !stripeConnect}
                                     value={stripeConnect ? referralLink : ''}
                                     InputProps={{
-                                        style: { color: 'rgba(17, 17, 19, 1)', fontFamily: 'Nunito Sans', fontWeight: 400, fontSize: '14px' },
+                                        style: {
+                                            color: 'rgba(17, 17, 19, 1)',
+                                            fontFamily: 'Nunito Sans',
+                                            fontWeight: 400,
+                                            fontSize: '14px',
+                                        },
                                         endAdornment: (
-                                            (referralLink && stripeConnect && (
+                                            referralLink && stripeConnect && (
                                                 <InputAdornment position="end">
-                                                    <IconButton onClick={handleCopyClick} edge="end" >
+                                                    <IconButton
+                                                        onClick={handleCopyClick}
+                                                        edge="end"
+                                                        disabled={!referralLink || !stripeConnect} // Блокировка кнопки
+                                                    >
                                                         <ContentCopyIcon fontSize="small" />
                                                     </IconButton>
                                                 </InputAdornment>
-                                            ))
-
+                                            )
                                         )
                                     }}
-                                    InputLabelProps={{ style: { color: 'rgba(17, 17, 19, 0.6)', fontFamily: 'Nunito Sans', fontWeight: 400, fontSize: '14px', padding: 0 } }}
+                                    InputLabelProps={{
+                                        style: {
+                                            color: 'rgba(17, 17, 19, 0.6)',
+                                            fontFamily: 'Nunito Sans',
+                                            fontWeight: 400,
+                                            fontSize: '14px',
+                                            padding: 0
+                                        }
+                                    }}
                                     sx={{
                                         marginBottom: '32px',
                                         backgroundColor: '#fff',
                                         borderRadius: '4px',
                                         width: '100%',
+                                        pointerEvents: !stripeConnect ? 'none' : 'auto', // Отключение кликов
                                         "& .MuiOutlinedInput-root": {
+                                            pointerEvents: !stripeConnect ? 'none' : 'auto', // Важное дополнение
                                             "& fieldset": {
                                                 borderColor: 'rgba(208, 213, 221, 1)',
                                             },
@@ -371,6 +537,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps>  = ({isMaster}) => {
                                         "@media (max-width: 900px)": { width: '100%', height: '48px' },
                                     }}
                                 />
+
                             </Box>
                         </Box>
                     </Box>
