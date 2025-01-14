@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Optional
 from datetime import date
-from dependencies import get_partners_assets_service, check_user_partner, get_accounts_service, PartnersAssetService, AccountsService
+from dependencies import get_partners_assets_service, check_user_partner, get_accounts_service, get_partners_service, PartnersAssetService, AccountsService, PartnersService
 
 router = APIRouter(dependencies=[Depends(check_user_partner)])
 
@@ -37,3 +37,21 @@ def get_partner_accounts(
         raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))
      
     return account.get('data') 
+
+
+@router.get('/partners')
+@router.get('/partners/')
+def get_masterpartner_partners(
+    email: Optional[str] = Query(...),
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    page: int = Query(0),
+    rowsPerPage: int = Query(10),
+    get_partners_service: PartnersService = Depends(get_partners_service)):
+    
+    response = get_partners_service.get_partner_partners(email, start_date, end_date, page, rowsPerPage)
+    if not response.get("status"):
+        error = response.get("error", {}) or {}
+        raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))
+     
+    return response.get('data') 
