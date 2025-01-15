@@ -1,0 +1,21 @@
+name = "maximiz-web-pixel-tracking"
+type = "web_pixel_extension"
+
+runtime_context = "strict"
+
+[customer_privacy]
+analytics = true
+marketing = true
+preferences = false
+sale_of_data = "enabled"
+
+[settings]
+type = "object"
+
+[settings.fields.accountID]
+name = "Account ID"
+description = "The unique identifier for your account. Required to enable tracking."
+type = "single_line_text_field"
+validations = [
+  { name = "min", value = "1" }
+]

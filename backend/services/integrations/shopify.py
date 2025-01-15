@@ -210,7 +210,33 @@ class ShopifyIntegrationService:
 
     def get_credentials(self, domain_id: int):
         return self.integration_persistence.get_credentials_for_service(domain_id, SourcePlatformEnum.SHOPIFY.value)
-
+    
+    def initialize_pixel(self, access_token, domain, user_id):
+        client_id = domain.data_provider_id
+        if client_id is None:
+            client_id = hashlib.sha256((str(domain.id) + os.getenv('SECRET_SALT')).encode()).hexdigest()
+            self.db.query(UserDomains).filter(UserDomains.user_id == user_id, UserDomains.domain == domain.domain).update(
+                {UserDomains.data_provider_id: client_id},
+                synchronize_session=False
+            )
+            self.db.commit()
+        query = f"""
+            mutation {{
+                webPixelCreate(webPixel: {{ settings: "{{\\\"accountID\\\":\\\"{client_id}\\\"}}" }}) {{
+                    userErrors {{
+                        code
+                        field
+                        message
+                    }}
+                    webPixel {{
+                        settings
+                        id
+                    }}
+                }}
+            }}
+        """
+        with shopify.Session.temp(domain.domain, ShopifyConfig.api_version, access_token):
+            shopify.GraphQL().execute(query)
 
     def __set_pixel(self, user_id, domain, credentials):
         client_id = domain.data_provider_id
