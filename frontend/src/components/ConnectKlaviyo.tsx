@@ -360,14 +360,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
             setListNameError(false);
         }
 
-        // Validate Tag Name
-        if (tagName.trim() === '') {
-            setTagNameError(true);
-            valid = false;
-        } else {
-            setTagNameError(false);
-        }
-
         // If valid, save and close
         if (valid) {
             const newKlaviyoList = { id: '-1', list_name: newListName }
@@ -1216,7 +1208,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                                 </Box>
                                                                 <Box sx={{ textAlign: 'right' }}>
                                                                     <Button variant="contained" onClick={handleSave}
-                                                                        disabled={listNameError || tagNameError || !newListName || !tagName}
+                                                                        disabled={listNameError || tagNameError || !newListName}
                                                                         sx={{
                                                                             borderRadius: '4px',
                                                                             border: '1px solid #5052B2',
