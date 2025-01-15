@@ -923,19 +923,22 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                                         value={
                                             optionAdAccount?.name || null // Установить значение по умолчанию на пустую строку
                                         }
-                                        onClick={handleClickAdAccount} // Shrinks the label when clicked
+                                        onClick={handleClickAdAccount} 
                                         size="small"
+
                                         fullWidth
                                         label={optionAdAccount?.name ? '' : 'Select Ad Account'}
                                         InputLabelProps={{
                                             shrink: isShrunk || optionAdAccount?.name !== "", // Shrinks label if clicked or if value is not empty
                                             sx: {
                                                 fontFamily: 'Nunito Sans',
-                                            fontSize: '12px',
+                                            fontSize: '15px',
                                             lineHeight: '16px',
                                             color: 'rgba(17, 17, 19, 0.60)',
-                                            letterSpacing: '0.06px',
-                                            top: '5px',
+                                            
+                                            padding: 0,
+                                            margin: 0,
+                                            left: '3px',
                                             '&.Mui-focused': {
                                                 color: '#0000FF',
                                             },
@@ -1012,11 +1015,10 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                                             shrink: selectedOption ? false : isShrunk,
                                             sx: {
                                                 fontFamily: 'Nunito Sans',
-                                                fontSize: '12px',
+                                                fontSize: '15px',
                                                 lineHeight: '16px',
                                                 color: 'rgba(17, 17, 19, 0.60)',
-                                                letterSpacing: '0.06px',
-                                                top: '5px',
+                                                pl: '3px',
                                                 '&.Mui-focused': {
                                                     color: '#0000FF',
                                                 },
