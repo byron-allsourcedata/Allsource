@@ -293,15 +293,26 @@ class ShopifyIntegrationService:
         return url
     
     def handle_uninstalled_app(self, payload):
-        user_integration = self.integration_persistence.get_integration_by_shop_id(shop_id=payload["id"])
+        shop_id = payload["id"]
+        user_integration = self.integration_persistence.get_integration_by_shop_id(shop_id=shop_id)
         if user_integration:
-            self.db.query(UserDomains).filter(UserDomains.id == user_integration.domain_id).update(
-                {UserDomains.is_pixel_installed: False},
-                synchronize_session=False
-            )
-            self.db.flush()
-            self.db.query(User).filter(User.shop_id==str(payload["id"])).update({"shop_id": None, "shopify_token": None, "shop_domain": None, "charge_id": None})
             self.db.delete(user_integration)
+            self.db.flush()
+            user_domain = self.db.query(UserDomains).filter(UserDomains.id == user_integration.domain_id).first()
+            user_domains = self.db.query(UserDomains).filter(UserDomains.user_id == user_domain.user_id).all()
+            if len(user_domains) > 1:
+                self.db.delete(user_domain)
+            else:
+                self.db.query(UserDomains).filter(UserDomains.id == user_integration.domain_id).update(
+                    {UserDomains.is_pixel_installed: False},
+                    synchronize_session=False
+                )
+            self.db.query(User).filter(User.shop_id == str(shop_id)).update({
+                "shop_id": None,
+                "shopify_token": None,
+                "shop_domain": None,
+                "charge_id": None
+            })
             self.db.commit()
         
     def verify_shopify_hmac(self, data: bytes, hmac_header: str) -> bool:
