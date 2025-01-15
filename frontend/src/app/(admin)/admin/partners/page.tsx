@@ -48,7 +48,7 @@ const Assets: React.FC = () => {
                     "sidebar content"
                 `,
                     gridTemplateRows: 'auto 1fr',
-                    gridTemplateColumns: '170px 1fr',
+                    gridTemplateColumns: '200px 1fr',
                     height: '92vh',
                 }}
             >
