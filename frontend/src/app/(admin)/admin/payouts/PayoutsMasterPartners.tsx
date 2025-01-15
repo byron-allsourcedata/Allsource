@@ -7,8 +7,7 @@ import Image from "next/image";
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight'
-import MonthDetails from '@/components/ReferralRewardsMonth';
-import { width } from "@mui/system";
+import PayoutsMonth from './PayoutsMonth';
 
 interface RewardData {
     month: string;
@@ -59,7 +58,28 @@ const ReferralRewards: React.FC = () => {
         // fetchRules();
         setRewards([
             {
-                month: "February",
+                month: "November",
+                totalRewards: "$2000",
+                rewardsPaid: "$1800",
+                invitesCount: 30,
+                payoutDate: "Dec 01, 2024",
+            },
+            {
+                month: "October",
+                totalRewards: "$1000",
+                rewardsPaid: "$800",
+                invitesCount: 20,
+                payoutDate: "Nov 01, 2024",
+            },
+            {
+                month: "September",
+                totalRewards: "$2500",
+                rewardsPaid: "$2300",
+                invitesCount: 40,
+                payoutDate: "Oct 01, 2024",
+            },
+            {
+                month: "August",
                 totalRewards: "$1500",
                 rewardsPaid: "$1200",
                 invitesCount: 25,
@@ -115,7 +135,7 @@ const ReferralRewards: React.FC = () => {
                 '@media (max-width: 600px)': { margin: '0rem auto 0rem' }
             }}>
                 {selectedMonth ? (
-                    <MonthDetails open={open} selectedMonth={selectedMonth} onBack={handleBack} />
+                    <PayoutsMonth open={open} selectedMonth={selectedMonth} onBack={handleBack} />
                 ) : (
                     <>
                         <Box sx={{ display: 'flex', justifyContent: 'end', mb: 2 }}>
@@ -243,6 +263,12 @@ const ReferralRewards: React.FC = () => {
                                             </Box>
                                             <Box>
                                                 <Typography variant="body2" className="table-heading" sx={{textAlign: 'left'}}>
+                                                    Reward Approved
+                                                </Typography>
+                                                <Typography variant="subtitle1" className="table-data">{data.rewardsPaid}</Typography>
+                                            </Box>
+                                            <Box>
+                                                <Typography variant="body2" className="table-heading" sx={{textAlign: 'left'}}>
                                                     Rewards paid
                                                 </Typography>
                                                 <Typography variant="subtitle1" className="table-data">{data.rewardsPaid}</Typography>
@@ -251,7 +277,7 @@ const ReferralRewards: React.FC = () => {
                                         <Box sx={{ display: 'flex', gap:6, '@media (max-width: 900px)': { gap: 3}, '@media (max-width: 600px)': { justifyContent: 'space-between', width: '100%', display: 'flex', pr:1.5 } }}>
                                             <Box>
                                                 <Typography variant="body2" className="table-heading">
-                                                    No. of Invites
+                                                    No. of accounts
                                                 </Typography>
                                                 <Typography variant="subtitle1" className="table-data">{data.invitesCount}</Typography>
                                             </Box>

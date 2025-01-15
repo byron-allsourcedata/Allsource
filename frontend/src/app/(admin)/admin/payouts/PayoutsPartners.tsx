@@ -7,7 +7,7 @@ import Image from "next/image";
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight'
-import MonthDetails from '@/components/ReferralRewardsMonth';
+import PayoutsMonth from './PayoutsMonth';
 import { width } from "@mui/system";
 
 interface RewardData {
@@ -59,7 +59,28 @@ const ReferralRewards: React.FC = () => {
         // fetchRules();
         setRewards([
             {
-                month: "February",
+                month: "November",
+                totalRewards: "$2000",
+                rewardsPaid: "$1800",
+                invitesCount: 30,
+                payoutDate: "Dec 01, 2024",
+            },
+            {
+                month: "October",
+                totalRewards: "$1000",
+                rewardsPaid: "$800",
+                invitesCount: 20,
+                payoutDate: "Nov 01, 2024",
+            },
+            {
+                month: "September",
+                totalRewards: "$2500",
+                rewardsPaid: "$2300",
+                invitesCount: 40,
+                payoutDate: "Oct 01, 2024",
+            },
+            {
+                month: "August",
                 totalRewards: "$1500",
                 rewardsPaid: "$1200",
                 invitesCount: 25,
@@ -115,7 +136,7 @@ const ReferralRewards: React.FC = () => {
                 '@media (max-width: 600px)': { margin: '0rem auto 0rem' }
             }}>
                 {selectedMonth ? (
-                    <MonthDetails open={open} selectedMonth={selectedMonth} onBack={handleBack} />
+                    <PayoutsMonth open={open} selectedMonth={selectedMonth} onBack={handleBack} />
                 ) : (
                     <>
                         <Box sx={{ display: 'flex', justifyContent: 'end', mb: 2 }}>
