@@ -176,6 +176,13 @@ const PartnersMain: React.FC<PartnersProps> = ({loading, setLoading, masterId, p
         { key: 'actions', label: 'Actions', sortable: false },
     ];
 
+    const [partnerStates, setPartnerStates] = useState(
+        partners.map((partner) => ({
+          id: partner.id,
+          isActive: partner.status === "Active",
+        }))
+      );
+
     const handleOpenMenu = (event: any, rowData: any) => {
         setMenuAnchor(event.currentTarget);
         setSelectedRowData(rowData);
@@ -304,29 +311,75 @@ const PartnersMain: React.FC<PartnersProps> = ({loading, setLoading, masterId, p
         );
     };
 
-    const Toggle = ({ initialStatus, onStatusChange }: any) => {
-        const [isActive, setIsActive] = useState(initialStatus === "Active");
+
+    const Toggle: React.FC<{isActive: boolean; onToggle: () => void}> = ({ isActive, onToggle  }) => {
+        // const [isActive, setIsActive] = useState(initialStatus === "Active");
       
-        const handleToggle = () => {
-          const newStatus = isActive ? "Inactive" : "Active";
-          setIsActive(!isActive);
-          onStatusChange(newStatus);
-        };
+        // const handleToggle = () => {
+        //   const newStatus = isActive ? "Inactive" : "Active";
+        //   setIsActive(!isActive);
+        //   onStatusChange(newStatus);
+        // };
       
         return (
-          <div
-            className={`custom-toggle ${isActive ? "active" : "inactive"}`}
-            onClick={handleToggle}
-          >
-            <div className="toggle-circle"></div>
-            <span className="toggle-label">{isActive ? "Active" : "Inactive"}</span>
-          </div>
-        );
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                width: 70,
+                height: 24,
+                backgroundColor: isActive ? "rgba(80, 82, 178, 1)" : "rgba(123, 123, 123, 1)",
+                borderRadius: "20px",
+                cursor: "pointer",
+                position: "relative",
+                transition: "0.3s ease",
+                padding: "0 5px",
+                userSelect: "none",
+              }}
+              onClick={onToggle}
+            >
+              <Box
+                sx={{
+                  width: 20,
+                  height: 20,
+                  backgroundColor: "white",
+                  borderRadius: "50%",
+                  position: "absolute",
+                  left: isActive ? "48px" : "2px",
+                  transition: "left 0.3s ease",
+                }}
+              />
+              <Typography
+                sx={{
+                  fontFamily: "Roboto",
+                  fontSize: 12,
+                  lineHeight: "16.8px",
+                  color: "white",
+                  position: "absolute",
+                  top: "50%",
+                  left: isActive ? "25%" : "49%",
+                  right: isActive ? "49%" : "25%",
+                  transform: "translate(-50%, -50%)",
+                  transition: "0.3s ease",
+                }}
+              >
+                {isActive ? "Active" : "Inactive"}
+              </Typography>
+            </Box>
+          );
       };
 
     
-    const handleStatusChange = async (newStatus: string, id: number) => {
+    const handleStatusChange = async (id: number) => {
         setLoading(true);
+        const partnerIndex = partnerStates.findIndex((p) => p.id === id);
+        const newPartnerStates = [...partnerStates];
+        const isCurrentlyActive = newPartnerStates[partnerIndex].isActive;
+
+        newPartnerStates[partnerIndex].isActive = !isCurrentlyActive;
+        setPartnerStates(newPartnerStates);
+
+        const newStatus = !isCurrentlyActive ? "Active" : "Inactive";
     
         try {
             const response = await axiosInstance.put(`partners/${id}/`, {status: newStatus, message: newStatus=="Active" ? "Your account active again" : "Your account has become inactive!" }, {
@@ -405,7 +458,9 @@ const PartnersMain: React.FC<PartnersProps> = ({loading, setLoading, masterId, p
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                        {partners.map((data) => (
+                                        {partners.map((data) => {
+                                            const isActive = partnerStates.find((p) => p.id === data.id)?.isActive;
+                                            return (
                                             <TableRow key={data.id} sx={{
                                                 ...suppressionsStyles.tableBodyRow,
                                                 '&:hover': {
@@ -469,7 +524,7 @@ const PartnersMain: React.FC<PartnersProps> = ({loading, setLoading, masterId, p
                                                 </TableCell>
 
                                                 <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
-                                                    <Toggle initialStatus={data.status == "Active" ? "Active" : "Inactive"} onStatusChange={() => handleStatusChange(data.status == "Active" ? "Inactive" : "Active", data.id)} />
+                                                    <Toggle isActive={isActive || false} onToggle={() => handleStatusChange(data.id)} />
                                                 </TableCell>
 
                                                 <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
@@ -496,7 +551,7 @@ const PartnersMain: React.FC<PartnersProps> = ({loading, setLoading, masterId, p
                                                     </IconButton>
                                                 </TableCell>
                                             </TableRow>
-                                        ))}
+                                        )})}
                                 </TableBody>
                             </Table>
                         </TableContainer>
