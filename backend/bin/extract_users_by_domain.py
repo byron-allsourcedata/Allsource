@@ -31,7 +31,6 @@ async def fetch_users_by_domain(db_session, company_domains, output_file, valid_
         if users:
             row = {"company domain": domain}
             for user in users:
-                print(user.job_title)
                 if not user.job_title or user.job_title.lower() not in valid_job_titles:
                     continue
                 
@@ -63,7 +62,6 @@ async def fetch_users_by_domain(db_session, company_domains, output_file, valid_
                     row[f"last name_{len(row) // 6}"] = user.last_name
                     row[f"email_{len(row) // 6}"] = email
                     row[f"mobile number_{len(row) // 6}"] = mobile_number
-                print(row)
             results.append(row)
             
     df = pd.DataFrame(results)
