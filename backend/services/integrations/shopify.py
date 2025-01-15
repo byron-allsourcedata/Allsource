@@ -295,7 +295,7 @@ class ShopifyIntegrationService:
     def handle_uninstalled_app(self, payload):
         user_integration = self.integration_persistence.get_integration_by_shop_id(shop_id=payload["id"])
         if user_integration:
-            self.db.query(UserDomains).filter(UserDomains.shop_id == str(payload["id"]), UserDomains.id == user_integration.domain_id).update(
+            self.db.query(UserDomains).filter(UserDomains.id == user_integration.domain_id).update(
                 {UserDomains.is_pixel_installed: False},
                 synchronize_session=False
             )
