@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Box, Typography, Button, Table, TableBody, Modal, TableCell, TableContainer, TableHead, TableRow, Grid, IconButton, Switch, Divider, Popover, Drawer, LinearProgress, Tooltip, TextField, TablePagination, Chip } from '@mui/material';
 import Image from 'next/image';
@@ -135,6 +135,18 @@ export const SettingsBilling: React.FC = () => {
     const [inactiveContactCounts, setInactiveContactCounts] = useState(0);
     const [inactiveDate, setInactiveDate] = useState<string | null>();
     const [hide, setHide] = useState(false);
+    const sourcePlatform = useMemo(() => {
+        if (typeof window !== 'undefined') {
+            const savedMe = sessionStorage.getItem('me');
+            if (savedMe) {
+                try {
+                    const parsed = JSON.parse(savedMe);
+                    return parsed.source_platform || '';
+                } catch (error) { }
+            }
+        }
+        return '';
+    }, [typeof window !== 'undefined' ? sessionStorage.getItem('me') : null]);
 
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
@@ -1339,7 +1351,9 @@ export const SettingsBilling: React.FC = () => {
                                 <TableCell className='table-heading' sx={billingStyles.tableColumn}>Pricing Plan</TableCell>
                                 <TableCell className='table-heading' sx={billingStyles.tableColumn}>Total</TableCell>
                                 <TableCell className='table-heading' sx={billingStyles.tableColumn}>Status</TableCell>
-                                <TableCell className='table-heading' sx={billingStyles.tableColumn}>Actions</TableCell>
+                                {sourcePlatform !== 'shopify' && (
+                                    <TableCell className='table-heading' sx={billingStyles.tableColumn}>Actions</TableCell>
+                                )}
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -1388,17 +1402,41 @@ export const SettingsBilling: React.FC = () => {
                                                 {history.status}
                                             </Typography>
                                         </TableCell>
-                                        <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                                <IconButton onClick={() => fetchSaveBillingHistory(history.invoice_id)} sx={{ ':hover': { backgroundColor: 'transparent', }, padding: 0 }}>
-                                                    <DownloadIcon sx={{ width: '24px', height: '24px', color: 'rgba(188, 188, 188, 1)', ':hover': { color: 'rgba(80, 82, 178, 1)' } }} />
-                                                </IconButton>
-                                                <IconButton onClick={() => handleSendInvoicePopupOpen(history.invoice_id)} sx={{ ':hover': { backgroundColor: 'transparent', }, padding: 0 }}>
-                                                    <TelegramIcon sx={{ width: '24px', height: '24px', color: 'rgba(188, 188, 188, 1)', ':hover': { color: 'rgba(80, 82, 178, 1)' } }} />
-                                                </IconButton>
-                                            </Box>
-                                        </TableCell>
+                                        {sourcePlatform !== 'shopify' && (
+                                            <TableCell className="table-data" sx={billingStyles.tableBodyColumn}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                    {/* Download Button */}
+                                                    <IconButton
+                                                        onClick={() => fetchSaveBillingHistory(history.invoice_id)}
+                                                        sx={{ ':hover': { backgroundColor: 'transparent' }, padding: 0 }}
+                                                    >
+                                                        <DownloadIcon
+                                                            sx={{
+                                                                width: '24px',
+                                                                height: '24px',
+                                                                color: 'rgba(188, 188, 188, 1)',
+                                                                ':hover': { color: 'rgba(80, 82, 178, 1)' }
+                                                            }}
+                                                        />
+                                                    </IconButton>
 
+                                                    {/* Send Invoice Button */}
+                                                    <IconButton
+                                                        onClick={() => handleSendInvoicePopupOpen(history.invoice_id)}
+                                                        sx={{ ':hover': { backgroundColor: 'transparent' }, padding: 0 }}
+                                                    >
+                                                        <TelegramIcon
+                                                            sx={{
+                                                                width: '24px',
+                                                                height: '24px',
+                                                                color: 'rgba(188, 188, 188, 1)',
+                                                                ':hover': { color: 'rgba(80, 82, 178, 1)' }
+                                                            }}
+                                                        />
+                                                    </IconButton>
+                                                </Box>
+                                            </TableCell>
+                                        )}
                                     </TableRow>
                                 )))}
                         </TableBody>
@@ -1600,7 +1638,7 @@ export const SettingsBilling: React.FC = () => {
 
             </Drawer>
 
-        </Box>
+        </Box >
 
 
 
