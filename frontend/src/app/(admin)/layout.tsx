@@ -1,7 +1,7 @@
 "use client";
 import React, { ReactNode } from "react";
 import { Grid } from "@mui/material";
-import Header from "@/components/Header";
+import HeaderAdmin from "./HeaderAdmin";
 import AdminSidebar from "@/components/SidebarAdmin";
 
 interface AdminLayoutProps {
@@ -11,12 +11,19 @@ interface AdminLayoutProps {
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   return (
     <>
-      <Header NewRequestNotification={false} />
-      <Grid container sx={{ display: "flex", flexWrap: "nowrap", overflowX: "hidden", paddingTop: "4.25rem" }}>
-        <Grid item xs={12} md="auto" lg="auto" sx={{ position: "fixed", flexBasis: "200px", overflowX: "hidden", flexShrink: 0, minWidth: "200px" }}>
+      <HeaderAdmin NewRequestNotification={false} />
+      <Grid container sx={{ display: "flex", flexWrap: "nowrap", overflowX: "hidden", paddingTop: "4.25rem" }}> 
+        <Grid item xs={12} md="auto" lg="auto" sx={{ position: "fixed", flexBasis: "200px", overflowX: "hidden", flexShrink: 0, minWidth: "200px", display: { xs: 'none', md: 'block' }, }}>
           <AdminSidebar />
         </Grid>
-        <Grid item xs={12} md lg sx={{ padding: "0px", ml:20 }}>
+        <Grid item xs={12} md lg sx={{ padding: "0px", ml:20, '@media (max-width: 899px)': {
+              padding: '0 16px 32px',
+              marginLeft: 0,
+            },
+            '@media (max-width: 599px)': {
+              padding: '0 16px 16px',
+              marginLeft: 0,
+            } }}>
           {children}
         </Grid>
       </Grid>
