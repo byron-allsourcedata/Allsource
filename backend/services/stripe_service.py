@@ -6,10 +6,27 @@ import logging
 
 from config.stripe import StripeConfig
 from schemas.users import UserSignUpForm
+from persistence.user_persistence import UserPersistence
 
 stripe.api_key = StripeConfig.api_key
 
 logging.getLogger("stripe").setLevel(logging.WARNING)
+
+
+class StripeService:
+    def __init__(self, user_persistence: UserPersistence):
+        self.user_persistence_service = user_persistence
+
+    def get_stripe_account_info(self, stripe_account_id: str, user_id: int):
+        if stripe_account_id:
+            try:
+                account = stripe.Account.retrieve(stripe_account_id)
+                return account
+            except:
+                self.user_persistence_service.delete_stripe_info(user_id=user_id)
+                return {}
+        else:
+            return {}
 
 
 def create_customer(user: UserSignUpForm):
@@ -367,11 +384,3 @@ def get_billing_history_by_userid(customer_id, page, per_page):
     max_page = math.ceil(count / per_page)
     billing_history = billing_history[(page - 1) * per_page:min(page * per_page, count)]
     return billing_history, count, max_page
-
-
-def get_stripe_account_info(stripe_account_id: str):
-    if stripe_account_id:
-        account = stripe.Account.retrieve(stripe_account_id)
-        return account
-    else:
-        return {}

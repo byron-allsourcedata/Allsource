@@ -4,7 +4,7 @@ from persistence.referral_discount_code_persistence import ReferralDiscountCodes
 from dotenv import load_dotenv
 from encryption_utils import encrypt_data
 from persistence.user_persistence import UserPersistence
-from services.stripe_service import get_stripe_account_info
+from services.stripe_service import StripeService
 
 logger = logging.getLogger(__name__)
 load_dotenv()
@@ -12,12 +12,13 @@ load_dotenv()
 
 class ReferralService:
     def __init__(self, referral_persistence_service: ReferralDiscountCodesPersistence,
-                 user_persistence: UserPersistence):
+                 user_persistence: UserPersistence, stripe_service: StripeService):
         self.referral_persistence_service = referral_persistence_service
         self.user_persistence = user_persistence
+        self.stripe_service = stripe_service
 
     def get_overview_info(self, user: dict):
-        account = get_stripe_account_info(user.get('connected_stripe_account_id'))
+        account = self.stripe_service.get_stripe_account_info(user.get('connected_stripe_account_id'), user.get('id'))
         email = account.get('email')
         currently_due = account.get('requirements', {}).get('currently_due', [])
         can_transfer = account.get("capabilities", {}).get("transfers", "") == "active"
