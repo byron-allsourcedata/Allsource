@@ -220,12 +220,13 @@ def get_referral_service(
 def get_partners_service(
         partners_persistence: PartnersPersistence = Depends(get_partners_persistence),
         user_persistence: UserPersistence = Depends(get_user_persistence_service),
+        accounts_persistence: ParntersInvitationsPersistence = Depends(get_partners_invitations_persistence),
         send_grid_persistence: SendgridPersistence = Depends(get_send_grid_persistence_service),
-        plans_persistence: PlansPersistence = Depends(get_plans_persistence),
-):
+        plans_persistence: PlansPersistence = Depends(get_plans_persistence)):
     return PartnersService(
         partners_persistence=partners_persistence,
         user_persistence=user_persistence,
+        accounts_persistence=accounts_persistence,
         send_grid_persistence=send_grid_persistence,
         plans_persistence=plans_persistence,
     )

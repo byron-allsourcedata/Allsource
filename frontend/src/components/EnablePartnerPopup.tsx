@@ -10,12 +10,16 @@ interface PartnerData {
     id: number;
     partner_name: string;
     email: string;
-    join_date: Date;
+    join_date: Date | string;
     commission: string;
     subscription: string;
     sources: string;
     last_payment_date: string;
     status: string;
+    count: number;
+    reward_payout_date: string;
+    reward_status: string;
+    reward_amount: string;
 }
 
 interface FormUploadPopupProps {
