@@ -24,10 +24,10 @@ class UserPersistence:
             synchronize_session=False)
         self.db.commit()
         
+    def get_user_domain(self, domain):
+        return self.db.query(UserDomains).filter(UserDomains.domain == domain).first()
+        
     def save_user_domain(self, user_id, domain):
-        user_domain = self.db.query(UserDomains).filter(UserDomains.domain == domain).first()
-        if user_domain:
-            return user_domain
         user_domain = UserDomains(user_id=user_id, domain=domain.replace('https://', '').replace('http://', ''))
         self.db.add(user_domain)
         self.db.commit()
