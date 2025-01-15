@@ -21,7 +21,7 @@ logging.basicConfig(level=logging.INFO)
 import logging
 import pandas as pd
 
-async def fetch_users_by_domain(db_session, company_domains, output_file):
+async def fetch_users_by_domain(db_session, company_domains, output_file, valid_job_titles):
     results = []
     count = 0
     for domain in company_domains:
@@ -31,6 +31,10 @@ async def fetch_users_by_domain(db_session, company_domains, output_file):
         if users:
             row = {"company domain": domain}
             for user in users:
+                print(user.job_title)
+                if not user.job_title or user.job_title.lower() not in valid_job_titles:
+                    continue
+                
                 email = None
                 mobile_number = None
                 
@@ -52,13 +56,14 @@ async def fetch_users_by_domain(db_session, company_domains, output_file):
                 elif user.company_phone:
                     mobile_number = user.company_phone
                 mobile_number = mobile_number.split(', ')[-1] if mobile_number else None
-                if mobile_number and user.job_title:
+                
+                if mobile_number or email:
                     row[f"job title_{len(row) // 6}"] = user.job_title
                     row[f"first name_{len(row) // 6}"] = user.first_name
                     row[f"last name_{len(row) // 6}"] = user.last_name
                     row[f"email_{len(row) // 6}"] = email
                     row[f"mobile number_{len(row) // 6}"] = mobile_number
-            
+                print(row)
             results.append(row)
             
     df = pd.DataFrame(results)
@@ -78,12 +83,16 @@ async def main():
         db_session = Session()
         input_file = 'tmp/company_domains.txt'
         output_file = 'tmp/output_users.csv'
+        job_title = 'tmp/all-jobs.txt'
 
         with open(input_file, "r") as file:
             content = file.read()
             company_domains = [domain.strip() for domain in content.splitlines() if domain.strip()]
+        
+        with open(job_title, "r") as file:
+            valid_job_titles = {title.strip().lower() for title in file if title.strip()}
             
-        await fetch_users_by_domain(db_session, company_domains, output_file)
+        await fetch_users_by_domain(db_session, company_domains, output_file, valid_job_titles)
 
     except Exception as err:
         logging.error("Unhandled Exception:", exc_info=True)
