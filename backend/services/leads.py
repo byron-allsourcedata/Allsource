@@ -22,11 +22,14 @@ class LeadsService:
  
         return ', '.join(formatted_phones)
 
-
+    def convert_state_code_to_name(self, state_code, state_dict):
+        if state_code:
+            return state_dict.get(state_code.lower(), None)
+        return None
 
     def get_leads(self, page, per_page, from_date, to_date, regions, page_visits, average_time_sec,
                   recurring_visits, sort_by, sort_order, search_query, from_time, to_time, behavior_type, status):
-        leads, count, max_page = self.leads_persistence_service.filter_leads(
+        leads, count, max_page, states = self.leads_persistence_service.filter_leads(
             domain_id=self.domain.id,
             page=page,
             per_page=per_page,
@@ -44,7 +47,7 @@ class LeadsService:
             to_time=to_time,
             status=status
         )
-
+        state_dict = {state.state_code: state.state_name for state in states}
         leads_list = []
         for lead in leads:
             if not lead[66]:
@@ -77,14 +80,14 @@ class LeadsService:
                     'personal_emails': lead[8],
                     'last_name': lead[9],
                     'personal_city': lead[10],
-                    'personal_state': lead[11],
+                    'personal_state': self.convert_state_code_to_name(lead[11], state_dict),
                     'company_name': lead[12],
                     'company_domain': lead[13],
                     'company_phone': self.format_phone_number(lead[14]) if lead[14] else None,
                     'company_sic': lead[15],
                     'company_address': lead[16],
                     'company_city': lead[17],
-                    'company_state': lead[18],
+                    'company_state': self.convert_state_code_to_name(lead[18], state_dict),
                     'company_linkedin_url': lead[19],
                     'company_revenue': lead[20],
                     'company_employee_count': lead[21],
@@ -109,7 +112,7 @@ class LeadsService:
                     'professional_address': lead[40],
                     'professional_address_2': lead[41],
                     'professional_city': lead[42],
-                    'professional_state': lead[43],
+                    'professional_state': self.convert_state_code_to_name(lead[43], state_dict),
                     'primary_industry': lead[44],
                     'business_email_validation_status': lead[45],
                     'business_email_last_seen': lead[46],
@@ -123,7 +126,7 @@ class LeadsService:
                     'professional_zip': lead[54],
                     'company_zip': lead[55],
                     'behavior_type': 'converted_sales' if lead[65] else lead[56],
-                    'state': lead[57].title() if lead[57] else None,
+                    'state': self.convert_state_code_to_name(lead[57], state_dict),
                     'city': lead[58].title() if lead[58] else None,
                     'first_visited_date': lead[59].strftime('%d.%m.%Y'),
                     'first_visited_time': lead[60].strftime('%H:%M'),
@@ -140,7 +143,7 @@ class LeadsService:
                        behavior_type=None, status=None, recurring_visits=None, sort_by=None,
                        sort_order=None, search_query=None, from_time=None, to_time=None, leads_ids=0):
         if leads_ids == 0:
-            results = self.leads_persistence_service.get_full_user_leads_by_filters(domain_id=self.domain.id,
+            leads, states = self.leads_persistence_service.get_full_user_leads_by_filters(domain_id=self.domain.id,
                                                                                     from_date=from_date,
                                                                                     to_date=to_date, regions=regions,
                                                                                     page_visits=page_visits,
@@ -154,8 +157,8 @@ class LeadsService:
                                                                                     from_time=from_time, to_time=to_time
                                                                                     )
         else:
-            results = self.leads_persistence_service.get_full_user_leads_by_ids(self.domain.id, leads_ids)
-        if len(results) == 0:
+            leads, states = self.leads_persistence_service.get_full_user_leads_by_ids(self.domain.id, leads_ids)
+        if len(leads) == 0:
             return None
         output = io.StringIO()
         writer = csv.writer(output)
@@ -165,47 +168,48 @@ class LeadsService:
             'Gender', 'Age range', 'Marital status', 'Children', 'Job title', 'Seniority level', 'Department', 'Company name', 'Company domain', 'Company phone', 'Company description', 
             'Business email', 'Business email last seen', 'Company last updated', 'Company address', 'Company city', 'Company state', 'Company zipcode', 'Income range', 'Net worth', 'Company revenue',
             'Company employee count', 'Primary industry', 'Followers', 'Company LinkedIn url'])
-        for result in results:
+        state_dict = {state.state_code: state.state_name for state in states}
+        for lead in leads:
             relevant_data = [
-                result.first_name or 'None',
-                result.last_name or 'None',
-                format_phone_number(result.mobile_phone) or 'None',
-                format_phone_number(result.personal_phone) or 'None',
-                result.direct_number or 'None',
-                result.personal_address or 'None',
-                result.personal_city or 'None',
-                result.personal_state or 'None',
-                result.personal_zip or 'None',
-                result.personal_emails or 'None',
-                result.personal_emails_last_seen or 'None',
-                result.business_email or 'None',
-                result.business_email_last_seen or 'None',
-                result.linkedin_url or 'None',
-                result.gender or 'None',
-                f"{result.age_min} - {result.age_max}" if result.age_min is not None and result.age_max is not None else 'None',
-                result.married or 'None',
-                result.children or 'None',
-                result.job_title or 'None',
-                result.seniority_level or 'None',
-                result.department or 'None',
-                result.company_name or 'None',
-                result.company_domain or 'None',
-                format_phone_number(result.company_phone) or 'None',
-                result.company_description or 'None',
-                result.business_email or 'None',
-                result.business_email_last_seen or 'None',
-                result.company_last_updated or 'None',
-                result.company_address or 'None',
-                result.company_city or 'None',
-                result.company_state or 'None',
-                result.company_zip or 'None',
-                result.income_range or 'None',
-                result.net_worth or 'None',
-                result.company_revenue or 'None',
-                result.company_employee_count or 'None',
-                result.primary_industry or 'None',
-                result.social_connections or 'None',
-                result.company_linkedin_url or 'None'
+                lead.first_name or 'None',
+                lead.last_name or 'None',
+                format_phone_number(lead.mobile_phone) or 'None',
+                format_phone_number(lead.personal_phone) or 'None',
+                lead.direct_number or 'None',
+                lead.personal_address or 'None',
+                lead.personal_city or 'None',
+                self.convert_state_code_to_name(lead.personal_state, state_dict) or 'None',
+                lead.personal_zip or 'None',
+                lead.personal_emails or 'None',
+                lead.personal_emails_last_seen or 'None',
+                lead.business_email or 'None',
+                lead.business_email_last_seen or 'None',
+                lead.linkedin_url or 'None',
+                lead.gender or 'None',
+                f"{lead.age_min} - {lead.age_max}" if lead.age_min is not None and lead.age_max is not None else 'None',
+                lead.married or 'None',
+                lead.children or 'None',
+                lead.job_title or 'None',
+                lead.seniority_level or 'None',
+                lead.department or 'None',
+                lead.company_name or 'None',
+                lead.company_domain or 'None',
+                format_phone_number(lead.company_phone) or 'None',
+                lead.company_description or 'None',
+                lead.business_email or 'None',
+                lead.business_email_last_seen or 'None',
+                lead.company_last_updated or 'None',
+                lead.company_address or 'None',
+                lead.company_city or 'None',
+                self.convert_state_code_to_name(lead.company_state, state_dict) or 'None',
+                lead.company_zip or 'None',
+                lead.income_range or 'None',
+                lead.net_worth or 'None',
+                lead.company_revenue or 'None',
+                lead.company_employee_count or 'None',
+                lead.primary_industry or 'None',
+                lead.social_connections or 'None',
+                lead.company_linkedin_url or 'None'
             ]
             writer.writerow(relevant_data)
 
