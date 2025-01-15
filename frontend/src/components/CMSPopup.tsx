@@ -117,6 +117,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
     return '';
   });
   const [access_token, setAccessToken] = useState('');
+  const [accessTokenExists, setAccessTokenExists] = useState(false)
   const [storeHash, setstoreHash] = useState('')
   const [storeHashError, setStoreHashError] = useState(false)
   const sourcePlatform = useMemo(() => {
@@ -144,6 +145,9 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
         if (response.status === 200) {
           setDomain(response.data.shop_domain);
           setAccessToken(response.data.access_token);
+          if (response.data.access_token){
+            setAccessTokenExists(true)
+          }
         }
       } catch (error) {
       }
@@ -306,7 +310,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                 )}
                 {selectedCMS === 'Shopify' ? (
                   <>
-                    {sourcePlatform !== 'shopify' && (
+                    {(sourcePlatform !== 'shopify' || !accessTokenExists) && (
                       <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
                         <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store"
                           target="_blank"
@@ -372,10 +376,10 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                           value={access_token}
                           onChange={(e) => setAccessToken(e.target.value)}
                           InputLabelProps={{ sx: styles.inputLabel }}
-                          disabled={sourcePlatform === 'shopify'}
+                          disabled={(sourcePlatform === 'shopify' && accessTokenExists)}
                         />
                       </Box>
-                      {sourcePlatform !== 'shopify' && (
+                      {(sourcePlatform !== 'shopify') && (
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'start' }}>
                           <Image src='/3.svg' alt='3' width={28} height={28} />
                           <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '2em 1em 1em', fontWeight: '500', '@media (max-width: 600px)': { padding: '1em' } }}>Once you have submitted the required information, our system will automatically install the script on your Shopify store. You don’t need to take any further action.</Typography>
@@ -383,7 +387,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                       )}
                     </Box>
                     <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', maxHeight: '100%', padding: '0em 1em' }}>
-                      {sourcePlatform === 'shopify' ? (
+                      {sourcePlatform === 'shopify' && accessTokenExists ? (
                         <Typography
                           sx={{
                             color: "#333",
