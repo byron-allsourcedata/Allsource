@@ -43,7 +43,7 @@ async def fetch_users_by_domain(db_session, company_domains, output_file, valid_
         logging.info(f"Processed domains {count} / {len(company_domains)}")
         users = db_session.query(FiveXFiveUser).filter(FiveXFiveUser.company_domain == domain).all()
         if users:
-            row = {"company domain": domain}
+            row = {"domain": domain}
             for user in users:
                 if not user.job_title or user.job_title.lower() not in valid_job_titles:
                     continue
