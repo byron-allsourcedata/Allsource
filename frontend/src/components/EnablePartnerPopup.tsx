@@ -200,6 +200,7 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                             placeholder='Need to custom my plan according to my usage'
                             sx={{
                                 width: "556px",
+                                "@media (max-width: 620px)": { width: "calc(100vw - 64px)" },
                                 paddingBottom: "24px",
                                 "& .MuiInputLabel-root.Mui-focused": {
                                     color: "rgba(17, 17, 19, 0.6)",

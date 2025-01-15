@@ -65,17 +65,29 @@ class PartnersService:
             return {"status": False, "error":{"code": 500, "message": f"Unexpected error during getting: {str(e)}"}}
         return {"status": True, "data": {"items": result, "totalCount": total_count}}
     
+    def get_partner(self, email) -> PartnersObjectResponse:
+        try:
+            decoded_email = unquote(email)
+            partner = self.partners_persistence.get_partner_by_email(decoded_email)
+            
+            user_id = partner.user_id
+            user = self.get_user_info(user_id)
+            partnerData = self.domain_mapped(partner, user)
+
+            return {"status": True, "data": partnerData}
+        
+        except Exception as e:
+            logger.debug("Error getting partner data", e)
+            return {"status": False, "error":{"code": 500, "message": f"Unexpected error during getting: {str(e)}"}}
+    
 
     def get_partner_partners(self, email, start_date, end_date, page, rowsPerPage) -> PartnersObjectResponse:
         offset = page * rowsPerPage
         limit = rowsPerPage
-
-        print("frgfr", email)
         
         try:
             decoded_email = unquote(email)
             partner = self.partners_persistence.get_partner_by_email(decoded_email)
-            print("sfdewfe", partner.id)
             partners = self.partners_persistence.get_partners_by_partners_id(partner.id, start_date, end_date, offset, limit)
             total_count = self.partners_persistence.get_total_count_by_id(partner.id)
             
@@ -153,7 +165,7 @@ class PartnersService:
         return md5_hash
     
 
-    async def create_partner(self, full_name: str, email: str, company_name: str, commission: str, isMaster: bool) -> PartnersObjectResponse:
+    async def create_partner(self, full_name: str, email: str, company_name: str, commission: str, isMaster: bool, masterId=None) -> PartnersObjectResponse:
         if not full_name or not email or not company_name or not commission:
             return {"status": False, "error": {"code": 400, "message": "Invalid request with your partner data"}}
         
@@ -167,6 +179,9 @@ class PartnersService:
                 "token": hash,
                 "isMaster": isMaster
             }
+
+            if masterId is not None:
+                creating_data["masterId"] = masterId
 
             created_data = self.partners_persistence.create_partner(creating_data)
 
@@ -227,6 +242,7 @@ class PartnersService:
             id=partner.id,
             partner_name=partner.name,
             email=partner.email,
+            isMaster=partner.isMaster,
             join_date=partner.join_date,
             commission=partner.commission,
             subscription=user["subscription"],

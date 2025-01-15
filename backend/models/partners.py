@@ -26,6 +26,7 @@ class Partners(Base):
                 "status": self.status,
                 "email": self.email,
                 "name": self.name,
+                "isMaster": self.isMaster,
                 "company_name": self.company_name,
                 "join_date": self.join_date
             }

@@ -277,9 +277,9 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id: partnerId, fromA
                         Master Partners
                     </Typography>
                 </>}
-                    <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', mb: 2, alignItems: 'center', gap: 2 }}>
+                    <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', mb: fromAdmin ? 2 : 6, alignItems: 'center', gap: 2 }}>
                         {fromAdmin 
-                        ?
+                        &&
                         <Tabs
                             value={tabIndex}
                             onChange={handleTabChange}
@@ -372,54 +372,44 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id: partnerId, fromA
                                 }}
                                 label="Partners"
                             />
-                        </Tabs> 
-                        : 
-                        <Typography  variant="h4" component="h2"
-                                sx={{
-                                    fontWeight: 'bold',
-                                    fontSize: '16px',
-                                    whiteSpace: 'nowrap',
-                                    textAlign: 'start',
-                                    fontFamily: 'Nunito Sans',                                  
-                                }}>
-                                Accounts
-                        </Typography>
-                        }
+                        </Tabs> }
                         <Box sx={{display: 'flex', gap: "16px"}}>
+                        {fromAdmin && 
+                        <>
                         <TextField
-                                        id="input-with-icon-textfield"
-                                        placeholder="Search by account name, emails"
-                                        value={search}
-                                        onChange={handleSearchChange}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter') {
-                                                fetchRules();
-                                            }
-                                        }}
-                                        InputProps={{
-                                            startAdornment: (
-                                                <InputAdornment position="start">
-                                                        <SearchIcon onClick={fetchRules} style={{ cursor: "pointer" }}/>
-                                                </InputAdornment>
-                                            ),
-                                        }}
-                                        variant="outlined"
-                                        sx={{
-                                            flex: 1,
-                                            width: '360px',
-                                            '& .MuiOutlinedInput-root': {
-                                                borderRadius: '4px',
-                                                height: '40px',
-                                            },
-                                            '& input': {
-                                                paddingLeft: 0,
-                                            },
-                                            '& input::placeholder': {
-                                                fontSize: '14px',
-                                                color: '#8C8C8C',
-                                            },
-                                        }}
-                                    />
+                            id="input-with-icon-textfield"
+                            placeholder="Search by account name, emails"
+                            value={search}
+                            onChange={handleSearchChange}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    fetchRules();
+                                }
+                            }}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                            <SearchIcon onClick={fetchRules} style={{ cursor: "pointer" }}/>
+                                    </InputAdornment>
+                                ),
+                            }}
+                            variant="outlined"
+                            sx={{
+                                flex: 1,
+                                width: '360px',
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: '4px',
+                                    height: '40px',
+                                },
+                                '& input': {
+                                    paddingLeft: 0,
+                                },
+                                '& input::placeholder': {
+                                    fontSize: '14px',
+                                    color: '#8C8C8C',
+                                },
+                            }}
+                        />
                         <Button
                             aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
                             aria-haspopup="true"
@@ -464,6 +454,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id: partnerId, fromA
                                 </Box>
                             }
                         </Button>
+                        </>}
                         </Box>
                     </Box>
 
