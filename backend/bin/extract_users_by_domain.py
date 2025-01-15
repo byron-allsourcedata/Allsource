@@ -1,5 +1,5 @@
 import asyncio
-import json
+import argparse
 import logging
 import os
 import sys
@@ -20,6 +20,20 @@ logging.basicConfig(level=logging.INFO)
 
 import logging
 import pandas as pd
+
+def format_phone_number(phones):
+    if phones:
+        phone_list = phones.split(',')
+        formatted_phones = []
+        for phone in phone_list:
+            phone_str = phone.strip()
+            if phone_str.endswith(".0"):
+                phone_str = phone_str[:-2]
+            if not phone_str.startswith("+"):
+                phone_str = f"+{phone_str}"
+            formatted_phones.append(phone_str)
+
+        return ', '.join(formatted_phones)
 
 async def fetch_users_by_domain(db_session, company_domains, output_file, valid_job_titles):
     results = []
@@ -54,7 +68,9 @@ async def fetch_users_by_domain(db_session, company_domains, output_file, valid_
                     mobile_number = user.personal_phone
                 elif user.company_phone:
                     mobile_number = user.company_phone
+                    
                 mobile_number = mobile_number.split(', ')[-1] if mobile_number else None
+                mobile_number = format_phone_number(mobile_number)
                 
                 if mobile_number or email:
                     row[f"job title_{len(row) // 6}"] = user.job_title
@@ -72,6 +88,9 @@ async def fetch_users_by_domain(db_session, company_domains, output_file, valid_
 async def main():
     logging.info("Started")
     db_session = None
+    parser = argparse.ArgumentParser(description="Extract users by domain.")
+    parser.add_argument("input_file", help="Path to the input file with company domains")
+    args = parser.parse_args()
 
     try:
         engine = create_engine(
@@ -79,7 +98,10 @@ async def main():
         )
         Session = sessionmaker(bind=engine)
         db_session = Session()
-        input_file = 'tmp/company_domains.txt'
+        if not args.input_file:
+            logging.error("input_file is None", exc_info=True)
+            return
+        input_file = f"tmp/{args.input_file}"
         output_file = 'tmp/output_users.csv'
         job_title = 'tmp/all-jobs.txt'
 
