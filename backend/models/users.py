@@ -55,6 +55,8 @@ class Users(Base):
     connected_stripe_account_id = Column(VARCHAR(128), nullable=True)
     utm_params = Column(JSON, nullable=True)
     is_stripe_connected = Column(BOOLEAN, default=False, nullable=False)
+    stripe_connected_email = Column(VARCHAR, nullable=True)
+    stripe_connected_currently_due = Column(JSON, nullable=True)
 
 
 User = Users

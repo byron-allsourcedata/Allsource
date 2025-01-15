@@ -369,6 +369,9 @@ def get_billing_history_by_userid(customer_id, page, per_page):
     return billing_history, count, max_page
 
 
-def get_stripe_account_info(stripe_account_id):
-    account = stripe.Account.retrieve(stripe_account_id)
-    return account
+def get_stripe_account_info(stripe_account_id: str):
+    if stripe_account_id:
+        account = stripe.Account.retrieve(stripe_account_id)
+        return account
+    else:
+        return {}
