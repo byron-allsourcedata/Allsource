@@ -251,7 +251,7 @@ const MetaConnectButton = ({open, onClose, onSave, isEdit}: MetaConnectPopupProp
             marginTop: '12px',
             lineHeight: 'normal'
             }}>
-            login to your Facebook
+            Login to your Facebook
             </Typography>
             <Box>
                 <Button
