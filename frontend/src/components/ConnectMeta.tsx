@@ -722,7 +722,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                  }}>
                 <TabContext value={value}>
                     <Box sx={{pb: 4}}>
-                        <TabList centered aria-label="Connect to Meta Tabs"
+                        <TabList centered aria-label="Tabs"
                         TabIndicatorProps={{sx: {backgroundColor: "#5052b2" } }} 
                         sx={{
                             "& .MuiTabs-scroller": {
