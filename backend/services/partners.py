@@ -20,12 +20,11 @@ logger = logging.getLogger(__name__)
 class PartnersService:
 
     def __init__(self, partners_persistence: PartnersPersistence, user_persistence: UserPersistence, send_grid_persistence: SendgridPersistence,
-                 plans_persistence: PlansPersistence, referral_service: ReferralService):
+                 plans_persistence: PlansPersistence):
         self.partners_persistence = partners_persistence
         self.user_persistence = user_persistence
         self.send_grid_persistence = send_grid_persistence
         self.plans_persistence = plans_persistence
-        self.referral_service = referral_service
 
 
     def get_user_info(self, user_id=None):

@@ -236,7 +236,7 @@ class UserPersistence:
     def confirm_stripe_connect(self, user_id: int):
         self.db.query(Users).filter(Users.id == user_id).update(
             {Users.is_stripe_connected: True,
-             Users.stripe_connected_currently_due: None},
+             Users.stripe_connected_currently_due: {}},
             synchronize_session=False
         )
         self.db.commit()
@@ -252,4 +252,14 @@ class UserPersistence:
         if update_data:
             self.db.query(Users).filter(Users.id == user_id).update(update_data, synchronize_session=False)
             self.db.commit()
+
+    def delete_stripe_info(self, user_id: int):
+        self.db.query(Users).filter(Users.id == user_id).update(
+            {Users.connected_stripe_account_id: None,
+             Users.is_stripe_connected: False,
+             Users.stripe_connected_currently_due: None,
+             Users.stripe_connected_email: None},
+            synchronize_session=False
+        )
+        self.db.commit()
 
