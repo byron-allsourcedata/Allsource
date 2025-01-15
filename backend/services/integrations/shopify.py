@@ -444,9 +444,9 @@ class ShopifyIntegrationService:
         user_website = domain.domain.lower().lstrip('http://').lstrip('https://')
         if user_website != shop_domain:
             raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {'message': 'Store Domain does not match the one you specified earlier'}})
-        self.__save_integration(credentials.shopify.shop_domain, credentials.shopify.access_token, domain.id, user, shop_id)
         if not domain.is_pixel_installed:
             self.__set_pixel(user.get('id'), domain, credentials)
+        self.__save_integration(credentials.shopify.shop_domain, credentials.shopify.access_token, domain.id, user, shop_id)
         return {
             'status': 'Successfully',
             'detail': {
