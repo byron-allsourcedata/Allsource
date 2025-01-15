@@ -73,12 +73,13 @@ async def fetch_users_by_domain(db_session, company_domains, output_file, valid_
                 mobile_number = format_phone_number(mobile_number)
                 
                 if mobile_number or email:
-                    row[f"job title_{len(row) // 6}"] = user.job_title
-                    row[f"first name_{len(row) // 6}"] = user.first_name
-                    row[f"last name_{len(row) // 6}"] = user.last_name
-                    row[f"email_{len(row) // 6}"] = email
-                    row[f"mobile number_{len(row) // 6}"] = mobile_number
-            results.append(row)
+                    row[f"job title_{len(row) // 5}"] = user.job_title
+                    row[f"first name_{len(row) // 5}"] = user.first_name
+                    row[f"last name_{len(row) // 5}"] = user.last_name
+                    row[f"email_{len(row) // 5}"] = email
+                    row[f"mobile number_{(len(row) // 5) - 1}"] = mobile_number
+            if len(row) != 1:
+                results.append(row)
             
     df = pd.DataFrame(results)
     df.to_csv(output_file, index=False)
