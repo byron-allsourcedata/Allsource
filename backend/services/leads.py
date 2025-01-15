@@ -47,7 +47,7 @@ class LeadsService:
             to_time=to_time,
             status=status
         )
-        state_dict = {state.state_code: state.state_name for state in states}
+        state_dict = {state.state_code: state.state_name for state in states} if states else {}
         leads_list = []
         for lead in leads:
             if not lead[66]:
@@ -168,7 +168,7 @@ class LeadsService:
             'Gender', 'Age range', 'Marital status', 'Children', 'Job title', 'Seniority level', 'Department', 'Company name', 'Company domain', 'Company phone', 'Company description', 
             'Business email', 'Business email last seen', 'Company last updated', 'Company address', 'Company city', 'Company state', 'Company zipcode', 'Income range', 'Net worth', 'Company revenue',
             'Company employee count', 'Primary industry', 'Followers', 'Company LinkedIn url'])
-        state_dict = {state.state_code: state.state_name for state in states}
+        state_dict = {state.state_code: state.state_name for state in states} if states else {}
         for lead in leads:
             relevant_data = [
                 lead.first_name or 'None',
