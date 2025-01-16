@@ -4,7 +4,7 @@ import Image from "next/image";
 import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "../../context/UserContext";
-import NavigationMenu from "@/components/NavigationMenu";
+import NavigationMenu from "./NavigationMenuAdmin";
 import { SliderProvider } from "../../context/SliderContext";
 import { useTrial } from '../../context/TrialProvider';
 import NotificationPopup from "../../components/NotificationPopup";
