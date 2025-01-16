@@ -30,6 +30,7 @@ const Signup: React.FC = () => {
   const ift = searchParams.get('ift')
   const ftd = searchParams.get('ftd')
   const referral = searchParams.get('referral')
+  const shop_hash = searchParams.get('shop_hash')
   const initialShopifyData = {
     code: searchParams.get('code') || null,
     hmac: searchParams.get('hmac') || null,
@@ -50,6 +51,7 @@ const Signup: React.FC = () => {
     ...{ ift: ift },
     ...{ ftd: ftd },
     ...{ referral: referral },
+    ...{ shop_hash: shop_hash },
   });
   const [formSubmitted, setFormSubmitted] = useState(false);
 
@@ -201,7 +203,6 @@ const Signup: React.FC = () => {
               break;
             case "EMAIL_ALREADY_EXISTS":
               showErrorToast('Email is associated with an account. Please login');
-              router.push('/signin');
               break;
             case "ERROR_SHOPIFY_TOKEN":
               showErrorToast('Error shopify token');
@@ -316,6 +317,7 @@ const Signup: React.FC = () => {
                   ftd,
                   utm_params: utmData,
                   ...{ referral: referral },
+                  ...{ shop_hash: shop_hash },
                   ...(isShopifyDataComplete && { shopify_data: initialShopifyData })
                 });
 
@@ -369,7 +371,6 @@ const Signup: React.FC = () => {
                     router.push(partner ? '/partners' : '/dashboard');
                     break;
                   case "EMAIL_ALREADY_EXISTS":
-                    router.push('/signin');
                     showErrorToast('Email is associated with an account. Please login')
                     break;
                   default:

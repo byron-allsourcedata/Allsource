@@ -37,6 +37,7 @@ class UserSignUpForm(BaseModel):
     ift: Optional[str] = None
     ftd: Optional[str] = None
     referral: Optional[str] = None
+    shop_hash: Optional[str] = None
     utm_params: Optional[UtmParams] = None
 
 
