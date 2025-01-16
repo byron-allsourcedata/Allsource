@@ -236,7 +236,7 @@ class UserPersistence:
     def confirm_stripe_connect(self, user_id: int):
         self.db.query(Users).filter(Users.id == user_id).update(
             {Users.is_stripe_connected: True,
-             Users.stripe_connected_currently_due: {}},
+             Users.stripe_connected_currently_due: None},
             synchronize_session=False
         )
         self.db.commit()
