@@ -309,10 +309,6 @@ def oauth_bigcommerce_load(signed_payload: Annotated[str, Query()], signed_paylo
     user_email = result['user_email']
     store_hash = result['store_hash']
     owner_email = result['owner_email']
-    print('------')
-    print(user_email)
-    print(owner_email)
-    print(BigcommerceConfig.frontend_sign_in_redirect)
     user = user_persistence.get_user_by_email(user_email)
     if user:
         return RedirectResponse(BigcommerceConfig.frontend_sign_in_redirect)

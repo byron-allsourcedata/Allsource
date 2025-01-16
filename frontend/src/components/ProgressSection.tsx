@@ -230,14 +230,14 @@ export const ProgressSection: React.FC = () => {
           </CustomButton>
           <CustomButton
             onClick={installManually}
-            disabled={sourcePlatform === 'shopify'}
+            disabled={(sourcePlatform === 'shopify' || sourcePlatform === 'big_commerce')}
             sx={{
               borderRadius: "4px",
               mb: "16px",
               "@media (max-width: 1199px)": {
                 mb: "16px",
               },
-              ...(sourcePlatform === 'shopify' && {
+              ...((sourcePlatform === 'shopify' || sourcePlatform === 'big_commerce') && {
                 color: 'grey',
                 borderColor: 'grey',
                 pointerEvents: 'none',

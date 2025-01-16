@@ -204,11 +204,11 @@ class BigcommerceIntegrationsService:
         return integration
     
 
-    def __set_pixel(self, user, domain, shop_domain: str, access_token: str):
+    def __set_pixel(self, user_id, domain, shop_domain: str, access_token: str):
         client_id = domain.data_provider_id
         if client_id is None:
             client_id = hashlib.sha256((str(domain.id) + os.getenv('SECRET_SALT')).encode()).hexdigest()
-            self.integrations_persistence.db.query(UserDomains).filter(UserDomains.user_id == user.get('id'), UserDomains.domain == domain.domain).update(
+            self.integrations_persistence.db.query(UserDomains).filter(UserDomains.user_id == user_id, UserDomains.domain == domain.domain).update(
                 {UserDomains.data_provider_id: client_id},
                 synchronize_session=False
             )

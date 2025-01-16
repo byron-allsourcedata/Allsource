@@ -574,7 +574,7 @@ class UsersAuth:
             self.fill_referral_users(referral=referral, user_object=user_object)
             self.user_persistence_service.book_call_confirmed(user_object.id)
             
-        if is_with_card is False and teams_token is None and referral_token is None and shopify_data is None:
+        if is_with_card is False and teams_token is None and referral_token is None and shopify_data is None and shop_hash is None:
             return self._send_email_verification(user_object, token)
         
         if referral_token:
@@ -604,7 +604,7 @@ class UsersAuth:
                 domain = self.user_persistence_service.save_user_domain(user_object.id, external_apps_installations.domain_url)
                 if domain:
                     credentials = IntegrationCredentials(
-                                    bigcommerce=ShopifyOrBigcommerceCredentials(shop_domain=external_apps_installations.domain_url, access_token=external_apps_installations.access_token)
+                                    bigcommerce=ShopifyOrBigcommerceCredentials(shop_domain=shop_hash, access_token=external_apps_installations.access_token)
                                 )
                     
                     service.bigcommerce.add_integration(credentials, domain, user_object.__dict__)

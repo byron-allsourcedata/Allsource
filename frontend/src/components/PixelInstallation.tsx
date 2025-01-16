@@ -77,7 +77,7 @@ const PixelInstallation: React.FC = () => {
         try {
           const parsed = JSON.parse(savedMe);
           return parsed.source_platform || '';
-        } catch (error) {}
+        } catch (error) { }
       }
     }
     return '';
@@ -183,14 +183,14 @@ const PixelInstallation: React.FC = () => {
               onClick={installManually}
               sx={{
                 ...buttonStyles,
-                ...(sourcePlatform === 'shopify' && {
+                ...((sourcePlatform === 'shopify' || sourcePlatform === 'big_commerce') && {
                   color: 'grey',
                   borderColor: 'grey',
                   pointerEvents: 'none',
                   backgroundColor: 'lightgrey'
                 })
               }}
-              disabled={sourcePlatform === 'shopify'}
+              disabled={(sourcePlatform === 'shopify' || sourcePlatform === 'big_commerce')}
             >
               <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'space-between', flexDirection: 'row' }}>
                 <Image src={'/install_manually.svg'} alt="Install Manually" width={24} height={24} />
@@ -208,14 +208,14 @@ const PixelInstallation: React.FC = () => {
               onClick={installGoogleTag}
               sx={{
                 ...buttonGoogle,
-                ...(sourcePlatform === 'shopify' && {
+                ...((sourcePlatform === 'shopify' || sourcePlatform === 'big_commerce') && {
                   color: 'grey',
                   borderColor: 'grey',
                   pointerEvents: 'none',
                   backgroundColor: 'lightgrey'
                 })
               }}
-              disabled={sourcePlatform === 'shopify'}
+              disabled={(sourcePlatform === 'shopify' || sourcePlatform === 'big_commerce')}
             >
               <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'space-between', flexDirection: 'row' }}>
                 <Image src={'/install_gtm.svg'} className="icon-img" alt="Install on Google Tag Manager" width={24} height={24} />
@@ -228,12 +228,13 @@ const PixelInstallation: React.FC = () => {
           <Grid item xs={12} md={4}>
             <Button variant="outlined" fullWidth onClick={installCMS} sx={buttonStyles}>
               <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'space-between', flexDirection: 'row' }}>
-
                 <Box sx={{ display: 'flex', width: '100%', gap: 0.25 }}>
                   {sourcePlatform === 'shopify' ? (
                     <>
                       <Image src={'/install_cms1.svg'} alt="Install on CMS" width={24} height={24} />
                     </>
+                  ) : sourcePlatform === 'big_commerce' ? (
+                    <Image src={'/bigcommerce-icon.svg'} className="icon-img" alt="Install on CMS" width={24} height={24} />
                   ) : (
                     <>
                       <Image src={'/install_cms1.svg'} alt="Install on CMS" width={24} height={24} />
@@ -241,7 +242,6 @@ const PixelInstallation: React.FC = () => {
                       <Image src={'/bigcommerce-icon.svg'} className="icon-img" alt="Install on CMS" width={24} height={24} />
                     </>
                   )}
-
                 </Box>
                 <CustomTooltip title={"Install easily on your CMS for a streamlined integration experience."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2/how-do-i-install-maximiz-pixel-on-shopify-store" />
               </Box>
