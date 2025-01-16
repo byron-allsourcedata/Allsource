@@ -59,6 +59,7 @@ class UserLoginFormResponse(BaseModel):
     shopify_status: Optional[str] = None
     token: Optional[str] = None
     stripe_payment_url: Optional[str] = None
+    is_partner: Optional[bool] = None
 
 
 class PixelFormResponse(BaseModel):
