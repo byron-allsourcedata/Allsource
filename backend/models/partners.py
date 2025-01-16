@@ -1,4 +1,4 @@
-from sqlalchemy import Column, event, Integer, TIMESTAMP, Boolean, VARCHAR
+from sqlalchemy import Column, event, Integer, TIMESTAMP, BOOLEAN, VARCHAR
 from .base import Base, create_timestamps, update_timestamps
 
 
@@ -15,9 +15,10 @@ class Partners(Base):
     join_date = Column(TIMESTAMP, nullable=True)
     token = Column(VARCHAR(256), nullable=False)
     status = Column(VARCHAR(16), default="invitation sent", nullable=False)
-    isMaster = Column(Boolean, default=False, nullable=False)
+    isMaster = Column(BOOLEAN, default=False, nullable=False)
     created_at = Column(TIMESTAMP, nullable=False)
     updated_at = Column(TIMESTAMP, nullable=False)
+    is_active = Column(BOOLEAN, nullable=False, default=True)
     
     def to_dict(self):
             return {

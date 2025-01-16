@@ -217,6 +217,14 @@ class PartnersService:
             return {"status": False, "error": {"code": 400, "message": "Invalid request with your partner data"}}
 
         try:
+            if field == 'status' and value == 'inactive':
+                field = 'is_active'
+                value = False
+                
+            if field == 'status' and value == 'active':
+                field = 'is_active'
+                value = True
+                
             update_data = {field: value}
 
             if partner_name is not None:

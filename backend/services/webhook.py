@@ -5,7 +5,6 @@ from enums import NotificationTitles
 from persistence.notification import NotificationPersistence
 from services.subscriptions import SubscriptionService
 from services.integrations.base import IntegrationService
-from fastapi import Response
 from .stripe_service import save_payment_details_in_stripe, determine_plan_name_from_product_id
 
 logger = logging.getLogger(__name__)
@@ -24,7 +23,7 @@ class WebhookService:
             tzinfo=None)
         data_object = payload.get("data").get("object")
         customer_id = data_object.get("customer")
-        user_data = self.subscription_service.get_userid_by_customer(customer_id)
+        user_data, parent_id, referral_user_id = self.subscription_service.get_userid_by_customer(customer_id)
         if not user_data:
             return payload
 
@@ -45,7 +44,7 @@ class WebhookService:
         self.subscription_service.create_subscription_transaction(user_id=user_data.id,
                                                                   stripe_payload=payload)
 
-        result = self.subscription_service.process_subscription(user=user_data, stripe_payload=data_object)
+        result = self.subscription_service.process_subscription(user=user_data, stripe_payload=data_object, parent_id=parent_id, referral_user_id=referral_user_id)
         lead_credit_plan_id = None
         if result['lead_credit_price']:
             plan = self.subscription_service.get_plan_by_price(lead_credit_price=result['lead_credit_price'])
@@ -70,7 +69,7 @@ class WebhookService:
         data_object = payload.get("data").get("object")
         customer_id = data_object.get("customer")
         stripe_status = data_object.get("status")
-        user_data = self.subscription_service.get_userid_by_customer(customer_id)
+        user_data, parent_id, referral_user_id = self.subscription_service.get_userid_by_customer(customer_id)
         if not user_data:
             return payload
 
@@ -110,7 +109,7 @@ class WebhookService:
         self.subscription_service.create_subscription_transaction(user_id=user_data.id,
                                                                   stripe_payload=payload)
 
-        self.subscription_service.process_subscription(user=user_data, stripe_payload=data_object)
+        self.subscription_service.process_subscription(user=user_data, stripe_payload=data_object, parent_id=parent_id, referral_user_id=referral_user_id)
 
         return {
             'status': stripe_status,
@@ -123,7 +122,7 @@ class WebhookService:
         if product_description != 'leads_credits' or product_description != 'prospect_credits':
             return payload
         customer_id = data_object.get("customer")
-        user_data = self.subscription_service.get_userid_by_customer(customer_id)
+        user_data, parent_id, referral_user_id = self.subscription_service.get_userid_by_customer(customer_id)
         if not user_data:
             return payload
 

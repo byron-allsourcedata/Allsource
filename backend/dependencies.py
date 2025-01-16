@@ -156,12 +156,23 @@ def get_notification_persistence(db: Session = Depends(get_db)):
 def get_aws_service(s3_client=Depends(get_s3_client)) -> AWSService:
     return AWSService(s3_client)
 
+def get_stripe_service(user_persistence: UserPersistence = Depends(get_user_persistence_service)):
+    return StripeService(user_persistence=user_persistence)
+
+def get_referral_service(
+        referral_persistence: ReferralDiscountCodesPersistence = Depends(get_referral_persistence_service),
+        user_persistence: UserPersistence = Depends(get_user_persistence_service),
+        stripe_service: StripeService = Depends(get_stripe_service)):
+    return ReferralService(referral_persistence_service=referral_persistence, user_persistence=user_persistence,
+                           stripe_service=stripe_service)
+
 
 def get_subscription_service(db: Session = Depends(get_db),
                              user_persistence_service: UserPersistence = Depends(get_user_persistence_service),
-                             plans_persistence: PlansPersistence = Depends(get_plans_persistence)):
+                             plans_persistence: PlansPersistence = Depends(get_plans_persistence),
+                             referral_service: ReferralService = Depends(get_referral_service)):
     return SubscriptionService(db=db, user_persistence_service=user_persistence_service,
-                               plans_persistence=plans_persistence)
+                               plans_persistence=plans_persistence, referral_service=referral_service)
 
 
 def get_partners_assets_service(
@@ -203,18 +214,6 @@ def get_integration_service(db: Session = Depends(get_db),
                               aws_service,
                               domain_persistence,
                               suppression_persitence, epi_persistence)
-
-
-def get_stripe_service(user_persistence: UserPersistence = Depends(get_user_persistence_service)):
-    return StripeService(user_persistence=user_persistence)
-
-
-def get_referral_service(
-        referral_persistence: ReferralDiscountCodesPersistence = Depends(get_referral_persistence_service),
-        user_persistence: UserPersistence = Depends(get_user_persistence_service),
-        stripe_service: StripeService = Depends(get_stripe_service)):
-    return ReferralService(referral_persistence_service=referral_persistence, user_persistence=user_persistence,
-                           stripe_service=stripe_service)
 
 
 def get_partners_service(

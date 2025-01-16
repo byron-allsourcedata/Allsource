@@ -17,25 +17,30 @@ from persistence.plans_persistence import PlansPersistence
 from persistence.user_persistence import UserPersistence
 from utils import get_utc_aware_date_for_postgres
 from decimal import *
+from models.referral_payouts import ReferralPayouts
+from models.referral_users import ReferralUser
 from services.stripe_service import determine_plan_name_from_product_id
 from urllib.parse import urlencode
-from utils import timestamp_to_date
 import requests
-
+from services.referral import ReferralService
 load_dotenv()
 
 logger = logging.getLogger(__name__)
 
 
 class SubscriptionService:
-    def __init__(self, db: Session, user_persistence_service: UserPersistence, plans_persistence: PlansPersistence):
+    def __init__(self, db: Session, user_persistence_service: UserPersistence, plans_persistence: PlansPersistence, referral_service: ReferralService):
         self.plans_persistence = plans_persistence
         self.db = db
         self.user_persistence_service = user_persistence_service
         self.UNLIMITED = -1
+        self.referral_service = referral_service
 
     def get_userid_by_customer(self, customer_id):
-        return self.db.query(User).filter(User.customer_id == customer_id).first()
+        return self.db.query(User, ReferralPayouts.parent_id, ReferralUser.id)\
+            .join(ReferralPayouts, ReferralPayouts.user_id == User.id)\
+            .join(ReferralUser, ReferralUser.user_id == User.id)\
+            .filter(User.customer_id == customer_id).first()
     
     def get_billing_history_shopify(self, user_id, page, per_page):
         start_index = (page - 1) * per_page
@@ -483,7 +488,7 @@ class SubscriptionService:
         return result
 
     
-    def process_subscription(self, stripe_payload, user: Users):
+    def process_subscription(self, stripe_payload, user: Users, referral_payout, referral_user):
         result = {
             'status': None,
             'lead_credit_price': None
@@ -523,7 +528,10 @@ class SubscriptionService:
                 UserSubscriptions.platform_subscription_id == platform_subscription_id,
                 UserSubscriptions.price_id == price_id).first()
             price_id = stripe_payload['items']['data'][0]['plan']['id']
-            plan = self.plans_persistence.get_plan_by_price_id(price_id)    
+            plan = self.plans_persistence.get_plan_by_price_id(price_id)
+            if referral_user and not referral_payout:
+                self.referral_service.manage_referral_payout(plan.price, user.id, referral_user)
+            
             domains_limit = plan.domains_limit
             integrations_limit = plan.integrations_limit
             leads_credits = plan.leads_credits

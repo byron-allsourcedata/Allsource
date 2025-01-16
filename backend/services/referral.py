@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from encryption_utils import encrypt_data
 from persistence.user_persistence import UserPersistence
 from services.stripe_service import StripeService
-
+from models.referral_users import ReferralUser
 logger = logging.getLogger(__name__)
 load_dotenv()
 
@@ -50,6 +50,10 @@ class ReferralService:
         return {
             'referral_code': encrypt_data(f"{user.get('id')}:{discount_code.id}")
         }
+    
+    def manage_referral_payout(self, plan_price, user_id, referral_user: ReferralUser):
+        self.referral_persistence_service.create_referral_payout()
+        
 
     def get_referral_details(self, user: dict):
         discount_codes = self.referral_persistence_service.get_referral_discount_codes()
