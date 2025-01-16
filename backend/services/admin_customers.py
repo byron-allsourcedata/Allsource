@@ -69,8 +69,8 @@ class AdminCustomersService:
         if not user:
             return UpdateUserStatus.USER_NOT_FOUND
         
-        if update_data.partner:
-            user.is_partner = True
+        if update_data.partner is None:
+            user.is_partner = update_data.partner
         self.db.commit()
         
         return UpdateUserStatus.SUCCESS
