@@ -209,7 +209,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
             else {
                 setIsPartnerAvailable(false) 
             }
-        }, 7000) //NEED this test in dev with 2500
+        }, 2500) //NEED this test in dev with 2500
     }   
 
     useEffect(() => {

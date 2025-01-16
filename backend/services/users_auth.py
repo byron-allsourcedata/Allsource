@@ -735,6 +735,7 @@ class UsersAuth:
             result = {
                 'status': authorization_data['status'].value,
                 'token': token,
+                'is_partner': user_object.is_partner,
                 'stripe_payment_url': authorization_data.get('stripe_payment_url')
             }
             if shopify_status:
@@ -752,7 +753,8 @@ class UsersAuth:
         
         result = {
                     'status': LoginStatus.SUCCESS,
-                    'token': token
+                    'token': token,
+                    'is_partner': user_object.is_partner,
                 }
         if shopify_status:
                 result['shopify_status'] = shopify_status

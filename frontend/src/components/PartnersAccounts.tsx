@@ -65,10 +65,11 @@ const getStatusStyle = (status: string) => {
 };
 
 interface PartnersAccountsProps {
+    appliedDates?: { start: Date | null; end: Date | null };
     id?: number | null;
     fromAdmin?: boolean;
     masterData?: any;
-    loading: boolean;
+    loading?: boolean;
     setLoading: (state: boolean) => void;
     tabIndex?: number;
     handleTabChange?: (event: React.SyntheticEvent | null, newIndex: number) => void;
@@ -89,7 +90,7 @@ interface AccountData {
 }
 
 
-const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id: partnerId, fromAdmin, masterData, setMasterData, loading, setLoading, tabIndex, handleTabChange }) => {
+const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFromMain = { start: null, end: null }, id: partnerId, fromAdmin, masterData, setMasterData, loading, setLoading, tabIndex, handleTabChange }) => {
     const { email } = useUser();
     const [accounts, setAccounts] = useState<AccountData[]>([]);
     const [page, setPage] = useState(0);
@@ -100,7 +101,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id: partnerId, fromA
     const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
     const isCalendarOpen = Boolean(calendarAnchorEl);
     const [formattedDates, setFormattedDates] = useState<string>('');
-    const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
+    const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>(appliedDatesFromMain);
     const [selectedDateLabel, setSelectedDateLabel] = useState<string>('');
     const id = partnerId ?? masterData?.id
     const allowedRowsPerPage = [10, 25, 50, 100];
@@ -226,14 +227,10 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({id: partnerId, fromA
         fetchRules();
     }, [id, appliedDates]);
 
-    const [referralLink, setReferralLink] = useState('1233213213tttttt');
-
-    const handleCopyClick = () => {
-        navigator.clipboard.writeText(referralLink).then(() => {
-            alert('Referral link copied!');
-        }).catch(err => {
-        });
-    };
+    useEffect(() => {
+        setAppliedDates(appliedDatesFromMain)
+        console.log({appliedDatesFromMain})
+    }, [appliedDatesFromMain]);
 
 
     return (

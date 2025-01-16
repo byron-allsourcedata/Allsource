@@ -91,7 +91,7 @@ class PartnersService:
             decoded_email = unquote(email)
             partner = self.partners_persistence.get_partner_by_email(decoded_email)
             partners = self.partners_persistence.get_partners_by_partners_id(partner.id, start_date, end_date, offset, limit)
-            total_count = self.partners_persistence.get_total_count_by_id(partner.id)
+            total_count = self.partners_persistence.get_total_count_by_id(partner.id, start_date, end_date)
             
             result = []
             for partner in partners:
@@ -143,9 +143,9 @@ class PartnersService:
         template_id = self.send_grid_persistence.get_template_by_alias(
             SendgridTemplate.PARTNER_MESSAGE_TEMPLATE.value)
         mail_object.send_sign_up_mail(
-            to_emails=email,
-            template_id=template_id,
-            template_placeholder={"full_name": full_name, "message": message, "email": email},
+             to_emails=email,
+             template_id=template_id,
+             template_placeholder={"full_name": full_name, "message": message, "email": email},
         )
     
 
@@ -161,9 +161,9 @@ class PartnersService:
         md5_hash = hashlib.md5(json_string.encode()).hexdigest()
         referral_token = f"{os.getenv('SITE_HOST_URL')}/signup?referral_token={md5_hash}&user_mail={email}"
         mail_object.send_sign_up_mail(
-            to_emails=email,
-            template_id=template_id,
-            template_placeholder={"full_name": full_name, "link": referral_token, "email": email},
+             to_emails=email,
+             template_id=template_id,
+             template_placeholder={"full_name": full_name, "link": referral_token, "email": email},
         )
         return md5_hash
     

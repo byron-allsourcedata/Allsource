@@ -237,13 +237,12 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                     width: "70px",
                     height: "40px",
                     ":hover": {
-                        backgroundColor: "rgba(8, 83, 196, 1)"},
+                        backgroundColor: "rgba(62, 64, 142, 1)"},
                     ":active": {
-                        backgroundColor: "rgba(20, 110, 246, 1)",
-                        border: "2px solid rgba(157, 194, 251, 1)"},
+                        backgroundColor: "rgba(80, 82, 178, 1)"},
                     ":disabled": {
-                        backgroundColor: "rgba(20, 110, 246, 1)",
-                        opacity: 0.4,
+                        backgroundColor: "rgba(80, 82, 178, 1)",
+                        opacity: 0.6,
                     },
                 }}>
                     <Typography
@@ -265,12 +264,11 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                     width: "67px",
                     height: "40px",
                     ":hover": {
-                        borderColor: "rgba(8, 83, 196, 1)"},
+                        borderColor: "rgba(62, 64, 142, 1)"},
                     ":active": {
-                        borderColor: "rgba(20, 110, 246, 1)",
-                        border: "1px solid rgba(157, 194, 251, 1)"},
+                        borderColor: "rgba(80, 82, 178, 1)"},
                     ":disabled": {
-                        borderColor: "rgba(20, 110, 246, 1)",
+                        borderColor: "rgba(80, 82, 178, 1)",
                         opacity: 0.4,
                     },
                 }}>

@@ -1,34 +1,23 @@
+"use client"
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { Box, Typography, TextField, Button, List, ListItemText, ListItemButton, IconButton, Tabs, Tab, 
+import { Box, Grid, Typography, TextField, Button, List, ListItemText, ListItemButton, IconButton, Tabs, Tab, 
     InputAdornment, Popover, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import { suppressionsStyles } from "@/css/suppressions";
 import dayjs from "dayjs";
-import CustomTablePagination from "./CustomTablePagination";
+import CustomTablePagination from "@/components/CustomTablePagination";
 import Image from "next/image";
-import CalendarPopup from "./CustomCalendar";
+import CalendarPopup from "@/components/CustomCalendar";
 import { DateRangeIcon } from "@mui/x-date-pickers/icons";
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import SearchIcon from '@mui/icons-material/Search';
 import InvitePartnerPopup from "@/components/InvitePartnerPopup"
 import EnablePartnerPopup from "@/components/EnablePartnerPopup"
 import { showErrorToast, showToast } from '@/components/ToastNotification';
-import PartnersAccounts from "./PartnersAccounts";
+import PartnersAccounts from "@/components/PartnersAccounts";
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
-
-interface PartnerData {
-    id: number;
-    partner_name: string;
-    email: string;
-    join_date: Date | string;
-    commission: string;
-    subscription: string;
-    sources: string;
-    last_payment_date: string;
-    status: string;
-}
 
 const getStatusStyle = (status: string) => {
     switch (status) {
@@ -60,6 +49,18 @@ const getStatusStyle = (status: string) => {
     }
 };
 
+interface PartnerData {
+    id: number;
+    partner_name: string;
+    email: string;
+    join_date: Date | string;
+    commission: string;
+    subscription: string;
+    sources: string;
+    last_payment_date: string;
+    status: string;
+}
+
 interface PartnersAdminProps {
     masterData?: any;
     setMasterData?: any;
@@ -83,13 +84,11 @@ interface EnabledPartner {
     fullName?: string
 }
 
-type CombinedPartnerData = NewPartner & EnabledPartner;
-
-
-const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData, isMaster: master, tabIndex, handleTabChange, setLoading, loading}) => {
-    const [isMaster, setIsMaster] = useState(master);
+const Assets: React.FC = () => {
+    const [isMaster, setIsMaster] = useState(false);
     const [partners, setPartners] = useState<PartnerData[]>([]);
     const [page, setPage] = useState(0);
+    const [loading, setLoading] = useState(false);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalCount, setTotalCount] = useState(0);
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
@@ -325,31 +324,55 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
     };
 
     useEffect(() => {
-        if (masterData?.id){
-            fetchRulesId(masterData.id)
-            setPartnerName(masterData.partner_name)
-        }
-        else {
-            fetchRules();
-        }
+        // if (masterData?.id){
+        //     fetchRulesId(masterData.id)
+        //     setPartnerName(masterData.partner_name)
+        // }
+        // else {
+        //     fetchRules();
+        // }
+        fetchRules();
     }, [page, rowsPerPage, appliedDates])
 
-
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', gap: "24px", justifyContent: 'space-between' }}>
+        <>
+            <Box
+                sx={{
+                    display: 'grid',
+                    gridTemplateAreas: `
+                    "header header"
+                    "sidebar content"
+                `,
+                    gridTemplateRows: 'auto 1fr',
+                    gridTemplateColumns: '170px 1fr',
+                    height: '92vh',
+                }}
+            >
+
+
+                <Box
+                    sx={{
+                        gridArea: 'content',
+
+                    }}
+                >
+                    <Grid container>
+                        <Grid item xs={12} sx={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                            <Box sx={{ display: "flex", flexDirection: "column" }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', gap: "24px", justifyContent: 'space-between' }}>
             {accountPage || partnerName
             ?
             <>
                 <Box sx={{display: "flex", alignItems: "center", gap: "5px" }}>
                     <Typography onClick={() => {
-                        if(masterData) {
-                            handleTabChange(null, 0)
-                        }
+                        // if(masterData) {
+                        //     handleTabChange(null, 0)
+                        // }
                         setAccountPage(false)
                         setAccountName(null)
                     }}
                     sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "#808080", cursor: "pointer"}}>
-                        {isMaster || masterData ? "Master" : ""} Partner {partnerName ? `- ${partnerName}` : ""}
+                        {isMaster ? "Master" : ""} Partner {partnerName ? `- ${partnerName}` : ""}
                     </Typography>
                     {accountName && 
                         <>
@@ -394,99 +417,6 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                     }}>
                                 <Box>
                                     <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', mb: 2, alignItems: 'center', gap: 2 }}>
-                                        <Tabs
-                                            value={tabIndex}
-                                            onChange={handleTabChange}
-                                            sx={{
-                                                textTransform: 'none',
-                                                minHeight: 0,
-                                                '& .MuiTabs-indicator': {
-                                                    backgroundColor: 'rgba(80, 82, 178, 1)',
-                                                    height: '1.4px',
-                                                },
-                                                "@media (max-width: 600px)": {
-                                                    border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px', width: '100%', '& .MuiTabs-indicator': {
-                                                        height: '0',
-                                                    },
-                                                }
-                                            }}
-                                            aria-label="partners role tabs"
-                                        >   
-                                            {masterData?.id && <Tab className="main-text"
-                                                sx={{
-                                                    textTransform: 'none',
-                                                    padding: '4px 1px',
-                                                    minHeight: 'auto',
-                                                    flexGrow: 1,
-                                                    pb: '10px',
-                                                    textAlign: 'center',
-                                                    fontSize: '14px',
-                                                    fontWeight: 700,
-                                                    lineHeight: '19.1px',
-                                                    minWidth: 'auto',
-                                                    mr: 2,
-                                                    '&.Mui-selected': {
-                                                        color: 'rgba(80, 82, 178, 1)'
-                                                    },
-                                                    "@media (max-width: 600px)": {
-                                                        mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                                                            backgroundColor: 'rgba(249, 249, 253, 1)',
-                                                            border: '1px solid rgba(220, 220, 239, 1)'
-                                                        },
-                                                    }
-                                                }}
-                                                label="Accounts"
-                                            />}
-                                            <Tab className="main-text"
-                                                sx={{
-                                                    display: masterData?.id ? "none" : "block",
-                                                    textTransform: 'none',
-                                                    padding: '4px 1px',
-                                                    minHeight: 'auto',
-                                                    flexGrow: 1,
-                                                    pb: '10px',
-                                                    textAlign: 'center',
-                                                    fontSize: '14px',
-                                                    fontWeight: 700,
-                                                    lineHeight: '19.1px',
-                                                    minWidth: 'auto',
-                                                    mr: 2,
-                                                    '&.Mui-selected': {
-                                                        color: 'rgba(80, 82, 178, 1)'
-                                                    },
-                                                    "@media (max-width: 600px)": {
-                                                        mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                                                            backgroundColor: 'rgba(249, 249, 253, 1)',
-                                                            border: '1px solid rgba(220, 220, 239, 1)'
-                                                        },
-                                                    }
-                                                }}
-                                                label="Master partners"
-                                            />
-                                            <Tab className="main-text"
-                                                sx={{
-                                                    textTransform: 'none',
-                                                    padding: '4px 10px',
-                                                    pb: '10px',
-                                                    flexGrow: 1,
-                                                    minHeight: 'auto',
-                                                    minWidth: 'auto',
-                                                    fontSize: '14px',
-                                                    fontWeight: 700,
-                                                    lineHeight: '19.1px',
-                                                    '&.Mui-selected': {
-                                                        color: 'rgba(80, 82, 178, 1)'
-                                                    },
-                                                    "@media (max-width: 600px)": {
-                                                        mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                                                            backgroundColor: 'rgba(249, 249, 253, 1)',
-                                                            border: '1px solid rgba(220, 220, 239, 1)'
-                                                        },
-                                                    }
-                                                }}
-                                                label="Partners"
-                                            />
-                                        </Tabs>
                                         <Box sx={{display: 'flex', gap: "16px"}}>
                                             <TextField
                                                 id="input-with-icon-textfield"
@@ -648,7 +578,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                                         if (isMaster){
                                                                             setPartnerName(data.partner_name)
                                                                             setIsMaster(false)
-                                                                            setMasterData(data)
+                                                                            // setMasterData(data)
                                                                             fetchRulesId(data.id)
                                                                         }
                                                                         else {
@@ -848,7 +778,13 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                 </>
             }
         </Box>
-    );
+                            </Box>
+                        </Grid>
+                    </Grid>
+                </Box>
+            </Box>
+        </>
+    )
 };
 
-export default PartnersAdmin;
+export default Assets;
