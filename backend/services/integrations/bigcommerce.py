@@ -106,8 +106,11 @@ class BigcommerceIntegrationsService:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
         return integration
     
+    def get_external_apps_installations_by_shop_hash(self, shop_hash):
+        return self.integrations_persistence.get_external_apps_installations_by_shop_hash(shop_hash=shop_hash)
+    
 
-    def add_external_apps_install(self, new_credentials: IntegrationCredentials):
+    def add_external_apps_install(self, new_credentials: IntegrationCredentials, domain_url: str):
         try:
             epi = self.eai_persistence.get_epi_by_filter_one(platform=SourcePlatformEnum.BIG_COMMERCE.value, store_hash=new_credentials.bigcommerce.shop_domain)
             if epi:
@@ -115,6 +118,7 @@ class BigcommerceIntegrationsService:
             epi = self.eai_persistence.create_epi({
                     'platform': SourcePlatformEnum.BIG_COMMERCE.value,
                     'store_hash': new_credentials.bigcommerce.shop_domain,
+                    'domain_url': domain_url,
                     'access_token': new_credentials.bigcommerce.access_token
                 })
             if not epi:
@@ -158,9 +162,11 @@ class BigcommerceIntegrationsService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing required information in payload")
         
         user_email = user.get('email')
+        owner_email = owner.get('email')
         store_hash = payload.get('store_hash')
         return {
             'user_email': user_email,
+            'owner_email': owner_email,
             'store_hash': store_hash
         }
     
