@@ -142,7 +142,7 @@ class PartnersService:
         mail_object = SendgridHandler()
         template_id = self.send_grid_persistence.get_template_by_alias(
             SendgridTemplate.PARTNER_MESSAGE_TEMPLATE.value)
-         mail_object.send_sign_up_mail(
+        mail_object.send_sign_up_mail(
              to_emails=email,
              template_id=template_id,
              template_placeholder={"full_name": full_name, "message": message, "email": email},
