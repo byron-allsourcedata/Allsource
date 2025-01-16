@@ -600,12 +600,14 @@ class UsersAuth:
     def _process_big_commerce_integration(self, user_object, shop_hash):
         with self.integration_service as service:
             external_apps_installations = service.bigcommerce.get_external_apps_installations_by_shop_hash(shop_hash)
-            domain = self.user_persistence_service.save_user_domain(user_object.id, external_apps_installations.domain_url)
-            credentials = IntegrationCredentials(
-                            bigcommerce=ShopifyOrBigcommerceCredentials(shop_domain=external_apps_installations.domain_url, access_token=external_apps_installations.access_token)
-                        )
-            
-            service.bigcommerce.add_integration(credentials, domain, user_object.__dict__)
+            if external_apps_installations:
+                domain = self.user_persistence_service.save_user_domain(user_object.id, external_apps_installations.domain_url)
+                if domain:
+                    credentials = IntegrationCredentials(
+                                    bigcommerce=ShopifyOrBigcommerceCredentials(shop_domain=external_apps_installations.domain_url, access_token=external_apps_installations.access_token)
+                                )
+                    
+                    service.bigcommerce.add_integration(credentials, domain, user_object.__dict__)
     
     def _process_shopify_integration(self, user_object, shopify_data, shopify_access_token, shop_id):
         domain = self.user_persistence_service.save_user_domain(user_object.id, shopify_data.shop)
