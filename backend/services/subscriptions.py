@@ -548,6 +548,9 @@ class SubscriptionService:
             
             if referral_parent_id and not payout_id:
                 partner = self.partners_persistence.get_partner_by_user_id(user_id)
+                print(partner)
+                print(partner.commission)
+                print(partner.is_active)
                 if partner and partner.commission and partner.is_active:
                     amount = Decimal(stripe_payload.get("plan").get("amount_decimal")) / Decimal(100)
                     reward_amount = round(partner.commission / 100 * amount, 2)
