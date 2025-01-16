@@ -548,12 +548,9 @@ class SubscriptionService:
             
             if referral_parent_id and not payout_id:
                 partner = self.partners_persistence.get_partner_by_user_id(referral_parent_id)
-                print(partner)
-                print(partner.commission)
-                print(partner.is_active)
                 if partner and partner.commission and partner.is_active:
                     amount = Decimal(stripe_payload.get("plan").get("amount_decimal")) / Decimal(100)
-                    reward_amount = round(partner.commission / 100 * amount, 2)
+                    reward_amount = round(Decimal(partner.commission) / Decimal(100) * amount, 2)
                     self.referral_service.save_referral_payouts(reward_amount, user_id, referral_parent_id)
                 
             domains_limit = plan.domains_limit
