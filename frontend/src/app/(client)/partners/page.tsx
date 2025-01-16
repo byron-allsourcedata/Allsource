@@ -55,6 +55,10 @@ interface PartnerData {
     sources: string;
     last_payment_date: string;
     status: string;
+    count: number;
+    reward_payout_date: string;
+    reward_status: string;
+    reward_amount: string;
 }
 
 
@@ -170,10 +174,13 @@ const Partners: React.FC = () => {
                     email: encodeURIComponent(email ? email : '')
                 }});
             if(responseMe.status === 200) {
-                setIsMaster(responseMe.data.isMaster) 
+                const masterPartner = responseMe.data.isMaster
+                setIsMaster(masterPartner) 
                 setMasterId(responseMe.data.id)  
                 setCommission(responseMe.data.commission) 
-                fetchRules()
+                if(masterPartner){
+                    fetchRules()
+                }
             }
             else {
                 setIsMaster(false)
@@ -230,7 +237,7 @@ const Partners: React.FC = () => {
 
     return (
         <Box sx={partnersStyle.mainContent}>
-            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', position: 'fixed', top: hasNotification ? '7.05rem' : '4.25rem', pt: '12px', pb: '16px', zIndex: 1200, backgroundColor: '#fff', justifyContent: 'space-between', width: '90%', ml: 0, "@media (max-width: 900px)": { left: 0, zIndex: 50 }, "@media (max-width: 600px)": { flexDirection: 'column', pl: '1.5rem', display: 'flex', alignItems: 'flex-start', zIndex: 50, width: '97%' }, "@media (max-width: 440px)": { flexDirection: 'column', pt: hasNotification ? '3rem' : '0.75rem', top: hasNotification ? '4.5rem' : '', zIndex: 50, justifyContent: 'flex-start' }, "@media (max-width: 400px)": { pt: hasNotification ? '4.25rem' : '', pb: '6px', } }}>
+            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', position: 'fixed', top: hasNotification ? '10vw' : '4.25rem', left: '9.1rem', pl: '2rem', pt: '12px', pb: '16px', zIndex: 1200, backgroundColor: '#fff', justifyContent: 'space-between', width: '90%', ml: 0, "@media (max-width: 900px)": { left: 0, zIndex: 50 }, "@media (max-width: 600px)": { flexDirection: 'column', pl: '1.5rem', display: 'flex', alignItems: 'flex-start', zIndex: 50, width: '97%' }, "@media (max-width: 440px)": { flexDirection: 'column', pt: hasNotification ? '3rem' : '0.75rem', top: hasNotification ? '4.5rem' : '', zIndex: 50, justifyContent: 'flex-start' }, "@media (max-width: 400px)": { pt: hasNotification ? '4.25rem' : '', pb: '6px', } }}>
                 
                 <Box sx={{ flexShrink: 0, display: 'flex', justifyContent: "space-between", flexDirection: 'row', alignItems: 'center', width: '15%', gap: 1, "@media (max-width: 900px)": { width: '20%' }, "@media (max-width: 600px)": { mb: 2, width: '97%' }, "@media (max-width: 440px)": { mb: 1 }, }}>
                     <Box sx={{display: 'flex', justifyContent: "space-between", alignItems: 'center', gap: 1}}>
@@ -522,7 +529,7 @@ const Partners: React.FC = () => {
                 </Box>
                 <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
                     <TabPanel value={tabIndex} index={isMaster ? 2 : 1}>
-                        <PartnersMain masterId={masterId} partnersData={partners} />
+                        <PartnersMain loading={loading} setLoading={setLoading} masterId={masterId} partnersData={partners} />
                     </TabPanel>
                 </Box>
                 <Box sx={{ width: '100%', padding: 0, margin: 0 }}>

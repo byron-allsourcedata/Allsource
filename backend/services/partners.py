@@ -8,6 +8,7 @@ from models.partners import Partners
 from persistence.user_persistence import UserPersistence
 from services.referral import ReferralService
 from persistence.partners_persistence import PartnersPersistence
+from persistence.partners_invations_persistence import ParntersInvitationsPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.plans_persistence import PlansPersistence
 from schemas.partners import PartnersResponse, PartnerUserData, PartnersObjectResponse
@@ -19,19 +20,22 @@ logger = logging.getLogger(__name__)
 
 class PartnersService:
 
-    def __init__(self, partners_persistence: PartnersPersistence, user_persistence: UserPersistence, send_grid_persistence: SendgridPersistence,
-                 plans_persistence: PlansPersistence, referral_service: ReferralService):
+    def __init__(self, partners_persistence: PartnersPersistence, accounts_persistence: ParntersInvitationsPersistence, user_persistence: UserPersistence, send_grid_persistence: SendgridPersistence,
+                 plans_persistence: PlansPersistence):
         self.partners_persistence = partners_persistence
+        self.accounts_persistence = accounts_persistence
         self.user_persistence = user_persistence
         self.send_grid_persistence = send_grid_persistence
         self.plans_persistence = plans_persistence
-        self.referral_service = referral_service
 
 
     def get_user_info(self, user_id=None):
         user_data = {}
         user_data["subscription"] = "--"
         user_data["payment_date"] = None
+        user_data["reward_amount"] = None
+        user_data["reward_status"] = None
+        user_data["reward_payout_date"] = None
         if user_id is not None:
             # self.user_persistence.get_user_by_id(user_id)
             # user_data["payment_date"] = datetime.strptime("1880-12-19 12:54:55", "%Y-%m-%d %H:%M:%S")
@@ -93,7 +97,8 @@ class PartnersService:
             for partner in partners:
                 user_id = partner.user_id
                 user = self.get_user_info(user_id)
-                result.append(self.domain_mapped(partner, user))
+                count = self.accounts_persistence.get_total_count(partner.id)
+                result.append(self.domain_mapped(partner, user, count))
         
         except Exception as e:
             logger.debug("Error getting partner data", e)
@@ -235,7 +240,7 @@ class PartnersService:
 
 
 
-    def domain_mapped(self, partner: Partners, user: PartnerUserData):
+    def domain_mapped(self, partner: Partners, user: PartnerUserData, count=0):
         return PartnersResponse(
             id=partner.id,
             partner_name=partner.name,
@@ -246,5 +251,9 @@ class PartnersService:
             subscription=user["subscription"],
             sources=partner.company_name,
             last_payment_date=user["payment_date"],
-            status=partner.status.capitalize()
+            reward_amount=user["reward_amount"],
+            reward_status=user["reward_status"],
+            reward_payout_date=user["reward_payout_date"],
+            status=partner.status.capitalize(),
+            count=count
         ).model_dump()

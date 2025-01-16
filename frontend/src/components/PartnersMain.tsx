@@ -2,7 +2,10 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { Box, Typography, TextField, Button, List, ListItemText, ListItemButton, IconButton, Tabs, Tab, 
     InputAdornment, Popover, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
+import { styled } from '@mui/material/styles';
+import Switch, { SwitchProps } from '@mui/material/Switch';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import { suppressionsStyles } from "@/css/suppressions";
 import dayjs from "dayjs";
@@ -28,6 +31,10 @@ interface PartnerData {
     sources: string;
     last_payment_date: string;
     status: string;
+    count: number;
+    reward_payout_date: string;
+    reward_status: string;
+    reward_amount: string;
 }
 
 const getStatusStyle = (status: string) => {
@@ -61,6 +68,8 @@ const getStatusStyle = (status: string) => {
 };
 
 interface PartnersProps {
+    loading: boolean;
+    setLoading: any;
     masterId: number;
     partnersData: PartnerData[];
 }
@@ -78,61 +87,58 @@ interface EnabledPartner {
     fullName?: string
 }
 
-// const IOSSwitch = styled((props: SwitchProps) => (
-//     <Switch focusVisibleClassName=".Mui-focusVisible" disableRipple {...props} />
-// ))(({ theme }) => ({
-//     width: 56,
-//     height: 26,
-//     padding: 0,
-//     '& .MuiSwitch-switchBase': {
-//         padding: 0,
-//         margin: 2,
-//         transitionDuration: '300ms',
-//         '&.Mui-checked': {
-//             transform: 'translateX(30px)',
-//             color: '#fff',
-//             '& + .MuiSwitch-track': {
-//                 backgroundColor: theme.palette.mode === 'dark' ? '#2ECA45' : '#65C466',
-//                 opacity: 1,
-//                 border: 0,
-//             },
-//             '&.Mui-disabled + .MuiSwitch-track': {
-//                 opacity: 0.5,
-//             },
-//         },
-//         '&.Mui-focusVisible .MuiSwitch-thumb': {
-//             color: '#33cf4d',
-//             border: '6px solid #fff',
-//         },
-//         '&.Mui-disabled .MuiSwitch-thumb': {
-//             color:
-//                 theme.palette.mode === 'light'
-//                     ? theme.palette.grey[100]
-//                     : theme.palette.grey[600],
-//         },
-//         '&.Mui-disabled + .MuiSwitch-track': {
-//             opacity: theme.palette.mode === 'light' ? 0.7 : 0.3,
-//         },
-//     },
-//     '& .MuiSwitch-thumb': {
-//         boxSizing: 'border-box',
-//         width: 22,
-//         height: 22,
-//     },
-//     '& .MuiSwitch-track': {
-//         borderRadius: 26 / 2,
-//         backgroundColor: theme.palette.mode === 'light' ? '#E9E9EA' : '#39393D',
-//         opacity: 1,
-//         transition: theme.transitions.create(['background-color'], {
-//             duration: 500,
-//         }),
-//     },
-// }));
+const AccountStatusSwitch = styled(Switch)(({ theme }) => ({
+    padding: 8,
+    width: 86,
+    '& .MuiSwitch-track': {
+      borderRadius: 22 / 2,
+      backgroundColor: 'rgba(123, 123, 123, 1)',
+      opacity: 1,
+      position: 'relative',
+      '&::before': {
+        content: '"Inactive"',
+        position: 'absolute',
+        top: '50%',
+        left: '10%',
+        transform: 'translateY(-50%)',
+        fontSize: 12,
+        color: 'white',
+      },
+      '&.MuiSwitch-switchBase + &.Mui-checked': {
+        transform: 'translateX(48px)',
+      },
+      '& .Mui-checked.MuiSwitch-track': {
+        opacity: 1,
+        backgroundColor: 'rgba(80, 82, 178, 1)',
+      },
+      '&.Mui-checked': {
+        '&::before': {
+          content: '"Active"',
+          left: '60%',
+        },
+        '&.MuiSwitch-track': {
+          opacity: 1
+        },
+        '&.MuiSwitch-switchBase': {
+            transform: 'translateX(48px)', 
+        }
+      },
+    },
+    '& .MuiSwitch-thumb': {
+      boxShadow: 'none',
+      width: 16,
+      height: 16,
+      margin: 2,
+      color: 'white',
+    },
+  }));
+  
+  
 
 type CombinedPartnerData = NewPartner & EnabledPartner;
 
 
-const PartnersMain: React.FC<PartnersProps> = ({masterId, partnersData}) => {
+const PartnersMain: React.FC<PartnersProps> = ({loading, setLoading, masterId, partnersData}) => {
     const [partners, setPartners] = useState<PartnerData[]>(partnersData);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -142,7 +148,6 @@ const PartnersMain: React.FC<PartnersProps> = ({masterId, partnersData}) => {
     const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
     const isCalendarOpen = Boolean(calendarAnchorEl);
     const [formattedDates, setFormattedDates] = useState<string>('');
-    const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
     const [selectedDateLabel, setSelectedDateLabel] = useState<string>('');
     const [menuAnchor, setMenuAnchor] = useState(null);
     const [formPopupOpen, setFormPopupOpen] = useState(false);
@@ -151,19 +156,20 @@ const PartnersMain: React.FC<PartnersProps> = ({masterId, partnersData}) => {
     const [enabledData, setEnabledData] = useState<EnabledPartner>({id: 0});
     const [selectedRowData, setSelectedRowData] = useState<any>(null);
     const [accountPage, setAccountPage] = useState(false);
-    const [id, setId] = useState<number | null>(null);
     const [partnerName, setPartnerName] = useState<string | null>(null);
     const [accountName, setAccountName] = useState<string | null>(null);
     const [search, setSearch] = useState("");
     const [errorResponse, setErrosResponse] = useState(false);
 
     const tableHeaders = [
-        { key: 'account_name', label: `Partner name`, sortable: false },
+        { key: 'partner_name', label: `Account name`, sortable: false },
         { key: 'email', label: 'Email', sortable: false },
         { key: 'join_date', label: 'Join date', sortable: true },
+        { key: 'count', label: 'No.of accounts', sortable: false },
         { key: 'commission', label: 'Commission %', sortable: false },
-        { key: 'subscription', label: 'Subscription', sortable: false },
-        { key: 'sources', label: 'Sources', sortable: false },
+        { key: 'reward_amount', label: 'Reward amount', sortable: false },
+        { key: 'reward_status', label: 'Reward Status', sortable: false },
+        { key: 'reward_payout_date', label: 'Reward payout date', sortable: false },
         { key: 'last_payment_date', label: 'Last payment date', sortable: true },
         { key: 'account_status', label: 'Account status', sortable: false },
         { key: 'status', label: 'Status', sortable: false },
@@ -216,21 +222,14 @@ const PartnersMain: React.FC<PartnersProps> = ({masterId, partnersData}) => {
         }
     };
 
-    const handleApply = (dates: { start: Date | null; end: Date | null }) => {
-        if (dates.start && dates.end) {
-            setAppliedDates({ ...dates }); 
-            setCalendarAnchorEl(null);
-            handleCalendarClose();
-        }
-        else {
-            setAppliedDates({ start: null, end: null })
-        }
-    };
-
 
     const handlePageChange = (event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
         setPage(newPage);
     };
+
+    useEffect(() => {
+        setPartners(partnersData)
+    }, [partnersData]); 
 
 
     const handleRowsPerPageChange = (event: React.ChangeEvent<{ value: unknown }>) => {
@@ -305,6 +304,44 @@ const PartnersMain: React.FC<PartnersProps> = ({masterId, partnersData}) => {
         );
     };
 
+    const Toggle = ({ initialStatus, onStatusChange }: any) => {
+        const [isActive, setIsActive] = useState(initialStatus === "Active");
+      
+        const handleToggle = () => {
+          const newStatus = isActive ? "Inactive" : "Active";
+          setIsActive(!isActive);
+          onStatusChange(newStatus);
+        };
+      
+        return (
+          <div
+            className={`custom-toggle ${isActive ? "active" : "inactive"}`}
+            onClick={handleToggle}
+          >
+            <div className="toggle-circle"></div>
+            <span className="toggle-label">{isActive ? "Active" : "Inactive"}</span>
+          </div>
+        );
+      };
+
+    
+    const handleStatusChange = async (newStatus: string, id: number) => {
+        setLoading(true);
+    
+        try {
+            const response = await axiosInstance.put(`partners/${id}/`, {status: newStatus, message: newStatus=="Active" ? "Your account active again" : "Your account has become inactive!" }, {
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (response.status === 200) {
+                updateOrAddAsset(response.data);
+                showToast("Partner status successfully updated!");
+            }
+        } catch {
+            showErrorToast("Failed to update status. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', gap: "24px", justifyContent: 'space-between' }}>
@@ -334,7 +371,17 @@ const PartnersMain: React.FC<PartnersProps> = ({masterId, partnersData}) => {
                                         {tableHeaders.map(({ key, label, sortable }) => (
                                             <TableCell
                                                 key={key}
-                                                sx={{...suppressionsStyles.tableColumn, paddingLeft: "16px", cursor: sortable ? 'pointer' : 'default'}}
+                                                sx={{
+                                                    ...suppressionsStyles.tableColumn, 
+                                                    paddingLeft: "16px", 
+                                                    cursor: sortable ? 'pointer' : 'default',
+                                                    ...(key === 'partner_name' && { 
+                                                        position: 'sticky',
+                                                        left: 0,
+                                                        zIndex: 99,
+                                                        backgroundColor: '#fff',
+                                                        
+                                                    })}}
                                                 onClick={sortable ? () => handleSortRequest(key) : undefined}
                                             >
                                                 <Box sx={{ display: 'flex', alignItems: 'center' }} style={key === "status" || key === "actions" ? { justifyContent: "center" } : {}}>
@@ -376,6 +423,7 @@ const PartnersMain: React.FC<PartnersProps> = ({masterId, partnersData}) => {
                                                         position: 'sticky',
                                                         left: 0,
                                                         zIndex: 1, 
+                                                        background: "#fff",
                                                         "&:hover .icon-button": { display: "contents" }}}
                                                     >
                                                     <Box sx={{display: "flex", alignItems: "center", justifyContent: "space-between", color: 'rgba(80, 82, 178, 1)'}}>
@@ -397,15 +445,23 @@ const PartnersMain: React.FC<PartnersProps> = ({masterId, partnersData}) => {
                                                 </TableCell>
 
                                                 <TableCell className='table-data'sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
+                                                    {data.count}
+                                                </TableCell>
+
+                                                <TableCell className='table-data'sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
                                                     {data.commission}
                                                 </TableCell>
 
                                                 <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
-                                                    {data.subscription}
+                                                    {data.reward_amount ?? '--'}
                                                 </TableCell>
 
                                                 <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
-                                                    Direct
+                                                    {data.reward_status ?? '--'}
+                                                </TableCell>
+
+                                                <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
+                                                    {dayjs(data.reward_payout_date).isValid() ? dayjs(data.reward_payout_date).format('MMM D, YYYY') : '--'}
                                                 </TableCell>
 
                                                 <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
@@ -413,11 +469,7 @@ const PartnersMain: React.FC<PartnersProps> = ({masterId, partnersData}) => {
                                                 </TableCell>
 
                                                 <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
-                                                    {/* <IOSSwitch
-                                                        onChange={() => onSwitchChange(row)}
-                                                        checked={row.is_trial}
-                                                        disabled={row.payment_status === 'SUBSCRIPTION_ACTIVE' || row.payment_status === 'NEED_CONFIRM_EMAIL' || row.payment_status === 'NEED_CONFIRM_EMAIL' || row.payment_status === 'FILL_COMPANY_DETAILS'}
-                                                    /> */}
+                                                    <Toggle initialStatus={data.status == "Active" ? "Active" : "Inactive"} onStatusChange={() => handleStatusChange(data.status == "Active" ? "Inactive" : "Active", data.id)} />
                                                 </TableCell>
 
                                                 <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
@@ -438,8 +490,6 @@ const PartnersMain: React.FC<PartnersProps> = ({masterId, partnersData}) => {
                                                         </Typography>
                                                     </Box>
                                                 </TableCell>
-
-
                                                 <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
                                                     <IconButton onClick={(event) => handleOpenMenu(event, data)} sx={{ ':hover': { backgroundColor: 'transparent', }}} >
                                                         <Image src='/edit-partner.svg' alt='edit' height={16.18} width={22.91} />
@@ -502,14 +552,6 @@ const PartnersMain: React.FC<PartnersProps> = ({masterId, partnersData}) => {
                 </Box>
                 
             </Box>
-            <CalendarPopup
-                anchorEl={calendarAnchorEl}
-                open={isCalendarOpen}
-                onClose={handleCalendarClose}
-                onDateChange={handleDateChange}
-                onDateLabelChange={handleDateLabelChange}
-                onApply={handleApply}
-            />
         </Box>
     );
 };
