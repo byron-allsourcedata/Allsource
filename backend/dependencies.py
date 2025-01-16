@@ -174,9 +174,11 @@ def get_referral_service(
 def get_subscription_service(db: Session = Depends(get_db),
                              user_persistence_service: UserPersistence = Depends(get_user_persistence_service),
                              plans_persistence: PlansPersistence = Depends(get_plans_persistence),
-                             referral_service: ReferralService = Depends(get_referral_service)):
+                             referral_service: ReferralService = Depends(get_referral_service),
+                             partners_persistence: PartnersPersistence = Depends(get_partners_persistence)):
     return SubscriptionService(db=db, user_persistence_service=user_persistence_service,
-                               plans_persistence=plans_persistence, referral_service=referral_service)
+                               plans_persistence=plans_persistence, referral_service=referral_service,
+                               partners_persistence=partners_persistence)
 
 
 def get_partners_assets_service(
