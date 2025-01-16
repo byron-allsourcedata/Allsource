@@ -179,7 +179,7 @@ async def bigcommerce_redirect_login(store_hash: str = Query(...), is_pixel_inst
     with integration_service as service:
         return service.bigcommerce.bigcommerce_redirect_login(store_hash=store_hash, is_pixel_install=is_pixel_install, domain=domain, user=user)
     
-@router.get("/bigcommerce/remove-user-callback")
+@router.get("/bigcommerce/remove-user")
 async def remove_user_callback(request: Request):
     params = request.query_params
     store_id = params.get('store_id')
