@@ -149,6 +149,10 @@ class SendgridTemplate(Enum):
     PAYMENT_FAILURE_NOTIFICATION = 'payment_failure_notification'
     PARTNER_INVITE_TEMPLATE='partner_invite_template'
     PARTNER_MESSAGE_TEMPLATE='partner_message_template'
+    PARTNER_ENABLE_TEMPLATE='partner_enable_template'
+    PARTNER_DISABLE_TEMPLATE='partner_disable_template'
+    PARTNER_TERMINATE_TEMPLATE='partner_terminate_template'
+    PARTNER_UPDATE_TEMPLATE='partner_update_commission'
 
 
 class ResetPasswordEnum(Enum):

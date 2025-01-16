@@ -159,7 +159,6 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ masterId, isMaster
 
     useEffect(() => {
         if (fileData && fileData.email) {
-            console.log({fileData})
             setEmail(fileData.email);
             setCommission(fileData.commission.toString());
             setCompanyName(fileData.companyName);
