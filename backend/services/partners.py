@@ -215,8 +215,6 @@ class PartnersService:
     ) -> PartnersObjectResponse:
         if not partner_id or not field or not value:
             return {"status": False, "error": {"code": 400, "message": "Invalid request with your partner data"}}
-
-        print("field", field)
             
         try:
             update_data = {field: value}

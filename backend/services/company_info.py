@@ -7,15 +7,17 @@ from sqlalchemy.orm import Session
 from enums import SourcePlatformEnum
 from schemas.users import CompanyInfo
 from services.subscriptions import SubscriptionService
+from persistence.partners_persistence import PartnersPersistence
 
 logger = logging.getLogger(__name__)
 
 
 class CompanyInfoService:
-    def __init__(self, db: Session, user, subscription_service: SubscriptionService):
+    def __init__(self, db: Session, user, subscription_service: SubscriptionService, partners_persistence: PartnersPersistence):
         self.user = user
         self.db = db
         self.subscription_service = subscription_service
+        self.partners_persistence = partners_persistence
 
     def set_company_info(self, company_info: CompanyInfo):
         result = self.check_company_info_authorization()
@@ -30,6 +32,7 @@ class CompanyInfoService:
             user.company_website_visits = company_info.monthly_visits
             user.is_company_details_filled = True
             self.db.flush()
+            self.partners_persistence.update_partner_info(company_info.email, company_info.fullName, company_info.organization_name)
             if self.user.get('source_platform') != SourcePlatformEnum.SHOPIFY.value:
                 self.db.add(UserDomains(user_id=self.user.get('id'),
                                         domain=company_info.company_website.replace('https://', '').replace('http://', '')))

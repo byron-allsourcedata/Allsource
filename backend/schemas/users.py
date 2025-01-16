@@ -91,6 +91,8 @@ class CompanyInfo(BaseModel):
     company_role: str = Field(...)
     monthly_visits: str = Field(...)
     employees_workers: str = Field(...)
+    email: str = Field(...)
+    fullName: str = Field(...)
 
 
 class BaseFormResponse(BaseModel):
