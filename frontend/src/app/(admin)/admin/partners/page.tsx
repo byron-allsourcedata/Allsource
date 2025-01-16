@@ -48,7 +48,7 @@ const Assets: React.FC = () => {
                     "sidebar content"
                 `,
                     gridTemplateRows: 'auto 1fr',
-                    gridTemplateColumns: '200px 1fr',
+                    gridTemplateColumns: '0px 1fr',
                     height: '92vh',
                 }}
             >
@@ -61,7 +61,7 @@ const Assets: React.FC = () => {
                     }}
                 >
                     <Grid container>
-                        <Grid item xs={12} sx={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                        <Grid item xs={12} sx={{ display: 'flex', flexDirection: 'column' }}>
                             <Box sx={{ display: "flex", flexDirection: "column" }}>
                                 <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
                                     {masterData?.id && <TabPanel value={tabIndex} index={0}>
