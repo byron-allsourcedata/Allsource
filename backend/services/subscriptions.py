@@ -40,10 +40,23 @@ class SubscriptionService:
         self.partners_persistence = partners_persistence
 
     def get_userid_by_customer(self, customer_id):
-        return self.db.query(User, ReferralPayouts.id, ReferralUser.parent_user_id)\
-            .join(ReferralPayouts, ReferralPayouts.user_id == User.id)\
-            .join(ReferralUser, ReferralUser.user_id == User.id)\
-            .filter(User.customer_id == customer_id).first()
+        result = self.db.query(User, ReferralPayouts.id, ReferralUser.parent_user_id) \
+            .join(ReferralPayouts, ReferralPayouts.user_id == User.id, isouter=True) \
+            .join(ReferralUser, ReferralUser.user_id == User.id, isouter=True) \
+            .filter(User.customer_id == customer_id) \
+            .first()
+        
+        if result is None:
+            return None 
+        
+        user, referral_payout_id, parent_user_id = result
+
+        return {
+            "user": user,
+            "payout_id": referral_payout_id,
+            "parent_user_id": parent_user_id
+        }
+
     
     def get_billing_history_shopify(self, user_id, page, per_page):
         start_index = (page - 1) * per_page

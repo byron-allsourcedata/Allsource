@@ -23,10 +23,18 @@ class WebhookService:
             tzinfo=None)
         data_object = payload.get("data").get("object")
         customer_id = data_object.get("customer")
-        user_data, payout_id, referral_parent_id = self.subscription_service.get_userid_by_customer(customer_id)
-        if not user_data:
+        result = self.subscription_service.get_userid_by_customer(customer_id)
+        if not result:
             return payload
 
+        user_data = result['user']
+        payout_id = result['payout_id']
+        referral_parent_id = result['parent_user_id']
+        print('---------')
+        print(user_data)
+        print(payout_id)
+        print(referral_parent_id)
+        
         platform_subscription_id = data_object.get("id")
         price_id = data_object.get("plan").get("id")
 
