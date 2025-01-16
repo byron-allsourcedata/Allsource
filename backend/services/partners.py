@@ -142,11 +142,11 @@ class PartnersService:
         mail_object = SendgridHandler()
         template_id = self.send_grid_persistence.get_template_by_alias(
             SendgridTemplate.PARTNER_MESSAGE_TEMPLATE.value)
-        # mail_object.send_sign_up_mail(
-        #     to_emails=email,
-        #     template_id=template_id,
-        #     template_placeholder={"full_name": full_name, "message": message, "email": email},
-        # )
+         mail_object.send_sign_up_mail(
+             to_emails=email,
+             template_id=template_id,
+             template_placeholder={"full_name": full_name, "message": message, "email": email},
+        )
     
 
     def send_referral_in_email(self, full_name: str, email: str):
@@ -160,11 +160,11 @@ class PartnersService:
         json_string = json.dumps(md5_token_info, sort_keys=True)
         md5_hash = hashlib.md5(json_string.encode()).hexdigest()
         referral_token = f"{os.getenv('SITE_HOST_URL')}/signup?referral_token={md5_hash}&user_mail={email}"
-        # mail_object.send_sign_up_mail(
-        #     to_emails=email,
-        #     template_id=template_id,
-        #     template_placeholder={"full_name": full_name, "link": referral_token, "email": email},
-        # )
+        mail_object.send_sign_up_mail(
+             to_emails=email,
+             template_id=template_id,
+             template_placeholder={"full_name": full_name, "link": referral_token, "email": email},
+        )
         return md5_hash
     
 
