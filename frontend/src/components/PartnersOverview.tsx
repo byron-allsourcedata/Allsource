@@ -140,14 +140,14 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                             </Typography>
                                         </Box>
                                         
-                                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 1, pl: 2 }}>
+                                        {stripeEmail && <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 1, pl: 2 }}>
                                             <Typography className="table-heading">
                                                 Email
                                             </Typography>
                                             <Typography className="table-data">
                                                 {stripeEmail}
                                             </Typography>
-                                        </Box>
+                                        </Box>}
                                         
                                         <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 1, pl: 2 }}>
                                             <Typography className="table-heading">
@@ -264,11 +264,11 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                                 {connectedAccountId}
                                             </Typography>
                                         </Box>
-                                        {!accountCreatePending && ( <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 1, pl: 2 }}>
+                                         <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 1, pl: 2 }}>
                                             <Typography className="table-heading" sx={{ color: 'rgba(244, 87, 69, 1) !important', pl: 0, textAlign: 'left' }}>
                                                 Referral Details and account transactions are restricted due to incomplete required information.
                                             </Typography>
-                                        </Box>)}
+                                        </Box>
                                         <Button
                                             variant="outlined"
                                             sx={{
@@ -368,6 +368,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                             });
                                             const accountData = await accountResponse.json();
                                             setConnectedAccountId(accountData.account);
+                                            setCurrentDue(accountData.currently_due)
 
                                             const linkResponse = await fetch("/api/onboarding", {
                                                 method: "POST",

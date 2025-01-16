@@ -28,7 +28,7 @@ class ReferralService:
 
             return {
                 'connected_stripe_account_id': user.get('connected_stripe_account_id'),
-                'is_stripe_connected': user.get('is_stripe_connected'),
+                'is_stripe_connected': True,
                 'stripe_connected_email': user.get('stripe_connected_email'),
             }
 
