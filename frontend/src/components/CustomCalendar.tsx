@@ -4,7 +4,6 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { subDays, subMonths, startOfWeek, startOfMonth, subQuarters } from 'date-fns';
 import '../css/CustomDatePicker.css';
-import { width } from '@mui/system';
 
 
 
@@ -40,8 +39,7 @@ interface CalendarPopupProps {
 const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, onDateChange, onApply, onDateLabelChange }) => {
     const [startDate, setStartDate] = useState<Date | null>(null);
     const [endDate, setEndDate] = useState<Date | null>(null);
-    const [key, setKey] = useState(0);
-
+    const [activeLabel, setActiveLabel] = useState<string | null>(null);
 
     const [startDateString, setStartDateString] = useState<string>('');
     const [endDateString, setEndDateString] = useState<string>('');
@@ -84,7 +82,6 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
         setEndDateString('');
         setStartDateString('');
         onDateChange({ start, end });
-        setKey(prevKey => prevKey + 1);
         onDateLabelChange(label);
     };
 
@@ -96,6 +93,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
         todayEnd.setHours(23, 59, 59, 999);
     
         updateCalendar(todayStart, todayEnd, 'Today');
+        setActiveLabel('Today');
     };
     
     const handleYesterday = () => {
@@ -106,6 +104,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
         yesterdayEnd.setHours(23, 59, 59, 999);
     
         updateCalendar(yesterdayStart, yesterdayEnd, 'Yesterday');
+        setActiveLabel('Yesterday');
     };
     
 
@@ -113,40 +112,49 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
         const start = startOfWeek(new Date(), { weekStartsOn: 1 });
         const end = new Date();
         updateCalendar(start, end, 'This Week');
+        setActiveLabel('This Week');
     };
 
     const handleLast7Days = () => {
         const end = new Date();
         const start = subDays(end, 7);
         updateCalendar(start, end, 'Last 7 days');
+        setActiveLabel('Last 7 days');
     };
 
     const handleLast30Days = () => {
         const end = new Date();
         const start = subDays(end, 30);
         updateCalendar(start, end, 'Last 30 days');
+        setActiveLabel('Last 30 days');
     };
 
     const handleThisMonth = () => {
         const start = startOfMonth(new Date());
         const end = new Date();
         updateCalendar(start, end, 'This Month');
+        setActiveLabel('This Month');
     };
 
     const handleLastMonth = () => {
-        const end = new Date();
-        const start = subMonths(end, 1);
+        const now = new Date();
+        const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const end = new Date(now.getFullYear(), now.getMonth(), 0);
         updateCalendar(start, end, 'Last Month');
+        setActiveLabel('Last Month');
     };
+    
 
     const handleLastQuarter = () => {
         const end = new Date();
         const start = subQuarters(end, 1);
         updateCalendar(start, end, 'Last Quarter');
+        setActiveLabel('Last Quarter');
     };
 
     const handleAllTime = () => {
         updateCalendar(null, new Date(), 'All Time');
+        setActiveLabel('All Time');
     };
 
     const handleApply = () => {
@@ -164,6 +172,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
         setEndDateString('')
         setStartDateString('')
         onApply({ start: null, end: null });
+        setActiveLabel('')
         onClose();
         setShowDatePicker(false);
     }
@@ -189,9 +198,6 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
         return '';
     };
 
-    useEffect(() => {
-        setKey(prevKey => prevKey + 1);
-    }, [startDate, endDate]);
 
     const handleCustomClick = () => {
         setShowDatePicker(true); // Show the date picker
@@ -250,15 +256,15 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
                                 display: 'none'
                             }
                         }} onClick={handleCustomClick}>Custom</Button>
-                        <Button sx={style.button_date} onClick={handleToday}>Today</Button>
-                        <Button sx={style.button_date} onClick={handleYesterday}>Yesterday</Button>
-                        <Button sx={style.button_date} onClick={handleThisWeek}>This Week</Button>
-                        <Button sx={style.button_date} onClick={handleLast7Days}>Last 7 days</Button>
-                        <Button sx={style.button_date} onClick={handleLast30Days}>Last 30 days</Button>
-                        <Button sx={style.button_date} onClick={handleThisMonth}>This Month</Button>
-                        <Button sx={style.button_date} onClick={handleLastMonth}>Last Month</Button>
-                        <Button sx={style.button_date} onClick={handleLastQuarter}>Last Quarter</Button>
-                        <Button sx={style.button_date} onClick={handleAllTime}>All Time</Button>
+                        <Button sx={{...style.button_date, color: activeLabel === 'Today' ? 'rgba(80, 82, 178, 1)' : 'inherit'}} onClick={handleToday}>Today</Button>
+                        <Button sx={{...style.button_date, color: activeLabel === 'Yesterday' ? 'rgba(80, 82, 178, 1)' : 'inherit'}} onClick={handleYesterday}>Yesterday</Button>
+                        <Button sx={{...style.button_date, color: activeLabel === 'This Week' ? 'rgba(80, 82, 178, 1)' : 'inherit'}} onClick={handleThisWeek}>This Week</Button>
+                        <Button sx={{...style.button_date, color: activeLabel === 'Last 7 days' ? 'rgba(80, 82, 178, 1)' : 'inherit'}} onClick={handleLast7Days}>Last 7 days</Button>
+                        <Button sx={{...style.button_date, color: activeLabel === 'Last 30 days' ? 'rgba(80, 82, 178, 1)' : 'inherit'}} onClick={handleLast30Days}>Last 30 days</Button>
+                        <Button sx={{...style.button_date, color: activeLabel === 'This Month' ? 'rgba(80, 82, 178, 1)' : 'inherit'}} onClick={handleThisMonth}>This Month</Button>
+                        <Button sx={{...style.button_date, color: activeLabel === 'Last Month' ? 'rgba(80, 82, 178, 1)' : 'inherit'}} onClick={handleLastMonth}>Last Month</Button>
+                        <Button sx={{...style.button_date, color: activeLabel === 'Last Quarter' ? 'rgba(80, 82, 178, 1)' : 'inherit'}} onClick={handleLastQuarter}>Last Quarter</Button>
+                        <Button sx={{...style.button_date, color: activeLabel === 'All Time' ? 'rgba(80, 82, 178, 1)' : 'inherit'}} onClick={handleAllTime}>All Time</Button>
                     </Box>
 
                     <Box sx={{ display: 'flex', flexDirection: 'column' }}>

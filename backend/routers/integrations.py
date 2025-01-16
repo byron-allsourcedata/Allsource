@@ -179,7 +179,7 @@ async def bigcommerce_redirect_login(store_hash: str = Query(...), is_pixel_inst
     with integration_service as service:
         return service.bigcommerce.bigcommerce_redirect_login(store_hash=store_hash, is_pixel_install=is_pixel_install, domain=domain, user=user)
     
-@router.get("/bigcommerce/remove-user-callback")
+@router.get("/bigcommerce/remove-user")
 async def remove_user_callback(request: Request):
     params = request.query_params
     store_id = params.get('store_id')
@@ -289,10 +289,11 @@ def bigcommerce_auth(
                     shop_domain=shop_hash,
                     access_token=access_token
                 )
-            )
+            ),
+            domain_url=domain_url
         )
                  
-    return RedirectResponse(f"{BigcommerceConfig.frontend_sign_up_redirect}?utm_source=big_commerce")
+    return RedirectResponse(f"{BigcommerceConfig.frontend_sign_up_redirect}?utm_source=big_commerce&shop_hash={shop_hash}")
     
 @router.get("/bigcommerce/uninstall", status_code=status.HTTP_200_OK)
 def oauth_bigcommerce_uninstall(signed_payload: Annotated[str, Query()], signed_payload_jwt: Annotated[str, Query()], integration_service: IntegrationService = Depends(get_integration_service)):
@@ -307,6 +308,7 @@ def oauth_bigcommerce_load(signed_payload: Annotated[str, Query()], signed_paylo
     
     user_email = result['user_email']
     store_hash = result['store_hash']
+    owner_email = result['owner_email']
     user = user_persistence.get_user_by_email(user_email)
     if user:
         return RedirectResponse(BigcommerceConfig.frontend_sign_in_redirect)
@@ -317,7 +319,11 @@ def oauth_bigcommerce_load(signed_payload: Annotated[str, Query()], signed_paylo
     
     owner = integration_service.get_user_by_shop_domain(store_hash)
     if not owner:
+        return RedirectResponse(f"{BigcommerceConfig.frontend_sign_up_redirect}?utm_source=big_commerce&shop_hash={store_hash}")
+    
+    if owner_email == user_email:
         return RedirectResponse(BigcommerceConfig.frontend_sign_in_redirect)
+    
     md5_token_info = {
             'id': owner.id,
             'user_mail': user_email,

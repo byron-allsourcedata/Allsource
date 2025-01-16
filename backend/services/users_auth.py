@@ -184,6 +184,7 @@ class UsersAuth:
         ift = auth_google_data.ift
         awc = auth_google_data.awc if auth_google_data.awc else auth_google_data.utm_params.awc
         ftd = auth_google_data.ftd
+        shop_hash = auth_google_data.shop_hash
         referral = auth_google_data.referral
         
         if referral:
@@ -274,6 +275,9 @@ class UsersAuth:
 
         if shopify_data:
             self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
+        
+        if shop_hash:
+            self._process_big_commerce_integration(user_object, shop_hash)
 
         self.user_persistence_service.email_confirmed(user_object.id)
         
@@ -398,7 +402,7 @@ class UsersAuth:
                     user_subscription = self.subscription_service.get_user_subscription(user_object.id)
                     if user_subscription.domains_limit != self.UNLIMITED:
                         domain = self.domain_persistence.get_domain_by_filter(domain=shopify_data.shop, user_id=user_object.id)
-                        if domain:
+                        if not domain:
                             if self.domain_persistence.count_domain(user_object.id) >= user_subscription.domains_limit:
                                 shopify_status = OauthShopify.NEED_UPGRADE_PLAN
                 else:
@@ -469,6 +473,7 @@ class UsersAuth:
         awc = user_form.awc if user_form.awc else user_form.utm_params.awc
         ift = user_form.ift
         ftd = user_form.ftd
+        shop_hash = user_form.shop_hash
         referral = user_form.referral
         
         if referral:
@@ -552,6 +557,10 @@ class UsersAuth:
         if shopify_data:
             self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
             self.user_persistence_service.email_confirmed(user_object.id)
+        
+        if shop_hash:
+            self._process_big_commerce_integration(user_object, shop_hash)
+            self.user_persistence_service.email_confirmed(user_object.id)
             
         if coupon and user_form.spi:
             self.user_persistence_service.book_call_confirmed(user_object.id)
@@ -565,7 +574,7 @@ class UsersAuth:
             self.fill_referral_users(referral=referral, user_object=user_object)
             self.user_persistence_service.book_call_confirmed(user_object.id)
             
-        if is_with_card is False and teams_token is None and referral_token is None and shopify_data is None:
+        if is_with_card is False and teams_token is None and referral_token is None and shopify_data is None and shop_hash is None:
             return self._send_email_verification(user_object, token)
         
         if referral_token:
@@ -587,6 +596,18 @@ class UsersAuth:
             'status': status,
             'token': token
         }
+        
+    def _process_big_commerce_integration(self, user_object, shop_hash):
+        with self.integration_service as service:
+            external_apps_installations = service.bigcommerce.get_external_apps_installations_by_shop_hash(shop_hash)
+            if external_apps_installations:
+                domain = self.user_persistence_service.save_user_domain(user_object.id, external_apps_installations.domain_url)
+                if domain:
+                    credentials = IntegrationCredentials(
+                                    bigcommerce=ShopifyOrBigcommerceCredentials(shop_domain=shop_hash, access_token=external_apps_installations.access_token)
+                                )
+                    
+                    service.bigcommerce.add_integration(credentials, domain, user_object.__dict__)
     
     def _process_shopify_integration(self, user_object, shopify_data, shopify_access_token, shop_id):
         domain = self.user_persistence_service.save_user_domain(user_object.id, shopify_data.shop)
@@ -699,7 +720,7 @@ class UsersAuth:
                 user_subscription = self.subscription_service.get_user_subscription(user_object.id)
                 if user_subscription.domains_limit != self.UNLIMITED:
                     domain = self.domain_persistence.get_domain_by_filter(domain=shopify_data.shop, user_id=user_object.id)
-                    if domain:
+                    if not domain:
                         if self.domain_persistence.count_domain(user_object.id) >= user_subscription.domains_limit:
                             shopify_status = OauthShopify.NEED_UPGRADE_PLAN
             else:

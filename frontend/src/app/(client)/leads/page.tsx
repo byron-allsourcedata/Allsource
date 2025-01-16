@@ -176,7 +176,7 @@ const Leads: React.FC = () => {
         } else if (start) {
             setFormattedDates(`${start.toLocaleDateString()}`);
         } else {
-            setFormattedDates('No dates selected');
+            setFormattedDates('');
         }
     };
 

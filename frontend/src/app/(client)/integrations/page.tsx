@@ -364,6 +364,17 @@ const DeleteIntegrationPopup = ({ service_name, open, handleDelete, onClose }: D
 
   if (!open) return null;
 
+  const formatServiceName = (name: string): string => {
+    if (name === "big_commerce") {
+      return "BigCommerce";
+    }
+    return name
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+
+
   return (
     <>
       {loading && (
@@ -410,8 +421,8 @@ const DeleteIntegrationPopup = ({ service_name, open, handleDelete, onClose }: D
         }}
       >
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', p: '24px', borderBottom: '1px solid rgba(0, 0, 0, 0.1)', }}>
-          <Typography variant='h3' fontSize={'1rem'}>Confirm Deletion {service_name}</Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', p: '24px', pb:'19px', borderBottom: '1px solid rgba(0, 0, 0, 0.1)', }}>
+          <Typography variant='h3' fontSize={'1rem'}>Confirm deletion {service_name ? formatServiceName(service_name) : ''}</Typography>
           <CloseIcon sx={{ cursor: 'pointer' }} onClick={onClose} />
         </Box>
 
@@ -435,8 +446,8 @@ const DeleteIntegrationPopup = ({ service_name, open, handleDelete, onClose }: D
               p: 4
             }}
           >
-            Are you sure you want to delete the {service_name} integration? This action will remove all
-            associated lists and disconnect {service_name} from your account.
+            Are you sure you want to delete the {service_name ? formatServiceName(service_name) : ''} integration? This action will remove all
+            associated lists and disconnect {service_name ? formatServiceName(service_name) : ''} from your account.
           </Typography>
         </Box>
         <Box sx={{
@@ -447,7 +458,7 @@ const DeleteIntegrationPopup = ({ service_name, open, handleDelete, onClose }: D
           bottom: 0,
           width: '100%',
           backgroundColor: 'white',
-          pt: '24px', borderTop: '1px solid rgba(0, 0, 0, 0.1)',
+          pt: '12px', borderTop: '1px solid rgba(0, 0, 0, 0.1)',
         }}>
           <Button
             sx={{
@@ -460,7 +471,7 @@ const DeleteIntegrationPopup = ({ service_name, open, handleDelete, onClose }: D
             variant='outlined'
             onClick={onClose}
           >
-            <Typography padding={'0.5rem 1rem'} fontSize={'0.8rem'}>Cancel</Typography>
+            <Typography padding={'0rem 1rem'} sx={{textTransform: 'none'}} fontSize={'0.8rem'}>Cancel</Typography>
           </Button>
           <Button
             sx={{
@@ -478,7 +489,7 @@ const DeleteIntegrationPopup = ({ service_name, open, handleDelete, onClose }: D
             variant='contained'
             onClick={handleDeleteClick}
           >
-            <Typography padding={'0.5rem 2rem'} fontSize={'0.8rem'}>Confirm</Typography>
+            <Typography padding={'0.35rem 2rem'} sx={{textTransform: 'none'}} fontSize={'0.8rem'}>Confirm</Typography>
           </Button>
         </Box>
       </Drawer>

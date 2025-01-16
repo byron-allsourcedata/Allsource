@@ -128,23 +128,7 @@ const sidebarStyles = {
     },
 };
 
-const containerStyles = (hasNotification: boolean) => ( {
-    container: {
-        width: '100%',
-        flexShrink: 0,
-        fontFamily: 'Nunito Sans',
-        fontSize: '14px',
-        fontWeight: '400',
-        backgroundColor: 'rgba(255, 255, 255, 1)',
-        borderRight: '1px solid rgba(228, 228, 228, 1)',
-        height: hasNotification ? 'calc(100vh - 6.85rem)' : 'calc(100vh - 4.25rem)',
-        maxWidth: '146px',
-        display: 'flex',
-        overflow: 'hidden',
-        flexDirection: 'column',
-        justifyContent: 'start',
-        position: 'relative'
-    }})
+
 
 const SidebarAdmin: React.FC = () => {
     const router = useRouter();
@@ -161,7 +145,7 @@ const SidebarAdmin: React.FC = () => {
             <List sx={sidebarStyles.menu}>
                 <ListItemButton
                     onClick={() => handleNavigation('/admin/users')}
-                    sx={isActive('/admin/users') ? sidebarStyles.activeItem : sidebarStyles.inactiveItem}
+                    sx={isActive('/admin/users') ? sidebarStyles.activeItem : sidebarStyles.ListItem}
                 >
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <LeadsIcon />
@@ -170,7 +154,7 @@ const SidebarAdmin: React.FC = () => {
                 </ListItemButton>
                 <ListItemButton
                     onClick={() => handleNavigation('/admin/partners')}
-                    sx={isActive('/admin/partners') ? sidebarStyles.activeItem : sidebarStyles.inactiveItem}
+                    sx={isActive('/admin/partners') ? sidebarStyles.activeItem : sidebarStyles.ListItem}
                 >
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <AccountBoxIcon />
@@ -188,7 +172,7 @@ const SidebarAdmin: React.FC = () => {
                 </ListItemButton>
                 <ListItemButton
                     onClick={() => handleNavigation('/admin/assets')}
-                    sx={isActive('/admin/assets') ? sidebarStyles.activeItem : sidebarStyles.inactiveItem}
+                    sx={isActive('/admin/assets') ? sidebarStyles.activeItem : sidebarStyles.ListItem}
                 >
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <CategoryIcon />
@@ -197,7 +181,7 @@ const SidebarAdmin: React.FC = () => {
                 </ListItemButton>
                 <ListItemButton
                     onClick={() => handleNavigation('/admin/payouts')}
-                    sx={isActive('/admin/payouts') ? sidebarStyles.activeItem : sidebarStyles.inactiveItem}
+                    sx={isActive('/admin/payouts') ? sidebarStyles.activeItem : sidebarStyles.ListItem}
                 >
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <FeaturedPlayListIcon />

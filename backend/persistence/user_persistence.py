@@ -25,7 +25,7 @@ class UserPersistence:
         self.db.commit()
         
     def save_user_domain(self, user_id, domain):
-        user_domain = self.db.query(UserDomains).filter(UserDomains.domain == domain).first()
+        user_domain = self.db.query(UserDomains).filter(UserDomains.domain == domain, UserDomains.user_id == user_id).first()
         if user_domain:
             return user_domain
         user_domain = UserDomains(user_id=user_id, domain=domain.replace('https://', '').replace('http://', ''))
@@ -222,23 +222,21 @@ class UserPersistence:
             {Users.connected_stripe_account_id: stripe_connected_account_id},
             synchronize_session=False
         )
-        # Check if the user is a partner
-        user = self.db.query(Users).filter(Users.id == user_id, Users.is_partner.is_(True)).first()
-        if user:
-            # update status partner
-            self.db.query(Partners).filter(Partners.user_id == user_id).update(
-                {Partners.status: "active"},
-                synchronize_session=False
-            )
-
         self.db.commit()
 
     def confirm_stripe_connect(self, user_id: int):
-        self.db.query(Users).filter(Users.id == user_id).update(
-            {Users.is_stripe_connected: True,
-             Users.stripe_connected_currently_due: None},
-            synchronize_session=False
-        )
+        user = self.db.query(Users).filter(Users.id == user_id).first()
+        if not user:
+            return False
+
+        user.is_stripe_connected = True
+        user.stripe_connected_currently_due = None
+
+        if user.is_partner:
+            partner = self.db.query(Partners).filter(Partners.user_id == user_id).first()
+            if partner:
+                partner.status = "active"
+
         self.db.commit()
         return True
 
@@ -252,4 +250,14 @@ class UserPersistence:
         if update_data:
             self.db.query(Users).filter(Users.id == user_id).update(update_data, synchronize_session=False)
             self.db.commit()
+
+    def delete_stripe_info(self, user_id: int):
+        self.db.query(Users).filter(Users.id == user_id).update(
+            {Users.connected_stripe_account_id: None,
+             Users.is_stripe_connected: False,
+             Users.stripe_connected_currently_due: None,
+             Users.stripe_connected_email: None},
+            synchronize_session=False
+        )
+        self.db.commit()
 

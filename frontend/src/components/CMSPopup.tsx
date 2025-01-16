@@ -117,6 +117,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
     return '';
   });
   const [access_token, setAccessToken] = useState('');
+  const [accessTokenExists, setAccessTokenExists] = useState(false)
   const [storeHash, setstoreHash] = useState('')
   const [storeHashError, setStoreHashError] = useState(false)
   const sourcePlatform = useMemo(() => {
@@ -140,23 +141,37 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
   useEffect(() => {
     const fetchCredentials = async () => {
       try {
-        const response = await axiosInstance.get('/integrations/credentials/shopify');
-        if (response.status === 200) {
-          setDomain(response.data.shop_domain);
-          setAccessToken(response.data.access_token);
+        const response_shopify = await axiosInstance.get('/integrations/credentials/shopify');
+        if (response_shopify.status === 200) {
+          setDomain(response_shopify.data.shop_domain);
+          setAccessToken(response_shopify.data.access_token);
+          if (response_shopify.data.access_token) {
+            setAccessTokenExists(true)
+          }
         }
-      } catch (error) {
+      } catch (error) {}
+      try {
+        const response_big_commerce = await axiosInstance.get('/integrations/credentials/bigcommerce');
+        if (response_big_commerce.status === 200) {
+          setstoreHash(response_big_commerce.data.shop_domain);
+          if (response_big_commerce.data.shop_domain) {
+            setAccessTokenExists(true)
+          }
+        }
       }
+      catch(error) {}
+
       if (sourcePlatform === 'shopify') {
         setSelectedCMS('Shopify')
         setHeaderTitle('Shopify settings')
       } else if (sourcePlatform === 'big_commerce') {
         setSelectedCMS('Bigcommerce')
-        setHeaderTitle('Install with Bigcommerce')
+        setHeaderTitle('Bigcommerce settings')
       }
     };
     fetchCredentials()
   }, [])
+
   const [isFocused, setIsFocused] = useState(true);
   const handleFocus = () => {
     setIsFocused(true);
@@ -306,7 +321,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                 )}
                 {selectedCMS === 'Shopify' ? (
                   <>
-                    {sourcePlatform !== 'shopify' && (
+                    {(sourcePlatform !== 'shopify' || !accessTokenExists) && (
                       <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
                         <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store"
                           target="_blank"
@@ -372,10 +387,10 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                           value={access_token}
                           onChange={(e) => setAccessToken(e.target.value)}
                           InputLabelProps={{ sx: styles.inputLabel }}
-                          disabled={sourcePlatform === 'shopify'}
+                          disabled={(sourcePlatform === 'shopify' && accessTokenExists)}
                         />
                       </Box>
-                      {sourcePlatform !== 'shopify' && (
+                      {(sourcePlatform !== 'shopify') && (
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'start' }}>
                           <Image src='/3.svg' alt='3' width={28} height={28} />
                           <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '2em 1em 1em', fontWeight: '500', '@media (max-width: 600px)': { padding: '1em' } }}>Once you have submitted the required information, our system will automatically install the script on your Shopify store. You don’t need to take any further action.</Typography>
@@ -383,7 +398,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                       )}
                     </Box>
                     <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', maxHeight: '100%', padding: '0em 1em' }}>
-                      {sourcePlatform === 'shopify' ? (
+                      {sourcePlatform === 'shopify' && accessTokenExists ? (
                         <Typography
                           sx={{
                             color: "#333",
@@ -517,24 +532,30 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                   </>
                 ) : (
                   <>
-                    <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                      <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-bigcommerce-to-maximiz"
-                        target="_blank"
-                        rel="noopener refferer"
-                        sx={{
-                          fontFamily: 'Nunito Sans',
-                          fontSize: '14px',
-                          fontWeight: '600',
-                          lineHeight: '20px',
-                          color: '#5052b2',
-                          textDecorationColor: '#5052b2'
-                        }}>Tutorial</Link>
-                    </Box>
-                    <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '1em', height: '100%' }}>
-                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: 0, justifyContent: 'start' }}>
-                        <Image src='/1.svg' alt='1' width={28} height={28} />
-                        <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Bigcommerce store hash in the designated field. This allows our system to identify your store.</Typography>
+                    {(sourcePlatform !== 'big_commerce' || !accessTokenExists) && (
+                      <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
+                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-bigcommerce-to-maximiz"
+                          target="_blank"
+                          rel="noopener refferer"
+                          sx={{
+                            fontFamily: 'Nunito Sans',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            lineHeight: '20px',
+                            color: '#5052b2',
+                            textDecorationColor: '#5052b2'
+                          }}>Tutorial</Link>
                       </Box>
+                    )}
+
+                    <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '1em', height: '100%' }}>
+                      {(sourcePlatform !== 'big_commerce' || !accessTokenExists) && (
+                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: 0, justifyContent: 'start' }}>
+                          <Image src='/1.svg' alt='1' width={28} height={28} />
+                          <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Bigcommerce store hash in the designated field. This allows our system to identify your store.</Typography>
+                        </Box>
+                      )}
+
                       <Box
                         component="pre"
                         sx={{ display: 'flex', width: '100%', justifyContent: 'center', margin: 0, pl: 1 }}
@@ -549,36 +570,56 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                           sx={styles.formField}
                           onFocus={handleFocus}
                           onBlur={handleBlur}
-
+                          disabled={(sourcePlatform === 'big_commerce' && accessTokenExists)}
                           InputProps={{ sx: styles.formInput }}
                           onChange={handleStoreHashChange}
                           InputLabelProps={{ sx: styles.inputLabel }}
                         />
                       </Box>
-                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'start' }}>
-                        <Image src='/2.svg' alt='2' width={28} height={28} />
-                        <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '2em 1em 1em', fontWeight: '500', '@media (max-width: 600px)': { padding: '1em' } }}>Once you have submitted the required information, our system will automatically install the script on your Bigcommerce store. You don’t need to take any further action.</Typography>
-                      </Box>
+                      {(sourcePlatform !== 'big_commerce' ||!accessTokenExists) && (
+                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'start' }}>
+                          <Image src='/2.svg' alt='2' width={28} height={28} />
+                          <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '2em 1em 1em', fontWeight: '500', '@media (max-width: 600px)': { padding: '1em' } }}>Once you have submitted the required information, our system will automatically install the script on your Bigcommerce store. You don’t need to take any further action.</Typography>
+                        </Box>
+                      )}
+
                     </Box>
                     <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', maxHeight: '100%', padding: '0em 1em' }}>
-                      <Button
-                        fullWidth
-                        variant="contained"
-                        sx={{
-                          ...styles.submitButton,
-                          marginTop: 'auto',
-                          pointerEvents: !!storeHash ? "auto" : "none",
-                          backgroundColor: "rgba(80, 82, 178, 1)",
-                          "&.Mui-disabled": {
-                            backgroundColor: "rgba(80, 82, 178, 0.3)",
-                            color: "#fff",
-                          },
-                        }}
-                        onClick={handleSubmitBigcommerce}
-                        disabled={!storeHash}
-                      >
-                        Install Pixel
-                      </Button>
+                      {sourcePlatform === 'big_commerce' && accessTokenExists ? (
+                        <Typography
+                          sx={{
+                            color: "#333",
+                            fontWeight: "500",
+                            fontSize: 16,
+                            textAlign: "center",
+                            padding: '0.5em',
+                            backgroundColor: "transparent",
+                            borderRadius: 2,
+                            marginTop: 'auto',
+                          }}
+                        >
+                          Pixel Installed
+                        </Typography>
+                      ) : (
+                        <Button
+                          fullWidth
+                          variant="contained"
+                          sx={{
+                            ...styles.submitButton,
+                            marginTop: 'auto',
+                            pointerEvents: !!storeHash ? "auto" : "none",
+                            backgroundColor: "rgba(80, 82, 178, 1)",
+                            "&.Mui-disabled": {
+                              backgroundColor: "rgba(80, 82, 178, 0.3)",
+                              color: "#fff",
+                            },
+                          }}
+                          onClick={handleSubmitBigcommerce}
+                          disabled={!storeHash}
+                        >
+                          Install Pixel
+                        </Button>
+                      )}
                     </Box>
                   </>
                 ))}
