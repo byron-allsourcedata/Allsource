@@ -504,7 +504,7 @@ class SubscriptionService:
         return result
 
     
-    def process_subscription(self, stripe_payload, user: Users, referral_parent_id, payout_id):
+    def process_subscription(self, user: Users, stripe_payload, payout_id, referral_parent_id):
         result = {
             'status': None,
             'lead_credit_price': None
@@ -547,7 +547,7 @@ class SubscriptionService:
             plan = self.plans_persistence.get_plan_by_price_id(price_id)
             
             if referral_parent_id and not payout_id:
-                partner = self.partners_persistence.get_partner_by_user_id(user_id)
+                partner = self.partners_persistence.get_partner_by_user_id(referral_parent_id)
                 print(partner)
                 print(partner.commission)
                 print(partner.is_active)
