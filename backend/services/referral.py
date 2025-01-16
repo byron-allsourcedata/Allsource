@@ -5,17 +5,18 @@ from dotenv import load_dotenv
 from encryption_utils import encrypt_data
 from persistence.user_persistence import UserPersistence
 from services.stripe_service import StripeService
-from models.referral_users import ReferralUser
+from persistence.referral_payouts import ReferralPayoutsPersistence
 logger = logging.getLogger(__name__)
 load_dotenv()
 
 
 class ReferralService:
     def __init__(self, referral_persistence_service: ReferralDiscountCodesPersistence,
-                 user_persistence: UserPersistence, stripe_service: StripeService):
+                 user_persistence: UserPersistence, stripe_service: StripeService, referral_payouts_persistence: ReferralPayoutsPersistence):
         self.referral_persistence_service = referral_persistence_service
         self.user_persistence = user_persistence
         self.stripe_service = stripe_service
+        self.referral_payouts_persistence = referral_payouts_persistence
 
     def get_overview_info(self, user: dict):
         account = self.stripe_service.get_stripe_account_info(user.get('connected_stripe_account_id'), user.get('id'))
@@ -51,8 +52,8 @@ class ReferralService:
             'referral_code': encrypt_data(f"{user.get('id')}:{discount_code.id}")
         }
     
-    def manage_referral_payout(self, plan_price, user_id, referral_user: ReferralUser):
-        self.referral_persistence_service.create_referral_payout()
+    def save_referral_payouts(self, reward_amount, user_id, referral_parent_id):
+        self.referral_payouts_persistence.save_referral_payouts(reward_amount, user_id, referral_parent_id)
         
 
     def get_referral_details(self, user: dict):

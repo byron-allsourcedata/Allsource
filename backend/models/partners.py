@@ -8,7 +8,7 @@ class Partners(Base):
     id = Column(Integer, primary_key=True, nullable=False)
     user_id = Column(Integer, nullable=True)
     master_id = Column(Integer, nullable=True)
-    commission = Column(VARCHAR(16), nullable=False)
+    commission = Column(Integer, nullable=False)
     email = Column(VARCHAR(64), nullable=False)
     name = Column(VARCHAR(64), nullable=False)
     company_name = Column(VARCHAR(64), nullable=False)

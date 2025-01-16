@@ -11,6 +11,7 @@ from models.plans import SubscriptionPlan
 from models.subscription_transactions import SubscriptionTransactions
 from models.subscriptions import Subscription, UserSubscriptions
 from models.users import Users, User
+from persistence.partners_persistence import PartnersPersistence
 from models.users_domains import UserDomains
 from models.users_payments_transactions import UsersPaymentsTransactions
 from persistence.plans_persistence import PlansPersistence
@@ -29,15 +30,17 @@ logger = logging.getLogger(__name__)
 
 
 class SubscriptionService:
-    def __init__(self, db: Session, user_persistence_service: UserPersistence, plans_persistence: PlansPersistence, referral_service: ReferralService):
+    def __init__(self, db: Session, user_persistence_service: UserPersistence, plans_persistence: PlansPersistence, referral_service: ReferralService,
+                 partners_persistence: PartnersPersistence):
         self.plans_persistence = plans_persistence
         self.db = db
         self.user_persistence_service = user_persistence_service
         self.UNLIMITED = -1
         self.referral_service = referral_service
+        self.partners_persistence = partners_persistence
 
     def get_userid_by_customer(self, customer_id):
-        return self.db.query(User, ReferralPayouts.parent_id, ReferralUser.id)\
+        return self.db.query(User, ReferralPayouts.id, ReferralUser.parent_user_id)\
             .join(ReferralPayouts, ReferralPayouts.user_id == User.id)\
             .join(ReferralUser, ReferralUser.user_id == User.id)\
             .filter(User.customer_id == customer_id).first()
@@ -488,7 +491,7 @@ class SubscriptionService:
         return result
 
     
-    def process_subscription(self, stripe_payload, user: Users, referral_payout, referral_user):
+    def process_subscription(self, stripe_payload, user: Users, referral_parent_id, payout_id):
         result = {
             'status': None,
             'lead_credit_price': None
@@ -529,9 +532,14 @@ class SubscriptionService:
                 UserSubscriptions.price_id == price_id).first()
             price_id = stripe_payload['items']['data'][0]['plan']['id']
             plan = self.plans_persistence.get_plan_by_price_id(price_id)
-            if referral_user and not referral_payout:
-                self.referral_service.manage_referral_payout(plan.price, user.id, referral_user)
             
+            if referral_parent_id and not payout_id:
+                partner = self.partners_persistence.get_partner_by_user_id(user_id)
+                if partner and partner.commission and partner.is_active:
+                    amount = Decimal(stripe_payload.get("plan").get("amount_decimal")) / Decimal(100)
+                    reward_amount = round(partner.commission / 100 * amount, 2)
+                    self.referral_service.save_referral_payouts(reward_amount, user_id, referral_parent_id)
+                
             domains_limit = plan.domains_limit
             integrations_limit = plan.integrations_limit
             leads_credits = plan.leads_credits
