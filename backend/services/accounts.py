@@ -35,9 +35,8 @@ class AccountsService:
             offset=offset,
             limit=limit
         )
-        accounts
 
-        return {"items": result, "totalCount": total_count}
+        return {"items": accounts, "totalCount": total_count}
 
     def domain_mapped(self, account: ParntersUsersInvitation, user: AccountUserData):
         return AccountResponse(
