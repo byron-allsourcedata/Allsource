@@ -395,7 +395,7 @@ const Partners: React.FC = () => {
                         </Tabs>
                     </Box>
 
-                    {tabIndex === 0 && <Box sx={{flexGrow: 1, display: 'flex', justifyContent: "flex-end", width: '24%', gap: "16px", "@media (max-width: 900px)": { display: "none" }, }}>
+                    {tabIndex === 0 && <Box sx={{flexGrow: 1, display: 'flex', justifyContent: "flex-end", width: '24%', mr:3, gap: "16px", "@media (max-width: 900px)": { display: "none" }, }}>
                         <Box sx={{
                             display: "flex",
                             alignItems: "center",
