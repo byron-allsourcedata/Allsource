@@ -236,3 +236,7 @@ class PlanAlias(Enum):
 class ProgramType(Enum):
     PARTNER = 'partner'
     REFERRAL = 'referral'
+    
+class PayoutsStatus(Enum):
+    PENDING = 'pending'
+    PAID = 'paid'

@@ -41,9 +41,11 @@ const ReferralRewards: React.FC = () => {
     const fetchRewards = async (selectedYear: string) => {
         setLoading(true);
         try {
-            const response = await axiosInstance.post("/referral/rewards", {
-                year: selectedYear,
-            });
+            const response = await axiosInstance.get("/referral/rewards", {
+                params: {
+                    year: selectedYear
+                }
+            });            
             setRewards(response.data);
         } catch (error) {
         } finally {

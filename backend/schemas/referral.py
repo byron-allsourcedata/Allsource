@@ -12,3 +12,4 @@ class ReferralDetailsResponse(BaseModel):
     discount_codes: Optional[List[dict]] = None
     referral_code: Optional[str] = None
 
+

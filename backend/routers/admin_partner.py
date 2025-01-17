@@ -15,10 +15,10 @@ def get_partners(
     start_date: Optional[date] = Query(None),
     end_date: Optional[date] = Query(None),
     page: int = Query(0),
-    rowsPerPage: int = Query(10),
+    rows_per_page: int = Query(10),
     get_partners_service: PartnersService = Depends(get_partners_service)):
     
-    partner = get_partners_service.get_partners(isMaster, search, start_date, end_date, page, rowsPerPage)
+    partner = get_partners_service.get_partners(isMaster, search, start_date, end_date, page, rows_per_page)
     if not partner.get("status"):
         error = partner.get("error", {}) or {}
         raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))
