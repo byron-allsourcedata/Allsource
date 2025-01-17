@@ -2,7 +2,9 @@ from sqlalchemy.orm import Session
 from models.referral_payouts import ReferralPayouts
 from sqlalchemy import func, extract
 from models.users import Users
+from models.subscriptions import UserSubscriptions
 from sqlalchemy import and_, or_, desc, asc, Integer
+from models.plans import SubscriptionPlan
 from models.referral_users import ReferralUser
 from datetime import datetime
 import pytz
@@ -11,15 +13,30 @@ class ReferralUserPersistence:
     def __init__(self, db: Session):
         self.db = db
     
-    def get_referral_users(self, partner_id, search_term, start_date, end_date, offset, limit):
-        query = self.db.query(Users.company_name, Users.email, ReferralUser.created_at, ReferralPayouts.created_at, ReferralPayouts.status).filter(ReferralUser.partner_id == partner_id)
-
+    def get_referral_users(self, partner_id, search_term=None, start_date=None, end_date=None, offset=0, limit=10):
+        query = self.db.query(
+            ReferralUser.created_at.label('referral_created_at'),
+            Users.company_name,
+            Users.email,
+            ReferralPayouts.created_at.label('payout_created_at'),
+            ReferralPayouts.status.label('payout_status'),
+            UserSubscriptions.status.label('subscription_status'),
+            SubscriptionPlan.title.label('subscription_plan_title')
+        )\
+            .outerjoin(Users, Users.id == ReferralUser.user_id)\
+            .outerjoin(ReferralPayouts, ReferralPayouts.user_id == ReferralUser.user_id)\
+            .outerjoin(UserSubscriptions, UserSubscriptions.id == Users.current_subscription_id)\
+            .outerjoin(SubscriptionPlan, SubscriptionPlan.id == UserSubscriptions.plan_id)\
+            .filter(ReferralUser.partner_id == partner_id)
+        
         if search_term:
-            query = query.filter(or_(
+            query = query.filter(
+                or_(
                     Users.name.ilike(f'{search_term}%'),
-                    Users.name.ilike(f'{search_term}%'))
+                    Users.company_name.ilike(f'{search_term}%')
+                )
             )
-            
+        
         if start_date and end_date:
             start_date = datetime.fromtimestamp(start_date, tz=pytz.UTC)
             end_date = datetime.fromtimestamp(end_date, tz=pytz.UTC)
@@ -29,12 +46,11 @@ class ReferralUserPersistence:
                     ReferralUser.created_at <= end_date
                 )
             )
-
-        return query.offset(offset).limit(limit).all()
-    
-        # accounts, total_count
         
-        # plan_amount: string;
-        # reward_amount: string;
-        # reward_payout_date: string;
-        # status: string;
+        total_count = query.count()
+        result = query.offset(offset).limit(limit).all()
+        
+        return {
+            "result": result,
+            "total_count": total_count
+        }

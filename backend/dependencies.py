@@ -13,6 +13,7 @@ from config.database import SessionLocal
 from enums import DomainStatus, UserAuthorizationStatus
 from exceptions import InvalidToken
 from models.users import Users as User
+from persistence.referral_user import ReferralUserPersistence
 from persistence.referral_payouts import ReferralPayoutsPersistence
 from persistence.audience_persistence import AudiencePersistence
 from persistence.domains import UserDomainsPersistence, UserDomains
@@ -83,6 +84,9 @@ def get_partners_assets_service(
 def get_partners_persistence(db: Session = Depends(get_db)) -> PartnersPersistence:
     return PartnersPersistence(db)
 
+def get_referral_user_persistence(db: Session = Depends(get_db)) -> ReferralUserPersistence:
+    return ReferralUserPersistence(db)
+
 
 def get_referral_discount_codes_persistence(db: Session = Depends(get_db)) -> ReferralDiscountCodesPersistence:
     return ReferralDiscountCodesPersistence(db)
@@ -94,8 +98,9 @@ def get_partners_invitations_persistence(db: Session = Depends(get_db)) -> Parnt
 
 def get_accounts_service(
         accounts_persistence: ParntersInvitationsPersistence = Depends(get_partners_invitations_persistence),
-        partners_persistence: PartnersPersistence = Depends(get_partners_persistence)):
-    return AccountsService(accounts_persistence=accounts_persistence, partners_persistence=partners_persistence)
+        partners_persistence: PartnersPersistence = Depends(get_partners_persistence),
+        referral_user_persistence: ReferralUserPersistence = Depends(get_referral_user_persistence)):
+    return AccountsService(accounts_persistence=accounts_persistence, partners_persistence=partners_persistence, referral_user_persistence=referral_user_persistence)
 
 
 def get_plans_persistence(db: Session = Depends(get_db)):
