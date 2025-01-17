@@ -32,7 +32,7 @@ class CompanyInfoService:
             user.company_website_visits = company_info.monthly_visits
             user.is_company_details_filled = True
             self.db.flush()
-            self.partners_persistence.update_partner_info(company_info.email, company_info.fullName, company_info.organization_name)
+            self.partners_persistence.update_partner_info(user.email, user.full_name, company_info.organization_name)
             if self.user.get('source_platform') not in (SourcePlatformEnum.SHOPIFY.value, SourcePlatformEnum.BIG_COMMERCE.value):
                 self.db.add(UserDomains(user_id=self.user.get('id'),
                                         domain=company_info.company_website.replace('https://', '').replace('http://', '')))

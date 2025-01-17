@@ -97,7 +97,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
     }, []);
 
     useEffect(() => {
-        if (discountCodeOptions.length > 0 && !discountCode) {
+        if (discountCodeOptions?.length > 0 && !discountCode) {
             setDiscountCode(discountCodeOptions[0]);
         }
     }, [discountCodeOptions, discountCode]);
@@ -465,7 +465,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                             )
                                         )}
                                     >
-                                        {discountCodeOptions.map((option, index) => (
+                                        {discountCodeOptions?.map((option, index) => (
                                             <MenuItem
                                                 key={index}
                                                 value={option.name}

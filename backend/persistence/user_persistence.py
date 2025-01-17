@@ -71,7 +71,10 @@ class UserPersistence:
         return result
 
     def get_user_by_id(self, user_id, result_as_object=False):
-        user = self.db.query(Users).filter(Users.id == user_id).first()
+        user, partner_is_active = self.db.query(Users, Partners.is_active)\
+        .filter(Users.id == user_id)\
+        .outerjoin(Partners, Partners.user_id == user_id)\
+        .first()
         result_user = None
         if user:
             result_user = {
@@ -115,6 +118,7 @@ class UserPersistence:
                 'is_stripe_connected': user.is_stripe_connected,
                 'stripe_connected_email': user.stripe_connected_email,
                 'stripe_connected_currently_due': user.stripe_connected_currently_due,
+                'partner_is_active': partner_is_active
             }
         self.db.rollback()
         if result_as_object:

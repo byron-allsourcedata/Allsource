@@ -42,29 +42,30 @@ async def create_customer_session(price_id: str, payments_service: PaymentsServi
 async def update_payment_confirmation(request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)):
     payload = await request.json()
     result_update_subscription = webhook_service.update_subscription_confirmation(payload=payload)
-    user = result_update_subscription['user']
-    rabbitmq_connection = RabbitMQConnection()
-    connection = await rabbitmq_connection.connect()
-    queue_name = f"sse_events_{str(user.id)}"
-    try:
-        await publish_rabbitmq_message(
-        connection=connection,
-        queue_name=queue_name,
-        message_body={'status': result_update_subscription.get('status'),
-                      'update_subscription': True}
-        )
-        await publish_rabbitmq_message(
+    user = result_update_subscription.get('user')
+    if user:
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+        queue_name = f"sse_events_{str(user.id)}"
+        try:
+            await publish_rabbitmq_message(
             connection=connection,
-            queue_name=QUEUE_CREDITS_CHARGING,
-            message_body={
-                'customer_id': user.customer_id,
-                'plan_id': result_update_subscription['lead_credit_plan_id']
-            }
-        )
-    except:
-        logging.error('Failed to publish rabbitmq message')
-    finally:
-        await rabbitmq_connection.close()
+            queue_name=queue_name,
+            message_body={'status': result_update_subscription.get('status'),
+                        'update_subscription': True}
+            )
+            await publish_rabbitmq_message(
+                connection=connection,
+                queue_name=QUEUE_CREDITS_CHARGING,
+                message_body={
+                    'customer_id': user.customer_id,
+                    'plan_id': result_update_subscription['lead_credit_plan_id']
+                }
+            )
+        except:
+            logging.error('Failed to publish rabbitmq message')
+        finally:
+            await rabbitmq_connection.close()
             
     return "OK"
 
