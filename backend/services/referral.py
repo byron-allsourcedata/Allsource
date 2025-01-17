@@ -59,8 +59,8 @@ class ReferralService:
             'referral_code': encrypt_data(f"{user.get('id')}:{discount_code.id}")
         }
     
-    def create_referral_payouts(self, reward_amount, user_id, referral_parent_id):
-        self.referral_payouts_persistence.create_referral_payouts(reward_amount, user_id, referral_parent_id)
+    def create_referral_payouts(self, reward_amount, user_id, referral_parent_id, reward_type):
+        self.referral_payouts_persistence.create_referral_payouts(reward_amount, user_id, referral_parent_id, reward_type)
         
 
     def get_referral_details(self, user: dict):
@@ -69,11 +69,17 @@ class ReferralService:
         formatted_discount_codes = None
         referral_code = None
 
-        if user.get('partner_is_active') is False and user.get('is_stripe_connected') == False:
+        if user.get('is_stripe_connected') is False:
             return {
-            'discount_codes': formatted_discount_codes,
-            'referral_code': referral_code
-        }
+                'discount_codes': formatted_discount_codes,
+                'referral_code': referral_code
+            }
+                
+        if user.get('partner_is_active') is False:
+            return {
+                'discount_codes': formatted_discount_codes,
+                'referral_code': referral_code
+            }
             
         if discount_codes:
             discount_code_id = discount_codes[0].id

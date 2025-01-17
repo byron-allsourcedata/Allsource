@@ -565,12 +565,12 @@ class SubscriptionService:
                         final_amount = amount_decimal
                         
                     reward_amount = round(Decimal(partner.commission) / Decimal(100) * final_amount, 2)
-                    self.referral_service.create_referral_payouts(reward_amount, user_id, referral_parent_id)
+                    self.referral_service.create_referral_payouts(reward_amount, user_id, referral_parent_id, 'partner')
                     if partner.master_id:
                         master_partner = self.partners_persistence.get_partner_by_user_id(partner.master_id)
                         if master_partner and master_partner.commission and master_partner.is_active:
-                            reward_amount = round(Decimal(master_partner.commission) / Decimal(100) * reward_amount, 2)
-                            self.referral_service.create_referral_payouts(reward_amount, referral_parent_id, partner.master_id)
+                            reward_amount = round(Decimal(master_partner.commission - partner.commission) / Decimal(100) * reward_amount, 2)
+                            self.referral_service.create_referral_payouts(reward_amount, referral_parent_id, partner.master_id, 'master_partner')
                         
                 
             domains_limit = plan.domains_limit
