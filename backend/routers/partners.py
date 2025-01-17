@@ -5,8 +5,7 @@ from datetime import date
 from schemas.partners import PartnerCreateRequest, PartnerUpdateRequest, OpportunityStatus
 from dependencies import get_partners_assets_service, check_user_partner, get_accounts_service, get_partners_service, PartnersAssetService, AccountsService, PartnersService
 
-router = APIRouter(dependencies=[Depends(check_user_partner)])
-
+router = APIRouter()
 
 @router.get('/assets')
 @router.get('/assets/')
@@ -23,21 +22,15 @@ def get_partners_assets(
 @router.get('/accounts')
 @router.get('/accounts/')
 def get_partner_accounts(
-    id: Optional[int] = Query(0),
-    email: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
-    start_date: Optional[date] = Query(None),
-    end_date: Optional[date] = Query(None),
+    start_date: int = Query(None, description="Start date in integer format"),
+    end_date: int = Query(None, description="End date in integer format"),
     page: int = Query(0),
     rowsPerPage: int = Query(10),
+    user: dict = Depends(check_user_partner),
     get_accounts_service: AccountsService = Depends(get_accounts_service)):
     
-    account = get_accounts_service.get_accounts(id, email, search, start_date, end_date, page, rowsPerPage)
-    if not account.get("status"):
-        error = account.get("error", {}) or {}
-        raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))
-     
-    return account.get('data') 
+    return get_accounts_service.get_accounts(user, search, start_date, end_date, page, rowsPerPage)     
 
 
 @router.get('/')

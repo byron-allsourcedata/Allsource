@@ -206,7 +206,6 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
             else {
                 response = await axiosInstance.get(`/partners/accounts`, { 
                     params: {
-                        email: encodeURIComponent(email ? email : ''),
                         search,
                         start_date: appliedDates.start ? appliedDates.start.toLocaleDateString('en-CA') : null,
                         end_date: appliedDates.end ? appliedDates.end.toLocaleDateString('en-CA') : null,

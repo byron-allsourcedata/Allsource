@@ -10,11 +10,6 @@ class ParntersInvitationsPersistence:
     def __init__(self, db: Session):
         self.db = db
 
-
-    def get_accounts(self):
-        return self.db.query(ParntersUsersInvitation).all()
-
-
     def get_accounts(self, partner_id, search_term=None, start_date=None, end_date=None, offset=0, limit=10):
         query = self.db.query(ParntersUsersInvitation).filter(ParntersUsersInvitation.partner_id == partner_id)
 
