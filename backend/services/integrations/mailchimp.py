@@ -219,6 +219,11 @@ class MailchimpIntegrationsService:
         except ApiClientError as error:
             if error.status_code == 400:
                 return "Already exists"
+            
+            if error.status_code == 403:
+                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+            
+            raise error
 
         return response
 
