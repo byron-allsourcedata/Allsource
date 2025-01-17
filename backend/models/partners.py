@@ -34,4 +34,3 @@ class Partners(Base):
             }
 
 event.listen(Partners, "before_insert", create_timestamps)
-event.listen(Partners, "before_update", update_timestamps)
