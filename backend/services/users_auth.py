@@ -251,6 +251,10 @@ class UsersAuth:
             return {
                 'status': SignUpStatus.EMAIL_ALREADY_EXISTS
             }
+        
+        if auth_google_data.spi:
+            status = SignUpStatus.FILL_COMPANY_DETAILS
+            is_with_card = True
 
         customer_id = stripe_service.create_customer_google(google_payload)
         user_object = self.add_user(is_with_card=is_with_card, customer_id=customer_id, user_form=google_payload,
