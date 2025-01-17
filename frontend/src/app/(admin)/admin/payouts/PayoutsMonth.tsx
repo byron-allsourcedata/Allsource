@@ -1,5 +1,5 @@
 import { suppressionsStyles } from "@/css/suppressions";
-import { Button, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
+import { Button, IconButton, InputAdornment, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography } from "@mui/material";
 import { Box } from "@mui/system";
 import dayjs from "dayjs";
 import CustomTablePagination from "@/components/CustomTablePagination";
@@ -8,7 +8,8 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { list } from "postcss";
+import { DateRangeIcon } from "@mui/x-date-pickers";
+import SearchIcon from '@mui/icons-material/Search';
 
 interface RewardData {
     month: string;
@@ -27,6 +28,7 @@ interface MonthDetailsProps {
     onBack: () => void;
     selectedMonth: string;
     open: boolean;
+    onPartnerClick: (partnerName: string, month: string) => void;
 }
 
 const getStatusStyle = (status: any) => {
@@ -66,13 +68,37 @@ const tableHeaders = [
     { key: 'actions', label: 'Actions', sortable: false },
 ];
 
-const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth }) => {
+const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth, onPartnerClick }) => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalCount, setTotalCount] = useState(0);
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
     const [data, setData] = useState<RewardData[] | []>([]);
+    const [search, setSearch] = useState("");
+
+    // Calendar
+    const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
+    const isCalendarOpen = Boolean(calendarAnchorEl);
+    const [formattedDates, setFormattedDates] = useState<string>('');
+    const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
+    const [selectedDateLabel, setSelectedDateLabel] = useState<string>('');
+
+    const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setCalendarAnchorEl(event.currentTarget);
+    };
+
+    const handleCalendarClose = () => {
+        setCalendarAnchorEl(null);
+    };
+    const handleDateLabelChange = (label: string) => {
+        setSelectedDateLabel(label);
+    };
+
+
+    const handleSearchChange = (event: any) => {
+        setSearch(event.target.value);
+    };
 
 
     const handlePageChange = (event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
@@ -170,21 +196,100 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
         }}>
 
             <Box>
-                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mb: 2, gap: 2 }}>
-                    <IconButton
-                        onClick={onBack}
-                        sx={{
-                            textTransform: "none",
-                            backgroundColor: "#fff",
-                            border: '0.73px solid rgba(184, 184, 184, 1)',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            padding: 0.25
-                        }}
-                    >
-                        <KeyboardArrowLeftIcon sx={{ color: "rgba(128, 128, 128, 1)" }} />
-                    </IconButton>
-                    <Typography className="second-sub-title">{selectedMonth}</Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', mb:2 }}>
+
+                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mb: 2, gap: 2 }}>
+                        <IconButton
+                            onClick={onBack}
+                            sx={{
+                                textTransform: "none",
+                                backgroundColor: "#fff",
+                                border: '0.73px solid rgba(184, 184, 184, 1)',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                padding: 0.25
+                            }}
+                        >
+                            <KeyboardArrowLeftIcon sx={{ color: "rgba(128, 128, 128, 1)" }} />
+                        </IconButton>
+                        <Typography className="second-sub-title">{selectedMonth}</Typography>
+                    </Box>
+
+                    <Box sx={{display: 'flex', flexDirection: 'row', gap:2}}>
+                        <TextField
+                            id="input-with-icon-textfield"
+                            placeholder="Search by partner name, emails"
+                            value={search}
+                            onChange={handleSearchChange}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    fetchRewardData();
+                                }
+                            }}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <SearchIcon onClick={fetchRewardData} style={{ cursor: "pointer" }} />
+                                    </InputAdornment>
+                                ),
+                            }}
+                            variant="outlined"
+                            sx={{
+                                flex: 1,
+                                width: '360px',
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: '4px',
+                                    height: '44px',
+                                },
+                                '& input': {
+                                    paddingLeft: 0,
+                                },
+                                '& input::placeholder': {
+                                    fontSize: '14px',
+                                    color: '#8C8C8C',
+                                },
+                            }}
+                        />
+                        <Button
+                            aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
+                            aria-haspopup="true"
+                            aria-expanded={isCalendarOpen ? 'true' : undefined}
+                            onClick={handleCalendarClick}
+                            sx={{
+                                textTransform: 'none',
+                                color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
+                                border: formattedDates ? '1.5px solid rgba(80, 82, 178, 1)' : '1.5px solid rgba(184, 184, 184, 1)',
+                                borderRadius: '4px',
+                                padding: '8px',
+                                minWidth: 'auto',
+                                '@media (max-width: 900px)': {
+                                    border: 'none',
+                                    padding: 0
+                                },
+                                '&:hover': {
+                                    border: '1.5px solid rgba(80, 82, 178, 1)',
+                                    '& .MuiSvgIcon-root': {
+                                        color: 'rgba(80, 82, 178, 1)'
+                                    }
+                                }
+                            }}
+                        >
+                            <DateRangeIcon
+                                fontSize="medium"
+                                sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }}
+                            />
+                            <Typography variant="body1" sx={{
+                                fontFamily: 'Roboto',
+                                fontSize: '14px',
+                                fontWeight: '400',
+                                color: 'rgba(32, 33, 36, 1)',
+                                lineHeight: '19.6px',
+                                textAlign: 'left'
+                            }}>
+                            </Typography>
+                        </Button>
+                    </Box>
+
                 </Box>
 
 
@@ -208,10 +313,10 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                                                 key={key}
                                                 sx={{
                                                     ...suppressionsStyles.tableColumn,
-                                                    ...(key === 'personal_email' && {
+                                                    ...(key === 'account_name' && {
                                                         position: 'sticky',
                                                         left: 0,
-                                                        zIndex: 99,
+                                                        zIndex: 1,
                                                         backgroundColor: '#fff',
                                                     }),
                                                 }}
@@ -270,7 +375,9 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                                                     left: 0,
                                                     zIndex: 1,
                                                     backgroundColor: '#fff',
-                                                }}>
+                                                }}
+                                                    onClick={() => onPartnerClick(item.partner_name, item.month)}
+                                                >
                                                     {item.partner_name}
                                                 </TableCell>
 

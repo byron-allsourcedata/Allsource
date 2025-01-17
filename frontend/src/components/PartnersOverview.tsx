@@ -139,7 +139,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                                 Stripe account details
                                             </Typography>
                                         </Box>
-                                        
+
                                         {stripeEmail && <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 1, pl: 2 }}>
                                             <Typography className="table-heading">
                                                 Email
@@ -148,7 +148,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                                 {stripeEmail}
                                             </Typography>
                                         </Box>}
-                                        
+
                                         <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 1, pl: 2 }}>
                                             <Typography className="table-heading">
                                                 Account ID
@@ -225,7 +225,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                                     Stripe account details
                                                 </Typography>
                                             </Box>
-                                            {currentDue && ( <Box sx={{ display: 'flex', alignItems: 'start', pr: 2 }}>
+                                            {currentDue && (<Box sx={{ display: 'flex', alignItems: 'start', pr: 2 }}>
                                                 <Tooltip
                                                     title={
                                                         <Box>
@@ -234,10 +234,11 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                                             </Typography>
                                                             <ul style={{ margin: 0, paddingLeft: '1.2em', }}>
                                                                 {currentDue.map((item, index) => (
-                                                                    <li key={index} style={{ color: '#fff', fontFamily: 'Nunito Sans', fontSize: '14px',
+                                                                    <li key={index} style={{
+                                                                        color: '#fff', fontFamily: 'Nunito Sans', fontSize: '14px',
                                                                         lineHeight: 'normal',
                                                                         fontWeight: 600,
-                                                                        }}>
+                                                                    }}>
                                                                         {item}
                                                                     </li>
                                                                 ))}
@@ -264,7 +265,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                                 {connectedAccountId}
                                             </Typography>
                                         </Box>
-                                         <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 1, pl: 2 }}>
+                                        <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 1, pl: 2 }}>
                                             <Typography className="table-heading" sx={{ color: 'rgba(244, 87, 69, 1) !important', pl: 0, textAlign: 'left' }}>
                                                 Referral Details and account transactions are restricted due to incomplete required information.
                                             </Typography>
@@ -500,7 +501,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                                     <IconButton
                                                         onClick={handleCopyClick}
                                                         edge="end"
-                                                        disabled={!referralLink || !stripeConnect} // Блокировка кнопки
+                                                        disabled={!referralLink || !stripeConnect}
                                                     >
                                                         <ContentCopyIcon fontSize="small" />
                                                     </IconButton>
@@ -587,7 +588,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                     </Box> */}
 
                     <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 1, '@media (max-width: 1200px)': { flexDirection: 'column' } }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'center', alignItems: 'start', borderRadius: '4px', padding: '1rem 1.5rem', gap: 2, maxHeight: '245px', '@media (max-width: 900px)': { display: 'none' }, }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', height: '200px', justifyContent: 'center', alignItems: 'start', borderRadius: '4px', padding: '1rem 1.5rem', gap: 2, maxHeight: '200px', '@media (max-width: 900px)': { display: 'none' }, }}>
                             <Typography className="second-sub-title">
                                 How it works
                             </Typography>
@@ -611,8 +612,10 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                             borderRadius: '8px',
                                             borderBottom: '1px solid rgba(228, 228, 228, 1)',
                                             boxShadow: 'none',
+                                            pt: '6px',
                                             mb: 0,
-                                            "&:before": { display: "none", borderBottom: 'none', },
+                                            margin: 0,
+                                            "&:before": { display: "none", borderBottom: 'none', margin: 0 },
                                         }}
                                     >
                                         <AccordionSummary
@@ -623,14 +626,25 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                                     <AddIcon sx={{ color: 'black' }} fontSize="small" />
                                                 )
                                             }
-                                            sx={{ display: 'flex', alignItems: 'center', padding: 0, margin: 0, minHeight: 0, cursor: 'pointer', }}
+                                            sx={{
+                                                minHeight: '36px', // Убираем min-height
+                                                padding: 0,
+                                                margin: 0,
+                                                '&.Mui-expanded': {
+                                                    minHeight: '10px', // Убираем min-height для раскрытого состояния
+                                                },
+                                                '& .MuiAccordionSummary-content': {
+                                                    marginTop: '6px'
+                                                },
+                                                '& .MuiAccordionSummary-content.Mui-expanded': {
+                                                    marginTop: '6px', // Убираем отступы для раскрытого состояния
+                                                },
+                                            }}
                                         >
-                                            <Typography className="second-sub-title" sx={{ fontWeight: '400 !important', }}>
-                                                {item.question}
-                                            </Typography>
+                                            <Typography className="second-sub-title">{item.question}</Typography>
                                         </AccordionSummary>
                                         <AccordionDetails sx={{ margin: 0, paddingTop: 0 }}>
-                                            <Typography className="table-data">
+                                            <Typography className="table-data" sx={{ fontSize: '13px !important' }}>
                                                 {item.answer}
                                             </Typography>
                                         </AccordionDetails>
