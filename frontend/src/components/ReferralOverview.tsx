@@ -435,8 +435,10 @@ const ReferralOverview: React.FC = () => {
                                             borderRadius: '8px',
                                             borderBottom: '1px solid rgba(228, 228, 228, 1)',
                                             boxShadow: 'none',
+                                            pt: '6px',
                                             mb: 0,
-                                            "&:before": { display: "none", borderBottom: 'none', },
+                                            margin: 0,
+                                            "&:before": { display: "none", borderBottom: 'none', margin: 0 },
                                         }}
                                     >
                                         <AccordionSummary
@@ -447,14 +449,25 @@ const ReferralOverview: React.FC = () => {
                                                     <AddIcon sx={{ color: 'black' }} fontSize="small" />
                                                 )
                                             }
-                                            sx={{ display: 'flex', alignItems: 'center', padding: 0, margin: 0, minHeight: 0, cursor: 'pointer', }}
+                                            sx={{
+                                                minHeight: '36px', // Убираем min-height
+                                                padding: 0,
+                                                margin: 0,
+                                                '&.Mui-expanded': {
+                                                    minHeight: '10px', // Убираем min-height для раскрытого состояния
+                                                },
+                                                '& .MuiAccordionSummary-content': {
+                                                    marginTop: '6px'
+                                                },
+                                                '& .MuiAccordionSummary-content.Mui-expanded': {
+                                                    marginTop: '6px', // Убираем отступы для раскрытого состояния
+                                                },
+                                            }}
                                         >
-                                            <Typography className="second-sub-title" sx={{ fontWeight: '400 !important', }}>
-                                                {item.question}
-                                            </Typography>
+                                            <Typography className="second-sub-title">{item.question}</Typography>
                                         </AccordionSummary>
                                         <AccordionDetails sx={{ margin: 0, paddingTop: 0 }}>
-                                            <Typography className="table-data">
+                                            <Typography className="table-data" sx={{ fontSize: '13px !important' }}>
                                                 {item.answer}
                                             </Typography>
                                         </AccordionDetails>
