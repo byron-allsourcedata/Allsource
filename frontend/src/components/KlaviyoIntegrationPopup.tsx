@@ -18,6 +18,7 @@ interface CreateKlaviyoProps {
     initApiKey?: string
     boxShadow?: string;
     isEdit?: boolean;
+    Invalid_api_key?: boolean;
 }
 
 interface IntegrationsCredentials {
@@ -80,6 +81,9 @@ const klaviyoStyles = {
             '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                 borderColor: '#0000FF',
             },
+            '&.Mui-error .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'red',
+        },
         },
         '&+.MuiFormHelperText-root': {
             marginLeft: '0',
@@ -87,7 +91,7 @@ const klaviyoStyles = {
     },
 }
 
-const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxShadow }: CreateKlaviyoProps) => {
+const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxShadow, Invalid_api_key }: CreateKlaviyoProps) => {
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
     const [checked, setChecked] = useState(false);
@@ -423,12 +427,12 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                                         variant="outlined"
                                         fullWidth
                                         margin="normal"
-                                        error={apiKeyError}
+                                        error={apiKeyError || Invalid_api_key}
                                         helperText={apiKeyError ? 'API Key is required' : ''}
                                         value={apiKey}
                                         onChange={handleApiKeyChange}
                                         InputLabelProps={{ sx: klaviyoStyles.inputLabel }}
-                                        InputProps={{ sx: klaviyoStyles.formInput }}
+                                        InputProps={{ sx: {...klaviyoStyles.formInput, borderColor: Invalid_api_key ? 'red' : 'inherit' },   }}
                                     />
                                 </Box>
                                 <Box sx={{ background: '#f0f0f0', border: '1px solid #efefef', borderRadius: '4px', p: 2 }}>
