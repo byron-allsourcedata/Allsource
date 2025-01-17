@@ -94,18 +94,15 @@ class ReferralService:
         }
 
     def get_rewards_info(self, year: str, month: str = None):
-        result = self.referral_payouts_persistence.get_all_referral_payouts(year=year, month=month)
-        if not result:
-            return
-        payouts = result['payouts']
-        referral_count = result['user_count']
-        
+        payouts = self.referral_payouts_persistence.get_all_referral_payouts(year=year, month=month)
+
         grouped_by_month = defaultdict(list)
         for payout in payouts:
             month_year = payout.created_at.strftime('%Y-%m')
             grouped_by_month[month_year].append(payout)
         
         monthly_info = []
+        
         for month_year, month_payouts in grouped_by_month.items():
             total_rewards = sum(payout.reward_amount for payout in month_payouts)
             rewards_paid = sum(
@@ -117,13 +114,14 @@ class ReferralService:
                 default=None
             )
             
-            payout_date_formatted = payout_date.isoformat() if payout_date else None
+            payout_date_formatted = payout_date.strftime('%b %d, %Y') if payout_date else None
+            month_name = payout_date.strftime('%B') if payout_date else ""
             
             monthly_info.append({
-                'month': month_year,
+                'month': month_name,
                 'totalRewards': round(total_rewards, 2),
                 'rewardsPaid': round(rewards_paid, 2),
-                'invitesCount': referral_count,
+                'invitesCount': 1,
                 'payoutDate': payout_date_formatted
             })
         

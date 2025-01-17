@@ -20,12 +20,8 @@ class ReferralPayoutsPersistence:
         self.db.commit()
     
     def get_all_referral_payouts(self, year, month):
-        query = self.db.query(
-            ReferralPayouts, 
-            func.count(func.distinct(ReferralUser.user_id)).label("referral_count")
-        )
+        query = self.db.query(ReferralPayouts)
         
-        query = query.join(ReferralUser, ReferralUser.user_id == ReferralPayouts.user_id)
         if year:
             query = query.filter(extract("year", ReferralPayouts.created_at) == year)
 
@@ -39,14 +35,5 @@ class ReferralPayoutsPersistence:
             except KeyError:
                 raise ValueError(f"Invalid month name: {month}")
     
-        query = query.group_by(ReferralPayouts.id)
-
-        referral_payouts, referral_count = query.all()
-
-        return {
-            'payouts': referral_payouts,
-            'referral_count': referral_count
-        }
-
-
-
+        result = query.all()
+        return result

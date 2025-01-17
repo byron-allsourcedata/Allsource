@@ -11,15 +11,5 @@ class OverviewResponse(BaseModel):
 class ReferralDetailsResponse(BaseModel):
     discount_codes: Optional[List[dict]] = None
     referral_code: Optional[str] = None
-    
-class RewardsResponse(BaseModel):
-    month: Optional[str] = None
-    totalRewards: Optional[str] = None
-    rewardsPaid: Optional[str] = None
-    invitesCount: Optional[str] = None
-    payoutDate: Optional[str] = None
-
-class RewardsListResponse(BaseModel):
-    rewards: Optional[List[RewardsResponse]] = None
 
 
