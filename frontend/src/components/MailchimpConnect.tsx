@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import CustomizedProgressBar from "./CustomizedProgressBar";
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
-import { showToast } from "./ToastNotification";
+import { showErrorToast, showToast } from "./ToastNotification";
 
 interface CreateOmnisendProps {
     handleClose: () => void
@@ -16,6 +16,7 @@ interface CreateOmnisendProps {
     open: boolean
     initApiKey?: string;
     boxShadow?: string;
+    Invalid_api_key?: boolean;
 }
 
 interface IntegrationsCredentials {
@@ -79,6 +80,9 @@ const klaviyoStyles = {
           '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
             borderColor: '#0000FF',
           },
+          '&.Mui-error .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'red',
+        },
         },
         '&+.MuiFormHelperText-root': {
             marginLeft: '0',
@@ -86,7 +90,7 @@ const klaviyoStyles = {
       },
 }
 
-const MailchimpConnect = ({ handleClose, open, onSave, initApiKey, boxShadow}: CreateOmnisendProps) => {
+const MailchimpConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Invalid_api_key}: CreateOmnisendProps) => {
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
     const [loading, setLoading] = useState(false)
@@ -169,12 +173,14 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey, boxShadow}: C
                 api_key: apiKey
             }
         }, {params: {service_name: 'mailchimp'}})
-        if(response.status === 200) {
+        if(response.status === 200 && response.data.status !== "CREDENTIALS_INVALID") {
             showToast('Integration Mailchimp Successfully')
             if(onSave){
                 onSave({'service_name': 'mailchimp', 'is_failed': false, access_token: apiKey})
             }
             handleNextTab()
+        } else {
+            showErrorToast("Invalid API Key")
         }
     } catch (error) {}
     finally{
@@ -387,7 +393,7 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey, boxShadow}: C
                                 variant="outlined"
                                 fullWidth
                                 margin="normal"
-                                error={apiKeyError}
+                                error={apiKeyError || Invalid_api_key}
                                 helperText={apiKeyError ? 'API Key is required' : ''}
                                 value={apiKey}
                                 onChange={handleApiKeyChange}

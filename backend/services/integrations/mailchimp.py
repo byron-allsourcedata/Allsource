@@ -154,9 +154,9 @@ class MailchimpIntegrationsService:
         try:
             lists = self.get_list(api_key=credentials.mailchimp.api_key, server=data_center)
             if not lists:
-                raise HTTPException(status_code=400, detail={"status": IntegrationsStatus.CREDENTAILS_INVALID.value})
+                raise HTTPException(status_code=200, detail={"status": IntegrationsStatus.CREDENTAILS_INVALID.value})
         except:
-            raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREDENTAILS_INVALID.value})
+            raise HTTPException(status_code=200, detail={'status': IntegrationsStatus.CREDENTAILS_INVALID.value})
         integration = self.__save_integation(domain_id=domain.id, api_key=credentials.mailchimp.api_key, server=data_center)
         return integration
 

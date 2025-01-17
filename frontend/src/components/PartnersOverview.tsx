@@ -233,15 +233,26 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                                                 Please provide all necessary details:
                                                             </Typography>
                                                             <ul style={{ margin: 0, paddingLeft: '1.2em', }}>
-                                                                {currentDue.map((item, index) => (
-                                                                    <li key={index} style={{
-                                                                        color: '#fff', fontFamily: 'Nunito Sans', fontSize: '14px',
-                                                                        lineHeight: 'normal',
-                                                                        fontWeight: 600,
-                                                                    }}>
-                                                                        {item}
-                                                                    </li>
-                                                                ))}
+                                                                {currentDue.map((item, index) => {
+                                                                    const formattedString = item
+                                                                        .split('.')
+                                                                        .map((word, idx) => {
+                                                                            if (idx === 0) {
+                                                                                return word.charAt(0).toUpperCase() + word.slice(1);
+                                                                            }
+                                                                            return word;
+                                                                        })
+                                                                        .join(' ');
+
+                                                                    return (
+                                                                        <li key={index} style={{
+                                                                            color: '#fff', fontFamily: 'Nunito Sans', fontSize: '14px',
+                                                                            lineHeight: 'normal', fontWeight: 600,
+                                                                        }}>
+                                                                            {formattedString}
+                                                                        </li>
+                                                                    );
+                                                                })}
                                                             </ul>
                                                         </Box>
                                                     }
@@ -267,7 +278,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                         </Box>
                                         <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 1, pl: 2 }}>
                                             <Typography className="table-heading" sx={{ color: 'rgba(244, 87, 69, 1) !important', pl: 0, textAlign: 'left' }}>
-                                                Referral Details and account transactions are restricted due to incomplete required information.
+                                                Referral details are unavailable. Update your information to proceed.
                                             </Typography>
                                         </Box>
                                         <Button
@@ -429,7 +440,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                             fontWeight: 400,
                                             fontSize: '14px',
                                             padding: 0,
-                                            "&.Mui-focused":{
+                                            "&.Mui-focused": {
                                                 color: 'rgba(17, 17, 19, 0.6)',
                                             }
                                         }}

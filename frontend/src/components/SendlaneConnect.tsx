@@ -17,6 +17,7 @@ interface CreateSendlaneProps {
     open: boolean
     initApiKey?: string;
     boxShadow?: string;
+    Invalid_api_key?: boolean;
 }
 
 interface IntegrationsCredentials {
@@ -79,6 +80,9 @@ const klaviyoStyles = {
             '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                 borderColor: '#0000FF',
             },
+            '&.Mui-error .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'red',
+        },
         },
         '&+.MuiFormHelperText-root': {
             marginLeft: '0',
@@ -86,7 +90,7 @@ const klaviyoStyles = {
     },
 }
 
-const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow }: CreateSendlaneProps) => {
+const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Invalid_api_key }: CreateSendlaneProps) => {
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
     const [value, setValue] = useState<string>('1')
@@ -392,7 +396,7 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow }: C
                                         variant="outlined"
                                         fullWidth
                                         margin="normal"
-                                        error={apiKeyError}
+                                        error={apiKeyError || Invalid_api_key}
                                         helperText={apiKeyError ? 'API Key is required' : ''}
                                         value={apiKey}
                                         onChange={handleApiKeyChange}
