@@ -36,6 +36,7 @@ interface PartnerData {
     reward_payout_date: string;
     reward_status: string;
     reward_amount: string;
+    isActive: boolean;
 }
 
 const getStatusStyle = (status: string) => {
@@ -161,7 +162,7 @@ const PartnersMain: React.FC<PartnersProps> = ({setLoading, masterId, appliedDat
                 setPartnerStates(
                     response.data.items.map((partner: any) => ({
                       id: partner.id,
-                      isActive: partner.status === "Active",
+                      isActive: partner.isActive,
                     }))
                   );
             }
@@ -308,14 +309,13 @@ const PartnersMain: React.FC<PartnersProps> = ({setLoading, masterId, appliedDat
         newPartnerStates[partnerIndex].isActive = !isCurrentlyActive;
         setPartnerStates(newPartnerStates);
 
-        const newStatus = !isCurrentlyActive ? "Active" : "Inactive";
+        const newStatus = !isCurrentlyActive ? true : false;
     
         try {
-            const response = await axiosInstance.put(`partners/${id}/`, {status: newStatus, message: newStatus=="Active" ? "Your account active again" : "Your account has become inactive!" }, {
+            const response = await axiosInstance.put(`partners/opportunity/${id}/`, {status: newStatus}, {
                 headers: { 'Content-Type': 'application/json' },
             });
             if (response.status === 200) {
-                updateOrAddAsset(response.data);
                 showToast("Partner status successfully updated!");
             }
         } catch {

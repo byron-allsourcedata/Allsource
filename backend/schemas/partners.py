@@ -21,6 +21,7 @@ class PartnersResponse(BaseModel):
     reward_amount: Optional[str] = None
     reward_status: Optional[str] = None
     reward_payout_date: Optional[str] = None
+    isActive: bool = False
 
 class PartnersObjectResponse(BaseModel):
     status: bool
@@ -35,6 +36,9 @@ class PartnerCreateRequest(BaseModel):
     isMaster: Optional[bool] = False
     masterId: Optional[int] = None
 
+class OpportunityStatus(BaseModel):
+    status: bool
+
 class PartnerUpdateRequest(BaseModel):
     message: Optional[str] = None
     status: Optional[str] = None
@@ -45,3 +49,4 @@ class PartnerUpdateRequest(BaseModel):
 class PartnerUserData(BaseModel):
     subscription: Optional[str] = None
     payment_date: Optional[datetime] = None
+    sources: Optional[str] = None

@@ -20,6 +20,7 @@ interface PartnerData {
     reward_payout_date: string;
     reward_status: string;
     reward_amount: string;
+    isActive: boolean;
 }
 
 interface FormUploadPopupProps {

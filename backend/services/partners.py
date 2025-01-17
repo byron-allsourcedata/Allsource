@@ -29,13 +29,18 @@ class PartnersService:
         self.plans_persistence = plans_persistence
 
 
-    def get_user_info(self, user_id=None):
+    def get_user_info(self, user_id=None, partner=None):
         user_data = {}
         user_data["subscription"] = "--"
         user_data["payment_date"] = None
         user_data["reward_amount"] = None
         user_data["reward_status"] = None
         user_data["reward_payout_date"] = None
+        user_data["sources"] = "Direct"
+        if partner.master_id is not None:
+            master_partner = self.partners_persistence.get_asset_by_id(partner.master_id)
+            if (master_partner and master_partner.company_name):
+                user_data["sources"] = master_partner.company_name
         if user_id is not None:
             # self.user_persistence.get_user_by_id(user_id)
             # user_data["payment_date"] = datetime.strptime("1880-12-19 12:54:55", "%Y-%m-%d %H:%M:%S")
@@ -57,7 +62,7 @@ class PartnersService:
             total_count = self.partners_persistence.get_total_count(isMaster, search_term)
 
             result = [
-                self.domain_mapped(partner, self.get_user_info(partner.user_id))
+                self.domain_mapped(partner, self.get_user_info(partner.user_id, partner))
                 for partner in partners
             ]
             return {"status": True, "data": {"items": result, "totalCount": total_count}}
@@ -72,7 +77,7 @@ class PartnersService:
             partner = self.partners_persistence.get_partner_by_email(decoded_email)
             
             user_id = partner.user_id
-            user = self.get_user_info(user_id)
+            user = self.get_user_info(user_id, partner)
             partnerData = self.domain_mapped(partner, user)
 
             return {"status": True, "data": partnerData}
@@ -95,7 +100,7 @@ class PartnersService:
             result = []
             for partner in partners:
                 user_id = partner.user_id
-                user = self.get_user_info(user_id)
+                user = self.get_user_info(user_id, partner)
                 count = self.accounts_persistence.get_total_count(partner.id)
                 result.append(self.domain_mapped(partner, user, count))
         
@@ -115,7 +120,7 @@ class PartnersService:
             result = []
             for partner in partners:
                 user_id = partner.user_id
-                user = self.get_user_info(user_id)
+                user = self.get_user_info(user_id, partner)
                 result.append(self.domain_mapped(partner, user))
         except Exception as e:
             logger.debug("Error getting partner data", e)
@@ -191,7 +196,7 @@ class PartnersService:
                 logger.debug('Database error during creation', e)
                 return {"status": False, "error": {"code": 500, "message": "Partner not created"}}
 
-            user = self.get_user_info(created_data.user_id)
+            user = self.get_user_info(created_data.user_id, created_data)
             return {"status": True, "data": self.domain_mapped(created_data, user)}
         
         except Exception as e:
@@ -252,12 +257,28 @@ class PartnersService:
                     SendgridTemplate.PARTNER_UPDATE_TEMPLATE.value)
                 self.send_message_in_email(updated_data.name, message, updated_data.email, template_id, value)
 
-            user = self.get_user_info(updated_data.user_id)
+            user = self.get_user_info(updated_data.user_id, updated_data)
             return {"status": True, "data": self.domain_mapped(updated_data, user)}
         except Exception as e:
             logger.debug("Error updating partner data", exc_info=True)
             return {"status": False, "error": {"code": 500, "message": f"Unexpected error during updation: {str(e)}"}}
 
+    async def update_opportunity_partner(
+        self, 
+        partner_id: int, 
+        payload: dict, 
+    ) -> PartnersObjectResponse:
+        if not payload:
+            return {"status": False, "error": {"code": 400, "message": "Invalid request with your partner data"}}
+            
+        try:
+            update_data = {"is_active": payload.status}
+            updated_data = self.partners_persistence.update_partner(partner_id=partner_id, **update_data) 
+        
+            return {"status": True}
+        except Exception as e:
+            logger.debug("Error updating partner data", exc_info=True)
+            return {"status": False, "error": {"code": 500, "message": f"Unexpected error during updation: {str(e)}"}}
 
 
     def domain_mapped(self, partner: Partners, user: PartnerUserData, count=0):
@@ -269,12 +290,12 @@ class PartnersService:
             join_date=partner.join_date,
             commission=partner.commission,
             subscription=user["subscription"],
-            sources=partner.company_name,
+            sources=user["sources"],
             last_payment_date=user["payment_date"],
             reward_amount=user["reward_amount"],
             reward_status=user["reward_status"],
             reward_payout_date=user["reward_payout_date"],
             status=partner.status.capitalize() if partner.is_active else 'Inactive',
             count=count,
-            is_active=partner.is_active
+            isActive=partner.is_active
         ).model_dump()
