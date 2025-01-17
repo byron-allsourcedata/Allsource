@@ -111,6 +111,7 @@ export const SettingsSubscription: React.FC = () => {
     const [hasActivePlan, setHasActivePlan] = useState<boolean>(false);
     const [showSlider, setShowSlider] = useState(true);
     const [utmParams, setUtmParams] = useState<string | null>(null);
+    const [activePlan, setActivePlan] = useState<any>(null);
     const sourcePlatform = useMemo(() => {
         if (typeof window !== 'undefined') {
             const savedMe = sessionStorage.getItem('me');
@@ -134,8 +135,6 @@ export const SettingsSubscription: React.FC = () => {
         const period = newValue === 0 ? 'month' : 'year';
         const period_plans = allPlans.filter((plan: any) => plan.interval === period);
         setPlans(period_plans);
-        const activePlan = allPlans.find((plan: any) => plan.is_active && plan.title !== 'Free Trial') !== undefined;
-        setHasActivePlan(activePlan);
     };
 
     const handleCustomPlanPopupOpen = () => {
@@ -183,16 +182,18 @@ export const SettingsSubscription: React.FC = () => {
                 setIsLoading(true);
                 fetchPrefillData();
                 const response = await axiosInterceptorInstance.get(`/subscriptions/stripe-plans`);
-                setAllPlans(response.data.stripe_plans)
+                setAllPlans(response.data.stripe_plans);
+
                 const stripePlans: StripePlan[] = response.data.stripe_plans;
-                const activePlan = stripePlans.find(plan => plan.is_active && plan.title !== 'Free Trial');
-                setHasActivePlan(!!activePlan);
-                let interval = 'month'
-                if (activePlan) {
-                    interval = activePlan.interval
-                }
+                const active = stripePlans.find(plan => plan.is_active && plan.title !== 'Free Trial');
+                setActivePlan(active || null);
+                setHasActivePlan(!!active);
+
+                const interval = active ? active.interval : 'month';
                 if (interval === 'year') {
-                    setTabValue(1)
+                    setTabValue(1);
+                } else {
+                    setTabValue(0);
                 }
                 const period_plans = response.data.stripe_plans.filter((plan: any) => plan.interval === interval);
                 setPlans(period_plans);
@@ -280,6 +281,8 @@ export const SettingsSubscription: React.FC = () => {
                         setAllPlans(response.data.stripe_plans)
                         const stripePlans: StripePlan[] = response.data.stripe_plans;
                         const activePlan = stripePlans.find(plan => plan.is_active);
+                        const active = stripePlans.find(plan => plan.is_active && plan.title !== 'Free Trial');
+                        setActivePlan(active || null);
                         setHasActivePlan(!!activePlan);
                         let interval = 'month'
                         if (activePlan) {
@@ -323,7 +326,7 @@ export const SettingsSubscription: React.FC = () => {
         (tabValue === 1 && plan.interval === 'year')
     );
 
-    const activePlan = filteredPlans.find((plan) => plan.is_active);
+
 
     if (isLoading) {
         return <CustomizedProgressBar />;
@@ -468,7 +471,12 @@ export const SettingsSubscription: React.FC = () => {
                     {filteredPlans.length > 0 ? (
                         filteredPlans.map((plan, index) => (
                             <Box key={index} sx={subscriptionStyles.formWrapper}>
-                                <PlanCard plan={plan} activePlanTitle={activePlan?.title || ''} tabValue={tabValue} onChoose={handleChoosePlan} />
+                                <PlanCard
+                                    plan={plan}
+                                    activePlanTitle={activePlan?.title || ''}
+                                    tabValue={tabValue}
+                                    onChoose={handleChoosePlan}
+                                />
                             </Box>
                         ))
                     ) : (

@@ -8,6 +8,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight'
 import PayoutsMonth from './PayoutsMonth';
+import PartnerAccounts from "./PartnersAccountPayouts";
 
 interface RewardData {
     month: string;
@@ -20,10 +21,12 @@ interface RewardData {
 const ReferralRewards: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [open, setOpen] = useState<boolean>(false);
+    const [openPartner, setOpenPartner] = useState<boolean>(false);
     const [rewards, setRewards] = useState<RewardData[]>([]);
     const currentYear = new Date().getFullYear();
     const [year, setYear] = useState<string>(currentYear.toString());
     const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+    const [selectedPartner, setSelectedPartner] = useState<string | null>(null);
     const yearsOptions: (string | number)[] = Array.from(
         { length: 12 },
         (_, i) => new Date().getFullYear() - i
@@ -47,6 +50,11 @@ const ReferralRewards: React.FC = () => {
             setLoading(false);
         }
     };
+
+    const handlePartnerClick = (partnerName: string) => {
+        setSelectedPartner(partnerName);
+        setOpenPartner(true);
+      };
 
 
 
@@ -119,6 +127,11 @@ const ReferralRewards: React.FC = () => {
         setOpen(false);
     };
 
+    const handleBackPartners = () => {
+        setSelectedPartner(null);
+        setOpenPartner(false);
+      };
+
     return (
         <>
             {loading &&
@@ -134,8 +147,11 @@ const ReferralRewards: React.FC = () => {
                 minHeight: '77vh',
                 '@media (max-width: 600px)': { margin: '0rem auto 0rem' }
             }}>
-                {selectedMonth ? (
-                    <PayoutsMonth open={open} selectedMonth={selectedMonth} onBack={handleBack} />
+                {selectedPartner ? (
+          <PartnerAccounts open={openPartner} partnerName={selectedPartner} selectMonth={selectedMonth || ''} onBack={handleBackPartners} />
+        ) : 
+                selectedMonth ? (
+                    <PayoutsMonth open={open} selectedMonth={selectedMonth} onBack={handleBack} onPartnerClick={handlePartnerClick} />
                 ) : (
                     <>
                         <Box sx={{ display: 'flex', justifyContent: 'end', mb: 2 }}>

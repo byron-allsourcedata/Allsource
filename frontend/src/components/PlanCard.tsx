@@ -5,30 +5,33 @@ import CustomTooltip from './customToolTip';
 
 const PlanCard: React.FC<{ plan: any; activePlanTitle: string, tabValue: number, onChoose: (stripePriceId: string) => void }> = ({ plan, activePlanTitle, tabValue, onChoose }) => {
     const getButtonLabel = () => {
-        if (plan.is_active) return 'Current Plan';
-        if (activePlanTitle === '' && tabValue === 0){
-            if (plan.title === 'Launch') return 'Downgrade';
-            if (plan.title === 'Pro') return 'Downgrade';
-            if (plan.title === 'Growth') return 'Downgrade';
+        if (plan.is_active) return 'Current Plan'; 
+        if (activePlanTitle === '') {
+            return 'Choose Plan';
         }
-        if (activePlanTitle === '' && tabValue === 1){
-            if (plan.title === 'Launch') return 'Upgrade';
-            if (plan.title === 'Pro') return 'Upgrade';
-            if (plan.title === 'Growth') return 'Upgrade';
+    
+        const levels = ['Launch', 'Pro', 'Growth'];
+    
+        const currentLevelIndex = levels.indexOf(activePlanTitle);
+        const targetLevelIndex = levels.indexOf(plan.title);
+    
+        if (currentLevelIndex === -1 || targetLevelIndex === -1) {
+            return 'Choose Plan';
         }
-        if (activePlanTitle === 'Launch') {
-            if (plan.title === 'Pro') return 'Upgrade';
-            if (plan.title === 'Growth') return 'Upgrade';
-        } else if (activePlanTitle === 'Pro') {
-            if (plan.title === 'Launch') return 'Downgrade';
-            if (plan.title === 'Growth') return 'Upgrade';
+    
+        if (tabValue === 1) {
+            if (targetLevelIndex > currentLevelIndex) return 'Upgrade';
+            if (targetLevelIndex < currentLevelIndex) return 'Upgrade';
+            if (targetLevelIndex == currentLevelIndex) return 'Upgrade';
+        } else {
+            if (targetLevelIndex > currentLevelIndex) return 'Downgrade'; 
+            if (targetLevelIndex < currentLevelIndex) return 'Downgrade'; 
+            if (targetLevelIndex == currentLevelIndex) return 'Downgrade';
         }
-        else if (activePlanTitle === 'Growth') {
-            if (plan.title === 'Launch') return 'Downgrade';
-            if (plan.title === 'Pro') return 'Downgrade';
-        }
-        return 'Choose Plan';
+    
+        return 'Choose Plan'; // 
     };
+    
     return (
         <Box sx={{
             padding: '30px 24px', border: '1px solid #e4e4e4', borderRadius: '4px', boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.25)',

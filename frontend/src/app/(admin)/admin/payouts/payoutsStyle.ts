@@ -66,7 +66,7 @@ export const payoutsStyle: { [key: string]: SxProps<Theme> } = {
     tableColumn: {
         lineHeight: '16px !important',
         position: 'relative',
-        paddingLeft: '45px',
+        paddingLeft: '18px',
         paddingTop: '18px',
         paddingBottom: '18px',
         '&::after': {
@@ -92,7 +92,7 @@ export const payoutsStyle: { [key: string]: SxProps<Theme> } = {
     tableBodyColumn: {
         lineHeight: '16px !important',
         position: 'relative',
-        paddingLeft: '45px',
+        paddingLeft: '25px',
         paddingTop: '13.5px',
         paddingBottom: '13.5px',
         '&::after': {
