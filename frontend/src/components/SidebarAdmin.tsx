@@ -171,12 +171,20 @@ const SidebarAdmin: React.FC = () => {
                 <ListItemButton
                     onClick={() => handleNavigation('/admin/partners')}
                     sx={isActive('/admin/partners') ? sidebarStyles.activeItem : sidebarStyles.inactiveItem}
-
                 >
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <AccountBoxIcon />
                     </ListItemIcon>
                     <ListItemText primary="Partners" />
+                </ListItemButton>
+                <ListItemButton
+                    onClick={() => handleNavigation('/admin/accounts')}
+                    sx={isActive('/admin/accounts') ? sidebarStyles.activeItem : sidebarStyles.inactiveItem}
+                >
+                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                        <AccountBoxIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Accounts" />
                 </ListItemButton>
                 <ListItemButton
                     onClick={() => handleNavigation('/admin/assets')}
