@@ -6,6 +6,8 @@ from encryption_utils import encrypt_data
 from persistence.user_persistence import UserPersistence
 from services.stripe_service import StripeService
 from persistence.referral_payouts import ReferralPayoutsPersistence
+from enums import PayoutsStatus
+from collections import defaultdict
 logger = logging.getLogger(__name__)
 load_dotenv()
 
@@ -90,3 +92,40 @@ class ReferralService:
             'discount_codes': formatted_discount_codes,
             'referral_code': referral_code
         }
+
+    def get_rewards_info(self, year: str, month: str = None):
+        result = self.referral_payouts_persistence.get_all_referral_payouts(year=year, month=month)
+        if not result:
+            return
+        payouts = result['payouts']
+        referral_count = result['user_count']
+        
+        grouped_by_month = defaultdict(list)
+        for payout in payouts:
+            month_year = payout.created_at.strftime('%Y-%m')
+            grouped_by_month[month_year].append(payout)
+        
+        monthly_info = []
+        for month_year, month_payouts in grouped_by_month.items():
+            total_rewards = sum(payout.reward_amount for payout in month_payouts)
+            rewards_paid = sum(
+                payout.reward_amount for payout in month_payouts if payout.status == PayoutsStatus.PAID.value
+            )
+            
+            payout_date = max(
+                (payout.created_at for payout in month_payouts),
+                default=None
+            )
+            
+            payout_date_formatted = payout_date.isoformat() if payout_date else None
+            
+            monthly_info.append({
+                'month': month_year,
+                'totalRewards': round(total_rewards, 2),
+                'rewardsPaid': round(rewards_paid, 2),
+                'invitesCount': referral_count,
+                'payoutDate': payout_date_formatted
+            })
+        
+        return monthly_info
+    
