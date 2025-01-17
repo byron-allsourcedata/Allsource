@@ -2,7 +2,7 @@ from sqlalchemy import Column, event, Integer, TIMESTAMP, BOOLEAN, VARCHAR
 from .base import Base, create_timestamps, update_timestamps
 
 
-class Partners(Base):
+class Partner(Base):
     __tablename__ = "partners"
 
     id = Column(Integer, primary_key=True, nullable=False)
@@ -27,11 +27,11 @@ class Partners(Base):
                 "status": self.status,
                 "email": self.email,
                 "name": self.name,
-                "is_master": self.is_master,
+                "isMaster": self.is_master,
                 "company_name": self.company_name,
                 "join_date": self.join_date,
                 "is_active": self.is_active
             }
 
-event.listen(Partners, "before_insert", create_timestamps)
-event.listen(Partners, "before_update", update_timestamps)
+event.listen(Partner, "before_insert", create_timestamps)
+event.listen(Partner, "before_update", update_timestamps)
