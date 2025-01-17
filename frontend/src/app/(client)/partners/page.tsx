@@ -221,7 +221,7 @@ const Partners: React.FC = () => {
                 setEmail(storedData.email);
                 fetchRulesMe(storedData.email); 
             }
-        }, 7000);
+        }, 2500);
 
         return () => window.clearTimeout(timeoutId);
     }, []);
