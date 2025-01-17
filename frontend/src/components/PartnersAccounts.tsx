@@ -90,7 +90,7 @@ interface AccountData {
 }
 
 
-const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFromMain = { start: null, end: null }, id: partnerId, fromAdmin, masterData, setMasterData, loading, setLoading, tabIndex, handleTabChange }) => {
+const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFromMain, id: partnerId, fromAdmin, masterData, setMasterData, loading, setLoading, tabIndex, handleTabChange }) => {
     const { email } = useUser();
     const [accounts, setAccounts] = useState<AccountData[]>([]);
     const [page, setPage] = useState(0);
@@ -101,7 +101,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
     const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
     const isCalendarOpen = Boolean(calendarAnchorEl);
     const [formattedDates, setFormattedDates] = useState<string>('');
-    const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>(appliedDatesFromMain);
+    const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>(appliedDatesFromMain ?? { start: null, end: null });
     const [selectedDateLabel, setSelectedDateLabel] = useState<string>('');
     const id = partnerId ?? masterData?.id
     const allowedRowsPerPage = [10, 25, 50, 100];
