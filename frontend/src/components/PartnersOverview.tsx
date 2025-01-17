@@ -424,9 +424,14 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                 >
                                     <InputLabel
                                         sx={{
-                                            fontFamily: 'Roboto',
-                                            fontSize: '13px',
-                                            color: 'rgba(74, 74, 74, 1)',
+                                            color: 'rgba(17, 17, 19, 0.6)',
+                                            fontFamily: 'Nunito Sans',
+                                            fontWeight: 400,
+                                            fontSize: '14px',
+                                            padding: 0,
+                                            "&.Mui-focused":{
+                                                color: 'rgba(17, 17, 19, 0.6)',
+                                            }
                                         }}
                                     >
                                         Discount Code
@@ -435,13 +440,16 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                         value={stripeConnect ? discountCode?.name : ''}
                                         onChange={handleDiscountCodeChange}
                                         disabled={!stripeConnect}
-                                        label="Discount co"
+                                        label="Discount code"
                                         sx={{
                                             backgroundColor: '#fff',
                                             borderRadius: '4px',
-                                            fontFamily: 'Nunito Sans',
+                                            fontFamily: 'Roboto',
+                                            fontSize: '14px',
+                                            fontWeight: '400',
+                                            lineHeight: '19.6px',
+                                            color: 'rgba(32, 33, 36, 1)',
                                             zIndex: 0,
-                                            color: 'rgba(17, 17, 19, 1)',
                                             "& .MuiOutlinedInput-root": {
                                                 "& fieldset": {
                                                     borderColor: 'rgba(208, 213, 221, 1)',
@@ -471,8 +479,8 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                                 key={index}
                                                 value={option.name}
                                                 sx={{
-                                                    fontFamily: 'Nunito Sans',
-                                                    fontWeight: 500,
+                                                    fontFamily: 'Roboto',
+                                                    fontWeight: 400,
                                                     fontSize: '14px',
                                                     lineHeight: '19.6px',
                                                 }}
