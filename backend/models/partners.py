@@ -15,7 +15,7 @@ class Partners(Base):
     join_date = Column(TIMESTAMP, nullable=True)
     token = Column(VARCHAR(256), nullable=False)
     status = Column(VARCHAR(16), default="invitation sent", nullable=False)
-    isMaster = Column(BOOLEAN, default=False, nullable=False)
+    is_master = Column(BOOLEAN, default=False, nullable=False)
     created_at = Column(TIMESTAMP, nullable=False)
     updated_at = Column(TIMESTAMP, nullable=False)
     is_active = Column(BOOLEAN, nullable=False, default=True)
@@ -27,7 +27,7 @@ class Partners(Base):
                 "status": self.status,
                 "email": self.email,
                 "name": self.name,
-                "isMaster": self.isMaster,
+                "is_master": self.is_master,
                 "company_name": self.company_name,
                 "join_date": self.join_date,
                 "is_active": self.is_active
