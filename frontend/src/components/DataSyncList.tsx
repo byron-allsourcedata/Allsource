@@ -371,7 +371,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
     setKlaviyoIconPopupOpen(false);
     setSelectedId(null);
     setIsEdit(false);
-    setIsInvalidApiKey(false);
     try {
       const response = await axiosInstance.get(
         `/data-sync/sync?integrations_users_sync_id=${selectedId}`
