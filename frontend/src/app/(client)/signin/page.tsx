@@ -90,17 +90,14 @@ const Signin: React.FC = () => {
     validateField(name, value);
   };
 
-  const checkPartner = () => {
-    setTimeout(() => {
-        const storedMe = sessionStorage.getItem('me');
-        if (storedMe) {
-            const storedData = JSON.parse(storedMe);
-            router.push('/partners')
-        }
-        else {
-          router.push('/dashboard')
-        }
-    }, 7000) //NEED this test in dev with 2500
+  const checkPartner = (isPartner: boolean) => {
+    if (isPartner) {
+      router.push('/partners')
+    }
+    else {
+      router.push('/dashboard')
+    }
+
 }  
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -153,8 +150,7 @@ const Signin: React.FC = () => {
 
             case "SUCCESS":
               get_me()
-              checkPartner()
-              // console.log({})
+              checkPartner(response.data.is_partner)
               break;
             case 'NON_SHOPIFY_ACCOUNT':
               showErrorToast("non shopify account");

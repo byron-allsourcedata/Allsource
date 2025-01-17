@@ -70,7 +70,7 @@ async def create_user(user_form: UserSignUpForm, users_service: UsersAuth = Depe
 @router.post("/login", response_model=UserLoginFormResponse)
 async def login_user(user_form: UserLoginForm, users_service: UsersAuth = Depends(get_users_auth_service)):
     user_data = users_service.login_account(user_form)
-    return UserLoginFormResponse(status=user_data.get('status'), token=user_data.get("token"),
+    return UserLoginFormResponse(status=user_data.get('status'), token=user_data.get("token"), is_partner=user_data.get('is_partner'),
                                     stripe_payment_url=user_data.get('stripe_payment_url'), shopify_status=user_data.get('shopify_status'))
 
 

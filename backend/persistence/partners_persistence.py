@@ -65,8 +65,21 @@ class PartnersPersistence:
 
         return query.count()
     
-    def get_total_count_by_id(self, id):
-        return self.db.query(Partners).filter(Partners.master_id == id).count()
+    def get_total_count_by_id(self, id, start_date, end_date):
+        query = self.db.query(Partners).filter(Partners.master_id == id)
+
+        if start_date:
+            if isinstance(start_date, str):
+                start_date = datetime.strptime(start_date, "%Y-%m-%d")
+            query = query.filter(Partners.join_date >= start_date)
+        if end_date:
+            if isinstance(end_date, str):
+                end_date = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1) - timedelta(seconds=1)
+            else:
+                end_date = datetime.combine(end_date, datetime.max.time())
+            query = query.filter(Partners.join_date <= end_date)
+
+        return query.count()
 
 
 

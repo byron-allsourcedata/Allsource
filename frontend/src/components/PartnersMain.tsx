@@ -10,6 +10,7 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import { suppressionsStyles } from "@/css/suppressions";
 import dayjs from "dayjs";
 import CustomTablePagination from "./CustomTablePagination";
+import { useUser } from '@/context/UserContext';
 import Image from "next/image";
 import CalendarPopup from "./CustomCalendar";
 import { DateRangeIcon } from "@mui/x-date-pickers/icons";
@@ -68,10 +69,14 @@ const getStatusStyle = (status: string) => {
 };
 
 interface PartnersProps {
-    loading: boolean;
     setLoading: any;
+    appliedDates: { start: Date | null; end: Date | null };
     masterId: number;
-    partnersData: PartnerData[];
+}
+
+interface PartnerState {
+    id: number
+    isActive: boolean;
 }
 
 interface NewPartner {
@@ -86,79 +91,27 @@ interface EnabledPartner {
     id: number, 
     fullName?: string
 }
-
-const AccountStatusSwitch = styled(Switch)(({ theme }) => ({
-    padding: 8,
-    width: 86,
-    '& .MuiSwitch-track': {
-      borderRadius: 22 / 2,
-      backgroundColor: 'rgba(123, 123, 123, 1)',
-      opacity: 1,
-      position: 'relative',
-      '&::before': {
-        content: '"Inactive"',
-        position: 'absolute',
-        top: '50%',
-        left: '10%',
-        transform: 'translateY(-50%)',
-        fontSize: 12,
-        color: 'white',
-      },
-      '&.MuiSwitch-switchBase + &.Mui-checked': {
-        transform: 'translateX(48px)',
-      },
-      '& .Mui-checked.MuiSwitch-track': {
-        opacity: 1,
-        backgroundColor: 'rgba(80, 82, 178, 1)',
-      },
-      '&.Mui-checked': {
-        '&::before': {
-          content: '"Active"',
-          left: '60%',
-        },
-        '&.MuiSwitch-track': {
-          opacity: 1
-        },
-        '&.MuiSwitch-switchBase': {
-            transform: 'translateX(48px)', 
-        }
-      },
-    },
-    '& .MuiSwitch-thumb': {
-      boxShadow: 'none',
-      width: 16,
-      height: 16,
-      margin: 2,
-      color: 'white',
-    },
-  }));
   
   
 
 type CombinedPartnerData = NewPartner & EnabledPartner;
 
 
-const PartnersMain: React.FC<PartnersProps> = ({loading, setLoading, masterId, partnersData}) => {
-    const [partners, setPartners] = useState<PartnerData[]>(partnersData);
+const PartnersMain: React.FC<PartnersProps> = ({setLoading, masterId, appliedDates}) => {
+    const [partners, setPartners] = useState<PartnerData[]>([]);
+    const [partnerStates, setPartnerStates] = useState<PartnerState[]>([])
     const [page, setPage] = useState(0);
+    const { email } = useUser();
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalCount, setTotalCount] = useState(0);
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
-    const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
-    const isCalendarOpen = Boolean(calendarAnchorEl);
-    const [formattedDates, setFormattedDates] = useState<string>('');
-    const [selectedDateLabel, setSelectedDateLabel] = useState<string>('');
     const [menuAnchor, setMenuAnchor] = useState(null);
     const [formPopupOpen, setFormPopupOpen] = useState(false);
     const [noticePopupOpen, setNoticePopupOpen] = useState(false);
     const [fileData, setFileData] = useState<NewPartner>({id: 0, email: "", fullName: "", companyName: "", commission: ""});
     const [enabledData, setEnabledData] = useState<EnabledPartner>({id: 0});
     const [selectedRowData, setSelectedRowData] = useState<any>(null);
-    const [accountPage, setAccountPage] = useState(false);
-    const [partnerName, setPartnerName] = useState<string | null>(null);
-    const [accountName, setAccountName] = useState<string | null>(null);
-    const [search, setSearch] = useState("");
     const [errorResponse, setErrosResponse] = useState(false);
 
     const tableHeaders = [
@@ -176,13 +129,6 @@ const PartnersMain: React.FC<PartnersProps> = ({loading, setLoading, masterId, p
         { key: 'actions', label: 'Actions', sortable: false },
     ];
 
-    const [partnerStates, setPartnerStates] = useState(
-        partners.map((partner) => ({
-          id: partner.id,
-          isActive: partner.status === "Active",
-        }))
-      );
-
     const handleOpenMenu = (event: any, rowData: any) => {
         setMenuAnchor(event.currentTarget);
         setSelectedRowData(rowData);
@@ -190,53 +136,44 @@ const PartnersMain: React.FC<PartnersProps> = ({loading, setLoading, masterId, p
         handleFormOpenPopup()
     };
 
-    const handleCloseMenu = () => {
-        setMenuAnchor(null);
-        setSelectedRowData(null);
-    };
-
     const open = Boolean(menuAnchor);
-
-    const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-        setCalendarAnchorEl(event.currentTarget);
-    };
-
-    const handleCalendarClose = () => {
-        setCalendarAnchorEl(null);
-    };
-    const handleDateLabelChange = (label: string) => {
-        setSelectedDateLabel(label);
-    };
-
     const allowedRowsPerPage = [10, 25, 50, 100];
-    const validatedRowsPerPage = allowedRowsPerPage.includes(rowsPerPage) ? rowsPerPage : 10;   
-
-    const handleDateChange = (dates: { start: Date | null; end: Date | null }) => {
-        const { start, end } = dates;
-        if (start && end) {
-            const formattedStart = dayjs(start).format('MMM D');
-            const formattedEnd = dayjs(end).format('MMM D, YYYY');
-
-            setFormattedDates(`${formattedStart} - ${formattedEnd}`);
-        } else if (start) {
-            const formattedStart = dayjs(start).format('MMM D, YYYY');
-            setFormattedDates(formattedStart);
-        } else if (end) {
-            const formattedEnd = dayjs(end).format('MMM D, YYYY');
-            setFormattedDates(formattedEnd);
-        } else {
-            setFormattedDates('');
-        }
-    };
 
 
     const handlePageChange = (event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
         setPage(newPage);
     };
 
+    const fetchRules = useCallback(async () => {
+        setLoading(true)
+
+        try {
+            const response = await axiosInstance.get(`/partners/partners`, { 
+                params: {
+                    email: encodeURIComponent(email ? email : ''),
+                    start_date: appliedDates.start ? appliedDates.start.toLocaleDateString('en-CA') : null,
+                    end_date: appliedDates.end ? appliedDates.end.toLocaleDateString('en-CA') : null,
+                    page, rowsPerPage
+                }});
+            if(response.status === 200 && response.data.totalCount > 0) {
+                setPartners([...response.data.items])
+                setTotalCount(response.data.totalCount)  
+                setPartnerStates(
+                    response.data.items.map((partner: any) => ({
+                      id: partner.id,
+                      isActive: partner.status === "Active",
+                    }))
+                  );
+            }
+        } catch {
+        } finally {
+            setLoading(false)
+        }
+    }, [page, rowsPerPage, appliedDates, email]);
+
     useEffect(() => {
-        setPartners(partnersData)
-    }, [partnersData]); 
+        fetchRules()
+    }, [page, rowsPerPage, appliedDates]); 
 
 
     const handleRowsPerPageChange = (event: React.ChangeEvent<{ value: unknown }>) => {
@@ -313,14 +250,6 @@ const PartnersMain: React.FC<PartnersProps> = ({loading, setLoading, masterId, p
 
 
     const Toggle: React.FC<{isActive: boolean; onToggle: () => void}> = ({ isActive, onToggle  }) => {
-        // const [isActive, setIsActive] = useState(initialStatus === "Active");
-      
-        // const handleToggle = () => {
-        //   const newStatus = isActive ? "Inactive" : "Active";
-        //   setIsActive(!isActive);
-        //   onStatusChange(newStatus);
-        // };
-      
         return (
             <Box
               sx={{
@@ -372,7 +301,7 @@ const PartnersMain: React.FC<PartnersProps> = ({loading, setLoading, masterId, p
     
     const handleStatusChange = async (id: number) => {
         setLoading(true);
-        const partnerIndex = partnerStates.findIndex((p) => p.id === id);
+        const partnerIndex = partnerStates.findIndex((p: any) => p.id === id);
         const newPartnerStates = [...partnerStates];
         const isCurrentlyActive = newPartnerStates[partnerIndex].isActive;
 
@@ -459,7 +388,7 @@ const PartnersMain: React.FC<PartnersProps> = ({loading, setLoading, masterId, p
                                 </TableHead>
                                 <TableBody>
                                         {partners.map((data) => {
-                                            const isActive = partnerStates.find((p) => p.id === data.id)?.isActive;
+                                            const isActive = partnerStates.find((p: any) => p.id === data.id)?.isActive;
                                             return (
                                             <TableRow key={data.id} sx={{
                                                 ...suppressionsStyles.tableBodyRow,
@@ -473,13 +402,11 @@ const PartnersMain: React.FC<PartnersProps> = ({loading, setLoading, masterId, p
                                                 <TableCell className='sticky-cell table-data' 
                                                     sx={{
                                                         ...suppressionsStyles.tableBodyColumn, 
-                                                        cursor: "pointer", 
                                                         paddingLeft: "16px",
                                                         position: 'sticky',
                                                         left: 0,
                                                         zIndex: 1, 
-                                                        background: "#fff",
-                                                        "&:hover .icon-button": { display: "contents" }}}
+                                                        background: "#fff"}}
                                                     >
                                                     <Box sx={{display: "flex", alignItems: "center", justifyContent: "space-between", color: 'rgba(80, 82, 178, 1)'}}>
                                                         {data.partner_name}

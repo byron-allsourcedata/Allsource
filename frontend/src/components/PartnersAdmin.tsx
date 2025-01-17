@@ -300,7 +300,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
         } finally {
             setLoading(false);
         }
-    }, [search, appliedDates]);
+    }, [page, rowsPerPage, search, appliedDates]);
 
     const updateOrAddAsset = (updatedPartner: PartnerData) => {
         setPartners((prevAccounts) => {
@@ -332,7 +332,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
         else {
             fetchRules();
         }
-    }, [appliedDates])
+    }, [page, rowsPerPage, appliedDates])
 
 
     return (
