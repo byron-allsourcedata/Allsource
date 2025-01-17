@@ -19,9 +19,11 @@ interface PartnerData {
     reward_payout_date: string;
     reward_status: string;
     reward_amount: string;
+    isActive: boolean;
 }
 
 interface FormUploadPopupProps {
+    maxCommission?: number;
     masterId?: number;
     isMaster?: boolean;
     open: boolean;
@@ -39,7 +41,7 @@ interface RequestData {
     masterId?: number;
 }
 
-const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ masterId, isMaster, open, fileData, onClose, updateOrAddAsset }) => {
+const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, masterId, isMaster, open, fileData, onClose, updateOrAddAsset }) => {
     const [action, setAction] = useState("Add");
     const [buttonContain, setButtonContain] = useState(false);
     const [fullName, setFullName] = useState(""); 
@@ -56,31 +58,16 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ masterId, isMaster
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       setEmailError(!emailRegex.test(value) && value !== "");
     };
-
-    const handleNameChange = (e: any) => {
-        setFullName(e.target.value)
-        if(action === "Edit"){
-            setButtonContain(true)
-        }
-    }
-
-    const handleCompanyChange = (e: any) => {
-        setCompanyName(e.target.value)
-        if(action === "Edit"){
-            setButtonContain(true)
-        }
-      };
   
     const handleCommissionChange = (e: any) => {
-      const value = e.target.value;
-      const isValid = /^[1-9]$|^[1-6][0-9]$|^70$/.test(value);
-      setCommissionError(!isValid && value !== "");
-      if (isValid || value === "") {
-        setCommission(value);
-      }
-      if(action === "Edit"){
-        setButtonContain(true)
-      }
+        const value = e.target.value;
+        const comissionUpLine = maxCommission ? maxCommission - 1 : 70;
+        const numericValue = Number(value);
+        const isValid = numericValue >= 1 && numericValue <= comissionUpLine;
+        setCommissionError(!isValid && value !== "");
+        if (isValid || value === "") {
+            setCommission(value);
+        }
     };
 
     const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
@@ -254,7 +241,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ masterId, isMaster
                                 },  
                             }}
                             value={fullName}
-                            onChange={handleNameChange}
+                            onChange={(e) => setFullName(e.target.value)}
                         />
 
                         <TextField
@@ -292,7 +279,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ masterId, isMaster
                                 },  
                             }}
                             value={companyName}
-                            onChange={handleCompanyChange}
+                            onChange={(e) => setCompanyName(e.target.value)}
                         />
 
                         <TextField
@@ -312,7 +299,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ masterId, isMaster
                             onChange={handleCommissionChange}
                             error={commissionError}
                             helperText={
-                            commissionError ? "Commission must be a number between 1 and 70" : ""
+                            commissionError ? `Commission must be a number between 1 and ${maxCommission ?? 70}` : ""
                             }
                         />
                 </Box>

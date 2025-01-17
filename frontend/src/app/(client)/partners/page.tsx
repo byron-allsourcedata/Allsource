@@ -78,7 +78,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
 const Partners: React.FC = () => {
     const { hasNotification } = useNotification();
     const [email, setEmail] = useState('');
-    const [commission, setCommission] = useState('');
+    const [commission, setCommission] = useState(0);
     const [masterId, setMasterId] = useState(0)
     const [formPopupOpen, setFormPopupOpen] = useState(false);
     const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
@@ -508,6 +508,7 @@ const Partners: React.FC = () => {
                             onApply={handleApply}
                         />
                     <InvitePartnerPopup 
+                        maxCommission={commission}
                         masterId={masterId}
                         isMaster={false}
                         open={formPopupOpen} 

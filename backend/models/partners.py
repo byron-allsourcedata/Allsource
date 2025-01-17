@@ -29,7 +29,8 @@ class Partners(Base):
                 "name": self.name,
                 "isMaster": self.isMaster,
                 "company_name": self.company_name,
-                "join_date": self.join_date
+                "join_date": self.join_date,
+                "is_active": self.is_active
             }
 
 event.listen(Partners, "before_insert", create_timestamps)
