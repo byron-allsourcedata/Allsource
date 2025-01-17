@@ -532,7 +532,8 @@ class UsersAuth:
         }
         
         if user_form.spi:
-            status = SignUpStatus.SUCCESS
+            status = SignUpStatus.FILL_COMPANY_DETAILS
+            is_with_card = True
             
         user_object = self.add_user(is_with_card=is_with_card, customer_id=customer_id, user_form=user_data,
                                     spi=user_form.spi, awin_awc=awc, access_token=shopify_access_token, shop_id=shop_id, shop_data=shopify_data,
@@ -561,9 +562,6 @@ class UsersAuth:
         if shop_hash:
             self._process_big_commerce_integration(user_object, shop_hash)
             self.user_persistence_service.email_confirmed(user_object.id)
-            
-        if user_form.spi and not is_with_card:
-            self.user_persistence_service.book_call_confirmed(user_object.id)
             
         if (ift and ift == 'arwt') or user_object.source_platform in (SourcePlatformEnum.BIG_COMMERCE.value, SourcePlatformEnum.SHOPIFY.value):
             self.user_persistence_service.book_call_confirmed(user_object.id)
@@ -595,7 +593,7 @@ class UsersAuth:
         if teams_token:
             return {
                 'is_success': True,
-                'status': SignUpStatus.FILL_COMPANY_DETAILS,
+                'status': SignUpStatus.SUCCESS,
                 'token': token
             }
 
