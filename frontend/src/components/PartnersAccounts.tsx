@@ -195,7 +195,13 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
 
         try {
             if(id) {
-                response = await axiosInstance.get(`/admin-accounts`, { params: {id} });
+                response = await axiosInstance.get(`/admin-accounts`, { params: {
+                    id,
+                    search,
+                    start_date: appliedDates.start ? appliedDates.start.toLocaleDateString('en-CA') : null,
+                    end_date: appliedDates.end ? appliedDates.end.toLocaleDateString('en-CA') : null,
+                    page, rowsPerPage
+                } });
             } 
             else {
                 response = await axiosInstance.get(`/partners/accounts`, { 
@@ -228,8 +234,13 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
     }, [id, appliedDates]);
 
     useEffect(() => {
-        setAppliedDates(appliedDatesFromMain)
-        console.log({appliedDatesFromMain})
+        if (
+            appliedDatesFromMain?.start instanceof Date || appliedDatesFromMain?.start === null &&
+            appliedDatesFromMain?.end instanceof Date || appliedDatesFromMain?.end === null
+          ) {
+            setAppliedDates(appliedDatesFromMain);
+          }
+          
     }, [appliedDatesFromMain]);
 
 
