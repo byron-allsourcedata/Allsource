@@ -3,8 +3,8 @@ from datetime import datetime, timedelta
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
-
-from enums import UserAuthorizationStatus
+from schemas.users import UpdateUserRequest
+from enums import UserAuthorizationStatus, UpdateUserStatus
 from models.plans import SubscriptionPlan
 from models.subscriptions import UserSubscriptions
 from models.users import Users
@@ -63,6 +63,17 @@ class AdminCustomersService:
     def get_user_by_email(self, email):
         user_object = self.db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
         return user_object
+    
+    def update_user(self, update_data: UpdateUserRequest):
+        user = self.db.query(Users).filter(Users.id == update_data.user_id).first()
+        if not user:
+            return UpdateUserStatus.USER_NOT_FOUND
+        
+        if update_data.partner is None:
+            user.is_partner = update_data.partner
+        self.db.commit()
+        
+        return UpdateUserStatus.SUCCESS
 
     def get_user_subscription(self, user_id):
         user_subscription = self.db.query(UserSubscriptions).filter(UserSubscriptions.user_id == user_id).first()

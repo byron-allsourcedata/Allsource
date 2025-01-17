@@ -1,0 +1,127 @@
+import asyncio
+import argparse
+import logging
+import os
+import sys
+
+import pandas as pd
+from sqlalchemy import create_engine
+
+current_dir = os.path.dirname(os.path.realpath(__file__))
+parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
+sys.path.append(parent_dir)
+from models.five_x_five_users import FiveXFiveUser
+from sqlalchemy.orm import sessionmaker
+from dotenv import load_dotenv
+
+load_dotenv()
+logging.basicConfig(level=logging.INFO)
+
+
+import logging
+import pandas as pd
+
+def format_phone_number(phones):
+    if phones:
+        phone_list = phones.split(',')
+        formatted_phones = []
+        for phone in phone_list:
+            phone_str = phone.strip()
+            if phone_str.endswith(".0"):
+                phone_str = phone_str[:-2]
+            if not phone_str.startswith("+"):
+                phone_str = f"+{phone_str}"
+            formatted_phones.append(phone_str)
+
+        return ', '.join(formatted_phones)
+
+async def fetch_users_by_domain(db_session, company_domains, output_file, valid_job_titles):
+    results = []
+    count = 0
+    for domain in company_domains:
+        count += 1
+        logging.info(f"Processed domains {count} / {len(company_domains)}")
+        users = db_session.query(FiveXFiveUser).filter(FiveXFiveUser.company_domain == domain).all()
+        if users:
+            row = {"domain": domain}
+            for user in users:
+                if not user.job_title or user.job_title.lower() not in valid_job_titles:
+                    continue
+                
+                email = None
+                mobile_number = None
+                
+                if user.personal_emails:
+                    email = user.personal_emails
+                elif user.business_email:
+                    email = user.business_email
+                elif user.programmatic_business_emails:
+                    email = user.programmatic_business_emails
+                elif user.additional_personal_emails:
+                    email = user.additional_personal_emails
+                
+                email = email.split(', ')[-1] if email else None
+                
+                if user.mobile_phone:
+                    mobile_number = user.mobile_phone
+                elif user.personal_phone:
+                    mobile_number = user.personal_phone
+                elif user.company_phone:
+                    mobile_number = user.company_phone
+                    
+                mobile_number = mobile_number.split(', ')[-1] if mobile_number else None
+                mobile_number = format_phone_number(mobile_number)
+                
+                if mobile_number or email:
+                    row[f"job title_{len(row) // 5}"] = user.job_title
+                    row[f"first name_{len(row) // 5}"] = user.first_name
+                    row[f"last name_{len(row) // 5}"] = user.last_name
+                    row[f"email_{len(row) // 5}"] = email
+                    row[f"mobile number_{(len(row) // 5) - 1}"] = mobile_number
+            if len(row) != 1:
+                results.append(row)
+            
+    df = pd.DataFrame(results)
+    df.to_csv(output_file, index=False)
+    logging.info(f"Results saved to {output_file}")
+
+
+async def main():
+    logging.info("Started")
+    db_session = None
+    parser = argparse.ArgumentParser(description="Extract users by domain.")
+    parser.add_argument("input_file", help="Path to the input file with company domains")
+    args = parser.parse_args()
+
+    try:
+        engine = create_engine(
+            f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}", pool_pre_ping=True
+        )
+        Session = sessionmaker(bind=engine)
+        db_session = Session()
+        if not args.input_file:
+            logging.error("input_file is None", exc_info=True)
+            return
+        input_file = f"tmp/{args.input_file}"
+        output_file = 'tmp/output_users.csv'
+        job_title = 'tmp/all-jobs.txt'
+
+        with open(input_file, "r") as file:
+            content = file.read()
+            company_domains = [domain.strip() for domain in content.splitlines() if domain.strip()]
+        
+        with open(job_title, "r") as file:
+            valid_job_titles = {title.strip().lower() for title in file if title.strip()}
+            
+        await fetch_users_by_domain(db_session, company_domains, output_file, valid_job_titles)
+
+    except Exception as err:
+        logging.error("Unhandled Exception:", exc_info=True)
+    finally:
+        if db_session:
+            logging.info("Closing the database session...")
+            db_session.close()
+        logging.info("Shutting down...")
+
+if __name__ == "__main__":
+    asyncio.run(main())

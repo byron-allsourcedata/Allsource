@@ -362,7 +362,10 @@ class LeadsPersistence:
         leads = query.limit(per_page).offset(offset).all()
         count = query.count()
         max_page = math.ceil(count / per_page)
-        return leads, count, max_page
+        states = None
+        if leads:
+            states = self.db.query(States).all()
+        return leads, count, max_page, states
 
     def get_contact_data(self, domain_id, from_date, to_date):
         query = (
@@ -472,7 +475,9 @@ class LeadsPersistence:
             )
             .all()
         )
-        return lead_users
+        if lead_users:
+            states = self.db.query(States).all()
+        return lead_users, states
 
     def get_full_user_leads_by_filters(self, domain_id, from_date, to_date, regions, page_visits,
                                        average_time_spent, behavior_type, status, recurring_visits, sort_by, sort_order,
@@ -643,7 +648,9 @@ class LeadsPersistence:
             query = query.filter(or_(*filters))
 
         leads = query.limit(1000).all()
-        return leads
+        if leads:
+            states = self.db.query(States).all()
+        return leads, states
 
     def filter_leads_for_build_audience(self, regions, professions, ages, genders, net_worths,
                                         interest_list, not_in_existing_lists, page, per_page):

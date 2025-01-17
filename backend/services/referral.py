@@ -4,20 +4,22 @@ from persistence.referral_discount_code_persistence import ReferralDiscountCodes
 from dotenv import load_dotenv
 from encryption_utils import encrypt_data
 from persistence.user_persistence import UserPersistence
-from services.stripe_service import get_stripe_account_info
-
+from services.stripe_service import StripeService
+from persistence.referral_payouts import ReferralPayoutsPersistence
 logger = logging.getLogger(__name__)
 load_dotenv()
 
 
 class ReferralService:
     def __init__(self, referral_persistence_service: ReferralDiscountCodesPersistence,
-                 user_persistence: UserPersistence):
+                 user_persistence: UserPersistence, stripe_service: StripeService, referral_payouts_persistence: ReferralPayoutsPersistence):
         self.referral_persistence_service = referral_persistence_service
         self.user_persistence = user_persistence
+        self.stripe_service = stripe_service
+        self.referral_payouts_persistence = referral_payouts_persistence
 
     def get_overview_info(self, user: dict):
-        account = get_stripe_account_info(user.get('connected_stripe_account_id'))
+        account = self.stripe_service.get_stripe_account_info(user.get('connected_stripe_account_id'), user.get('id'))
         email = account.get('email')
         currently_due = account.get('requirements', {}).get('currently_due', [])
         can_transfer = account.get("capabilities", {}).get("transfers", "") == "active"
@@ -27,7 +29,7 @@ class ReferralService:
 
             return {
                 'connected_stripe_account_id': user.get('connected_stripe_account_id'),
-                'is_stripe_connected': user.get('is_stripe_connected'),
+                'is_stripe_connected': True,
                 'stripe_connected_email': user.get('stripe_connected_email'),
             }
 
@@ -49,6 +51,10 @@ class ReferralService:
         return {
             'referral_code': encrypt_data(f"{user.get('id')}:{discount_code.id}")
         }
+    
+    def save_referral_payouts(self, reward_amount, user_id, referral_parent_id):
+        self.referral_payouts_persistence.save_referral_payouts(reward_amount, user_id, referral_parent_id)
+        
 
     def get_referral_details(self, user: dict):
         discount_codes = self.referral_persistence_service.get_referral_discount_codes()

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from services.admin_customers import AdminCustomersService
 from dependencies import get_admin_customers_service, check_user_admin
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
-
+from schemas.users import UpdateUserRequest, UpdateUserResponse
 router = APIRouter(dependencies=[Depends(check_user_admin)])
 
 
@@ -53,3 +53,7 @@ async def verify_token(admin_customers_service: AdminCustomersService = Depends(
 async def get_users(admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service)):
     users = admin_customers_service.get_users()
     return users
+
+@router.put('/user', response_model=UpdateUserResponse)
+def update_user(update_data: UpdateUserRequest, admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service)):
+    return admin_customers_service.update_user(update_data)

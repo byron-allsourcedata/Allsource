@@ -34,6 +34,7 @@ class CompanyInfoService:
             self.db.flush()
             self.partners_persistence.update_partner_info(company_info.email, company_info.fullName, company_info.organization_name)
             if self.user.get('source_platform') != SourcePlatformEnum.SHOPIFY.value:
+            if self.user.get('source_platform') not in (SourcePlatformEnum.SHOPIFY.value, SourcePlatformEnum.BIG_COMMERCE.value):
                 self.db.add(UserDomains(user_id=self.user.get('id'),
                                         domain=company_info.company_website.replace('https://', '').replace('http://', '')))
             self.db.commit()
@@ -46,7 +47,7 @@ class CompanyInfoService:
 
     def get_company_info(self):
         result = {}
-        if self.user.get('source_platform') == SourcePlatformEnum.SHOPIFY.value:
+        if self.user.get('source_platform') in (SourcePlatformEnum.SHOPIFY.value, SourcePlatformEnum.BIG_COMMERCE.value):
             result['domain_url'] = self.db.query(UserDomains.domain).filter_by(user_id=self.user.get('id')).scalar()
         result['status'] = self.check_company_info_authorization()
         return result

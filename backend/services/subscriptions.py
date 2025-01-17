@@ -11,31 +11,52 @@ from models.plans import SubscriptionPlan
 from models.subscription_transactions import SubscriptionTransactions
 from models.subscriptions import Subscription, UserSubscriptions
 from models.users import Users, User
+from persistence.partners_persistence import PartnersPersistence
 from models.users_domains import UserDomains
 from models.users_payments_transactions import UsersPaymentsTransactions
 from persistence.plans_persistence import PlansPersistence
 from persistence.user_persistence import UserPersistence
 from utils import get_utc_aware_date_for_postgres
 from decimal import *
+from models.referral_payouts import ReferralPayouts
+from models.referral_users import ReferralUser
 from services.stripe_service import determine_plan_name_from_product_id
 from urllib.parse import urlencode
-from utils import timestamp_to_date
 import requests
-
+from services.referral import ReferralService
 load_dotenv()
 
 logger = logging.getLogger(__name__)
 
 
 class SubscriptionService:
-    def __init__(self, db: Session, user_persistence_service: UserPersistence, plans_persistence: PlansPersistence):
+    def __init__(self, db: Session, user_persistence_service: UserPersistence, plans_persistence: PlansPersistence, referral_service: ReferralService,
+                 partners_persistence: PartnersPersistence):
         self.plans_persistence = plans_persistence
         self.db = db
         self.user_persistence_service = user_persistence_service
         self.UNLIMITED = -1
+        self.referral_service = referral_service
+        self.partners_persistence = partners_persistence
 
     def get_userid_by_customer(self, customer_id):
-        return self.db.query(User).filter(User.customer_id == customer_id).first()
+        result = self.db.query(User, ReferralPayouts.id, ReferralUser.parent_user_id) \
+            .join(ReferralPayouts, ReferralPayouts.user_id == User.id, isouter=True) \
+            .join(ReferralUser, ReferralUser.user_id == User.id, isouter=True) \
+            .filter(User.customer_id == customer_id) \
+            .first()
+        
+        if result is None:
+            return None 
+        
+        user, referral_payout_id, parent_user_id = result
+
+        return {
+            "user": user,
+            "payout_id": referral_payout_id,
+            "parent_user_id": parent_user_id
+        }
+
     
     def get_billing_history_shopify(self, user_id, page, per_page):
         start_index = (page - 1) * per_page
@@ -483,7 +504,7 @@ class SubscriptionService:
         return result
 
     
-    def process_subscription(self, stripe_payload, user: Users):
+    def process_subscription(self, user: Users, stripe_payload, payout_id, referral_parent_id):
         result = {
             'status': None,
             'lead_credit_price': None
@@ -523,7 +544,29 @@ class SubscriptionService:
                 UserSubscriptions.platform_subscription_id == platform_subscription_id,
                 UserSubscriptions.price_id == price_id).first()
             price_id = stripe_payload['items']['data'][0]['plan']['id']
-            plan = self.plans_persistence.get_plan_by_price_id(price_id)    
+            plan = self.plans_persistence.get_plan_by_price_id(price_id)
+            
+            if referral_parent_id and not payout_id:
+                partner = self.partners_persistence.get_partner_by_user_id(referral_parent_id)
+                if partner and partner.commission and partner.is_active:
+                    discount = stripe_payload.get("discount")
+                    amount_decimal = Decimal(stripe_payload.get("plan").get("amount_decimal")) / Decimal(100)
+                    if discount and discount.get("coupon"):
+                        coupon = discount["coupon"]
+                        amount_off = coupon.get("amount_off")
+                        percent_off = coupon.get("percent_off")
+                        discount_amount = Decimal(0)
+                        if amount_off:
+                            discount_amount += Decimal(amount_off) / Decimal(100)
+                        if percent_off:
+                            discount_amount += (amount_decimal * Decimal(percent_off)) / Decimal(100)
+                        final_amount = max(amount_decimal - discount_amount, Decimal(0))
+                    else:
+                        final_amount = amount_decimal
+                        
+                    reward_amount = round(Decimal(partner.commission) / Decimal(100) * final_amount, 2)
+                    self.referral_service.save_referral_payouts(reward_amount, user_id, referral_parent_id)
+                
             domains_limit = plan.domains_limit
             integrations_limit = plan.integrations_limit
             leads_credits = plan.leads_credits

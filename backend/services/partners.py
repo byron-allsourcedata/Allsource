@@ -60,7 +60,6 @@ class PartnersService:
                 self.domain_mapped(partner, self.get_user_info(partner.user_id))
                 for partner in partners
             ]
-
             return {"status": True, "data": {"items": result, "totalCount": total_count}}
         except Exception as e:
             logger.debug("Error getting partner data", e)
@@ -217,6 +216,14 @@ class PartnersService:
             return {"status": False, "error": {"code": 400, "message": "Invalid request with your partner data"}}
             
         try:
+            if field == 'status' and value == 'inactive':
+                field = 'is_active'
+                value = False
+                
+            if field == 'status' and value == 'active':
+                field = 'is_active'
+                value = True
+                
             update_data = {field: value}
 
             if partner_name is not None:
@@ -267,6 +274,7 @@ class PartnersService:
             reward_amount=user["reward_amount"],
             reward_status=user["reward_status"],
             reward_payout_date=user["reward_payout_date"],
-            status=partner.status.capitalize(),
-            count=count
+            status=partner.status.capitalize() if partner.is_active else 'Inactive',
+            count=count,
+            is_active=partner.is_active
         ).model_dump()

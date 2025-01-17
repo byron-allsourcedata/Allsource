@@ -165,7 +165,7 @@ class PaymentsService:
     def upgrade_and_downgrade_user_subscription(self, price_id: str, user) -> dict[str, SubscriptionStatus] | dict[
         str, str] | dict[str, str]:
         subscription = self.plan_persistence.get_user_subscription(user_id=user.get('id'))
-        if subscription is None:
+        if subscription is None or subscription.platform_subscription_id is None:
             return {'status': SubscriptionStatus.INCOMPLETE}
         if user.get('source_platform') == SourcePlatformEnum.SHOPIFY.value:
             plan = self.plan_persistence.get_plan_by_price_id(price_id)

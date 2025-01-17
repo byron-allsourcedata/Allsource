@@ -133,6 +133,9 @@ class PixelStatus(Enum):
     PIXEL_CODE_PARSE_FAILED = 'PIXEL_CODE_PARSE_FAILED'
     USER_NOT_FOUND = 'USER_NOT_FOUND'
 
+class UpdateUserStatus(Enum):
+    SUCCESS = 'SUCCESS'
+    USER_NOT_FOUND = 'USER_NOT_FOUND'
 
 class UpdatePasswordStatus(Enum):
     PASSWORDS_DO_NOT_MATCH = 'PASSWORDS_DO_NOT_MATCH'

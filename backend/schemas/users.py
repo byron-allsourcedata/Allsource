@@ -4,7 +4,7 @@ from typing_extensions import TypedDict
 from pydantic import BaseModel, Field
 
 from enums import SignUpStatus, LoginStatus, BaseEnum, VerificationEmail, UpdatePasswordStatus, ResetPasswordEnum, \
-    VerifyToken, CompanyInfoEnum, PixelStatus, StripeConnectStatus
+    VerifyToken, CompanyInfoEnum, PixelStatus, StripeConnectStatus, UpdateUserStatus
 
 
 class ShopifyPayloadModel(BaseModel):
@@ -37,6 +37,7 @@ class UserSignUpForm(BaseModel):
     ift: Optional[str] = None
     ftd: Optional[str] = None
     referral: Optional[str] = None
+    shop_hash: Optional[str] = None
     utm_params: Optional[UtmParams] = None
 
 
@@ -142,3 +143,11 @@ class StripeAccountID(BaseModel):
 class StripeConnectResponse(BaseModel):
     status: StripeConnectStatus
 
+
+class UpdateUserRequest(BaseModel):
+    user_id: int
+    partner: bool | None = None
+
+class UpdateUserResponse(BaseModel):
+    status: UpdateUserStatus
+    

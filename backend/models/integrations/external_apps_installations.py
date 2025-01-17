@@ -9,6 +9,7 @@ class ExternalAppsInstall(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     platform = Column(VARCHAR, index=True, nullable=False)
     store_hash = Column(VARCHAR, index=True, nullable=False)
+    domain_url =  Column(VARCHAR, index=True, nullable=False)
     access_token = Column(VARCHAR, nullable=False)
 
 Index('external_apps_install_platform_idx', ExternalAppsInstall.platform, ExternalAppsInstall.store_hash)

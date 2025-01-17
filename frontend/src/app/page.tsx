@@ -1,18 +1,20 @@
 
 'use client';
-import { useRouter } from 'next/navigation';
 import { useUser } from '@/context/UserContext';
 
 function RedirectPage() {
   const { partner } = useUser();
-  const router = useRouter()
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('token');
       if (token) {
-        router.push(partner ? '/partners' : '/dashboard');
+        if (partner) {
+          window.location.href = '/partners'
+        } else{
+          window.location.href = '/dashboard'
+        }
       }
       else {
-        router.push('/signin')
+        window.location.href = '/signin'
       }
   }
 }

@@ -21,7 +21,10 @@ export async function POST(req) {
       },
     });
 
-    return NextResponse.json({ account: account.id });
+    const account_info = await stripe.accounts.retrieve(account.id)
+    const currentlyDue = account_info.requirements?.currently_due || [];
+
+    return NextResponse.json({ account: account.id, currently_due: currentlyDue });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

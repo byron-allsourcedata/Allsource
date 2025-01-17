@@ -210,7 +210,33 @@ class ShopifyIntegrationService:
 
     def get_credentials(self, domain_id: int):
         return self.integration_persistence.get_credentials_for_service(domain_id, SourcePlatformEnum.SHOPIFY.value)
-
+    
+    def initialize_pixel(self, access_token, domain, user_id):
+        client_id = domain.data_provider_id
+        if client_id is None:
+            client_id = hashlib.sha256((str(domain.id) + os.getenv('SECRET_SALT')).encode()).hexdigest()
+            self.db.query(UserDomains).filter(UserDomains.user_id == user_id, UserDomains.domain == domain.domain).update(
+                {UserDomains.data_provider_id: client_id},
+                synchronize_session=False
+            )
+            self.db.commit()
+        query = f"""
+            mutation {{
+                webPixelCreate(webPixel: {{ settings: "{{\\\"accountID\\\":\\\"{client_id}\\\"}}" }}) {{
+                    userErrors {{
+                        code
+                        field
+                        message
+                    }}
+                    webPixel {{
+                        settings
+                        id
+                    }}
+                }}
+            }}
+        """
+        with shopify.Session.temp(domain.domain, ShopifyConfig.api_version, access_token):
+            shopify.GraphQL().execute(query)
 
     def __set_pixel(self, user_id, domain, credentials):
         client_id = domain.data_provider_id
@@ -267,10 +293,26 @@ class ShopifyIntegrationService:
         return url
     
     def handle_uninstalled_app(self, payload):
-        user_integration = self.integration_persistence.get_integration_by_shop_id(shop_id=payload["id"])
+        shop_id = payload["id"]
+        user_integration = self.integration_persistence.get_integration_by_shop_id(shop_id=shop_id)
         if user_integration:
-            self.db.query(User).filter(User.shop_id==str(payload["id"])).update({"shop_id": None, "shopify_token": None, "shop_domain": None, "charge_id": None})
             self.db.delete(user_integration)
+            self.db.flush()
+            user_domain = self.db.query(UserDomains).filter(UserDomains.id == user_integration.domain_id).first()
+            user_domains = self.db.query(UserDomains).filter(UserDomains.user_id == user_domain.user_id).all()
+            if len(user_domains) > 1:
+                self.db.delete(user_domain)
+            else:
+                self.db.query(UserDomains).filter(UserDomains.id == user_integration.domain_id).update(
+                    {UserDomains.is_pixel_installed: False},
+                    synchronize_session=False
+                )
+            self.db.query(User).filter(User.shop_id == str(shop_id)).update({
+                "shop_id": None,
+                "shopify_token": None,
+                "shop_domain": None,
+                "charge_id": None
+            })
             self.db.commit()
         
     def verify_shopify_hmac(self, data: bytes, hmac_header: str) -> bool:
@@ -402,9 +444,9 @@ class ShopifyIntegrationService:
         user_website = domain.domain.lower().lstrip('http://').lstrip('https://')
         if user_website != shop_domain:
             raise HTTPException(status_code=400, detail={'status': 'error', 'detail': {'message': 'Store Domain does not match the one you specified earlier'}})
-        self.__save_integration(credentials.shopify.shop_domain, credentials.shopify.access_token, domain.id, user, shop_id)
         if not domain.is_pixel_installed:
             self.__set_pixel(user.get('id'), domain, credentials)
+        self.__save_integration(credentials.shopify.shop_domain, credentials.shopify.access_token, domain.id, user, shop_id)
         return {
             'status': 'Successfully',
             'detail': {
