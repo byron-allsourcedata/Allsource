@@ -163,7 +163,7 @@ const SidebarAdmin: React.FC = () => {
                 </ListItemButton>
                 <ListItemButton
                     onClick={() => handleNavigation('/admin/accounts')}
-                    sx={isActive('/admin/accounts') ? sidebarStyles.activeItem : sidebarStyles.inactiveItem}
+                    sx={isActive('/admin/accounts') ? sidebarStyles.activeItem : sidebarStyles.ListItem}
                 >
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <AccountBoxIcon />
