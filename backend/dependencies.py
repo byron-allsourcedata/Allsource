@@ -13,6 +13,7 @@ from config.database import SessionLocal
 from enums import DomainStatus, UserAuthorizationStatus
 from exceptions import InvalidToken
 from models.users import Users as User
+from persistence.referral_payouts import ReferralPayoutsPersistence
 from persistence.audience_persistence import AudiencePersistence
 from persistence.domains import UserDomainsPersistence, UserDomains
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
@@ -100,6 +101,8 @@ def get_accounts_service(
 def get_plans_persistence(db: Session = Depends(get_db)):
     return PlansPersistence(db=db)
 
+def get_referral_payouts_persistence(db: Session = Depends(get_db)):
+    return ReferralPayoutsPersistence(db=db)
 
 def get_leads_persistence(db: Session = Depends(get_db)):
     return LeadsPersistence(db=db)
@@ -162,17 +165,20 @@ def get_stripe_service(user_persistence: UserPersistence = Depends(get_user_pers
 def get_referral_service(
         referral_persistence: ReferralDiscountCodesPersistence = Depends(get_referral_persistence_service),
         user_persistence: UserPersistence = Depends(get_user_persistence_service),
-        stripe_service: StripeService = Depends(get_stripe_service)):
+        stripe_service: StripeService = Depends(get_stripe_service),
+        referral_payouts_persistence: ReferralPayoutsPersistence = Depends(get_referral_payouts_persistence)):
     return ReferralService(referral_persistence_service=referral_persistence, user_persistence=user_persistence,
-                           stripe_service=stripe_service)
+                           stripe_service=stripe_service, referral_payouts_persistence=referral_payouts_persistence)
 
 
 def get_subscription_service(db: Session = Depends(get_db),
                              user_persistence_service: UserPersistence = Depends(get_user_persistence_service),
                              plans_persistence: PlansPersistence = Depends(get_plans_persistence),
-                             referral_service: ReferralService = Depends(get_referral_service)):
+                             referral_service: ReferralService = Depends(get_referral_service),
+                             partners_persistence: PartnersPersistence = Depends(get_partners_persistence)):
     return SubscriptionService(db=db, user_persistence_service=user_persistence_service,
-                               plans_persistence=plans_persistence, referral_service=referral_service)
+                               plans_persistence=plans_persistence, referral_service=referral_service,
+                               partners_persistence=partners_persistence)
 
 
 def get_partners_assets_service(

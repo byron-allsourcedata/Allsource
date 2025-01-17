@@ -90,6 +90,9 @@ class PartnersPersistence:
     def get_partner_by_email(self, email):
         return self.db.query(Partners).filter(Partners.email == email).first()
     
+    def get_partner_by_user_id(self, user_id):
+        return self.db.query(Partners).filter(Partners.user_id == user_id).first()
+    
 
     def update_partner(self, partner_id: int, **kwargs) -> Optional[Partners]:
         partner = self.get_asset_by_id(partner_id)
