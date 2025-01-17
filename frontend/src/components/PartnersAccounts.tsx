@@ -90,7 +90,7 @@ interface AccountData {
 }
 
 
-const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFromMain = { start: null, end: null }, id: partnerId, fromAdmin, masterData, setMasterData, loading, setLoading, tabIndex, handleTabChange }) => {
+const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFromMain, id: partnerId, fromAdmin, masterData, setMasterData, loading, setLoading, tabIndex, handleTabChange }) => {
     const { email } = useUser();
     const [accounts, setAccounts] = useState<AccountData[]>([]);
     const [page, setPage] = useState(0);
@@ -101,7 +101,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
     const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
     const isCalendarOpen = Boolean(calendarAnchorEl);
     const [formattedDates, setFormattedDates] = useState<string>('');
-    const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>(appliedDatesFromMain);
+    const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>(appliedDatesFromMain ?? { start: null, end: null });
     const [selectedDateLabel, setSelectedDateLabel] = useState<string>('');
     const id = partnerId ?? masterData?.id
     const allowedRowsPerPage = [10, 25, 50, 100];
@@ -195,7 +195,13 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
 
         try {
             if(id) {
-                response = await axiosInstance.get(`/admin-accounts`, { params: {id} });
+                response = await axiosInstance.get(`/admin-accounts`, { params: {
+                    id,
+                    search,
+                    start_date: appliedDates.start ? appliedDates.start.toLocaleDateString('en-CA') : null,
+                    end_date: appliedDates.end ? appliedDates.end.toLocaleDateString('en-CA') : null,
+                    page, rowsPerPage
+                } });
             } 
             else {
                 response = await axiosInstance.get(`/partners/accounts`, { 
@@ -228,8 +234,13 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
     }, [id, appliedDates]);
 
     useEffect(() => {
-        setAppliedDates(appliedDatesFromMain)
-        console.log({appliedDatesFromMain})
+        if (
+            appliedDatesFromMain?.start instanceof Date || appliedDatesFromMain?.start === null &&
+            appliedDatesFromMain?.end instanceof Date || appliedDatesFromMain?.end === null
+          ) {
+            setAppliedDates(appliedDatesFromMain);
+          }
+          
     }, [appliedDatesFromMain]);
 
 

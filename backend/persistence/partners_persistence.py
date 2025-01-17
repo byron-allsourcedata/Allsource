@@ -94,6 +94,15 @@ class PartnersPersistence:
         return self.db.query(Partners).filter(Partners.user_id == user_id).first()
     
 
+    def update_partner_info(self, email, fullName, company):
+        partner = self.get_partner_by_email(email)
+
+        partner.name = fullName
+        partner.company_name = company
+        self.db.commit()
+        self.db.refresh(partner)
+    
+
     def update_partner(self, partner_id: int, **kwargs) -> Optional[Partners]:
         partner = self.get_asset_by_id(partner_id)
 

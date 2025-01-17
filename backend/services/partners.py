@@ -130,25 +130,25 @@ class PartnersService:
         try:
             partner = self.partners_persistence.get_asset_by_id(id)
             self.partners_persistence.terminate_partner(partner_id=id)
-            self.send_message_in_email(partner.name, message, partner.email)
+            template_id = self.send_grid_persistence.get_template_by_alias(
+                SendgridTemplate.PARTNER_TERMINATE_TEMPLATE.value)
+            self.send_message_in_email(partner.name, message, partner.email, template_id)
             return {"status": True}
         except Exception as e:
             logger.debug('Error deleting partner', e)
             return {"status": False, "error":{"code": 500, "message": f"Unexpected error during deletion: {str(e)}"}}
     
 
-    def send_message_in_email(self, full_name: str, message: str, email: str):
+    def send_message_in_email(self, full_name: str, message: str, email: str, template_id, commission=''):
         mail_object = SendgridHandler()
-        template_id = self.send_grid_persistence.get_template_by_alias(
-            SendgridTemplate.PARTNER_MESSAGE_TEMPLATE.value)
         mail_object.send_sign_up_mail(
-             to_emails=email,
-             template_id=template_id,
-             template_placeholder={"full_name": full_name, "message": message, "email": email},
+            to_emails=email,
+            template_id=template_id,
+            template_placeholder={"full_name": full_name, "message": message, "email": email, "commission": commission},
         )
     
 
-    def send_referral_in_email(self, full_name: str, email: str):
+    def send_referral_in_email(self, full_name: str, email: str, commission: str):
         mail_object = SendgridHandler()
         template_id = self.send_grid_persistence.get_template_by_alias(
             SendgridTemplate.PARTNER_INVITE_TEMPLATE.value)
@@ -160,9 +160,9 @@ class PartnersService:
         md5_hash = hashlib.md5(json_string.encode()).hexdigest()
         referral_token = f"{os.getenv('SITE_HOST_URL')}/signup?referral_token={md5_hash}&user_mail={email}"
         mail_object.send_sign_up_mail(
-             to_emails=email,
-             template_id=template_id,
-             template_placeholder={"full_name": full_name, "link": referral_token, "email": email},
+            to_emails=email,
+            template_id=template_id,
+            template_placeholder={"full_name": full_name, "link": referral_token, "email": email, "commission": commission},
         )
         return md5_hash
     
@@ -172,7 +172,7 @@ class PartnersService:
             return {"status": False, "error": {"code": 400, "message": "Invalid request with your partner data"}}
         
         try:
-            hash = self.send_referral_in_email(full_name, email)
+            hash = self.send_referral_in_email(full_name, email, commission)
             creating_data = {
                 "full_name": full_name,
                 "email": email,
@@ -214,7 +214,7 @@ class PartnersService:
     ) -> PartnersObjectResponse:
         if not partner_id or not field or not value:
             return {"status": False, "error": {"code": 400, "message": "Invalid request with your partner data"}}
-
+            
         try:
             if field == 'status' and value == 'inactive':
                 field = 'is_active'
@@ -236,8 +236,21 @@ class PartnersService:
             if not updated_data:
                 logger.debug("Database error during updation")
                 return {"status": False, "error": {"code": 500, "message": "Partner not updated"}}
+            
 
-            self.send_message_in_email(updated_data.name, message, updated_data.email)
+            if (field == "status"):
+                if (value == "active"):
+                    template_id = self.send_grid_persistence.get_template_by_alias(
+                    SendgridTemplate.PARTNER_ENABLE_TEMPLATE.value)
+                    self.send_message_in_email(updated_data.name, message, updated_data.email, template_id)
+                else:
+                    template_id = self.send_grid_persistence.get_template_by_alias(
+                    SendgridTemplate.PARTNER_DISABLE_TEMPLATE.value)
+                    self.send_message_in_email(updated_data.name, message, updated_data.email, template_id)
+            else:
+                template_id = self.send_grid_persistence.get_template_by_alias(
+                    SendgridTemplate.PARTNER_UPDATE_TEMPLATE.value)
+                self.send_message_in_email(updated_data.name, message, updated_data.email, template_id, value)
 
             user = self.get_user_info(updated_data.user_id)
             return {"status": True, "data": self.domain_mapped(updated_data, user)}

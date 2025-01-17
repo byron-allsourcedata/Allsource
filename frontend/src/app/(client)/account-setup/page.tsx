@@ -228,6 +228,7 @@ const AccountSetup = () => {
         company_role: selectedRoles,
         monthly_visits: selectedVisits,
         employees_workers: selectedEmployees,
+        email, fullName,
       });
 
       switch (response.data.status) {
