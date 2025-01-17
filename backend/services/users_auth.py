@@ -562,9 +562,8 @@ class UsersAuth:
             self._process_big_commerce_integration(user_object, shop_hash)
             self.user_persistence_service.email_confirmed(user_object.id)
             
-        if coupon and user_form.spi:
+        if user_form.spi and not is_with_card:
             self.user_persistence_service.book_call_confirmed(user_object.id)
-            self.user_persistence_service.email_confirmed(user_object.id)
             
         if (ift and ift == 'arwt') or user_object.source_platform in (SourcePlatformEnum.BIG_COMMERCE.value, SourcePlatformEnum.SHOPIFY.value):
             self.user_persistence_service.book_call_confirmed(user_object.id)
@@ -574,8 +573,17 @@ class UsersAuth:
             self.fill_referral_users(referral=referral, user_object=user_object)
             self.user_persistence_service.book_call_confirmed(user_object.id)
             
-        if is_with_card is False and teams_token is None and referral_token is None and shopify_data is None and shop_hash is None:
+        conditions = [
+            is_with_card is False,
+            teams_token is None,
+            referral_token is None,
+            shopify_data is None,
+            shop_hash is None
+        ]
+
+        if all(conditions):
             return self._send_email_verification(user_object, token)
+
         
         if referral_token:
             self.user_persistence_service.book_call_confirmed(user_object.id)
