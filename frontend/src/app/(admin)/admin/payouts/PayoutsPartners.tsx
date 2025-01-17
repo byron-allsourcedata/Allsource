@@ -17,13 +17,15 @@ import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import PayoutsMonth from "./PayoutsMonth";
 import { width } from "@mui/system";
 import PartnerAccounts from "./PartnersAccountPayouts";
+import dayjs from "dayjs";
 
 interface RewardData {
   month: string;
-  totalRewards: string;
-  rewardsPaid: string;
-  invitesCount: number;
-  payoutDate: string;
+  total_rewards: number;
+  rewards_approved: number;
+  rewards_paid: number;
+  count_accounts: number;
+  payout_date: Date;
 }
 
 const ReferralRewards: React.FC = () => {
@@ -75,52 +77,27 @@ const ReferralRewards: React.FC = () => {
     setRewards([
       {
         month: "November",
-        totalRewards: "$2000",
-        rewardsPaid: "$1800",
-        invitesCount: 30,
-        payoutDate: "Dec 01, 2024",
+        total_rewards: 2000,
+        rewards_approved: 1800,
+        rewards_paid: 1800,
+        count_accounts: 30,
+        payout_date: new Date("2024-12-01"),
       },
       {
         month: "October",
-        totalRewards: "$1000",
-        rewardsPaid: "$800",
-        invitesCount: 20,
-        payoutDate: "Nov 01, 2024",
+        total_rewards: 1000,
+        rewards_approved: 1200,
+        rewards_paid: 800,
+        count_accounts: 25,
+        payout_date: new Date("2024-11-01"),
       },
       {
         month: "September",
-        totalRewards: "$2500",
-        rewardsPaid: "$2300",
-        invitesCount: 40,
-        payoutDate: "Oct 01, 2024",
-      },
-      {
-        month: "August",
-        totalRewards: "$1500",
-        rewardsPaid: "$1200",
-        invitesCount: 25,
-        payoutDate: "Sep 01, 2024",
-      },
-      {
-        month: "July",
-        totalRewards: "$2000",
-        rewardsPaid: "$1800",
-        invitesCount: 30,
-        payoutDate: "Aug 01, 2024",
-      },
-      {
-        month: "June",
-        totalRewards: "$1000",
-        rewardsPaid: "$800",
-        invitesCount: 20,
-        payoutDate: "May 01, 2024",
-      },
-      {
-        month: "May",
-        totalRewards: "$2500",
-        rewardsPaid: "$2300",
-        invitesCount: 40,
-        payoutDate: "Apr 01, 2024",
+        total_rewards: 2300,
+        rewards_approved: 1500,
+        rewards_paid: 1000,
+        count_accounts: 10,
+        payout_date: new Date("2024-10-01"),
       },
     ]);
   }, []);
@@ -161,6 +138,7 @@ const ReferralRewards: React.FC = () => {
           <PayoutsMonth
             open={open}
             selectedMonth={selectedMonth}
+            selectedYear={year}
             onBack={handleBack}
             onPartnerClick={handlePartnerClick}
           />
@@ -349,7 +327,7 @@ const ReferralRewards: React.FC = () => {
                           Total Rewards
                         </Typography>
                         <Typography variant="subtitle1" className="table-data">
-                          {data.totalRewards}
+                          {data.total_rewards}
                         </Typography>
                       </Box>
                       <Box>
@@ -361,7 +339,7 @@ const ReferralRewards: React.FC = () => {
                           Reward Approved
                         </Typography>
                         <Typography variant="subtitle1" className="table-data">
-                          {data.rewardsPaid}
+                          {data.rewards_approved}
                         </Typography>
                       </Box>
                       <Box>
@@ -373,7 +351,7 @@ const ReferralRewards: React.FC = () => {
                           Rewards paid
                         </Typography>
                         <Typography variant="subtitle1" className="table-data">
-                          {data.rewardsPaid}
+                          {data.rewards_paid}
                         </Typography>
                       </Box>
                     </Box>
@@ -395,7 +373,7 @@ const ReferralRewards: React.FC = () => {
                           No. of accounts
                         </Typography>
                         <Typography variant="subtitle1" className="table-data">
-                          {data.invitesCount}
+                          {data.count_accounts}
                         </Typography>
                       </Box>
                       <Box>
@@ -407,7 +385,7 @@ const ReferralRewards: React.FC = () => {
                           Payout date
                         </Typography>
                         <Typography variant="subtitle1" className="table-data">
-                          {data.payoutDate}
+                          {dayjs(data.payout_date).format('MMM D, YYYY')}
                         </Typography>
                       </Box>
                     </Box>

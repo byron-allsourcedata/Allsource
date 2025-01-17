@@ -153,7 +153,7 @@ const ReferralRewards: React.FC = () => {
           <PartnerAccounts open={openPartner} partnerName={selectedPartner} selectMonth={selectedMonth || ''} onBack={handleBackPartners} />
         ) : 
                 selectedMonth ? (
-                    <PayoutsMonth open={open} selectedMonth={selectedMonth} onBack={handleBack} onPartnerClick={handlePartnerClick} />
+                    <PayoutsMonth open={open} selectedYear={year} selectedMonth={selectedMonth} onBack={handleBack} onPartnerClick={handlePartnerClick} />
                 ) : (
                     <>
                         <Box sx={{ display: 'flex', justifyContent: 'end', mb: 2 }}>
