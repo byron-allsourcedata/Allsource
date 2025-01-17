@@ -26,11 +26,11 @@ def get_partner_accounts(
     start_date: int = Query(None, description="Start date in integer format"),
     end_date: int = Query(None, description="End date in integer format"),
     page: int = Query(0),
-    rowsPerPage: int = Query(10),
+    rows_per_page: int = Query(10),
     user: dict = Depends(check_user_partner),
     get_accounts_service: AccountsService = Depends(get_accounts_service)):
     
-    return get_accounts_service.get_accounts(user, search, start_date, end_date, page, rowsPerPage)     
+    return get_accounts_service.get_accounts(user, search, start_date, end_date, page, rows_per_page)     
 
 
 @router.get('/')
@@ -120,10 +120,10 @@ def get_masterpartner_partners(
     start_date: Optional[date] = Query(None),
     end_date: Optional[date] = Query(None),
     page: int = Query(0),
-    rowsPerPage: int = Query(10),
+    rows_per_page: int = Query(10),
     get_partners_service: PartnersService = Depends(get_partners_service)):
     
-    response = get_partners_service.get_partner_partners(email, start_date, end_date, page, rowsPerPage)
+    response = get_partners_service.get_partner_partners(email, start_date, end_date, page, rows_per_page)
     if not response.get("status"):
         error = response.get("error", {}) or {}
         raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))

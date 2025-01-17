@@ -283,7 +283,8 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                     isMaster, search,
                     start_date: appliedDates.start ? appliedDates.start.toLocaleDateString('en-CA') : null,
                     end_date: appliedDates.end ? appliedDates.end.toLocaleDateString('en-CA') : null,
-                    page, rowsPerPage
+                    page, 
+                    rows_per_page: rowsPerPage
                 }})
             if (response.status === 200 && response.data.totalCount > 0) {
                 setErrosResponse(false)
@@ -734,7 +735,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                                                 <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {}}>
                                                                                     <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Reward history"/>
                                                                                 </ListItemButton>
-                                                                                {selectedRowData?.status === "Active" 
+                                                                                {selectedRowData?.isActive === true 
                                                                                 ?   <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
                                                                                         handleNoticeOpenPopup()
                                                                                         setEnabledData({ 

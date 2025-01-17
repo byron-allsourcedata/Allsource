@@ -29,9 +29,10 @@ class AdminCustomersService:
         self.send_grid_persistence = send_grid_persistence
 
     def get_users(self):
-        users_object = self.user_persistence.get_users()
+        users_object = self.user_persistence.get_not_partner_users()
         result = []
         for user in users_object:
+
             payment_status = self.users_auth_service.get_user_authorization_status_without_pixel(user)
             if payment_status == UserAuthorizationStatus.SUCCESS:
                 user_plan = self.db.query(
@@ -69,8 +70,8 @@ class AdminCustomersService:
         if not user:
             return UpdateUserStatus.USER_NOT_FOUND
         
-        if update_data.partner is None:
-            user.is_partner = update_data.partner
+        if update_data.is_partner:
+            user.is_partner = update_data.is_partner
         self.db.commit()
         
         return UpdateUserStatus.SUCCESS

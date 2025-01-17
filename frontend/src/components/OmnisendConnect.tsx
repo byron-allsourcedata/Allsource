@@ -16,6 +16,7 @@ interface CreateOmnisendProps {
     open: boolean
     initApiKey?: string,
     boxShadow?: string
+    Invalid_api_key?: boolean;
 }
 
 interface IntegrationsCredentials {
@@ -79,6 +80,9 @@ const klaviyoStyles = {
           '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
             borderColor: '#0000FF',
           },
+          '&.Mui-error .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'red',
+        },
         },
         '&+.MuiFormHelperText-root': {
             marginLeft: '0',
@@ -86,7 +90,7 @@ const klaviyoStyles = {
       },
 }
 
-const OmnisendConnect = ({ handleClose, open, onSave, initApiKey, boxShadow}: CreateOmnisendProps) => {
+const OmnisendConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Invalid_api_key}: CreateOmnisendProps) => {
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
     const [loading, setLoading] = useState(false)
@@ -391,7 +395,7 @@ const OmnisendConnect = ({ handleClose, open, onSave, initApiKey, boxShadow}: Cr
                                 variant="outlined"
                                 fullWidth
                                 margin="normal"
-                                error={apiKeyError}
+                                error={apiKeyError || Invalid_api_key}
                                 helperText={apiKeyError ? 'API Key is required' : ''}
                                 value={apiKey}
                                 onChange={handleApiKeyChange}

@@ -8,7 +8,7 @@ from enums import TeamsInvitationStatus, SignUpStatus
 from models.teams_invitations import TeamInvitation
 from models.users_domains import UserDomains
 from models.users import Users
-from models.partners import Partners
+from models.partner import Partner
 
 logger = logging.getLogger(__name__)
 
@@ -71,9 +71,9 @@ class UserPersistence:
         return result
 
     def get_user_by_id(self, user_id, result_as_object=False):
-        user, partner_is_active = self.db.query(Users, Partners.is_active)\
+        user, partner_is_active = self.db.query(Users, Partner.is_active)\
         .filter(Users.id == user_id)\
-        .outerjoin(Partners, Partners.user_id == user_id)\
+        .outerjoin(Partner, Partner.user_id == user_id)\
         .first()
         result_user = None
         if user:
@@ -221,6 +221,34 @@ class UserPersistence:
             for user in users
         ]
 
+    def get_not_partner_users(self):
+        users = self.db.query(
+            Users.id,
+            Users.email,
+            Users.full_name,
+            Users.created_at,
+            Users.is_with_card,
+            Users.company_name,
+            Users.is_email_confirmed,
+            Users.is_book_call_passed,
+            Users.stripe_payment_url
+        ).filter(Users.is_partner == False).all()
+
+        return [
+            {
+                "id": user[0],
+                "email": user[1],
+                "full_name": user[2],
+                "created_at": user[3],
+                "is_with_card": user[4],
+                "company_name": user[5],
+                "is_email_confirmed": user[6],
+                "is_book_call_passed": user[7],
+                "stripe_payment_url": user[8]
+            }
+            for user in users
+        ]
+
     def add_stripe_account(self, user_id: int, stripe_connected_account_id: str):
         self.db.query(Users).filter(Users.id == user_id).update(
             {Users.connected_stripe_account_id: stripe_connected_account_id},
@@ -237,7 +265,7 @@ class UserPersistence:
         user.stripe_connected_currently_due = None
 
         if user.is_partner:
-            partner = self.db.query(Partners).filter(Partners.user_id == user_id).first()
+            partner = self.db.query(Partner).filter(Partner.user_id == user_id).first()
             if partner:
                 partner.status = "active"
 

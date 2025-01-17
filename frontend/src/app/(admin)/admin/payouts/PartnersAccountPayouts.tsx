@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Box, Typography, IconButton, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Popover } from "@mui/material";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import CustomTablePagination from "@/components/CustomTablePagination";
 import { payoutsStyle } from "./payoutsStyle";
 import dayjs from "dayjs";
-import { MoreHoriz } from "@mui/icons-material";
 
 interface PartnerAccountsProps {
     partnerName: string;
@@ -194,7 +194,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                     >
                         <KeyboardArrowLeftIcon sx={{ color: "rgba(128, 128, 128, 1)" }} />
                     </IconButton>
-                    <Typography className="second-sub-title">{selectMonth} --{partnerName}</Typography>
+                    <Typography className="second-sub-title">{selectMonth} -- {partnerName}</Typography>
                 </Box>
 
 
@@ -276,9 +276,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                                     ...payoutsStyle.tableBodyColumn,
                                                     cursor: 'pointer',
                                                     position: 'sticky',
-                                                    color: 'rgba(80, 82, 178, 1) !important',
                                                     left: 0,
-                                                    pl:150,
                                                     zIndex: 1,
                                                     backgroundColor: '#fff',
                                                 }}
@@ -312,26 +310,34 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
 
                                                 <TableCell sx={{ ...payoutsStyle.tableBodyColumn, textAlign: 'center', pl: 0 }}>
                                                     <Typography component="span" sx={{
-                                                        background: getStatusStyle(item.reward_status).background,
                                                         padding: '6px 8px',
                                                         borderRadius: '2px',
                                                         fontFamily: 'Roboto',
                                                         fontSize: '12px',
                                                         fontWeight: '400',
                                                         lineHeight: '16px',
-                                                        color: getStatusStyle(item.reward_status).color,
                                                     }}>
-                                                        {item.comment}
+                                                        {item.comment || '--'}
                                                     </Typography>
                                                 </TableCell>
 
 
                                                 <TableCell sx={{ ...payoutsStyle.tableBodyColumn, textAlign: 'center', pl: 0 }}>
+                                                <Typography component="span" sx={{
+                                                        padding: '6px 8px',
+                                                        borderRadius: '2px',
+                                                        fontFamily: 'Roboto',
+                                                        fontSize: '12px',
+                                                        fontWeight: '400',
+                                                        lineHeight: '16px',
+                                                    }}>
+                                                        {item.reward_status}
+                                                    </Typography>
                                                     <IconButton
                                                         onClick={(event) => handleOpenMenu(event, index)}
-                                                        sx={{ ':hover': { backgroundColor: 'transparent' } }}
+                                                        sx={{ ':hover': { backgroundColor: 'transparent', color: 'rgba(80, 82, 178, 1) !important', },  }}
                                                     >
-                                                        <MoreHoriz />
+                                                        <KeyboardArrowDownIcon />
                                                     </IconButton>
                                                     <Popover
                                                         open={Boolean(menuAnchor) && activeRow === index}
@@ -371,7 +377,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                                                     console.log("Rewards history clicked");
                                                                 }}
                                                             >
-                                                                Rewards History
+                                                                Approve
                                                             </Button>
                                                             <Button
                                                                 sx={{
@@ -392,7 +398,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                                                     console.log("Disable clicked");
                                                                 }}
                                                             >
-                                                                Disable
+                                                                Reject
                                                             </Button>
                                                         
                                                         </Box>

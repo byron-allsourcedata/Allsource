@@ -54,6 +54,6 @@ async def get_users(admin_customers_service: AdminCustomersService = Depends(get
     users = admin_customers_service.get_users()
     return users
 
-@router.put('/user', response_model=UpdateUserResponse)
+@router.put('/user')
 def update_user(update_data: UpdateUserRequest, admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service)):
     return admin_customers_service.update_user(update_data)

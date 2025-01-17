@@ -154,7 +154,8 @@ const PartnersMain: React.FC<PartnersProps> = ({setLoading, masterId, appliedDat
                     email: encodeURIComponent(email ? email : ''),
                     start_date: appliedDates.start ? appliedDates.start.toLocaleDateString('en-CA') : null,
                     end_date: appliedDates.end ? appliedDates.end.toLocaleDateString('en-CA') : null,
-                    page, rowsPerPage
+                    page, 
+                    rows_per_page: rowsPerPage
                 }});
             if(response.status === 200 && response.data.totalCount > 0) {
                 setPartners([...response.data.items])

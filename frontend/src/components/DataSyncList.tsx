@@ -79,6 +79,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
   const [sendlaneIconPopupOpen, setOpenSendlaneIconPopup] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
+  const [isInvalidApiKey, setIsInvalidApiKey] = useState(false);
   const [integrationsCredentials, setIntegrationsCredentials] = useState<
     IntegrationsCredentials[]
   >([]);
@@ -517,6 +518,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
       const foundItem = data.find((item) => item.id === selectedId);
       const dataSyncPlatform = foundItem ? foundItem.platform : null;
       if (foundItem.type_error === "Invalid API Key") {
+        setIsInvalidApiKey(true)
         if (dataSyncPlatform) {
           if (dataSyncPlatform === "klaviyo") {
             setOpenKlaviyoConnect(true);
@@ -1115,16 +1117,16 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                     onClose={() => setOpenBigcommerceConnect(false)}
                 />
          */}
-        <MailchimpConnect open={openMailchimpConnect} handleClose={() => setOpenMailchimpConnect(false)}
-          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'mailchimp')?.access_token} boxShadow="rgba(0, 0, 0, 0.01)" />
-        <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={() => setOpenKlaviyoConnect(false)}
-          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token} boxShadow="rgba(0, 0, 0, 0.01)" />
-        <OmnisendConnect open={openOmnisendConnect} handleClose={() => setOpenOmnisendConnect(false)}
-          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'omnisend')?.access_token} boxShadow="rgba(0, 0, 0, 0.01)" />
+        <MailchimpConnect open={openMailchimpConnect} handleClose={() => {setOpenMailchimpConnect(false), setIsInvalidApiKey(false)}}
+          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'mailchimp')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
+        <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={() => {setOpenKlaviyoConnect(false), setIsInvalidApiKey(false)} }
+          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
+        <OmnisendConnect open={openOmnisendConnect} handleClose={() => {setOpenOmnisendConnect(false), setIsInvalidApiKey(false)}}
+          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'omnisend')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
         <SendlaneConnect
           open={openSendlaneConnect}
-          handleClose={() => setOpenSendlaneConnect(false)}
-          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sendlane')?.access_token} boxShadow="rgba(0, 0, 0, 0.01)"
+          handleClose={() => {setOpenSendlaneConnect(false), setIsInvalidApiKey(false)}}
+          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sendlane')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
         />
         <ZapierConnectPopup
           open={openZapierConnect}

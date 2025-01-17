@@ -2,7 +2,7 @@ from sqlalchemy import Column, event, Integer, TIMESTAMP, BOOLEAN, VARCHAR
 from .base import Base, create_timestamps, update_timestamps
 
 
-class Partners(Base):
+class Partner(Base):
     __tablename__ = "partners"
 
     id = Column(Integer, primary_key=True, nullable=False)
@@ -15,7 +15,7 @@ class Partners(Base):
     join_date = Column(TIMESTAMP, nullable=True)
     token = Column(VARCHAR(256), nullable=False)
     status = Column(VARCHAR(16), default="invitation sent", nullable=False)
-    isMaster = Column(BOOLEAN, default=False, nullable=False)
+    is_master = Column(BOOLEAN, default=False, nullable=False)
     created_at = Column(TIMESTAMP, nullable=False)
     updated_at = Column(TIMESTAMP, nullable=False)
     is_active = Column(BOOLEAN, nullable=False, default=True)
@@ -27,10 +27,11 @@ class Partners(Base):
                 "status": self.status,
                 "email": self.email,
                 "name": self.name,
-                "isMaster": self.isMaster,
+                "isMaster": self.is_master,
                 "company_name": self.company_name,
                 "join_date": self.join_date,
                 "is_active": self.is_active
             }
 
-event.listen(Partners, "before_insert", create_timestamps)
+event.listen(Partner, "before_insert", create_timestamps)
+event.listen(Partner, "before_update", update_timestamps)
