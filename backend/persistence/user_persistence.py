@@ -8,7 +8,7 @@ from enums import TeamsInvitationStatus, SignUpStatus
 from models.teams_invitations import TeamInvitation
 from models.users_domains import UserDomains
 from models.users import Users
-from models.partners import Partners
+from models.partner import Partner
 
 logger = logging.getLogger(__name__)
 
@@ -71,9 +71,9 @@ class UserPersistence:
         return result
 
     def get_user_by_id(self, user_id, result_as_object=False):
-        user, partner_is_active = self.db.query(Users, Partners.is_active)\
+        user, partner_is_active = self.db.query(Users, Partner.is_active)\
         .filter(Users.id == user_id)\
-        .outerjoin(Partners, Partners.user_id == user_id)\
+        .outerjoin(Partner, Partner.user_id == user_id)\
         .first()
         result_user = None
         if user:
@@ -237,7 +237,7 @@ class UserPersistence:
         user.stripe_connected_currently_due = None
 
         if user.is_partner:
-            partner = self.db.query(Partners).filter(Partners.user_id == user_id).first()
+            partner = self.db.query(Partner).filter(Partner.user_id == user_id).first()
             if partner:
                 partner.status = "active"
 

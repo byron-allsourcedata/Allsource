@@ -1,4 +1,4 @@
-from models.partners import Partners
+from models.partner import Partner
 from models.partners_users_invitation import ParntersUsersInvitation
 from sqlalchemy.orm import Session
 from typing import Optional

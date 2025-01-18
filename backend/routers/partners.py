@@ -29,10 +29,10 @@ def get_partner_accounts(
     start_date: Optional[date] = Query(None),
     end_date: Optional[date] = Query(None),
     page: int = Query(0),
-    rowsPerPage: int = Query(10),
+    rows_per_page: int = Query(10),
     get_accounts_service: AccountsService = Depends(get_accounts_service)):
     
-    account = get_accounts_service.get_accounts(id, email, search, start_date, end_date, page, rowsPerPage)
+    account = get_accounts_service.get_accounts(id, email, search, start_date, end_date, page, rows_per_page)
     if not account.get("status"):
         error = account.get("error", {}) or {}
         raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))
@@ -127,10 +127,10 @@ def get_masterpartner_partners(
     start_date: Optional[date] = Query(None),
     end_date: Optional[date] = Query(None),
     page: int = Query(0),
-    rowsPerPage: int = Query(10),
+    rows_per_page: int = Query(10),
     get_partners_service: PartnersService = Depends(get_partners_service)):
     
-    response = get_partners_service.get_partner_partners(email, start_date, end_date, page, rowsPerPage)
+    response = get_partners_service.get_partner_partners(email, start_date, end_date, page, rows_per_page)
     if not response.get("status"):
         error = response.get("error", {}) or {}
         raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))

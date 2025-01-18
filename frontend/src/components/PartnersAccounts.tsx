@@ -200,7 +200,8 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                     search,
                     start_date: appliedDates.start ? appliedDates.start.toLocaleDateString('en-CA') : null,
                     end_date: appliedDates.end ? appliedDates.end.toLocaleDateString('en-CA') : null,
-                    page, rowsPerPage
+                    page, 
+                    rows_per_page: rowsPerPage
                 } });
             } 
             else {
@@ -210,7 +211,8 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                         search,
                         start_date: appliedDates.start ? appliedDates.start.toLocaleDateString('en-CA') : null,
                         end_date: appliedDates.end ? appliedDates.end.toLocaleDateString('en-CA') : null,
-                        page, rowsPerPage
+                        page,
+                        rows_per_page: rowsPerPage
                     }});
             }
             if(response.status === 200 && response.data.totalCount > 0) {

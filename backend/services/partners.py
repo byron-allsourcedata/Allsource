@@ -4,7 +4,7 @@ import hashlib
 import json
 from urllib.parse import unquote
 from typing import Optional
-from models.partners import Partners
+from models.partner import Partner
 from persistence.user_persistence import UserPersistence
 from services.referral import ReferralService
 from persistence.partners_persistence import PartnersPersistence
@@ -281,7 +281,7 @@ class PartnersService:
             return {"status": False, "error": {"code": 500, "message": f"Unexpected error during updation: {str(e)}"}}
 
 
-    def domain_mapped(self, partner: Partners, user: PartnerUserData, count=0):
+    def domain_mapped(self, partner: Partner, user: PartnerUserData, count=0):
         return PartnersResponse(
             id=partner.id,
             partner_name=partner.name,
