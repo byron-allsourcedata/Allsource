@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session,
+from sqlalchemy.orm import Session
 from models.referral_payouts import ReferralPayouts
 from sqlalchemy import func, extract
 from models.users import Users
