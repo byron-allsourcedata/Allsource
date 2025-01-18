@@ -286,7 +286,7 @@ class PartnersService:
             id=partner.id,
             partner_name=partner.name,
             email=partner.email,
-            isMaster=partner.isMaster,
+            isMaster=partner.is_master,
             join_date=partner.join_date,
             commission=partner.commission,
             subscription=user["subscription"],
