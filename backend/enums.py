@@ -244,4 +244,4 @@ class PayoutsStatus(Enum):
 class ConfirmationStatus(Enum):
     PENDING = 'pending'
     REVOKED = 'revoked'
-    APPROVED = 'revoked'
+    APPROVED = 'approved'

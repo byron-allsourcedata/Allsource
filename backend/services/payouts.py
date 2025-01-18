@@ -6,7 +6,6 @@ from persistence.referral_payouts import ReferralPayoutsPersistence
 from persistence.partners_persistence import PartnersPersistence
 from typing import List, Dict
 import os
-from sqlalchemy.orm import Session
 
 class PayoutsService:
 
@@ -15,7 +14,7 @@ class PayoutsService:
         self.referral_user_persistence = referral_user_persistence
         self.partners_persistence = partners_persistence
         
-    def process_monthly_payouts(payouts: List) -> List[Dict]:
+    def process_monthly_payouts(self, payouts: List) -> List[Dict]:
         grouped_by_month = defaultdict(list)
         for payout in payouts:
             month_year = payout.created_at.strftime('%Y-%m')
@@ -33,10 +32,10 @@ class PayoutsService:
             )
             
             payout_date = max(
-                (payout.paid_at for payout in month_payouts),
+                (payout.paid_at for payout in month_payouts if payout.paid_at is not None),
                 default=None
             )
-            
+
             payout_date_formatted = payout_date.strftime('%b %d, %Y') if payout_date else None
             month_name = payout_date.strftime('%B') if payout_date else ""
                 
@@ -51,9 +50,15 @@ class PayoutsService:
         
         return monthly_info
     
+    def check_pending_referral_payouts(self, referral_payouts):
+        for referral_payout in referral_payouts:
+            if referral_payout.confirmation_status == ConfirmationStatus.APPROVED.value and referral_payout.status == PayoutsStatus.PENDING.value:
+                return PayoutsStatus.PENDING.value
+        return PayoutsStatus.PAID.value
+    
     def process_partners_payouts(self, payouts: List) -> List[Dict]:
         user_ids = {payout.user_id for payout in payouts}
-        
+        print(user_ids)
         partners = self.partners_persistence.get_partners_by_user_ids(user_ids)
         partners_dict = {partner.user_id: partner for partner in partners}
         
@@ -67,6 +72,7 @@ class PayoutsService:
                     if master_partner:
                         source = master_partner.company_name
                 referral_payouts = self.referral_payouts_persistence.get_referral_payouts_by_parent_id(payout.user_id)
+                
                 rewards_paid = sum(
                     payout.reward_amount for payout in referral_payouts if payout.status == PayoutsStatus.PAID.value
                 )
@@ -74,7 +80,7 @@ class PayoutsService:
                     payout.reward_amount for payout in referral_payouts if payout.confirmation_status == ConfirmationStatus.PENDING.value
                 )
                 payout_date = max(
-                    (payout.paid_at for payout in referral_payouts),
+                    (payout.paid_at for payout in referral_payouts if payout.paid_at is not None),
                     default=None
                 )
                 
@@ -89,7 +95,7 @@ class PayoutsService:
                     'reward_amount': rewards_paid,
                     'reward_approved': rewards_approved,
                     'reward_payout_date': payout_date_formatted,
-                    'reward_status': payout.status,
+                    'reward_status': self.check_pending_referral_payouts(referral_payouts),
                 })
         
         return result

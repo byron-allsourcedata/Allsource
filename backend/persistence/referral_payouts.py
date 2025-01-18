@@ -26,6 +26,17 @@ class ReferralPayoutsPersistence:
     def get_referral_payouts_by_parent_id(self, parent_id):
         return self.db.query(ReferralPayouts).filter(ReferralPayouts.parent_id == parent_id).all()
     
+    def get_all_referral_payouts(self, year=None, month=None):
+        query = self.db.query(ReferralPayouts)
+        
+        if year:
+            query = query.filter(extract("year", ReferralPayouts.created_at) == year)
+        
+        if month:
+            query = query.filter(extract("month", ReferralPayouts.created_at) == month)
+        
+        return query.all()
+    
     def get_referral_payouts_by_company_name(self, year, month, company_name):
         query = self.db.query(
             ReferralPayouts.id,

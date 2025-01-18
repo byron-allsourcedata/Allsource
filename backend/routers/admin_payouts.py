@@ -9,7 +9,7 @@ router = APIRouter(dependencies=[Depends(check_user_admin)])
 
 @router.get("/partners")
 def get_payouts_partners(referral_service: PayoutsService = Depends(get_payouts_service), 
-                        year: Optional[str] = Query(None),
+                        year: Optional[int] = Query(None),
                         month: Optional[int] = Query(None),
                         company_name: Optional[str] = Query(None)):
     return referral_service.get_payouts_partners(year=year, month=month, company_name=company_name)
