@@ -41,6 +41,12 @@ class ReferralService:
                 email=email,
                 currently_due=currently_due
             )
+            return {
+                'connected_stripe_account_id': user.get('connected_stripe_account_id'),
+                'is_stripe_connected': user.get('is_stripe_connected'),
+                'stripe_connected_email': email,
+                'stripe_connected_currently_due': currently_due
+            }
         return {
             'connected_stripe_account_id': user.get('connected_stripe_account_id'),
             'is_stripe_connected': user.get('is_stripe_connected'),
