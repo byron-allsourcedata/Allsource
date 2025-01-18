@@ -177,9 +177,6 @@ const Partners: React.FC = () => {
                 setIsMaster(masterPartner) 
                 setMasterId(responseMe.data.id)  
                 setCommission(responseMe.data.commission) 
-                // if(masterPartner){
-                //     fetchRules(currentEmail)
-                // }
             }
             else {
                 setIsMaster(false)
@@ -190,28 +187,6 @@ const Partners: React.FC = () => {
         }
     }, [email]);
 
-
-    // const fetchRules = useCallback(async (curemail: string | null = null) => {
-    //     setLoading(true)
-    //     console.log({rowsPerPage})
-
-    //     try {
-    //         const response = await axiosInstance.get(`/partners/partners`, { 
-    //             params: {
-    //                 email: encodeURIComponent(curemail ? curemail : email),
-    //                 start_date: appliedDates.start ? appliedDates.start.toLocaleDateString('en-CA') : null,
-    //                 end_date: appliedDates.end ? appliedDates.end.toLocaleDateString('en-CA') : null,
-    //                 page, rowsPerPage
-    //             }});
-    //         if(response.status === 200 && response.data.totalCount > 0) {
-    //             setPartners([...response.data.items])
-    //             setTotalCount(response.data.totalCount)  
-    //         }
-    //     } catch {
-    //     } finally {
-    //         setLoading(false)
-    //     }
-    // }, [page, rowsPerPage, appliedDates, email]);
 
     useEffect(() => {
         const timeoutId = window.setTimeout(() => {
@@ -225,12 +200,6 @@ const Partners: React.FC = () => {
 
         return () => window.clearTimeout(timeoutId);
     }, []);
-
-    // useEffect(() => {
-    //     if(isMaster !== null){
-    //         fetchRules();
-    //     }
-    // }, [page, rowsPerPage, appliedDates]);
 
     return (
         <>

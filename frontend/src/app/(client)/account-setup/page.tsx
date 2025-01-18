@@ -227,8 +227,7 @@ const AccountSetup = () => {
         company_website: websiteLink,
         company_role: selectedRoles,
         monthly_visits: selectedVisits,
-        employees_workers: selectedEmployees,
-        email, fullName,
+        employees_workers: selectedEmployees
       });
 
       switch (response.data.status) {
