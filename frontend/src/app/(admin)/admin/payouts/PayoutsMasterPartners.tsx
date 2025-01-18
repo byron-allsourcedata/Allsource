@@ -27,6 +27,7 @@ const ReferralRewards: React.FC = () => {
     const [year, setYear] = useState<string>(currentYear.toString());
     const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
     const [selectedPartner, setSelectedPartner] = useState<string | null>(null);
+    const [selectedPartnerId, setSelectedPartnerId] = useState<number | null>(null);
     const yearsOptions: (string | number)[] = Array.from(
         { length: 12 },
         (_, i) => new Date().getFullYear() - i
@@ -53,8 +54,9 @@ const ReferralRewards: React.FC = () => {
         }
     };
 
-    const handlePartnerClick = (partnerName: string) => {
-        setSelectedPartner(partnerName);
+    const handlePartnerClick = (partner_id: number, partner_name: string) => {
+        setSelectedPartner(partner_name);
+        setSelectedPartnerId(partner_id);
         setOpenPartner(true);
       };
 
@@ -149,8 +151,8 @@ const ReferralRewards: React.FC = () => {
                 minHeight: '77vh',
                 '@media (max-width: 600px)': { margin: '0rem auto 0rem' }
             }}>
-                {selectedPartner ? (
-          <PartnerAccounts open={openPartner} partnerName={selectedPartner} selectMonth={selectedMonth || ''} onBack={handleBackPartners} />
+                {selectedPartner && selectedPartnerId ? (
+          <PartnerAccounts open={openPartner} partnerName={selectedPartner} selectMonth={selectedMonth || ''} partnerId={selectedPartnerId} selectYear={year} onBack={handleBackPartners} />
         ) : 
                 selectedMonth ? (
                     <PayoutsMonth open={open} selectedYear={year} selectedMonth={selectedMonth} onBack={handleBack} onPartnerClick={handlePartnerClick} />

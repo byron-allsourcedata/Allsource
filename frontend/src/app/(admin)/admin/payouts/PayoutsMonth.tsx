@@ -12,6 +12,7 @@ import { DateRangeIcon } from "@mui/x-date-pickers";
 import SearchIcon from '@mui/icons-material/Search';
 
 interface RewardData {
+    partner_id: number;
     month: string;
     partner_name: string;
     email: string;
@@ -28,7 +29,7 @@ interface MonthDetailsProps {
     onBack: () => void;
     selectedMonth: string;
     open: boolean;
-    onPartnerClick: (partnerName: string, month: string) => void;
+    onPartnerClick: (partner_id: number, partner_name: string, selected_year: string,) => void;
     selectedYear: string;
 }
 
@@ -125,18 +126,35 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
 
     const fetchRewardData = async () => {
         try {
-            //const response = await axiosInstance.get(`/api/rewards/${selectedMonth}`);
+            // Отправляем GET-запрос на эндпоинт с параметрами year и month
+            const response = await axiosInstance.get("/admin-payouts/partners", {
+                params: {
+                    year: selectedYear,
+                    month: selectedMonth,
+                },
+            });
+
             // Обработка данных из ответа
-            // setTotalCount(response.data.totalCount);
-            // setData(response.data.rewards);
-            setData(testData);
-            setTotalCount(testData.length);
+            const rewards: RewardData[] = response.data.map((reward: any) => ({
+                partner_name: reward.partner_name,
+                email: reward.email,
+                sources: reward.sources,
+                number_of_accounts: reward.number_of_accounts,
+                reward_amount: reward.reward_amount,
+                reward_approved: reward.reward_approved,
+                reward_payout_date: new Date(reward.reward_payout_date), // Преобразуем строку в объект Date
+                reward_status: reward.reward_status,
+            }));
+
+            setData(rewards); // Устанавливаем данные в состояние
+            setTotalCount(rewards.length); // Устанавливаем общее количество
         } catch (error) {
         }
     };
 
     const testData: RewardData[] = [
-        {
+        {   
+            partner_id: 1,
             month: selectedMonth,
             partner_name: "Lolly",
             email: "abcdefghijkl@gmail.com",
@@ -147,7 +165,8 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
             reward_payout_date: new Date("2024-08-27"),
             reward_status: "Paid",
         },
-        {
+        {   
+            partner_id:2,
             month: selectedMonth,
             partner_name: "Klaviyo",
             email: "abcdefghijkl@gmail.com",
@@ -158,7 +177,8 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
             reward_payout_date: new Date("2024-08-27"),
             reward_status: "Pending",
         },
-        {
+        {   
+            partner_id: 3,
             month: selectedMonth,
             partner_name: "Maximiz",
             email: "abcdefghijkl@gmail.com",
@@ -169,7 +189,8 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
             reward_payout_date: new Date("2024-08-27"),
             reward_status: "Paid",
         },
-        {
+        {   
+            partner_id: 4,
             month: selectedMonth,
             partner_name: "Meta",
             email: "abcdefghijkl@gmail.com",
@@ -197,7 +218,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
         }}>
 
             <Box>
-                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', mb:2 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', mb: 2 }}>
 
                     <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mb: 2, gap: 2 }}>
                         <IconButton
@@ -216,7 +237,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                         <Typography className="second-sub-title">{selectedMonth} {selectedYear}</Typography>
                     </Box>
 
-                    <Box sx={{display: 'flex', flexDirection: 'row', gap:2}}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
                         <TextField
                             id="input-with-icon-textfield"
                             placeholder="Search by partner name, emails"
@@ -377,7 +398,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                                                     zIndex: 1,
                                                     backgroundColor: '#fff',
                                                 }}
-                                                    onClick={() => onPartnerClick(item.partner_name, item.month)}
+                                                    onClick={() => onPartnerClick(item.partner_id, item.partner_name, selectedYear)}
                                                 >
                                                     {item.partner_name}
                                                 </TableCell>
@@ -438,7 +459,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                                                             border: '1px solid rgba(80, 82, 178, 1)',
                                                             textTransform: 'none',
                                                             padding: '5px 8px',
-                                                            margin:0,
+                                                            margin: 0,
                                                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                                                             opacity: item.reward_status === 'Paid' ? 0.6 : 1,
                                                             pointerEvents: item.reward_status === 'Paid' ? 'none' : 'auto',

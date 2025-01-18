@@ -8,12 +8,15 @@ import CustomTablePagination from "@/components/CustomTablePagination";
 import { payoutsStyle } from "./payoutsStyle";
 import dayjs from "dayjs";
 import SearchIcon from '@mui/icons-material/Search';
+import axiosInstance from "@/axios/axiosInterceptorInstance";
 
 interface PartnerAccountsProps {
     partnerName: string;
     onBack: () => void;
     open: boolean;
     selectMonth: string;
+    selectYear: string;
+    partnerId: number;
 }
 
 const getStatusStyle = (status: any) => {
@@ -66,7 +69,7 @@ const tableHeaders = [
     { key: 'reward_status', label: 'Reward status', sortable: false },
 ];
 
-const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, onBack, selectMonth }) => {
+const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, onBack, selectMonth, partnerId, selectYear }) => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalCount, setTotalCount] = useState(0);
@@ -111,12 +114,27 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
 
     const fetchRewardData = async () => {
         try {
-            //const response = await axiosInstance.get(`/api/rewards/${selectedMonth}`);
-            // Обработка данных из ответа
-            // setTotalCount(response.data.totalCount);
-            // setData(response.data.rewards);
-            setData(testData);
-            setTotalCount(testData.length);
+            const response = await axiosInstance.get("/admin-payouts/partners", {
+                params: {
+                    year: selectYear,
+                    month: selectMonth,
+                    partner_id: partnerId
+                },
+            });
+    
+            const rewards: RewardData[] = response.data.map((reward: any) => ({
+                partner_name: reward.partner_name,
+                email: reward.email,
+                sources: reward.sources,
+                number_of_accounts: reward.number_of_accounts,
+                reward_amount: reward.reward_amount,
+                reward_approved: reward.reward_approved,
+                reward_payout_date: new Date(reward.reward_payout_date),
+                reward_status: reward.reward_status,
+            }));
+    
+            setData(rewards);
+            setTotalCount(rewards.length);
         } catch (error) {
         }
     };
