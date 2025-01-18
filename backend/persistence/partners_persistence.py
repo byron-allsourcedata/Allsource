@@ -9,6 +9,8 @@ class PartnersPersistence:
     def __init__(self, db: Session):
         self.db = db
 
+    def get_partners_by_user_ids(self, user_ids):
+        return self.db.query(Partner).filter(Partner.user_id.in_(user_ids)).all()
 
     def get_partners(self, isMaster, search_term, start_date, end_date, offset, limit):
         query = self.db.query(Partner).filter(Partner.isMaster == isMaster)

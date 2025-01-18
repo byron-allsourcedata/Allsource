@@ -17,8 +17,9 @@ def get_overview_info(referral_service: ReferralService = Depends(get_referral_s
 def get_rewards_info(referral_service: ReferralService = Depends(get_referral_service),
                       user: User = Depends(check_user_authentication),
                       year	: Optional[str] = Query(None),
-                      month: Optional[str] = Query(None)):
-    return referral_service.get_rewards_info(year=year, month=month)
+                      month: Optional[int] = Query(None),
+                      company_name: Optional[str] = Query(None)):
+    return referral_service.get_rewards_info(year=year, month=month, company_name=company_name)
 
 @router.get("/details", response_model=ReferralDetailsResponse)
 def get_referral_details(referral_service: ReferralService = Depends(get_referral_service),

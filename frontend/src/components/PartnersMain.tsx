@@ -151,7 +151,6 @@ const PartnersMain: React.FC<PartnersProps> = ({setLoading, masterId, appliedDat
         try {
             const response = await axiosInstance.get(`/partners/partners`, { 
                 params: {
-                    email: encodeURIComponent(email ? email : ''),
                     start_date: appliedDates.start ? appliedDates.start.toLocaleDateString('en-CA') : null,
                     end_date: appliedDates.end ? appliedDates.end.toLocaleDateString('en-CA') : null,
                     page, 

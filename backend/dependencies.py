@@ -17,6 +17,7 @@ from persistence.referral_user import ReferralUserPersistence
 from persistence.referral_payouts import ReferralPayoutsPersistence
 from persistence.audience_persistence import AudiencePersistence
 from persistence.domains import UserDomainsPersistence, UserDomains
+from services.payouts import PayoutsService
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.suppression import IntegrationsSuppressionPersistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
@@ -459,6 +460,11 @@ def get_sse_events_service(user_persistence_service: UserPersistence = Depends(g
 def get_dashboard_service(domain: UserDomains = Depends(check_pixel_install_domain),
                           leads_persistence_service: LeadsPersistence = Depends(get_leads_persistence)):
     return DashboardService(domain=domain, leads_persistence_service=leads_persistence_service)
+
+def get_payouts_service(
+        referral_payouts_persistence: ReferralPayoutsPersistence = Depends(get_referral_payouts_persistence),
+        referral_user_persistence: ReferralUserPersistence = Depends(get_referral_user_persistence)):
+    return PayoutsService(referral_payouts_persistence=referral_payouts_persistence)
 
 
 def get_pixel_installation_service(db: Session = Depends(get_db),

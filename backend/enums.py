@@ -240,3 +240,8 @@ class ProgramType(Enum):
 class PayoutsStatus(Enum):
     PENDING = 'pending'
     PAID = 'paid'
+
+class ConfirmationStatus(Enum):
+    PENDING = 'pending'
+    REVOKED = 'revoked'
+    APPROVED = 'revoked'
