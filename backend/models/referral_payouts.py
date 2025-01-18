@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, TIMESTAMP
 from sqlalchemy.dialects.postgresql import NUMERIC, VARCHAR
+from enums import PayoutsStatus
 from .base import Base
 
 
@@ -12,3 +13,4 @@ class ReferralPayouts(Base):
     reward_amount = Column(NUMERIC(18, 2), nullable=False)
     reward_type = Column(VARCHAR(128), nullable=False)
     created_at = Column(TIMESTAMP, nullable=False)
+    status = Column(VARCHAR(16), nullable=False, default=PayoutsStatus.PENDING.value)
