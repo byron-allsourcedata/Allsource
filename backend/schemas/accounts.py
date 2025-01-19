@@ -19,7 +19,7 @@ class AccountResponse(BaseModel):
     status: str
 
 class AccountsObjectResponse(BaseModel):
-    status: bool
+    status: Optional[bool] = None
     error: Optional[ErrorResponse] = None
     data: Optional[Union[List[AccountResponse], AccountResponse]] = None
 

@@ -11,7 +11,7 @@ class PartnersPersistence:
 
 
     def get_partners(self, isMaster, search_term, start_date, end_date, offset, limit):
-        query = self.db.query(Partner).filter(Partner.isMaster == isMaster)
+        query = self.db.query(Partner).filter(Partner.is_master == isMaster)
 
         if search_term:
             query = query.filter(
@@ -56,7 +56,7 @@ class PartnersPersistence:
 
 
     def get_total_count(self, isMaster, search_term=None):
-        query = self.db.query(Partner).filter(Partner.isMaster == isMaster)
+        query = self.db.query(Partner).filter(Partner.is_master == isMaster)
 
         if search_term:
             query = query.filter(
