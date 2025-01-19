@@ -67,7 +67,7 @@ class PayoutsService:
         
         return False
         
-    def check_pending_referral_payouts(self, referral_payouts):
+    def check_pending_referral_payouts(self, referral_payouts):            
         has_pending_approved = any(
             referral_payout.confirmation_status == ConfirmationStatus.APPROVED.value 
             and referral_payout.status == PayoutsStatus.PENDING.value
@@ -75,15 +75,6 @@ class PayoutsService:
         )
         
         if has_pending_approved:
-            return PayoutsStatus.PENDING.value
-
-        has_pending_pending = any(
-            referral_payout.confirmation_status == ConfirmationStatus.PENDING.value 
-            and referral_payout.status == PayoutsStatus.PENDING.value
-            for referral_payout in referral_payouts
-        )
-        
-        if has_pending_pending:
             return PayoutsStatus.PENDING.value
 
         return PayoutsStatus.PAID.value
@@ -115,7 +106,7 @@ class PayoutsService:
                     referral.reward_amount for referral in referral_payouts_for_partner if referral.status == PayoutsStatus.PAID.value
                 )
                 rewards_approved = sum(
-                    referral.reward_amount for referral in referral_payouts_for_partner if referral.confirmation_status == ConfirmationStatus.PENDING.value
+                    referral.reward_amount for referral in referral_payouts_for_partner if referral.confirmation_status == ConfirmationStatus.APPROVED.value
                 )
                 payout_date = max(
                     (referral.paid_at for referral in referral_payouts_for_partner if referral.paid_at is not None),
@@ -124,17 +115,13 @@ class PayoutsService:
                 
                 payout_date_formatted = payout_date.strftime('%b %d, %Y') if payout_date else None
                 
-                number_of_accounts = sum(
-                    (referral.confirmation_status == ConfirmationStatus.APPROVED.value for referral in referral_payouts_for_partner if referral.confirmation_status is not None)
-                )
-                
                 result.append({
                     'partner_id': partner.id,
                     'company_name': partner.company_name,
                     'email': partner.email,
                     'sources': source,
                     'is_payment_active': self.check_payment_active_payouts(referral_payouts_for_partner),
-                    'number_of_accounts': number_of_accounts,
+                    'number_of_accounts': len(referral_payouts_for_partner),
                     'reward_amount': rewards_paid,
                     'reward_approved': rewards_approved,
                     'reward_payout_date': payout_date_formatted,
