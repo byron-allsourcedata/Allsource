@@ -10,9 +10,11 @@ import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { DateRangeIcon } from "@mui/x-date-pickers";
 import SearchIcon from '@mui/icons-material/Search';
+import { showErrorToast, showToast } from "@/components/ToastNotification";
 
 interface RewardData {
     month: string;
+    is_payment_active: boolean;
     company_name: string;
     email: string;
     sources: string;
@@ -22,6 +24,7 @@ interface RewardData {
     reward_approved: string;
     reward_payout_date: Date;
     reward_status: string;
+    is_auto_payout_date?: boolean;
 }
 
 
@@ -128,6 +131,17 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
         setOrderBy(property);
     };
 
+    const handlePayOutReferral = async (partnerId: number) => {
+        try {
+            const response = await axiosInstance.get(`/pay-out-referrals/${partnerId}`);
+            showToast(response.data.status)
+            await fetchRewardData()
+        } catch (error) {
+            showErrorToast("Error during payment")
+        }
+    };
+
+
     useEffect(() => {
         if (open) {
             fetchRewardData();
@@ -140,87 +154,49 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                 "January", "February", "March", "April", "May", "June",
                 "July", "August", "September", "October", "November", "December"
             ];
-    
-            const selectedMonthNumber = selectedMonth 
-                ? monthArray.indexOf(selectedMonth) + 1 
+
+            const selectedMonthNumber = selectedMonth
+                ? monthArray.indexOf(selectedMonth) + 1
                 : undefined;
-    
+
             const response = await axiosInstance.get("/admin-payouts/partners", {
                 params: {
                     year: selectedYear,
-                    month: selectedMonthNumber, 
+                    month: selectedMonthNumber,
                 },
             });
 
-            // Обработка данных из ответа
-            const rewards: RewardData[] = response.data.map((reward: any) => ({
-                partner_id: reward.partner_id,
-                company_name: reward.company_name,
-                email: reward.email,
-                sources: reward.sources,
-                number_of_accounts: reward.number_of_accounts,
-                reward_amount: reward.reward_amount,
-                reward_approved: reward.reward_approved,
-                reward_payout_date: new Date(reward.reward_payout_date) || '', // Преобразуем строку в объект Date
-                reward_status: reward.reward_status,
-            }));
+            const rewards: RewardData[] = response.data.map((reward: any) => {
+                let isAutoPayoutDate = false;
+                const rewardPayoutDate = reward.reward_payout_date
+                    ? new Date(reward.reward_payout_date)
+                    : (() => {
+                        isAutoPayoutDate = true;
+                        const currentDate = new Date();
+                        const nextMonth = currentDate.getMonth() + 1;
+                        return new Date(currentDate.getFullYear(), nextMonth, 1);
+                    })();
 
-            setData(rewards); // Устанавливаем данные в состояние
-            setTotalCount(rewards.length); // Устанавливаем общее количество
+                return {
+                    is_payment_active: reward.is_payment_active,
+                    partner_id: reward.partner_id,
+                    company_name: reward.company_name,
+                    email: reward.email,
+                    sources: reward.sources,
+                    number_of_accounts: reward.number_of_accounts,
+                    reward_amount: reward.reward_amount,
+                    reward_approved: reward.reward_approved,
+                    reward_payout_date: rewardPayoutDate,
+                    is_auto_payout_date: isAutoPayoutDate,
+                    reward_status: reward.reward_status,
+                };
+            });
+
+            setData(rewards);
+            setTotalCount(rewards.length);
         } catch (error) {
         }
     };
-
-    const testData: RewardData[] = [
-        {   
-            partner_id: 1,
-            month: selectedMonth,
-            company_name: "Lolly",
-            email: "abcdefghijkl@gmail.com",
-            sources: "Direct",
-            number_of_accounts: 12,
-            reward_amount: "$200",
-            reward_approved: "$200",
-            reward_payout_date: new Date("2024-08-27"),
-            reward_status: "Paid",
-        },
-        {   
-            partner_id:2,
-            month: selectedMonth,
-            company_name: "Klaviyo",
-            email: "abcdefghijkl@gmail.com",
-            sources: "Lolly",
-            number_of_accounts: 10,
-            reward_amount: "$200",
-            reward_approved: "$200",
-            reward_payout_date: new Date("2024-08-27"),
-            reward_status: "Pending",
-        },
-        {   
-            partner_id: 3,
-            month: selectedMonth,
-            company_name: "Maximiz",
-            email: "abcdefghijkl@gmail.com",
-            sources: "Direct",
-            number_of_accounts: 12,
-            reward_amount: "$200",
-            reward_approved: "$200",
-            reward_payout_date: new Date("2024-08-27"),
-            reward_status: "Paid",
-        },
-        {   
-            partner_id: 4,
-            month: selectedMonth,
-            company_name: "Meta",
-            email: "abcdefghijkl@gmail.com",
-            sources: "Lolly",
-            number_of_accounts: 10,
-            reward_amount: "$200",
-            reward_approved: "$200",
-            reward_payout_date: new Date("2024-08-27"),
-            reward_status: "Pending",
-        },
-    ]
 
 
 
@@ -442,8 +418,14 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                                                     {item.reward_approved}
                                                 </TableCell>
 
-                                                <TableCell className='table-data' sx={payoutsStyle.tableBodyColumn}>
-                                                    {dayjs(item.reward_payout_date).format('MMM D, YYYY') || '--'}  
+                                                <TableCell className="table-data" sx={payoutsStyle.tableBodyColumn}>
+                                                    {item.is_auto_payout_date ? (
+                                                        <Typography className="table-data" sx={{ fontStyle: "italic", color: "gray" }}>
+                                                            Would be paid on {dayjs(item.reward_payout_date).format('MMM D, YYYY')}
+                                                        </Typography>
+                                                    ) : (
+                                                        dayjs(item.reward_payout_date).format('MMM D, YYYY') || '--'
+                                                    )}
                                                 </TableCell>
 
                                                 <TableCell sx={{ ...payoutsStyle.tableColumn, textAlign: 'center', pl: 0 }}>
@@ -466,9 +448,13 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                                                 <TableCell className='table-data'>
                                                     <Button
                                                         variant="contained"
-                                                        //onClick={() => ()}
+                                                        onClick={() => {
+                                                            if (item.is_payment_active) {
+                                                                handlePayOutReferral(item.partner_id);
+                                                            }
+                                                        }}
                                                         sx={{
-                                                            backgroundColor: item.reward_status === 'Paid' || 'paid' ? '#fff' : '#fff',
+                                                            backgroundColor: item.reward_status === 'paid' ? '#fff' : '#fff',
                                                             fontFamily: "Nunito Sans",
                                                             fontSize: '14px',
                                                             fontWeight: '600',
