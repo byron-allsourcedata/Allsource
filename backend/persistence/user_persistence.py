@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 
-from sqlalchemy import func
+from sqlalchemy import func, and_
 from sqlalchemy.orm import Session
 
 from enums import TeamsInvitationStatus, SignUpStatus
@@ -23,16 +23,16 @@ class UserPersistence:
             {Users.reset_password_sent_at: send_message_expiration_time},
             synchronize_session=False)
         self.db.commit()
-        
+
     def save_user_domain(self, user_id, domain):
-        user_domain = self.db.query(UserDomains).filter(UserDomains.domain == domain, UserDomains.user_id == user_id).first()
+        user_domain = self.db.query(UserDomains).filter(UserDomains.domain == domain,
+                                                        UserDomains.user_id == user_id).first()
         if user_domain:
             return user_domain
         user_domain = UserDomains(user_id=user_id, domain=domain.replace('https://', '').replace('http://', ''))
         self.db.add(user_domain)
         self.db.commit()
         return user_domain
-
 
     def get_team_members(self, user_id: int):
         users = self.db.query(Users).filter(Users.team_owner_id == user_id).all()
@@ -71,10 +71,10 @@ class UserPersistence:
         return result
 
     def get_user_by_id(self, user_id, result_as_object=False):
-        user, partner_is_active = self.db.query(Users, Partner.is_active)\
-        .filter(Users.id == user_id)\
-        .outerjoin(Partner, Partner.user_id == user_id)\
-        .first()
+        user, partner_is_active = self.db.query(Users, Partner.is_active) \
+            .filter(Users.id == user_id) \
+            .outerjoin(Partner, Partner.user_id == user_id) \
+            .first()
         result_user = None
         if user:
             result_user = {
@@ -167,12 +167,12 @@ class UserPersistence:
         if query:
             self.db.query(Users).filter(Users.id == user_id).update({"is_email_confirmed": True})
             self.db.commit()
-            
+
     def book_call_confirmed(self, user_id: int):
         self.db.query(Users).filter(Users.id == user_id).update({Users.is_book_call_passed: True},
                                                                 synchronize_session=False)
         self.db.commit()
-    
+
     def set_partner_role(self, user_id: int):
         self.db.query(Users).filter(Users.id == user_id).update({Users.is_partner: True},
                                                                 synchronize_session=False)
@@ -292,4 +292,3 @@ class UserPersistence:
             synchronize_session=False
         )
         self.db.commit()
-

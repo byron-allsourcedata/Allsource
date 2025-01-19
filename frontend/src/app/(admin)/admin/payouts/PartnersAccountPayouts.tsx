@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Box, Typography, IconButton, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Popover } from "@mui/material";
+import { Box, Typography, IconButton, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Popover, TextField, InputAdornment } from "@mui/material";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
@@ -7,12 +7,16 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import CustomTablePagination from "@/components/CustomTablePagination";
 import { payoutsStyle } from "./payoutsStyle";
 import dayjs from "dayjs";
+import SearchIcon from '@mui/icons-material/Search';
+import axiosInstance from "@/axios/axiosInterceptorInstance";
 
 interface PartnerAccountsProps {
     partnerName: string;
     onBack: () => void;
     open: boolean;
     selectMonth: string;
+    selectYear: string;
+    partnerId: number;
 }
 
 const getStatusStyle = (status: any) => {
@@ -41,7 +45,8 @@ const getStatusStyle = (status: any) => {
 };
 
 interface RewardData {
-    account_name: string;
+    partner_id: number;
+    company_name: string;
     email: string;
     join_date: Date;
     plan_amount: string;
@@ -64,7 +69,7 @@ const tableHeaders = [
     { key: 'reward_status', label: 'Reward status', sortable: false },
 ];
 
-const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, onBack, selectMonth }) => {
+const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, onBack, selectMonth, partnerId, selectYear }) => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalCount, setTotalCount] = useState(0);
@@ -73,6 +78,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
     const [data, setData] = useState<RewardData[] | []>([]);
     const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
     const [activeRow, setActiveRow] = useState<number | null>(null);
+    const [search, setSearch] = useState("");
 
     const handleOpenMenu = (event: React.MouseEvent<HTMLElement>, rowId: number) => {
         setMenuAnchor(event.currentTarget);
@@ -108,19 +114,34 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
 
     const fetchRewardData = async () => {
         try {
-            //const response = await axiosInstance.get(`/api/rewards/${selectedMonth}`);
-            // Обработка данных из ответа
-            // setTotalCount(response.data.totalCount);
-            // setData(response.data.rewards);
-            setData(testData);
-            setTotalCount(testData.length);
+            const response = await axiosInstance.get("/admin-payouts/partners", {
+                params: {
+                    year: selectYear,
+                    month: selectMonth,
+                    partner_id: partnerId
+                },
+            });
+    
+            const rewards: RewardData[] = response.data.map((reward: any) => ({
+                partner_name: reward.partner_name,
+                email: reward.email,
+                sources: reward.sources,
+                number_of_accounts: reward.number_of_accounts,
+                reward_amount: reward.reward_amount,
+                reward_approved: reward.reward_approved,
+                reward_payout_date: new Date(reward.reward_payout_date),
+                reward_status: reward.reward_status,
+            }));
+    
+            setData(rewards);
+            setTotalCount(rewards.length);
         } catch (error) {
         }
     };
 
     const testData: RewardData[] = [
-        {
-            account_name: "Lolly",
+        {   partner_id:1,
+            company_name: "Lolly",
             email: "abcdefghijkl@gmail.com",
             join_date: new Date("2024-08-27"),
             plan_amount: "$200",
@@ -130,8 +151,8 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
             comment: '--',
             reward_status: "Pending",
         },
-        {
-            account_name: "Klaviyo",
+        {   partner_id:2,
+            company_name: "Klaviyo",
             email: "abcdefghijkl@gmail.com",
             join_date: new Date("2024-08-27"),
             plan_amount: "$200",
@@ -141,8 +162,8 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
             comment: '--',
             reward_status: "Pending",
         },
-        {
-            account_name: "Maximiz",
+        {   partner_id:3,
+            company_name: "Maximiz",
             email: "abcdefghijkl@gmail.com",
             join_date: new Date("2024-08-27"),
             plan_amount: "$200",
@@ -152,8 +173,8 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
             comment: '--',
             reward_status: "Pending",
         },
-        {
-            account_name: "Meta",
+        {   partner_id:4,
+            company_name: "Meta",
             email: "abcdefghijkl@gmail.com",
             join_date: new Date("2024-08-27"),
             plan_amount: "$200",
@@ -164,6 +185,10 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
             reward_status: "Pending",
         },
     ]
+
+    const handleSearchChange = (event: any) => {
+        setSearch(event.target.value);
+    };
 
 
 
@@ -180,22 +205,62 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
         }}>
 
             <Box>
-                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mb: 2, gap: 2 }}>
-                    <IconButton
-                        onClick={onBack}
-                        sx={{
-                            textTransform: "none",
-                            backgroundColor: "#fff",
-                            border: '0.73px solid rgba(184, 184, 184, 1)',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            padding: 0.25
-                        }}
-                    >
-                        <KeyboardArrowLeftIcon sx={{ color: "rgba(128, 128, 128, 1)" }} />
-                    </IconButton>
-                    <Typography className="second-sub-title">{selectMonth} -- {partnerName}</Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', mb:2 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mb: 2, gap: 2 }}>
+                        <IconButton
+                            onClick={onBack}
+                            sx={{
+                                textTransform: "none",
+                                backgroundColor: "#fff",
+                                border: '0.73px solid rgba(184, 184, 184, 1)',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                padding: 0.25
+                            }}
+                        >
+                            <KeyboardArrowLeftIcon sx={{ color: "rgba(128, 128, 128, 1)" }} />
+                        </IconButton>
+                        <Typography className="second-sub-title">{selectMonth} -- {partnerName}</Typography>
+                    </Box>
+
+                <Box sx={{display: 'flex', flexDirection: 'row', gap:2}}>
+                        <TextField
+                            id="input-with-icon-textfield"
+                            placeholder="Search by partner name, emails"
+                            value={search}
+                            onChange={handleSearchChange}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    fetchRewardData();
+                                }
+                            }}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <SearchIcon onClick={fetchRewardData} style={{ cursor: "pointer" }} />
+                                    </InputAdornment>
+                                ),
+                            }}
+                            variant="outlined"
+                            sx={{
+                                flex: 1,
+                                width: '360px',
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: '4px',
+                                    height: '44px',
+                                },
+                                '& input': {
+                                    paddingLeft: 0,
+                                },
+                                '& input::placeholder': {
+                                    fontSize: '14px',
+                                    color: '#8C8C8C',
+                                },
+                            }}
+                        />
+                    </Box>
                 </Box>
+
 
 
                 <Box sx={{
@@ -281,7 +346,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                                     backgroundColor: '#fff',
                                                 }}
                                                 >
-                                                    {item.account_name}
+                                                    {item.company_name}
                                                 </TableCell>
 
                                                 <TableCell className='table-data' sx={payoutsStyle.tableBodyColumn}>
@@ -335,7 +400,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                                     </Typography>
                                                     <IconButton
                                                         onClick={(event) => handleOpenMenu(event, index)}
-                                                        sx={{ ':hover': { backgroundColor: 'transparent', color: 'rgba(80, 82, 178, 1) !important', },  }}
+                                                        sx={{ ':hover': { backgroundColor: 'transparent', color: 'rgba(80, 82, 178, 1) !important' }, padding:0 }}
                                                     >
                                                         <KeyboardArrowDownIcon />
                                                     </IconButton>

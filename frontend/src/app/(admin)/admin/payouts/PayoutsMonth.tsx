@@ -1,4 +1,4 @@
-import { suppressionsStyles } from "@/css/suppressions";
+import { payoutsStyle } from "./payoutsStyle";
 import { Button, IconButton, InputAdornment, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography } from "@mui/material";
 import { Box } from "@mui/system";
 import dayjs from "dayjs";
@@ -12,6 +12,7 @@ import { DateRangeIcon } from "@mui/x-date-pickers";
 import SearchIcon from '@mui/icons-material/Search';
 
 interface RewardData {
+    partner_id: number;
     month: string;
     partner_name: string;
     email: string;
@@ -28,7 +29,8 @@ interface MonthDetailsProps {
     onBack: () => void;
     selectedMonth: string;
     open: boolean;
-    onPartnerClick: (partnerName: string, month: string) => void;
+    onPartnerClick: (partner_id: number, partner_name: string, selected_year: string,) => void;
+    selectedYear: string;
 }
 
 const getStatusStyle = (status: any) => {
@@ -59,7 +61,7 @@ const getStatusStyle = (status: any) => {
 const tableHeaders = [
     { key: 'account_name', label: 'Partner name', sortable: false },
     { key: 'email', label: 'Email', sortable: false },
-    { key: 'sources', label: 'Sources', sortable: true },
+    { key: 'sources', label: 'Sources', sortable: false },
     { key: 'number_of_accounts', label: 'No.of accounts', sortable: false },
     { key: 'reward_amount', label: 'Reward amount', sortable: false },
     { key: 'reward_approved', label: 'Reward approved', sortable: false },
@@ -68,7 +70,7 @@ const tableHeaders = [
     { key: 'actions', label: 'Actions', sortable: false },
 ];
 
-const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth, onPartnerClick }) => {
+const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth, onPartnerClick, selectedYear }) => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalCount, setTotalCount] = useState(0);
@@ -124,18 +126,35 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
 
     const fetchRewardData = async () => {
         try {
-            //const response = await axiosInstance.get(`/api/rewards/${selectedMonth}`);
+            // Отправляем GET-запрос на эндпоинт с параметрами year и month
+            const response = await axiosInstance.get("/admin-payouts/partners", {
+                params: {
+                    year: selectedYear,
+                    month: selectedMonth,
+                },
+            });
+
             // Обработка данных из ответа
-            // setTotalCount(response.data.totalCount);
-            // setData(response.data.rewards);
-            setData(testData);
-            setTotalCount(testData.length);
+            const rewards: RewardData[] = response.data.map((reward: any) => ({
+                partner_name: reward.partner_name,
+                email: reward.email,
+                sources: reward.sources,
+                number_of_accounts: reward.number_of_accounts,
+                reward_amount: reward.reward_amount,
+                reward_approved: reward.reward_approved,
+                reward_payout_date: new Date(reward.reward_payout_date), // Преобразуем строку в объект Date
+                reward_status: reward.reward_status,
+            }));
+
+            setData(rewards); // Устанавливаем данные в состояние
+            setTotalCount(rewards.length); // Устанавливаем общее количество
         } catch (error) {
         }
     };
 
     const testData: RewardData[] = [
-        {
+        {   
+            partner_id: 1,
             month: selectedMonth,
             partner_name: "Lolly",
             email: "abcdefghijkl@gmail.com",
@@ -146,7 +165,8 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
             reward_payout_date: new Date("2024-08-27"),
             reward_status: "Paid",
         },
-        {
+        {   
+            partner_id:2,
             month: selectedMonth,
             partner_name: "Klaviyo",
             email: "abcdefghijkl@gmail.com",
@@ -157,7 +177,8 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
             reward_payout_date: new Date("2024-08-27"),
             reward_status: "Pending",
         },
-        {
+        {   
+            partner_id: 3,
             month: selectedMonth,
             partner_name: "Maximiz",
             email: "abcdefghijkl@gmail.com",
@@ -168,7 +189,8 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
             reward_payout_date: new Date("2024-08-27"),
             reward_status: "Paid",
         },
-        {
+        {   
+            partner_id: 4,
             month: selectedMonth,
             partner_name: "Meta",
             email: "abcdefghijkl@gmail.com",
@@ -196,7 +218,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
         }}>
 
             <Box>
-                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', mb:2 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', mb: 2 }}>
 
                     <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mb: 2, gap: 2 }}>
                         <IconButton
@@ -212,10 +234,10 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                         >
                             <KeyboardArrowLeftIcon sx={{ color: "rgba(128, 128, 128, 1)" }} />
                         </IconButton>
-                        <Typography className="second-sub-title">{selectedMonth}</Typography>
+                        <Typography className="second-sub-title">{selectedMonth} {selectedYear}</Typography>
                     </Box>
 
-                    <Box sx={{display: 'flex', flexDirection: 'row', gap:2}}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
                         <TextField
                             id="input-with-icon-textfield"
                             placeholder="Search by partner name, emails"
@@ -312,7 +334,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                                             <TableCell
                                                 key={key}
                                                 sx={{
-                                                    ...suppressionsStyles.tableColumn,
+                                                    ...payoutsStyle.tableColumn,
                                                     ...(key === 'account_name' && {
                                                         position: 'sticky',
                                                         left: 0,
@@ -341,11 +363,11 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                                 </TableHead>
                                 <TableBody>
                                     {data && data.length === 0 ? (
-                                        <TableRow sx={suppressionsStyles.tableBodyRow}>
+                                        <TableRow sx={payoutsStyle.tableBodyRow}>
                                             <TableCell
                                                 colSpan={9}
                                                 sx={{
-                                                    ...suppressionsStyles.tableBodyColumn,
+                                                    ...payoutsStyle.tableBodyColumn,
                                                     textAlign: 'center',
                                                     paddingTop: '16px',
                                                     paddingBottom: '16px',
@@ -359,7 +381,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                                     ) : (
                                         data && data.map((item, index) => (
                                             <TableRow key={index} sx={{
-                                                ...suppressionsStyles.tableBodyRow,
+                                                ...payoutsStyle.tableBodyRow,
                                                 '&:hover': {
                                                     backgroundColor: '#F7F7F7',
                                                     '& .sticky-cell': {
@@ -368,7 +390,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                                                 },
                                             }}>
                                                 <TableCell className='sticky-cell table-data' sx={{
-                                                    ...suppressionsStyles.tableBodyColumn,
+                                                    ...payoutsStyle.tableBodyColumn,
                                                     cursor: 'pointer',
                                                     position: 'sticky',
                                                     color: 'rgba(80, 82, 178, 1) !important',
@@ -376,36 +398,36 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                                                     zIndex: 1,
                                                     backgroundColor: '#fff',
                                                 }}
-                                                    onClick={() => onPartnerClick(item.partner_name, item.month)}
+                                                    onClick={() => onPartnerClick(item.partner_id, item.partner_name, selectedYear)}
                                                 >
                                                     {item.partner_name}
                                                 </TableCell>
 
-                                                <TableCell className='table-data' sx={suppressionsStyles.tableBodyColumn}>
+                                                <TableCell className='table-data' sx={payoutsStyle.tableBodyColumn}>
                                                     {item.email}
                                                 </TableCell>
 
-                                                <TableCell className='table-data' sx={suppressionsStyles.tableBodyColumn}>
+                                                <TableCell className='table-data' sx={payoutsStyle.tableBodyColumn}>
                                                     {item.sources}
                                                 </TableCell>
 
-                                                <TableCell className='table-data' sx={suppressionsStyles.tableBodyColumn}>
+                                                <TableCell className='table-data' sx={payoutsStyle.tableBodyColumn}>
                                                     {item.number_of_accounts}
                                                 </TableCell>
 
-                                                <TableCell className='table-data' sx={suppressionsStyles.tableBodyColumn}>
+                                                <TableCell className='table-data' sx={payoutsStyle.tableBodyColumn}>
                                                     {item.reward_amount}
                                                 </TableCell>
 
-                                                <TableCell className='table-data' sx={suppressionsStyles.tableBodyColumn}>
+                                                <TableCell className='table-data' sx={payoutsStyle.tableBodyColumn}>
                                                     {item.reward_approved}
                                                 </TableCell>
 
-                                                <TableCell className='table-data' sx={suppressionsStyles.tableBodyColumn}>
+                                                <TableCell className='table-data' sx={payoutsStyle.tableBodyColumn}>
                                                     {dayjs(item.reward_payout_date).format('MMM D, YYYY')}
                                                 </TableCell>
 
-                                                <TableCell sx={{ ...suppressionsStyles.tableColumn, textAlign: 'center', pl: 0 }}>
+                                                <TableCell sx={{ ...payoutsStyle.tableColumn, textAlign: 'center', pl: 0 }}>
                                                     <Typography component="span" sx={{
                                                         background: getStatusStyle(item.reward_status).background,
                                                         padding: '6px 8px',
@@ -414,6 +436,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                                                         fontSize: '12px',
                                                         fontWeight: '400',
                                                         lineHeight: '16px',
+                                                        margin: 0,
                                                         color: getStatusStyle(item.reward_status).color,
                                                     }}>
                                                         {item.reward_status}
@@ -435,7 +458,8 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                                                             color: "rgba(80, 82, 178, 1)",
                                                             border: '1px solid rgba(80, 82, 178, 1)',
                                                             textTransform: 'none',
-                                                            padding: '10px 24px',
+                                                            padding: '5px 8px',
+                                                            margin: 0,
                                                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                                                             opacity: item.reward_status === 'Paid' ? 0.6 : 1,
                                                             pointerEvents: item.reward_status === 'Paid' ? 'none' : 'auto',
