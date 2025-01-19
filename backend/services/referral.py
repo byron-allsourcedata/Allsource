@@ -67,8 +67,8 @@ class ReferralService:
             'referral_code': encrypt_data(f"{user.get('id')}:{discount_code.id}")
         }
     
-    def create_referral_payouts(self, reward_amount, user_id, referral_parent_id, reward_type):
-        self.referral_payouts_persistence.create_referral_payouts(reward_amount, user_id, referral_parent_id, reward_type)
+    def create_referral_payouts(self, reward_amount, user_id, referral_parent_id, reward_type, plan_amount):
+        self.referral_payouts_persistence.create_referral_payouts(reward_amount, user_id, referral_parent_id, reward_type, plan_amount)
         
 
     def get_referral_details(self, user: dict):
@@ -99,9 +99,8 @@ class ReferralService:
             'referral_code': referral_code
         }
 
-    def get_rewards_info(self, year: str, month: str = None):
+    def get_rewards_info(self, year: str, month: int, company_name: str):
         payouts = self.referral_payouts_persistence.get_all_referral_payouts(year=year, month=month)
-
         grouped_by_month = defaultdict(list)
         for payout in payouts:
             month_year = payout.created_at.strftime('%Y-%m')
@@ -132,4 +131,3 @@ class ReferralService:
             })
         
         return monthly_info
-    

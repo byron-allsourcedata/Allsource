@@ -14,14 +14,13 @@ class AccountResponse(BaseModel):
     plan_amount: str
     reward_status: str
     reward_amount: Optional[str] = None
-    reward_payout_date: Optional[str] = None
-    last_payment_date: Optional[str] = None
+    reward_payout_date: Optional[datetime] = None 
+    last_payment_date: Optional[datetime] = None
     status: str
 
 class AccountsObjectResponse(BaseModel):
-    status: Optional[bool] = None
-    error: Optional[ErrorResponse] = None
-    data: Optional[Union[List[AccountResponse], AccountResponse]] = None
+    items: Optional[List[AccountResponse]] = None
+    totalCount: int
 
 class AccountUserData(BaseModel):
     plan_amount: Optional[str] = None

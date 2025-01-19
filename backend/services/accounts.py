@@ -24,6 +24,7 @@ class AccountsService:
         self.partners_persistence = partners_persistence
         self.user_persistence = user_persistence
         self.referral_user_persistence = referral_user_persistence
+        
 
     def get_user_info(self, user_id=None, partner=None):
         user_data = {}

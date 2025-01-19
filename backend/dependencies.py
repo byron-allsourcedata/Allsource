@@ -13,9 +13,11 @@ from config.database import SessionLocal
 from enums import DomainStatus, UserAuthorizationStatus
 from exceptions import InvalidToken
 from models.users import Users as User
+from persistence.referral_user import ReferralUserPersistence
 from persistence.referral_payouts import ReferralPayoutsPersistence
 from persistence.audience_persistence import AudiencePersistence
 from persistence.domains import UserDomainsPersistence, UserDomains
+from services.payouts import PayoutsService
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.suppression import IntegrationsSuppressionPersistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
@@ -83,6 +85,9 @@ def get_partners_assets_service(
 def get_partners_persistence(db: Session = Depends(get_db)) -> PartnersPersistence:
     return PartnersPersistence(db)
 
+def get_referral_user_persistence(db: Session = Depends(get_db)) -> ReferralUserPersistence:
+    return ReferralUserPersistence(db)
+
 
 def get_referral_discount_codes_persistence(db: Session = Depends(get_db)) -> ReferralDiscountCodesPersistence:
     return ReferralDiscountCodesPersistence(db)
@@ -92,6 +97,12 @@ def get_partners_invitations_persistence(db: Session = Depends(get_db)) -> Parnt
     return ParntersInvitationsPersistence(db)
 
 
+def get_accounts_service(
+        accounts_persistence: ParntersInvitationsPersistence = Depends(get_partners_invitations_persistence),
+        partners_persistence: PartnersPersistence = Depends(get_partners_persistence),
+        referral_user_persistence: ReferralUserPersistence = Depends(get_referral_user_persistence)):
+    return AccountsService(accounts_persistence=accounts_persistence, partners_persistence=partners_persistence, referral_user_persistence=referral_user_persistence)
+  
 def get_plans_persistence(db: Session = Depends(get_db)):
     return PlansPersistence(db=db)
 
@@ -459,6 +470,14 @@ def get_sse_events_service(user_persistence_service: UserPersistence = Depends(g
 def get_dashboard_service(domain: UserDomains = Depends(check_pixel_install_domain),
                           leads_persistence_service: LeadsPersistence = Depends(get_leads_persistence)):
     return DashboardService(domain=domain, leads_persistence_service=leads_persistence_service)
+
+def get_payouts_service(
+        referral_payouts_persistence: ReferralPayoutsPersistence = Depends(get_referral_payouts_persistence),
+        referral_user_persistence: ReferralUserPersistence = Depends(get_referral_user_persistence),
+        partners_persistence: PartnersPersistence = Depends(get_partners_persistence),
+        stripe_service: StripeService = Depends(get_stripe_service)):
+    return PayoutsService(referral_payouts_persistence=referral_payouts_persistence, referral_user_persistence=referral_user_persistence, 
+                          partners_persistence=partners_persistence, stripe_service=stripe_service)
 
 
 def get_pixel_installation_service(db: Session = Depends(get_db),
