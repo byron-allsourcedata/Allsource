@@ -11,6 +11,7 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { DateRangeIcon } from "@mui/x-date-pickers";
 import SearchIcon from '@mui/icons-material/Search';
 import { showErrorToast, showToast } from "@/components/ToastNotification";
+import CustomizedProgressBar from "@/components/ProgressBar";
 
 interface RewardData {
     month: string;
@@ -87,6 +88,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalCount, setTotalCount] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
     const [data, setData] = useState<RewardData[] | []>([]);
@@ -133,9 +135,9 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
 
     const handlePayOutReferral = async (partnerId: number) => {
         try {
-            const response = await axiosInstance.get(`/pay-out-referrals/${partnerId}`);
-            showToast(response.data.status)
+            const response = await axiosInstance.get(`admin-payouts/pay-out-referrals/${partnerId}`);
             await fetchRewardData()
+            showToast(response.data.status)
         } catch (error) {
             showErrorToast("Error during payment")
         }
@@ -150,6 +152,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
 
     const fetchRewardData = async () => {
         try {
+            setIsLoading(true)
             const monthArray = [
                 "January", "February", "March", "April", "May", "June",
                 "July", "August", "September", "October", "November", "December"
@@ -195,6 +198,8 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
             setData(rewards);
             setTotalCount(rewards.length);
         } catch (error) {
+        } finally {
+            setIsLoading(false)
         }
     };
 
@@ -211,7 +216,9 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
             justifyContent: 'space-between',
             minHeight: '77vh',
         }}>
-
+            {isLoading &&
+            <CustomizedProgressBar />
+            }
             <Box>
                 <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', mb: 2 }}>
 
