@@ -1,18 +1,21 @@
 from persistence.referral_payouts import ReferralPayoutsPersistence
-from enums import PayoutsStatus, ConfirmationStatus
+from enums import PayoutsStatus, ConfirmationStatus, PayOutReferralsStatus
 from collections import defaultdict
 from persistence.referral_user import ReferralUserPersistence
 from persistence.referral_payouts import ReferralPayoutsPersistence
 from persistence.partners_persistence import PartnersPersistence
+from services.stripe_service import StripeService
 from typing import List, Dict
 import os
 
 class PayoutsService:
 
-    def __init__(self, referral_payouts_persistence: ReferralPayoutsPersistence, referral_user_persistence: ReferralUserPersistence, partners_persistence: PartnersPersistence):
+    def __init__(self, referral_payouts_persistence: ReferralPayoutsPersistence, referral_user_persistence: ReferralUserPersistence, 
+                 partners_persistence: PartnersPersistence, stripe_service: StripeService):
         self.referral_payouts_persistence = referral_payouts_persistence
         self.referral_user_persistence = referral_user_persistence
         self.partners_persistence = partners_persistence
+        self.stripe_service = stripe_service
         
     def process_monthly_payouts(self, payouts: List) -> List[Dict]:
         grouped_by_month = defaultdict(list)
@@ -53,6 +56,17 @@ class PayoutsService:
         
         return monthly_info
     
+    def check_payment_active_payouts(self, referral_payouts):
+        has_pending_approved = any(
+            referral_payout.confirmation_status == ConfirmationStatus.APPROVED.value 
+            and referral_payout.status == PayoutsStatus.PENDING.value
+            for referral_payout in referral_payouts
+        )
+        if has_pending_approved:
+            return True
+        
+        return False
+        
     def check_pending_referral_payouts(self, referral_payouts):
         has_pending_approved = any(
             referral_payout.confirmation_status == ConfirmationStatus.APPROVED.value 
@@ -75,10 +89,10 @@ class PayoutsService:
         return PayoutsStatus.PAID.value
 
     
-    def process_partners_payouts(self, payouts: List) -> List[Dict]:
+    def process_partners_payouts(self, payouts: List, search_query: str) -> List[Dict]:
         payouts = {payout.parent_id: payout for payout in payouts}.values()
         user_ids = {payout.parent_id for payout in payouts}
-        partners = self.partners_persistence.get_partners_by_user_ids(user_ids)
+        partners = self.partners_persistence.get_partners_by_user_ids(user_ids, search_query)
         partners_dict = {partner.user_id: partner for partner in partners}
         referral_payouts = self.referral_payouts_persistence.get_referral_payouts_by_parent_ids(user_ids)
         referral_payouts_dict = {}
@@ -110,12 +124,17 @@ class PayoutsService:
                 
                 payout_date_formatted = payout_date.strftime('%b %d, %Y') if payout_date else None
                 
+                number_of_accounts = sum(
+                    (referral.confirmation_status == ConfirmationStatus.APPROVED.value for referral in referral_payouts_for_partner if referral.confirmation_status is not None)
+                )
+                
                 result.append({
                     'partner_id': partner.id,
                     'company_name': partner.company_name,
                     'email': partner.email,
                     'sources': source,
-                    'number_of_accounts': len(referral_payouts_for_partner),
+                    'is_payment_active': self.check_payment_active_payouts(referral_payouts_for_partner),
+                    'number_of_accounts': number_of_accounts,
                     'reward_amount': rewards_paid,
                     'reward_approved': rewards_approved,
                     'reward_payout_date': payout_date_formatted,
@@ -139,7 +158,7 @@ class PayoutsService:
                 'reward_amount': referral_payout.reward_amount,
                 'payout_date': referral_payout.paid_at.strftime('%Y-%m-%d') if referral_payout.paid_at else None,
                 'referral_link': referral_link,
-                'comment': '-',
+                'comment': referral_payout.comment,
                 'reward_status': referral_payout.confirmation_status
             })
 
@@ -147,15 +166,35 @@ class PayoutsService:
 
 
         
-    def get_payouts_partners(self, year, month, partner_id):
+    def get_payouts_partners(self, year, month, partner_id, search_query):
         if year and month and partner_id:
-            referral_payouts = self.referral_payouts_persistence.get_referral_payouts_by_partner_id(year=year, month=month, partner_id=partner_id)
+            referral_payouts = self.referral_payouts_persistence.get_referral_payouts_by_partner_id(year=year, month=month, partner_id=partner_id, search_query=search_query)
             return self.process_partner_payouts(referral_payouts)
         
         if year and month:
             payouts = self.referral_payouts_persistence.get_all_referral_payouts(year=year, month=month)
-            return self.process_partners_payouts(payouts)
+            return self.process_partners_payouts(payouts, search_query=search_query)
         
         if year:
             payouts = self.referral_payouts_persistence.get_all_referral_payouts(year=year)
             return self.process_monthly_payouts(payouts)
+        
+    def update_payouts_partner(self, referral_payout_id, text ,confirmation_status):
+        if confirmation_status == 'approve':
+            confirmation_status = ConfirmationStatus.APPROVED.value
+        elif confirmation_status == 'reject':
+            confirmation_status = ConfirmationStatus.REJECT.value
+        else:
+            confirmation_status = ConfirmationStatus.PENDING.value
+            
+        return self.referral_payouts_persistence.update_payouts_partner(referral_payout_id, text ,confirmation_status)
+    
+    def pay_out_referrals(self, referral_payout_id):
+        result = self.referral_payouts_persistence.get_stripe_account_and_total_reward_by_payout_id(referral_payout_id=referral_payout_id)
+        if result:
+            stripe_account_id, total_reward = result
+            result_transfer = self.stripe_service.create_stripe_transfer(total_reward, stripe_account_id)
+            return PayOutReferralsStatus.SUCCESS.value
+        else:
+            PayOutReferralsStatus.NO_USERS_FOR_PAYOUT.value
+        

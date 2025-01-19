@@ -27,6 +27,14 @@ class StripeService:
                 return {}
         else:
             return {}
+    
+    def create_stripe_transfer(self, amount: int, destination_account: str):
+        transfer = stripe.Transfer.create(
+            amount=amount,
+            currency='usd',
+            destination=destination_account,
+        )
+        return transfer
 
 
 def create_customer(user: UserSignUpForm):

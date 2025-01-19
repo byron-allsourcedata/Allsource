@@ -1,5 +1,6 @@
 from models.partner import Partner
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from typing import Optional
 from datetime import datetime, timedelta
 
@@ -9,8 +10,16 @@ class PartnersPersistence:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_partners_by_user_ids(self, user_ids):
-        return self.db.query(Partner).filter(Partner.user_id.in_(user_ids)).all()
+    def get_partners_by_user_ids(self, user_ids, search_query=None):
+        query = self.db.query(Partner).filter(Partner.user_id.in_(user_ids))
+        if search_query:
+            filters = [
+                Partner.email.ilike(f'{search_query}%'),
+                Partner.company_name.ilike(f'{search_query}%'),
+            ]
+            query = query.filter(or_(*filters))
+            
+        return query.all()
 
     def get_partners(self, isMaster, search_term, start_date, end_date, offset, limit):
         query = self.db.query(Partner).filter(Partner.is_master == isMaster)

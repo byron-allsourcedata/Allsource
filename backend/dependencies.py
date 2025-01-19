@@ -464,8 +464,10 @@ def get_dashboard_service(domain: UserDomains = Depends(check_pixel_install_doma
 def get_payouts_service(
         referral_payouts_persistence: ReferralPayoutsPersistence = Depends(get_referral_payouts_persistence),
         referral_user_persistence: ReferralUserPersistence = Depends(get_referral_user_persistence),
-        partners_persistence: PartnersPersistence = Depends(get_partners_persistence)):
-    return PayoutsService(referral_payouts_persistence=referral_payouts_persistence, referral_user_persistence=referral_user_persistence, partners_persistence=partners_persistence)
+        partners_persistence: PartnersPersistence = Depends(get_partners_persistence),
+        stripe_service: StripeService = Depends(get_stripe_service)):
+    return PayoutsService(referral_payouts_persistence=referral_payouts_persistence, referral_user_persistence=referral_user_persistence, 
+                          partners_persistence=partners_persistence, stripe_service=stripe_service)
 
 
 def get_pixel_installation_service(db: Session = Depends(get_db),
