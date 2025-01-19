@@ -265,8 +265,17 @@ class PartnersService:
             return {"status": False, "error": {"code": 400, "message": "Invalid request with your partner data"}}
             
         try:
+            if (payload.status):
+                template_id = self.send_grid_persistence.get_template_by_alias(
+                SendgridTemplate.PARTNER_ENABLE_TEMPLATE.value) 
+            else:
+                template_id = self.send_grid_persistence.get_template_by_alias(
+                SendgridTemplate.PARTNER_DISABLE_TEMPLATE.value)
+            
             update_data = {"is_active": payload.status}
             updated_data = self.partners_persistence.update_partner(partner_id=partner_id, **update_data) 
+            
+            self.send_message_in_email(updated_data.name, "the fact that the master partner decided so", updated_data.email, template_id)
         
             return {"status": True}
         except Exception as e:
