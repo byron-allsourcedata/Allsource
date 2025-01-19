@@ -30,7 +30,7 @@ class StripeService:
     
     def create_stripe_transfer(self, amount: int, destination_account: str):
         transfer = stripe.Transfer.create(
-            amount=amount,
+            amount=int(amount * 100),
             currency='usd',
             destination=destination_account,
         )

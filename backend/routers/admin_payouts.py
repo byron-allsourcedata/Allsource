@@ -20,7 +20,7 @@ def update_payouts_partner(payouts_partner_request: PayoutsPartnerRequest, refer
                         referral_payout_id: int = Path(..., description="referral payout id")):
     return referral_service.update_payouts_partner(referral_payout_id, payouts_partner_request.text, payouts_partner_request.confirmation_status)
 
-@router.get("/pay-out-referrals/{referral_payout_id}")
+@router.get("/pay-out-referrals/{partner_id}")
 def pay_out_referrals(referral_service: PayoutsService = Depends(get_payouts_service), 
-                        referral_payout_id: int = Path(..., description="referral payout id")):
-    return referral_service.pay_out_referrals(referral_payout_id=referral_payout_id)
+                        partner_id: int = Path(..., description="partner id")):
+    return referral_service.pay_out_referrals(partner_id=partner_id)

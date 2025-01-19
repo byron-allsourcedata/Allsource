@@ -1,9 +1,12 @@
 from models.partner import Partner
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from typing import Optional
 from datetime import datetime, timedelta
-
+from models.referral_payouts import ReferralPayouts
+from models.partner import Partner
+from models.users import Users
+from enums import ConfirmationStatus, PayoutsStatus
 
 class PartnersPersistence:
 
@@ -20,6 +23,22 @@ class PartnersPersistence:
             query = query.filter(or_(*filters))
             
         return query.all()
+    
+    def get_stripe_account_and_total_reward_by_partner_id(self, partner_id):
+        return self.db.query(
+            Users.connected_stripe_account_id,
+            func.sum(ReferralPayouts.reward_amount).label('total_reward'),
+            func.array_agg(ReferralPayouts.id).label('payout_ids')
+        )\
+        .join(Partner, Partner.user_id == Users.id)\
+        .join(ReferralPayouts, ReferralPayouts.parent_id == Partner.user_id)\
+        .filter(
+            Partner.id == partner_id,
+            ReferralPayouts.confirmation_status == ConfirmationStatus.APPROVED.value,
+            ReferralPayouts.status == PayoutsStatus.PENDING.value
+        )\
+        .group_by(Users.connected_stripe_account_id)\
+        .first()
 
     def get_partners(self, isMaster, search_term, start_date, end_date, offset, limit):
         query = self.db.query(Partner).filter(Partner.is_master == isMaster)

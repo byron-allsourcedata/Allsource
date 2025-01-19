@@ -1,11 +1,10 @@
 from sqlalchemy.orm import Session
 from models.referral_payouts import ReferralPayouts
 from datetime import datetime, timezone
-from sqlalchemy import extract, or_, func
+from sqlalchemy import extract, or_
 from models.referral_users import ReferralUser
 from models.partner import Partner
 from models.users import Users
-from enums import ConfirmationStatus, PayoutsStatus
 from models.referral_discount_codes import ReferralDiscountCode
 
 class ReferralPayoutsPersistence:
@@ -23,22 +22,8 @@ class ReferralPayoutsPersistence:
         )
         self.db.add(referral_payout)
         self.db.commit()
-        
-    def get_stripe_account_and_total_reward_by_payout_id(self, referral_payout_id):
-        return self.db.query(
-            Users.connected_stripe_account_id,
-            func.sum(ReferralPayouts.reward_amount).label('total_reward')
-        )\
-        .join(ReferralPayouts, ReferralPayouts.parent_id == Users.id)\
-        .filter(
-            ReferralPayouts.id == referral_payout_id,
-            ReferralPayouts.confirmation_status == ConfirmationStatus.APPROVED.value,
-            ReferralPayouts.status == PayoutsStatus.PENDING.value
-        )\
-        .group_by(Users.connected_stripe_account_id)\
-        .first()
-        
-    def update_payouts_partner(self, referral_payout_id: int, text: str, confirmation_status):
+            
+    def update_payouts_partner_confirmation_status(self, referral_payout_id: int, confirmation_status, text=None):
         referral_payout = self.db.query(ReferralPayouts).filter(ReferralPayouts.id == referral_payout_id).first()
         if not referral_payout:
             return 'PAYOUTS_PARTNER_NOT_FOUND'
@@ -47,6 +32,17 @@ class ReferralPayoutsPersistence:
             referral_payout.comment = text
             
         referral_payout.confirmation_status = confirmation_status
+        
+        self.db.commit()
+        return 'SUCCESS'
+    
+    def update_payouts_partner_status(self, referral_payout_id: int, status):
+        referral_payout = self.db.query(ReferralPayouts).filter(ReferralPayouts.id == referral_payout_id).first()
+        if not referral_payout:
+            return 'PAYOUTS_PARTNER_NOT_FOUND'
+            
+        referral_payout.status = status
+        referral_payout.paid_at = datetime.now(timezone.utc)
         
         self.db.commit()
         return 'SUCCESS'

@@ -187,14 +187,26 @@ class PayoutsService:
         else:
             confirmation_status = ConfirmationStatus.PENDING.value
             
-        return self.referral_payouts_persistence.update_payouts_partner(referral_payout_id, text ,confirmation_status)
+        return self.referral_payouts_persistence.update_payouts_partner_confirmation_status(referral_payout_id ,confirmation_status=confirmation_status, text=text)
     
-    def pay_out_referrals(self, referral_payout_id):
-        result = self.referral_payouts_persistence.get_stripe_account_and_total_reward_by_payout_id(referral_payout_id=referral_payout_id)
+    def is_transfer_successful(self, transfer_response):
+        return (
+            transfer_response.get("id") is not None and
+            not transfer_response.get("reversed", True) and
+            transfer_response.get("amount") > 0
+        )
+    
+    def pay_out_referrals(self, partner_id):
+        result = self.partners_persistence.get_stripe_account_and_total_reward_by_partner_id(partner_id=partner_id)
         if result:
-            stripe_account_id, total_reward = result
+            stripe_account_id, total_reward, payout_ids = result
             result_transfer = self.stripe_service.create_stripe_transfer(total_reward, stripe_account_id)
-            return PayOutReferralsStatus.SUCCESS.value
+            if self.is_transfer_successful(result_transfer):
+                for payout_id in payout_ids:
+                    self.referral_payouts_persistence.update_payouts_partner_status(payout_id, PayoutsStatus.PAID.value)
+                return PayOutReferralsStatus.SUCCESS.value
+            
+            return PayOutReferralsStatus.PAYMENT_ERROR.value
         else:
-            PayOutReferralsStatus.NO_USERS_FOR_PAYOUT.value
+            return PayOutReferralsStatus.NO_USERS_FOR_PAYOUT.value
         
