@@ -9,6 +9,8 @@ import { payoutsStyle } from "./payoutsStyle";
 import dayjs from "dayjs";
 import SearchIcon from '@mui/icons-material/Search';
 import axiosInstance from "@/axios/axiosInterceptorInstance";
+import { showErrorToast, showToast } from "@/components/ToastNotification";
+import CustomizedProgressBar from "@/components/ProgressBar";
 
 interface PartnerAccountsProps {
     partnerName: string;
@@ -55,6 +57,7 @@ interface RewardData {
     referral_link: string;
     comment: string;
     reward_status: string;
+    referral_payouts_id: number;
 }
 
 const tableHeaders = [
@@ -71,6 +74,7 @@ const tableHeaders = [
 
 const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, onBack, selectMonth, partnerId, selectYear }) => {
     const [page, setPage] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalCount, setTotalCount] = useState(0);
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
@@ -106,6 +110,20 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
         setOrderBy(property);
     };
 
+    const handleStatusChange = async (referralPayoutId: number, confirmationStatus: string) => {
+        try {
+            const response = await axiosInstance.put(`/admin-payouts/partners/${referralPayoutId}`, {
+                confirmation_status: confirmationStatus,
+                text: confirmationStatus === "approve" ? "Approved by admin" : "Rejected by admin",
+            });
+            fetchRewardData();
+            showToast('Success changed payouts status')
+        } catch (error) {
+            showErrorToast("Error updating payout status:");
+        }
+    };
+    
+
     useEffect(() => {
         if (open) {
             fetchRewardData();
@@ -114,6 +132,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
 
     const fetchRewardData = async () => {
         try {
+            setIsLoading(true)
             const monthArray = [
                 "January", "February", "March", "April", "May", "June",
                 "July", "August", "September", "October", "November", "December"
@@ -142,60 +161,17 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                 reward_approved: reward.reward_approved,
                 reward_payout_date: new Date(reward.reward_payout_date),
                 reward_status: reward.reward_status,
+                comment: reward.comment,
+                referral_payouts_id: reward.referral_payouts_id,
             }));
     
             setData(rewards);
             setTotalCount(rewards.length);
         } catch (error) {
+        } finally{
+            setIsLoading(false)
         }
     };
-
-    const testData: RewardData[] = [
-        {   partner_id:1,
-            company_name: "Lolly",
-            email: "abcdefghijkl@gmail.com",
-            join_date: new Date("2024-08-27"),
-            plan_amount: "$200",
-            reward_amount: "$200",
-            payout_date: new Date("2024-08-27"),
-            referral_link: 'maximiz-referral-g22s',
-            comment: '--',
-            reward_status: "Pending",
-        },
-        {   partner_id:2,
-            company_name: "Klaviyo",
-            email: "abcdefghijkl@gmail.com",
-            join_date: new Date("2024-08-27"),
-            plan_amount: "$200",
-            reward_amount: "$200",
-            payout_date: new Date("2024-08-27"),
-            referral_link: 'maximiz-referral-g22s',
-            comment: '--',
-            reward_status: "Pending",
-        },
-        {   partner_id:3,
-            company_name: "Maximiz",
-            email: "abcdefghijkl@gmail.com",
-            join_date: new Date("2024-08-27"),
-            plan_amount: "$200",
-            reward_amount: "$200",
-            payout_date: new Date("2024-08-27"),
-            referral_link: 'maximiz-referral-g22s',
-            comment: '--',
-            reward_status: "Pending",
-        },
-        {   partner_id:4,
-            company_name: "Meta",
-            email: "abcdefghijkl@gmail.com",
-            join_date: new Date("2024-08-27"),
-            plan_amount: "$200",
-            reward_amount: "$200",
-            payout_date: new Date("2024-08-27"),
-            referral_link: 'maximiz-referral-g22s',
-            comment: '--',
-            reward_status: "Pending",
-        },
-    ]
 
     const handleSearchChange = (event: any) => {
         setSearch(event.target.value);
@@ -213,7 +189,10 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
             flexDirection: 'column',
             justifyContent: 'space-between',
             minHeight: '77vh',
-        }}>
+        }}> 
+            {isLoading &&
+            <CustomizedProgressBar />
+            }
 
             <Box>
                 <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', mb:2 }}>
@@ -448,10 +427,9 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                                                         backgroundColor: "rgba(80, 82, 178, 0.1)",
                                                                     },
                                                                 }}
-                                                                onClick={() => {
-                                                                    // Add your logic here
-                                                                    console.log("Rewards history clicked");
-                                                                }}
+                                                                onClick={() =>
+                                                                    handleStatusChange(item.referral_payouts_id, "approve")
+                                                                }
                                                             >
                                                                 Approve
                                                             </Button> )}
@@ -469,10 +447,9 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                                                         backgroundColor: "rgba(80, 82, 178, 0.1)",
                                                                     },
                                                                 }}
-                                                                onClick={() => {
-                                                                    // Add your logic here
-                                                                    console.log("Disable clicked");
-                                                                }}
+                                                                onClick={() =>
+                                                                    handleStatusChange(item.referral_payouts_id, "reject")
+                                                                }
                                                             >
                                                                 Reject
                                                             </Button>)}
