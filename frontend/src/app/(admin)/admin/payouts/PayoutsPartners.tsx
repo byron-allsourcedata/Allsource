@@ -46,8 +46,6 @@ const ReferralRewards: React.FC = () => {
   const handlePartnerClick = (partner_id: number, partner_name: string, selected_year: string) => {
     setSelectedPartner(partner_name);
     setSelectedPartnerId(partner_id);
-    console.log(selectedPartnerId)
-    console.log(partner_name, partner_id, selectedMonth)
     setOpenPartner(true)
   };
 

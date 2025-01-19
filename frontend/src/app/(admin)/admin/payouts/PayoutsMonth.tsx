@@ -45,6 +45,11 @@ const getStatusStyle = (status: any) => {
                 background: 'rgba(234, 248, 221, 1)',
                 color: 'rgba(43, 91, 0, 1)',
             };
+        case 'paid':
+            return {
+                background: 'rgba(234, 248, 221, 1)',
+                color: 'rgba(43, 91, 0, 1)',
+            };
         case 'Pending':
             return {
                 background: 'rgba(236, 236, 236, 1)',
@@ -151,7 +156,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                 number_of_accounts: reward.number_of_accounts,
                 reward_amount: reward.reward_amount,
                 reward_approved: reward.reward_approved,
-                reward_payout_date: new Date(reward.reward_payout_date), // Преобразуем строку в объект Date
+                reward_payout_date: new Date(reward.reward_payout_date) || '', // Преобразуем строку в объект Date
                 reward_status: reward.reward_status,
             }));
 
@@ -433,7 +438,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                                                 </TableCell>
 
                                                 <TableCell className='table-data' sx={payoutsStyle.tableBodyColumn}>
-                                                    {dayjs(item.reward_payout_date).format('MMM D, YYYY')}
+                                                    {dayjs(item.reward_payout_date).format('MMM D, YYYY') || '--'}  
                                                 </TableCell>
 
                                                 <TableCell sx={{ ...payoutsStyle.tableColumn, textAlign: 'center', pl: 0 }}>
@@ -446,9 +451,9 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                                                         fontWeight: '400',
                                                         lineHeight: '16px',
                                                         margin: 0,
-                                                        color: getStatusStyle(item.reward_status).color,
+                                                        color: getStatusStyle(item.reward_status.charAt(0).toUpperCase() + item.reward_status.slice(1)).color,
                                                     }}>
-                                                        {item.reward_status}
+                                                        {item.reward_status.charAt(0).toUpperCase() + item.reward_status.slice(1)}
                                                     </Typography>
                                                 </TableCell>
 
@@ -470,11 +475,11 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                                                             padding: '5px 8px',
                                                             margin: 0,
                                                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                                            opacity: item.reward_status === 'Paid' ? 0.6 : 1,
-                                                            pointerEvents: item.reward_status === 'Paid' ? 'none' : 'auto',
+                                                            opacity: item.reward_status === 'Paid' || 'paid' ? 0.6 : 1,
+                                                            pointerEvents: item.reward_status === 'Paid' || 'paid' ? 'none' : 'auto',
                                                             '&:hover': {
-                                                                backgroundColor: item.reward_status === 'Paid' ? '#FFF' : '#5052B2',
-                                                                color: item.reward_status === 'Paid' ? "rgba(80, 82, 178, 1)" : '#fff',
+                                                                backgroundColor: item.reward_status === 'Paid' || 'paid' ? '#FFF' : '#5052B2',
+                                                                color: item.reward_status === 'Paid' || 'paid' ? "rgba(80, 82, 178, 1)" : '#fff',
                                                             },
                                                             borderRadius: '4px'
                                                         }}

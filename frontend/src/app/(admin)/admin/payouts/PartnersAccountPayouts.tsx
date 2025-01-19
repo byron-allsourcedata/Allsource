@@ -132,10 +132,12 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
             });
     
             const rewards: RewardData[] = response.data.map((reward: any) => ({
-                partner_name: reward.partner_name,
+                company_name: reward.company_name,
                 email: reward.email,
                 sources: reward.sources,
+                plan_amount: reward.plan_amount,
                 number_of_accounts: reward.number_of_accounts,
+                referral_link: reward.referral_link,
                 reward_amount: reward.reward_amount,
                 reward_approved: reward.reward_approved,
                 reward_payout_date: new Date(reward.reward_payout_date),
@@ -405,7 +407,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                                         fontWeight: '400',
                                                         lineHeight: '16px',
                                                     }}>
-                                                        {item.reward_status}
+                                                        {item.reward_status.charAt(0).toUpperCase() + item.reward_status.slice(1)}
                                                     </Typography>
                                                     <IconButton
                                                         onClick={(event) => handleOpenMenu(event, index)}
@@ -432,7 +434,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                                                 maxWidth: "160px",
                                                             }}
                                                         >
-                                                            <Button
+                                                            {item.reward_status !== 'approved' && (<Button
                                                                 sx={{
                                                                     justifyContent: "flex-start",
                                                                     width: "100%",
@@ -452,8 +454,8 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                                                 }}
                                                             >
                                                                 Approve
-                                                            </Button>
-                                                            <Button
+                                                            </Button> )}
+                                                            {item.reward_status !== 'reject' && (<Button
                                                                 sx={{
                                                                     justifyContent: "flex-start",
                                                                     width: "100%",
@@ -473,7 +475,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                                                 }}
                                                             >
                                                                 Reject
-                                                            </Button>
+                                                            </Button>)}
                                                         
                                                         </Box>
                                                     </Popover>
