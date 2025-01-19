@@ -12,12 +12,12 @@ import { DateRangeIcon } from "@mui/x-date-pickers";
 import SearchIcon from '@mui/icons-material/Search';
 
 interface RewardData {
-    partner_id: number;
     month: string;
-    partner_name: string;
+    company_name: string;
     email: string;
     sources: string;
     number_of_accounts: number;
+    partner_id: number;
     reward_amount: string;
     reward_approved: string;
     reward_payout_date: Date;
@@ -126,17 +126,26 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
 
     const fetchRewardData = async () => {
         try {
-            // Отправляем GET-запрос на эндпоинт с параметрами year и month
+            const monthArray = [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            ];
+    
+            const selectedMonthNumber = selectedMonth 
+                ? monthArray.indexOf(selectedMonth) + 1 
+                : undefined;
+    
             const response = await axiosInstance.get("/admin-payouts/partners", {
                 params: {
                     year: selectedYear,
-                    month: selectedMonth,
+                    month: selectedMonthNumber, 
                 },
             });
 
             // Обработка данных из ответа
             const rewards: RewardData[] = response.data.map((reward: any) => ({
-                partner_name: reward.partner_name,
+                partner_id: reward.partner_id,
+                company_name: reward.company_name,
                 email: reward.email,
                 sources: reward.sources,
                 number_of_accounts: reward.number_of_accounts,
@@ -156,7 +165,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
         {   
             partner_id: 1,
             month: selectedMonth,
-            partner_name: "Lolly",
+            company_name: "Lolly",
             email: "abcdefghijkl@gmail.com",
             sources: "Direct",
             number_of_accounts: 12,
@@ -168,7 +177,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
         {   
             partner_id:2,
             month: selectedMonth,
-            partner_name: "Klaviyo",
+            company_name: "Klaviyo",
             email: "abcdefghijkl@gmail.com",
             sources: "Lolly",
             number_of_accounts: 10,
@@ -180,7 +189,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
         {   
             partner_id: 3,
             month: selectedMonth,
-            partner_name: "Maximiz",
+            company_name: "Maximiz",
             email: "abcdefghijkl@gmail.com",
             sources: "Direct",
             number_of_accounts: 12,
@@ -192,7 +201,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
         {   
             partner_id: 4,
             month: selectedMonth,
-            partner_name: "Meta",
+            company_name: "Meta",
             email: "abcdefghijkl@gmail.com",
             sources: "Lolly",
             number_of_accounts: 10,
@@ -398,9 +407,9 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                                                     zIndex: 1,
                                                     backgroundColor: '#fff',
                                                 }}
-                                                    onClick={() => onPartnerClick(item.partner_id, item.partner_name, selectedYear)}
+                                                    onClick={() => onPartnerClick(item.partner_id, item.company_name, selectedYear)}
                                                 >
-                                                    {item.partner_name}
+                                                    {item.company_name}
                                                 </TableCell>
 
                                                 <TableCell className='table-data' sx={payoutsStyle.tableBodyColumn}>

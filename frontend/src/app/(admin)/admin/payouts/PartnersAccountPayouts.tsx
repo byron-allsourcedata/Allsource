@@ -114,10 +114,19 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
 
     const fetchRewardData = async () => {
         try {
+            const monthArray = [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            ];
+    
+            const selectedMonthNumber = selectMonth 
+                ? monthArray.indexOf(selectMonth) + 1 
+                : undefined;
+
             const response = await axiosInstance.get("/admin-payouts/partners", {
                 params: {
                     year: selectYear,
-                    month: selectMonth,
+                    month: selectedMonthNumber,
                     partner_id: partnerId
                 },
             });

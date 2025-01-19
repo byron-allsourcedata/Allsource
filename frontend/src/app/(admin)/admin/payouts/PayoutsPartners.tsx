@@ -43,9 +43,11 @@ const ReferralRewards: React.FC = () => {
     (_, i) => new Date().getFullYear() - i
   );
 
-  const handlePartnerClick = (partner_id: number, partner_name: string) => {
+  const handlePartnerClick = (partner_id: number, partner_name: string, selected_year: string) => {
     setSelectedPartner(partner_name);
     setSelectedPartnerId(partner_id);
+    console.log(selectedPartnerId)
+    console.log(partner_name, partner_id, selectedMonth)
     setOpenPartner(true)
   };
 
@@ -58,7 +60,7 @@ const ReferralRewards: React.FC = () => {
   const fetchRewards = async (selectedYear: string) => {
     setLoading(true);
     try {
-      const response = await axiosInstance.get("/referral/rewards", {
+      const response = await axiosInstance.get("/admin-payouts/partners", {
         params: {
             year: selectedYear
         }
@@ -70,39 +72,39 @@ const ReferralRewards: React.FC = () => {
     }
   };
 
-  // useEffect(() => {
-  //     fetchRewards(year);
-  // }, []);
-
   useEffect(() => {
-    // fetchRules();
-    setRewards([
-      {
-        month: "November",
-        total_rewards: 2000,
-        rewards_approved: 1800,
-        rewards_paid: 1800,
-        count_accounts: 30,
-        payout_date: new Date("2024-12-01"),
-      },
-      {
-        month: "October",
-        total_rewards: 1000,
-        rewards_approved: 1200,
-        rewards_paid: 800,
-        count_accounts: 25,
-        payout_date: new Date("2024-11-01"),
-      },
-      {
-        month: "September",
-        total_rewards: 2300,
-        rewards_approved: 1500,
-        rewards_paid: 1000,
-        count_accounts: 10,
-        payout_date: new Date("2024-10-01"),
-      },
-    ]);
+      fetchRewards(year);
   }, []);
+
+  // useEffect(() => {
+  //   // fetchRules();
+  //   setRewards([
+  //     {
+  //       month: "November",
+  //       total_rewards: 2000,
+  //       rewards_approved: 1800,
+  //       rewards_paid: 1800,
+  //       count_accounts: 30,
+  //       payout_date: new Date("2024-12-01"),
+  //     },
+  //     {
+  //       month: "October",
+  //       total_rewards: 1000,
+  //       rewards_approved: 1200,
+  //       rewards_paid: 800,
+  //       count_accounts: 25,
+  //       payout_date: new Date("2024-11-01"),
+  //     },
+  //     {
+  //       month: "September",
+  //       total_rewards: 2300,
+  //       rewards_approved: 1500,
+  //       rewards_paid: 1000,
+  //       count_accounts: 10,
+  //       payout_date: new Date("2024-10-01"),
+  //     },
+  //   ]);
+  // }, []);
 
   const handleViewDetails = (monthData: string) => {
     setSelectedMonth(monthData);
