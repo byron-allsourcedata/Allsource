@@ -37,7 +37,7 @@ class ReferralPayoutsPersistence:
         
         return query.all()
     
-    def get_referral_payouts_by_company_name(self, year, month, company_name):
+    def get_referral_payouts_by_partner_id(self, year, month, partner_id):
         query = self.db.query(
             ReferralPayouts.id,
             ReferralPayouts.reward_amount,
@@ -50,9 +50,10 @@ class ReferralPayoutsPersistence:
             Users.id.label('user_id'),
             Users.created_at
             ) .join(Users, Users.id == ReferralPayouts.user_id)\
+            .join(Partner, Partner.user_id == Users.id)\
             .outerjoin(ReferralUser, ReferralUser.user_id == ReferralPayouts.user_id)\
             .outerjoin(ReferralDiscountCode, ReferralDiscountCode.id == ReferralUser.discount_code_id)\
-            .filter(Users.company_name == company_name)\
+            .filter(Partner.id == partner_id)\
             .filter(extract("year", ReferralPayouts.created_at) == year)\
             .filter(extract("month", ReferralPayouts.created_at) == month)
 

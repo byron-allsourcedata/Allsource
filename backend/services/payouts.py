@@ -58,7 +58,6 @@ class PayoutsService:
     
     def process_partners_payouts(self, payouts: List) -> List[Dict]:
         user_ids = {payout.user_id for payout in payouts}
-        print(user_ids)
         partners = self.partners_persistence.get_partners_by_user_ids(user_ids)
         partners_dict = {partner.user_id: partner for partner in partners}
         
@@ -123,9 +122,9 @@ class PayoutsService:
 
 
         
-    def get_payouts_partners(self, year, month, company_name):
-        if year and month and company_name:
-            referral_payouts = self.referral_payouts_persistence.get_referral_payouts_by_company_name(year=year, month=month, company_name=company_name)
+    def get_payouts_partners(self, year, month, partner_id):
+        if year and month and partner_id:
+            referral_payouts = self.referral_payouts_persistence.get_referral_payouts_by_partner_id(year=year, month=month, partner_id=partner_id)
             return self.process_partner_payouts(referral_payouts)
         
         if year and month:
