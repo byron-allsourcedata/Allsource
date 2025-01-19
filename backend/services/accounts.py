@@ -22,12 +22,12 @@ class AccountsService:
         self.accounts_persistence = accounts_persistence
         self.partners_persistence = partners_persistence
         self.referral_user_persistence = referral_user_persistence
+        
 
-
-    def get_accounts(self, user: dict, search, start_date, end_date, page, rowsPerPage) -> AccountsObjectResponse:
+    def get_accounts(self, user: dict, search, start_date, end_date, page, rowsPerPage):
         offset = page * rowsPerPage
         limit = rowsPerPage
-        accounts, total_count = self.referral_user_persistence.get_referral_users(
+        accounts_data, total_count = self.referral_user_persistence.get_referral_users(
             user_id=user.get('id'),
             search_term=search,
             start_date=start_date,
@@ -36,7 +36,7 @@ class AccountsService:
             limit=limit
         )
 
-        return {"items": accounts, "totalCount": total_count}
+        return {"items": accounts_data, "totalCount": total_count}
 
     def domain_mapped(self, account: ParntersUsersInvitation, user: AccountUserData):
         return AccountResponse(

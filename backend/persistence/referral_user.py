@@ -16,20 +16,28 @@ class ReferralUserPersistence:
         
     def get_referral_users(self, user_id, search_term=None, start_date=None, end_date=None, offset=0, limit=10):
         query = self.db.query(
-            ReferralUser.created_at.label('referral_created_at'),
+            Partner.id,
             Users.company_name,
             Users.email,
+            ReferralUser.created_at.label('join_date'),
             ReferralPayouts.created_at.label('payout_created_at'),
             ReferralPayouts.status.label('payout_status'),
             UserSubscriptions.status.label('subscription_status'),
             SubscriptionPlan.title.label('subscription_plan_title')
         )\
-            .outerjoin(Users, Users.id == ReferralUser.user_id)\
+            .outerjoin(ReferralUser, ReferralUser.user_id == Users.id)\
             .outerjoin(Partner, Partner.user_id == Users.id)\
-            .outerjoin(ReferralPayouts, ReferralPayouts.user_id == ReferralUser.user_id)\
+            .outerjoin(ReferralPayouts, ReferralPayouts.user_id == Users.id)\
             .outerjoin(UserSubscriptions, UserSubscriptions.id == Users.current_subscription_id)\
             .outerjoin(SubscriptionPlan, SubscriptionPlan.id == UserSubscriptions.plan_id)\
             .filter(Users.id == user_id)
+        
+    # plan_amount: string;
+    # reward_status: string;
+    # reward_amount: string;
+    # reward_payout_date: string;
+    # last_payment_date: string;
+    # status: string;
         
         if search_term:
             query = query.filter(

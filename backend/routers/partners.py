@@ -30,7 +30,7 @@ def get_partner_accounts(
     user: dict = Depends(check_user_partner),
     get_accounts_service: AccountsService = Depends(get_accounts_service)):
     
-    return get_accounts_service.get_accounts(user, search, start_date, end_date, page, rows_per_page)     
+    return get_accounts_service.get_accounts(user, search, start_date, end_date, page, rows_per_page) 
 
 
 @router.get('/')

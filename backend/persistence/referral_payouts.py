@@ -26,6 +26,9 @@ class ReferralPayoutsPersistence:
     def get_referral_payouts_by_parent_id(self, parent_id):
         return self.db.query(ReferralPayouts).filter(ReferralPayouts.parent_id == parent_id).all()
     
+    def get_referral_payouts_by_parent_ids(self, user_ids):
+        return self.db.query(ReferralPayouts).filter(ReferralPayouts.parent_id.in_(user_ids)).all()
+    
     def get_all_referral_payouts(self, year=None, month=None):
         query = self.db.query(ReferralPayouts)
         
@@ -49,9 +52,9 @@ class ReferralPayoutsPersistence:
             Users.email,
             Users.id.label('user_id'),
             Users.created_at
-            ) .join(Users, Users.id == ReferralPayouts.user_id)\
+            ) .join(Users, Users.id == ReferralPayouts.parent_id)\
             .join(Partner, Partner.user_id == Users.id)\
-            .outerjoin(ReferralUser, ReferralUser.user_id == ReferralPayouts.user_id)\
+            .outerjoin(ReferralUser, ReferralUser.parent_user_id == ReferralPayouts.parent_id)\
             .outerjoin(ReferralDiscountCode, ReferralDiscountCode.id == ReferralUser.discount_code_id)\
             .filter(Partner.id == partner_id)\
             .filter(extract("year", ReferralPayouts.created_at) == year)\

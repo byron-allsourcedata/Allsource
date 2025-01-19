@@ -38,48 +38,73 @@ class PayoutsService:
 
             payout_date_formatted = payout_date.strftime('%b %d, %Y') if payout_date else None
             month_name = payout_date.strftime('%B') if payout_date else ""
-                
+            
+            user_ids = {month_payout.parent_id for month_payout in month_payouts}
+            partners = self.partners_persistence.get_partners_by_user_ids(user_ids)
+    
             monthly_info.append({
                 'month': month_name,
                 'total_rewards': round(total_rewards, 2),
                 'rewards_approved': round(rewards_approved, 2),
                 'rewards_paid': round(rewards_paid, 2),
-                'count_accounts': len(month_payouts),
+                'count_accounts': len(partners),
                 'payout_date': payout_date_formatted
             })
         
         return monthly_info
     
     def check_pending_referral_payouts(self, referral_payouts):
-        for referral_payout in referral_payouts:
-            if referral_payout.confirmation_status == ConfirmationStatus.APPROVED.value and referral_payout.status == PayoutsStatus.PENDING.value:
-                return PayoutsStatus.PENDING.value
+        has_pending_approved = any(
+            referral_payout.confirmation_status == ConfirmationStatus.APPROVED.value 
+            and referral_payout.status == PayoutsStatus.PENDING.value
+            for referral_payout in referral_payouts
+        )
+        
+        if has_pending_approved:
+            return PayoutsStatus.PENDING.value
+
+        has_pending_pending = any(
+            referral_payout.confirmation_status == ConfirmationStatus.PENDING.value 
+            and referral_payout.status == PayoutsStatus.PENDING.value
+            for referral_payout in referral_payouts
+        )
+        
+        if has_pending_pending:
+            return PayoutsStatus.PENDING.value
+
         return PayoutsStatus.PAID.value
+
     
     def process_partners_payouts(self, payouts: List) -> List[Dict]:
-        user_ids = {payout.user_id for payout in payouts}
+        payouts = {payout.parent_id: payout for payout in payouts}.values()
+        user_ids = {payout.parent_id for payout in payouts}
         partners = self.partners_persistence.get_partners_by_user_ids(user_ids)
         partners_dict = {partner.user_id: partner for partner in partners}
+        referral_payouts = self.referral_payouts_persistence.get_referral_payouts_by_parent_ids(user_ids)
+        referral_payouts_dict = {}
+        for referral in referral_payouts:
+            referral_payouts_dict.setdefault(referral.parent_id, []).append(referral)
         
         result = []
         for payout in payouts:
-            partner = partners_dict.get(payout.user_id)
+            partner = partners_dict.get(payout.parent_id)
             if partner:
                 source = 'Direct'
                 if partner.master_id:
                     master_partner = self.partners_persistence.get_asset_by_id(partner.master_id)
                     if master_partner:
                         source = master_partner.company_name
-                referral_payouts = self.referral_payouts_persistence.get_referral_payouts_by_parent_id(payout.user_id)
+                
+                referral_payouts_for_partner = referral_payouts_dict.get(payout.parent_id, [])
                 
                 rewards_paid = sum(
-                    payout.reward_amount for payout in referral_payouts if payout.status == PayoutsStatus.PAID.value
+                    referral.reward_amount for referral in referral_payouts_for_partner if referral.status == PayoutsStatus.PAID.value
                 )
                 rewards_approved = sum(
-                    payout.reward_amount for payout in referral_payouts if payout.confirmation_status == ConfirmationStatus.PENDING.value
+                    referral.reward_amount for referral in referral_payouts_for_partner if referral.confirmation_status == ConfirmationStatus.PENDING.value
                 )
                 payout_date = max(
-                    (payout.paid_at for payout in referral_payouts if payout.paid_at is not None),
+                    (referral.paid_at for referral in referral_payouts_for_partner if referral.paid_at is not None),
                     default=None
                 )
                 
@@ -90,11 +115,11 @@ class PayoutsService:
                     'company_name': partner.company_name,
                     'email': partner.email,
                     'sources': source,
-                    'number_of_accounts': len(referral_payouts),
+                    'number_of_accounts': len(referral_payouts_for_partner),
                     'reward_amount': rewards_paid,
                     'reward_approved': rewards_approved,
                     'reward_payout_date': payout_date_formatted,
-                    'reward_status': self.check_pending_referral_payouts(referral_payouts),
+                    'reward_status': self.check_pending_referral_payouts(referral_payouts_for_partner),
                 })
         
         return result
@@ -105,7 +130,7 @@ class PayoutsService:
         for referral_payout in referral_payouts:
             referral_link = f"{os.getenv('SITE_URL')}signup?coupon={referral_payout.coupon}" 
             processed_payouts.append({
-                'referral_payouts_id': referral_payout.referral_payouts_id,
+                'referral_payouts_id': referral_payout.id,
                 'user_id': referral_payout.user_id,
                 'company_name': referral_payout.company_name,
                 'email': referral_payout.email,
