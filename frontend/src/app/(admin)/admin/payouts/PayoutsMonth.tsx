@@ -55,6 +55,11 @@ const getStatusStyle = (status: any) => {
                 background: 'rgba(236, 236, 236, 1)',
                 color: 'rgba(74, 74, 74, 1)',
             };
+        case 'pending':
+            return {
+                background: 'rgba(236, 236, 236, 1)',
+                color: 'rgba(74, 74, 74, 1)',
+            };
         default:
             return {
                 background: 'transparent',
@@ -463,7 +468,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                                                         variant="contained"
                                                         //onClick={() => ()}
                                                         sx={{
-                                                            backgroundColor: item.reward_status === 'Paid' ? '#fff' : '#fff', // Белый фон всегда
+                                                            backgroundColor: item.reward_status === 'Paid' || 'paid' ? '#fff' : '#fff',
                                                             fontFamily: "Nunito Sans",
                                                             fontSize: '14px',
                                                             fontWeight: '600',
@@ -475,11 +480,11 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                                                             padding: '5px 8px',
                                                             margin: 0,
                                                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                                            opacity: item.reward_status === 'Paid' || 'paid' ? 0.6 : 1,
-                                                            pointerEvents: item.reward_status === 'Paid' || 'paid' ? 'none' : 'auto',
+                                                            opacity: item.reward_status === 'paid' ? 0.6 : 1,
+                                                            pointerEvents: item.reward_status === 'paid' ? 'none' : 'auto',
                                                             '&:hover': {
-                                                                backgroundColor: item.reward_status === 'Paid' || 'paid' ? '#FFF' : '#5052B2',
-                                                                color: item.reward_status === 'Paid' || 'paid' ? "rgba(80, 82, 178, 1)" : '#fff',
+                                                                backgroundColor: item.reward_status === 'paid' ? '#FFF' : '#5052B2',
+                                                                color: item.reward_status === 'paid' ? "rgba(80, 82, 178, 1)" : '#fff',
                                                             },
                                                             borderRadius: '4px'
                                                         }}
