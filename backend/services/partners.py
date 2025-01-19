@@ -42,8 +42,6 @@ class PartnersService:
             if (master_partner and master_partner.company_name):
                 user_data["sources"] = master_partner.company_name
         if user_id is not None:
-            # self.user_persistence.get_user_by_id(user_id)
-            # user_data["payment_date"] = datetime.strptime("1880-12-19 12:54:55", "%Y-%m-%d %H:%M:%S")
             subsciption = self.plans_persistence.get_current_plan(user_id)
             if (subsciption and subsciption.title):
                 user_data["subscription"] = subsciption.title
@@ -53,22 +51,17 @@ class PartnersService:
     def get_partners(self, isMaster, search, start_date, end_date, page, rowsPerPage) -> PartnersObjectResponse:
         offset = page * rowsPerPage
         limit = rowsPerPage
+        search_term = f"%{search}%" if search else None
+        partners = self.partners_persistence.get_partners(
+            isMaster, search_term, start_date, end_date, offset, limit
+        )
+        total_count = self.partners_persistence.get_total_count(isMaster, search_term)
 
-        try:
-            search_term = f"%{search}%" if search else None
-            partners = self.partners_persistence.get_partners(
-                isMaster, search_term, start_date, end_date, offset, limit
-            )
-            total_count = self.partners_persistence.get_total_count(isMaster, search_term)
-
-            result = [
-                self.domain_mapped(partner, self.get_user_info(partner.user_id, partner))
-                for partner in partners
-            ]
-            return {"status": True, "data": {"items": result, "totalCount": total_count}}
-        except Exception as e:
-            logger.debug("Error getting partner data", e)
-            return {"status": False, "error": {"code": 500, "message": f"Unexpected error during getting: {str(e)}"}}
+        result = [
+            self.domain_mapped(partner, self.get_user_info(partner.user_id, partner))
+            for partner in partners
+        ]
+        return {"status": True, "data": {"items": result, "totalCount": total_count}}
     
     
     def get_partner(self, email) -> PartnersObjectResponse:

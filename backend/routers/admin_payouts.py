@@ -11,4 +11,4 @@ def get_payouts_partners(referral_service: PayoutsService = Depends(get_payouts_
                         year: Optional[int] = Query(None),
                         month: Optional[int] = Query(None),
                         partner_id: Optional[int] = Query(None)):
-    return referral_service.get_payouts_partners(year=year, month=month, company_name=partner_id)
+    return referral_service.get_payouts_partners(year=year, month=month, partner_id=partner_id)
