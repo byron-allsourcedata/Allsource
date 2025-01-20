@@ -320,6 +320,14 @@ def fetch_last_id_of_previous_page(customer_id, per_page, page):
 
     return starting_after
 
+def get_stripe_payment_url(customer_id, stripe_payment_hash):
+    stripe_payment_url = create_stripe_checkout_session(
+        customer_id=customer_id,
+        line_items=[{"price": stripe_payment_hash['stripe_price_id'], "quantity": 1}],
+        mode="subscription",
+        coupon=stripe_payment_hash['coupon']
+    )
+    return stripe_payment_url.get('link')
 
 def create_stripe_checkout_session(customer_id: str,
                                    line_items: List[dict],

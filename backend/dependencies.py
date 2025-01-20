@@ -52,7 +52,7 @@ from services.plans import PlansService
 from services.settings import SettingsService
 from services.sse_events import SseEventsService
 from services.subscriptions import SubscriptionService
-from services.stripe_service import StripeService
+from services.stripe_service import StripeService, get_stripe_payment_url
 from services.suppression import SuppressionService
 from services.users import UsersService
 from services.users_auth import UsersAuth
@@ -320,7 +320,7 @@ def check_user_authorization(Authorization: Annotated[str, Header()],
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={'status': auth_status.value,
-                    'stripe_payment_url': user.get('stripe_payment_url')}
+                    'stripe_payment_url': get_stripe_payment_url(user.get('customer_id'), user.get('stripe_payment_url')) }
         )
     if auth_status != UserAuthorizationStatus.SUCCESS:
         raise HTTPException(
@@ -341,7 +341,7 @@ def check_user_authorization_without_pixel(Authorization: Annotated[str, Header(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={'status': auth_status.value,
-                    'stripe_payment_url': user.get('stripe_payment_url')}
+                    'stripe_payment_url': get_stripe_payment_url(user.get('customer_id'), user.get('stripe_payment_url'))}
         )
     if auth_status != UserAuthorizationStatus.SUCCESS and not user[
         'is_partner'] and auth_status != UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED:

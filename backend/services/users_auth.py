@@ -29,7 +29,7 @@ from services.payments_plans import PaymentsPlans
 from . import stripe_service
 from .jwt_service import get_password_hash, create_access_token, verify_password, decode_jwt_data
 from .sendgrid import SendgridHandler
-from .stripe_service import create_stripe_checkout_session
+from .stripe_service import get_stripe_payment_url
 from .subscriptions import SubscriptionService
 from encryption_utils import decrypt_data
 
@@ -312,14 +312,7 @@ class UsersAuth:
                     return {'status': LoginStatus.SUCCESS}
                 else:
                     if user.stripe_payment_url:
-                        stripe_payment_url = create_stripe_checkout_session(
-                            customer_id=user.customer_id,
-                            line_items=[{"price": user.stripe_payment_url['stripe_price_id'], "quantity": 1}],
-                            mode="subscription",
-                            coupon=user.stripe_payment_url['coupon']
-                        )
-                        stripe_payment_url = stripe_payment_url.get('link')
-                        
+                        stripe_payment_url = get_stripe_payment_url(user.customer_id, user.stripe_payment_url)
                         return {
                             'status': LoginStatus.PAYMENT_NEEDED,
                             'stripe_payment_url': stripe_payment_url
