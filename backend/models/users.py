@@ -31,7 +31,7 @@ class Users(Base):
     verified_email_sent_at = Column(DateTime, nullable=True)
     change_email_sent_at = Column(DateTime, nullable=True)
     is_book_call_passed = Column(BOOLEAN, default=False, nullable=True)
-    stripe_payment_url = Column(VARCHAR(1024), nullable=True)
+    stripe_payment_url = Column(JSON, nullable=True)
     data_provider_id = Column(VARCHAR(64), nullable=True)
     is_pixel_installed = Column(BOOLEAN, default=False, nullable=True)
     role = Column(ARRAY(VARCHAR(32)))

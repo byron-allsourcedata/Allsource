@@ -125,16 +125,11 @@ class UsersAuth:
             plan = self.plan_persistence.get_plan_by_price_id(spi)
             if not plan:
                 raise HTTPException(status.HTTP_404_NOT_FOUND, detail={'error': 'spi with this value does not exist'})
+            stripe_payment_url = {
+                'stripe_price_id': spi,
+                'coupon': coupon
+            }
             
-            stripe_payment_url = create_stripe_checkout_session(
-                customer_id=customer_id,
-                line_items=[{"price": spi, "quantity": 1}],
-                mode="subscription",
-                trial_period=None,
-                coupon=coupon
-            )
-            stripe_payment_url = stripe_payment_url.get('link')
-        
         if shop_data and shop_data.shop:
             shop_domain = shop_data.shop
             
@@ -317,9 +312,17 @@ class UsersAuth:
                     return {'status': LoginStatus.SUCCESS}
                 else:
                     if user.stripe_payment_url:
+                        stripe_payment_url = create_stripe_checkout_session(
+                            customer_id=user.customer_id,
+                            line_items=[{"price": user.stripe_payment_url['stripe_price_id'], "quantity": 1}],
+                            mode="subscription",
+                            coupon=user.stripe_payment_url['coupon']
+                        )
+                        stripe_payment_url = stripe_payment_url.get('link')
+                        
                         return {
                             'status': LoginStatus.PAYMENT_NEEDED,
-                            'stripe_payment_url': user.stripe_payment_url
+                            'stripe_payment_url': stripe_payment_url
                         }
                     else:
                         return {'status': LoginStatus.NEED_CHOOSE_PLAN}

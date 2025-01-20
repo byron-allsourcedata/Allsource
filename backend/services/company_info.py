@@ -8,7 +8,7 @@ from enums import SourcePlatformEnum
 from schemas.users import CompanyInfo
 from services.subscriptions import SubscriptionService
 from persistence.partners_persistence import PartnersPersistence
-
+from services.stripe_service import create_stripe_checkout_session
 logger = logging.getLogger(__name__)
 
 
@@ -37,9 +37,18 @@ class CompanyInfoService:
                 self.db.add(UserDomains(user_id=self.user.get('id'),
                                         domain=company_info.company_website.replace('https://', '').replace('http://', '')))
             self.db.commit()
+            if user.stripe_payment_url:
+                stripe_payment_url = create_stripe_checkout_session(
+                    customer_id=user.customer_id,
+                    line_items=[{"price": user.stripe_payment_url['stripe_price_id'], "quantity": 1}],
+                    mode="subscription",
+                    coupon=user.stripe_payment_url['coupon']
+                )
+                stripe_payment_url = stripe_payment_url.get('link')
+                
             return {
                 'status': CompanyInfoEnum.SUCCESS,
-                'stripe_payment_url': user.stripe_payment_url
+                'stripe_payment_url': stripe_payment_url
                     }
         else:
             return {'status': result}
@@ -54,7 +63,7 @@ class CompanyInfoService:
     def check_company_info_authorization(self):
         if self.user.get('is_with_card'):
             if self.user.get('company_name'):
-                subscription_plan_exists = self.subscription_service.is_user_have_subscription(self.user.get('id'))
+                subscription_plan_exists = self.user.get('current_subscription_id')
                 if subscription_plan_exists:
                     return CompanyInfoEnum.DASHBOARD_ALLOWED
                 return CompanyInfoEnum.NEED_CHOOSE_PLAN
