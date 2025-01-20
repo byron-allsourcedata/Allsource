@@ -102,8 +102,7 @@ def get_accounts_service(
         partners_persistence: PartnersPersistence = Depends(get_partners_persistence),
         referral_user_persistence: ReferralUserPersistence = Depends(get_referral_user_persistence)):
     return AccountsService(accounts_persistence=accounts_persistence, partners_persistence=partners_persistence, referral_user_persistence=referral_user_persistence)
-
-
+  
 def get_plans_persistence(db: Session = Depends(get_db)):
     return PlansPersistence(db=db)
 
@@ -160,6 +159,17 @@ def get_epi_persistence(db: Session = Depends(get_db)) -> ExternalAppsInstallati
 
 def get_notification_persistence(db: Session = Depends(get_db)):
     return NotificationPersistence(db)
+
+def get_accounts_service(
+        accounts_persistence: ParntersInvitationsPersistence = Depends(get_partners_invitations_persistence),
+        partners_persistence: PartnersPersistence = Depends(get_partners_persistence),
+        referral_user_persistence:  ReferralDiscountCodesPersistence = Depends(get_referral_persistence_service),
+        user_persistence: UserPersistence = Depends(get_user_persistence_service)):
+    return AccountsService(
+        accounts_persistence=accounts_persistence, 
+        partners_persistence=partners_persistence,
+        user_persistence=user_persistence,
+        referral_user_persistence=referral_user_persistence)
 
 
 def get_aws_service(s3_client=Depends(get_s3_client)) -> AWSService:

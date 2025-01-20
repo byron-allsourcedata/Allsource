@@ -1,14 +1,16 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from sqlalchemy import func, and_
-from sqlalchemy.orm import Session
+from sqlalchemy import func, desc, asc, and_
+from sqlalchemy.orm import Session, aliased
+
 
 from enums import TeamsInvitationStatus, SignUpStatus
 from models.teams_invitations import TeamInvitation
 from models.users_domains import UserDomains
 from models.users import Users
 from models.partner import Partner
+from models.referral_payouts import ReferralPayouts
 
 logger = logging.getLogger(__name__)
 
@@ -292,3 +294,68 @@ class UserPersistence:
             synchronize_session=False
         )
         self.db.commit()
+
+    
+    def get_accounts(self, search_term, start_date, end_date, offset, limit, order_by, order):
+        parent_users = aliased(Users)
+
+        order_column = getattr(Users, order_by, Users.id)
+        order_direction = asc(order_column) if order == "asc" else desc(order_column)
+
+        query = self.db.query(
+            Users.id, 
+            Users.email,
+            Users.full_name,
+            Users.created_at,
+            ReferralPayouts.plan_amount,
+            ReferralPayouts.status,
+            ReferralPayouts.paid_at,
+            Users.is_email_confirmed,
+            Users.is_stripe_connected,
+            ReferralPayouts.reward_type,
+            parent_users.company_name.label("parent_company"),
+            ReferralPayouts.parent_id
+            ).outerjoin(ReferralPayouts, Users.id == ReferralPayouts.user_id
+            ).outerjoin(parent_users, ReferralPayouts.parent_id == parent_users.id
+            ).filter(Users.is_partner == False, (Users.role == None) | ~Users.role.any('admin'))
+
+        if search_term:
+            query = query.filter(
+                (Users.full_name.ilike(search_term)) | (Users.email.ilike(search_term))
+            )
+
+        if start_date:
+            query = query.filter(Users.created_at >= start_date)
+        if end_date:
+            end_date = datetime.combine(end_date, datetime.max.time())
+            query = query.filter(Users.created_at <= end_date)
+        
+        query = query.order_by(order_direction)
+
+        accounts = query.offset(offset).limit(limit).all()
+    
+        return [
+            {
+                "id": account[0],
+                "email": account[1],
+                "full_name": account[2],
+                "created_at": account[3],
+                "plan_amount": account[4] if account[4] else "--",
+                "status": (
+                    "Signup" if account[8] and not account[9] else
+                    "Active" if account[8] and account[9] else
+                    "Inactive"
+                ),
+                "sources": (
+                        f"{account[9].capitalize()}({account[10]})"
+                        if account[9] and account[10]
+                        else "Other"
+                ),
+                "reward_status": account[5].capitalize() if account[5] else "Inactive",
+                "paid_at": account[6],
+                "reward_payout_date": "--",
+                "last_payment_date": "--",
+            }
+            for account in accounts
+        ], query.count()
+
