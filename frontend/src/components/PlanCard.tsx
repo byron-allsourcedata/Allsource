@@ -43,7 +43,7 @@ const PlanCard: React.FC<{ plan: any; activePlanTitle: string, activePlanPeriod:
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Typography variant="h6" component="span" className='heading-text' sx={{
-                        fontSize: '32px !important'
+                        fontSize: plan.title === 'Partners Live' ? '29px !important' : '32px !important'
                     }}>
                         {plan.title}
                     </Typography>

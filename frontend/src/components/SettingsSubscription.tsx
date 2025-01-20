@@ -474,7 +474,7 @@ export const SettingsSubscription: React.FC = () => {
                                 <PlanCard
                                     plan={plan}
                                     activePlanTitle={activePlan?.title || ''}
-                                    activePlanPeriod={activePlan.interval || ''}
+                                    activePlanPeriod={activePlan?.interval || ''}
                                     tabValue={tabValue}
                                     onChoose={handleChoosePlan}
                                 />
