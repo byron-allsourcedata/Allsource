@@ -76,6 +76,15 @@ class PayoutsService:
         
         if has_pending_approved:
             return PayoutsStatus.PENDING.value
+        
+        has_pending_pending = any(
+            referral_payout.confirmation_status == ConfirmationStatus.PENDING.value 
+            and referral_payout.status == PayoutsStatus.PENDING.value
+            for referral_payout in referral_payouts
+        )
+        
+        if has_pending_pending:
+            return PayoutsStatus.PENDING.value
 
         return PayoutsStatus.PAID.value
 
