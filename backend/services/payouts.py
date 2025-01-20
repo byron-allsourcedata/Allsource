@@ -111,12 +111,14 @@ class PayoutsService:
                 
                 referral_payouts_for_partner = referral_payouts_dict.get(payout.parent_id, [])
                 
-                rewards_paid = sum(
-                    referral.reward_amount for referral in referral_payouts_for_partner if referral.status == PayoutsStatus.PAID.value
+                reward_amount = sum(
+                    referral.reward_amount for referral in referral_payouts_for_partner
                 )
+                
                 rewards_approved = sum(
                     referral.reward_amount for referral in referral_payouts_for_partner if referral.confirmation_status == ConfirmationStatus.APPROVED.value
                 )
+                
                 payout_date = max(
                     (referral.paid_at for referral in referral_payouts_for_partner if referral.paid_at is not None),
                     default=None
@@ -131,7 +133,7 @@ class PayoutsService:
                     'sources': source,
                     'is_payment_active': self.check_payment_active_payouts(referral_payouts_for_partner),
                     'number_of_accounts': len(referral_payouts_for_partner),
-                    'reward_amount': rewards_paid,
+                    'reward_amount': reward_amount,
                     'reward_approved': rewards_approved,
                     'reward_payout_date': payout_date_formatted,
                     'reward_status': self.check_pending_referral_payouts(referral_payouts_for_partner),
