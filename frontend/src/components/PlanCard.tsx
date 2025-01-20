@@ -3,15 +3,15 @@ import { Box, Typography, Button, Divider } from '@mui/material';
 import Image from 'next/image';
 import CustomTooltip from './customToolTip';
 
-const PlanCard: React.FC<{ plan: any; activePlanTitle: string, tabValue: number, onChoose: (stripePriceId: string) => void }> = ({ plan, activePlanTitle, tabValue, onChoose }) => {
+const PlanCard: React.FC<{ plan: any; activePlanTitle: string, activePlanPeriod: string, tabValue: number, onChoose: (stripePriceId: string) => void }> = ({ plan, activePlanTitle, tabValue, onChoose, activePlanPeriod }) => {
     const getButtonLabel = () => {
-        if (plan.is_active) return 'Current Plan'; 
+        if (plan.is_active) return 'Current Plan';
+    
         if (activePlanTitle === '') {
             return 'Choose Plan';
         }
     
         const levels = ['Launch', 'Pro', 'Growth'];
-    
         const currentLevelIndex = levels.indexOf(activePlanTitle);
         const targetLevelIndex = levels.indexOf(plan.title);
     
@@ -19,17 +19,19 @@ const PlanCard: React.FC<{ plan: any; activePlanTitle: string, tabValue: number,
             return 'Choose Plan';
         }
     
-        if (tabValue === 1) {
+        if (tabValue === 1 && activePlanPeriod === 'year') {
             if (targetLevelIndex > currentLevelIndex) return 'Upgrade';
-            if (targetLevelIndex < currentLevelIndex) return 'Upgrade';
-            if (targetLevelIndex == currentLevelIndex) return 'Upgrade';
-        } else {
-            if (targetLevelIndex > currentLevelIndex) return 'Downgrade'; 
-            if (targetLevelIndex < currentLevelIndex) return 'Downgrade'; 
-            if (targetLevelIndex == currentLevelIndex) return 'Downgrade';
+            if (targetLevelIndex < currentLevelIndex) return 'Downgrade';
+            return 'Current';
         }
     
-        return 'Choose Plan'; // 
+        if (tabValue === 1 && activePlanPeriod === 'month') {
+            return 'Upgrade';
+        }
+    
+        if (targetLevelIndex > currentLevelIndex) return 'Upgrade'; 
+        if (targetLevelIndex < currentLevelIndex) return 'Downgrade'; 
+        return 'Downgrade';
     };
     
     return (
