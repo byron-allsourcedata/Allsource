@@ -146,6 +146,7 @@ class StripeConnectResponse(BaseModel):
 class UpdateUserRequest(BaseModel):
     user_id: int
     is_partner: bool | None = None
+    commission: Optional[str] = None
 
 class UpdateUserResponse(BaseModel):
     status: UpdateUserStatus

@@ -12,8 +12,10 @@ def get_payouts_partners(referral_service: PayoutsService = Depends(get_payouts_
                         year: Optional[int] = Query(None),
                         month: Optional[int] = Query(None),
                         partner_id: Optional[int] = Query(None),
+                        is_master: Optional[bool] = Query(default=False),
+                        reward_type: Optional[str] = Query(default='partner'),
                         search_query: str = Query(None, description="Search for email, first name, lastname and phone number")):
-    return referral_service.get_payouts_partners(year=year, month=month, partner_id=partner_id, search_query=search_query)
+    return referral_service.get_payouts_partners(year=year, month=month, partner_id=partner_id, search_query=search_query, is_master=is_master, reward_type=reward_type)
 
 @router.put("/partners/{referral_payout_id}")
 def update_payouts_partner(payouts_partner_request: PayoutsPartnerRequest, referral_service: PayoutsService = Depends(get_payouts_service),

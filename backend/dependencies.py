@@ -273,11 +273,12 @@ def get_admin_customers_service(db: Session = Depends(get_db),
                                 user_persistence: UserPersistence = Depends(get_user_persistence_service),
                                 users_auth_service: UsersAuth = Depends(get_users_auth_service),
                                 plans_presistence: PlansPersistence = Depends(get_plans_persistence),
-                                send_grid_persistence: SendgridPersistence = Depends(get_settings_persistence)):
+                                send_grid_persistence: SendgridPersistence = Depends(get_settings_persistence),
+                                partners_persistence: PartnersPersistence = Depends(get_partners_persistence)):
     return AdminCustomersService(db=db, subscription_service=subscription_service,
                                  user_persistence=user_persistence, plans_persistence=plans_presistence,
                                  send_grid_persistence=send_grid_persistence,
-                                 users_auth_service=users_auth_service)
+                                 users_auth_service=users_auth_service, partners_persistence=partners_persistence)
 
 
 def get_user_authorization_status(user, users_auth_service: UsersAuth):

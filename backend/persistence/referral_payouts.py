@@ -55,8 +55,10 @@ class ReferralPayoutsPersistence:
     def get_referral_payouts_by_parent_ids(self, user_ids):
         return self.db.query(ReferralPayouts).filter(ReferralPayouts.parent_id.in_(user_ids)).all()
     
-    def get_all_referral_payouts(self, year=None, month=None):
-        query = self.db.query(ReferralPayouts)
+    def get_all_referral_payouts(self, is_master, year=None, month=None):
+        query = self.db.query(ReferralPayouts)\
+            .outerjoin(Partner, Partner.user_id == ReferralPayouts.parent_id)\
+            .filter(Partner.is_master == is_master)
         
         if year:
             query = query.filter(extract("year", ReferralPayouts.created_at) == year)
@@ -66,7 +68,7 @@ class ReferralPayoutsPersistence:
         
         return query.order_by(ReferralPayouts.created_at.desc()).all()
     
-    def get_referral_payouts_by_partner_id(self, year, month, partner_id, search_query):
+    def get_referral_payouts_by_partner_id(self, year, month, partner_id, search_query, reward_type):
         query = self.db.query(
             Partner.id,
             ReferralPayouts.id,
@@ -94,6 +96,11 @@ class ReferralPayoutsPersistence:
             ReferralPayouts.created_at.desc()
         )
         
+        if reward_type == 'master_partner':
+            ReferralPayouts.reward_type == 'master_partner'
+        else:
+            ReferralPayouts.reward_type == 'partner'
+            
         if search_query:
             filters = [
                 ReferralPayouts.reward_amount.ilike(f'{search_query}%'),
