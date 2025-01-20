@@ -270,6 +270,9 @@ class UsersAuth:
             }
         token = create_access_token(token_info)
         logger.info("Token created")
+        
+        if auth_google_data.spi:
+            self.user_persistence_service.book_call_confirmed(user_object.id)
 
         if shopify_data:
             self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
@@ -549,6 +552,9 @@ class UsersAuth:
             }
         token = create_access_token(token_info)
         logger.info("Token created")
+        
+        if user_form.spi:
+            self.user_persistence_service.book_call_confirmed(user_object.id)
         
         if shopify_data:
             self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
