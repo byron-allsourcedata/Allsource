@@ -1,11 +1,13 @@
 from sqlalchemy.orm import Session
 from models.referral_payouts import ReferralPayouts
 from datetime import datetime, timezone
-from sqlalchemy import extract, or_
+from sqlalchemy import extract, or_, func, case
 from models.referral_users import ReferralUser
 from models.partner import Partner
 from models.users import Users
 from models.referral_discount_codes import ReferralDiscountCode
+import math
+import pytz
 
 class ReferralPayoutsPersistence:
     def __init__(self, db: Session):
@@ -111,3 +113,27 @@ class ReferralPayoutsPersistence:
             query = query.filter(extract("month", ReferralPayouts.created_at) == month)
             
         return query.all()
+    
+    def get_overview_payout_history(self, page, per_page, from_date, to_date):
+        start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC) if from_date else None
+        end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC) if to_date else None
+        paid_alias = case((ReferralPayouts.status == 'paid', ReferralPayouts.reward_amount), else_=0)
+        query = (
+            self.db.query(
+                func.to_char(ReferralPayouts.paid_at, 'YYYY-MM').label('year_month'),
+                func.sum(ReferralPayouts.plan_amount).label('total_revenue'),
+                func.sum(ReferralPayouts.reward_amount).label('total_reward_amount'),
+                func.sum(paid_alias).label('total_rewards_paid')
+            )
+            .filter(ReferralPayouts.paid_at.isnot(None))
+        )
+        if start_date and end_date:
+            query = query.filter(
+                ReferralPayouts.paid_at.between(start_date, end_date)
+                )
+        query = query.group_by('year_month').order_by('year_month')
+        offset = (page - 1) * per_page
+        result = query.limit(per_page).offset(offset).all()
+        count = query.count()
+        max_page = math.ceil(count / per_page)
+        return result, count, max_page

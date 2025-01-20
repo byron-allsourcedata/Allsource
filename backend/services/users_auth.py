@@ -126,12 +126,11 @@ class UsersAuth:
             if not plan:
                 raise HTTPException(status.HTTP_404_NOT_FOUND, detail={'error': 'spi with this value does not exist'})
             
-            trial_period = plan.trial_days
             stripe_payment_url = create_stripe_checkout_session(
                 customer_id=customer_id,
                 line_items=[{"price": spi, "quantity": 1}],
                 mode="subscription",
-                trial_period=trial_period,
+                trial_period=None,
                 coupon=coupon
             )
             stripe_payment_url = stripe_payment_url.get('link')
@@ -648,11 +647,7 @@ class UsersAuth:
         user = self.user_persistence_service.get_user_by_id(user_id)
         if not user:
             return False
-        
-        referral_discount_code = self.referral_persistence_service.get_referral_discount_code_by_id(discount_code_id)
-        if not referral_discount_code:
-            return False
-        
+                
         return True
        
     def _send_email_verification(self, user_object, token):

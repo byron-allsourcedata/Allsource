@@ -207,4 +207,13 @@ class PayoutsService:
             return PayOutReferralsStatus.PAYMENT_ERROR.value
         else:
             return PayOutReferralsStatus.NO_USERS_FOR_PAYOUT.value
+    
+    def pay_overview_payout_history(self, page, per_page, from_date, to_date):
+        history_list, total_count, max_page = self.referral_payouts_persistence.get_overview_payout_history(page, per_page, from_date, to_date)
+        return {
+                'history_list': history_list,
+                'total_count': total_count,
+                'max_page':max_page
+            }
+        
         

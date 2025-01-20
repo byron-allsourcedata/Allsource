@@ -445,13 +445,13 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                             }
                                         }}
                                     >
-                                        Discount Code
+                                        Without Discount Code
                                     </InputLabel>
                                     <Select
                                         value={stripeConnect ? discountCode?.name : ''}
                                         onChange={handleDiscountCodeChange}
                                         disabled={!stripeConnect}
-                                        label="Discount code"
+                                        label="Discount Code"
                                         sx={{
                                             backgroundColor: '#fff',
                                             borderRadius: '4px',

@@ -8,7 +8,7 @@ class ReferralUser(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, nullable=False)
     parent_user_id = Column(Integer, nullable=False)
-    discount_code_id = Column(Integer, nullable=False)
+    discount_code_id = Column(Integer, nullable=True)
     referral_program_type = Column(VARCHAR(32), nullable=False)
     created_at = Column(TIMESTAMP, nullable=False)
     

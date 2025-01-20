@@ -1,15 +1,15 @@
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { Box, Typography, TextField, Button, FormControl, InputLabel, MenuItem, Select, IconButton, InputAdornment, Accordion, AccordionSummary, AccordionDetails, SelectChangeEvent, TableContainer, Table, TableBody, TableRow, TableCell, TableHead } from "@mui/material";
+import { Box, Typography, Button, TableContainer, Table, TableBody, TableRow, TableCell, TableHead } from "@mui/material";
 import { useEffect, useState } from "react";
 import ProgressBar from "../../../../components/ProgressBar";
 import Image from "next/image";
 import { payoutsStyle } from "./payoutsStyle";
-import { showToast } from "../../../../components/ToastNotification";
 import CustomTooltip from "@/components/customToolTip";
 import CalendarPopup from "@/components/CustomCalendar";
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import dayjs from "dayjs";
 import CustomTablePagination from "@/components/CustomTablePagination";
+import { parse, format } from 'date-fns';
 
 interface FAQItem {
     question: string;
@@ -50,7 +50,7 @@ const ReferralOverview: React.FC = () => {
 
     const [payotsList, setSuppressionList] = useState<any[]>([]);
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalCount, setTotalCount] = useState(0);
 
 
@@ -129,40 +129,40 @@ const ReferralOverview: React.FC = () => {
         setRowsPerPage(parseInt(event.target.value as string, 10));
     };
 
-    // interface PayoutsListResponse {
-    //     history_list: any[];
-    //     total_count: number;
-    //     max_page: number;
-    // }
+    interface PayoutsListResponse {
+        history_list: any[];
+        total_count: number;
+        max_page: number;
+    }
 
-    // const fetchHistoryList = async (page: number, perPage: number) => {
-    //     try {
-    //         setLoading(true)
-    //         const response = await axiosInstance.get<PayoutsListResponse>('/suppressions/suppression-list', {
-    //             params: {
-    //                 page: page + 1,
-    //                 per_page: perPage,
-    //             },
-    //         });
-    //         setSuppressionList(response.data.history_list);
-    //         setTotalCount(response.data.total_count);
-    //     } catch (error) {
-    //     }
-    //     finally {
-    //         setLoading(false)
-    //     }
-    // };
+    const fetchHistoryList = async (page: number, perPage: number) => {
+        try {
+            setLoading(true)
+            const response = await axiosInstance.get<PayoutsListResponse>('admin-payouts/overview/payout-history', {
+                params: {
+                    page: page + 1,
+                    per_page: perPage,
+                },
+            });
+            setSuppressionList(response.data.history_list);
+            setTotalCount(response.data.total_count);
+        } catch (error) {
+        }
+        finally {
+            setLoading(false)
+        }
+    };
 
-    // useEffect(() => {
-    //     try {
-    //         setLoading(true)
-    //         fetchHistoryList(page, rowsPerPage);
-    //     }
-    //     finally {
-    //         setLoading(false)
-    //     }
+    useEffect(() => {
+        try {
+            setLoading(true)
+            fetchHistoryList(page, rowsPerPage);
+        }
+        finally {
+            setLoading(false)
+        }
 
-    // }, [page, rowsPerPage]);
+    }, [page, rowsPerPage]);
 
 
     return (
@@ -182,7 +182,7 @@ const ReferralOverview: React.FC = () => {
                     <Box sx={{ display: 'flex', flexDirection: 'row', width: '100%', gap: 1, '@media (max-width: 600px)': { flexDirection: 'column' } }}>
 
                         <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'start', alignItems: 'start', borderRadius: '4px', pt: 0, pb: 2, gap: 2.5, }}>
-                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'start', width: '100%', gap: 1, padding: 1, pb:0 }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'start', width: '100%', gap: 1, padding: 1, pb: 0 }}>
                                 <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 1, padding: 1 }}>
                                     <Image src={'/stripe-image.svg'} width={60} height={60} alt="stripe-icon" />
                                     <Typography className="second-sub-title">
@@ -247,7 +247,7 @@ const ReferralOverview: React.FC = () => {
                                 </Button>
                             </Box>
 
-                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 1, pl: 2, pt:0 }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 1, pl: 2, pt: 0 }}>
                                 <Typography className="table-heading">
                                     Email
                                 </Typography>
@@ -324,14 +324,6 @@ const ReferralOverview: React.FC = () => {
                                 <Table>
                                     <TableHead>
                                         <TableRow>
-                                            <TableCell className='table-heading'
-                                                sx={{
-                                                    ...payoutsStyle.tableColumn,
-                                                    textAlign: 'center',
-                                                    pl: 0,
-                                                    zIndex: 9,
-                                                    position: 'sticky', backgroundColor: '#fff', left: 0
-                                                }}>List name</TableCell>
                                             <TableCell className='table-heading' sx={{ ...payoutsStyle.tableColumn, textAlign: 'center', pl: 0 }}>Month</TableCell>
                                             <TableCell className='table-heading' sx={{ ...payoutsStyle.tableColumn, textAlign: 'center', pl: 0 }}>Total Revenue</TableCell>
                                             <TableCell className='table-heading' sx={{ ...payoutsStyle.tableColumn, textAlign: 'center', pl: 0 }}>Total Rewards </TableCell>
@@ -369,7 +361,7 @@ const ReferralOverview: React.FC = () => {
                                                         zIndex: 1,
                                                         backgroundColor: '#fff',
                                                     }}>
-                                                        {payout.month}
+                                                        {format(parse(payout.year_month, 'yyyy-MM', new Date()), 'MMMM, yyyy')}
                                                     </TableCell>
                                                     <TableCell className='table-data' sx={{ ...payoutsStyle.tableColumn, textAlign: 'center', pl: 0 }}>
                                                         <Typography component="span" className='table-data' sx={{
@@ -386,10 +378,10 @@ const ReferralOverview: React.FC = () => {
                                                         </Typography>
                                                     </TableCell>
                                                     <TableCell className='table-data' sx={{ ...payoutsStyle.tableColumn, pl: 7 }}>
-                                                        {payout.total_rewards}
+                                                        {payout.total_reward_amount}
                                                     </TableCell>
                                                     <TableCell className='table-data' sx={payoutsStyle.tableBodyColumn}>
-                                                        {payout.rewards_paid}
+                                                        {payout.total_rewards_paid}
                                                     </TableCell>
 
                                                 </TableRow>

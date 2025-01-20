@@ -25,7 +25,7 @@ class ReferralDiscountCodesPersistence:
         referral_user = ReferralUser(
             user_id=user_id,
             parent_user_id=parent_user_id,
-            discount_code_id=discount_code_id,
+            discount_code_id=discount_code_id or None,
             referral_program_type=referral_program_type,
             created_at=datetime.now(timezone.utc)
         )
