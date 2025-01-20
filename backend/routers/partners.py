@@ -23,23 +23,25 @@ def get_partners_assets(
 @router.get('/accounts/')
 def get_partner_accounts(
     search: Optional[str] = Query(None),
-    start_date: int = Query(None, description="Start date in integer format"),
-    end_date: int = Query(None, description="End date in integer format"),
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
     page: int = Query(0),
     rows_per_page: int = Query(10),
+    order_by: str = Query("id"),
+    order: str = Query("asc"),
     user: dict = Depends(check_user_partner),
     get_accounts_service: AccountsService = Depends(get_accounts_service)):
     
-    return get_accounts_service.get_accounts(user, search, start_date, end_date, page, rows_per_page) 
+    return get_accounts_service.get_partner_accounts(user.get('id'), search, start_date, end_date, page, rows_per_page, order_by, order) 
 
 
 @router.get('/')
 @router.get('')
 def get_masterpartner_data(
-    email: Optional[str] = Query(...),
+    user: dict = Depends(check_user_partner),
     get_partners_service: PartnersService = Depends(get_partners_service)):
     
-    response = get_partners_service.get_partner(email)
+    response = get_partners_service.get_partner(user.get('email'))
     if not response.get("status"):
         error = response.get("error", {}) or {}
         raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))

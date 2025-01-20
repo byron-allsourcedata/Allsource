@@ -317,6 +317,7 @@ class UserPersistence:
             parent_users.company_name.label("parent_company"),
             ReferralUser.parent_user_id,
             ReferralPayouts.status,
+            ReferralPayouts.created_at,
             ).outerjoin(ReferralPayouts, Users.id == ReferralPayouts.user_id
             ).outerjoin(ReferralUser, Users.id == ReferralUser.user_id
             ).outerjoin(parent_users, ReferralUser.parent_user_id == parent_users.id
@@ -358,7 +359,7 @@ class UserPersistence:
                 "will_pay": True if account[12] else False,
                 "paid_at": False if account[6] else True,
                 "reward_payout_date": account[6] if account[6] else (datetime.now().replace(day=1) + timedelta(days=32)).replace(day=1).strftime('%Y-%m-%d'),
-                "last_payment_date": "--",
+                "last_payment_date": account[13],
             }
             for account in accounts
         ], query.count()
