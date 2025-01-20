@@ -31,6 +31,7 @@ const Signup: React.FC = () => {
   const ftd = searchParams.get('ftd')
   const referral = searchParams.get('referral')
   const shop_hash = searchParams.get('shop_hash')
+  const source_platform = searchParams.get('source_platform')
   const initialShopifyData = {
     code: searchParams.get('code') || null,
     hmac: searchParams.get('hmac') || null,
@@ -52,6 +53,7 @@ const Signup: React.FC = () => {
     ...{ ftd: ftd },
     ...{ referral: referral },
     ...{ shop_hash: shop_hash },
+    ...{source_platform: source_platform}
   });
   const [formSubmitted, setFormSubmitted] = useState(false);
 
@@ -318,6 +320,7 @@ const Signup: React.FC = () => {
                   utm_params: utmData,
                   ...{ referral: referral },
                   ...{ shop_hash: shop_hash },
+                  ...{source_platform: source_platform},
                   ...(isShopifyDataComplete && { shopify_data: initialShopifyData })
                 });
 

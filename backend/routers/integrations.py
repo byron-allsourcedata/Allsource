@@ -293,7 +293,7 @@ def bigcommerce_auth(
             domain_url=domain_url
         )
                  
-    return RedirectResponse(f"{BigcommerceConfig.frontend_sign_up_redirect}?utm_source=big_commerce&shop_hash={shop_hash}")
+    return RedirectResponse(f"{BigcommerceConfig.frontend_sign_up_redirect}?source_platform=big_commerce&shop_hash={shop_hash}")
     
 @router.get("/bigcommerce/uninstall", status_code=status.HTTP_200_OK)
 def oauth_bigcommerce_uninstall(signed_payload: Annotated[str, Query()], signed_payload_jwt: Annotated[str, Query()], integration_service: IntegrationService = Depends(get_integration_service)):
@@ -319,7 +319,7 @@ def oauth_bigcommerce_load(signed_payload: Annotated[str, Query()], signed_paylo
     
     owner = integration_service.get_user_by_shop_domain(store_hash)
     if not owner:
-        return RedirectResponse(f"{BigcommerceConfig.frontend_sign_up_redirect}?utm_source=big_commerce&shop_hash={store_hash}")
+        return RedirectResponse(f"{BigcommerceConfig.frontend_sign_up_redirect}?source_platform=big_commerce&shop_hash={store_hash}")
     
     if owner_email == user_email:
         return RedirectResponse(BigcommerceConfig.frontend_sign_in_redirect)

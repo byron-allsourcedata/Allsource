@@ -16,5 +16,6 @@ class AuthGoogleData(BaseModel):
     referral: Optional[str] = None
     shop_hash: Optional[str] = None
     utm_params: Optional[UtmParams] = None
+    source_platform:Optional[str] = None
 
     
