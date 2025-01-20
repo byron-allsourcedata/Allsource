@@ -243,7 +243,7 @@ class PayoutsStatus(Enum):
 
 class ConfirmationStatus(Enum):
     PENDING = 'pending'
-    REVOKED = 'revoked'
+    REJECT = 'reject'
     APPROVED = 'approved'
     
 class PayOutReferralsStatus(Enum):

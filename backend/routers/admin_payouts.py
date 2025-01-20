@@ -24,3 +24,8 @@ def update_payouts_partner(payouts_partner_request: PayoutsPartnerRequest, refer
 def pay_out_referrals(referral_service: PayoutsService = Depends(get_payouts_service), 
                         partner_id: int = Path(..., description="partner id")):
     return referral_service.pay_out_referrals(partner_id=partner_id)
+
+@router.get("/overview/payout-history")
+def pay_overview_payout_history(referral_service: PayoutsService = Depends(get_payouts_service), 
+                        partner_id: int = Path(..., description="partner id")):
+    return referral_service.pay_out_referrals(partner_id=partner_id)
