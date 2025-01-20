@@ -38,6 +38,7 @@ class PartnerCreateRequest(BaseModel):
 
 class OpportunityStatus(BaseModel):
     status: bool
+    message: Optional[str] = None
 
 class PartnerUpdateRequest(BaseModel):
     message: Optional[str] = None

@@ -81,11 +81,10 @@ async def delete_partner(
 async def update_opportunity_partner(
     partner_id: int,
     payload: OpportunityStatus,
-    message: Optional[str] = Query(None),
     get_partners_service: PartnersService = Depends(get_partners_service),
 ):
 
-    partner = await get_partners_service.update_opportunity_partner(partner_id, payload, message)
+    partner = await get_partners_service.update_opportunity_partner(partner_id, payload)
 
     if not partner.get("status"):
         error = partner.get("error", {}) or {}

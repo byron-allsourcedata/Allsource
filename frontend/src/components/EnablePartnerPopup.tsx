@@ -28,10 +28,10 @@ interface FormUploadPopupProps {
     open: boolean;
     onClose: () => void;
     removePartnerById:  (id: number) => void
-    updateOrAddAsset: (partner: PartnerData) => void
+    updateOpportunity: (id: number) => void
 }
 
-const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open, onClose, removePartnerById, updateOrAddAsset }) => {
+const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open, onClose, removePartnerById, updateOpportunity }) => {
     const [action, setAction] = useState("Disable");
     const [buttonContain, setButtonContain] = useState(false);
     const [fullName, setFullName] = useState("");
@@ -75,15 +75,16 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
     }
 
     const handleSubmit = async () => {
+        console.log({action})
         setProcessing(true);
         setButtonContain(false);
     
         try {
-            const response = await axiosInstance.put(`admin-partners/${id}/`, {status: "inactive", message}, {
+            const response = await axiosInstance.put(`admin-partners/opportunity/${id}/`, {status: false, message}, {
                 headers: { 'Content-Type': 'application/json' },
             });
             if (response.status === 200) {
-                updateOrAddAsset(response.data);
+                updateOpportunity(id);
                 showToast("Partner status successfully updated!");
             }
         } catch {

@@ -259,7 +259,6 @@ class PartnersService:
         self, 
         partner_id: int, 
         payload: dict, 
-        message=None
     ):
             
         try:
@@ -273,6 +272,7 @@ class PartnersService:
             update_data = {"is_active": payload.status}
             updated_data = self.partners_persistence.update_partner(partner_id=partner_id, **update_data) 
             
+            message = payload.message
             if not message:
                 message = "the fact that the master partner decided so"
             
