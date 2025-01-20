@@ -529,10 +529,6 @@ class UsersAuth:
             "full_name": user_form.full_name,
             "password": user_form.password,
         }
-        
-        if user_form.spi:
-            status = SignUpStatus.FILL_COMPANY_DETAILS
-            is_with_card = True
             
         user_object = self.add_user(is_with_card=is_with_card, customer_id=customer_id, user_form=user_data,
                                     spi=user_form.spi, awin_awc=awc, access_token=shopify_access_token, shop_id=shop_id, shop_data=shopify_data,

@@ -37,19 +37,20 @@ class CompanyInfoService:
                 self.db.add(UserDomains(user_id=self.user.get('id'),
                                         domain=company_info.company_website.replace('https://', '').replace('http://', '')))
             self.db.commit()
+            stripe_payment_url = None
             if user.stripe_payment_url:
-                stripe_payment_url = create_stripe_checkout_session(
+                stripe_payment = create_stripe_checkout_session(
                     customer_id=user.customer_id,
                     line_items=[{"price": user.stripe_payment_url['stripe_price_id'], "quantity": 1}],
                     mode="subscription",
                     coupon=user.stripe_payment_url['coupon']
                 )
-                stripe_payment_url = stripe_payment_url.get('link')
+                stripe_payment_url = stripe_payment.get('link')
                 
-            return {
-                'status': CompanyInfoEnum.SUCCESS,
-                'stripe_payment_url': stripe_payment_url
-                    }
+            return{
+                    'status': CompanyInfoEnum.SUCCESS,
+                    'stripe_payment_url': stripe_payment_url
+                }
         else:
             return {'status': result}
 
