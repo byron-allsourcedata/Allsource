@@ -66,8 +66,7 @@ class PartnersService:
     
     def get_partner(self, email) -> PartnersObjectResponse:
         try:
-            decoded_email = unquote(email)
-            partner = self.partners_persistence.get_partner_by_email(decoded_email)
+            partner = self.partners_persistence.get_partner_by_email(email)
             
             user_id = partner.user_id
             user = self.get_user_info(user_id, partner)

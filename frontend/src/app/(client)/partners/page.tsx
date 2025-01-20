@@ -164,14 +164,11 @@ const Partners: React.FC = () => {
         }
     };
 
-    const fetchRulesMe = useCallback(async (currentEmail: string) => {
+    const fetchRulesMe = useCallback(async () => {
         setLoading(true)
 
         try {
-            const responseMe = await axiosInstance.get(`/partners`, { 
-                params: {
-                    email: encodeURIComponent(currentEmail || '')
-                }});
+            const responseMe = await axiosInstance.get(`/partners`);
             if(responseMe.status === 200) {
                 const masterPartner = responseMe.data.isMaster
                 setIsMaster(masterPartner) 
@@ -189,17 +186,8 @@ const Partners: React.FC = () => {
 
 
     useEffect(() => {
-        const timeoutId = window.setTimeout(() => {
-            const storedMe = sessionStorage.getItem('me');
-            if (storedMe) {
-                const storedData = JSON.parse(storedMe);
-                setEmail(storedData.email);
-                fetchRulesMe(storedData.email); 
-            }
-        }, 2500);
-
-        return () => window.clearTimeout(timeoutId);
-    }, []);
+        fetchRulesMe()
+    }, [])
 
     return (
         <>

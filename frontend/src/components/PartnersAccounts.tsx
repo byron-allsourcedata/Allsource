@@ -12,6 +12,7 @@ import { DateRangeIcon } from "@mui/x-date-pickers/icons";
 import SearchIcon from '@mui/icons-material/Search';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import { useUser } from '@/context/UserContext';
+import { Solitreo } from "next/font/google";
 
 const tableHeaders = [
     { key: 'account_name', label: 'Account name', sortable: false },
@@ -26,11 +27,6 @@ const tableHeaders = [
 
 const getStatusStyle = (status: string) => {
     switch (status) {
-        case "Accepted":
-            return {
-                background: 'rgba(234, 248, 221, 1)',
-                color: 'rgba(43, 91, 0, 1)',
-            };
         case 'Paid':
             return {
                 background: 'rgba(234, 248, 221, 1)',
@@ -40,6 +36,11 @@ const getStatusStyle = (status: string) => {
             return {
                 background: 'rgba(234, 248, 221, 1)',
                 color: 'rgba(43, 91, 0, 1)',
+            };
+        case 'Inactive':
+            return {
+                background: 'rgba(236, 236, 236, 1)',
+                color: 'rgba(74, 74, 74, 1)',
             };
         case 'Pending':
             return {
@@ -91,7 +92,6 @@ interface AccountData {
 
 
 const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFromMain, id: partnerId, fromAdmin, masterData, setMasterData, loading, setLoading, tabIndex, handleTabChange }) => {
-    const { email } = useUser();
     const [accounts, setAccounts] = useState<AccountData[]>([]);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -195,13 +195,14 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
 
         try {
             if(id) {
-                response = await axiosInstance.get(`/admin-accounts`, { params: {
-                    id,
+                response = await axiosInstance.get(`/admin-accounts/${id}/`, { params: {
                     search,
                     start_date: appliedDates.start ? appliedDates.start.toLocaleDateString('en-CA') : null,
                     end_date: appliedDates.end ? appliedDates.end.toLocaleDateString('en-CA') : null,
                     page, 
-                    rows_per_page: rowsPerPage
+                    rows_per_page: rowsPerPage,
+                    order_by: orderBy,
+                    order,
                 } });
             } 
             else {
@@ -211,9 +212,12 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                         start_date: appliedDates.start ? appliedDates.start.toLocaleDateString('en-CA') : null,
                         end_date: appliedDates.end ? appliedDates.end.toLocaleDateString('en-CA') : null,
                         page,
-                        rows_per_page: rowsPerPage
+                        rows_per_page: rowsPerPage,
+                        order_by: orderBy,
+                        order,
                     }});
             }
+            console.log({response})
             if(response.status === 200 && response.data.totalCount > 0) {
                 setAccounts([...response.data.items])
                 setErrosResponse(false)
@@ -228,11 +232,11 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
         } finally {
             setLoading(false)
         }
-    }, [search, appliedDates]);
+    }, [search, appliedDates, page, rowsPerPage, orderBy, order]);
 
     useEffect(() => {
         fetchRules();
-    }, [id, appliedDates]);
+    }, [id, appliedDates, page, rowsPerPage, orderBy, order]);
 
     useEffect(() => {
         if (
@@ -550,14 +554,14 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                                                     <Typography component="div" sx={{
                                                         width: "74px",
                                                         margin: "0",
-                                                        background: getStatusStyle(data.status).background,
+                                                        background: getStatusStyle(data.reward_status).background,
                                                         padding: '3px 8px',
                                                         borderRadius: '2px',
                                                         fontFamily: 'Roboto',
                                                         fontSize: '12px',
                                                         fontWeight: '400',
                                                         lineHeight: '16px',
-                                                        color: getStatusStyle(data.status).color,
+                                                        color: getStatusStyle(data.reward_status).color,
                                                     }}>
                                                         {data.reward_status}
                                                     </Typography>
