@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from typing import Optional
 from datetime import date
-from dependencies import get_accounts_service, get_admin_customers_service, check_user_admin, AccountsService, AdminCustomersService
+from dependencies import get_accounts_service, check_user_admin, AccountsService, AdminCustomersService
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(check_user_admin)])
 
 
 # @router.get('')

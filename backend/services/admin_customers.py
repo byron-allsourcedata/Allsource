@@ -1,6 +1,5 @@
 import logging
-from datetime import datetime, timedelta
-
+from datetime import datetime, timedelta, timezone
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from schemas.users import UpdateUserRequest
@@ -13,6 +12,7 @@ from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.user_persistence import UserPersistence
 from services.subscriptions import SubscriptionService
 from services.users_auth import UsersAuth
+from utils import get_utc_aware_date
 
 logger = logging.getLogger(__name__)
 
@@ -65,14 +65,25 @@ class AdminCustomersService:
         user_object = self.db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
         return user_object
     
+    def create_subscription_for_partner(self, user: Users):
+        if not user.current_subscription_id:
+                    self.subscription_service.create_subscription_from_partners(user_id=user.id)
+        else:
+            user_subscription = self.subscription_service.get_user_subscription(user_id=user.id)
+            if user_subscription.plan_end.replace(tzinfo=timezone.utc) < get_utc_aware_date() or user_subscription.is_trial:
+                self.subscription_service.create_subscription_from_partners(user_id=user.id)
+
     def update_user(self, update_data: UpdateUserRequest):
         user = self.db.query(Users).filter(Users.id == update_data.user_id).first()
         if not user:
             return UpdateUserStatus.USER_NOT_FOUND
         
         if update_data.is_partner:
+            if update_data.is_partner == True:
+                self.create_subscription_for_partner(user=user)
+                    
             user.is_partner = update_data.is_partner
-        self.db.commit()
+            self.db.commit()
         
         return UpdateUserStatus.SUCCESS
 

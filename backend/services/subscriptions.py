@@ -344,7 +344,7 @@ class SubscriptionService:
     
     def create_subscription_from_partners(self, user_id):
         plan = self.plans_persistence.get_plan_by_alias(PlanAlias.PARTNERS.value)
-        plan_start = datetime.now(timezone.utc)
+        plan_start = datetime.now(timezone.utc).replace(tzinfo=None)
         add_subscription_obj = Subscription(
             domains_limit=plan.domains_limit,
             integrations_limit=plan.integrations_limit,
