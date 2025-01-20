@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { styled } from '@mui/material/styles';
 import PartnersAdmin from '@/components/PartnersAdmin'
 import PartnersAccounts from '@/components/PartnersAccounts'
+import CustomizedProgressBar from "@/components/ProgressBar";
 
 
 interface TabPanelProps {
@@ -70,7 +71,7 @@ const Assets: React.FC = () => {
                                 </Box>
                                 <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
                                     <TabPanel value={tabIndex} index={masterData?.id ? 1 : 0}>
-                                        <PartnersAdmin masterData={masterData} setMasterData={setMasterData} isMaster={true} loading={loading} setLoading={setLoading} tabIndex={tabIndex} handleTabChange={handleTabChange} />
+                                        <PartnersAdmin masterData={masterData} setMasterData={setMasterData} isMaster={loading} loading={loading} setLoading={setLoading} tabIndex={tabIndex} handleTabChange={handleTabChange} />
                                     </TabPanel>
                                 </Box>
                                 <Box sx={{ width: '100%', padding: 0, margin: 0 }}>

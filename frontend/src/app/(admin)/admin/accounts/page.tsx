@@ -18,7 +18,7 @@ import EnablePartnerPopup from "@/components/EnablePartnerPopup"
 import { showErrorToast, showToast } from '@/components/ToastNotification';
 import PartnersAccounts from "@/components/PartnersAccounts";
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
-import CustomizedProgressBar from "@/components/CustomizedProgressBar";
+import CustomizedProgressBar from "@/components/ProgressBar";
 import PaymentHistory from "@/components/PaymentHistory";
 
 const getStatusStyle = (status: string) => {
@@ -332,6 +332,11 @@ const Accounts: React.FC = () => {
     }, [page, rowsPerPage, appliedDates, orderBy, order])
 
 
+    if (loading) {
+        return <CustomizedProgressBar />;
+    }
+
+
     return (
         <Box
             sx={{
@@ -345,7 +350,6 @@ const Accounts: React.FC = () => {
                 height: '92vh',
             }}
         >
-
             <Box
                 sx={{
                     gridArea: 'content',

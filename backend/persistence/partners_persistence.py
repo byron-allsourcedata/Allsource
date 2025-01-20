@@ -82,6 +82,7 @@ class PartnersPersistence:
             return query
         
         return query.offset(offset).limit(limit).all()
+
     
 
 
