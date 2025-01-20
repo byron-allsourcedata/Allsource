@@ -1,9 +1,20 @@
 from datetime import datetime, timedelta, timezone
 import re
+import os
+import hashlib
+import json
 
 def get_utc_aware_date():
     return datetime.now(timezone.utc).replace(microsecond=0)
 
+def get_md5_hash(email):
+    md5_token_info = {
+                    'user_mail': email,
+                    'salt': os.getenv('SECRET_SALT')
+                }
+    json_string = json.dumps(md5_token_info, sort_keys=True)
+    md5_hash = hashlib.md5(json_string.encode()).hexdigest()
+    return md5_hash
 
 def get_utc_aware_date_for_postgres():
     return get_utc_aware_date().isoformat()[:-6] + "Z"

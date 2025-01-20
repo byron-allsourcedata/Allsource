@@ -4,7 +4,6 @@ from sqlalchemy import or_, func
 from typing import Optional
 from datetime import datetime, timedelta
 from models.referral_payouts import ReferralPayouts
-from models.partner import Partner
 from models.users import Users
 from enums import ConfirmationStatus, PayoutsStatus
 
@@ -180,7 +179,7 @@ class PartnersPersistence:
             email=creating_data["email"],
             name=creating_data["full_name"],
             company_name=creating_data["company_name"],
-            isMaster=creating_data["isMaster"]
+            is_master=creating_data["isMaster"]
         )
 
         if "masterId" in creating_data and creating_data["masterId"] is not None:
