@@ -17,9 +17,11 @@ class AccountsService:
 
     def __init__(self,
         referral_user_persistence: ReferralUserPersistence,
-        user_persistence: UserPersistence):
+        user_persistence: UserPersistence,
+        partner_persistence: PartnersPersistence):
         self.referral_user_persistence = referral_user_persistence
         self.user_persistence = user_persistence
+        self.partner_persistence = partner_persistence
         
 
     def get_partner_accounts(self, id, search, start_date, end_date, page, rowsPerPage, order_by, order):
@@ -42,23 +44,9 @@ class AccountsService:
         return {"items": accounts, "totalCount": total_count}
     
     def get_partner_by_id_accounts(self, id, search, start_date, end_date, page, rowsPerPage, order_by, order):
-        offset = page * rowsPerPage
-        limit = rowsPerPage
+        partner = self.partner_persistence.get_asset_by_id(id)
+        return self.get_partner_accounts(partner.user_id, search, start_date, end_date, page, rowsPerPage, order_by, order)
 
-        search_term = f"%{search}%" if search else None
-
-        accounts, total_count = self.referral_user_persistence.get_referral_by_id_users(
-            partner_id=id,
-            search_term=search_term,
-            start_date=start_date,
-            end_date=end_date,
-            offset=offset,
-            limit=limit,
-            order_by=order_by, 
-            order=order
-        )
-
-        return {"items": accounts, "totalCount": total_count}
     
     
     def get_admin_accounts(self, search, start_date, end_date, page, rows_per_page, order_by, order):

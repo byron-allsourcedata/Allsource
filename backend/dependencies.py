@@ -156,8 +156,9 @@ def get_notification_persistence(db: Session = Depends(get_db)):
 
 def get_accounts_service(
         referral_user_persistence: ReferralUserPersistence = Depends(get_referral_user_persistence),
-        user_persistence: UserPersistence = Depends(get_user_persistence_service)):
-    return AccountsService(referral_user_persistence=referral_user_persistence, user_persistence=user_persistence)
+        user_persistence: UserPersistence = Depends(get_user_persistence_service),
+        partner_persistence: PartnersPersistence = Depends(get_partners_persistence)):
+    return AccountsService(referral_user_persistence=referral_user_persistence, user_persistence=user_persistence, partner_persistence=partner_persistence)
 
 
 def get_aws_service(s3_client=Depends(get_s3_client)) -> AWSService:
