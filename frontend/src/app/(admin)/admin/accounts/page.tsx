@@ -70,6 +70,8 @@ interface PartnerData {
     reward_status: string;
     plan_amount: string;
     sources: string;
+    will_pay: boolean;
+    paid_at: boolean;
     last_payment_date: Date | string;
     reward_payout_date: Date | string;
 }
@@ -571,16 +573,24 @@ const Accounts: React.FC = () => {
                                                                         </TableCell>
 
                                                                         <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
-                                                                            {/* <Typography component="div" sx={{
-                                                                                    width: "100px",
-                                                                                    fontFamily: 'Roboto',
-                                                                                    fontSize: '10px',
-                                                                                    fontWeight: '400',
-                                                                                    lineHeight: '14px'
-                                                                                }}>
-                                                                                    Would be paid on
-                                                                            </Typography> */}
-                                                                            {dayjs(data.reward_payout_date).isValid() ? dayjs(data.reward_payout_date).format('MMM D, YYYY') : '--'}
+                                                                            {data.will_pay ?
+                                                                            <>
+                                                                                {data.paid_at && <Typography component="div" sx={{
+                                                                                        width: "100px",
+                                                                                        fontFamily: 'Roboto',
+                                                                                        fontSize: '10px',
+                                                                                        fontWeight: '400',
+                                                                                        lineHeight: '14px'
+                                                                                    }}>
+                                                                                        Would be paid on
+                                                                                </Typography>}
+                                                                                {dayjs(data.reward_payout_date).isValid() ? dayjs(data.reward_payout_date).format('MMM D, YYYY') : '--'}
+                                                                            </>
+                                                                            : 
+                                                                            <>
+                                                                                --
+                                                                            </>
+                                                                            }
                                                                         </TableCell>
 
                                                                         <TableCell className='table-data'sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>

@@ -11,6 +11,7 @@ from models.users_domains import UserDomains
 from models.users import Users
 from models.partner import Partner
 from models.referral_payouts import ReferralPayouts
+from models.referral_users import ReferralUser
 
 logger = logging.getLogger(__name__)
 
@@ -312,11 +313,13 @@ class UserPersistence:
             ReferralPayouts.paid_at,
             Users.is_email_confirmed,
             Users.is_stripe_connected,
-            ReferralPayouts.reward_type,
+            ReferralUser.referral_program_type,
             parent_users.company_name.label("parent_company"),
-            ReferralPayouts.parent_id
+            ReferralUser.parent_user_id,
+            ReferralPayouts.status,
             ).outerjoin(ReferralPayouts, Users.id == ReferralPayouts.user_id
-            ).outerjoin(parent_users, ReferralPayouts.parent_id == parent_users.id
+            ).outerjoin(ReferralUser, Users.id == ReferralUser.user_id
+            ).outerjoin(parent_users, ReferralUser.parent_user_id == parent_users.id
             ).filter(Users.is_partner == False, (Users.role == None) | ~Users.role.any('admin'))
 
         if search_term:
@@ -352,8 +355,9 @@ class UserPersistence:
                         else "Other"
                 ),
                 "reward_status": account[5].capitalize() if account[5] else "Inactive",
-                "paid_at": account[6],
-                "reward_payout_date": "--",
+                "will_pay": True if account[12] else False,
+                "paid_at": False if account[6] else True,
+                "reward_payout_date": account[6] if account[6] else (datetime.now().replace(day=1) + timedelta(days=32)).replace(day=1).strftime('%Y-%m-%d'),
                 "last_payment_date": "--",
             }
             for account in accounts
