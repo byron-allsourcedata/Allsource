@@ -515,12 +515,6 @@ const PartnersMain: React.FC<PartnersProps> = ({setLoading, masterId, appliedDat
                         fileData={fileData} 
                         open={formPopupOpen} 
                         onClose={handleFormClosePopup}  />
-                    <EnablePartnerPopup 
-                        updateOrAddAsset={updateOrAddAsset}
-                        removePartnerById={removePartnerById}
-                        enabledData={enabledData} 
-                        open={noticePopupOpen} 
-                        onClose={handleNoticeClosePopup}  />
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'end' }}>
                     <CustomTablePagination

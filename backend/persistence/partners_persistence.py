@@ -59,7 +59,7 @@ class PartnersPersistence:
                 end_date = datetime.combine(end_date, datetime.max.time())
             query = query.filter(Partner.join_date <= end_date)
 
-        return query.offset(offset).limit(limit).all()
+        return query.offset(offset).limit(limit).all(), query.count()
 
     
 
@@ -179,7 +179,7 @@ class PartnersPersistence:
             email=creating_data["email"],
             name=creating_data["full_name"],
             company_name=creating_data["company_name"],
-            is_master=creating_data["isMaster"]
+            is_master=creating_data["is_master"]
         )
 
         if "masterId" in creating_data and creating_data["masterId"] is not None:
