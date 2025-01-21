@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Query 
 from typing import Optional, List
 from datetime import date
-from schemas.partners import PartnerCreateRequest, PartnerUpdateRequest, PartnersResponse
+from schemas.partners import PartnerCreateRequest, PartnerUpdateRequest, PartnersResponse, OpportunityStatus
 from dependencies import get_partners_service, check_user_admin, PartnersService
 
 router = APIRouter(dependencies=[Depends(check_user_admin)])
@@ -73,6 +73,24 @@ async def delete_partner(
         error = partner.get("error", {}) or {}
         raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))
      
+    return True
+
+
+@router.put("/opportunity/{partner_id}")
+@router.put("/opportunity/{partner_id}/")
+async def update_opportunity_partner(
+    partner_id: int,
+    payload: OpportunityStatus,
+    message: Optional[str] = Query(None),
+    get_partners_service: PartnersService = Depends(get_partners_service),
+):
+
+    partner = await get_partners_service.update_opportunity_partner(partner_id, payload, message)
+
+    if not partner.get("status"):
+        error = partner.get("error", {}) or {}
+        raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))
+
     return True
 
 

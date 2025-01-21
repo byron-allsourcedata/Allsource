@@ -259,9 +259,8 @@ class PartnersService:
         self, 
         partner_id: int, 
         payload: dict, 
-    ) -> PartnersObjectResponse:
-        if not payload:
-            return {"status": False, "error": {"code": 400, "message": "Invalid request with your partner data"}}
+        message=None
+    ):
             
         try:
             if (payload.status):
@@ -274,7 +273,10 @@ class PartnersService:
             update_data = {"is_active": payload.status}
             updated_data = self.partners_persistence.update_partner(partner_id=partner_id, **update_data) 
             
-            self.send_message_in_email(updated_data.name, "the fact that the master partner decided so", updated_data.email, template_id)
+            if not message:
+                message = "the fact that the master partner decided so"
+            
+            self.send_message_in_email(updated_data.name, message, updated_data.email, template_id)
         
             return {"status": True}
         except Exception as e:

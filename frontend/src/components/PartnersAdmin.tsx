@@ -238,15 +238,25 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
         setFormPopupOpen(false)
     }
 
+    useEffect(() => {
+        console.log({partners})
+    }, [partners])
+
     const setEnabled = async () => {
         setLoading(true);
     
         try {
-            const response = await axiosInstance.put(`admin-partners/${selectedRowData.id}/`, {status: "active"}, {
+            const response = await axiosInstance.put(`admin-partners/opportunity/${selectedRowData.id}/`, {status: true}, {
                 headers: { 'Content-Type': 'application/json' },
             });
             if (response.status === 200) {
-                updateOrAddAsset(response.data);
+                setPartners((prevPartners) =>
+                    prevPartners.map((partner) =>
+                      partner.id === selectedRowData.id
+                        ? { ...partner, isActive: false }
+                        : partner
+                    )
+                  );
                 showToast("Partner status successfully updated!");
             }
         } catch {
@@ -296,6 +306,8 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                 setErrosResponse(true)
                 setTotalCount(0)
             }
+
+            console.log({response})
 
         } catch {
         } finally {
