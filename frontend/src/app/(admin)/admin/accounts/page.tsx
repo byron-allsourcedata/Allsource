@@ -20,6 +20,8 @@ import PartnersAccounts from "@/components/PartnersAccounts";
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import CustomizedProgressBar from "@/components/ProgressBar";
 import PaymentHistory from "@/components/PaymentHistory";
+import Slider from "./MakePartner"
+import MakePartner from "./MakePartner";
 
 const getStatusStyle = (status: string) => {
     switch (status) {
@@ -115,6 +117,8 @@ const Accounts: React.FC = () => {
     const [accountName, setAccountName] = useState<string | null>(null);
     const [search, setSearch] = useState("");
     const [errorResponse, setErrosResponse] = useState(false);
+    const [isSliderOpen, setSliderOpen] = useState(false);
+    const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 
     const tableHeaders = [
         { key: 'partner_name', label: 'Account name', sortable: false },
@@ -129,18 +133,18 @@ const Accounts: React.FC = () => {
         { key: 'actions', label: 'Actions', sortable: false },
     ];
 
+    const handleOpenSlider = (id: number) => {
+        setSelectedUserId(id);
+        setSliderOpen(true);
+    };
 
-    const makePartner = async (userId: number, isPartner: boolean) => {
-        try {
-            const response = await axiosInstance.put('/admin/user', {
-                user_id: userId,
-                is_partner: isPartner,
-            });
-            showToast('User updated succesfuly')
-            fetchRules();
-        } catch (error) {
-            showErrorToast('Error updating user');
-        }
+    const handleCloseSlider = () => {
+        setSliderOpen(false);
+        setSelectedUserId(null);
+    };
+
+    const handleSubmit = () => {
+        fetchRules();
     };
 
     const handleOpenMenu = (event: any, rowData: any) => {
@@ -166,8 +170,7 @@ const Accounts: React.FC = () => {
         setSelectedDateLabel(label);
     };
 
-    const allowedRowsPerPage = [10, 25, 50, 100];
-    const validatedRowsPerPage = allowedRowsPerPage.includes(rowsPerPage) ? rowsPerPage : 10;   
+    const allowedRowsPerPage = [10, 25, 50, 100];   
 
     const handleDateChange = (dates: { start: Date | null; end: Date | null }) => {
         const { start, end } = dates;
@@ -644,9 +647,7 @@ const Accounts: React.FC = () => {
                                                                                         }}>
                                                                                             <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Payment history"/>
                                                                                         </ListItemButton>
-                                                                                        <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() =>
-                                                                                            makePartner(selectedRowData.id, true)
-                                                                                        }>
+                                                                                        <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => { handleCloseMenu(), handleOpenSlider(selectedRowData.id) }}>
                                                                                             <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Make partner"/>
                                                                                         </ListItemButton>
                                                                                         <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {}}>
@@ -741,6 +742,10 @@ const Accounts: React.FC = () => {
                                 </>}
                             </Box>
                         </Box>
+                        {(isSliderOpen && selectedUserId) && <MakePartner isOpen={isSliderOpen}
+                        onClose={handleCloseSlider}
+                        onSumbit={handleSubmit}
+                        user_id={selectedUserId} />}
                     </Grid>
                 </Grid>
             </Box>

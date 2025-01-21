@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Box, Typography, IconButton, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Popover, TextField, InputAdornment, Drawer } from "@mui/material";
+import { Box, Typography, IconButton, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Popover, TextField, InputAdornment, Tab, Tabs } from "@mui/material";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
@@ -74,6 +74,10 @@ const tableHeaders = [
 ];
 
 const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, onBack, selectMonth, partnerId, selectYear }) => {
+    const [tabIndex, setTabIndex] = useState(0);
+    const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
+        setTabIndex(newIndex);
+    };
     const [page, setPage] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -131,6 +135,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
         try {
             const response = await axiosInstance.put(`/admin-payouts/partners/${referralPayoutId}`, {
                 confirmation_status: confirmationStatus,
+                text: confirmationStatus === "approve" ? "Approved by admin" : "Rejected by admin",
             });
             fetchRewardData();
             showToast('Success changed payouts status')
@@ -138,7 +143,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
             showErrorToast("Error updating payout status:");
         }
     };
-
+    
 
     useEffect(() => {
         if (open) {
@@ -153,19 +158,20 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                 "January", "February", "March", "April", "May", "June",
                 "July", "August", "September", "October", "November", "December"
             ];
-
-            const selectedMonthNumber = selectMonth
-                ? monthArray.indexOf(selectMonth) + 1
+    
+            const selectedMonthNumber = selectMonth 
+                ? monthArray.indexOf(selectMonth) + 1 
                 : undefined;
 
             const response = await axiosInstance.get("/admin-payouts/partners", {
                 params: {
                     year: selectYear,
                     month: selectedMonthNumber,
-                    partner_id: partnerId
+                    partner_id: partnerId,
+                    reward_type:'master_partner'
                 },
             });
-
+    
             const rewards: RewardData[] = response.data.map((reward: any) => ({
                 company_name: reward.company_name,
                 email: reward.email,
@@ -180,11 +186,11 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                 comment: reward.comment,
                 referral_payouts_id: reward.referral_payouts_id,
             }));
-
+    
             setData(rewards);
             setTotalCount(rewards.length);
         } catch (error) {
-        } finally {
+        } finally{
             setIsLoading(false)
         }
     };
@@ -205,14 +211,13 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
             flexDirection: 'column',
             justifyContent: 'space-between',
             minHeight: '77vh',
-        }}>
+        }}> 
             {isLoading &&
-                <CustomizedProgressBar />
+            <CustomizedProgressBar />
             }
 
             <Box>
-                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', mb: 2 }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mb: 2, gap: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mb: 2, gap: 2 }}>
                         <IconButton
                             onClick={onBack}
                             sx={{
@@ -228,8 +233,82 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                         </IconButton>
                         <Typography className="second-sub-title">{selectMonth} -- {partnerName}</Typography>
                     </Box>
+                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', mb:2 }}>
+                    
 
-                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
+                    <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'start', alignItems: 'center', "@media (max-width: 900px)": { pr: 0 }, "@media (max-width: 600px)": { width: '97%', pr: '0' } }}>
+                        <Tabs
+                            value={tabIndex}
+                            onChange={handleTabChange}
+                            sx={{
+                                textTransform: 'none',
+                                minHeight: 0,
+                                '& .MuiTabs-indicator': {
+                                    backgroundColor: 'rgba(80, 82, 178, 1)',
+                                    height: '1.4px',
+                                },
+                                "@media (max-width: 600px)": {
+                                    border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px', width: '100%', '& .MuiTabs-indicator': {
+                                        height: '0',
+                                    },
+                                }
+                            }}
+                            aria-label="suppression tabs"
+                        >
+                            <Tab className="main-text"
+                                sx={{
+                                    textTransform: 'none',
+                                    padding: '4px 1px',
+                                    pb: '10px',
+                                    flexGrow: 1,
+                                    marginRight: '3em',
+                                    minHeight: 'auto',
+                                    minWidth: 'auto',
+                                    fontSize: '14px',
+                                    fontWeight: 700,
+                                    lineHeight: '19.1px',
+                                    textAlign: 'left',
+                                    mr: 2,
+                                    '&.Mui-selected': {
+                                        color: 'rgba(80, 82, 178, 1)'
+                                    },
+                                    "@media (max-width: 600px)": {
+                                        mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                                            backgroundColor: 'rgba(249, 249, 253, 1)',
+                                            border: '1px solid rgba(220, 220, 239, 1)'
+                                        },
+                                    }
+                                }}
+                                label="Accounts"
+                            />
+                            <Tab className="main-text"
+                                sx={{
+                                    textTransform: 'none',
+                                    padding: '4px 10px',
+                                    minHeight: 'auto',
+                                    flexGrow: 1,
+                                    pb: '10px',
+                                    textAlign: 'center',
+                                    fontSize: '14px',
+                                    fontWeight: 700,
+                                    lineHeight: '19.1px',
+                                    minWidth: 'auto',
+                                    '&.Mui-selected': {
+                                        color: 'rgba(80, 82, 178, 1)'
+                                    },
+                                    "@media (max-width: 600px)": {
+                                        mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                                            backgroundColor: 'rgba(249, 249, 253, 1)',
+                                            border: '1px solid rgba(220, 220, 239, 1)'
+                                        },
+                                    }
+                                }}
+                                label="Partners"
+                            />
+                        </Tabs>
+                </Box>
+
+                <Box sx={{display: 'flex', flexDirection: 'row', gap:2}}>
                         <TextField
                             id="input-with-icon-textfield"
                             placeholder="Search by partner name, emails"
@@ -264,7 +343,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                 },
                             }}
                         />
-                    </Box>
+                </Box>
                 </Box>
 
 
@@ -394,7 +473,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
 
 
                                                 <TableCell sx={{ ...payoutsStyle.tableBodyColumn, textAlign: 'center', pl: 0 }}>
-                                                    <Typography component="span" sx={{
+                                                <Typography component="span" sx={{
                                                         padding: '6px 8px',
                                                         borderRadius: '2px',
                                                         fontFamily: 'Roboto',
@@ -406,7 +485,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                                     </Typography>
                                                     <IconButton
                                                         onClick={(event) => handleOpenMenu(event, index)}
-                                                        sx={{ ':hover': { backgroundColor: 'transparent', color: 'rgba(80, 82, 178, 1) !important' }, padding: 0 }}
+                                                        sx={{ ':hover': { backgroundColor: 'transparent', color: 'rgba(80, 82, 178, 1) !important' }, padding:0 }}
                                                     >
                                                         <KeyboardArrowDownIcon />
                                                     </IconButton>
@@ -448,7 +527,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                                                 }
                                                             >
                                                                 Approve
-                                                            </Button>)}
+                                                            </Button> )}
                                                             {item.reward_status !== 'reject' && (<Button
                                                                 sx={{
                                                                     justifyContent: "flex-start",
@@ -463,19 +542,15 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                                                         backgroundColor: "rgba(80, 82, 178, 0.1)",
                                                                     },
                                                                 }}
-                                                                // onClick={() =>
-                                                                //     handleStatusChange(item.referral_payouts_id, "reject")
-                                                                // }
                                                                 onClick={() => { handleCloseMenu(), handleOpenSlider(item.referral_payouts_id) }}
                                                             >
                                                                 Reject
                                                             </Button>)}
-
+                                                        
                                                         </Box>
                                                     </Popover>
                                                 </TableCell>
                                             </TableRow>
-
                                         )))}
                                 </TableBody>
                             </Table>
@@ -490,7 +565,6 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                             onRowsPerPageChange={handleRowsPerPageChange}
                         />
                     </Box>
-
                     {(isSliderOpen && selectedPayoutId) && <RejectSlider isOpen={isSliderOpen}
                         onClose={handleCloseSlider}
                         onSumbit={handleSubmit}

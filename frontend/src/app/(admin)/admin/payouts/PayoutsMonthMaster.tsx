@@ -1,25 +1,40 @@
-import React, { useEffect, useState } from "react";
-import { Box, Typography, IconButton, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Popover, TextField, InputAdornment, Drawer } from "@mui/material";
-import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import { payoutsStyle } from "./payoutsStyle";
+import { Button, IconButton, InputAdornment, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography } from "@mui/material";
+import { Box } from "@mui/system";
+import dayjs from "dayjs";
+import CustomTablePagination from "@/components/CustomTablePagination";
+import { useEffect, useState } from "react";
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import CustomTablePagination from "@/components/CustomTablePagination";
-import { payoutsStyle } from "./payoutsStyle";
-import dayjs from "dayjs";
-import SearchIcon from '@mui/icons-material/Search';
+import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import axiosInstance from "@/axios/axiosInterceptorInstance";
+import { DateRangeIcon } from "@mui/x-date-pickers";
+import SearchIcon from '@mui/icons-material/Search';
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import CustomizedProgressBar from "@/components/ProgressBar";
-import RejectSlider from "./RejectSlider";
 
-interface PartnerAccountsProps {
-    partnerName: string;
+interface RewardData {
+    month: string;
+    is_payment_active: boolean;
+    company_name: string;
+    email: string;
+    join_date: Date;
+    commission: number;
+    partner_id: number;
+    reward_amount: string;
+    reward_approved: string;
+    reward_payout_date: Date;
+    reward_status: string;
+    is_auto_payout_date?: boolean;
+}
+
+
+interface MonthDetailsProps {
     onBack: () => void;
+    selectedMonth: string;
     open: boolean;
-    selectMonth: string;
-    selectYear: string;
-    partnerId: number;
+    onPartnerClick: (partner_id: number, partner_name: string, selected_year: string,) => void;
+    selectedYear: string;
 }
 
 const getStatusStyle = (status: any) => {
@@ -34,7 +49,17 @@ const getStatusStyle = (status: any) => {
                 background: 'rgba(234, 248, 221, 1)',
                 color: 'rgba(43, 91, 0, 1)',
             };
+        case 'paid':
+            return {
+                background: 'rgba(234, 248, 221, 1)',
+                color: 'rgba(43, 91, 0, 1)',
+            };
         case 'Pending':
+            return {
+                background: 'rgba(236, 236, 236, 1)',
+                color: 'rgba(74, 74, 74, 1)',
+            };
+        case 'pending':
             return {
                 background: 'rgba(236, 236, 236, 1)',
                 color: 'rgba(74, 74, 74, 1)',
@@ -47,68 +72,49 @@ const getStatusStyle = (status: any) => {
     }
 };
 
-interface RewardData {
-    partner_id: number;
-    company_name: string;
-    email: string;
-    join_date: Date;
-    plan_amount: string;
-    reward_amount: string;
-    payout_date: Date;
-    referral_link: string;
-    comment: string;
-    reward_status: string;
-    referral_payouts_id: number;
-}
-
 const tableHeaders = [
-    { key: 'account_name', label: 'Account name', sortable: false },
+    { key: 'account_name', label: 'Master Partner name', sortable: false },
     { key: 'email', label: 'Email', sortable: false },
     { key: 'join_date', label: 'Join date', sortable: true },
-    { key: 'plan_amount', label: 'Plan amount', sortable: false },
+    { key: 'comission', label: 'Comission', sortable: false },
     { key: 'reward_amount', label: 'Reward amount', sortable: false },
-    { key: 'payout_date', label: 'Payout date', sortable: true },
-    { key: 'referral_link', label: 'Referral link', sortable: false },
-    { key: 'comment', label: 'Comment', sortable: false },
+    { key: 'reward_approved', label: 'Reward approved', sortable: false },
+    { key: 'reward_payout_date', label: 'Reward Payout date', sortable: true },
     { key: 'reward_status', label: 'Reward status', sortable: false },
+    { key: 'actions', label: 'Actions', sortable: false },
 ];
 
-const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, onBack, selectMonth, partnerId, selectYear }) => {
+const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth, onPartnerClick, selectedYear }) => {
     const [page, setPage] = useState(0);
-    const [isLoading, setIsLoading] = useState(true);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalCount, setTotalCount] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
     const [data, setData] = useState<RewardData[] | []>([]);
-    const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
-    const [activeRow, setActiveRow] = useState<number | null>(null);
     const [search, setSearch] = useState("");
-    const [isSliderOpen, setSliderOpen] = useState(false);
-    const [selectedPayoutId, setSelectedPayoutId] = useState<number | null>(null);
 
-    const handleOpenSlider = (id: number) => {
-        setSelectedPayoutId(id);
-        setSliderOpen(true);
+    // Calendar
+    const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
+    const isCalendarOpen = Boolean(calendarAnchorEl);
+    const [formattedDates, setFormattedDates] = useState<string>('');
+    const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
+    const [selectedDateLabel, setSelectedDateLabel] = useState<string>('');
+
+    const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setCalendarAnchorEl(event.currentTarget);
     };
 
-    const handleCloseSlider = () => {
-        setSliderOpen(false);
-        setSelectedPayoutId(null);
+    const handleCalendarClose = () => {
+        setCalendarAnchorEl(null);
+    };
+    const handleDateLabelChange = (label: string) => {
+        setSelectedDateLabel(label);
     };
 
-    const handleOpenMenu = (event: React.MouseEvent<HTMLElement>, rowId: number) => {
-        setMenuAnchor(event.currentTarget);
-        setActiveRow(rowId);
-    };
 
-    const handleCloseMenu = () => {
-        setMenuAnchor(null);
-        setActiveRow(null);
-    };
-
-    const handleSubmit = () => {
-        fetchRewardData();
+    const handleSearchChange = (event: any) => {
+        setSearch(event.target.value);
     };
 
 
@@ -127,15 +133,13 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
         setOrderBy(property);
     };
 
-    const handleStatusChange = async (referralPayoutId: number, confirmationStatus: string) => {
+    const handlePayOutReferral = async (partnerId: number) => {
         try {
-            const response = await axiosInstance.put(`/admin-payouts/partners/${referralPayoutId}`, {
-                confirmation_status: confirmationStatus,
-            });
-            fetchRewardData();
-            showToast('Success changed payouts status')
+            const response = await axiosInstance.get(`admin-payouts/pay-out-referrals/${partnerId}`);
+            await fetchRewardData()
+            showToast(response.data.status)
         } catch (error) {
-            showErrorToast("Error updating payout status:");
+            showErrorToast("Error during payment")
         }
     };
 
@@ -154,32 +158,43 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                 "July", "August", "September", "October", "November", "December"
             ];
 
-            const selectedMonthNumber = selectMonth
-                ? monthArray.indexOf(selectMonth) + 1
+            const selectedMonthNumber = selectedMonth
+                ? monthArray.indexOf(selectedMonth) + 1
                 : undefined;
 
             const response = await axiosInstance.get("/admin-payouts/partners", {
                 params: {
-                    year: selectYear,
+                    year: selectedYear,
                     month: selectedMonthNumber,
-                    partner_id: partnerId
+                    is_master: true
                 },
             });
 
-            const rewards: RewardData[] = response.data.map((reward: any) => ({
-                company_name: reward.company_name,
-                email: reward.email,
-                sources: reward.sources,
-                plan_amount: reward.plan_amount,
-                number_of_accounts: reward.number_of_accounts,
-                referral_link: reward.referral_link,
-                reward_amount: reward.reward_amount,
-                reward_approved: reward.reward_approved,
-                reward_payout_date: new Date(reward.reward_payout_date),
-                reward_status: reward.reward_status,
-                comment: reward.comment,
-                referral_payouts_id: reward.referral_payouts_id,
-            }));
+            const rewards: RewardData[] = response.data.map((reward: any) => {
+                let isAutoPayoutDate = false;
+                const rewardPayoutDate = reward.reward_payout_date
+                    ? new Date(reward.reward_payout_date)
+                    : (() => {
+                        isAutoPayoutDate = true;
+                        const currentDate = new Date();
+                        const nextMonth = currentDate.getMonth() + 1;
+                        return new Date(currentDate.getFullYear(), nextMonth, 1);
+                    })();
+
+                return {
+                    is_payment_active: reward.is_payment_active,
+                    partner_id: reward.partner_id,
+                    company_name: reward.company_name,
+                    email: reward.email,
+                    join_date: reward.join_date,
+                    commission: reward.commission,
+                    reward_amount: reward.reward_amount,
+                    reward_approved: reward.reward_approved,
+                    reward_payout_date: rewardPayoutDate,
+                    is_auto_payout_date: isAutoPayoutDate,
+                    reward_status: reward.reward_status,
+                };
+            });
 
             setData(rewards);
             setTotalCount(rewards.length);
@@ -187,10 +202,6 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
         } finally {
             setIsLoading(false)
         }
-    };
-
-    const handleSearchChange = (event: any) => {
-        setSearch(event.target.value);
     };
 
 
@@ -207,11 +218,11 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
             minHeight: '77vh',
         }}>
             {isLoading &&
-                <CustomizedProgressBar />
+            <CustomizedProgressBar />
             }
-
             <Box>
                 <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', mb: 2 }}>
+
                     <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mb: 2, gap: 2 }}>
                         <IconButton
                             onClick={onBack}
@@ -226,7 +237,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                         >
                             <KeyboardArrowLeftIcon sx={{ color: "rgba(128, 128, 128, 1)" }} />
                         </IconButton>
-                        <Typography className="second-sub-title">{selectMonth} -- {partnerName}</Typography>
+                        <Typography className="second-sub-title">{selectedMonth} {selectedYear}</Typography>
                     </Box>
 
                     <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
@@ -264,9 +275,47 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                 },
                             }}
                         />
+                        <Button
+                            aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
+                            aria-haspopup="true"
+                            aria-expanded={isCalendarOpen ? 'true' : undefined}
+                            onClick={handleCalendarClick}
+                            sx={{
+                                textTransform: 'none',
+                                color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
+                                border: formattedDates ? '1.5px solid rgba(80, 82, 178, 1)' : '1.5px solid rgba(184, 184, 184, 1)',
+                                borderRadius: '4px',
+                                padding: '8px',
+                                minWidth: 'auto',
+                                '@media (max-width: 900px)': {
+                                    border: 'none',
+                                    padding: 0
+                                },
+                                '&:hover': {
+                                    border: '1.5px solid rgba(80, 82, 178, 1)',
+                                    '& .MuiSvgIcon-root': {
+                                        color: 'rgba(80, 82, 178, 1)'
+                                    }
+                                }
+                            }}
+                        >
+                            <DateRangeIcon
+                                fontSize="medium"
+                                sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }}
+                            />
+                            <Typography variant="body1" sx={{
+                                fontFamily: 'Roboto',
+                                fontSize: '14px',
+                                fontWeight: '400',
+                                color: 'rgba(32, 33, 36, 1)',
+                                lineHeight: '19.6px',
+                                textAlign: 'left'
+                            }}>
+                            </Typography>
+                        </Button>
                     </Box>
-                </Box>
 
+                </Box>
 
 
                 <Box sx={{
@@ -347,10 +396,12 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                                     ...payoutsStyle.tableBodyColumn,
                                                     cursor: 'pointer',
                                                     position: 'sticky',
+                                                    color: 'rgba(80, 82, 178, 1) !important',
                                                     left: 0,
                                                     zIndex: 1,
                                                     backgroundColor: '#fff',
                                                 }}
+                                                    onClick={() => onPartnerClick(item.partner_id, item.company_name, selectedYear)}
                                                 >
                                                     {item.company_name}
                                                 </TableCell>
@@ -364,7 +415,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                                 </TableCell>
 
                                                 <TableCell className='table-data' sx={payoutsStyle.tableBodyColumn}>
-                                                    {item.plan_amount}
+                                                    {item.commission}
                                                 </TableCell>
 
                                                 <TableCell className='table-data' sx={payoutsStyle.tableBodyColumn}>
@@ -372,110 +423,70 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                                 </TableCell>
 
                                                 <TableCell className='table-data' sx={payoutsStyle.tableBodyColumn}>
-                                                    {dayjs(item.payout_date).format('MMM D, YYYY')}
+                                                    {item.reward_approved}
                                                 </TableCell>
 
-                                                <TableCell className='table-data' sx={payoutsStyle.tableBodyColumn}>
-                                                    {item.referral_link}
+                                                <TableCell className="table-data" sx={payoutsStyle.tableBodyColumn}>
+                                                    {item.is_auto_payout_date ? (
+                                                        <Typography className="table-data" sx={{ fontStyle: "italic", color: "gray" }}>
+                                                            Would be paid on {dayjs(item.reward_payout_date).format('MMM D, YYYY')}
+                                                        </Typography>
+                                                    ) : (
+                                                        dayjs(item.reward_payout_date).format('MMM D, YYYY') || '--'
+                                                    )}
                                                 </TableCell>
 
-                                                <TableCell sx={{ ...payoutsStyle.tableBodyColumn, textAlign: 'center', pl: 0 }}>
+                                                <TableCell sx={{ ...payoutsStyle.tableColumn, textAlign: 'center', pl: 0 }}>
                                                     <Typography component="span" sx={{
+                                                        background: getStatusStyle(item.reward_status).background,
                                                         padding: '6px 8px',
                                                         borderRadius: '2px',
                                                         fontFamily: 'Roboto',
                                                         fontSize: '12px',
                                                         fontWeight: '400',
                                                         lineHeight: '16px',
-                                                    }}>
-                                                        {item.comment || '--'}
-                                                    </Typography>
-                                                </TableCell>
-
-
-                                                <TableCell sx={{ ...payoutsStyle.tableBodyColumn, textAlign: 'center', pl: 0 }}>
-                                                    <Typography component="span" sx={{
-                                                        padding: '6px 8px',
-                                                        borderRadius: '2px',
-                                                        fontFamily: 'Roboto',
-                                                        fontSize: '12px',
-                                                        fontWeight: '400',
-                                                        lineHeight: '16px',
+                                                        margin: 0,
+                                                        color: getStatusStyle(item.reward_status.charAt(0).toUpperCase() + item.reward_status.slice(1)).color,
                                                     }}>
                                                         {item.reward_status.charAt(0).toUpperCase() + item.reward_status.slice(1)}
                                                     </Typography>
-                                                    <IconButton
-                                                        onClick={(event) => handleOpenMenu(event, index)}
-                                                        sx={{ ':hover': { backgroundColor: 'transparent', color: 'rgba(80, 82, 178, 1) !important' }, padding: 0 }}
-                                                    >
-                                                        <KeyboardArrowDownIcon />
-                                                    </IconButton>
-                                                    <Popover
-                                                        open={Boolean(menuAnchor) && activeRow === index}
-                                                        anchorEl={menuAnchor}
-                                                        onClose={handleCloseMenu}
-                                                        anchorOrigin={{
-                                                            vertical: "bottom",
-                                                            horizontal: "center",
+                                                </TableCell>
+
+
+                                                <TableCell className='table-data'>
+                                                    <Button
+                                                        variant="contained"
+                                                        onClick={() => {
+                                                            if (item.is_payment_active) {
+                                                                handlePayOutReferral(item.partner_id);
+                                                            }
+                                                        }}
+                                                        sx={{
+                                                            backgroundColor: item.reward_status === 'paid' ? '#fff' : '#fff',
+                                                            fontFamily: "Nunito Sans",
+                                                            fontSize: '14px',
+                                                            fontWeight: '600',
+                                                            lineHeight: '20px',
+                                                            letterSpacing: 'normal',
+                                                            color: "rgba(80, 82, 178, 1)",
+                                                            border: '1px solid rgba(80, 82, 178, 1)',
+                                                            textTransform: 'none',
+                                                            padding: '5px 8px',
+                                                            margin: 0,
+                                                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                                            opacity: item.reward_status === 'paid' ? 0.6 : 1,
+                                                            pointerEvents: item.reward_status === 'paid' ? 'none' : 'auto',
+                                                            '&:hover': {
+                                                                backgroundColor: item.reward_status === 'paid' ? '#FFF' : '#5052B2',
+                                                                color: item.reward_status === 'paid' ? "rgba(80, 82, 178, 1)" : '#fff',
+                                                            },
+                                                            borderRadius: '4px'
                                                         }}
                                                     >
-                                                        <Box
-                                                            sx={{
-                                                                p: 1,
-                                                                display: "flex",
-                                                                flexDirection: "column",
-                                                                alignItems: "flex-start",
-                                                                width: "100%",
-                                                                maxWidth: "160px",
-                                                            }}
-                                                        >
-                                                            {item.reward_status !== 'approved' && (<Button
-                                                                sx={{
-                                                                    justifyContent: "flex-start",
-                                                                    width: "100%",
-                                                                    textTransform: "none",
-                                                                    fontFamily: "Nunito Sans",
-                                                                    fontSize: "14px",
-                                                                    color: "rgba(32, 33, 36, 1)",
-                                                                    fontWeight: 600,
-                                                                    ":hover": {
-                                                                        color: "rgba(80, 82, 178, 1)",
-                                                                        backgroundColor: "rgba(80, 82, 178, 0.1)",
-                                                                    },
-                                                                }}
-                                                                onClick={() =>
-                                                                    handleStatusChange(item.referral_payouts_id, "approve")
-                                                                }
-                                                            >
-                                                                Approve
-                                                            </Button>)}
-                                                            {item.reward_status !== 'reject' && (<Button
-                                                                sx={{
-                                                                    justifyContent: "flex-start",
-                                                                    width: "100%",
-                                                                    textTransform: "none",
-                                                                    fontFamily: "Nunito Sans",
-                                                                    fontSize: "14px",
-                                                                    color: "rgba(32, 33, 36, 1)",
-                                                                    fontWeight: 600,
-                                                                    ":hover": {
-                                                                        color: "rgba(80, 82, 178, 1)",
-                                                                        backgroundColor: "rgba(80, 82, 178, 0.1)",
-                                                                    },
-                                                                }}
-                                                                // onClick={() =>
-                                                                //     handleStatusChange(item.referral_payouts_id, "reject")
-                                                                // }
-                                                                onClick={() => { handleCloseMenu(), handleOpenSlider(item.referral_payouts_id) }}
-                                                            >
-                                                                Reject
-                                                            </Button>)}
-
-                                                        </Box>
-                                                    </Popover>
+                                                        Pay
+                                                    </Button>
                                                 </TableCell>
                                             </TableRow>
-
                                         )))}
                                 </TableBody>
                             </Table>
@@ -490,11 +501,6 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                             onRowsPerPageChange={handleRowsPerPageChange}
                         />
                     </Box>
-
-                    {(isSliderOpen && selectedPayoutId) && <RejectSlider isOpen={isSliderOpen}
-                        onClose={handleCloseSlider}
-                        onSumbit={handleSubmit}
-                        referralPayoutId={selectedPayoutId} />}
                 </Box>
 
             </Box>
@@ -502,4 +508,4 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
     );
 };
 
-export default PartnerAccounts;
+export default MonthDetails;

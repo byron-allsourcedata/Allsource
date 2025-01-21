@@ -7,8 +7,8 @@ import Image from "next/image";
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight'
-import PayoutsMonth from './PayoutsMonth';
-import PartnerAccounts from "./PartnersAccountPayouts";
+import PayoutsMonthMaster from './PayoutsMonthMaster';
+import MasterPartnerAccounts from "./MasterPartnersAccountsPayouts";
 
 interface RewardData {
     month: string;
@@ -42,17 +42,18 @@ const ReferralRewards: React.FC = () => {
     const fetchRewards = async (selectedYear: string) => {
         setLoading(true);
         try {
-            const response = await axiosInstance.get("/referral/rewards", {
-                params: {
-                    year: selectedYear
-                }
-            });            
-            setRewards(response.data);
+          const response = await axiosInstance.get("/admin-payouts/partners", {
+            params: {
+                year: selectedYear,
+                is_master: true
+            }
+        });
+          setRewards(response.data);
         } catch (error) {
         } finally {
-            setLoading(false);
+          setLoading(false);
         }
-    };
+      };
 
     const handlePartnerClick = (partner_id: number, partner_name: string) => {
         setSelectedPartner(partner_name);
@@ -60,65 +61,8 @@ const ReferralRewards: React.FC = () => {
         setOpenPartner(true);
       };
 
-
-
-    // useEffect(() => {
-    //     fetchRewards(year);
-    // }, []);
-
     useEffect(() => {
-        // fetchRules();
-        setRewards([
-            {
-                month: "November",
-                totalRewards: "$2000",
-                rewardsPaid: "$1800",
-                invitesCount: 30,
-                payoutDate: "Dec 01, 2024",
-            },
-            {
-                month: "October",
-                totalRewards: "$1000",
-                rewardsPaid: "$800",
-                invitesCount: 20,
-                payoutDate: "Nov 01, 2024",
-            },
-            {
-                month: "September",
-                totalRewards: "$2500",
-                rewardsPaid: "$2300",
-                invitesCount: 40,
-                payoutDate: "Oct 01, 2024",
-            },
-            {
-                month: "August",
-                totalRewards: "$1500",
-                rewardsPaid: "$1200",
-                invitesCount: 25,
-                payoutDate: "Sep 01, 2024",
-            },
-            {
-                month: "July",
-                totalRewards: "$2000",
-                rewardsPaid: "$1800",
-                invitesCount: 30,
-                payoutDate: "Aug 01, 2024",
-            },
-            {
-                month: "June",
-                totalRewards: "$1000",
-                rewardsPaid: "$800",
-                invitesCount: 20,
-                payoutDate: "May 01, 2024",
-            },
-            {
-                month: "May",
-                totalRewards: "$2500",
-                rewardsPaid: "$2300",
-                invitesCount: 40,
-                payoutDate: "Apr 01, 2024",
-            },
-        ]);
+        fetchRewards(year);
     }, []);
 
     const handleViewDetails = (monthData: string) => {
@@ -152,10 +96,10 @@ const ReferralRewards: React.FC = () => {
                 '@media (max-width: 600px)': { margin: '0rem auto 0rem' }
             }}>
                 {selectedPartner && selectedPartnerId ? (
-          <PartnerAccounts open={openPartner} partnerName={selectedPartner} selectMonth={selectedMonth || ''} partnerId={selectedPartnerId} selectYear={year} onBack={handleBackPartners} />
+          <MasterPartnerAccounts open={openPartner} partnerName={selectedPartner} selectMonth={selectedMonth || ''} partnerId={selectedPartnerId} selectYear={year} onBack={handleBackPartners} />
         ) : 
                 selectedMonth ? (
-                    <PayoutsMonth open={open} selectedYear={year} selectedMonth={selectedMonth} onBack={handleBack} onPartnerClick={handlePartnerClick} />
+                    <PayoutsMonthMaster open={open} selectedYear={year} selectedMonth={selectedMonth} onBack={handleBack} onPartnerClick={handlePartnerClick} />
                 ) : (
                     <>
                         <Box sx={{ display: 'flex', justifyContent: 'end', mb: 2 }}>
