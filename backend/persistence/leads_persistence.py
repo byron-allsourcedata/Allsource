@@ -753,15 +753,10 @@ class LeadsPersistence:
                 FiveXFiveUser.company_linkedin_url,
                 FiveXFiveUser.company_revenue,
                 FiveXFiveUser.company_employee_count,
-                FiveXFiveUser.net_worth,
                 FiveXFiveUser.job_title,
                 FiveXFiveUser.last_updated,
-                FiveXFiveUser.personal_emails_last_seen,
-                FiveXFiveUser.company_last_updated,
-                FiveXFiveUser.job_title_last_updated,
                 FiveXFiveUser.age_min,
                 FiveXFiveUser.age_max,
-                FiveXFiveUser.additional_personal_emails,
                 FiveXFiveUser.linkedin_url,
                 FiveXFiveUser.personal_address,
                 FiveXFiveUser.personal_address_2,
@@ -772,18 +767,7 @@ class LeadsPersistence:
                 FiveXFiveUser.children,
                 FiveXFiveUser.income_range,
                 FiveXFiveUser.homeowner,
-                FiveXFiveUser.seniority_level,
-                FiveXFiveUser.department,
-                FiveXFiveUser.professional_address,
-                FiveXFiveUser.professional_address_2,
-                FiveXFiveUser.professional_city,
-                FiveXFiveUser.professional_state,
-                FiveXFiveUser.professional_zip4,
                 FiveXFiveUser.primary_industry,
-                FiveXFiveUser.business_email_validation_status,
-                FiveXFiveUser.business_email_last_seen,
-                FiveXFiveUser.personal_emails_validation_status,
-                FiveXFiveUser.related_domains,
                 FiveXFiveUser.social_connections,
                 FiveXFiveUser.dpv_code
             )
@@ -793,7 +777,7 @@ class LeadsPersistence:
         result = [
             {
                 column.name: (
-                    (getattr(user, column.name, None).lower() if column.name == "gender" and getattr(user, column.name, None) else getattr(user, column.name, "N/A"))
+                    (getattr(user, column.name, None).lower() if column.name == "gender" and getattr(user, column.name, None) else getattr(user, column.name, ""))
                 )
                 for column in FiveXFiveUser.__table__.columns
                 if getattr(user, column.name, None) is not None or column.name != "gender"
