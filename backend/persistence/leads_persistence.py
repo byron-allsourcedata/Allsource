@@ -792,9 +792,11 @@ class LeadsPersistence:
         )
         result = [
             {
-                column.name: (getattr(user, column.name, None).lower() if column.name == "gender" and getattr(user, column.name, None) else getattr(user, column.name, None))
+                column.name: (
+                    (getattr(user, column.name, None).lower() if column.name == "gender" and getattr(user, column.name, None) else getattr(user, column.name, "N/A"))
+                )
                 for column in FiveXFiveUser.__table__.columns
-                if getattr(user, column.name, None) is not None
+                if getattr(user, column.name, None) is not None or column.name != "gender"
             }
             for user in five_x_five_users
         ]

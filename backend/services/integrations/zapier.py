@@ -94,25 +94,24 @@ class ZapierIntegrationService:
         if (lead_type == 'converted sales'):
             return 'converted_sales'
         if (lead_type == 'all contacts'):
-            return 'allContact'
-        return 'allContact'
+            return 'allContacts'
+        return 'allContacts'
     
     def __mapped_lead(self, lead):
         lead_dict = {
             "id": lead.id,
             "first_name": lead.first_name,
-            "programmatic_business_emails": lead.programmatic_business_emails,
+            "last_name": lead.last_name,
             "mobile_phone": format_phone_number(lead.mobile_phone),
             "direct_number": lead.direct_number,
             "gender": lead.gender.lower() if lead.gender else None,
             "personal_phone": format_phone_number(lead.personal_phone),
             "business_email": lead.business_email,
-            "personal_emails": lead.personal_emails,
-            "last_name": lead.last_name,
-            "personal_city": lead.personal_city,
-            "personal_state": lead.personal_state,
-            "company_name": lead.company_name,
-            "company_domain": lead.company_domain,
+            "personal_emails": lead.personal_emails or 'N\A',
+            "personal_city": lead.personal_city or 'N\A',
+            "personal_state": lead.personal_state or 'N\A',
+            "company_name": lead.company_name or 'N\A',
+            "company_domain": lead.company_domain or 'N\A',
             "company_phone": format_phone_number(lead.company_phone),
             "company_sic": lead.company_sic,
             "company_address": lead.company_address,
@@ -123,7 +122,7 @@ class ZapierIntegrationService:
             "company_revenue": lead.company_revenue,
             "company_employee_count": lead.company_employee_count,
             "net_worth": lead.net_worth,
-            "job_title": lead.job_title,
+            "job_title": lead.job_title or 'N\A',
             "last_updated": lead.last_updated.isoformat() if isinstance(lead.last_updated, datetime) else None,
             "personal_emails_last_seen": lead.personal_emails_last_seen.isoformat() if isinstance(lead.personal_emails_last_seen, datetime) else None,
             "company_last_updated": lead.company_last_updated.isoformat() if isinstance(lead.company_last_updated, datetime) else None,
@@ -132,7 +131,7 @@ class ZapierIntegrationService:
             "age_max": lead.age_max,
             "additional_personal_emails": lead.additional_personal_emails,
             "linkedin_url": lead.linkedin_url,
-            "personal_address": lead.personal_address,
+            "personal_address": lead.personal_address or 'N\A',
             "personal_address_2": lead.personal_address_2,
             "personal_zip": lead.personal_zip,
             "personal_zip4": lead.personal_zip4,
