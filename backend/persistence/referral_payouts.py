@@ -95,11 +95,10 @@ class ReferralPayoutsPersistence:
         ).order_by(
             ReferralPayouts.created_at.desc()
         )
-        
         if reward_type == 'master_partner':
-            ReferralPayouts.reward_type == 'master_partner'
+            query = query.filter(ReferralPayouts.reward_type == 'master_partner')
         else:
-            ReferralPayouts.reward_type == 'partner'
+            query = query.filter(ReferralPayouts.reward_type == 'partner')
             
         if search_query:
             filters = [
