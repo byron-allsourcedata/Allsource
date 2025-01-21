@@ -6,7 +6,7 @@ import pytz
 from sqlalchemy import and_, or_, desc, asc, Integer
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql import func
-
+from utils import format_phone_number
 from models.audience import Audience
 from models.audience_leads import AudienceLeads
 from models.five_x_five_emails import FiveXFiveEmails
@@ -732,12 +732,10 @@ class LeadsPersistence:
             self.db.query(
                 FiveXFiveUser.id,
                 FiveXFiveUser.first_name,
-                FiveXFiveUser.programmatic_business_emails,
                 FiveXFiveUser.mobile_phone,
                 FiveXFiveUser.direct_number,
                 FiveXFiveUser.gender,
                 FiveXFiveUser.personal_phone,
-                FiveXFiveUser.business_email,
                 FiveXFiveUser.personal_emails,
                 FiveXFiveUser.last_name,
                 FiveXFiveUser.personal_city,
@@ -776,11 +774,21 @@ class LeadsPersistence:
         )
         result = [
             {
-                column.name: (
-                    (getattr(user, column.name, None).lower() if column.name == "gender" and getattr(user, column.name, None) else getattr(user, column.name, ""))
+                column: (
+                    format_phone_number(getattr(user, column, "N/A"))
+                    if "phone" in column else
+                    (getattr(user, column, "N/A").lower() if column == "gender" and getattr(user, column, None) else getattr(user, column, "N/A"))
                 )
-                for column in FiveXFiveUser.__table__.columns
-                if getattr(user, column.name, None) is not None or column.name != "gender"
+                for column in [
+                    "id", "first_name", "mobile_phone", "direct_number", "gender", "personal_phone", 
+                    "personal_emails", "last_name", "personal_city", "personal_state", "company_name", 
+                    "company_domain", "company_phone", "company_sic", "company_address", "company_city", 
+                    "company_state", "company_zip", "company_linkedin_url", "company_revenue", 
+                    "company_employee_count", "job_title", "last_updated", "age_min", "age_max", 
+                    "linkedin_url", "personal_address", "personal_address_2", "personal_zip", "personal_zip4", 
+                    "professional_zip", "married", "children", "income_range", "homeowner", "primary_industry", 
+                    "social_connections", "dpv_code"
+                ]
             }
             for user in five_x_five_users
         ]
