@@ -184,10 +184,6 @@ class PartnersService:
 
         created_data = self.partners_persistence.create_partner(creating_data)
 
-        if not created_data:
-            logger.debug('Database error during creation', e)
-            return {"status": False, "error": {"code": 500, "message": "Partner not created"}}
-
         user = self.get_user_info(created_data.user_id, created_data)
         return {"status": True, "data": self.domain_mapped(created_data, user)}
     
