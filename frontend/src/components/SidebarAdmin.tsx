@@ -136,7 +136,11 @@ const SidebarAdmin: React.FC = () => {
     const pathname = usePathname();
 
     const handleNavigation = (path: string) => {
-        router.push(path);
+        if (pathname === path) {
+            router.replace(path);
+        } else {
+            router.push(path);
+        }
     };
 
     const isActive = (path: string) => pathname === path;
