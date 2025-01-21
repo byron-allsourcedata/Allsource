@@ -85,13 +85,17 @@ class AdminCustomersService:
         if update_data.is_partner:
             if update_data.is_partner == True:
                 self.create_subscription_for_partner(user=user)
+                commission = 70 if update_data.commission >= 70 else update_data.commission
                 creating_data = {
+                    'user_id': user.id,
+                    'join_date': datetime.now(timezone.utc),
                     "full_name": user.full_name,
                     "email": user.email,
                     "company_name": user.company_name,
-                    "commission": update_data.commission,
+                    "commission": commission,
                     "token": get_md5_hash(user.email),
-                    "isMaster": False
+                    "isMaster": False,
+                    'status': 'signup'
                 }
                 self.partners_persistence.create_partner(creating_data)
             user.is_partner = update_data.is_partner
@@ -153,7 +157,7 @@ class AdminCustomersService:
                 user_subscription = self.get_user_subscription(user_data.id)
                 if not user_subscription.plan_start and not user_subscription.plan_end:
                     free_trial_plan = self.get_free_trial_plan()
-                    start_date = datetime.utcnow()
+                    start_date = datetime.now(timezone.utc)
                     end_date = start_date + timedelta(days=free_trial_plan.trial_days)
                     start_date_str = start_date.isoformat() + "Z"
                     end_date_str = end_date.isoformat() + "Z"

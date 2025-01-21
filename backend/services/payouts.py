@@ -160,7 +160,7 @@ class PayoutsService:
         processed_payouts = []
 
         for referral_payout in referral_payouts:
-            referral_link = f"{os.getenv('SITE_URL')}signup?coupon={referral_payout.coupon}" 
+            referral_link = f"{os.getenv('SITE_HOST_URL')}signup?coupon={referral_payout.coupon}" 
             processed_payouts.append({
                 'referral_payouts_id': referral_payout.id,
                 'user_id': referral_payout.user_id,
