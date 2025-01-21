@@ -217,7 +217,6 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                         order,
                     }});
             }
-            console.log({response})
             if(response.status === 200 && response.data.totalCount > 0) {
                 setAccounts([...response.data.items])
                 setErrosResponse(false)
