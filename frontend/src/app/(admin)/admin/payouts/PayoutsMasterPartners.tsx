@@ -9,14 +9,16 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight'
 import PayoutsMonthMaster from './PayoutsMonthMaster';
 import MasterPartnerAccounts from "./MasterPartnersAccountsPayouts";
+import dayjs from "dayjs";
 
 interface RewardData {
     month: string;
-    totalRewards: string;
-    rewardsPaid: string;
-    invitesCount: number;
-    payoutDate: string;
-}
+    total_rewards: number;
+    rewards_approved: number;
+    rewards_paid: number;
+    count_accounts: number;
+    payout_date: Date;
+  }
 
 const ReferralRewards: React.FC = () => {
     const [loading, setLoading] = useState(false);
@@ -223,19 +225,19 @@ const ReferralRewards: React.FC = () => {
                                                 <Typography variant="body2" className="table-heading">
                                                     Total Rewards
                                                 </Typography>
-                                                <Typography variant="subtitle1" className="table-data">{data.totalRewards}</Typography>
+                                                <Typography variant="subtitle1" className="table-data">{data.total_rewards}</Typography>
                                             </Box>
                                             <Box>
                                                 <Typography variant="body2" className="table-heading" sx={{textAlign: 'left'}}>
                                                     Reward Approved
                                                 </Typography>
-                                                <Typography variant="subtitle1" className="table-data">{data.rewardsPaid}</Typography>
+                                                <Typography variant="subtitle1" className="table-data">{data.rewards_approved}</Typography>
                                             </Box>
                                             <Box>
                                                 <Typography variant="body2" className="table-heading" sx={{textAlign: 'left'}}>
                                                     Rewards paid
                                                 </Typography>
-                                                <Typography variant="subtitle1" className="table-data">{data.rewardsPaid}</Typography>
+                                                <Typography variant="subtitle1" className="table-data">{data.rewards_paid}</Typography>
                                             </Box>
                                         </Box>
                                         <Box sx={{ display: 'flex', gap:6, '@media (max-width: 900px)': { gap: 3}, '@media (max-width: 600px)': { justifyContent: 'space-between', width: '100%', display: 'flex', pr:1.5 } }}>
@@ -243,13 +245,13 @@ const ReferralRewards: React.FC = () => {
                                                 <Typography variant="body2" className="table-heading">
                                                     No. of accounts
                                                 </Typography>
-                                                <Typography variant="subtitle1" className="table-data">{data.invitesCount}</Typography>
+                                                <Typography variant="subtitle1" className="table-data">{data.count_accounts}</Typography>
                                             </Box>
                                             <Box>
                                                 <Typography variant="body2" className="table-heading" sx={{textAlign: 'left'}}>
                                                     Payout date
                                                 </Typography>
-                                                <Typography variant="subtitle1" className="table-data">{data.payoutDate}</Typography>
+                                                <Typography variant="subtitle1" className="table-data">{dayjs(data.payout_date).format('MMM D, YYYY')}</Typography>
                                             </Box>
                                         </Box>
                                     </Box>

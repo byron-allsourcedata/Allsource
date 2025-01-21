@@ -22,30 +22,6 @@ interface PartnerAccountsProps {
     partnerId: number;
 }
 
-const getStatusStyle = (status: any) => {
-    switch (status) {
-        case "Accepted":
-            return {
-                background: 'rgba(234, 248, 221, 1)',
-                color: 'rgba(43, 91, 0, 1)',
-            };
-        case 'Paid':
-            return {
-                background: 'rgba(234, 248, 221, 1)',
-                color: 'rgba(43, 91, 0, 1)',
-            };
-        case 'Pending':
-            return {
-                background: 'rgba(236, 236, 236, 1)',
-                color: 'rgba(74, 74, 74, 1)',
-            };
-        default:
-            return {
-                background: 'transparent',
-                color: 'inherit',
-            };
-    }
-};
 
 interface RewardData {
     partner_id: number;
@@ -149,7 +125,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
         if (open) {
             fetchRewardData();
         }
-    }, [open]);
+    }, [open, tabIndex]);
 
     const fetchRewardData = async () => {
         try {
@@ -168,7 +144,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                     year: selectYear,
                     month: selectedMonthNumber,
                     partner_id: partnerId,
-                    reward_type:'master_partner'
+                    reward_type: tabIndex === 0 ? 'partner' : 'master_partner',
                 },
             });
     
