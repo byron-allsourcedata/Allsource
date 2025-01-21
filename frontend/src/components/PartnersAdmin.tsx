@@ -238,15 +238,25 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
         setFormPopupOpen(false)
     }
 
+    const updateOpportunity = (id: number) => {
+        setPartners((prevPartners) =>
+            prevPartners.map((partner: any) =>
+              partner.id === id
+                ? { ...partner, isActive: !partner.isActive }
+                : partner
+            )
+        );
+    }
+
     const setEnabled = async () => {
         setLoading(true);
     
         try {
-            const response = await axiosInstance.put(`admin-partners/${selectedRowData.id}/`, {status: "active"}, {
+            const response = await axiosInstance.put(`admin-partners/opportunity/${selectedRowData.id}/`, {status: true}, {
                 headers: { 'Content-Type': 'application/json' },
             });
             if (response.status === 200) {
-                updateOrAddAsset(response.data);
+                updateOpportunity(selectedRowData.id)
                 showToast("Partner status successfully updated!");
             }
         } catch {
@@ -278,6 +288,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
     const fetchRules = useCallback(async () => {
         setLoading(true);
         try {
+            console.log({page, rowsPerPage})
             const response = await axiosInstance.get("/admin-partners", {
                 params: { 
                     isMaster, search,
@@ -737,18 +748,18 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                                                 </ListItemButton>
                                                                                 {selectedRowData?.isActive === true 
                                                                                 ?   <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
+                                                                                        handleCloseMenu()
                                                                                         handleNoticeOpenPopup()
                                                                                         setEnabledData({ 
                                                                                             id: selectedRowData.id});
-                                                                                        handleCloseMenu()
                                                                                     }}>
                                                                                         <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Disable"/>
                                                                                     </ListItemButton>
                                                                                 :   <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
+                                                                                        handleCloseMenu()
                                                                                         setEnabled()
                                                                                         setEnabledData({ 
                                                                                             id: selectedRowData.id});
-                                                                                        handleCloseMenu()
                                                                                     }}>
                                                                                         <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Enable"/>
                                                                                     </ListItemButton>
@@ -820,7 +831,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                         open={formPopupOpen} 
                                         onClose={handleFormClosePopup}  />
                                     <EnablePartnerPopup 
-                                        updateOrAddAsset={updateOrAddAsset}
+                                        updateOpportunity={updateOpportunity}
                                         removePartnerById={removePartnerById}
                                         enabledData={enabledData} 
                                         open={noticePopupOpen} 

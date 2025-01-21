@@ -37,7 +37,7 @@ interface RequestData {
     email?: string;
     full_name?: string;
     company_name?: string;
-    isMaster?: boolean;
+    is_master?: boolean;
     masterId?: number;
 }
 
@@ -115,7 +115,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
                 });
             } else {
                 requestData.email = email;
-                requestData.isMaster = isMaster;
+                requestData.is_master = isMaster;
                 if(masterId) {
                     requestData.masterId = masterId;
                     response = await axiosInstance.post(`partners/`, requestData, {

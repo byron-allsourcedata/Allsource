@@ -346,8 +346,8 @@ class UserPersistence:
                 "created_at": account[3],
                 "plan_amount": account[4] if account[4] else "--",
                 "status": (
-                    "Signup" if account[8] and not account[9] else
-                    "Active" if account[8] and account[9] else
+                    "Signup" if account[7] and not account[8] else
+                    "Active" if account[7] and account[8] else
                     "Inactive"
                 ),
                 "sources": (

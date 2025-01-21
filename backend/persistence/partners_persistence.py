@@ -59,7 +59,7 @@ class PartnersPersistence:
                 end_date = datetime.combine(end_date, datetime.max.time())
             query = query.filter(Partner.join_date <= end_date)
 
-        return query.offset(offset).limit(limit).all()
+        return query.offset(offset).limit(limit).all(), query.count()
 
     
 
