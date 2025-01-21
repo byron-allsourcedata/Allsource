@@ -742,20 +742,10 @@ class LeadsPersistence:
                 FiveXFiveUser.personal_state,
                 FiveXFiveUser.company_name,
                 FiveXFiveUser.company_domain,
-                FiveXFiveUser.company_phone,
-                FiveXFiveUser.company_sic,
-                FiveXFiveUser.company_address,
-                FiveXFiveUser.company_city,
-                FiveXFiveUser.company_state,
-                FiveXFiveUser.company_zip,
-                FiveXFiveUser.company_linkedin_url,
-                FiveXFiveUser.company_revenue,
-                FiveXFiveUser.company_employee_count,
                 FiveXFiveUser.job_title,
                 FiveXFiveUser.last_updated,
                 FiveXFiveUser.age_min,
                 FiveXFiveUser.age_max,
-                FiveXFiveUser.linkedin_url,
                 FiveXFiveUser.personal_address,
                 FiveXFiveUser.personal_address_2,
                 FiveXFiveUser.personal_zip,
@@ -765,13 +755,12 @@ class LeadsPersistence:
                 FiveXFiveUser.children,
                 FiveXFiveUser.income_range,
                 FiveXFiveUser.homeowner,
-                FiveXFiveUser.primary_industry,
-                FiveXFiveUser.social_connections,
                 FiveXFiveUser.dpv_code
             )
             .filter(FiveXFiveUser.id.in_(five_x_five_user_ids))
             .all()
         )
+
         result = [
             {
                 column: (
@@ -782,18 +771,17 @@ class LeadsPersistence:
                 for column in [
                     "id", "first_name", "mobile_phone", "direct_number", "gender", "personal_phone", 
                     "personal_emails", "last_name", "personal_city", "personal_state", "company_name", 
-                    "company_domain", "company_phone", "company_sic", "company_address", "company_city", 
-                    "company_state", "company_zip", "company_linkedin_url", "company_revenue", 
-                    "company_employee_count", "job_title", "last_updated", "age_min", "age_max", 
-                    "linkedin_url", "personal_address", "personal_address_2", "personal_zip", "personal_zip4", 
-                    "professional_zip", "married", "children", "income_range", "homeowner", "primary_industry", 
-                    "social_connections", "dpv_code"
+                    "company_domain", 
+                    "job_title", "last_updated", "age_min", "age_max", 
+                    "personal_address", "personal_address_2", "personal_zip", "personal_zip4", 
+                    "professional_zip", "married", "children", "income_range", "homeowner", "dpv_code"
                 ]
             }
             for user in five_x_five_users
         ]
         
         return result
+
         
     def search_contact(self, start_letter, domain_id):
         letters = start_letter.split()
