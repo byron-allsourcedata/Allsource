@@ -288,6 +288,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
     const fetchRules = useCallback(async () => {
         setLoading(true);
         try {
+            console.log({page, rowsPerPage})
             const response = await axiosInstance.get("/admin-partners", {
                 params: { 
                     isMaster, search,

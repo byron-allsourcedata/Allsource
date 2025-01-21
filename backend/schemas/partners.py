@@ -33,7 +33,7 @@ class PartnerCreateRequest(BaseModel):
     email: Optional[str] = None
     company_name: Optional[str] = None
     commission: str
-    isMaster: Optional[bool] = False
+    is_master: Optional[bool] = False
     masterId: Optional[int] = None
 
 class OpportunityStatus(BaseModel):

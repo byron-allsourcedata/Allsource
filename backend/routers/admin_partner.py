@@ -10,7 +10,7 @@ router = APIRouter(dependencies=[Depends(check_user_admin)])
 @router.get('')
 @router.get('/')
 def get_partners(
-    isMaster: Optional[bool] = Query(None),
+    isMaster: Optional[bool] = Query(False),
     search: Optional[str] = Query(None),
     start_date: Optional[date] = Query(None),
     end_date: Optional[date] = Query(None),
@@ -51,7 +51,7 @@ async def create_partner(
         request.email,
         request.company_name,
         request.commission,
-        request.isMaster,
+        request.is_master,
     )
 
     if not partner.get("status"):

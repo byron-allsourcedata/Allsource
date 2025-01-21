@@ -51,11 +51,12 @@ class PartnersService:
     def get_partners(self, isMaster, search, start_date, end_date, page, rowsPerPage) -> PartnersObjectResponse:
         offset = page * rowsPerPage
         limit = rowsPerPage
+
         search_term = f"%{search}%" if search else None
-        partners = self.partners_persistence.get_partners(
+        
+        partners, total_count = self.partners_persistence.get_partners(
             isMaster, search_term, start_date, end_date, offset, limit
         )
-        total_count = self.partners_persistence.get_total_count(isMaster, search_term)
 
         result = [
             self.domain_mapped(partner, self.get_user_info(partner.user_id, partner))
@@ -164,7 +165,7 @@ class PartnersService:
         return md5_hash
     
 
-    async def create_partner(self, full_name: str, email: str, company_name: str, commission: str, isMaster: bool, masterId=None) -> PartnersObjectResponse:
+    async def create_partner(self, full_name: str, email: str, company_name: str, commission: str, is_master: bool, masterId=None) -> PartnersObjectResponse:
         if not full_name or not email or not company_name or not commission:
             return {"status": False, "error": {"code": 400, "message": "Invalid request with your partner data"}}
         
@@ -176,7 +177,7 @@ class PartnersService:
                 "company_name": company_name,
                 "commission": commission,
                 "token": hash,
-                "isMaster": isMaster
+                "is_master": is_master
             }
 
             if masterId is not None:
