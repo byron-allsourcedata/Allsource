@@ -78,7 +78,6 @@ const ZapierConnectPopup = ({ open, handlePopupClose, boxShadow }: ApIkeyPopup) 
     };
 
     useEffect(() => {
-        if (open) {
         const fetchApiKey = async () => {
             const response = await axiosInstance.get('/domains/api_key')
             if (response.status === 200) {
@@ -86,7 +85,6 @@ const ZapierConnectPopup = ({ open, handlePopupClose, boxShadow }: ApIkeyPopup) 
             }
         }
         fetchApiKey()
-        }
     }, [])
 
 
