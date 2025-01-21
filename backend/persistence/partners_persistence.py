@@ -4,7 +4,6 @@ from sqlalchemy import or_, func
 from typing import Optional
 from datetime import datetime, timedelta
 from models.referral_payouts import ReferralPayouts
-from models.partner import Partner
 from models.users import Users
 from enums import ConfirmationStatus, PayoutsStatus
 

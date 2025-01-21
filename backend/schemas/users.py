@@ -39,6 +39,7 @@ class UserSignUpForm(BaseModel):
     referral: Optional[str] = None
     shop_hash: Optional[str] = None
     utm_params: Optional[UtmParams] = None
+    source_platform:Optional[str] = None
 
 
 class DismissNotificationsRequest(BaseModel):
@@ -145,6 +146,7 @@ class StripeConnectResponse(BaseModel):
 class UpdateUserRequest(BaseModel):
     user_id: int
     is_partner: bool | None = None
+    commission: Optional[str] = None
 
 class UpdateUserResponse(BaseModel):
     status: UpdateUserStatus

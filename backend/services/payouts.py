@@ -7,6 +7,7 @@ from persistence.partners_persistence import PartnersPersistence
 from services.stripe_service import StripeService
 from typing import List, Dict
 import os
+from datetime import datetime
 
 class PayoutsService:
 
@@ -31,7 +32,7 @@ class PayoutsService:
                 payout.reward_amount for payout in month_payouts if payout.status == PayoutsStatus.PAID.value
             )
             rewards_approved = sum(
-                payout.reward_amount for payout in month_payouts if payout.confirmation_status == ConfirmationStatus.PENDING.value
+                payout.reward_amount for payout in month_payouts if payout.confirmation_status == ConfirmationStatus.APPROVED.value
             )
             
             payout_date = max(
@@ -40,8 +41,8 @@ class PayoutsService:
             )
 
             payout_date_formatted = payout_date.strftime('%b %d, %Y') if payout_date else None
-            month_name = payout_date.strftime('%B') if payout_date else ""
             
+            month_name = datetime.strptime(month_year, '%Y-%m').strftime('%B')
             user_ids = {month_payout.parent_id for month_payout in month_payouts}
             partners = self.partners_persistence.get_partners_by_user_ids(user_ids)
     
@@ -89,7 +90,7 @@ class PayoutsService:
         return PayoutsStatus.PAID.value
 
     
-    def process_partners_payouts(self, payouts: List, search_query: str) -> List[Dict]:
+    def process_partners_payouts(self, payouts: List, search_query: str, is_master: bool) -> List[Dict]:
         payouts = {payout.parent_id: payout for payout in payouts}.values()
         user_ids = {payout.parent_id for payout in payouts}
         partners = self.partners_persistence.get_partners_by_user_ids(user_ids, search_query)
@@ -125,19 +126,33 @@ class PayoutsService:
                 )
                 
                 payout_date_formatted = payout_date.strftime('%b %d, %Y') if payout_date else None
-                
-                result.append({
-                    'partner_id': partner.id,
-                    'company_name': partner.company_name,
-                    'email': partner.email,
-                    'sources': source,
-                    'is_payment_active': self.check_payment_active_payouts(referral_payouts_for_partner),
-                    'number_of_accounts': len(referral_payouts_for_partner),
-                    'reward_amount': reward_amount,
-                    'reward_approved': rewards_approved,
-                    'reward_payout_date': payout_date_formatted,
-                    'reward_status': self.check_pending_referral_payouts(referral_payouts_for_partner),
-                })
+                join_date = partner.created_at.strftime('%b %d, %Y')
+                if is_master:
+                    result.append({
+                        'partner_id': partner.id,
+                        'company_name': partner.company_name,
+                        'email': partner.email,
+                        'join_date': join_date,
+                        'commission': partner.commission,
+                        'reward_amount': reward_amount,
+                        'reward_approved': rewards_approved,
+                        'reward_payout_date': payout_date_formatted,
+                        'reward_status': self.check_pending_referral_payouts(referral_payouts_for_partner),
+                        'is_payment_active': self.check_payment_active_payouts(referral_payouts_for_partner)
+                    })
+                else:
+                    result.append({
+                        'partner_id': partner.id,
+                        'company_name': partner.company_name,
+                        'email': partner.email,
+                        'sources': source,
+                        'number_of_accounts': len(referral_payouts_for_partner),
+                        'reward_amount': reward_amount,
+                        'reward_approved': rewards_approved,
+                        'reward_payout_date': payout_date_formatted,
+                        'reward_status': self.check_pending_referral_payouts(referral_payouts_for_partner),
+                        'is_payment_active': self.check_payment_active_payouts(referral_payouts_for_partner)
+                    })
         
         return result
     
@@ -164,17 +179,17 @@ class PayoutsService:
 
 
         
-    def get_payouts_partners(self, year, month, partner_id, search_query):
+    def get_payouts_partners(self, year, month, partner_id, search_query, is_master, reward_type):
         if year and month and partner_id:
-            referral_payouts = self.referral_payouts_persistence.get_referral_payouts_by_partner_id(year=year, month=month, partner_id=partner_id, search_query=search_query)
+            referral_payouts = self.referral_payouts_persistence.get_referral_payouts_by_partner_id(year=year, month=month, partner_id=partner_id, search_query=search_query, reward_type=reward_type)
             return self.process_partner_payouts(referral_payouts)
         
         if year and month:
-            payouts = self.referral_payouts_persistence.get_all_referral_payouts(year=year, month=month)
-            return self.process_partners_payouts(payouts, search_query=search_query)
+            payouts = self.referral_payouts_persistence.get_all_referral_payouts(is_master=is_master, year=year, month=month)
+            return self.process_partners_payouts(payouts, search_query=search_query, is_master=is_master)
         
         if year:
-            payouts = self.referral_payouts_persistence.get_all_referral_payouts(year=year)
+            payouts = self.referral_payouts_persistence.get_all_referral_payouts(is_master=is_master, year=year)
             return self.process_monthly_payouts(payouts)
         
     def update_payouts_partner(self, referral_payout_id, text ,confirmation_status):

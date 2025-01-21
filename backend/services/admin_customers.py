@@ -12,7 +12,9 @@ from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.user_persistence import UserPersistence
 from services.subscriptions import SubscriptionService
 from services.users_auth import UsersAuth
+from utils import get_md5_hash
 from utils import get_utc_aware_date
+from persistence.partners_persistence import PartnersPersistence
 
 logger = logging.getLogger(__name__)
 
@@ -20,13 +22,15 @@ logger = logging.getLogger(__name__)
 class AdminCustomersService:
 
     def __init__(self, db: Session, subscription_service: SubscriptionService, user_persistence: UserPersistence,
-                 plans_persistence: PlansPersistence, users_auth_service: UsersAuth, send_grid_persistence: SendgridPersistence):
+                 plans_persistence: PlansPersistence, users_auth_service: UsersAuth, send_grid_persistence: SendgridPersistence,
+                 partners_persistence: PartnersPersistence):
         self.db = db
         self.subscription_service = subscription_service
         self.user_persistence = user_persistence
         self.plans_persistence = plans_persistence
         self.users_auth_service = users_auth_service
         self.send_grid_persistence = send_grid_persistence
+        self.partners_persistence = partners_persistence
 
     def get_users(self):
         users_object = self.user_persistence.get_not_partner_users()
@@ -81,7 +85,15 @@ class AdminCustomersService:
         if update_data.is_partner:
             if update_data.is_partner == True:
                 self.create_subscription_for_partner(user=user)
-                    
+                creating_data = {
+                    "full_name": user.full_name,
+                    "email": user.email,
+                    "company_name": user.company_name,
+                    "commission": update_data.commission,
+                    "token": get_md5_hash(user.email),
+                    "isMaster": False
+                }
+                self.partners_persistence.create_partner(creating_data)
             user.is_partner = update_data.is_partner
             self.db.commit()
         
