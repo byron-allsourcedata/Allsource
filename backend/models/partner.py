@@ -11,7 +11,7 @@ class Partner(Base):
     commission = Column(Integer, nullable=False)
     email = Column(VARCHAR(64), nullable=False)
     name = Column(VARCHAR(64), nullable=False)
-    company_name = Column(VARCHAR(64), nullable=False)
+    company_name = Column(VARCHAR(64), nullable=True)
     join_date = Column(TIMESTAMP, nullable=True)
     token = Column(VARCHAR(256), nullable=False)
     status = Column(VARCHAR(16), default="invitation sent", nullable=False)
