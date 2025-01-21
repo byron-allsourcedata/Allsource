@@ -1,11 +1,11 @@
 "use client";
 import React, { ReactNode, useEffect, useState } from "react";
 import { Box, Grid } from "@mui/material";
-import Sidebar from "@/components/Sidebar";
-import TrialStatus from "@/components/TrialLabel";
+import Sidebar from "./components/Sidebar";
+import TrialStatus from "./components/TrialLabel";
 import { usePathname } from 'next/navigation';
 import { useSlider, SliderProvider } from '@/context/SliderContext';
-import Header from "@/components/Header";
+import Header from "./components/Header";
 import Slider from "@/components/Slider";
 import CustomizedProgressBar from '@/components/FirstLevelLoader'
 import axiosInstance from "@/axios/axiosInterceptorInstance";

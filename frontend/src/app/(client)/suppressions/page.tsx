@@ -2,8 +2,8 @@
 import { Box, Typography, Tabs, Tab, Button } from "@mui/material";
 import { Suspense, useEffect, useState } from "react";
 import { suppressionsStyle } from './suppressions';
-import CollectionRules from "@/components/SuppressionsCollectingRules";
-import SuppressionRules from "@/components/SuppressionsRules";
+import CollectionRules from "./components/SuppressionsCollectingRules";
+import SuppressionRules from "./components/SuppressionsRules";
 import CustomTooltip from "@/components/customToolTip";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import { useRouter } from "next/navigation";

@@ -8,14 +8,13 @@ import dynamic from 'next/dynamic'
 import React, { useState } from 'react'
 import { resellerStyle } from './resellerStyle'
 import PersonIcon from '@mui/icons-material/Person'
-import DomainButton from '@/components/DomainsButton'
-import TrialStatus from '../../../../components/TrialLabel'
+import TrialStatus from '../../../(client)/components/TrialLabel'
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Checkbox from '@mui/material/Checkbox';
 
 
-const SidebarAdmin = dynamic(() => import('../../../../components/SidebarAdmin'), {
+const SidebarAdmin = dynamic(() => import('../../SidebarAdmin'), {
     suspense: true,
 });
 
@@ -141,7 +140,6 @@ const Reseller: React.FC = () => {
           </Box>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <TrialStatus />
-          <DomainButton />
           <Button
             aria-controls={open ? 'profile-menu' : undefined}
             aria-haspopup="true"

@@ -1,6 +1,6 @@
 "use client";
 import React, {useState, useEffect, Suspense} from 'react';
-import { Box, Grid, Typography, Button, Menu, Chip, MenuItem, Table, TableBody, TableCell, IconButton, TableContainer, TableHead, TableRow, Paper, Checkbox} from '@mui/material';
+import { Box, Grid, Typography, Button, Chip, Table, TableBody, TableCell, IconButton, TableContainer, TableHead, TableRow, Paper, Checkbox} from '@mui/material';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import {useRouter} from 'next/navigation';
@@ -10,12 +10,8 @@ import {AxiosError} from 'axios';
 import {audienceStyles} from './audienceStyles';
 import Slider from '../../../components/Slider';
 import {SliderProvider} from '../../../context/SliderContext';
-import PersonIcon from '@mui/icons-material/Person';
-import TrialStatus from '@/components/TrialLabel';
-import DomainButton from '@/components/DomainsButton';
 import {ChevronLeft, ChevronRight} from '@mui/icons-material';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import FilterPopup from '@/components/FiltersSlider';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
@@ -23,12 +19,11 @@ import Swal from 'sweetalert2';
 import BuildAudience from "@/components/BuildAudience";
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import {leadsStyles} from "@/app/(client)/leads/leadsStyles";
 import AudiencePopup from "@/components/AudienceSlider";
 import {useTheme} from '@mui/material/styles';
 
 
-const Sidebar = dynamic(() => import('../../../components/Sidebar'), {
+const Sidebar = dynamic(() => import('../components/Sidebar'), {
     suspense: true,
 });
 
@@ -914,7 +909,6 @@ const Audience: React.FC = () => {
                                        selectedLeads={Array.from(selectedRows)}/>
                         <BuildAudience open={buildAudiencePopupOpen} onClose={handleBuildAudiencePopupClose}
                                        onDataFetch={handleDataFetch}/>
-                        {/* <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose}/> */}
             </Box>
         </>
     );
