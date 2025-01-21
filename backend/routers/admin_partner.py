@@ -18,12 +18,9 @@ def get_partners(
     rows_per_page: int = Query(10),
     get_partners_service: PartnersService = Depends(get_partners_service)):
     
-    partner = get_partners_service.get_partners(isMaster, search, start_date, end_date, page, rows_per_page)
-    if not partner.get("status"):
-        error = partner.get("error", {}) or {}
-        raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))
+    result = get_partners_service.get_partners(isMaster, search, start_date, end_date, page, rows_per_page)
      
-    return partner.get('data') 
+    return result.get('data') 
 
 
 @router.get('{id}', response_model=List[PartnersResponse])
@@ -33,15 +30,12 @@ def get_partners_by_partners_id(
     get_partners_service: PartnersService = Depends(get_partners_service)):
     
     partner = get_partners_service.partners_by_partners_id(id)
-    if not partner.get("status"):
-        error = partner.get("error", {}) or {}
-        raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))
      
     return partner.get('data') 
 
 
-@router.post("", response_model=PartnersResponse)
-@router.post("/", response_model=PartnersResponse)
+@router.post("")
+@router.post("/")
 async def create_partner(
     new_partner: PartnerCreateRequest,
     get_partners_service: PartnersService = Depends(get_partners_service)):
@@ -58,12 +52,9 @@ async def delete_partner(
     message: Optional[str] = Query(None),
     get_partners_service: PartnersService = Depends(get_partners_service)):
     
-    partner = get_partners_service.delete_partner(id, message)
-    if not partner.get("status"):
-        error = partner.get("error", {}) or {}
-        raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))
+    result = get_partners_service.delete_partner(id, message)
      
-    return True
+    return result
 
 
 @router.put("/opportunity/{partner_id}")
@@ -74,13 +65,9 @@ async def update_opportunity_partner(
     get_partners_service: PartnersService = Depends(get_partners_service),
 ):
 
-    partner = await get_partners_service.update_opportunity_partner(partner_id, payload)
+    result = await get_partners_service.update_opportunity_partner(partner_id, payload)
 
-    if not partner.get("status"):
-        error = partner.get("error", {}) or {}
-        raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))
-
-    return True
+    return result
 
 
 @router.put("/{partner_id}")

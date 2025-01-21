@@ -23,6 +23,7 @@ class PartnersPersistence:
             
         return query.all()
     
+
     def get_stripe_account_and_total_reward_by_partner_id(self, partner_id):
         return self.db.query(
             Users.connected_stripe_account_id,
@@ -39,8 +40,9 @@ class PartnersPersistence:
         .group_by(Users.connected_stripe_account_id)\
         .first()
 
-    def get_partners(self, isMaster, search_term, start_date, end_date, offset, limit):
-        query = self.db.query(Partner).filter(Partner.is_master == isMaster)
+
+    def get_partners(self, is_master, search_term, start_date, end_date, offset, limit):
+        query = self.db.query(Partner).filter(Partner.is_master == is_master)
 
         if search_term:
             query = query.filter(
@@ -48,69 +50,26 @@ class PartnersPersistence:
             )
 
         if start_date:
-            if isinstance(start_date, str):
-                start_date = datetime.strptime(start_date, "%Y-%m-%d")
             query = query.filter(Partner.join_date >= start_date)
 
         if end_date:
-            if isinstance(end_date, str):
-                end_date = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1) - timedelta(seconds=1)
-            else:
-                end_date = datetime.combine(end_date, datetime.max.time())
+            end_date = datetime.combine(end_date, datetime.max.time())
             query = query.filter(Partner.join_date <= end_date)
 
         return query.offset(offset).limit(limit).all(), query.count()
 
-    
 
-    def get_partners_by_partners_id(self, id, start_date=None, end_date=None, offset=None, limit=None):
+    def get_partners_by_partners_id(self, id, start_date, end_date, offset, limit):
         query = self.db.query(Partner).filter(Partner.master_id == id)
         
         if start_date:
-            if isinstance(start_date, str):
-                start_date = datetime.strptime(start_date, "%Y-%m-%d")
             query = query.filter(Partner.join_date >= start_date)
         if end_date:
-            if isinstance(end_date, str):
-                end_date = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1) - timedelta(seconds=1)
-            else:
-                end_date = datetime.combine(end_date, datetime.max.time())
+            end_date = datetime.combine(end_date, datetime.max.time())
             query = query.filter(Partner.join_date <= end_date)
         
-        if not offset and not limit:
-            return query
         
-        return query.offset(offset).limit(limit).all()
-
-    
-
-
-    def get_total_count(self, isMaster, search_term=None):
-        query = self.db.query(Partner).filter(Partner.is_master == isMaster)
-
-        if search_term:
-            query = query.filter(
-                (Partner.name.ilike(search_term)) | (Partner.email.ilike(search_term))
-            )
-
-        return query.count()
-    
-    def get_total_count_by_id(self, id, start_date, end_date):
-        query = self.db.query(Partner).filter(Partner.master_id == id)
-
-        if start_date:
-            if isinstance(start_date, str):
-                start_date = datetime.strptime(start_date, "%Y-%m-%d")
-            query = query.filter(Partner.join_date >= start_date)
-        if end_date:
-            if isinstance(end_date, str):
-                end_date = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1) - timedelta(seconds=1)
-            else:
-                end_date = datetime.combine(end_date, datetime.max.time())
-            query = query.filter(Partner.join_date <= end_date)
-
-        return query.count()
-
+        return query.offset(offset).limit(limit).all(), query.count()
 
 
     def get_partner_by_id(self, partner_id):
@@ -120,6 +79,7 @@ class PartnersPersistence:
     def get_partner_by_email(self, email):
         return self.db.query(Partner).filter(Partner.email == email).first()
     
+
     def get_partner_by_user_id(self, user_id):
         return self.db.query(Partner).filter(Partner.user_id == user_id).first()
     
@@ -130,6 +90,7 @@ class PartnersPersistence:
             partner.name = fullName
             partner.company_name = company
             self.db.commit()
+
 
     def update_partner(self, partner_id: int, **kwargs) -> Tuple[Optional[Partner], bool]:
         partner = self.get_partner_by_id(partner_id)
@@ -148,7 +109,6 @@ class PartnersPersistence:
 
         return partner, commission_changed
 
-    
 
     def update_partner_by_email(self, email: int, **kwargs) -> Optional[Partner]:
         partner = self.get_partner_by_email(email)
@@ -175,10 +135,10 @@ class PartnersPersistence:
             commission=creating_data["commission"],
             token=creating_data["token"],
             email=creating_data["email"],
-            name=creating_data["full_name"],
+            name=creating_data["name"],
             company_name=creating_data["company_name"],
             is_master=creating_data["is_master"],
-            status=creating_data.get('status') if creating_data.get('status') else 'invitation sent',
+            status=creating_data.get('status'),
             user_id=creating_data.get('user_id'),
             join_date=creating_data.get('join_date')
         )

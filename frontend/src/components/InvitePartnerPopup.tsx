@@ -35,10 +35,10 @@ interface FormUploadPopupProps {
 interface RequestData {
     commission: number;
     email?: string;
-    name?: string;
-    company_name?: string;
+    name: string;
+    company_name: string;
     is_master?: boolean;
-    masterId?: number;
+    master_id?: number;
 }
 
 const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, masterId, isMaster, open, fileData, onClose, updateOrAddAsset }) => {
@@ -117,28 +117,25 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
                 requestData.email = email;
                 requestData.is_master = isMaster;
                 if(masterId) {
-                    requestData.masterId = masterId;
+                    requestData.master_id = masterId;
                     response = await axiosInstance.post(`partners/`, requestData, {
                         headers: { 'Content-Type': 'application/json' },
                     });
                 }
                 else {
+                    console.log({requestData})
                     response = await axiosInstance.post(`admin-partners/`, requestData, {
                         headers: { 'Content-Type': 'application/json' },
                     });
                 }
             }
             if (response.status === 200) {
-                console.log({response})
-                if (response.data.message) {
-                    showErrorToast(response.data.message);
-                }
-                else {
+                if (response.data.data) {
                     updateOrAddAsset(response.data.data);
                     showToast("Partner successfully submitted!");
                 }
-                if (!response.data.status) {
-                    showErrorToast("Error sending email message. Please try again.");
+                if (response.data.message) {
+                    showErrorToast(response.data.message);
                 }
             }
 

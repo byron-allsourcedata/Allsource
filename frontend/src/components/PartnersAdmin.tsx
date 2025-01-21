@@ -258,6 +258,9 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
             if (response.status === 200) {
                 updateOpportunity(selectedRowData.id)
                 showToast("Partner status successfully updated!");
+                if (response.data.message) {
+                    showErrorToast(response.data.message);
+                }
             }
         } catch {
             showErrorToast("Failed to update status. Please try again.");

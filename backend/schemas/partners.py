@@ -24,18 +24,18 @@ class PartnersResponse(BaseModel):
     isActive: bool = False
 
 class PartnersObjectResponse(BaseModel):
-    status: bool
+    status: Optional[bool] = False
     error: Optional[ErrorResponse] = None
     message: Optional[str] = None
     data: Optional[Union[List[PartnersResponse], PartnersResponse]] = None
 
 class PartnerCreateRequest(BaseModel):
-    full_name: Optional[str] = None
-    email: Optional[str] = None
-    company_name: Optional[str] = None
-    commission: str
+    name: str
+    email: str
+    company_name: str
+    commission: int
     is_master: Optional[bool] = False
-    masterId: Optional[int] = None
+    master_id: Optional[int] = None
 
 class OpportunityStatus(BaseModel):
     status: bool

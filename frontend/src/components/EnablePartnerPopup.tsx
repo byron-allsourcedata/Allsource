@@ -86,6 +86,9 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
             if (response.status === 200) {
                 updateOpportunity(id);
                 showToast("Partner status successfully updated!");
+                if (response.data.message) {
+                    showErrorToast(response.data.message);
+                }
             }
         } catch {
             showErrorToast("Failed to update status. Please try again.");

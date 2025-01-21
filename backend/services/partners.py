@@ -48,93 +48,82 @@ class PartnersService:
         return user_data
 
 
-    def get_partners(self, isMaster, search, start_date, end_date, page, rowsPerPage) -> PartnersObjectResponse:
+    def get_partners(self, is_master, search, start_date, end_date, page, rowsPerPage) -> PartnersObjectResponse:
         offset = page * rowsPerPage
         limit = rowsPerPage
 
         search_term = f"%{search}%" if search else None
         
         partners, total_count = self.partners_persistence.get_partners(
-            isMaster, search_term, start_date, end_date, offset, limit
+            is_master, search_term, start_date, end_date, offset, limit
         )
 
         result = [
             self.domain_mapped(partner, self.get_user_info(partner.user_id, partner))
             for partner in partners
         ]
-        return {"status": True, "data": {"items": result, "totalCount": total_count}}
+        return {"data": {"items": result, "totalCount": total_count}}
     
     
     def get_partner(self, email) -> PartnersObjectResponse:
-        try:
-            partner = self.partners_persistence.get_partner_by_email(email)
-            
-            user_id = partner.user_id
-            user = self.get_user_info(user_id, partner)
-            partnerData = self.domain_mapped(partner, user)
-
-            return {"status": True, "data": partnerData}
+        partner = self.partners_persistence.get_partner_by_email(email)
         
-        except Exception as e:
-            logger.debug("Error getting partner data", e)
-            return {"status": False, "error":{"code": 500, "message": f"Unexpected error during getting: {str(e)}"}}
+        user_id = partner.user_id
+        user = self.get_user_info(user_id, partner)
+        partnerData = self.domain_mapped(partner, user)
+
+        return {"data": partnerData}
+        
     
 
     def get_partner_partners(self, email, start_date, end_date, page, rowsPerPage) -> PartnersObjectResponse:
         offset = page * rowsPerPage
         limit = rowsPerPage
         
-        try:
-            decoded_email = unquote(email)
-            partner = self.partners_persistence.get_partner_by_email(decoded_email)
-            partners = self.partners_persistence.get_partners_by_partners_id(partner.id, start_date, end_date, offset, limit)
-            total_count = self.partners_persistence.get_total_count_by_id(partner.id, start_date, end_date)
-            
-            result = []
-            for partner in partners:
-                user_id = partner.user_id
-                user = self.get_user_info(user_id, partner)
-                count = self.accounts_persistence.get_total_count(partner.id)
-                result.append(self.domain_mapped(partner, user, count))
+        decoded_email = unquote(email)
+        partner = self.partners_persistence.get_partner_by_email(decoded_email)
+        partners, total_count = self.partners_persistence.get_partners_by_partners_id(
+            partner.id, start_date, end_date, offset, limit)
         
-        except Exception as e:
-            logger.debug("Error getting partner data", e)
-            return {"status": False, "error":{"code": 500, "message": f"Unexpected error during getting: {str(e)}"}}
-        return {"status": True, "data": {"items": result, "totalCount": total_count}}
+        result = []
+        for partner in partners:
+            user_id = partner.user_id
+            user = self.get_user_info(user_id, partner)
+            count = self.accounts_persistence.get_total_count(partner.id)
+            result.append(self.domain_mapped(partner, user, count))
+        
+
+        return {"data": {"items": result, "totalCount": total_count}}
     
 
     def partners_by_partners_id(self, id: int) -> PartnersObjectResponse:
-        if not id:
-            return {"status": False, "error": {"code": 400, "message": "Invalid request with your partner data"}}
-        
-        try:
-            partners = self.partners_persistence.get_partners_by_partners_id(id)
+        partners = self.partners_persistence.get_partners_by_partners_id(id)
 
-            result = []
-            for partner in partners:
-                user_id = partner.user_id
-                user = self.get_user_info(user_id, partner)
-                result.append(self.domain_mapped(partner, user))
-        except Exception as e:
-            logger.debug("Error getting partner data", e)
-            return {"status": False, "error":{"code": 500, "message": f"Unexpected error during getting: {str(e)}"}}
+        result = []
+        for partner in partners:
+            user_id = partner.user_id
+            user = self.get_user_info(user_id, partner)
+            result.append(self.domain_mapped(partner, user))
 
-        return {"status": True, "data": result}
+
+        return {"data": result}
     
 
     def delete_partner(self, id: int, message: str) -> PartnersObjectResponse:
-        if not id:
-            return {"status": False, "error": {"code": 400, "message": "Invalid request with your partner data"}}
+        status = False
+
+        partner = self.partners_persistence.get_partner_by_id(id)
+        self.partners_persistence.terminate_partner(partner_id=id)
+        template_id = self.send_grid_persistence.get_template_by_alias(
+            SendgridTemplate.PARTNER_TERMINATE_TEMPLATE.value)
+        
         try:
-            partner = self.partners_persistence.get_partner_by_id(id)
-            self.partners_persistence.terminate_partner(partner_id=id)
-            template_id = self.send_grid_persistence.get_template_by_alias(
-                SendgridTemplate.PARTNER_TERMINATE_TEMPLATE.value)
             self.send_message_in_email(partner.name, message, partner.email, template_id)
-            return {"status": True}
         except Exception as e:
-            logger.debug('Error deleting partner', e)
-            return {"status": False, "error":{"code": 500, "message": f"Unexpected error during deletion: {str(e)}"}}
+            logger.debug('Error sending mail', e)
+            status = False
+        
+        return {"message": "Error sending email message. Please try again." if not status else None}
     
 
     def send_message_in_email(self, full_name: str, message: str, email: str, template_id, commission=''):
@@ -146,7 +135,7 @@ class PartnersService:
         )
     
 
-    def send_referral_in_email(self, full_name: str, email: str, commission: str):
+    def send_referral_in_email(self, full_name: str, email: str, commission: int):
         mail_object = SendgridHandler()
         template_id = self.send_grid_persistence.get_template_by_alias(
             SendgridTemplate.PARTNER_INVITE_TEMPLATE.value)
@@ -167,31 +156,34 @@ class PartnersService:
 
     async def create_partner(self, new_data: dict) -> PartnersObjectResponse:
         status = True
-        hash = ''
+        token = None
 
-        user_by_email = self.user_persistence.get_user_by_email()
+        user_by_email = self.user_persistence.get_user_by_email(new_data.email)
+        partner_by_email = self.partners_persistence.get_partner_by_email(new_data.email)
 
-        if user_by_email:
-            return {"status": False, "message": "User with this email already exists!"}
+        if user_by_email or partner_by_email:
+            return {"message": "User with this email already exists!"}
         
-
         try:
-            hash = self.send_referral_in_email(new_data.full_name, new_data.email, new_data.commission)
+            token = self.send_referral_in_email(new_data.name, new_data.email, new_data.commission)
         except Exception as e:
             logger.debug('Error sending mail', e)
             status = False
         
-
-        creating_data = new_data.dict()
-        creating_data["token"] = hash
-
-        if new_data.master_id is not None:
-            creating_data["master_id"] = new_data.master_id(new_data.email)
+        creating_data = {
+            **new_data.dict(),
+            "token": token,
+            "master_id": new_data.master_id if new_data.master_id else None
+        }
 
         created_data = self.partners_persistence.create_partner(creating_data)
 
         user = self.get_user_info(created_data.user_id, created_data)
-        return {"status": status, "data": self.domain_mapped(created_data, user)}
+
+        return {
+            "message": "Error sending email message. Please try again." if not status else None, 
+            "data": self.domain_mapped(created_data, user)
+        }
     
 
     def setUser(self, email: str, user_id: int, status: str, join_date = None):        
@@ -199,10 +191,9 @@ class PartnersService:
         
     
     async def update_partner(self, partner_id: int, new_data: dict) -> PartnersObjectResponse:
-        
+        status = True
         new_data_dict = new_data.dict()
         updated_data, commission_changed = self.partners_persistence.update_partner(partner_id=partner_id, **new_data_dict)
-        status = True
 
         if commission_changed:
             template_id = self.send_grid_persistence.get_template_by_alias(
@@ -217,36 +208,37 @@ class PartnersService:
                 status = False
 
         user = self.get_user_info(updated_data.user_id, updated_data)
-        return {"status": status, "data": self.domain_mapped(updated_data, user)}
+        return {
+            "message": "Error sending email message. Please try again." if not status else None, 
+            "data": self.domain_mapped(updated_data, user)}
 
 
-    async def update_opportunity_partner(
-        self, 
-        partner_id: int, 
-        payload: dict, 
-    ):
-            
-        try:
-            if (payload.status):
-                template_id = self.send_grid_persistence.get_template_by_alias(
-                SendgridTemplate.PARTNER_ENABLE_TEMPLATE.value) 
-            else:
-                template_id = self.send_grid_persistence.get_template_by_alias(
-                SendgridTemplate.PARTNER_DISABLE_TEMPLATE.value)
-            
-            update_data = {"is_active": payload.status}
-            updated_data = self.partners_persistence.update_partner(partner_id=partner_id, **update_data) 
-            
-            message = payload.message
-            if not message:
-                message = "the fact that the master partner decided so"
-            
-            self.send_message_in_email(updated_data.name, message, updated_data.email, template_id)
+    async def update_opportunity_partner(self, partner_id: int, payload: dict):
+        status = True
         
-            return {"status": True}
+        if (payload.status):
+            template_id = self.send_grid_persistence.get_template_by_alias(
+            SendgridTemplate.PARTNER_ENABLE_TEMPLATE.value) 
+        else:
+            template_id = self.send_grid_persistence.get_template_by_alias(
+            SendgridTemplate.PARTNER_DISABLE_TEMPLATE.value)
+
+        
+        update_data = {"is_active": payload.status}
+        updated_data = self.partners_persistence.update_partner(partner_id=partner_id, **update_data) 
+        
+        message = payload.message
+        if not message:
+            message = "the fact that the master partner decided so"
+        
+        try:
+            self.send_message_in_email(updated_data.name, message, updated_data.email, template_id)
         except Exception as e:
-            logger.debug("Error updating partner data", exc_info=True)
-            return {"status": False, "error": {"code": 500, "message": f"Unexpected error during updation: {str(e)}"}}
+            logger.debug('Error sending mail', e)
+            status = False
+    
+        return {"message": "Error sending email message. Please try again." if not status else None}
+
 
 
     def domain_mapped(self, partner: Partner, user: PartnerUserData, count=0):
