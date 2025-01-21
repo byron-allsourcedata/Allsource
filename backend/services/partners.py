@@ -169,32 +169,27 @@ class PartnersService:
         if not full_name or not email or not company_name or not commission:
             return {"status": False, "error": {"code": 400, "message": "Invalid request with your partner data"}}
         
-        try:
-            hash = self.send_referral_in_email(full_name, email, commission)
-            creating_data = {
-                "full_name": full_name,
-                "email": email,
-                "company_name": company_name,
-                "commission": commission,
-                "token": hash,
-                "is_master": is_master
-            }
+        hash = self.send_referral_in_email(full_name, email, commission)
+        creating_data = {
+            "full_name": full_name,
+            "email": email,
+            "company_name": company_name,
+            "commission": commission,
+            "token": hash,
+            "is_master": is_master
+        }
 
-            if masterId is not None:
-                creating_data["masterId"] = masterId
+        if masterId is not None:
+            creating_data["masterId"] = masterId
 
-            created_data = self.partners_persistence.create_partner(creating_data)
+        created_data = self.partners_persistence.create_partner(creating_data)
 
-            if not created_data:
-                logger.debug('Database error during creation', e)
-                return {"status": False, "error": {"code": 500, "message": "Partner not created"}}
+        if not created_data:
+            logger.debug('Database error during creation', e)
+            return {"status": False, "error": {"code": 500, "message": "Partner not created"}}
 
-            user = self.get_user_info(created_data.user_id, created_data)
-            return {"status": True, "data": self.domain_mapped(created_data, user)}
-        
-        except Exception as e:
-            logger.debug('Error creating partner', e)
-            return {"status": False, "error":{"code": 500, "message": f"Unexpected error during creation: {str(e)}"}}
+        user = self.get_user_info(created_data.user_id, created_data)
+        return {"status": True, "data": self.domain_mapped(created_data, user)}
     
 
     def setUser(self, email: str, user_id: int, status: str, join_date = None):        

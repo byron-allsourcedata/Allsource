@@ -53,11 +53,7 @@ async def create_partner(
         request.commission,
         request.is_master,
     )
-
-    if not partner.get("status"):
-        error = partner.get("error", {}) or {}
-        raise HTTPException(status_code=error.get("code", 500), detail=error.get("message", "Unknown error occurred"))
-     
+    
     return partner.get('data') 
 
 

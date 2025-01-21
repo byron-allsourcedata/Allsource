@@ -94,7 +94,7 @@ class AdminCustomersService:
                     "company_name": user.company_name,
                     "commission": commission,
                     "token": get_md5_hash(user.email),
-                    "isMaster": False,
+                    "is_master": False,
                     'status': 'signup'
                 }
                 self.partners_persistence.create_partner(creating_data)

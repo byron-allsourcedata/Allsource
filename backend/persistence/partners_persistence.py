@@ -179,7 +179,7 @@ class PartnersPersistence:
             email=creating_data["email"],
             name=creating_data["full_name"],
             company_name=creating_data["company_name"],
-            is_master=creating_data["isMaster"],
+            is_master=creating_data["is_master"],
             status=creating_data.get('status') if creating_data.get('status') else 'invitation sent',
             user_id=creating_data.get('user_id'),
             join_date=creating_data.get('join_date')
