@@ -2,7 +2,7 @@ import React from "react";
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
-import { Box, List, ListItem, TextField, Tooltip, Typography, Drawer, Backdrop, Link, IconButton, Button, RadioGroup, FormControl, FormControlLabel, Radio, FormLabel, Divider, Tab, Switch, LinearProgress } from "@mui/material";
+import { Box, List, ListItem, TextField, Tooltip, Typography, Drawer, Backdrop, Link, IconButton, Button, RadioGroup, FormControl, FormControlLabel, Radio, FormLabel, Divider, Tab, Switch, LinearProgress, Tabs } from "@mui/material";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import CustomizedProgressBar from "./CustomizedProgressBar";
@@ -11,23 +11,24 @@ import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from "./ToastNotification";
 import { useAxiosHook } from "@/hooks/AxiosHooks";
 
-interface CreateSendlaneProps {
+interface CreateKlaviyoProps {
     handleClose: () => void
-    onSave?: (new_integration: any) => void
+    onSave?: (integration: IntegrationsCredentials) => void
     open: boolean
-    initApiKey?: string;
+    initApiKey?: string
     boxShadow?: string;
+    isEdit?: boolean;
     Invalid_api_key?: boolean;
 }
 
 interface IntegrationsCredentials {
-    id: number
+    id?: number
     access_token: string
-    ad_account_id: string
-    shop_domain: string
-    data_center: string
+    ad_account_id?: string
+    shop_domain?: string
+    data_center?: string
     service_name: string
-    is_with_suppression: boolean
+    is_with_suppression?: boolean
 }
 
 const klaviyoStyles = {
@@ -41,7 +42,6 @@ const klaviyoStyles = {
         padding: 0,
         minWidth: 'auto',
         px: 2,
-        pointerEvents: 'none',
         '@media (max-width: 600px)': {
             alignItems: 'flex-start',
             p: 0
@@ -53,8 +53,9 @@ const klaviyoStyles = {
     },
     inputLabel: {
         fontFamily: 'Nunito Sans',
-        fontSize: '14.5px',
+        fontSize: '14px',
         lineHeight: '16px',
+        left: '2px',
         color: 'rgba(17, 17, 19, 0.60)',
         '&.Mui-focused': {
             color: '#0000FF',
@@ -90,25 +91,26 @@ const klaviyoStyles = {
     },
 }
 
-const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Invalid_api_key }: CreateSendlaneProps) => {
+const SlackIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxShadow, Invalid_api_key }: CreateKlaviyoProps) => {
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
-    const [value, setValue] = useState<string>('1')
     const [checked, setChecked] = useState(false);
     const [tab2Error, setTab2Error] = useState(false);
-    const label = { inputProps: { 'aria-label': 'Switch demo' } };
-    const [selectedRadioValue, setSelectedRadioValue] = useState('');
     const [disableButton, setDisableButton] = useState(false);
-    const [isDropdownValid, setIsDropdownValid] = useState(false);
+    const label = { inputProps: { 'aria-label': 'Switch demo' } };
     const { data, loading, error, sendRequest } = useAxiosHook();
+
+
+    const [value, setValue] = useState("1");
+
+    const handleChange = (event: React.SyntheticEvent, newValue: string) => {
+        setValue(newValue);
+    };
 
     useEffect(() => {
         setApiKey(initApiKey || '')
     }, [initApiKey])
 
-    const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setSelectedRadioValue(event.target.value);
-    };
 
     const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setChecked(event.target.checked);
@@ -120,14 +122,14 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
         setApiKeyError(!value);
     };
 
-    const instructions: any[] = [
-        // { id: 'unique-id-1', text: 'Go to the Klaviyo website and log into your account.' },
-        // { id: 'unique-id-2', text: 'Click on the Settings option located in your Klaviyo account options.' },
-        // { id: 'unique-id-3', text: 'Click Create Private API Key Name to Maximiz.' },
-        // { id: 'unique-id-4', text: 'Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Klaviyo key.' },
-        // { id: 'unique-id-5', text: 'Click Create.' },
-        // { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in Maximiz Klaviyo section.' },
-        // { id: 'unique-id-7', text: 'Click Connect.' },
+    const instructions = [
+        { id: 'unique-id-1', text: 'Go to the Klaviyo website and log into your account.' },
+        { id: 'unique-id-2', text: 'Click on the Settings option located in your Klaviyo account options.' },
+        { id: 'unique-id-3', text: 'Click Create Private API Key Name to Maximiz.' },
+        { id: 'unique-id-4', text: 'Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Klaviyo key.' },
+        { id: 'unique-id-5', text: 'Click Create.' },
+        { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in Maximiz Klaviyo section.' },
+        { id: 'unique-id-7', text: 'Click Connect.' },
     ];
 
     type HighlightConfig = {
@@ -164,7 +166,6 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
         return <>{parts}</>;
     };
 
-
     const handleApiKeySave = async () => {
         try {
             setDisableButton(true)
@@ -172,22 +173,28 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
                 url: "/integrations/",
                 method: "POST",
                 data: {
-                    sendlane: {
+                    klaviyo: {
                         api_key: apiKey,
                     },
                 },
-                params: { service_name: 'sendlane' },
+                params: { service_name: "klaviyo" },
             });
 
             if (response?.status === 200) {
-                showToast("Integration Sendlane Successfully");
+                if (onSave) {
+                    onSave({
+                        service_name: 'klaviyo',
+                        access_token: apiKey,
+                    })
+                }
+                showToast("Integration Klaviyo Successfully");
                 handleNextTab();
             }
-        } catch (error) {}
-        finally{
-            setDisableButton(false)
+        } catch (err) {
+            console.error("Error saving integration:", err);
         }
-    }
+    };
+
 
     const highlightConfig: HighlightConfig = {
         'Klaviyo': { color: '#5052B2', fontWeight: '500' },
@@ -215,7 +222,18 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
     };
 
     const handleSave = async () => {
-        handleClose()
+        if (onSave) {
+            onSave({
+                id: -1,
+                'service_name': 'klaviyo',
+                data_center: '',
+                access_token: apiKey,
+                is_with_suppression: checked,
+                ad_account_id: '',
+                shop_domain: ''
+            })
+        }
+            handleClose()
     }
 
     const getButton = (tabValue: string) => {
@@ -278,27 +296,27 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
 
     return (
         <>
-            {loading && (
-                <Box
-                    sx={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: 'rgba(0, 0, 0, 0.2)',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        zIndex: 1400,
-                        overflow: 'hidden'
-                    }}
-                >
-                    <Box sx={{ width: '100%', top: 0, height: '100vh' }}>
-                        <LinearProgress />
-                    </Box>
-                </Box>
-            )}
+        {loading && (
+            <Box
+                sx={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0, 0, 0, 0.2)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 1400,
+                    overflow: 'hidden'
+                }}
+            >
+            <Box sx={{width: '100%', top: 0, height: '100vh'}}>
+                <LinearProgress />
+            </Box>
+            </Box>
+        )}
             <Drawer
                 anchor="right"
                 open={open}
@@ -309,8 +327,8 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
                         position: 'fixed',
                         zIndex: 1301,
                         top: 0,
-                        boxShadow: boxShadow ? '0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)' : 'none',
                         bottom: 0,
+                        boxShadow: boxShadow ? '0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)' : 'none',
                         msOverflowStyle: 'none',
                         scrollbarWidth: 'none',
                         '&::-webkit-scrollbar': {
@@ -324,20 +342,20 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
                 slotProps={{
                     backdrop: {
                         sx: {
-                            backgroundColor: boxShadow ? boxShadow : 'transparent'
+                            backgroundColor: boxShadow ? boxShadow : 'rgba(0, 0, 0, 0.01)'
                         }
                     }
                 }}
             >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4' }}>
                     <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
-                        Connect to Slack
+                        Connect to Klaviyo
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link
-                            href={initApiKey
-                                ? "https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-sendlane-to-maximiz"
-                                : "https://maximizai.zohodesk.eu/portal/en/kb/articles/update-sendlane-integration-configuration"}
+                        <Link href={initApiKey ?
+                            "https://maximizai.zohodesk.eu/portal/en/kb/articles/update-klaviyo-integration-configuration" :
+                            "https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-klaviyo-to-maximiz"
+                        }
                             target="_blank"
                             rel="noopener noreferrer"
                             sx={{
@@ -348,20 +366,23 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
                                 color: '#5052b2',
                                 textDecorationColor: '#5052b2'
                             }}>Tutorial</Link>
-
                         <IconButton onClick={handleClose} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />
                         </IconButton>
                     </Box>
                 </Box>
-
                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
                     <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                         <TabContext value={value}>
                             <Box sx={{ pb: 4 }}>
-                                <TabList centered aria-label="Connect to Sendlaene Tabs"
+                                <Tabs
+                                    value={value}
+                                    onChange={handleChange}
+                                    centered
+                                    aria-label="Connect to Klaviyo Tabs"
                                     TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
                                     sx={{
+                                        cursor: 'pointer',
                                         "& .MuiTabs-scroller": {
                                             overflowX: 'auto !important',
                                         },
@@ -369,25 +390,35 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
                                             justifyContent: 'center',
                                             '@media (max-width: 600px)': {
                                                 gap: '16px',
-                                                justifyContent: 'flex-start'
-                                            }
-                                        }
-                                    }}>
-                                    <Tab label="API Key" value="1" sx={{ ...klaviyoStyles.tabHeading, cursor: 'pointer' }} />
-                                    <Tab label="Suppression Sync" value="2" sx={klaviyoStyles.tabHeading} />
-                                </TabList>
+                                                justifyContent: 'flex-start',
+                                            },
+                                        },
+                                    }}
+                                >
+                                    <Tab
+                                        label="API Key"
+                                        value="1"
+                                        sx={{ ...klaviyoStyles.tabHeading, cursor: 'pointer' }}
+                                    />
+                                    <Tab
+                                        label="Suppression Sync"
+                                        value="2"
+                                        sx={{ ...klaviyoStyles.tabHeading, cursor: 'pointer' }}
+                                    />
+                                </Tabs>
+
                             </Box>
                             <TabPanel value="1" sx={{ p: 0 }}>
                                 <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <Image src='/sendlane-icon.svg' alt='sendlane' height={26} width={32} />
+                                        <Image src='/klaviyo.svg' alt='klaviyo' height={26} width={32} />
                                         <Typography variant="h6" sx={{
                                             fontFamily: 'Nunito Sans',
                                             fontSize: '16px',
                                             fontWeight: '600',
                                             color: '#202124'
                                         }}>API Key</Typography>
-                                        <Tooltip title="Enter the API key provided by Sendlane" placement="right">
+                                        <Tooltip title="Enter the API key provided by Klaviyo" placement="right">
                                             <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
                                         </Tooltip>
                                     </Box>
@@ -401,11 +432,10 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
                                         value={apiKey}
                                         onChange={handleApiKeyChange}
                                         InputLabelProps={{ sx: klaviyoStyles.inputLabel }}
-                                        InputProps={{ sx: klaviyoStyles.formInput }}
+                                        InputProps={{ sx: {...klaviyoStyles.formInput, borderColor: Invalid_api_key ? 'red' : 'inherit' },   }}
                                     />
                                 </Box>
-                                {instructions.length > 0 && (<Box sx={{ background: '#f0f0f0', border: '1px solid #efefef', borderRadius: '4px', p: 2 }}>
-
+                                <Box sx={{ background: '#f0f0f0', border: '1px solid #efefef', borderRadius: '4px', p: 2 }}>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 2 }}>
                                         <Image src='/info-circle.svg' alt='info-circle' height={20} width={20} />
                                         <Typography variant="subtitle1" sx={{
@@ -414,7 +444,7 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
                                             fontWeight: '600',
                                             color: '#202124',
                                             lineHeight: 'normal'
-                                        }}>How to integrate Sendlane</Typography>
+                                        }}>How to integrate Klaviyo</Typography>
                                     </Box>
                                     <List dense sx={{ p: 0 }}>
                                         {instructions.map((instruction, index) => (
@@ -449,14 +479,13 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
                                             </ListItem>
                                         ))}
                                     </List>
-                                </Box>)
-                                }
+                                </Box>
                             </TabPanel>
                             <TabPanel value="2" sx={{ p: 0 }}>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                     <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <Image src='/sendlane-icon.svg' alt='sendlane' height={26} width={32} />
+                                            <Image src='/klaviyo.svg' alt='klaviyo' height={26} width={32} />
                                             <Typography variant="h6" sx={{
                                                 fontFamily: 'Nunito Sans',
                                                 fontSize: '16px',
@@ -473,7 +502,7 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
                                             lineHeight: '20px',
                                             letterSpacing: '0.06px'
                                         }}>Sync your current list to avoid collecting contacts you already possess.
-                                            Newly added contacts in Sendlane will be automatically suppressed each day.</Typography>
+                                            Newly added contacts in Klaviyo will be automatically suppressed each day.</Typography>
 
 
                                         <Box sx={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
@@ -590,14 +619,14 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
                                                 color: '#808080',
                                                 lineHeight: '20px',
                                                 letterSpacing: '0.06px'
-                                            }}>By performing this action, all your Sendlane contacts will be added to your Grow suppression list, and new contacts will be imported daily around 6pm EST.</Typography>
+                                            }}>By performing this action, all your Klaviyo contacts will be added to your Grow suppression list, and new contacts will be imported daily around 6pm EST.</Typography>
                                         </Box>
                                     </Box>
                                 </Box>
                             </TabPanel>
                         </TabContext>
                     </Box>
-                    <Box sx={{ px: 2, py: 2, width: '100%', borderTop: '1px solid #e4e4e4' }}>
+                    <Box sx={{ px: 2, py: 3.5, width: '100%' }}>
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
                             {getButton(value)}
                         </Box>
@@ -608,4 +637,4 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
     );
 }
 
-export default SendlaneConnect;
+export default SlackIntegrationPopup;

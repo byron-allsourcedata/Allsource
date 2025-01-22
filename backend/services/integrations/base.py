@@ -12,6 +12,8 @@ from persistence.integrations.external_apps_installations  import ExternalAppsIn
 from .attentive import AttentiveIntegrationsService
 from .shopify import ShopifyIntegrationService
 from .sendlane import SendlaneIntegrationService
+from persistence.user_persistence import UserPersistence
+from .slack import SlackService
 from .onimesend import OmnisendIntegrationService
 from .meta import MetaIntegrationsService
 from .mailchimp import MailchimpIntegrationsService
@@ -23,12 +25,13 @@ class IntegrationService:
 
     def __init__(self, db: Session, integration_persistence: IntegrationsPresistence, 
                  lead_persistence: LeadsPersistence, audience_persistence: AudiencePersistence, 
-                 lead_orders_persistence: LeadOrdersPersistence, 
+                 lead_orders_persistence: LeadOrdersPersistence, user_persistence: UserPersistence,
                  integrations_user_sync_persistence: IntegrationsUserSyncPersistence,
                  aws_service: AWSService, domain_persistence, suppression_persistence: IntegrationsSuppressionPersistence, epi_persistence: ExternalAppsInstallationsPersistence):
         self.db = db
         self.client = httpx.Client()
         self.integration_persistence = integration_persistence
+        self.user_persistence = user_persistence
         self.lead_persistence = lead_persistence
         self.audience_persistence = audience_persistence
         self.lead_orders_persistence = lead_orders_persistence
@@ -115,7 +118,12 @@ class IntegrationService:
         self.attentive = AttentiveIntegrationsService(self.domain_persistence,
                                                       self.integrations_user_sync_persistence,
                                                       self.client)
-        self.zapier = ZapierIntegrationService(self.lead_persistence, self.domain_persistence, self.integrations_user_sync_persistence, self.integration_persistence, self.client,)
+        self.slack = SlackService(self.user_persistence,
+                                self.integration_persistence,
+                                self.integrations_user_sync_persistence
+                                )
+        self.zapier = ZapierIntegrationService(self.lead_persistence, self.domain_persistence, self.integrations_user_sync_persistence, self.integration_persistence, self.client)
+
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):

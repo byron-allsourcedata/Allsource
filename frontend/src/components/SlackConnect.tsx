@@ -11,7 +11,7 @@ import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from "./ToastNotification";
 import { useAxiosHook } from "@/hooks/AxiosHooks";
 
-interface CreateSendlaneProps {
+interface CreateSlackProps {
     handleClose: () => void
     onSave?: (new_integration: any) => void
     open: boolean
@@ -81,8 +81,8 @@ const klaviyoStyles = {
                 borderColor: '#0000FF',
             },
             '&.Mui-error .MuiOutlinedInput-notchedOutline': {
-            borderColor: 'red',
-        },
+                borderColor: 'red',
+            },
         },
         '&+.MuiFormHelperText-root': {
             marginLeft: '0',
@@ -90,7 +90,7 @@ const klaviyoStyles = {
     },
 }
 
-const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Invalid_api_key }: CreateSendlaneProps) => {
+const SlackConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Invalid_api_key }: CreateSlackProps) => {
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
     const [value, setValue] = useState<string>('1')
@@ -183,8 +183,8 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
                 showToast("Integration Sendlane Successfully");
                 handleNextTab();
             }
-        } catch (error) {}
-        finally{
+        } catch (error) { }
+        finally {
             setDisableButton(false)
         }
     }
@@ -359,7 +359,7 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
                     <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                         <TabContext value={value}>
                             <Box sx={{ pb: 4 }}>
-                                <TabList centered aria-label="Connect to Sendlaene Tabs"
+                                <TabList centered aria-label="Connect to Slack Tabs"
                                     TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
                                     sx={{
                                         "& .MuiTabs-scroller": {
@@ -608,4 +608,4 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
     );
 }
 
-export default SendlaneConnect;
+export default SlackConnect;

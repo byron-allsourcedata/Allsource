@@ -26,6 +26,7 @@ class SourcePlatformEnum(Enum):
     ZAPIER = 'zapier'
     WORDPRESS = 'wordpress'
     HUBSPOT = 'hubspot'
+    SLACK = 'slack'
 
 
 class UserPaymentStatusEnum(Enum):

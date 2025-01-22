@@ -35,6 +35,7 @@ import { useNotification } from "@/context/NotificationContext";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import CloseIcon from '@mui/icons-material/Close';
 import ZapierConnectPopup from "@/components/ZapierConnectPopup";
+import SlackConnectPopup from "@/components/SlackConnectPopup";
 
 
 interface IntegrationBoxProps {
@@ -521,6 +522,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
   const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false)
   const [openMailchinpConnect, setOpenMailchimpConnect] = useState(false)
   const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
+  const [openSlackConnect, setOpenSlackConnect] = useState(false)
   const [OpenAttentiveConnect, setOpenAttentiveConnect] = useState(false)
   const [openZapierConnect, setOpenZapierConnect] = useState(false)
   const [openDeletePopup, setOpenDeletePopup] = useState(false)
@@ -539,6 +541,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
     setOpenSendlaneConnect(false)
     setOpenAttentiveConnect(false)
     setOpenZapierConnect(false)
+    setOpenSlackConnect(false)
   }
 
   const handleDeleteOpen = () => {
@@ -663,6 +666,18 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
             />
           </Box>
         )}
+        {integrationsCredentials.some(integration => integration.service_name === "slack") && (
+          <Box onClick={() => handleActive('slack')}>
+            <IntegrationBox
+              image="/slack-icon.svg"
+              service_name="slack"
+              active={activeService === 'slack'}
+              handleClick={() => setOpenSlackConnect(true)}
+              handleDelete={handleDeleteOpen}
+              is_failed={integrationsCredentials?.find(integration => integration.service_name === 'slack')?.is_failed}
+            />
+          </Box>
+        )}
         {integrationsCredentials.some(integration => integration.service_name === "attentive") && (
           <Box onClick={() => handleActive('attentive')}>
             <IntegrationBox
@@ -742,6 +757,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
         integrationsCredentials={integrationsCredentials}
         handleSaveSettings={handleSaveSettings}
       />
+      <SlackConnectPopup open={openSlackConnect} handlePopupClose={handleClose} boxShadow="rgba(0, 0, 0, 0.01)" />
       <Box>
         {(activeService && activeService != 'shopify' && activeService != 'big_commerce') && (<DataSyncList key={activeService} service_name={activeService} />)}
       </Box>
@@ -761,6 +777,7 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
   const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false)
   const [openMailchinpConnect, setOpenmailchimpConnect] = useState(false)
   const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
+  const [openSlackConnect, setOpenSlackConnect] = useState(false)
   const [openAttentiveConnect, setOpenAttentiveConnect] = useState(false)
   const [openZapierConnect, setOpenZapierConnect] = useState(false)
 
@@ -790,6 +807,7 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
     setOpenOmnisendConnect(false)
     setOpenmailchimpConnect(false)
     setOpenSendlaneConnect(false)
+    setOpenSlackConnect(false)
     setOpenAttentiveConnect(false)
     setOpenZapierConnect(false)
   }
@@ -826,6 +844,8 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
         break;
       case 'zapier':
         setOpenZapierConnect(true)
+      case 'slack':
+        setOpenSlackConnect(true)
       default:
         break;
     }
@@ -903,6 +923,7 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
       <SendlaneConnect open={openSendlaneConnect} handleClose={handleClose} onSave={handleSaveSettings} boxShadow="rgba(0, 0, 0, 0.1)" />
       <AttentiveIntegrationPopup open={openAttentiveConnect} handleClose={handleClose} onSave={handleSaveSettings} boxShadow="rgba(0, 0, 0, 0.1)" />
       <ZapierConnectPopup open={openZapierConnect} handlePopupClose={handleClose} boxShadow="rgba(0, 0, 0, 0.1)" />
+      <SlackConnectPopup open={openSlackConnect} handlePopupClose={handleClose} boxShadow="rgba(0, 0, 0, 0.1)" />
     </Box>
   );
 };
