@@ -21,7 +21,13 @@ class ReferralService:
         self.referral_payouts_persistence = referral_payouts_persistence
 
     def get_overview_info(self, user: dict):
-        account = self.stripe_service.get_stripe_account_info(user.get('connected_stripe_account_id'), user.get('id'))
+        account = {}
+        if user.get('connected_stripe_account_id'):
+            try:
+                account = self.stripe_service.get_stripe_account_info(user.get('connected_stripe_account_id'), user.get('id'))
+            except:
+                self.user_persistence.delete_stripe_info(user_id=user.get('id'))
+            
         email = account.get('email')
         currently_due = account.get('requirements', {}).get('currently_due', [])
         can_transfer = account.get("capabilities", {}).get("transfers", "") == "active"
