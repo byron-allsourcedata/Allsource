@@ -179,13 +179,13 @@ class PayoutsService:
 
 
         
-    def get_payouts_partners(self, year, month, partner_id, search_query, is_master, reward_type):
+    def get_payouts_partners(self, year, month, partner_id, search_query, is_master, reward_type, from_date, to_date, sort_by, sort_order):
         if year and month and partner_id:
-            referral_payouts = self.referral_payouts_persistence.get_referral_payouts_by_partner_id(year=year, month=month, partner_id=partner_id, search_query=search_query, reward_type=reward_type)
+            referral_payouts = self.referral_payouts_persistence.get_referral_payouts_by_partner_id(year=year, month=month, partner_id=partner_id, search_query=search_query, reward_type=reward_type, from_date=from_date, to_date=to_date, sort_by=sort_by, sort_order=sort_order)
             return self.process_partner_payouts(referral_payouts)
         
         if year and month:
-            payouts = self.referral_payouts_persistence.get_all_referral_payouts(is_master=is_master, year=year, month=month)
+            payouts = self.referral_payouts_persistence.get_all_referral_payouts(is_master=is_master, year=year, month=month, from_date=from_date, to_date=to_date)
             return self.process_partners_payouts(payouts, search_query=search_query, is_master=is_master)
         
         if year:
