@@ -4,6 +4,7 @@ from persistence.referral_discount_code_persistence import ReferralDiscountCodes
 from dotenv import load_dotenv
 from encryption_utils import encrypt_data
 from persistence.user_persistence import UserPersistence
+from services.jwt_service import create_access_token
 from services.stripe_service import StripeService
 from persistence.referral_payouts import ReferralPayoutsPersistence
 from enums import PayoutsStatus
@@ -133,5 +134,16 @@ class ReferralService:
                 'invitesCount': 1,
                 'payoutDate': payout_date_formatted
             })
+
+
         
         return monthly_info
+
+    def generate_access_token(self, user: dict, user_account_id: int):
+        if self.referral_persistence_service.verify_user_relationship(parent_id=user.get('id'), user_id=user_account_id):
+            token_info = {
+                "id": user_account_id,
+                "requester_access_user_id": user.get('id')
+            }
+            return create_access_token(token_info)
+        return None
