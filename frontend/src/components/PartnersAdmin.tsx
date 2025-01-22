@@ -23,11 +23,17 @@ interface PartnerData {
     partner_name: string;
     email: string;
     join_date: Date | string;
-    commission: string;
+    commission: number;
     subscription: string;
+    company_name: string;
     sources: string;
-    last_payment_date: string;
+    last_payment_date: Date | string;
     status: string;
+    count: number;
+    reward_payout_date: Date | string;
+    reward_status: string;
+    reward_amount: number;
+    isActive: boolean;
 }
 
 const getStatusStyle = (status: string) => {
@@ -240,9 +246,9 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
 
     const updateOpportunity = (id: number) => {
         setPartners((prevPartners) =>
-            prevPartners.map((partner: any) =>
-              partner.id === id
-                ? { ...partner, isActive: !partner.isActive }
+            prevPartners.map((partner: any) => 
+                partner.id === id
+                ? { ...partner, isActive: !partner.isActive}
                 : partner
             )
         );
@@ -326,9 +332,6 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
     const updateOrAddAsset = (updatedPartner: PartnerData) => {
         setPartners((prevAccounts) => {
             const index = prevAccounts.findIndex((account) => account.id === updatedPartner.id);
-            console.log({updatedPartner})
-            console.log({index})
-            console.log({prevAccounts})
             if (index !== -1) {
                 const newAccounts = [...prevAccounts];
                 newAccounts[index] = updatedPartner;
@@ -372,7 +375,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                         setAccountPage(false)
                         setAccountName(null)
                     }}
-                    sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "#808080", cursor: "pointer"}}>
+                    sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "#808080", cursor: "pointer", zIndex: 1000}}>
                         {isMaster || masterData ? "Master" : ""} Partner {partnerName ? `- ${partnerName}` : ""}
                     </Typography>
                     {accountName && 
@@ -516,7 +519,13 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                 id="input-with-icon-textfield"
                                                 placeholder="Search by account name, emails"
                                                 value={search}
-                                                onChange={handleSearchChange}
+                                                onChange={(e) => {
+                                                    const value = e.target.value;
+                                                    handleSearchChange(e);
+                                                    if (value === "") {
+                                                      fetchRules();
+                                                    }
+                                                }}
                                                 onKeyDown={(e) => {
                                                     if (e.key === 'Enter') {
                                                         fetchRules();
@@ -720,16 +729,16 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                                         <Typography component="div" sx={{
                                                                             width: "100px",
                                                                             margin: 0,
-                                                                            background: getStatusStyle(data.status).background,
+                                                                            background: getStatusStyle(data.isActive ? data.status : "Inactive" ).background,
                                                                             padding: '3px 8px',
                                                                             borderRadius: '2px',
                                                                             fontFamily: 'Roboto',
                                                                             fontSize: '12px',
                                                                             fontWeight: '400',
                                                                             lineHeight: '16px',
-                                                                            color: getStatusStyle(data.status).color,
+                                                                            color: getStatusStyle(data.isActive ? data.status : "Inactive" ).color,
                                                                         }}>
-                                                                            {data.status}
+                                                                            {data.isActive ? data.status : "Inactive"}
                                                                         </Typography>
                                                                     </Box>
                                                                 </TableCell>
@@ -790,7 +799,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                                                         id: selectedRowData.id,
                                                                                         email: selectedRowData.email,
                                                                                         fullName: selectedRowData.partner_name,
-                                                                                        companyName: selectedRowData.sources,
+                                                                                        companyName: selectedRowData.company_name,
                                                                                         commission: selectedRowData.commission,
                                                                                     });
                                                                                     handleFormOpenPopup()

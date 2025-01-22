@@ -22,6 +22,7 @@ class Partner(Base):
     
     def to_dict(self):
             return {
+                "id": self.id,
                 "user_id": self.user_id,
                 "commission": self.commission,
                 "status": self.status,

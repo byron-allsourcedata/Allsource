@@ -27,15 +27,16 @@ interface PartnerData {
     partner_name: string;
     email: string;
     join_date: Date | string;
-    commission: string;
+    commission: number;
     subscription: string;
+    company_name: string;
     sources: string;
-    last_payment_date: string;
+    last_payment_date: Date | string;
     status: string;
     count: number;
-    reward_payout_date: string;
+    reward_payout_date: Date | string;
     reward_status: string;
-    reward_amount: string;
+    reward_amount: number;
     isActive: boolean;
 }
 
@@ -230,6 +231,16 @@ const PartnersMain: React.FC<PartnersProps> = ({setLoading, masterId, appliedDat
         setFormPopupOpen(false)
     }
 
+    const updateOpportunity = (id: number) => {
+        setPartners((prevPartners) =>
+            prevPartners.map((partner: any) => 
+                partner.id === id
+                ? { ...partner, isActive: !partner.isActive}
+                : partner
+            )
+        );
+    }
+
 
     const updateOrAddAsset = (updatedPartner: PartnerData) => {
         setPartners((prevAccounts) => {
@@ -316,6 +327,7 @@ const PartnersMain: React.FC<PartnersProps> = ({setLoading, masterId, appliedDat
                 headers: { 'Content-Type': 'application/json' },
             });
             if (response.status === 200) {
+                updateOpportunity(id);
                 showToast("Partner status successfully updated!");
                 if (response.data.message) {
                     showErrorToast(response.data.message);
@@ -462,16 +474,16 @@ const PartnersMain: React.FC<PartnersProps> = ({setLoading, masterId, appliedDat
                                                         <Typography component="div" sx={{
                                                             width: "100px",
                                                             margin: 0,
-                                                            background: getStatusStyle(data.status).background,
+                                                            background: getStatusStyle(data.isActive ? data.status : "Inactive" ).background,
                                                             padding: '3px 8px',
                                                             borderRadius: '2px',
                                                             fontFamily: 'Roboto',
                                                             fontSize: '12px',
                                                             fontWeight: '400',
                                                             lineHeight: '16px',
-                                                            color: getStatusStyle(data.status).color,
+                                                            color: getStatusStyle(data.isActive ? data.status : "Inactive" ).color,
                                                         }}>
-                                                            {data.status}
+                                                            {data.isActive ? data.status : "Inactive"}
                                                         </Typography>
                                                     </Box>
                                                 </TableCell>

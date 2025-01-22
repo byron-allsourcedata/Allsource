@@ -2,7 +2,6 @@ import logging
 import os
 import hashlib
 import json
-from urllib.parse import unquote
 from typing import Optional
 from models.partner import Partner
 from persistence.user_persistence import UserPersistence
@@ -10,7 +9,6 @@ from services.referral import ReferralService
 from persistence.partners_persistence import PartnersPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.plans_persistence import PlansPersistence
-from persistence.referral_user import ReferralUserPersistence
 from schemas.partners import PartnersResponse, PartnerUserData, PartnersObjectResponse
 from services.sendgrid import SendgridHandler
 from enums import SendgridTemplate
@@ -21,15 +19,19 @@ logger = logging.getLogger(__name__)
 
 class PartnersService:
 
-    def __init__(self, partners_persistence: PartnersPersistence, user_persistence: UserPersistence, send_grid_persistence: SendgridPersistence,
-                 plans_persistence: PlansPersistence):
+    def __init__(
+        self, partners_persistence: PartnersPersistence, 
+        user_persistence: UserPersistence, 
+        send_grid_persistence: SendgridPersistence,
+        plans_persistence: PlansPersistence):
+        
         self.partners_persistence = partners_persistence
         self.user_persistence = user_persistence
         self.send_grid_persistence = send_grid_persistence
         self.plans_persistence = plans_persistence
 
 
-    def get_user_info(self, user_id=None, ff=None):
+    def get_subsciption_name(self, user_id):
         if user_id is not None:
             subsciption = self.plans_persistence.get_current_plan(user_id)
             if (subsciption and subsciption.title):
@@ -47,7 +49,7 @@ class PartnersService:
         )
 
         result = [
-            self.partner_mapped(partner, self.get_user_info(partner["user_id"]))
+            self.partner_mapped(partner, self.get_subsciption_name(partner["user_id"]))
             for partner in partners
         ]
         return {"data": {"items": result, "totalCount": total_count}}
@@ -72,21 +74,23 @@ class PartnersService:
         
 
         result = [
-            self.partner_mapped(partner, self.get_user_info(partner["user_id"]))
+            self.partner_mapped(partner, self.get_subsciption_name(partner["user_id"]))
             for partner in partners
         ]
         return {"data": {"items": result, "totalCount": total_count}}
     
 
-    def partners_by_partner_id(self, id, search, start_date, end_date, page, rows_per_page) -> PartnersObjectResponse:
+    def partners_by_partner_id(self, id, search, start_date, end_date, page, rowsPerPage) -> PartnersObjectResponse:
         print("uiiui", "partners_by_partners_id")
+        offset = page * rowsPerPage
+        limit = rowsPerPage
 
         search_term = f"%{search}%" if search else None
 
-        partners, total_count = self.partners_persistence.get_partners_by_partner_id(id, start_date, end_date, page, rows_per_page, search_term)
+        partners, total_count = self.partners_persistence.get_partners_by_partner_id(id, start_date, end_date, offset, limit, search_term)
 
         result = [
-            self.partner_mapped(partner, self.get_user_info(partner["user_id"]))
+            self.partner_mapped(partner, self.get_subsciption_name(partner["user_id"]))
             for partner in partners
         ]
 
@@ -162,11 +166,9 @@ class PartnersService:
 
         created_data = self.partners_persistence.create_partner(creating_data)
 
-        user = self.get_user_info(created_data.user_id, created_data)
-
         return {
             "message": "Error sending email message. Please try again." if not status else None, 
-            "data": self.partner_mapped(created_data, user)
+            "data": created_data.to_dict()
         }
 
     
@@ -192,10 +194,9 @@ class PartnersService:
                 logger.debug('Error sending mail', e)
                 status = False
 
-        user = self.get_user_info(updated_data.user_id, updated_data)
         return {
             "message": "Error sending email message. Please try again." if not status else None, 
-            "data": self.partner_mapped(updated_data, user)}
+            "data": updated_data.to_dict()}
 
 
     async def update_opportunity_partner(self, partner_id: int, payload: dict):
@@ -245,6 +246,6 @@ class PartnersService:
             reward_status=partner.reward_status,
             reward_payout_date=partner.reward_payout_date,
             count=partner.count_accounts,
-            status=partner.status.capitalize() if partner.is_active else 'Inactive',
+            status=partner.status.capitalize(),
             isActive=partner.is_active
         ).model_dump()

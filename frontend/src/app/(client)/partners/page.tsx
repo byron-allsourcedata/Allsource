@@ -43,15 +43,17 @@ interface PartnerData {
     partner_name: string;
     email: string;
     join_date: Date | string;
-    commission: string;
+    commission: number;
     subscription: string;
+    company_name: string;
     sources: string;
-    last_payment_date: string;
+    last_payment_date: Date | string;
     status: string;
     count: number;
-    reward_payout_date: string;
+    reward_payout_date: Date | string;
     reward_status: string;
-    reward_amount: string;
+    reward_amount: number;
+    isActive: boolean;
 }
 
 

@@ -10,15 +10,16 @@ interface PartnerData {
     partner_name: string;
     email: string;
     join_date: Date | string;
-    commission: string;
+    commission: number;
     subscription: string;
+    company_name: string;
     sources: string;
-    last_payment_date: string;
+    last_payment_date: Date | string;
     status: string;
     count: number;
-    reward_payout_date: string;
+    reward_payout_date: Date | string;
     reward_status: string;
-    reward_amount: string;
+    reward_amount: number;
     isActive: boolean;
 }
 
@@ -52,14 +53,14 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
     const [emailError, setEmailError] = useState(false);
     const [commissionError, setCommissionError] = useState(false);
   
-    const handleEmailChange = (e: any) => {
+    const handleEmailChange = (e: ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
       setEmail(value);
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       setEmailError(!emailRegex.test(value) && value !== "");
     };
   
-    const handleCommissionChange = (e: any) => {
+    const handleCommissionChange = (e: ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         const comissionUpLine = maxCommission ? maxCommission - 1 : 70;
         const numericValue = Number(value);
@@ -123,7 +124,6 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
                     });
                 }
                 else {
-                    console.log({requestData})
                     response = await axiosInstance.post(`admin-partners/`, requestData, {
                         headers: { 'Content-Type': 'application/json' },
                     });
@@ -139,7 +139,6 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
                 }
             }
 
-            console.log({response})
         } catch {
             showErrorToast("Failed to submit the invite. Please try again.");
         } finally {
@@ -168,7 +167,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
     }, [email, fullName, companyName, commission]);
     
     return (
-        <Drawer anchor="right" open={open}>
+        <Drawer anchor="right" onClose={onClose} open={open}>
         {processing && (
             <Box
                 sx={{
