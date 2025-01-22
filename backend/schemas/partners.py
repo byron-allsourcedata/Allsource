@@ -26,6 +26,7 @@ class PartnersResponse(BaseModel):
 class PartnersObjectResponse(BaseModel):
     status: bool
     error: Optional[ErrorResponse] = None
+    message: Optional[str] = None
     data: Optional[Union[List[PartnersResponse], PartnersResponse]] = None
 
 class PartnerCreateRequest(BaseModel):
@@ -40,12 +41,10 @@ class OpportunityStatus(BaseModel):
     status: bool
     message: Optional[str] = None
 
-class PartnerUpdateRequest(BaseModel):
-    message: Optional[str] = None
-    status: Optional[str] = None
-    commission: Optional[str] = None
-    full_name: Optional[str] = None
-    company_name: Optional[str] = None
+class PartnerUpdateRequest(BaseModel):    
+    commission: int
+    name: str
+    company_name: str
 
 class PartnerUserData(BaseModel):
     subscription: Optional[str] = None

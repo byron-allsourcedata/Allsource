@@ -288,7 +288,6 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
     const fetchRules = useCallback(async () => {
         setLoading(true);
         try {
-            console.log({page, rowsPerPage})
             const response = await axiosInstance.get("/admin-partners", {
                 params: { 
                     isMaster, search,
@@ -317,6 +316,9 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
     const updateOrAddAsset = (updatedPartner: PartnerData) => {
         setPartners((prevAccounts) => {
             const index = prevAccounts.findIndex((account) => account.id === updatedPartner.id);
+            console.log({updatedPartner})
+            console.log({index})
+            console.log({prevAccounts})
             if (index !== -1) {
                 const newAccounts = [...prevAccounts];
                 newAccounts[index] = updatedPartner;

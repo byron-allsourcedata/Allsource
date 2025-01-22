@@ -33,9 +33,9 @@ interface FormUploadPopupProps {
 }
 
 interface RequestData {
-    commission: string;
+    commission: number;
     email?: string;
-    full_name?: string;
+    name?: string;
     company_name?: string;
     is_master?: boolean;
     masterId?: number;
@@ -95,8 +95,8 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
         setButtonContain(false);
     
         const requestData: RequestData = {
-            commission,
-            full_name: fullName,
+            commission: parseInt(commission),
+            name: fullName,
             company_name: companyName
         };
         
@@ -129,9 +129,20 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
                 }
             }
             if (response.status === 200) {
-                updateOrAddAsset(response.data);
-                showToast("Partner successfully submitted!");
+                console.log({response})
+                if (response.data.message) {
+                    showErrorToast(response.data.message);
+                }
+                else {
+                    updateOrAddAsset(response.data.data);
+                    showToast("Partner successfully submitted!");
+                }
+                if (!response.data.status) {
+                    showErrorToast("Error sending email message. Please try again.");
+                }
             }
+
+            console.log({response})
         } catch {
             showErrorToast("Failed to submit the invite. Please try again.");
         } finally {

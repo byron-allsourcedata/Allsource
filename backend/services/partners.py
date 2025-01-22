@@ -38,7 +38,7 @@ class PartnersService:
         user_data["reward_payout_date"] = None
         user_data["sources"] = "Direct"
         if partner.master_id is not None:
-            master_partner = self.partners_persistence.get_asset_by_id(partner.master_id)
+            master_partner = self.partners_persistence.get_partner_by_id(partner.master_id)
             if (master_partner and master_partner.company_name):
                 user_data["sources"] = master_partner.company_name
         if user_id is not None:
@@ -126,7 +126,7 @@ class PartnersService:
         if not id:
             return {"status": False, "error": {"code": 400, "message": "Invalid request with your partner data"}}
         try:
-            partner = self.partners_persistence.get_asset_by_id(id)
+            partner = self.partners_persistence.get_partner_by_id(id)
             self.partners_persistence.terminate_partner(partner_id=id)
             template_id = self.send_grid_persistence.get_template_by_alias(
                 SendgridTemplate.PARTNER_TERMINATE_TEMPLATE.value)
@@ -165,96 +165,60 @@ class PartnersService:
         return md5_hash
     
 
-    async def create_partner(self, full_name: str, email: str, company_name: str, commission: str, is_master: bool, masterId=None) -> PartnersObjectResponse:
-        if not full_name or not email or not company_name or not commission:
-            return {"status": False, "error": {"code": 400, "message": "Invalid request with your partner data"}}
+    async def create_partner(self, new_data: dict) -> PartnersObjectResponse:
+        status = True
+        hash = ''
+
+        user_by_email = self.user_persistence.get_user_by_email()
+
+        if user_by_email:
+            return {"status": False, "message": "User with this email already exists!"}
         
+
         try:
-            hash = self.send_referral_in_email(full_name, email, commission)
-            creating_data = {
-                "full_name": full_name,
-                "email": email,
-                "company_name": company_name,
-                "commission": commission,
-                "token": hash,
-                "is_master": is_master
-            }
-
-            if masterId is not None:
-                creating_data["masterId"] = masterId
-
-            created_data = self.partners_persistence.create_partner(creating_data)
-
-            if not created_data:
-                logger.debug('Database error during creation', e)
-                return {"status": False, "error": {"code": 500, "message": "Partner not created"}}
-
-            user = self.get_user_info(created_data.user_id, created_data)
-            return {"status": True, "data": self.domain_mapped(created_data, user)}
-        
+            hash = self.send_referral_in_email(new_data.full_name, new_data.email, new_data.commission)
         except Exception as e:
-            logger.debug('Error creating partner', e)
-            return {"status": False, "error":{"code": 500, "message": f"Unexpected error during creation: {str(e)}"}}
+            logger.debug('Error sending mail', e)
+            status = False
+        
+
+        creating_data = new_data.dict()
+        creating_data["token"] = hash
+
+        if new_data.master_id is not None:
+            creating_data["master_id"] = new_data.master_id(new_data.email)
+
+        created_data = self.partners_persistence.create_partner(creating_data)
+
+        user = self.get_user_info(created_data.user_id, created_data)
+        return {"status": status, "data": self.domain_mapped(created_data, user)}
     
 
     def setUser(self, email: str, user_id: int, status: str, join_date = None):        
         self.partners_persistence.update_partner_by_email(email=email, user_id=user_id, status=status, join_date=join_date)
         
     
-    async def update_partner(
-        self, 
-        partner_id: int, 
-        field: str, 
-        value: str, 
-        message: str, 
-        partner_name: Optional[str] = None, 
-        company_name: Optional[str] = None
-    ) -> PartnersObjectResponse:
-        if not partner_id or not field or not value:
-            return {"status": False, "error": {"code": 400, "message": "Invalid request with your partner data"}}
-            
-        try:
-            if field == 'status' and value == 'inactive':
-                field = 'is_active'
-                value = False
-                
-            if field == 'status' and value == 'active':
-                field = 'is_active'
-                value = True
-                
-            update_data = {field: value}
+    async def update_partner(self, partner_id: int, new_data: dict) -> PartnersObjectResponse:
+        
+        new_data_dict = new_data.dict()
+        updated_data, commission_changed = self.partners_persistence.update_partner(partner_id=partner_id, **new_data_dict)
+        status = True
 
-            if partner_name is not None:
-                update_data["full_name"] = partner_name
-            if company_name is not None:
-                update_data["company_name"] = company_name
+        if commission_changed:
+            template_id = self.send_grid_persistence.get_template_by_alias(
+                SendgridTemplate.PARTNER_UPDATE_TEMPLATE.value
+            )
+            try:
+                self.send_message_in_email(
+                    updated_data.name, '', updated_data.email, template_id, updated_data.commission
+                )
+            except Exception as e:
+                logger.debug('Error sending mail', e)
+                status = False
 
-            updated_data = self.partners_persistence.update_partner(partner_id=partner_id, **update_data)
+        user = self.get_user_info(updated_data.user_id, updated_data)
+        return {"status": status, "data": self.domain_mapped(updated_data, user)}
 
-            if not updated_data:
-                logger.debug("Database error during updation")
-                return {"status": False, "error": {"code": 500, "message": "Partner not updated"}}
-            
-
-            if (field == "status"):
-                if (value == "active"):
-                    template_id = self.send_grid_persistence.get_template_by_alias(
-                    SendgridTemplate.PARTNER_ENABLE_TEMPLATE.value)
-                    self.send_message_in_email(updated_data.name, message, updated_data.email, template_id)
-                else:
-                    template_id = self.send_grid_persistence.get_template_by_alias(
-                    SendgridTemplate.PARTNER_DISABLE_TEMPLATE.value)
-                    self.send_message_in_email(updated_data.name, message, updated_data.email, template_id)
-            else:
-                template_id = self.send_grid_persistence.get_template_by_alias(
-                    SendgridTemplate.PARTNER_UPDATE_TEMPLATE.value)
-                self.send_message_in_email(updated_data.name, message, updated_data.email, template_id, value)
-
-            user = self.get_user_info(updated_data.user_id, updated_data)
-            return {"status": True, "data": self.domain_mapped(updated_data, user)}
-        except Exception as e:
-            logger.debug("Error updating partner data", exc_info=True)
-            return {"status": False, "error": {"code": 500, "message": f"Unexpected error during updation: {str(e)}"}}
 
     async def update_opportunity_partner(
         self, 

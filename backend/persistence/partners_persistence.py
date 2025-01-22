@@ -1,7 +1,7 @@
 from models.partner import Partner
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
-from typing import Optional
+from typing import Optional, Tuple
 from datetime import datetime, timedelta
 from models.referral_payouts import ReferralPayouts
 from models.users import Users
@@ -113,7 +113,7 @@ class PartnersPersistence:
 
 
 
-    def get_asset_by_id(self, partner_id):
+    def get_partner_by_id(self, partner_id):
         return self.db.query(Partner).filter(Partner.id == partner_id).first()
     
 
@@ -131,24 +131,23 @@ class PartnersPersistence:
             partner.company_name = company
             self.db.commit()
 
-    def update_partner(self, partner_id: int, **kwargs) -> Optional[Partner]:
-        partner = self.get_asset_by_id(partner_id)
+    def update_partner(self, partner_id: int, **kwargs) -> Tuple[Optional[Partner], bool]:
+        partner = self.get_partner_by_id(partner_id)
 
-        if not partner:
-            return None
+        commission_changed = False
 
         for key, value in kwargs.items():
             if hasattr(partner, key) and value is not None:
-                setattr(partner, key, value)
-
-        if "full_name" in kwargs and kwargs["full_name"] is not None:
-            partner.name = kwargs["full_name"]
-        if "company_name" in kwargs and kwargs["company_name"] is not None:
-            partner.company_name = kwargs["company_name"]
+                if getattr(partner, key) != value:
+                    setattr(partner, key, value)
+                    if key == "commission":
+                        commission_changed = True
 
         self.db.commit()
         self.db.refresh(partner)
-        return partner
+
+        return partner, commission_changed
+
     
 
     def update_partner_by_email(self, email: int, **kwargs) -> Optional[Partner]:
@@ -167,8 +166,7 @@ class PartnersPersistence:
 
 
     def terminate_partner(self, partner_id):
-        self.db.query(Partner).filter(
-            Partner.id == partner_id).delete()
+        self.db.query(Partner).filter(Partner.id == partner_id).delete()
         self.db.commit()
 
 
@@ -179,14 +177,14 @@ class PartnersPersistence:
             email=creating_data["email"],
             name=creating_data["full_name"],
             company_name=creating_data["company_name"],
-            is_master=creating_data["isMaster"],
+            is_master=creating_data["is_master"],
             status=creating_data.get('status') if creating_data.get('status') else 'invitation sent',
             user_id=creating_data.get('user_id'),
             join_date=creating_data.get('join_date')
         )
 
-        if "masterId" in creating_data and creating_data["masterId"] is not None:
-            partner.master_id = creating_data["masterId"]
+        if "master_id" in creating_data and creating_data["master_id"] is not None:
+            partner.master_id = creating_data["master_id"]
 
         self.db.add(partner)
         self.db.commit()
