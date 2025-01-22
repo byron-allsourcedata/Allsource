@@ -2,18 +2,16 @@
 import { Box, Typography, Tabs, Tab, Button } from "@mui/material";
 import { Suspense, useEffect, useState } from "react";
 import { referralStyle } from './referralStyles';
-import CollectionRules from "@/components/SuppressionsCollectingRules";
-import SuppressionRules from "@/components/SuppressionsRules";
 import CustomTooltip from "@/components/customToolTip";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import Image from "next/image";
-import { useNotification } from '../../../context/NotificationContext';
-import ReferralOverview from "@/components/ReferralOverview";
-import ReferralSignups from "@/components/ReferralSignups";
-import ReferralRewards from "@/components/ReferralRewards";
+import { useNotification } from '@/context/NotificationContext';
+import ReferralOverview from "@/app/(client)/referral/components/ReferralOverview";
+import ReferralSignups from "@/app/(client)/referral/components/ReferralSignups";
+import ReferralRewards from "@/app/(client)/referral/components/ReferralRewards";
 
 const centerContainerStyles = {
     display: 'flex',

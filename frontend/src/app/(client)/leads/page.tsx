@@ -12,7 +12,7 @@ import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import DownloadIcon from '@mui/icons-material/Download';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import FilterPopup from '@/components/FiltersSlider';
+import FilterPopup from './FiltersSlider';
 import AudiencePopup from '@/components/AudienceSlider';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
@@ -24,7 +24,7 @@ import Tooltip from '@mui/material/Tooltip';
 import CustomToolTip from '@/components/customToolTip';
 import CalendarPopup from '@/components/CustomCalendar';
 import CustomTablePagination from '@/components/CustomTablePagination';
-import UnlockButton from '@/components/UnlockButton';
+import UnlockButton from './UnlockButton';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useNotification } from '@/context/NotificationContext';
 

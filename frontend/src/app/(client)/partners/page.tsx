@@ -10,11 +10,11 @@ import dayjs from "dayjs";
 import Image from "next/image";
 import { useNotification } from '@/context/NotificationContext';
 import PartnersAccounts from "@/components/PartnersAccounts";
-import ReferralRewards from "@/components/ReferralRewards";
-import PartnersAssets from "@/components/PartnersAssets";
-import PartnersMain from "@/components/PartnersMain";
+import ReferralRewards from "@/app/(client)/referral/components/ReferralRewards";
+import PartnersAssets from "./components/PartnersAssets";
+import PartnersMain from "./components/PartnersMain";
 import CalendarPopup from "@/components/CustomCalendar";
-import PartnersOverview from "@/components/PartnersOverview";
+import PartnersOverview from "./components/PartnersOverview";
 import InvitePartnerPopup from "@/components/InvitePartnerPopup"
 
 const centerContainerStyles = {

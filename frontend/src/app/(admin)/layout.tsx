@@ -2,7 +2,7 @@
 import React, { ReactNode } from "react";
 import { Grid } from "@mui/material";
 import HeaderAdmin from "./HeaderAdmin";
-import AdminSidebar from "@/components/SidebarAdmin";
+import AdminSidebar from "./SidebarAdmin";
 
 interface AdminLayoutProps {
   children: ReactNode;
