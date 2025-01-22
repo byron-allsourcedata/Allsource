@@ -147,7 +147,7 @@ class PartnersService:
 
         if user_by_email or partner_by_email:
             return {"message": "User with this email already exists!"}
-        
+
         try:
             token = self.send_referral_in_email(new_data.name, new_data.email, new_data.commission)
         except Exception as e:
@@ -168,6 +168,7 @@ class PartnersService:
             "message": "Error sending email message. Please try again." if not status else None, 
             "data": self.partner_mapped(created_data, user)
         }
+
     
 
     def setUser(self, email: str, user_id: int, status: str, join_date = None):        

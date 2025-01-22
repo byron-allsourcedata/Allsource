@@ -6,7 +6,7 @@ import pytz
 from sqlalchemy import and_, or_, desc, asc, Integer
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql import func
-
+from utils import format_phone_number
 from models.audience import Audience
 from models.audience_leads import AudienceLeads
 from models.five_x_five_emails import FiveXFiveEmails
@@ -732,37 +732,20 @@ class LeadsPersistence:
             self.db.query(
                 FiveXFiveUser.id,
                 FiveXFiveUser.first_name,
-                FiveXFiveUser.programmatic_business_emails,
                 FiveXFiveUser.mobile_phone,
                 FiveXFiveUser.direct_number,
                 FiveXFiveUser.gender,
                 FiveXFiveUser.personal_phone,
-                FiveXFiveUser.business_email,
                 FiveXFiveUser.personal_emails,
                 FiveXFiveUser.last_name,
                 FiveXFiveUser.personal_city,
                 FiveXFiveUser.personal_state,
                 FiveXFiveUser.company_name,
                 FiveXFiveUser.company_domain,
-                FiveXFiveUser.company_phone,
-                FiveXFiveUser.company_sic,
-                FiveXFiveUser.company_address,
-                FiveXFiveUser.company_city,
-                FiveXFiveUser.company_state,
-                FiveXFiveUser.company_zip,
-                FiveXFiveUser.company_linkedin_url,
-                FiveXFiveUser.company_revenue,
-                FiveXFiveUser.company_employee_count,
-                FiveXFiveUser.net_worth,
                 FiveXFiveUser.job_title,
                 FiveXFiveUser.last_updated,
-                FiveXFiveUser.personal_emails_last_seen,
-                FiveXFiveUser.company_last_updated,
-                FiveXFiveUser.job_title_last_updated,
                 FiveXFiveUser.age_min,
                 FiveXFiveUser.age_max,
-                FiveXFiveUser.additional_personal_emails,
-                FiveXFiveUser.linkedin_url,
                 FiveXFiveUser.personal_address,
                 FiveXFiveUser.personal_address_2,
                 FiveXFiveUser.personal_zip,
@@ -772,34 +755,33 @@ class LeadsPersistence:
                 FiveXFiveUser.children,
                 FiveXFiveUser.income_range,
                 FiveXFiveUser.homeowner,
-                FiveXFiveUser.seniority_level,
-                FiveXFiveUser.department,
-                FiveXFiveUser.professional_address,
-                FiveXFiveUser.professional_address_2,
-                FiveXFiveUser.professional_city,
-                FiveXFiveUser.professional_state,
-                FiveXFiveUser.professional_zip4,
-                FiveXFiveUser.primary_industry,
-                FiveXFiveUser.business_email_validation_status,
-                FiveXFiveUser.business_email_last_seen,
-                FiveXFiveUser.personal_emails_validation_status,
-                FiveXFiveUser.related_domains,
-                FiveXFiveUser.social_connections,
                 FiveXFiveUser.dpv_code
             )
             .filter(FiveXFiveUser.id.in_(five_x_five_user_ids))
             .all()
         )
+
         result = [
             {
-                column.name: (getattr(user, column.name, None).lower() if column.name == "gender" and getattr(user, column.name, None) else getattr(user, column.name, None))
-                for column in FiveXFiveUser.__table__.columns
-                if getattr(user, column.name, None) is not None
+                column: (
+                    format_phone_number(getattr(user, column, "N/A"))
+                    if "phone" in column else
+                    (getattr(user, column, "N/A").lower() if column == "gender" and getattr(user, column, None) else getattr(user, column, "N/A"))
+                )
+                for column in [
+                    "id", "first_name", "mobile_phone", "direct_number", "gender", "personal_phone", 
+                    "personal_emails", "last_name", "personal_city", "personal_state", "company_name", 
+                    "company_domain", 
+                    "job_title", "last_updated", "age_min", "age_max", 
+                    "personal_address", "personal_address_2", "personal_zip", "personal_zip4", 
+                    "professional_zip", "married", "children", "income_range", "homeowner", "dpv_code"
+                ]
             }
             for user in five_x_five_users
         ]
         
         return result
+
         
     def search_contact(self, start_letter, domain_id):
         letters = start_letter.split()

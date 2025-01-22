@@ -232,6 +232,7 @@ const AccountSetup = () => {
 
       switch (response.data.status) {
         case "SUCCESS":
+          sessionStorage.setItem('current_domain', websiteLink.replace(/^https?:\/\//, ""))
           await fetchUserData();
           if (response.data.stripe_payment_url) {
             router.push(`${response.data.stripe_payment_url}`)

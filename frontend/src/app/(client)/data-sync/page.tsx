@@ -12,7 +12,7 @@ import Image from "next/image";
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import axiosInstance from '../../../axios/axiosInterceptorInstance';
 import { AxiosError } from "axios";
-import DataSyncList from "@/components/DataSyncList";
+import DataSyncList from "./components/DataSyncList";
 import { useRouter } from "next/navigation";
 
 const centerContainerStyles = {

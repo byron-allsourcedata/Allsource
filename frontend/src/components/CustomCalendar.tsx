@@ -67,7 +67,11 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
     };
 
     const handleChange = (dates: [Date | null, Date | null]) => {
-        const [start, end] = dates;
+        let [start, end] = dates;
+        if (start && end && start.getTime() === end.getTime()) {
+            end = new Date(start);
+            end.setHours(23, 59, 59, 999);
+        }
         setStartDate(start);
         setEndDate(end);
         onDateChange({ start, end });

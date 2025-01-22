@@ -160,8 +160,8 @@ def get_aws_service(s3_client=Depends(get_s3_client)) -> AWSService:
     return AWSService(s3_client)
 
 
-def get_stripe_service(user_persistence: UserPersistence = Depends(get_user_persistence_service)):
-    return StripeService(user_persistence=user_persistence)
+def get_stripe_service():
+    return StripeService()
 
 
 def get_referral_service(

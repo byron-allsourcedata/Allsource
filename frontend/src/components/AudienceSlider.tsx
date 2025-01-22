@@ -1,25 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Drawer, Box, Typography, IconButton, Backdrop, TextField, InputAdornment, Divider, FormControlLabel, Radio, Collapse, Checkbox, Button, List, ListItem, ListItemIcon, ListItemButton, ListItemText, Link, Tab, Tooltip  } from '@mui/material';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { Drawer, Box, Typography, IconButton, List, ListItem, ListItemIcon, ListItemButton, ListItemText} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from './ToastNotification';
 import Image from 'next/image';
 import SearchIcon from '@mui/icons-material/Search';
-import ConnectKlaviyo from './ConnectKlaviyo';
-import ConnectMeta from './ConnectMeta';
-import { fetchUserData } from '@/services/meService';
+import ConnectKlaviyo from '@/app/(client)/data-sync/components/ConnectKlaviyo';
+import ConnectMeta from '@/app/(client)/data-sync/components/ConnectMeta';
 import KlaviyoIntegrationPopup from './KlaviyoIntegrationPopup';
 import MetaConnectButton from './MetaConnectButton';
 import AlivbleIntagrationsSlider from './AvalibleIntegrationsSlider';
 import OmnisendConnect from './OmnisendConnect';
-import OnmisendDataSync from './OmnisendDataSync';
+import OnmisendDataSync from '../app/(client)/data-sync/components/OmnisendDataSync';
 import MailchimpConnect from './MailchimpConnect';
-import MailchimpDatasync from './MailchimpDatasync';
+import MailchimpDatasync from '../app/(client)/data-sync/components/MailchimpDatasync';
 import SendlaneConnect from './SendlaneConnect';
-import SendlaneDatasync from './SendlaneDatasync';
-import ZapierDataSync from './ZapierDataSync';
+import SendlaneDatasync from '../app/(client)/data-sync/components/SendlaneDatasync';
+import ZapierDataSync from '../app/(client)/data-sync/components/ZapierDataSync';
 
 interface AudiencePopupProps {
     open: boolean;
@@ -118,17 +115,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         }
     }, [open]);
 
-    const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const value = event.target.value;
-        setSelectedOption(value);
-        if (value === 'create') {
-            setIsFormOpen(true);
-            setIsExistingListsOpen(false);
-        } else if (value === 'existing') {
-            setIsExistingListsOpen(true);
-            setIsFormOpen(false);
-        }
-    };
 
     const handleOmnisendIconPopupOpenClose = () => {
         setOpenOmnisendConnect(false)

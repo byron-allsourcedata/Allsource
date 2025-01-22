@@ -1,7 +1,7 @@
 import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Grid, Link, Typography } from "@mui/material";
 import ArrowForwardIosSharpIcon  from '@mui/icons-material/ExpandMore';
 import { useState } from "react";
-import ManualPopup from "./ManualPopup";
+import ManualPopup from "../app/(client)/dashboard/components/ManualPopup";
 import CustomTooltip from "./customToolTip";
 
 const buttonStyles = {

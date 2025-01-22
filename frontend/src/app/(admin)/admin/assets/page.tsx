@@ -31,7 +31,7 @@ interface PartnersAssetsData {
     asset: AssetsData[] | [];
 }
 
-const SidebarAdmin = dynamic(() => import('../../../../components/SidebarAdmin'), {
+const SidebarAdmin = dynamic(() => import('../../SidebarAdmin'), {
     suspense: true,
 });
 

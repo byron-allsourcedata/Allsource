@@ -6,7 +6,6 @@ import logging
 
 from config.stripe import StripeConfig
 from schemas.users import UserSignUpForm
-from persistence.user_persistence import UserPersistence
 
 stripe.api_key = StripeConfig.api_key
 
@@ -14,19 +13,12 @@ logging.getLogger("stripe").setLevel(logging.WARNING)
 
 
 class StripeService:
-    def __init__(self, user_persistence: UserPersistence):
-        self.user_persistence_service = user_persistence
+    def __init__(self):
+        pass
 
-    def get_stripe_account_info(self, stripe_account_id: str, user_id: int):
-        if stripe_account_id:
-            try:
-                account = stripe.Account.retrieve(stripe_account_id)
-                return account
-            except:
-                self.user_persistence_service.delete_stripe_info(user_id=user_id)
-                return {}
-        else:
-            return {}
+    def get_stripe_account_info(self, stripe_account_id: str):
+        account = stripe.Account.retrieve(stripe_account_id)
+        return account
     
     def create_stripe_transfer(self, amount: int, destination_account: str):
         transfer = stripe.Transfer.create(

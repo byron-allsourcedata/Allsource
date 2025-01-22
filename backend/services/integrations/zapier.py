@@ -8,6 +8,7 @@ from persistence.integrations.integrations_persistence import IntegrationsPresis
 from fastapi import HTTPException
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
 from httpx import Client
+from utils import extract_first_email
 
 class ZapierIntegrationService: 
 
@@ -76,6 +77,8 @@ class ZapierIntegrationService:
 
     def __create_profile(self, five_x_five_user, sync: IntegrationUserSync):
         data = self.__mapped_lead(five_x_five_user)
+        if  data == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+            return data
         response = self.client.post(url=sync.hook_url, json=data)
         if response.status_code == 400:
                 return ProccessDataSyncResult.INCORRECT_FORMAT.value
@@ -94,64 +97,47 @@ class ZapierIntegrationService:
         if (lead_type == 'converted sales'):
             return 'converted_sales'
         if (lead_type == 'all contacts'):
-            return 'allContact'
-        return 'allContact'
+            return 'allContacts'
+        return 'allContacts'
     
     def __mapped_lead(self, lead):
+        first_email = (
+            getattr(lead, 'business_email') or 
+            getattr(lead, 'personal_emails') or
+            getattr(lead, 'additional_personal_emails') or
+            getattr(lead, 'programmatic_business_emails', None)
+        )
+        first_email = extract_first_email(first_email) if first_email else None
+        if not first_email:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+        
         lead_dict = {
             "id": lead.id,
             "first_name": lead.first_name,
-            "programmatic_business_emails": lead.programmatic_business_emails,
+            "last_name": lead.last_name,
             "mobile_phone": format_phone_number(lead.mobile_phone),
             "direct_number": lead.direct_number,
             "gender": lead.gender.lower() if lead.gender else None,
             "personal_phone": format_phone_number(lead.personal_phone),
             "business_email": lead.business_email,
-            "personal_emails": lead.personal_emails,
-            "last_name": lead.last_name,
-            "personal_city": lead.personal_city,
-            "personal_state": lead.personal_state,
-            "company_name": lead.company_name,
-            "company_domain": lead.company_domain,
-            "company_phone": format_phone_number(lead.company_phone),
-            "company_sic": lead.company_sic,
-            "company_address": lead.company_address,
-            "company_city": lead.company_city,
-            "company_state": lead.company_state,
-            "company_zip": lead.company_zip,
-            "company_linkedin_url": lead.company_linkedin_url,
-            "company_revenue": lead.company_revenue,
-            "company_employee_count": lead.company_employee_count,
-            "net_worth": lead.net_worth,
-            "job_title": lead.job_title,
+            "personal_emails": first_email,
+            "personal_city": lead.personal_city or "N/A",
+            "personal_state": lead.personal_state or "N/A",
+            "company_name": lead.company_name or "N/A",
+            "company_domain": lead.company_domain or "N/A",
+            "job_title": lead.job_title or "N/A",
             "last_updated": lead.last_updated.isoformat() if isinstance(lead.last_updated, datetime) else None,
-            "personal_emails_last_seen": lead.personal_emails_last_seen.isoformat() if isinstance(lead.personal_emails_last_seen, datetime) else None,
-            "company_last_updated": lead.company_last_updated.isoformat() if isinstance(lead.company_last_updated, datetime) else None,
-            "job_title_last_updated": lead.job_title_last_updated.isoformat() if isinstance(lead.job_title_last_updated, datetime) else None,
             "age_min": lead.age_min,
             "age_max": lead.age_max,
-            "additional_personal_emails": lead.additional_personal_emails,
-            "linkedin_url": lead.linkedin_url,
-            "personal_address": lead.personal_address,
-            "personal_address_2": lead.personal_address_2,
-            "personal_zip": lead.personal_zip,
-            "personal_zip4": lead.personal_zip4,
-            "professional_zip": lead.professional_zip,
+            "personal_address": lead.personal_address or "N/A",
+            "personal_address_2": lead.personal_address_2 or "N/A",
+            "personal_zip": lead.personal_zip or "N/A",
+            "personal_zip4": lead.personal_zip4 or "N/A",
+            "professional_zip": lead.professional_zip or "N/A",
             "married": lead.married,
             "children": lead.children,
             "income_range": lead.income_range,
             "homeowner": lead.homeowner,
-            "seniority_level": lead.seniority_level,
-            "professional_address": lead.professional_address,
-            "professional_address_2": lead.professional_address_2,
-            "professional_city": lead.professional_city,
-            "professional_state": lead.professional_state,
-            "professional_zip4": lead.professional_zip4,
-            "primary_industry": lead.primary_industry,
-            "business_email_validation_status": lead.business_email_validation_status,
-            "personal_emails_validation_status": lead.personal_emails_validation_status,
-            "related_domains": lead.related_domains,
-            "social_connections": lead.social_connections,
             "dpv_code": lead.dpv_code
         }
         
