@@ -192,7 +192,7 @@ class SlackService:
                     }
                     for channel in channels_data
                 ]
-                return {'status': ProccessDataSyncResult.AUTHENTICATION_FAILED, 'channels': channels} 
+                return {'status': ProccessDataSyncResult.SUCCESS, 'channels': channels} 
             except SlackApiError as e:
                 logger.error(f"Slack API Error: {e.response.get('error')}")
                 return {'status': ProccessDataSyncResult.AUTHENTICATION_FAILED}
