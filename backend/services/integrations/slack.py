@@ -123,17 +123,14 @@ class SlackService:
                 "message": error_message
             }
     
-    def join_channel(client_token, channel_id):
+    def join_channel(self, client_token, channel_id):
         client = WebClient(token=client_token)
         try:
             response = client.conversations_join(channel=channel_id)
-            print('----------')
             if response["ok"]:
-                print('success_join')
                 return {'status': IntegrationsStatus.SUCCESS.value}
             else:
-                print(response['error'])
-                return {'status': IntegrationsStatus.JOIN_CHANNEL_IS_FAILED.value, 
+                return {'status': IntegrationsStatus.JOIN_CHANNEL_IS_FAILED.value,
                         'message': response['error']
                         }
         except SlackApiError as e:
@@ -218,7 +215,7 @@ class SlackService:
             logger.error(f"Slack API error: {e.response['error']}")
             return ProccessDataSyncResult.LIST_NOT_EXISTS
         
-    async def create_sync(self, leads_type: str, list_id: str, list_name: str, data_map: List[DataMap], domain_id: int, created_by: str):
+    async def create_sync(self, leads_type: str, list_id: str, list_name: str, domain_id: int, created_by: str):
         credentials = self.integrations_persistence.get_credentials_for_service(domain_id, SourcePlatformEnum.SLACK.value)
         join_result = self.join_channel(credentials.access_token, list_id)
         if join_result['status'] == IntegrationsStatus.JOIN_CHANNEL_IS_FAILED.value:
@@ -227,12 +224,11 @@ class SlackService:
         for sync in data_syncs:
             if sync.get('integration_id') == credentials.id and sync.get('leads_type') == leads_type:
                 return
-        sync = self.sync_persistence.create_sync({
+        self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'list_id': list_id,
             'list_name': list_name,
             'domain_id': domain_id,
             'leads_type': leads_type,
-            'data_map': data_map,
             'created_by': created_by,
         })
