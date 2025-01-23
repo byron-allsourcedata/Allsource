@@ -272,7 +272,14 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
     const fetchRulesId = async (id: number) => {
         setLoading(true);
         try {
-            const response = await axiosInstance.get(`/admin-partners/${id}/`)
+            const response = await axiosInstance.get(`/admin-partners/${id}/`, {
+                params: { 
+                    search,
+                    start_date: appliedDates.start ? appliedDates.start.toLocaleDateString('en-CA') : null,
+                    end_date: appliedDates.end ? appliedDates.end.toLocaleDateString('en-CA') : null,
+                    page, 
+                    rows_per_page: rowsPerPage
+                }})
             if (response.status === 200 && response.data.length > 0) {
                 setErrosResponse(false)
                 setPartners([...response.data])
@@ -697,7 +704,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                                 </TableCell>
 
                                                                 <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
-                                                                    {data.subscription}
+                                                                    {data.subscription ?? '--'}
                                                                 </TableCell>
 
                                                                 <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>

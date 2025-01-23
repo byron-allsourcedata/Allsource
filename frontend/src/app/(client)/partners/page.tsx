@@ -170,7 +170,7 @@ const Partners: React.FC = () => {
         try {
             const responseMe = await axiosInstance.get(`/partners`);
             if(responseMe.status === 200) {
-                const masterPartner = responseMe.data.isMaster
+                const masterPartner = responseMe.data.is_master
                 setIsMaster(masterPartner) 
                 setMasterId(responseMe.data.id)  
                 setCommission(responseMe.data.commission) 

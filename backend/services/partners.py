@@ -8,44 +8,32 @@ from models.partner import Partner
 from persistence.user_persistence import UserPersistence
 from services.referral import ReferralService
 from persistence.partners_persistence import PartnersPersistence
-from persistence.partners_invations_persistence import ParntersInvitationsPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.plans_persistence import PlansPersistence
+from persistence.referral_user import ReferralUserPersistence
 from schemas.partners import PartnersResponse, PartnerUserData, PartnersObjectResponse
 from services.sendgrid import SendgridHandler
 from enums import SendgridTemplate
+from types import SimpleNamespace
 
 logger = logging.getLogger(__name__)
 
 
 class PartnersService:
 
-    def __init__(self, partners_persistence: PartnersPersistence, accounts_persistence: ParntersInvitationsPersistence, user_persistence: UserPersistence, send_grid_persistence: SendgridPersistence,
+    def __init__(self, partners_persistence: PartnersPersistence, user_persistence: UserPersistence, send_grid_persistence: SendgridPersistence,
                  plans_persistence: PlansPersistence):
         self.partners_persistence = partners_persistence
-        self.accounts_persistence = accounts_persistence
         self.user_persistence = user_persistence
         self.send_grid_persistence = send_grid_persistence
         self.plans_persistence = plans_persistence
 
 
-    def get_user_info(self, user_id=None, partner=None):
-        user_data = {}
-        user_data["subscription"] = "--"
-        user_data["payment_date"] = None
-        user_data["reward_amount"] = None
-        user_data["reward_status"] = None
-        user_data["reward_payout_date"] = None
-        user_data["sources"] = "Direct"
-        if partner.master_id is not None:
-            master_partner = self.partners_persistence.get_partner_by_id(partner.master_id)
-            if (master_partner and master_partner.company_name):
-                user_data["sources"] = master_partner.company_name
+    def get_user_info(self, user_id=None, ff=None):
         if user_id is not None:
             subsciption = self.plans_persistence.get_current_plan(user_id)
             if (subsciption and subsciption.title):
-                user_data["subscription"] = subsciption.title
-        return user_data
+                return subsciption.title
 
 
     def get_partners(self, is_master, search, start_date, end_date, page, rowsPerPage) -> PartnersObjectResponse:
@@ -59,58 +47,54 @@ class PartnersService:
         )
 
         result = [
-            self.domain_mapped(partner, self.get_user_info(partner.user_id, partner))
+            self.partner_mapped(partner, self.get_user_info(partner["user_id"]))
             for partner in partners
         ]
         return {"data": {"items": result, "totalCount": total_count}}
     
     
     def get_partner(self, email) -> PartnersObjectResponse:
+        print("uiiui", "get_partner")
         partner = self.partners_persistence.get_partner_by_email(email)
-        
-        user_id = partner.user_id
-        user = self.get_user_info(user_id, partner)
-        partnerData = self.domain_mapped(partner, user)
 
-        return {"data": partnerData}
+        return {"data": partner.to_dict()}
         
     
 
     def get_partner_partners(self, email, start_date, end_date, page, rowsPerPage) -> PartnersObjectResponse:
+        print("uiiui", "get_partner_partners")
         offset = page * rowsPerPage
         limit = rowsPerPage
         
-        decoded_email = unquote(email)
-        partner = self.partners_persistence.get_partner_by_email(decoded_email)
-        partners, total_count = self.partners_persistence.get_partners_by_partners_id(
+        partner = self.partners_persistence.get_partner_by_email(email)
+        partners, total_count = self.partners_persistence.get_partners_by_partner_id(
             partner.id, start_date, end_date, offset, limit)
         
-        result = []
-        for partner in partners:
-            user_id = partner.user_id
-            user = self.get_user_info(user_id, partner)
-            count = self.accounts_persistence.get_total_count(partner.id)
-            result.append(self.domain_mapped(partner, user, count))
-        
+
+        result = [
+            self.partner_mapped(partner, self.get_user_info(partner["user_id"]))
+            for partner in partners
+        ]
+        return {"data": {"items": result, "totalCount": total_count}}
+    
+
+    def partners_by_partner_id(self, id, search, start_date, end_date, page, rows_per_page) -> PartnersObjectResponse:
+        print("uiiui", "partners_by_partners_id")
+
+        search_term = f"%{search}%" if search else None
+
+        partners, total_count = self.partners_persistence.get_partners_by_partner_id(id, start_date, end_date, page, rows_per_page, search_term)
+
+        result = [
+            self.partner_mapped(partner, self.get_user_info(partner["user_id"]))
+            for partner in partners
+        ]
 
         return {"data": {"items": result, "totalCount": total_count}}
     
 
-    def partners_by_partners_id(self, id: int) -> PartnersObjectResponse:
-        partners = self.partners_persistence.get_partners_by_partners_id(id)
-
-        result = []
-        for partner in partners:
-            user_id = partner.user_id
-            user = self.get_user_info(user_id, partner)
-            result.append(self.domain_mapped(partner, user))
-
-
-        return {"data": result}
-    
-
     def delete_partner(self, id: int, message: str) -> PartnersObjectResponse:
-        status = False
+        status = True
 
         partner = self.partners_persistence.get_partner_by_id(id)
         self.partners_persistence.terminate_partner(partner_id=id)
@@ -182,7 +166,7 @@ class PartnersService:
 
         return {
             "message": "Error sending email message. Please try again." if not status else None, 
-            "data": self.domain_mapped(created_data, user)
+            "data": self.partner_mapped(created_data, user)
         }
     
 
@@ -210,7 +194,7 @@ class PartnersService:
         user = self.get_user_info(updated_data.user_id, updated_data)
         return {
             "message": "Error sending email message. Please try again." if not status else None, 
-            "data": self.domain_mapped(updated_data, user)}
+            "data": self.partner_mapped(updated_data, user)}
 
 
     async def update_opportunity_partner(self, partner_id: int, payload: dict):
@@ -225,7 +209,7 @@ class PartnersService:
 
         
         update_data = {"is_active": payload.status}
-        updated_data = self.partners_persistence.update_partner(partner_id=partner_id, **update_data) 
+        updated_data, commission_changed = self.partners_persistence.update_partner(partner_id=partner_id, **update_data)
         
         message = payload.message
         if not message:
@@ -241,21 +225,25 @@ class PartnersService:
 
 
 
-    def domain_mapped(self, partner: Partner, user: PartnerUserData, count=0):
+    def partner_mapped(self, partner, subscription: str):
+        if isinstance(partner, dict):
+            partner = SimpleNamespace(**partner)
+
         return PartnersResponse(
             id=partner.id,
             partner_name=partner.name,
+            company_name=partner.company_name,
             email=partner.email,
-            isMaster=partner.is_master,
+            is_master=partner.is_master,
             join_date=partner.join_date,
             commission=partner.commission,
-            subscription=user["subscription"],
-            sources=user["sources"],
-            last_payment_date=user["payment_date"],
-            reward_amount=user["reward_amount"],
-            reward_status=user["reward_status"],
-            reward_payout_date=user["reward_payout_date"],
+            subscription=subscription,
+            sources=partner.source,
+            last_payment_date=partner.last_payment_date,
+            reward_amount=partner.reward_amount,
+            reward_status=partner.reward_status,
+            reward_payout_date=partner.reward_payout_date,
+            count=partner.count_accounts,
             status=partner.status.capitalize() if partner.is_active else 'Inactive',
-            count=count,
             isActive=partner.is_active
         ).model_dump()

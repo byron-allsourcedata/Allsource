@@ -23,13 +23,18 @@ def get_partners(
     return result.get('data') 
 
 
-@router.get('{id}', response_model=List[PartnersResponse])
-@router.get('/{id}/', response_model=List[PartnersResponse])
-def get_partners_by_partners_id(
+@router.get('{id}')
+@router.get('/{id}/')
+def get_partners_by_partner_id(
     id: int,
+    search: Optional[str] = Query(None),
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    page: int = Query(0),
+    rows_per_page: int = Query(10),
     get_partners_service: PartnersService = Depends(get_partners_service)):
     
-    partner = get_partners_service.partners_by_partners_id(id)
+    partner = get_partners_service.partners_by_partner_id(id, search, start_date, end_date, page, rows_per_page)
      
     return partner.get('data') 
 
@@ -49,7 +54,7 @@ async def create_partner(
 @router.delete("/{id}/")
 async def delete_partner(
     id: int,
-    message: Optional[str] = Query(None),
+    message: str = Query(...),
     get_partners_service: PartnersService = Depends(get_partners_service)):
     
     result = get_partners_service.delete_partner(id, message)

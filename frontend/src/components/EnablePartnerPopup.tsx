@@ -65,6 +65,9 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
             if (response.status === 200) {
                 removePartnerById(id);
                 showToast("Partner successfully deleted!")
+                if (response.data.message) {
+                    showErrorToast(response.data.message);
+                }
             }
         } catch {
             showErrorToast("Failed to delete partner. Please try again later.");

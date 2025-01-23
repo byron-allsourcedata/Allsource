@@ -1,10 +1,13 @@
 from models.partner import Partner
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
+from sqlalchemy.sql import case
 from sqlalchemy import or_, func
 from typing import Optional, Tuple
 from datetime import datetime, timedelta
 from models.referral_payouts import ReferralPayouts
 from models.users import Users
+from models.plans import SubscriptionPlan
+from models.referral_users import ReferralUser
 from enums import ConfirmationStatus, PayoutsStatus
 
 class PartnersPersistence:
@@ -41,8 +44,50 @@ class PartnersPersistence:
         .first()
 
 
-    def get_partners(self, is_master, search_term, start_date, end_date, offset, limit):
-        query = self.db.query(Partner).filter(Partner.is_master == is_master)
+    def get_partners(self, is_master, search_term=None, start_date=None, end_date=None, offset=None, limit=None):
+        MasterPartner = aliased(Partner)
+        query = self.db.query(
+            Partner.id, 
+            Partner.email,
+            Partner.company_name,
+            Partner.user_id,
+            Partner.name,
+            Partner.join_date,
+            Partner.is_master,
+            Partner.commission,
+            Partner.status,
+            Partner.is_active,
+            ReferralPayouts.plan_amount.label("reward_amount"),
+            ReferralPayouts.paid_at.label("reward_payout_date"),
+            ReferralPayouts.status.label("reward_status"),
+            ReferralPayouts.created_at.label("last_payment_date"),
+            func.count(ReferralUser.parent_user_id).label("count_accounts"),
+            case(
+                (Partner.master_id.isnot(None), MasterPartner.company_name),
+                else_="Direct"
+            ).label("source")
+            ).outerjoin(ReferralPayouts, ReferralPayouts.user_id == Partner.user_id
+            ).outerjoin(ReferralUser, ReferralUser.user_id == Partner.user_id
+            ).outerjoin(MasterPartner, MasterPartner.id == Partner.master_id         
+            ).filter(Partner.is_master == is_master
+            ).group_by(
+                Partner.id, 
+                Partner.email,
+                Partner.company_name,
+                Partner.user_id,
+                Partner.name,
+                Partner.join_date,
+                Partner.is_master,
+                Partner.commission,
+                Partner.status,
+                Partner.is_active,
+                ReferralPayouts.plan_amount,
+                ReferralPayouts.paid_at,
+                ReferralPayouts.status,
+                ReferralPayouts.created_at,
+                MasterPartner.company_name,
+                Partner.master_id
+            )
 
         if search_term:
             query = query.filter(
@@ -56,11 +101,60 @@ class PartnersPersistence:
             end_date = datetime.combine(end_date, datetime.max.time())
             query = query.filter(Partner.join_date <= end_date)
 
-        return query.offset(offset).limit(limit).all(), query.count()
+        results = [row._asdict() for row in query.offset(offset).limit(limit).all()]
+        
+        return results, query.count()
 
 
-    def get_partners_by_partners_id(self, id, start_date, end_date, offset, limit):
-        query = self.db.query(Partner).filter(Partner.master_id == id)
+    def get_partners_by_partner_id(self, id, start_date, end_date, offset, limit, search_term=None):
+        MasterPartner = aliased(Partner)
+        query = self.db.query(
+            Partner.id, 
+            Partner.email,
+            Partner.company_name,
+            Partner.user_id,
+            Partner.name,
+            Partner.join_date,
+            Partner.is_master,
+            Partner.commission,
+            Partner.status,
+            Partner.is_active,
+            ReferralPayouts.plan_amount.label("reward_amount"),
+            ReferralPayouts.paid_at.label("reward_payout_date"),
+            ReferralPayouts.status.label("reward_status"),
+            ReferralPayouts.created_at.label("last_payment_date"),
+            func.count(ReferralUser.parent_user_id).label("count_accounts"),
+            case(
+                (Partner.master_id.isnot(None), MasterPartner.company_name),
+                else_="Direct"
+            ).label("source")
+            ).outerjoin(ReferralPayouts, ReferralPayouts.user_id == Partner.user_id
+            ).outerjoin(ReferralUser, ReferralUser.user_id == Partner.user_id
+            ).outerjoin(MasterPartner, MasterPartner.id == Partner.master_id         
+            ).filter(Partner.master_id == id
+            ).group_by(
+                Partner.id, 
+                Partner.email,
+                Partner.company_name,
+                Partner.user_id,
+                Partner.name,
+                Partner.join_date,
+                Partner.is_master,
+                Partner.commission,
+                Partner.status,
+                Partner.is_active,
+                ReferralPayouts.plan_amount,
+                ReferralPayouts.paid_at,
+                ReferralPayouts.status,
+                ReferralPayouts.created_at,
+                MasterPartner.company_name,
+                Partner.master_id
+            )
+        
+        if search_term:
+            query = query.filter(
+                (Partner.name.ilike(search_term)) | (Partner.email.ilike(search_term))
+            )
         
         if start_date:
             query = query.filter(Partner.join_date >= start_date)
@@ -68,8 +162,10 @@ class PartnersPersistence:
             end_date = datetime.combine(end_date, datetime.max.time())
             query = query.filter(Partner.join_date <= end_date)
         
+        results = [row._asdict() for row in query.offset(offset).limit(limit).all()]
         
-        return query.offset(offset).limit(limit).all(), query.count()
+        return results, query.count()
+        
 
 
     def get_partner_by_id(self, partner_id):
@@ -112,9 +208,6 @@ class PartnersPersistence:
 
     def update_partner_by_email(self, email: int, **kwargs) -> Optional[Partner]:
         partner = self.get_partner_by_email(email)
-
-        if not partner:
-            return None
 
         for key, value in kwargs.items():
             if hasattr(partner, key) and value is not None:
