@@ -43,15 +43,17 @@ interface PartnerData {
     partner_name: string;
     email: string;
     join_date: Date | string;
-    commission: string;
+    commission: number;
     subscription: string;
+    company_name: string;
     sources: string;
-    last_payment_date: string;
+    last_payment_date: Date | string;
     status: string;
     count: number;
-    reward_payout_date: string;
+    reward_payout_date: Date | string;
     reward_status: string;
-    reward_amount: string;
+    reward_amount: number;
+    isActive: boolean;
 }
 
 
@@ -170,7 +172,7 @@ const Partners: React.FC = () => {
         try {
             const responseMe = await axiosInstance.get(`/partners`);
             if(responseMe.status === 200) {
-                const masterPartner = responseMe.data.isMaster
+                const masterPartner = responseMe.data.is_master
                 setIsMaster(masterPartner) 
                 setMasterId(responseMe.data.id)  
                 setCommission(responseMe.data.commission) 

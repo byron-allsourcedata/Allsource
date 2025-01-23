@@ -74,7 +74,7 @@ class IntegrationsPresistence:
                 query = query.filter(Integration.service_name.in_(value))
             else:
                 query = query.filter_by(**{key: value})
-        return query.order_by(Integration.service_name.asc()).all()
+        return query.order_by(Integration.service_name.asc()).filter(Integration.data_sync == True).all()
     
     def get_all_integrations_filter_by(self, **filter_by):
         return self.db.query(UserIntegration).filter_by(**filter_by).all()

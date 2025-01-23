@@ -389,121 +389,99 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                                         '&.Mui-selected': {
                                             color: 'rgba(80, 82, 178, 1)'
                                         },
-                                        "@media (max-width: 600px)": {
-                                            mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                                                backgroundColor: 'rgba(249, 249, 253, 1)',
-                                                border: '1px solid rgba(220, 220, 239, 1)'
-                                            },
-                                        }
-                                    }}
-                                    label="Master partners"
-                                />
-                                <Tab className="main-text"
-                                    sx={{
-                                        textTransform: 'none',
-                                        padding: '4px 10px',
-                                        pb: '10px',
-                                        flexGrow: 1,
-                                        minHeight: 'auto',
-                                        minWidth: 'auto',
-                                        fontSize: '14px',
-                                        fontWeight: 700,
-                                        lineHeight: '19.1px',
-                                        '&.Mui-selected': {
-                                            color: 'rgba(80, 82, 178, 1)'
-                                        },
-                                        "@media (max-width: 600px)": {
-                                            mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                                                backgroundColor: 'rgba(249, 249, 253, 1)',
-                                                border: '1px solid rgba(220, 220, 239, 1)'
-                                            },
-                                        }
-                                    }}
-                                    label="Partners"
-                                />
-                            </Tabs>}
-                        <Box sx={{ display: 'flex', gap: "16px" }}>
-                            {fromAdmin &&
-                                <>
-                                    <TextField
-                                        id="input-with-icon-textfield"
-                                        placeholder="Search by account name, emails"
-                                        value={search}
-                                        onChange={handleSearchChange}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter') {
-                                                fetchRules();
-                                            }
-                                        }}
-                                        InputProps={{
-                                            startAdornment: (
-                                                <InputAdornment position="start">
-                                                    <SearchIcon onClick={fetchRules} style={{ cursor: "pointer" }} />
-                                                </InputAdornment>
-                                            ),
-                                        }}
-                                        variant="outlined"
-                                        sx={{
-                                            flex: 1,
-                                            width: '360px',
-                                            '& .MuiOutlinedInput-root': {
-                                                borderRadius: '4px',
-                                                height: '40px',
-                                            },
-                                            '& input': {
-                                                paddingLeft: 0,
-                                            },
-                                            '& input::placeholder': {
-                                                fontSize: '14px',
-                                                color: '#8C8C8C',
-                                            },
-                                        }}
-                                    />
-                                    <Button
-                                        aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
-                                        aria-haspopup="true"
-                                        aria-expanded={isCalendarOpen ? 'true' : undefined}
-                                        onClick={handleCalendarClick}
-                                        sx={{
-                                            textTransform: 'none',
-                                            color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
-                                            border: formattedDates ? '1.5px solid rgba(80, 82, 178, 1)' : '1.5px solid rgba(184, 184, 184, 1)',
-                                            borderRadius: '4px',
-                                            padding: '8px',
-                                            minWidth: 'auto',
-                                            '@media (max-width: 900px)': {
-                                                border: 'none',
-                                                padding: 0
-                                            },
-                                            '&:hover': {
-                                                border: '1.5px solid rgba(80, 82, 178, 1)',
-                                                '& .MuiSvgIcon-root': {
-                                                    color: 'rgba(80, 82, 178, 1)'
-                                                }
-                                            }
-                                        }}
-                                    >
-                                        <DateRangeIcon
-                                            fontSize="medium"
-                                            sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }}
-                                        />
-                                        <Typography variant="body1" sx={{
-                                            fontFamily: 'Roboto',
-                                            fontSize: '14px',
-                                            fontWeight: '400',
-                                            color: 'rgba(32, 33, 36, 1)',
-                                            lineHeight: '19.6px',
-                                            textAlign: 'left'
-                                        }}>
-                                            {formattedDates}
-                                        </Typography>
-                                        {formattedDates &&
-                                            <Box sx={{ pl: 2, display: 'flex', alignItems: 'center' }}>
-                                                <Image src="/arrow_down.svg" alt="arrow down" width={16} height={16} />
-                                            </Box>
-                                        }
-                                    </Button>
-                                </>}
+                                    }
+                                }}
+                                label="Partners"
+                            />
+                        </Tabs> }
+                        <Box sx={{display: 'flex', gap: "16px"}}>
+                        {fromAdmin && 
+                        <>
+                        <TextField
+                            id="input-with-icon-textfield"
+                            placeholder="Search by account name, emails"
+                            value={search}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                handleSearchChange(e);
+                                if (value === "") {
+                                  fetchRules();
+                                }
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    fetchRules();
+                                }
+                            }}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                            <SearchIcon onClick={fetchRules} style={{ cursor: "pointer" }}/>
+                                    </InputAdornment>
+                                ),
+                            }}
+                            variant="outlined"
+                            sx={{
+                                flex: 1,
+                                width: '360px',
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: '4px',
+                                    height: '40px',
+                                },
+                                '& input': {
+                                    paddingLeft: 0,
+                                },
+                                '& input::placeholder': {
+                                    fontSize: '14px',
+                                    color: '#8C8C8C',
+                                },
+                            }}
+                        />
+                        <Button
+                            aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
+                            aria-haspopup="true"
+                            aria-expanded={isCalendarOpen ? 'true' : undefined}
+                            onClick={handleCalendarClick}
+                            sx={{
+                                textTransform: 'none',
+                                color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
+                                border: formattedDates ? '1.5px solid rgba(80, 82, 178, 1)' : '1.5px solid rgba(184, 184, 184, 1)',
+                                borderRadius: '4px',
+                                padding: '8px',
+                                minWidth: 'auto',
+                                '@media (max-width: 900px)': {
+                                    border: 'none',
+                                    padding: 0
+                                },
+                                '&:hover': {
+                                    border: '1.5px solid rgba(80, 82, 178, 1)',
+                                    '& .MuiSvgIcon-root': {
+                                        color: 'rgba(80, 82, 178, 1)'
+                                    }
+                                }
+                            }}
+                        >
+                            <DateRangeIcon
+                                fontSize="medium"
+                                sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }}
+                            />
+                            <Typography variant="body1" sx={{
+                                fontFamily: 'Roboto',
+                                fontSize: '14px',
+                                fontWeight: '400',
+                                color: 'rgba(32, 33, 36, 1)',
+                                lineHeight: '19.6px',
+                                textAlign: 'left'
+                            }}>
+                                {formattedDates}
+                            </Typography>
+                            {formattedDates &&
+                                <Box sx={{ pl: 2, display: 'flex', alignItems: 'center' }}>
+                                    <Image src="/arrow_down.svg" alt="arrow down" width={16} height={16} />
+                                </Box>
+                            }
+                        </Button>
+                        </>}
                         </Box>
                     </Box>
 

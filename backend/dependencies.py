@@ -30,7 +30,6 @@ from persistence.settings_persistence import SettingsPersistence
 from persistence.suppression_persistence import SuppressionPersistence
 from persistence.partners_asset_persistence import PartnersAssetPersistence
 from persistence.partners_persistence import PartnersPersistence
-from persistence.partners_invations_persistence import ParntersInvitationsPersistence
 from persistence.user_persistence import UserPersistence
 from persistence.integrations.external_apps_installations import ExternalAppsInstallationsPersistence
 from persistence.referral_discount_code_persistence import ReferralDiscountCodesPersistence
@@ -91,10 +90,6 @@ def get_referral_user_persistence(db: Session = Depends(get_db)) -> ReferralUser
 
 def get_referral_discount_codes_persistence(db: Session = Depends(get_db)) -> ReferralDiscountCodesPersistence:
     return ReferralDiscountCodesPersistence(db)
-
-
-def get_partners_invitations_persistence(db: Session = Depends(get_db)) -> ParntersInvitationsPersistence:
-    return ParntersInvitationsPersistence(db)
   
 def get_plans_persistence(db: Session = Depends(get_db)):
     return PlansPersistence(db=db)
@@ -233,13 +228,11 @@ def get_integration_service(db: Session = Depends(get_db),
 def get_partners_service(
         partners_persistence: PartnersPersistence = Depends(get_partners_persistence),
         user_persistence: UserPersistence = Depends(get_user_persistence_service),
-        accounts_persistence: ParntersInvitationsPersistence = Depends(get_partners_invitations_persistence),
         send_grid_persistence: SendgridPersistence = Depends(get_send_grid_persistence_service),
         plans_persistence: PlansPersistence = Depends(get_plans_persistence)):
     return PartnersService(
         partners_persistence=partners_persistence,
         user_persistence=user_persistence,
-        accounts_persistence=accounts_persistence,
         send_grid_persistence=send_grid_persistence,
         plans_persistence=plans_persistence,
     )

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, event, Integer, TIMESTAMP, BOOLEAN, VARCHAR
+from sqlalchemy import Column, event, Integer, TIMESTAMP, BOOLEAN, VARCHAR, Index
 from .base import Base, create_timestamps, update_timestamps
 
 
@@ -22,16 +22,25 @@ class Partner(Base):
     
     def to_dict(self):
             return {
+                "id": self.id,
                 "user_id": self.user_id,
                 "commission": self.commission,
                 "status": self.status,
                 "email": self.email,
                 "name": self.name,
-                "isMaster": self.is_master,
+                "is_master": self.is_master,
                 "company_name": self.company_name,
                 "join_date": self.join_date,
                 "is_active": self.is_active
             }
+    
+    __table_args__ = (
+        Index('partners_master_id_idx', 'master_id'),
+        Index('partners_email_idx', 'email'),
+        Index('partners_is_master_idx', 'is_master'),
+        Index('partners_user_id_idx', 'user_id'),
+        Index('partners_pkey', 'id')
+    )
 
 event.listen(Partner, "before_insert", create_timestamps)
 event.listen(Partner, "before_update", update_timestamps)
