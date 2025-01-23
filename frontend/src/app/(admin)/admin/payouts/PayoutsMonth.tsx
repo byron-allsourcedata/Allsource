@@ -9,9 +9,11 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { DateRangeIcon } from "@mui/x-date-pickers";
+import CalendarPopup from "@/components/CustomCalendar"
 import SearchIcon from '@mui/icons-material/Search';
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import CustomizedProgressBar from "@/components/ProgressBar";
+import Image from "next/image";
 
 interface RewardData {
     month: string;
@@ -148,7 +150,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
         if (open) {
             fetchRewardData();
         }
-    }, [open]);
+    }, [open, appliedDates, orderBy, order]);
 
     const fetchRewardData = async () => {
         try {
@@ -162,14 +164,28 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                 ? monthArray.indexOf(selectedMonth) + 1
                 : undefined;
 
-            const response = await axiosInstance.get("/admin-payouts/partners", {
-                params: {
-                    year: selectedYear,
-                    month: selectedMonthNumber,
-                },
-            });
+            const params: { [key: string]: any } = {
+                year: selectedYear,
+                month: selectedMonthNumber,
+            };
 
-            const rewards: RewardData[] = response.data.map((reward: any) => {
+            if (appliedDates.start && appliedDates.end) {
+                params.from_date = Math.floor(new Date(appliedDates.start).getTime() / 1000);
+                params.to_date = Math.floor(new Date(appliedDates.end).getTime() / 1000);
+            }
+
+            if (search) {
+                params.search_query = search
+            }
+
+            if (orderBy) {
+                params.sort_by = orderBy
+                params.sort_order = order
+            }
+
+            const response = await axiosInstance.get("/admin-payouts/partners", { params });
+
+            const rewards: RewardData[] = response?.data.map((reward: any) => {
                 let isAutoPayoutDate = false;
                 const rewardPayoutDate = reward.reward_payout_date
                     ? new Date(reward.reward_payout_date)
@@ -203,6 +219,35 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
         }
     };
 
+    const handleDateChange = (dates: { start: Date | null; end: Date | null }) => {
+        const { start, end } = dates;
+        if (start && end) {
+            const formattedStart = dayjs(start).format('MMM D');
+            const formattedEnd = dayjs(end).format('MMM D, YYYY');
+
+            setFormattedDates(`${formattedStart} - ${formattedEnd}`);
+        } else if (start) {
+            const formattedStart = dayjs(start).format('MMM D, YYYY');
+            setFormattedDates(formattedStart);
+        } else if (end) {
+            const formattedEnd = dayjs(end).format('MMM D, YYYY');
+            setFormattedDates(formattedEnd);
+        } else {
+            setFormattedDates('');
+        }
+    };
+
+    const handleApply = (dates: { start: Date | null; end: Date | null }) => {
+        if (dates.start && dates.end) {
+            setAppliedDates(dates);
+            setCalendarAnchorEl(null);
+            handleCalendarClose();
+        }
+        else {
+            setAppliedDates({ start: null, end: null })
+        }
+    };
+
 
 
     return (
@@ -217,7 +262,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
             minHeight: '77vh',
         }}>
             {isLoading &&
-            <CustomizedProgressBar />
+                <CustomizedProgressBar />
             }
             <Box>
                 <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', mb: 2 }}>
@@ -310,7 +355,13 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                                 lineHeight: '19.6px',
                                 textAlign: 'left'
                             }}>
+                                {formattedDates}
                             </Typography>
+                            {formattedDates &&
+                                <Box sx={{ pl: 2, display: 'flex', alignItems: 'center' }}>
+                                    <Image src="/arrow_down.svg" alt="arrow down" width={16} height={16} />
+                                </Box>
+                            }
                         </Button>
                     </Box>
 
@@ -500,6 +551,14 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                             onRowsPerPageChange={handleRowsPerPageChange}
                         />
                     </Box>
+                    <CalendarPopup
+                        anchorEl={calendarAnchorEl}
+                        open={isCalendarOpen}
+                        onClose={handleCalendarClose}
+                        onDateChange={handleDateChange}
+                        onApply={handleApply}
+                        onDateLabelChange={handleDateLabelChange}
+                    />
                 </Box>
 
             </Box>

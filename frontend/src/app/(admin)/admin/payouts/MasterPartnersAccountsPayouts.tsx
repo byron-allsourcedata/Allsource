@@ -27,7 +27,6 @@ interface RewardData {
     partner_id: number;
     company_name: string;
     email: string;
-    join_date: Date;
     plan_amount: string;
     reward_amount: string;
     payout_date: Date;
@@ -35,6 +34,7 @@ interface RewardData {
     comment: string;
     reward_status: string;
     referral_payouts_id: number;
+    join_date: Date;
 }
 
 const tableHeaders = [
@@ -119,13 +119,13 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
             showErrorToast("Error updating payout status:");
         }
     };
-    
+
 
     useEffect(() => {
         if (open) {
             fetchRewardData();
         }
-    }, [open, tabIndex]);
+    }, [open, tabIndex, orderBy, order]);
 
     const fetchRewardData = async () => {
         try {
@@ -134,26 +134,37 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                 "January", "February", "March", "April", "May", "June",
                 "July", "August", "September", "October", "November", "December"
             ];
-    
-            const selectedMonthNumber = selectMonth 
-                ? monthArray.indexOf(selectMonth) + 1 
+
+            const selectedMonthNumber = selectMonth
+                ? monthArray.indexOf(selectMonth) + 1
                 : undefined;
 
-            const response = await axiosInstance.get("/admin-payouts/partners", {
-                params: {
-                    year: selectYear,
-                    month: selectedMonthNumber,
-                    partner_id: partnerId,
-                    reward_type: tabIndex === 0 ? 'partner' : 'master_partner',
-                },
-            });
-    
+            const params: { [key: string]: any } = {
+                year: selectYear,
+                month: selectedMonthNumber,
+                partner_id: partnerId,
+                reward_type: tabIndex === 0 ? 'partner' : 'master_partner',
+            };
+
+            if (search) {
+                params.search_query = search
+            }
+
+            if (orderBy) {
+                params.sort_by = orderBy
+                params.sort_order = order
+            }
+
+            const response = await axiosInstance.get("/admin-payouts/partners", { params });
+
+
             const rewards: RewardData[] = response.data.map((reward: any) => ({
                 company_name: reward.company_name,
                 email: reward.email,
                 sources: reward.sources,
                 plan_amount: reward.plan_amount,
                 number_of_accounts: reward.number_of_accounts,
+                join_date: reward.join_date,
                 referral_link: reward.referral_link,
                 reward_amount: reward.reward_amount,
                 reward_approved: reward.reward_approved,
@@ -162,11 +173,11 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                 comment: reward.comment,
                 referral_payouts_id: reward.referral_payouts_id,
             }));
-    
+
             setData(rewards);
             setTotalCount(rewards.length);
         } catch (error) {
-        } finally{
+        } finally {
             setIsLoading(false)
         }
     };
@@ -187,30 +198,30 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
             flexDirection: 'column',
             justifyContent: 'space-between',
             minHeight: '77vh',
-        }}> 
+        }}>
             {isLoading &&
-            <CustomizedProgressBar />
+                <CustomizedProgressBar />
             }
 
             <Box>
-            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mb: 2, gap: 2 }}>
-                        <IconButton
-                            onClick={onBack}
-                            sx={{
-                                textTransform: "none",
-                                backgroundColor: "#fff",
-                                border: '0.73px solid rgba(184, 184, 184, 1)',
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                                padding: 0.25
-                            }}
-                        >
-                            <KeyboardArrowLeftIcon sx={{ color: "rgba(128, 128, 128, 1)" }} />
-                        </IconButton>
-                        <Typography className="second-sub-title">{selectMonth} -- {partnerName}</Typography>
-                    </Box>
-                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', mb:2 }}>
-                    
+                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mb: 2, gap: 2 }}>
+                    <IconButton
+                        onClick={onBack}
+                        sx={{
+                            textTransform: "none",
+                            backgroundColor: "#fff",
+                            border: '0.73px solid rgba(184, 184, 184, 1)',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            padding: 0.25
+                        }}
+                    >
+                        <KeyboardArrowLeftIcon sx={{ color: "rgba(128, 128, 128, 1)" }} />
+                    </IconButton>
+                    <Typography className="second-sub-title">{selectMonth} -- {partnerName}</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', mb: 2 }}>
+
 
                     <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'start', alignItems: 'center', "@media (max-width: 900px)": { pr: 0 }, "@media (max-width: 600px)": { width: '97%', pr: '0' } }}>
                         <Tabs
@@ -282,9 +293,9 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                 label="Partners"
                             />
                         </Tabs>
-                </Box>
+                    </Box>
 
-                <Box sx={{display: 'flex', flexDirection: 'row', gap:2}}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
                         <TextField
                             id="input-with-icon-textfield"
                             placeholder="Search by partner name, emails"
@@ -319,7 +330,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                 },
                             }}
                         />
-                </Box>
+                    </Box>
                 </Box>
 
 
@@ -449,7 +460,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
 
 
                                                 <TableCell sx={{ ...payoutsStyle.tableBodyColumn, textAlign: 'center', pl: 0 }}>
-                                                <Typography component="span" sx={{
+                                                    <Typography component="span" sx={{
                                                         padding: '6px 8px',
                                                         borderRadius: '2px',
                                                         fontFamily: 'Roboto',
@@ -461,7 +472,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                                     </Typography>
                                                     <IconButton
                                                         onClick={(event) => handleOpenMenu(event, index)}
-                                                        sx={{ ':hover': { backgroundColor: 'transparent', color: 'rgba(80, 82, 178, 1) !important' }, padding:0 }}
+                                                        sx={{ ':hover': { backgroundColor: 'transparent', color: 'rgba(80, 82, 178, 1) !important' }, padding: 0 }}
                                                     >
                                                         <KeyboardArrowDownIcon />
                                                     </IconButton>
@@ -503,7 +514,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                                                 }
                                                             >
                                                                 Approve
-                                                            </Button> )}
+                                                            </Button>)}
                                                             {item.reward_status !== 'reject' && (<Button
                                                                 sx={{
                                                                     justifyContent: "flex-start",
@@ -522,7 +533,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                                             >
                                                                 Reject
                                                             </Button>)}
-                                                        
+
                                                         </Box>
                                                     </Popover>
                                                 </TableCell>

@@ -154,6 +154,7 @@ const Accounts: React.FC = () => {
 
     const handleCloseMenu = () => {
         setMenuAnchor(null);
+        setIsMaster(false),
         setSelectedRowData(null);
     };
 
@@ -642,10 +643,11 @@ const Accounts: React.FC = () => {
                                                                                         vertical: 'bottom',
                                                                                         horizontal: 'left',
                                                                                     }}
+                                                                                    slotProps={{paper: {sx:{boxShadow: 'none', border: '1px solid rgba(228, 228, 228, 1)', padding:0}}}}
                                                                                     >
                                                                                     <List
                                                                                         sx={{ 
-                                                                                            width: '100%', maxWidth: 360}}
+                                                                                            width: '100%', maxWidth: 360, padding:0}}
                                                                                         >
                                                                                         <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
                                                                                             handleCloseMenu()
@@ -654,8 +656,11 @@ const Accounts: React.FC = () => {
                                                                                         }}>
                                                                                             <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Payment history"/>
                                                                                         </ListItemButton>
-                                                                                        <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => { handleCloseMenu(), handleOpenSlider(selectedRowData.id) }}>
+                                                                                        <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => { handleCloseMenu(), setIsMaster(false), handleOpenSlider(selectedRowData.id) }}>
                                                                                             <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Make partner"/>
+                                                                                        </ListItemButton>
+                                                                                        <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => { handleCloseMenu(), setIsMaster(true), handleOpenSlider(selectedRowData.id) }}>
+                                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Make Master partner"/>
                                                                                         </ListItemButton>
                                                                                         <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {}}>
                                                                                             <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Reward history"/>
@@ -752,6 +757,7 @@ const Accounts: React.FC = () => {
                         {(isSliderOpen && selectedUserId) && <MakePartner isOpen={isSliderOpen}
                         onClose={handleCloseSlider}
                         onSumbit={handleSubmit}
+                        is_master={isMaster}
                         user_id={selectedUserId} />}
                     </Grid>
                 </Grid>

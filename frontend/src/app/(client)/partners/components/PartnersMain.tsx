@@ -414,7 +414,7 @@ const PartnersMain: React.FC<PartnersProps> = ({setLoading, masterId, appliedDat
                                                     }
                                                 },
                                             }}>
-                                                <TableCell className='sticky-cell table-data' 
+                                                <TableCell className='sticky-cell' 
                                                     sx={{
                                                         ...suppressionsStyles.tableBodyColumn, 
                                                         paddingLeft: "16px",

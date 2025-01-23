@@ -11,6 +11,7 @@ interface SliderProps {
     onClose: () => void;
     user_id?: number;
     onSumbit: () => void;
+    is_master?: boolean;
 }
 
 const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
@@ -24,7 +25,7 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
 }));
 
 
-const MakePartner: React.FC<SliderProps> = ({ isOpen, onClose, user_id, onSumbit }) => {
+const MakePartner: React.FC<SliderProps> = ({ isOpen, onClose, user_id, onSumbit, is_master }) => {
     const [commission, setCommission] = useState("");
     const [processing, setProcessing] = useState(false)
     const handleClose = () => {
@@ -37,7 +38,8 @@ const MakePartner: React.FC<SliderProps> = ({ isOpen, onClose, user_id, onSumbit
             const response = await axiosInstance.put('/admin/user', {
                 user_id: user_id,
                 is_partner: true,
-                commission: commission
+                commission: commission,
+                is_master: is_master ? true : false
             });
             onSumbit()
             showToast('User updated succesfuly')
@@ -54,7 +56,7 @@ const MakePartner: React.FC<SliderProps> = ({ isOpen, onClose, user_id, onSumbit
     return (
         <>
             <Backdrop open={isOpen} onClick={handleClose} sx={{ zIndex: 1200, color: '#fff' }} />
-            <Drawer anchor="right" open={isOpen} PaperProps={{
+            <Drawer anchor="right" onClose={handleClose} open={isOpen} PaperProps={{
                 sx: {
                     width: '40%',
                     position: 'fixed',
@@ -86,7 +88,7 @@ const MakePartner: React.FC<SliderProps> = ({ isOpen, onClose, user_id, onSumbit
                 )}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, pb: 1.4, borderBottom: '1px solid #e4e4e4' }}>
                     <Typography className='first-sub-title' sx={{ textAlign: 'center', '@media (max-width: 600px)': { fontSize: '16px', textAlign: 'left' }, '@media (min-width: 1500px)': { fontSize: '22px !important', lineHeight: '25.2px !important' } }}>
-                       Make partner
+                       Make {is_master ? 'Master' : ''} partner
                     </Typography>
                     <IconButton onClick={handleClose}>
                         <CloseIcon sx={{ '@media (min-width: 1500px)': { fontSize: '28px !important', lineHeight: '25.2px !important' } }} />
@@ -111,7 +113,7 @@ const MakePartner: React.FC<SliderProps> = ({ isOpen, onClose, user_id, onSumbit
                                 marginTop: "24px"
                             }}
                         >
-                            Are you sure you want to make the user a partner?
+                            Are you sure you want to make the user a {is_master ? 'Master' : ''} partner?
                         </Typography>
 
                         <TextField

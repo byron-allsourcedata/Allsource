@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from dependencies import get_referral_service, check_user_authentication, check_user_setting_access
 from models.users import User
 from schemas.referral import *
@@ -28,4 +28,16 @@ def get_referral_details(referral_service: ReferralService = Depends(get_referra
     if discount_code_id:
         return referral_service.get_referral_discount_code_by_id(discount_code_id=discount_code_id, user=user)
     return referral_service.get_referral_details(user=user)
+
+@router.get("/generate-token")
+async def generate_token(user_account_id: int,
+                         referral_service: ReferralService = Depends(get_referral_service),
+                         user: User = Depends(check_user_authentication)):
+    token = referral_service.generate_access_token(user=user, user_account_id=user_account_id)
+    if token:
+        return {"token": token}
+    raise HTTPException(
+        status_code=403,
+        detail="Access denied"
+    )
 

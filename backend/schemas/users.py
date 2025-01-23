@@ -147,6 +147,7 @@ class UpdateUserRequest(BaseModel):
     user_id: int
     is_partner: bool | None = None
     commission: Optional[int] = None
+    is_master: Optional[bool] = None
 
 class UpdateUserResponse(BaseModel):
     status: UpdateUserStatus
