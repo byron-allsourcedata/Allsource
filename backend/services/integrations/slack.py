@@ -147,9 +147,14 @@ class SlackService:
     async def process_data_sync(self, five_x_five_user, user_integration, data_sync, lead_user):
         visited_url = self.get_first_visited_url(lead_user)
         user_text = self.generate_user_text(five_x_five_user, visited_url)
-        return self.send_message_to_channels(user_text, user_integration.access_token)
+        if not user_text:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+        return self.send_message_to_channels(user_text, user_integration.access_token, data_sync.list_id)
     
     def generate_user_text(self, five_x_five_user: FiveXFiveUser, visited_url) -> str:
+        if not five_x_five_user.linkedin_url:
+            return None
+        
         email_priorities = [
             five_x_five_user.personal_emails,
             five_x_five_user.business_email,
@@ -205,18 +210,18 @@ class SlackService:
             response = client.conversations_info(channel=channel_id)
             if not response["ok"] or not response["channel"]["is_member"]:
                 logger.warning(f"Access to the channel #{channel_id} is denied.")
-                return ProccessDataSyncResult.AUTHENTICATION_FAILED
+                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
 
             client.chat_postMessage(
                 channel=channel_id,
                 text=text
             )
             logger.info(f"The message has been sent to the channel: #{channel_id}")
-            return ProccessDataSyncResult.SUCCESS
+            return ProccessDataSyncResult.SUCCESS.value
 
         except SlackApiError as e:
             logger.error(f"Slack API error: {e.response['error']}")
-            return ProccessDataSyncResult.LIST_NOT_EXISTS
+            return ProccessDataSyncResult.LIST_NOT_EXISTS.value
         
     async def create_sync(self, leads_type: str, list_id: str, list_name: str, data_map: List[DataMap], domain_id: int, created_by: str):
         credentials = self.integrations_persistence.get_credentials_for_service(domain_id, SourcePlatformEnum.SLACK.value)
