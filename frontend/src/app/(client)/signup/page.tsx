@@ -97,9 +97,9 @@ const Signup: React.FC = () => {
     if (Object.keys(utmParams).length > 0) {
       localStorage.setItem(UTM_STORAGE_KEY, JSON.stringify(utmParams));
     }
-    if (slack_status == 'UserNotFound'){
+    if (slack_status){
       showErrorToast(slack_status)
-    }
+    } 
   }, []);
 
   const validateField = (name: string, value: string) => {
