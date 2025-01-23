@@ -14,6 +14,7 @@ import SwapVertIcon from '@mui/icons-material/SwapVert';
 import { useRouter } from "next/navigation";
 import { useUser } from '@/context/UserContext';
 import { Solitreo } from "next/font/google";
+import { fetchUserData } from "@/services/meService";
 
 const tableHeaders = [
     { key: 'account_name', label: 'Account name', sortable: false },
@@ -271,6 +272,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                     localStorage.setItem('token', response.data.token)
                     sessionStorage.removeItem('current_domain')
                     sessionStorage.removeItem('me')
+                    await fetchUserData()
                     router.push('/dashboard')
                     router.refresh()
                 }

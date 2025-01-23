@@ -84,11 +84,12 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
     const parent_domain = sessionStorage.getItem('parent_domain')
     if (parent_token) {
       await new Promise<void>((resolve) => {
-        sessionStorage.clear
+        sessionStorage.clear()
         localStorage.removeItem('parent_token');
         sessionStorage.removeItem('parent_domain')
         localStorage.setItem('token', parent_token);
         sessionStorage.setItem('current_domain', parent_domain || '')
+        fetchUserData()
         setBackButton(false)
 
         setTimeout(() => {
