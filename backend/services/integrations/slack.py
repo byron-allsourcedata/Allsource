@@ -192,12 +192,12 @@ class SlackService:
                     }
                     for channel in channels_data
                 ]
-                return channels
+                return {'status': ProccessDataSyncResult.AUTHENTICATION_FAILED, 'channels': channels} 
             except SlackApiError as e:
                 logger.error(f"Slack API Error: {e.response.get('error')}")
-                return ProccessDataSyncResult.AUTHENTICATION_FAILED
+                return {'status': ProccessDataSyncResult.AUTHENTICATION_FAILED}
 
-        return ProccessDataSyncResult.AUTHENTICATION_FAILED
+        return {'status': ProccessDataSyncResult.AUTHENTICATION_FAILED}
         
     def send_message_to_channels(self, text, client_token, channel_id):
         client = WebClient(token=client_token)
