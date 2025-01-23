@@ -390,7 +390,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                                             color: 'rgba(80, 82, 178, 1)'
                                         },
                                     }
-                                }}
+                                }
                                 label="Partners"
                             />
                         </Tabs> }
