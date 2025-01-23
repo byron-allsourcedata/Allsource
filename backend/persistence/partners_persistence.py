@@ -63,11 +63,11 @@ class PartnersPersistence:
             ReferralPayouts.created_at.label("last_payment_date"),
             func.count(ReferralUser.parent_user_id).label("count_accounts"),
             case(
-                (Partner.master_id.isnot(None), MasterPartner.company_name),
+                (Partner.master_id > 0, MasterPartner.company_name),
                 else_="Direct"
             ).label("source")
-            ).outerjoin(ReferralPayouts, ReferralPayouts.user_id == Partner.user_id
-            ).outerjoin(ReferralUser, ReferralUser.user_id == Partner.user_id
+            ).outerjoin(ReferralPayouts, ReferralPayouts.parent_id == Partner.user_id
+            ).outerjoin(ReferralUser, ReferralUser.parent_user_id == Partner.user_id
             ).outerjoin(MasterPartner, MasterPartner.id == Partner.master_id         
             ).filter(Partner.is_master == is_master
             ).group_by(
@@ -125,11 +125,11 @@ class PartnersPersistence:
             ReferralPayouts.created_at.label("last_payment_date"),
             func.count(ReferralUser.parent_user_id).label("count_accounts"),
             case(
-                (Partner.master_id.isnot(None), MasterPartner.company_name),
+                (Partner.master_id > 0, MasterPartner.company_name),
                 else_="Direct"
             ).label("source")
-            ).outerjoin(ReferralPayouts, ReferralPayouts.user_id == Partner.user_id
-            ).outerjoin(ReferralUser, ReferralUser.user_id == Partner.user_id
+            ).outerjoin(ReferralPayouts, ReferralPayouts.parent_id == Partner.user_id
+            ).outerjoin(ReferralUser, ReferralUser.parent_user_id == Partner.user_id
             ).outerjoin(MasterPartner, MasterPartner.id == Partner.master_id         
             ).filter(Partner.master_id == id
             ).group_by(

@@ -375,7 +375,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                         setAccountPage(false)
                         setAccountName(null)
                     }}
-                    sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "#808080", cursor: "pointer", zIndex: 1000}}>
+                    sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "#808080", cursor: "pointer"}}>
                         {isMaster || masterData ? "Master" : ""} Partner {partnerName ? `- ${partnerName}` : ""}
                     </Typography>
                     {accountName && 
