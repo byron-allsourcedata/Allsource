@@ -133,6 +133,7 @@ class SlackService:
         client = WebClient(token=client_token)
         try:
             response = client.conversations_join(channel=channel_id)
+            print(response['ok'])
             if response["ok"]:
                 return {'status': IntegrationsStatus.SUCCESS.value}
             else:
@@ -226,7 +227,7 @@ class SlackService:
             logger.error(f"Slack API error: {e.response['error']}")
             return ProccessDataSyncResult.LIST_NOT_EXISTS
         
-    async def create_sync(self, leads_type: str, list_id: str, list_name: str, data_map: List[DataMap], domain_id: int, created_by: str):
+    async def create_sync(self, leads_type: str, list_id: str, list_name: str, domain_id: int, created_by: str, data_map: List[DataMap]=None):
         credentials = self.integrations_persistence.get_credentials_for_service(domain_id, SourcePlatformEnum.SLACK.value)
         join_result = self.join_channel(credentials.access_token, list_id)
         if join_result['status'] == IntegrationsStatus.JOIN_CHANNEL_IS_FAILED.value:
