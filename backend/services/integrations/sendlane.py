@@ -154,7 +154,7 @@ class SendlaneIntegrationService:
             'created_by': created_by,
         })
 
-    async def process_data_sync(self, five_x_five_user, user_integration, integration_data_sync):
+    async def process_data_sync(self, five_x_five_user, user_integration, integration_data_sync, lead_user):
         profile = self.__create_contact(five_x_five_user, user_integration.access_token, integration_data_sync.list_id)
         if profile == ProccessDataSyncResult.AUTHENTICATION_FAILED.value or profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
             return profile

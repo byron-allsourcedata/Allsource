@@ -1,5 +1,5 @@
 from sqlalchemy import Column, DateTime, event, Integer
-from sqlalchemy.dialects.postgresql import BIGINT, BOOLEAN, INTEGER, TIMESTAMP, VARCHAR, ARRAY, JSON
+from sqlalchemy.dialects.postgresql import BIGINT, BOOLEAN, INTEGER, TIMESTAMP, VARCHAR, ARRAY, JSON, TEXT
 
 from .base import Base, create_timestamps, update_timestamps
 

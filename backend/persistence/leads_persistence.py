@@ -10,6 +10,7 @@ from utils import format_phone_number
 from models.audience import Audience
 from models.audience_leads import AudienceLeads
 from models.five_x_five_emails import FiveXFiveEmails
+from models.leads_requests import LeadsRequests
 from models.five_x_five_locations import FiveXFiveLocations
 from models.five_x_five_names import FiveXFiveNames
 from models.five_x_five_phones import FiveXFivePhones
@@ -855,4 +856,10 @@ class LeadsPersistence:
 
     def get_lead_user_by_up_id(self, domain_id, up_id):
         return self.db.query(LeadUser).join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id).filter(FiveXFiveUser.up_id == up_id, LeadUser.domain_id == domain_id).first()
+    
+    def get_first_visited_url(self, lead_user):
+        result = self.db.query(LeadsRequests)\
+            .join(LeadUser, LeadUser.first_visit_id == LeadsRequests.visit_id)\
+            .filter(LeadUser.id == lead_user.id).first()
+        return result.page
     
