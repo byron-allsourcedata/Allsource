@@ -3,5 +3,5 @@ from typing import Optional
 from datetime import datetime
     
 class SlackCreateListRequest(BaseModel):
-    channel_name: str
+    name: str
     is_private: bool = False
