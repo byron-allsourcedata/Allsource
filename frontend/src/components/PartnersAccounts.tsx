@@ -253,8 +253,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
     const handleLogin = async (user_account_id: number) => {
         try {
             const response = await axiosInstance.get('/referral/generate-token', {params: {
-                mail: user.email,
-                free_trial: action === 'activate',
+                user_account_id: user_account_id
             }},)
         }
         catch{
