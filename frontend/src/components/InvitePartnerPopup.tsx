@@ -10,15 +10,16 @@ interface PartnerData {
     partner_name: string;
     email: string;
     join_date: Date | string;
-    commission: string;
+    commission: number;
     subscription: string;
+    company_name: string;
     sources: string;
-    last_payment_date: string;
+    last_payment_date: Date | string;
     status: string;
     count: number;
-    reward_payout_date: string;
+    reward_payout_date: Date | string;
     reward_status: string;
-    reward_amount: string;
+    reward_amount: number;
     isActive: boolean;
 }
 
@@ -33,12 +34,12 @@ interface FormUploadPopupProps {
 }
 
 interface RequestData {
-    commission: string;
+    commission: number;
     email?: string;
-    full_name?: string;
-    company_name?: string;
+    name: string;
+    company_name: string;
     is_master?: boolean;
-    masterId?: number;
+    master_id?: number;
 }
 
 const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, masterId, isMaster, open, fileData, onClose, updateOrAddAsset }) => {
@@ -52,14 +53,14 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
     const [emailError, setEmailError] = useState(false);
     const [commissionError, setCommissionError] = useState(false);
   
-    const handleEmailChange = (e: any) => {
+    const handleEmailChange = (e: ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
       setEmail(value);
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       setEmailError(!emailRegex.test(value) && value !== "");
     };
   
-    const handleCommissionChange = (e: any) => {
+    const handleCommissionChange = (e: ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         const comissionUpLine = maxCommission ? maxCommission - 1 : 70;
         const numericValue = Number(value);
@@ -95,8 +96,8 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
         setButtonContain(false);
     
         const requestData: RequestData = {
-            commission,
-            full_name: fullName,
+            commission: parseInt(commission),
+            name: fullName,
             company_name: companyName
         };
         
@@ -117,7 +118,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
                 requestData.email = email;
                 requestData.is_master = isMaster;
                 if(masterId) {
-                    requestData.masterId = masterId;
+                    requestData.master_id = masterId;
                     response = await axiosInstance.post(`partners/`, requestData, {
                         headers: { 'Content-Type': 'application/json' },
                     });
@@ -129,9 +130,15 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
                 }
             }
             if (response.status === 200) {
-                updateOrAddAsset(response.data);
-                showToast("Partner successfully submitted!");
+                if (response.data.data) {
+                    updateOrAddAsset(response.data.data);
+                    showToast("Partner successfully submitted!");
+                }
+                if (response.data.message) {
+                    showErrorToast(response.data.message);
+                }
             }
+
         } catch {
             showErrorToast("Failed to submit the invite. Please try again.");
         } finally {
@@ -160,7 +167,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
     }, [email, fullName, companyName, commission]);
     
     return (
-        <Drawer anchor="right" open={open}>
+        <Drawer anchor="right" onClose={onClose} open={open}>
         {processing && (
             <Box
                 sx={{

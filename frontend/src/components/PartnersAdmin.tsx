@@ -23,11 +23,17 @@ interface PartnerData {
     partner_name: string;
     email: string;
     join_date: Date | string;
-    commission: string;
+    commission: number;
     subscription: string;
+    company_name: string;
     sources: string;
-    last_payment_date: string;
+    last_payment_date: Date | string;
     status: string;
+    count: number;
+    reward_payout_date: Date | string;
+    reward_status: string;
+    reward_amount: number;
+    isActive: boolean;
 }
 
 const getStatusStyle = (status: string) => {
@@ -240,9 +246,9 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
 
     const updateOpportunity = (id: number) => {
         setPartners((prevPartners) =>
-            prevPartners.map((partner: any) =>
-              partner.id === id
-                ? { ...partner, isActive: !partner.isActive }
+            prevPartners.map((partner: any) => 
+                partner.id === id
+                ? { ...partner, isActive: !partner.isActive}
                 : partner
             )
         );
@@ -258,6 +264,9 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
             if (response.status === 200) {
                 updateOpportunity(selectedRowData.id)
                 showToast("Partner status successfully updated!");
+                if (response.data.message) {
+                    showErrorToast(response.data.message);
+                }
             }
         } catch {
             showErrorToast("Failed to update status. Please try again.");
@@ -269,7 +278,14 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
     const fetchRulesId = async (id: number) => {
         setLoading(true);
         try {
-            const response = await axiosInstance.get(`/admin-partners/${id}/`)
+            const response = await axiosInstance.get(`/admin-partners/${id}/`, {
+                params: { 
+                    search,
+                    start_date: appliedDates.start ? appliedDates.start.toLocaleDateString('en-CA') : null,
+                    end_date: appliedDates.end ? appliedDates.end.toLocaleDateString('en-CA') : null,
+                    page, 
+                    rows_per_page: rowsPerPage
+                }})
             if (response.status === 200 && response.data.length > 0) {
                 setErrosResponse(false)
                 setPartners([...response.data])
@@ -288,7 +304,6 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
     const fetchRules = useCallback(async () => {
         setLoading(true);
         try {
-            console.log({page, rowsPerPage})
             const response = await axiosInstance.get("/admin-partners", {
                 params: { 
                     isMaster, search,
@@ -504,7 +519,13 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                 id="input-with-icon-textfield"
                                                 placeholder="Search by account name, emails"
                                                 value={search}
-                                                onChange={handleSearchChange}
+                                                onChange={(e) => {
+                                                    const value = e.target.value;
+                                                    handleSearchChange(e);
+                                                    if (value === "") {
+                                                      fetchRules();
+                                                    }
+                                                }}
                                                 onKeyDown={(e) => {
                                                     if (e.key === 'Enter') {
                                                         fetchRules();
@@ -692,7 +713,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                                 </TableCell>
 
                                                                 <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
-                                                                    {data.subscription}
+                                                                    {data.subscription ?? '--'}
                                                                 </TableCell>
 
                                                                 <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
@@ -708,16 +729,16 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                                         <Typography component="div" sx={{
                                                                             width: "100px",
                                                                             margin: 0,
-                                                                            background: getStatusStyle(data.status).background,
+                                                                            background: getStatusStyle(data.isActive ? data.status : "Inactive" ).background,
                                                                             padding: '3px 8px',
                                                                             borderRadius: '2px',
                                                                             fontFamily: 'Roboto',
                                                                             fontSize: '12px',
                                                                             fontWeight: '400',
                                                                             lineHeight: '16px',
-                                                                            color: getStatusStyle(data.status).color,
+                                                                            color: getStatusStyle(data.isActive ? data.status : "Inactive" ).color,
                                                                         }}>
-                                                                            {data.status}
+                                                                            {data.isActive ? data.status : "Inactive"}
                                                                         </Typography>
                                                                     </Box>
                                                                 </TableCell>
@@ -778,7 +799,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                                                         id: selectedRowData.id,
                                                                                         email: selectedRowData.email,
                                                                                         fullName: selectedRowData.partner_name,
-                                                                                        companyName: selectedRowData.sources,
+                                                                                        companyName: selectedRowData.company_name,
                                                                                         commission: selectedRowData.commission,
                                                                                     });
                                                                                     handleFormOpenPopup()
