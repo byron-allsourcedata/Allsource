@@ -30,7 +30,7 @@ const Signup: React.FC = () => {
   const ift = searchParams.get('ift')
   const ftd = searchParams.get('ftd')
   const referral = searchParams.get('referral')
-  const error_slack = searchParams.get('error_slack')
+  const slack_status = searchParams.get('slack_status')
   const shop_hash = searchParams.get('shop_hash')
   const source_platform = searchParams.get('source_platform')
   const initialShopifyData = {
@@ -97,8 +97,8 @@ const Signup: React.FC = () => {
     if (Object.keys(utmParams).length > 0) {
       localStorage.setItem(UTM_STORAGE_KEY, JSON.stringify(utmParams));
     }
-    if (error_slack == 'UserNotFound'){
-      showErrorToast(error_slack)
+    if (slack_status == 'UserNotFound'){
+      showErrorToast(slack_status)
     }
   }, []);
 

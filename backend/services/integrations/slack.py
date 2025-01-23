@@ -86,7 +86,7 @@ class SlackService:
 
     def slack_oauth_callback(self, code: str, state):
         if not state:
-            return {'status': 'State not found'}
+            return {'status': 'Maximiz user not found'}
         state = self.decode_state(state)
         user_id = state.get('user_id')
         domain_id = state.get('domain_id')
@@ -105,7 +105,7 @@ class SlackService:
                 self.save_integration(domain_id, slack_bot_token, user)
                 return {'status': 'SUCCESS', 'user_id': user_id}
             else:
-                return {'status': "User not found"}
+                return {'status': "Maximiz user not found"}
         else:
             return {'status': "OAuth failed"}
 
