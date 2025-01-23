@@ -15,7 +15,7 @@ from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from enums import SourcePlatformEnum, IntegrationsStatus, ProccessDataSyncResult
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.leads_persistence import LeadsPersistence
- 
+
 logger = logging.getLogger("slack")
 logger.setLevel(logging.INFO)
 handler = logging.StreamHandler()
@@ -25,16 +25,17 @@ logger.addHandler(handler)
 
 
 class SlackService:
-    def __init__(self, user_persistence: UserPersistence, user_integrations_persistence: IntegrationsPresistence, sync_persistence: IntegrationsUserSyncPersistence,
+    def __init__(self, user_persistence: UserPersistence, user_integrations_persistence: IntegrationsPresistence,
+                 sync_persistence: IntegrationsUserSyncPersistence,
                  lead_persistence: LeadsPersistence):
         self.user_persistence = user_persistence
         self.integrations_persistence = user_integrations_persistence
         self.sync_persistence = sync_persistence
         self.lead_persistence = lead_persistence
-        
+
     def get_credential(self, domain_id):
         return self.integrations_persistence.get_credentials_for_service(domain_id, SourcePlatformEnum.SLACK.value)
-        
+
     def save_integration(self, domain_id: int, access_token: str, user: dict):
         credential = self.get_credential(domain_id)
         if credential:
@@ -48,7 +49,7 @@ class SlackService:
         if not integrations:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
         return integrations
-    
+
     def generate_authorize_url(self, user_id, domain_id):
         state_payload = json.dumps({"user_id": user_id, "domain_id": domain_id})
         state = base64.urlsafe_b64encode(state_payload.encode()).decode()
@@ -64,12 +65,12 @@ class SlackService:
                 "groups:write",
                 "channels:join",
                 "chat:write"
-                ],
+            ],
             user_scopes=[],
             redirect_uri=SlackConfig.redirect_url,
         )
         return generator.generate(state=state)
-    
+
     def decode_state(self, state: str):
         try:
             decoded_bytes = base64.urlsafe_b64decode(state)
@@ -79,15 +80,14 @@ class SlackService:
         except Exception as e:
             raise ValueError(f"Failed to decode state: {e}")
 
-    
     def slack_oauth_callback(self, code: str, state):
         state = self.decode_state(state)
         user_id = state.get('user_id')
         domain_id = state.get('domain_id')
         client = WebClient()
         response = client.oauth_v2_access(
-            client_id = SlackConfig.client_id,
-            client_secret = SlackConfig.client_secret,
+            client_id=SlackConfig.client_id,
+            client_secret=SlackConfig.client_secret,
             code=code,
             redirect_uri=SlackConfig.redirect_url
         )
@@ -102,7 +102,7 @@ class SlackService:
                 raise SlackApiError(status_code=404, detail="User not found")
         else:
             raise SlackApiError(status_code=400, detail="OAuth failed")
-    
+
     def create_channel(self, domain_id, channel_name, is_private=False):
         user_integration = self.get_credential(domain_id)
         client = WebClient(token=user_integration.access_token)
@@ -122,7 +122,7 @@ class SlackService:
                 "status": IntegrationsStatus.CREATE_IS_FAILED.value,
                 "message": error_message
             }
-    
+
     def join_channel(self, client_token, channel_id):
         client = WebClient(token=client_token)
         try:
@@ -134,18 +134,18 @@ class SlackService:
                         'message': response['error']
                         }
         except SlackApiError as e:
-            return {'status': IntegrationsStatus.JOIN_CHANNEL_IS_FAILED.value, 
-                        'message': response['error']
-                        }
-        
+            return {'status': IntegrationsStatus.JOIN_CHANNEL_IS_FAILED.value,
+                    'message': e.response['error']
+                    }
+
     def get_first_visited_url(self, lead_user):
         return self.lead_persistence.get_first_visited_url(lead_user)
-    
+
     async def process_data_sync(self, five_x_five_user, user_integration, data_sync, lead_user):
         visited_url = self.get_first_visited_url(lead_user)
         user_text = self.generate_user_text(five_x_five_user, visited_url)
         return self.send_message_to_channels(user_text, user_integration.access_token)
-    
+
     def generate_user_text(self, five_x_five_user: FiveXFiveUser, visited_url) -> str:
         email_priorities = [
             five_x_five_user.personal_emails,
@@ -161,8 +161,8 @@ class SlackService:
             "Title (Job Title)": five_x_five_user.job_title,
             "Company": five_x_five_user.company_name,
             "Detail": f"{five_x_five_user.company_employee_count or 'Unknown Employees'} | "
-                    f"{five_x_five_user.company_revenue or 'Unknown Revenue'} | "
-                    f"{five_x_five_user.primary_industry or 'Unknown Industry'}",
+                      f"{five_x_five_user.company_revenue or 'Unknown Revenue'} | "
+                      f"{five_x_five_user.primary_industry or 'Unknown Industry'}",
             "Email": email,
             "Visited URL (Page)": visited_url,
             "Location": (
@@ -174,7 +174,7 @@ class SlackService:
         filtered_data = {key: value for key, value in data.items() if value and value != "N/A"}
         user_text = "\n".join([f"*{key}:* {value}" for key, value in filtered_data.items()])
         return user_text
-    
+
     def get_channels(self, domain_id):
         user_integration = self.get_credential(domain_id)
         if user_integration:
@@ -189,13 +189,13 @@ class SlackService:
                     }
                     for channel in channels_data
                 ]
-                return {'status': ProccessDataSyncResult.SUCCESS, 'channels': channels} 
+                return {'status': ProccessDataSyncResult.SUCCESS, 'channels': channels}
             except SlackApiError as e:
                 logger.error(f"Slack API Error: {e.response.get('error')}")
                 return {'status': ProccessDataSyncResult.AUTHENTICATION_FAILED}
 
         return {'status': ProccessDataSyncResult.AUTHENTICATION_FAILED}
-        
+
     def send_message_to_channels(self, text, client_token, channel_id):
         client = WebClient(token=client_token)
         try:
@@ -214,9 +214,10 @@ class SlackService:
         except SlackApiError as e:
             logger.error(f"Slack API error: {e.response['error']}")
             return ProccessDataSyncResult.LIST_NOT_EXISTS
-        
+
     async def create_sync(self, leads_type: str, list_id: str, list_name: str, domain_id: int, created_by: str):
-        credentials = self.integrations_persistence.get_credentials_for_service(domain_id, SourcePlatformEnum.SLACK.value)
+        credentials = self.integrations_persistence.get_credentials_for_service(domain_id,
+                                                                                SourcePlatformEnum.SLACK.value)
         join_result = self.join_channel(credentials.access_token, list_id)
         if join_result['status'] == IntegrationsStatus.JOIN_CHANNEL_IS_FAILED.value:
             return join_result
