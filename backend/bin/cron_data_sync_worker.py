@@ -29,7 +29,7 @@ from dependencies import (IntegrationsPresistence, LeadsPersistence, AudiencePer
 
 load_dotenv()
 
-CRON_DATA_SYNC_LEADS = 'cron_data_sync_leads_test'
+CRON_DATA_SYNC_LEADS = 'cron_data_sync_leads'
 
 
 def setup_logging(level):
