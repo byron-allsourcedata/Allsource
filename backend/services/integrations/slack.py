@@ -100,9 +100,9 @@ class SlackService:
         else:
             raise SlackApiError(status_code=400, detail="OAuth failed")
     
-    def create_channel(client_token, channel_name, is_private=False):
-        client = WebClient(token=client_token)
-        
+    def create_channel(self, domain_id, channel_name, is_private=False):
+        user_integration = self.get_credential(domain_id)
+        client = WebClient(token=user_integration.access_token)
         try:
             response = client.conversations_create(
                 name=channel_name,
@@ -110,13 +110,13 @@ class SlackService:
             )
             if response["ok"]:
                 return {
-                    "status": "success",
+                    "status": "SUCCESS",
                     "channel": response["channel"]
                 }
         except SlackApiError as e:
             error_message = e.response.get("error", "unknown_error")
             return {
-                "status": "failed",
+                "status": "FAILED",
                 "error": error_message
             }
     
