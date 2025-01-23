@@ -35,11 +35,15 @@ class SlackService:
 
     def get_credential(self, domain_id):
         return self.integrations_persistence.get_credentials_for_service(domain_id, SourcePlatformEnum.SLACK.value)
+    
+    def update_credential(self, domain_id, access_token):
+        return self.integrations_persistence.update_credential_for_service(domain_id, SourcePlatformEnum.SLACK.value, access_token)
 
     def save_integration(self, domain_id: int, access_token: str, user: dict):
         credential = self.get_credential(domain_id)
         if credential:
-            raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.ALREADY_EXIST.value})
+            return self.update_credential(domain_id, access_token)
+        
         integrations = self.integrations_persistence.create_integration({
             'domain_id': domain_id,
             'access_token': access_token,
@@ -144,38 +148,40 @@ class SlackService:
     async def process_data_sync(self, five_x_five_user, user_integration, data_sync, lead_user):
         visited_url = self.get_first_visited_url(lead_user)
         user_text = self.generate_user_text(five_x_five_user, visited_url)
-        return self.send_message_to_channels(user_text, user_integration.access_token)
+        if not user_text:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+            
+        return self.send_message_to_channels(user_text, user_integration.access_token, data_sync.list_id)
     
     def generate_user_text(self, five_x_five_user: FiveXFiveUser, visited_url) -> str:
         if not five_x_five_user.linkedin_url:
             return None
         
         email_priorities = [
-            five_x_five_user.personal_emails,
             five_x_five_user.business_email,
-            five_x_five_user.programmatic_business_emails,
+            five_x_five_user.personal_emails,
             five_x_five_user.additional_personal_emails,
+            five_x_five_user.programmatic_business_emails
         ]
         email = next((email.strip() for email in email_priorities if email), "N/A")
 
         data = {
-            "LinkedIn URL (Person)": five_x_five_user.linkedin_url,
+            "LinkedIn URL": five_x_five_user.linkedin_url,
             "Name": f"{five_x_five_user.first_name} {five_x_five_user.last_name}".strip(),
-            "Title (Job Title)": five_x_five_user.job_title,
+            "Title": five_x_five_user.job_title,
             "Company": five_x_five_user.company_name,
             "Detail": f"{five_x_five_user.company_employee_count or 'Unknown Employees'} | "
                       f"{five_x_five_user.company_revenue or 'Unknown Revenue'} | "
                       f"{five_x_five_user.primary_industry or 'Unknown Industry'}",
             "Email": email,
-            "Visited URL (Page)": visited_url,
+            "Visited URL": visited_url,
             "Location": (
                 f"{five_x_five_user.professional_city}, {five_x_five_user.professional_state}".strip(", ")
                 if five_x_five_user.professional_city or five_x_five_user.professional_state
                 else None
             ),
         }
-        filtered_data = {key: value for key, value in data.items() if value and value != "N/A"}
-        user_text = "\n".join([f"*{key}:* {value}" for key, value in filtered_data.items()])
+        user_text = "\n".join([f"*{key}:* {value}" for key, value in data.items()])
         return user_text
 
     def get_channels(self, domain_id):

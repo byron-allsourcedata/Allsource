@@ -858,7 +858,8 @@ class LeadsPersistence:
         return self.db.query(LeadUser).join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id).filter(FiveXFiveUser.up_id == up_id, LeadUser.domain_id == domain_id).first()
     
     def get_first_visited_url(self, lead_user):
-        return self.db.query(LeadsRequests.page)\
-            .join(LeadUser, LeadUser.first_visit_id == LeadsRequests.id)\
-            .filter(LeadUser.id == lead_user.id).scalar()
+        result = self.db.query(LeadsRequests)\
+            .join(LeadUser, LeadUser.first_visit_id == LeadsRequests.visit_id)\
+            .filter(LeadUser.id == lead_user.id).first()
+        return result.page
     
