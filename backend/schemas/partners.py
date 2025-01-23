@@ -10,42 +10,42 @@ class PartnersResponse(BaseModel):
     id: int
     partner_name: str
     email: str
+    company_name: str
     isMaster: Optional[bool] = False
     join_date: Optional[datetime] = None
     commission: int
-    subscription: str
+    subscription: Optional[str] = None
     sources: Optional[str] = None
     last_payment_date: Optional[datetime] = None
     status: str
     count: Optional[int] = None
-    reward_amount: Optional[str] = None
+    reward_amount: Optional[float] = None
     reward_status: Optional[str] = None
-    reward_payout_date: Optional[str] = None
+    reward_payout_date: Optional[datetime] = None
     isActive: bool = False
 
 class PartnersObjectResponse(BaseModel):
-    status: bool
+    status: Optional[bool] = False
     error: Optional[ErrorResponse] = None
+    message: Optional[str] = None
     data: Optional[Union[List[PartnersResponse], PartnersResponse]] = None
 
 class PartnerCreateRequest(BaseModel):
-    full_name: Optional[str] = None
-    email: Optional[str] = None
-    company_name: Optional[str] = None
-    commission: str
+    name: str
+    email: str
+    company_name: str
+    commission: int
     is_master: Optional[bool] = False
-    masterId: Optional[int] = None
+    master_id: Optional[int] = None
 
 class OpportunityStatus(BaseModel):
     status: bool
     message: Optional[str] = None
 
-class PartnerUpdateRequest(BaseModel):
-    message: Optional[str] = None
-    status: Optional[str] = None
-    commission: Optional[str] = None
-    full_name: Optional[str] = None
-    company_name: Optional[str] = None
+class PartnerUpdateRequest(BaseModel):    
+    commission: int
+    name: str
+    company_name: str
 
 class PartnerUserData(BaseModel):
     subscription: Optional[str] = None

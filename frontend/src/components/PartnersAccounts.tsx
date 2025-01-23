@@ -392,7 +392,13 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                             id="input-with-icon-textfield"
                             placeholder="Search by account name, emails"
                             value={search}
-                            onChange={handleSearchChange}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                handleSearchChange(e);
+                                if (value === "") {
+                                  fetchRules();
+                                }
+                            }}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
                                     fetchRules();

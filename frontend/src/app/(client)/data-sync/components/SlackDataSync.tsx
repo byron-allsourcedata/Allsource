@@ -18,7 +18,7 @@ interface ConnectSlackPopupProps {
 
 type ChannelList = {
     id: string;
-    channel_name: string;
+    name: string;
     is_private?: boolean;
 }
 
@@ -54,11 +54,13 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
     const [isPrivate, setIsPrivate] = useState(false)
     const [listNameErrorMessage, setListNameErrorMessage] = useState('')
     const [customFieldsList, setCustomFieldsList] = useState<CustomField[]>([]);
+    const [savedList, setSavedList] = useState<ChannelList | null>(null);
+
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (textFieldRef.current && !textFieldRef.current.contains(event.target as Node)) {
                 // If clicked outside, reset shrink only if there is no input value
-                if (selectedOption?.channel_name === '') {
+                if (selectedOption?.name === '') {
                     setIsShrunk(false);
                 }
                 if (isDropdownOpen) {
@@ -123,18 +125,17 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
     const getChannelList = async () => {
         try {
             setLoading(true)
-            const response = await axiosInstance.get('/slack/get-channels', {
-                params: {
-                    service_name: 'slack'
-                }
-            })
-            setSlackList(response.data)
-            const foundItem = response.data?.find((item: any) => item.list_name === data?.name);
+            const response = await axiosInstance.get('/slack/get-channels')
+            setSlackList(response.data.channels || [])
+            if (response.data.status !== 'success'){
+                showErrorToast(response.data.message)
+            }
+            const foundItem = response.data?.channel.find((item: any) => item.name === data?.channel.name);
             if (foundItem) {
                 setUpdateKlaviuo(data.id)
                 setSelectedOption({
                     id: foundItem.id,
-                    channel_name: foundItem.list_name,
+                    name: foundItem.name,
                     is_private: foundItem.is_private
                 });
             } else {
@@ -156,29 +157,28 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         try {
             setLoading(true)
             const newListResponse = await axiosInstance.post('/slack/create-channel', {
-                channel_name: selectedOption?.channel_name,
+                name: selectedOption?.name,
                 is_private: isPrivate
             }
             );
+            
 
-            if (newListResponse.status !== 201) {
-                throw new Error('Failed to create a new tags');
+            if (newListResponse.data.status !== 'SUCCESS') {
+                showErrorToast('Error when trying to create new list')
             }
 
-            return newListResponse.data;
+            return newListResponse.data.channel;
         }
         finally {
             setLoading(false)
         }
     }
 
-
-
-    const handleSaveSync = async () => {
+    const handleSaveList = async () => {
         setLoading(true);
-        let list: ChannelList | null = null;
-
         try {
+            let list: ChannelList | null = null;
+    
             if (selectedOption && selectedOption.id === '-1') {
                 list = await createNewList();
             } else if (selectedOption) {
@@ -187,46 +187,64 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                 showToast('Please select a valid option.');
                 return;
             }
+    
+            setSavedList(list); // Сохраняем список в состояние
+            showToast('List saved successfully');
+        } catch (error) {
+            console.error('Error saving list:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+
+
+    const handleSaveSync = async () => {
+        if (!savedList) {
+            showToast('No list data found. Please save the list first.');
+            return;
+        }
+    
+        setLoading(true);
+        try {
             if (isEdit) {
-                const response = await axiosInstance.put(`/data-sync/sync`, {
+                const response = await axiosInstance.put('/data-sync/sync', {
                     integrations_users_sync_id: data.id,
-                    list_id: list?.id,
-                    channel_name: list?.channel_name,
+                    list_id: savedList.id,
+                    name: savedList.name,
                     leads_type: selectedRadioValue,
                     data_map: customFields
                 }, {
-                    params: {
-                        service_name: 'slack'
-                    }
+                    params: { service_name: 'slack' }
                 });
+    
                 if (response.status === 201 || response.status === 200) {
                     onClose();
                     showToast('Data sync updated successfully');
                 }
             } else {
-                if (!list) { return }
                 const response = await axiosInstance.post('/data-sync/sync', {
-                    list_id: list?.id,
-                    channel_name: list?.channel_name,
+                    list_id: savedList.id,
+                    list_name: savedList.name,
                     leads_type: selectedRadioValue,
                     data_map: customFields
                 }, {
-                    params: {
-                        service_name: 'slack'
-                    }
+                    params: { service_name: 'slack' }
                 });
+    
                 if (response.status === 201 || response.status === 200) {
                     onClose();
                     showToast('Data sync created successfully');
                     triggerSync();
                 }
             }
-
-
+        } catch (error) {
+            console.error('Error during sync:', error);
         } finally {
             setLoading(false);
         }
     };
+    
 
 
     // Handle menu open
@@ -268,7 +286,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
             // Проверка, является ли value объектом KlaviyoList
             setSelectedOption({
                 id: value.id,
-                channel_name: value.channel_name,
+                name: value.name,
                 is_private: value.is_private
             });
             setIsDropdownValid(true);
@@ -283,7 +301,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         return value !== null &&
             typeof value === 'object' &&
             'id' in value &&
-            'channel_name' in value;
+            'name' in value;
     };
 
 
@@ -303,7 +321,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
 
         // If valid, save and close
         if (valid) {
-            const newSlackList = { id: '-1', channel_name: newListName, is_private: isPrivate }
+            const newSlackList = { id: '-1', name: newListName, is_private: isPrivate }
             setSelectedOption(newSlackList);
             if (isKlaviyoList(newSlackList)) {
                 setIsDropdownValid(true);
@@ -468,8 +486,8 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                 return (
                     <Button
                         variant="contained"
-                        disabled={!isDropdownValid}
-                        onClick={handleSaveSync}
+                        disabled={!selectedOption}
+                        onClick={handleSaveList}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito Sans",
@@ -579,7 +597,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
 
     const handleNewListChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value
-        if (slackList?.some(list => list.channel_name === value)) {
+        if (slackList?.some(list => list.name === value)) {
             setListNameError(true)
             setListNameErrorMessage('List name must be unique')
         }
@@ -890,7 +908,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                                 <TextField
                                                     ref={textFieldRef}
                                                     variant="outlined"
-                                                    value={selectedOption?.channel_name}
+                                                    value={selectedOption?.name}
                                                     onClick={handleClick}
                                                     size="small"
                                                     fullWidth
@@ -1127,7 +1145,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                                                 background: 'rgba(80, 82, 178, 0.10)'
                                                             }
                                                         }}>
-                                                            <ListItemText primary={klaviyo.channel_name} primaryTypographyProps={{
+                                                            <ListItemText primary={klaviyo.name} primaryTypographyProps={{
                                                                 sx: {
                                                                     fontFamily: "Nunito Sans",
                                                                     fontSize: "14px",
@@ -1155,6 +1173,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                 }}>
                                     <Box sx={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
                                         <Typography variant="h6" className='first-sub-title'>Map list</Typography>
+                                        {selectedOption?.name && 
                                         <Typography variant='h6' sx={{
                                             background: '#EDEDF7',
                                             borderRadius: '3px',
@@ -1165,8 +1184,8 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                             padding: '2px 4px',
                                             lineHeight: '16px'
                                         }}>
-                                            {selectedOption?.channel_name}
-                                        </Typography>
+                                            {selectedOption?.name}
+                                        </Typography>}
                                     </Box>
 
                                     <Grid container alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' }, marginBottom: '14px' }}>
@@ -1189,7 +1208,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                                 minWidth: '196px'
                                             }
                                         }}>
-                                            <Image src='/sendlane-icon.svg' alt='sendlane' height={20} width={24} />
+                                            <Image src='/slack-icon.svg' alt='slack' height={20} width={24} />
                                         </Grid>
                                         <Grid item xs="auto" sm={1}>&nbsp;</Grid>
                                     </Grid>

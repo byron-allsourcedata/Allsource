@@ -13,7 +13,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     <>
       <HeaderAdmin NewRequestNotification={false} />
       <Grid container sx={{ display: "flex", flexWrap: "nowrap", overflowX: "hidden", paddingTop: "4.25rem" }}> 
-        <Grid item xs={12} md="auto" lg="auto" sx={{ position: "fixed", flexBasis: "200px", overflowX: "hidden", flexShrink: 0, minWidth: "200px", display: { xs: 'none', md: 'block' }, }}>
+        <Grid item xs={12} md="auto" lg="auto" sx={{ position: "fixed", flexBasis: "146px", overflowX: "hidden", flexShrink: 0, display: { xs: 'none', md: 'block' }, }}>
           <AdminSidebar />
         </Grid>
         <Grid item xs={12} md lg sx={{ padding: "0px", ml:20, '@media (max-width: 899px)': {
