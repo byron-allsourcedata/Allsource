@@ -11,7 +11,7 @@ import BCommerceConnect from "./Bcommerce"
 import OmnisendConnect from "./OmnisendConnect"
 import MailchimpConnect from "./MailchimpConnect"
 import SendlaneConnect from "./SendlaneConnect"
-import SlackConnect from "./SlackConnect"
+import SlackConnectPopup from "./SlackConnectPopup"
 import ZapierConnectPopup from "./ZapierConnectPopup"
 
 
@@ -489,7 +489,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
             <MailchimpConnect open={openMailchimpConnect} handleClose={() => setOpenMailchimpConnect(false)} onSave={saveIntegration} />
             <SendlaneConnect open={openSendlaneConnect} handleClose={() => setOpenSendlaneConnect(false)} onSave={saveIntegration} />
             <ZapierConnectPopup open={openZapierConnect} handlePopupClose={handleClose} />
-            <SlackConnect open={openSlackConnect} handleClose={() => setOpenSlackConnect(false)} onSave={saveIntegration} />
+            <SlackConnectPopup open={openSlackConnect} handlePopupClose={() => setOpenSlackConnect(false)} onSave={saveIntegration} />
         </>
     )
 }

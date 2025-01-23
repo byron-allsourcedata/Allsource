@@ -796,7 +796,8 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
     { image: 'attentive.svg', service_name: 'attentive' },
     { image: 'listrak.svg', service_name: 'listark' },
     { image: 'cordial.svg', service_name: 'cordial' },
-    { image: 'zapier-icon.svg', service_name: 'zapier' }
+    { image: 'zapier-icon.svg', service_name: 'zapier' },
+    { image: 'slack-icon.svg', service_name: 'slack' }
   ];
 
   const handleClose = () => {

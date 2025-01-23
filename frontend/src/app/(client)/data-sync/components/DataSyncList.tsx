@@ -33,18 +33,17 @@ import { datasyncStyle } from "@/app/(client)/data-sync/datasyncStyle";
 import MailchimpDatasync from "./MailchimpDatasync";
 import OmnisendDataSync from "./OmnisendDataSync";
 import SendlaneDatasync from "./SendlaneDatasync";
-import SlackDatasync from "./SlackDatasync";
+import SlackDatasync from "./SlackDataSync";
 import CustomTablePagination from "@/components/CustomTablePagination";
-import AttentiveIntegrationPopup from "../../../../components/AttentiveIntegrationPopup";
-import BCommerceConnect from "../../../../components/Bcommerce";
-import KlaviyoIntegrationPopup from "../../../../components/KlaviyoIntegrationPopup";
-import MailchimpConnect from "../../../../components/MailchimpConnect";
-import OmnisendConnect from "../../../../components/OmnisendConnect";
-import SendlaneConnect from "../../../../components/SendlaneConnect";
-import ShopifySettings from "../../../../components/ShopifySettings";
-import ZapierConnectPopup from "../../../../components/ZapierConnectPopup";
-import SlackConnect from "../../../../components/SlackConnect";
-
+import AttentiveIntegrationPopup from "@/components/AttentiveIntegrationPopup";
+import BCommerceConnect from "@/components/Bcommerce";
+import KlaviyoIntegrationPopup from "@/components/KlaviyoIntegrationPopup";
+import MailchimpConnect from "@/components/MailchimpConnect";
+import OmnisendConnect from "@/components/OmnisendConnect";
+import SendlaneConnect from "@/components/SendlaneConnect";
+import ShopifySettings from "@/components/ShopifySettings";
+import ZapierConnectPopup from "@/components/ZapierConnectPopup";
+import SlackConnectPopup from "@/components/SlackConnectPopup";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface DataSyncProps {
@@ -1152,9 +1151,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
           handleClose={() => { setOpenSendlaneConnect(false), setIsInvalidApiKey(false) }}
           initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sendlane')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
         />
-        <SlackConnect
+        <SlackConnectPopup
           open={openSendlaneConnect}
-          handleClose={() => { setOpenSlackConnect(false), setIsInvalidApiKey(false) }}
+          handlePopupClose={() => { setOpenSlackConnect(false), setIsInvalidApiKey(false) }}
           initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'slack')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
         />
         <ZapierConnectPopup

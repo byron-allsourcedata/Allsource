@@ -61,7 +61,16 @@ const slackStyles = {
     },
 }
 
-const SlackConnectPopup = ({ open, handlePopupClose, boxShadow }) => {
+interface SlackConnectProps {
+    handlePopupClose: () => void
+    onSave?: (new_integration: any) => void
+    open: boolean
+    initApiKey?: string;
+    boxShadow?: string;
+    Invalid_api_key?: boolean;
+}
+
+const SlackConnectPopup = ({ open, handlePopupClose, boxShadow }: SlackConnectProps) => {
     const [authorizeUrl, setAuthorizeUrl] = useState('')
     const [value, setValue] = useState('1')
     const [loading, setLoading] = useState(false);
