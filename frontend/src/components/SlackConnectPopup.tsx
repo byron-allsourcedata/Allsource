@@ -163,7 +163,6 @@ const SlackConnectPopup = ({ open, handlePopupClose, boxShadow }) => {
                                     }
                                 }} onChange={handleChangeTab}>
                                 <Tab label="Connection" value="1" className='tab-heading' sx={slackStyles.tabHeading} onClick={() => setValue('1')} />
-                                <Tab label="Suppression Sync" value="2" className='tab-heading' sx={slackStyles.tabHeading} onClick={() => setValue('2')} />
                             </TabList>
                         </Box>
                         <TabPanel value="1" sx={{ p: 0 }}>
@@ -185,7 +184,7 @@ const SlackConnectPopup = ({ open, handlePopupClose, boxShadow }) => {
                                         fullWidth
                                         onClick={handleLogin}
                                         variant="contained"
-                                        startIcon={<Image src='/slack-white.svg' alt='slack' height={24} width={24} />}
+                                        startIcon={<Image src='/slack-icon.svg' alt='slack' height={24} width={24} />}
                                         sx={{
                                             backgroundColor: '#f24e1e',
                                             fontFamily: "Nunito Sans",

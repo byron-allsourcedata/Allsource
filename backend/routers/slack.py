@@ -18,4 +18,9 @@ async def get_authorize_url(domain = Depends(check_pixel_install_domain),
                             user=Depends(check_user_authorization), 
                             slack_service: SlackService = Depends(get_slack_service)):
     return slack_service.generate_authorize_url(user_id=user.get('id'), domain_id=domain.id)
-    
+
+@router.get("/get-channels")
+async def get_channels(user=Depends(check_user_authorization),
+                       domain = Depends(check_pixel_install_domain),
+                       slack_service: SlackService = Depends(get_slack_service)):
+    return slack_service.get_channels(domain_id = domain.id)

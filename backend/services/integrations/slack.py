@@ -29,8 +29,11 @@ class SlackService:
         self.integrations_persistence = user_integrations_persistence
         self.sync_persistence = sync_persistence
         
+    def get_credential(self, domain_id):
+        return self.integrations_persistence.get_credentials_for_service(domain_id, SourcePlatformEnum.SLACK.value)
+        
     def save_integration(self, domain_id: int, access_token: str, user: dict):
-        credential = self.integrations_persistence.get_credentials_for_service(domain_id, SourcePlatformEnum.SLACK.value)
+        credential = self.get_credential(domain_id)
         if credential:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.ALREADY_EXIST.value})
         integrations = self.integrations_persistence.create_integration({
@@ -49,7 +52,16 @@ class SlackService:
 
         generator = AuthorizeUrlGenerator(
             client_id=SlackConfig.client_id,
-            scopes=["channels:history", "channels:read", "chat:write", "groups:read"],
+            scopes=[
+                "channels:read",
+                "groups:read",
+                "channels:history",
+                "groups:history",
+                "channels:manage",
+                "groups:write",
+                "channels:join",
+                "chat:write"
+                ],
             user_scopes=[],
             redirect_uri=SlackConfig.redirect_url,
         )
@@ -88,6 +100,42 @@ class SlackService:
         else:
             raise SlackApiError(status_code=400, detail="OAuth failed")
     
+    def create_channel(client_token, channel_name, is_private=False):
+        client = WebClient(token=client_token)
+        
+        try:
+            response = client.conversations_create(
+                name=channel_name,
+                is_private=is_private
+            )
+            if response["ok"]:
+                return {
+                    "status": "success",
+                    "channel": response["channel"]
+                }
+        except SlackApiError as e:
+            error_message = e.response.get("error", "unknown_error")
+            return {
+                "status": "failed",
+                "error": error_message
+            }
+    
+    def join_channel(client_token, channel_id):
+        client = WebClient(token=client_token)
+        try:
+            response = client.conversations_join(channel=channel_id)
+            
+            if response["ok"]:
+                channel_info = response["channel"]
+                print(f"Successfully joined the channel: #{channel_info['name']}")
+                return channel_info
+            else:
+                print(f"Failed to join the channel: {response['error']}")
+                return {"error": response['error']}
+        except SlackApiError as e:
+            print(f"Slack API error: {e.response['error']}")
+            return {"error": e.response['error']}
+    
     async def process_data_sync(self, five_x_five_user, user_integration, data_sync):
         user_text = self.generate_user_text(five_x_five_user)
         return self.send_message_to_channels(user_text, user_integration.access_token)
@@ -120,29 +168,46 @@ class SlackService:
         )
 
         return user_text
+    
+    def get_channels(self, domain_id):
+        user_integration = self.get_credential(domain_id)
+        if user_integration:
+            client = WebClient(token=user_integration.access_token)
+            try:
+                response = client.conversations_list()
+                channels_data = response.get("channels", [])
+                channels = [
+                    {
+                        'id': channel["id"],
+                        'channel_name': channel["name"]
+                    }
+                    for channel in channels_data
+                ]
+                return channels
+            except SlackApiError as e:
+                logger.error(f"Slack API Error: {e.response.get('error')}")
+                return ProccessDataSyncResult.AUTHENTICATION_FAILED
+
+        return ProccessDataSyncResult.AUTHENTICATION_FAILED
         
-    def send_message_to_channels(self, text, client_token):
+    def send_message_to_channels(self, text, client_token, channel_id):
         client = WebClient(token=client_token)
         try:
-            response = client.conversations_list()
-            channels = response.get("channels", [])
+            response = client.conversations_info(channel=channel_id)
+            if not response["ok"] or not response["channel"]["is_member"]:
+                logger.warning(f"Access to the channel #{channel_id} is denied.")
+                return ProccessDataSyncResult.AUTHENTICATION_FAILED
 
-            for channel in channels:
-                channel_id = channel["id"]
-                channel_name = channel["name"]
-                members_response = client.conversations_members(channel=channel_id)
-                bot_user_id = client.auth_test()["user_id"]
+            client.chat_postMessage(
+                channel=channel_id,
+                text=text
+            )
+            logger.info(f"The message has been sent to the channel: #{channel_id}")
+            return ProccessDataSyncResult.SUCCESS
 
-                if bot_user_id in members_response["members"]:
-                    client.chat_postMessage(
-                        channel=channel_id,
-                        text=text
-                    )
-                    logger.info(f"The message has been sent to the channel: #{channel_name}")
-                    return ProccessDataSyncResult.SUCCESS
-                return ProccessDataSyncResult.LIST_NOT_EXISTS
         except SlackApiError as e:
-            return ProccessDataSyncResult.AUTHENTICATION_FAILED
+            logger.error(f"Slack API error: {e.response['error']}")
+            return ProccessDataSyncResult.LIST_NOT_EXISTS
         
     async def create_sync(self, leads_type: str, list_id: str, list_name: str, data_map: List[DataMap], domain_id: int, created_by: str):
         credentials = self.integrations_persistence.get_credentials_for_service(domain_id, SourcePlatformEnum.SLACK.value)

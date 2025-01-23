@@ -520,7 +520,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                             backgroundColor: selectedIntegration === 'omnisend' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
                                         }}>
                                             <ListItemIcon sx={{ minWidth: 'auto' }}>
-                                                <Image src="/slack_icon_black.svg" alt="slack" height={26} width={32} />
+                                                <Image src="/slack-icon.svg" alt="slack" height={26} width={32} />
                                             </ListItemIcon>
                                             <ListItemText primary="Slack" primaryTypographyProps={{
                                                 sx: {

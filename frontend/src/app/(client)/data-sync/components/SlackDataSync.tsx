@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Drawer, Box, Typography, IconButton, TextField, Divider, FormControlLabel, FormControl, FormLabel, Radio, Button,  Link, Tab, Tooltip,  RadioGroup, MenuItem, Popover, Menu, ListItemText, ClickAwayListener, InputAdornment, Grid, LinearProgress } from '@mui/material';
+import { Drawer, Box, Typography, IconButton, TextField, Divider, FormControlLabel, FormControl, FormLabel, Radio, Button, Link, Tab, Tooltip, RadioGroup, MenuItem, Popover, Menu, ListItemText, ClickAwayListener, InputAdornment, Grid, LinearProgress } from '@mui/material';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
@@ -16,14 +16,9 @@ interface ConnectSlackPopupProps {
     isEdit: boolean;
 }
 
-type KlaviyoList = {
+type ChannelList = {
     id: string
-    list_name: string
-}
-
-type KlaviyoTags = {
-    id: string
-    tags_name: string
+    channel_name: string
 }
 
 
@@ -31,67 +26,34 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
     const { triggerSync } = useIntegrationContext();
     const [loading, setLoading] = useState(false)
     const [value, setValue] = React.useState('1');
-    const [checked, setChecked] = useState(false);
     const [selectedRadioValue, setSelectedRadioValue] = useState(data?.type);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [selectedOption, setSelectedOption] = useState<KlaviyoList | null>(null);
+    const [selectedOption, setSelectedOption] = useState<ChannelList | null>(null);
     const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
     const [newListName, setNewListName] = useState<string>('');
-    const [tagName, setTagName] = useState<string>('');
     const [isShrunk, setIsShrunk] = useState<boolean>(false);
     const textFieldRef = useRef<HTMLDivElement>(null);
     const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
-    const [openDropdown, setOpenDropdown] = useState<number | null>(null);
-    const [openDropdownMaximiz, setOpenDropdownMaximiz] = useState<number | null>(null)
     const [apiKeyError, setApiKeyError] = useState(false);
     const [tab2Error, setTab2Error] = useState(false);
     const [isDropdownValid, setIsDropdownValid] = useState(false);
     const [listNameError, setListNameError] = useState(false);
-    const [tagNameError, setTagNameError] = useState(false);
     const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(null)
     const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
     const [newMapListName, setNewMapListName] = useState<string>('');
     const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
     const [UpdateKlaviuo, setUpdateKlaviuo] = useState<any>(null);
     const [maplistNameError, setMapListNameError] = useState(false);
-    const [klaviyoList, setKlaviyoList] = useState<KlaviyoList[]>([])
+    const [slackList, setSlackList] = useState<ChannelList[]>([])
     const [senders, setSenders] = useState<any[]>([])
     const [listNameErrorMessage, setListNameErrorMessage] = useState('')
     const [optionSender, setOptionSender] = useState<any>(senders)
-    const [customFieldsList, setCustomFieldsList] = useState([{ type: 'Gender', value: 'gender' },
-    { type: 'Company Name', value: 'company_name' },
-    { type: 'Company Domain', value: 'company_domain' },
-    { type: 'Company SIC', value: 'company_sic' },
-    { type: 'Company LinkedIn URL', value: 'company_linkedin_url' },
-    { type: 'Company Revenue', value: 'company_revenue' },
-    { type: 'Company Employee Count', value: 'company_employee_count' },
-    { type: 'Net Worth', value: 'net_worth' },
-    { type: 'Last Updated', value: 'last_updated' },
-    { type: 'Personal Emails Last Seen', value: 'personal_emails_last_seen' },
-    { type: 'Company Last Updated', value: 'company_last_updated' },
-    { type: 'Job Title Last Updated', value: 'job_title_last_updated' },
-    { type: 'Age Min', value: 'age_min' },
-    { type: 'Age Max', value: 'age_max' },
-    { type: 'Additional Personal Emails', value: 'additional_personal_emails' },
-    { type: 'LinkedIn URL', value: 'linkedin_url' },
-    { type: 'Married', value: 'married' },
-    { type: 'Children', value: 'children' },
-    { type: 'Income Range', value: 'income_range' },
-    { type: 'Homeowner', value: 'homeowner' },
-    { type: 'Seniority Level', value: 'seniority_level' },
-    { type: 'Department', value: 'department' },
-    { type: 'Primary Industry', value: 'primary_industry' },
-    { type: 'Work History', value: 'work_history' },
-    { type: 'Education History', value: 'education_history' },
-    { type: 'Company Description', value: 'company_description' },
-    { type: 'Related Domains', value: 'related_domains' },
-    { type: 'Social Connections', value: 'social_connections' },
-    { type: 'DPV Code', value: 'dpv_code' }]);
+    const [customFieldsList, setCustomFieldsList] = useState([]);
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (textFieldRef.current && !textFieldRef.current.contains(event.target as Node)) {
                 // If clicked outside, reset shrink only if there is no input value
-                if (selectedOption?.list_name === '') {
+                if (selectedOption?.channel_name === '') {
                     setIsShrunk(false);
                 }
                 if (isDropdownOpen) {
@@ -113,7 +75,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         if (data?.data_map) {
             setCustomFields(data?.data_map);
         } else {
-            setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
+            setCustomFields(customFieldsList.map(field => ({ type: field?.value, value: field?.type })))
         }
     }, [open])
 
@@ -132,25 +94,20 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         setCustomFields(customFields.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
     };
     useEffect(() => {
-        if(open) { return }
+        if (open) { return }
         setLoading(false);
         setValue('1');
-        setChecked(false);
         setSelectedRadioValue('');
         setAnchorEl(null);
         setSelectedOption(null);
         setShowCreateForm(false);
         setNewListName('');
-        setTagName('');
         setIsShrunk(false);
         setIsDropdownOpen(false);
-        setOpenDropdown(null);
-        setOpenDropdownMaximiz(null);
         setApiKeyError(false);
         setTab2Error(false);
         setIsDropdownValid(false);
         setListNameError(false);
-        setTagNameError(false);
         setDeleteAnchorEl(null);
         setSelectedRowId(null);
         setNewMapListName('');
@@ -158,46 +115,34 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         setMapListNameError(false);
     }, [open])
 
-    const getSender = async () => {
+    const getChannelList = async () => {
         try {
             setLoading(true)
-            const response = await axiosInstance.get('/integrations/sync/sender')
-            setSenders(response.data)
-        }
-        finally {
+            const response = await axiosInstance.get('/slack/get-channels', {
+                params: {
+                    service_name: 'slack'
+                }
+            })
+            setSlackList(response.data)
+            const foundItem = response.data?.find((item: any) => item.list_name === data?.name);
+            if (foundItem) {
+                setUpdateKlaviuo(data.id)
+                setSelectedOption({
+                    id: foundItem.id,
+                    channel_name: foundItem.list_name
+                });
+            } else {
+                setSelectedOption(null);
+            }
+            setSelectedRadioValue(data?.type);
+        } catch (error) {}
+        finally{
             setLoading(false)
         }
     }
-
-    const getSendlaneList = async () => {
-        try {
-        setLoading(true)
-        const response = await axiosInstance.get('/integrations/sync/list/', {
-            params: {
-                service_name: 'sendlane'
-            }
-        })
-        setKlaviyoList(response.data)
-        const foundItem = response.data?.find((item: any) => item.list_name === data?.name);
-        if (foundItem) {
-            setUpdateKlaviuo(data.id)
-            setSelectedOption({
-                id: foundItem.id,
-                list_name: foundItem.list_name
-            });
-        } else {
-            setSelectedOption(null);
-        }
-        setSelectedRadioValue(data?.type);
-        setLoading(false)
-    } catch (error) {
-        
-    }
-    }
     useEffect(() => {
-        if(open) {
-            getSendlaneList()
-            getSender()
+        if (open) {
+            getChannelList()
         }
     }, [open])
 
@@ -205,30 +150,30 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         try {
             setLoading(true)
             const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
-                name: selectedOption?.list_name,
+                name: selectedOption?.channel_name,
                 sender_id: optionSender?.id
             }, {
                 params: {
-                    service_name: 'sendlane'
+                    service_name: 'slack'
                 }
             });
-    
+
             if (newListResponse.status !== 201) {
                 throw new Error('Failed to create a new tags');
             }
-    
+
             return newListResponse.data;
         }
         finally {
             setLoading(false)
         }
     }
-    
+
 
 
     const handleSaveSync = async () => {
         setLoading(true);
-        let list: KlaviyoList | null = null;
+        let list: typeof slackList | null = null;
 
         try {
             if (selectedOption && selectedOption.id === '-1') {
@@ -245,7 +190,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                     list_id: list?.id,
                     list_name: list?.list_name,
                     leads_type: selectedRadioValue,
-                    // data_map: customFields
+                    data_map: customFields
                 }, {
                     params: {
                         service_name: 'slack'
@@ -256,7 +201,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                     showToast('Data sync updated successfully');
                 }
             } else {
-                if(!list) { return }
+                if (!list) { return }
                 const response = await axiosInstance.post('/data-sync/sync', {
                     list_id: list?.id,
                     list_name: list?.list_name,
@@ -310,7 +255,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         setNewMapListName('');
     };
 
-    const handleSelectOption = (value: KlaviyoList | string) => {
+    const handleSelectOption = (value: slackList | string) => {
         if (value === 'createNew') {
             setShowCreateForm(prev => !prev);
             if (!showCreateForm) {
@@ -320,7 +265,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
             // Проверка, является ли value объектом KlaviyoList
             setSelectedOption({
                 id: value.id,
-                list_name: value.list_name
+                channel_name: value.list_name
             });
             setIsDropdownValid(true);
             handleClose();
@@ -330,7 +275,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         }
     };
 
-    const isKlaviyoList = (value: any): value is KlaviyoList => {
+    const isKlaviyoList = (value: any): value is slackList => {
         return value !== null &&
             typeof value === 'object' &&
             'id' in value &&
@@ -355,17 +300,12 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         // If valid, save and close
         if (valid) {
             const newKlaviyoList = { id: '-1', list_name: newListName }
-            setSelectedOption(newKlaviyoList);
-            if (isKlaviyoList(newKlaviyoList)) {
+            setSelectedOption(newSlackList);
+            if (isKlaviyoList(newSlackList)) {
                 setIsDropdownValid(true);
             }
             handleClose();
         }
-    };
-
-
-    const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setChecked(event.target.checked);
     };
 
     const label = { inputProps: { 'aria-label': 'Switch demo' } };
@@ -635,7 +575,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
 
     const handleNewListChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value
-        if (klaviyoList?.some(list => list.list_name === value)) {
+        if (slackList?.some(list => list.channel_name === value)) {
             setListNameError(true)
             setListNameErrorMessage('List name must be unique')
         }
@@ -680,101 +620,102 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
 
     return (
         <>
-        {loading && (
-            <Box
-                sx={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'rgba(0, 0, 0, 0.2)',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    zIndex: 1400,
-                    overflow: 'hidden'
+            {loading && (
+                <Box
+                    sx={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0, 0, 0, 0.2)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 1400,
+                        overflow: 'hidden'
+                    }}
+                >
+                    <Box sx={{ width: '100%', top: 0, height: '100vh' }}>
+                        <LinearProgress />
+                    </Box>
+                </Box>
+            )}
+            <Drawer
+                anchor="right"
+                open={open}
+                onClose={handlePopupClose}
+                PaperProps={{
+                    sx: {
+                        width: '620px',
+                        position: 'fixed',
+                        zIndex: 1301,
+                        top: 0,
+                        bottom: 0,
+                        msOverflowStyle: 'none',
+                        scrollbarWidth: 'none',
+                        '&::-webkit-scrollbar': {
+                            display: 'none',
+                        },
+                        '@media (max-width: 600px)': {
+                            width: '100%',
+                        }
+                    },
+                }}
+                slotProps={{
+                    backdrop: {
+                        sx: {
+                            backgroundColor: 'rgba(0, 0, 0, 0)'
+                        }
+                    }
                 }}
             >
-            <Box sx={{width: '100%', top: 0, height: '100vh'}}>
-                <LinearProgress />
-            </Box>
-            </Box>
-        )}
-        <Drawer
-            anchor="right"
-            open={open}
-            onClose={handlePopupClose}
-            PaperProps={{
-                sx: {
-                    width: '620px',
-                    position: 'fixed',
-                    zIndex: 1301,
-                    top: 0,
-                    bottom: 0,
-                    msOverflowStyle: 'none',
-                    scrollbarWidth: 'none',
-                    '&::-webkit-scrollbar': {
-                        display: 'none',
-                    },
-                    '@media (max-width: 600px)': {
-                        width: '100%',
-                    }
-                },
-            }}
-            slotProps={{
-                backdrop: {
-                  sx: {
-                    backgroundColor: 'rgba(0, 0, 0, 0)'
-                  }
-                }
-              }}
-        >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
-                <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
-                    Connect to Slack
-                </Typography>
-                <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                    <Link href="#" className="main-text" sx={{
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        lineHeight: '20px',
-                        color: '#5052b2',
-                        textDecorationColor: '#5052b2'
-                    }}>Tutorial</Link>
-                    <IconButton onClick={handlePopupClose} sx={{ p: 0 }}>
-                        <CloseIcon sx={{ width: '20px', height: '20px' }} />
-                    </IconButton>
-                </Box>
-            </Box>
-            <Divider />
-            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
-                <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
-                <TabContext value={value}>
-                    <Box sx={{pb: 4}}>
-                        <TabList centered aria-label="Connect to Slack Tabs"
-                        TabIndicatorProps={{sx: {backgroundColor: "#5052b2" } }} 
-                        sx={{
-                            "& .MuiTabs-scroller": {
-                                overflowX: 'auto !important',
-                            },
-                            "& .MuiTabs-flexContainer": {
-                            justifyContent:'center',
-                            '@media (max-width: 600px)': {
-                                gap: '16px',
-                                justifyContent:'flex-start'
-                            }
-                        }}} onChange={handleChangeTab}>
-                        <Tab label="Sync Filter" value="1" className='tab-heading' sx={klaviyoStyles.tabHeading} />
-                        <Tab label="Contact Sync" value="2" className='tab-heading' sx={klaviyoStyles.tabHeading} />
-                        {/* <Tab label="Map data" value="3" className='tab-heading' sx={klaviyoStyles.tabHeading} /> */}
-                        </TabList>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+                    <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
+                        Connect to Slack
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
+                        <Link href="#" className="main-text" sx={{
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            lineHeight: '20px',
+                            color: '#5052b2',
+                            textDecorationColor: '#5052b2'
+                        }}>Tutorial</Link>
+                        <IconButton onClick={handlePopupClose} sx={{ p: 0 }}>
+                            <CloseIcon sx={{ width: '20px', height: '20px' }} />
+                        </IconButton>
                     </Box>
-                    <TabPanel value="1" sx={{ p: 0 }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <Typography variant="subtitle1" className='paragraph'>Synchronise all data in real-time from this moment forward for seamless integration and continuous updates.</Typography>
-                            <FormControl sx={{ gap: '16px' }} error={tab2Error}>
+                </Box>
+                <Divider />
+                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
+                    <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
+                        <TabContext value={value}>
+                            <Box sx={{ pb: 4 }}>
+                                <TabList centered aria-label="Connect to Slack Tabs"
+                                    TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
+                                    sx={{
+                                        "& .MuiTabs-scroller": {
+                                            overflowX: 'auto !important',
+                                        },
+                                        "& .MuiTabs-flexContainer": {
+                                            justifyContent: 'center',
+                                            '@media (max-width: 600px)': {
+                                                gap: '16px',
+                                                justifyContent: 'flex-start'
+                                            }
+                                        }
+                                    }} onChange={handleChangeTab}>
+                                    <Tab label="Sync Filter" value="1" className='tab-heading' sx={klaviyoStyles.tabHeading} />
+                                    <Tab label="Contact Sync" value="2" className='tab-heading' sx={klaviyoStyles.tabHeading} />
+                                    <Tab label="Map data" value="3" className='tab-heading' sx={klaviyoStyles.tabHeading} />
+                                </TabList>
+                            </Box>
+                            <TabPanel value="1" sx={{ p: 0 }}>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                    <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                        <Typography variant="subtitle1" className='paragraph'>Synchronise all data in real-time from this moment forward for seamless integration and continuous updates.</Typography>
+                                        <FormControl sx={{ gap: '16px' }} error={tab2Error}>
                                             <FormLabel id="contact-type-radio-buttons-group-label" className='first-sub-title' sx={{
                                                 '&.Mui-focused': {
                                                     color: '#000',
@@ -932,7 +873,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                     <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
-                                            <Image src='/sendlane-icon.svg' alt='sendlane' height={26} width={32} />
+                                            <Image src='/slack-icon.svg' alt='slack' height={26} width={32} />
                                             <Typography variant="h6" className='first-sub-title'>Contact sync</Typography>
                                             <Tooltip title="Sync data with list" placement="right">
                                                 <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
@@ -940,12 +881,12 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                         </Box>
 
 
-                                        <ClickAwayListener onClickAway={() => {}}>
+                                        <ClickAwayListener onClickAway={() => { }}>
                                             <Box>
                                                 <TextField
                                                     ref={textFieldRef}
                                                     variant="outlined"
-                                                    value={selectedOption?.list_name}
+                                                    value={selectedOption?.channel_name}
                                                     onClick={handleClick}
                                                     size="small"
                                                     fullWidth
@@ -1122,8 +1063,8 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                                                         fullWidth
                                                                         variant="outlined"
                                                                         label='Sender'
-                                                                        value={optionSender.sender_name}
-                                                                        onChange={(e) => setOptionSender(senders.find(item => item.sender_name === e.target.value))}
+                                                                        value={optionSender.channel_name}
+                                                                        onChange={(e) => setOptionSender(senders.find(item => item.channel_name === e.target.value))}
                                                                         InputLabelProps={{
                                                                             sx: {
                                                                                 fontFamily: 'Nunito Sans',
@@ -1174,13 +1115,13 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                                                         {senders?.map((item) => (
                                                                             <MenuItem
                                                                                 key={item.id}
-                                                                                value={item.sender_name}
+                                                                                value={item.channel_name}
                                                                             >
-                                                                                {item.sender_name}
+                                                                                {item.channel_name}
                                                                             </MenuItem>
                                                                         ))}
                                                                     </TextField>
-                    
+
                                                                 </Box>
                                                                 <Box sx={{ textAlign: 'right' }}>
                                                                     <Button variant="contained" onClick={handleSave}
@@ -1217,13 +1158,13 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                                     )}
 
                                                     {/* Show static options */}
-                                                    {klaviyoList && klaviyoList.map((klaviyo, option) => (
+                                                    {slackList && slackList.map((klaviyo, option) => (
                                                         <MenuItem key={klaviyo.id} onClick={() => handleSelectOption(klaviyo)} sx={{
                                                             '&:hover': {
                                                                 background: 'rgba(80, 82, 178, 0.10)'
                                                             }
                                                         }}>
-                                                            <ListItemText primary={klaviyo.list_name} primaryTypographyProps={{
+                                                            <ListItemText primary={klaviyo.channel_name} primaryTypographyProps={{
                                                                 sx: {
                                                                     fontFamily: "Nunito Sans",
                                                                     fontSize: "14px",
@@ -1261,7 +1202,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                             padding: '2px 4px',
                                             lineHeight: '16px'
                                         }}>
-                                            {selectedOption?.list_name}
+                                            {selectedOption?.channel_name}
                                         </Typography>
                                     </Box>
 
@@ -1430,93 +1371,6 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                                         }}
                                                     />
                                                 </Grid>
-
-                                                {/* Delete Icon */}
-                                                <Grid item xs="auto" sm={1} container justifyContent="center">
-                                                    {row.canDelete && (
-                                                        <>
-                                                            <IconButton onClick={(event) => handleClickOpen(event, row.id)}>
-                                                                <Image
-                                                                    src='/trash-icon-filled.svg'
-                                                                    alt='trash-icon-filled'
-                                                                    height={18}
-                                                                    width={18} // Adjust the size as needed
-                                                                />
-                                                            </IconButton>
-                                                            <Popover
-                                                                id={deleteId}
-                                                                open={deleteOpen}
-                                                                anchorEl={deleteAnchorEl}
-                                                                onClose={handleDeleteClose}
-                                                                anchorOrigin={{
-                                                                    vertical: 'bottom',
-                                                                    horizontal: 'center',
-                                                                }}
-                                                                transformOrigin={{
-                                                                    vertical: 'top',
-                                                                    horizontal: 'right',
-                                                                }}
-                                                            >
-                                                                <Box sx={{
-                                                                    minWidth: '254px',
-                                                                    borderRadius: '4px',
-                                                                    border: '0.2px solid #afafaf',
-                                                                    background: '#fff',
-                                                                    boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
-                                                                    padding: '16px 21px 16px 16px'
-                                                                }}>
-                                                                    <Typography variant="body1" className='first-sub-title' sx={{
-                                                                        paddingBottom: '12px'
-                                                                    }}>Confirm Deletion</Typography>
-                                                                    <Typography variant="body2" sx={{
-                                                                        color: '#5f6368',
-                                                                        fontFamily: 'Roboto',
-                                                                        fontSize: '12px',
-                                                                        fontWeight: '400',
-                                                                        lineHeight: '16px',
-                                                                        paddingBottom: '26px'
-                                                                    }}>
-                                                                        Are you sure you want to delete this <br /> map data?
-                                                                    </Typography>
-                                                                    <Box display="flex" justifyContent="flex-end" mt={2}>
-                                                                        <Button onClick={handleDeleteClose} sx={{
-                                                                            borderRadius: '4px',
-                                                                            border: '1px solid #5052b2',
-                                                                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                                                            color: '#5052b2',
-                                                                            fontFamily: 'Nunito Sans',
-                                                                            fontSize: '14px',
-                                                                            fontWeight: '600',
-                                                                            lineHeight: '20px',
-                                                                            marginRight: '16px',
-                                                                            textTransform: 'none'
-                                                                        }}>
-                                                                            Clear
-                                                                        </Button>
-                                                                        <Button onClick={handleDelete} sx={{
-                                                                            background: '#5052B2',
-                                                                            borderRadius: '4px',
-                                                                            border: '1px solid #5052b2',
-                                                                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                                                            color: '#fff',
-                                                                            fontFamily: 'Nunito Sans',
-                                                                            fontSize: '14px',
-                                                                            fontWeight: '600',
-                                                                            lineHeight: '20px',
-                                                                            textTransform: 'none',
-                                                                            '&:hover': {
-                                                                                color: '#5052B2'
-                                                                            }
-                                                                        }}>
-                                                                            Delete
-                                                                        </Button>
-                                                                    </Box>
-                                                                </Box>
-                                                            </Popover>
-                                                        </>
-                                                    )}
-
-                                                </Grid>
                                             </Grid>
                                         </Box>
                                     ))}
@@ -1580,7 +1434,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                                             <MenuItem
                                                                 key={item.value}
                                                                 value={item.value}
-                                                                disabled={customFields.some(f => f.type === item.value)} // Дизейблим выбранные
+                                                                disabled={customFields.some(f => f.type === item.value)}
                                                             >
                                                                 {item.type}
                                                             </MenuItem>
@@ -1654,34 +1508,6 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                                 </Grid>
                                             </Grid>
                                         ))}
-                                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, mr: 6 }}>
-                                            <Button
-                                                onClick={handleAddField}
-                                                aria-haspopup="true"
-                                                sx={{
-                                                    textTransform: 'none',
-                                                    border: '1px solid rgba(80, 82, 178, 1)',
-                                                    borderRadius: '4px',
-                                                    padding: '9px 16px',
-                                                    minWidth: 'auto',
-                                                    '@media (max-width: 900px)': {
-                                                        display: 'none'
-                                                    }
-                                                }}
-                                            >
-                                                <Typography sx={{
-                                                    marginRight: '0.5em',
-                                                    fontFamily: 'Nunito Sans',
-                                                    lineHeight: '22.4px',
-                                                    fontSize: '16px',
-                                                    textAlign: 'left',
-                                                    fontWeight: '500',
-                                                    color: '#5052B2'
-                                                }}>
-                                                    Add
-                                                </Typography>
-                                            </Button>
-                                        </Box>
                                     </Box>
                                 </Box>
                             </TabPanel>

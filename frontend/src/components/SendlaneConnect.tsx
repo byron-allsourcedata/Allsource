@@ -331,7 +331,7 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
             >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4' }}>
                     <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
-                        Connect to Slack
+                        Connect to Sendlane
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
                         <Link
