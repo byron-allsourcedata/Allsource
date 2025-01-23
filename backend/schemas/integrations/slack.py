@@ -4,4 +4,4 @@ from datetime import datetime
     
 class SlackCreateListRequest(BaseModel):
     channel_name: str
-    is_private: str
+    is_private: bool = False

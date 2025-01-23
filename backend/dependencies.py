@@ -166,9 +166,10 @@ def get_aws_service(s3_client=Depends(get_s3_client)) -> AWSService:
     return AWSService(s3_client)
 
 def get_slack_service(
-    user_persistence: UserPersistence = Depends(get_user_persistence_service), 
+    user_persistence: UserPersistence = Depends(get_user_persistence_service),
+    lead_persistence: LeadsPersistence = Depends(get_leads_persistence),
     user_integrations_persistence: IntegrationsPresistence = Depends(get_user_integrations_presistence), sync_persistence: IntegrationsUserSyncPersistence = Depends(get_integrations_user_sync_persistence)):
-    return SlackService(user_persistence=user_persistence, user_integrations_persistence=user_integrations_persistence, sync_persistence=sync_persistence)
+    return SlackService(user_persistence=user_persistence, user_integrations_persistence=user_integrations_persistence, sync_persistence=sync_persistence, lead_persistence=lead_persistence)
 
 def get_stripe_service():
     return StripeService()

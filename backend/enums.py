@@ -211,6 +211,7 @@ class IntegrationsStatus(Enum):
     SUCCESS = "SUCCESS"
     NOT_MATCHED_EARLIER = "Store Domain does not match the one you specified earlier"
     ALREADY_EXIST = 'ALREADY_EXIST'
+    JOIN_CHANNEL_IS_FAILED = 'JOIN_CHANNEL_IS_FAILED'
 
 
 class StripeConnectStatus(Enum):

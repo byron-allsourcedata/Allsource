@@ -109,7 +109,7 @@ class OmnisendIntegrationService:
             message_body=message)
         rabbitmq_connection.close()
         
-    async def process_data_sync(self, five_x_five_user, user_integration, data_sync):    
+    async def process_data_sync(self, five_x_five_user, user_integration, data_sync, lead_user):    
         profile = self.__create_profile(five_x_five_user, user_integration.access_token, data_sync.data_map)
         
         if profile == ProccessDataSyncResult.AUTHENTICATION_FAILED.value or profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:

@@ -120,7 +120,8 @@ class IntegrationService:
                                                       self.client)
         self.slack = SlackService(self.user_persistence,
                                 self.integration_persistence,
-                                self.integrations_user_sync_persistence
+                                self.integrations_user_sync_persistence,
+                                self.lead_persistence
                                 )
         self.zapier = ZapierIntegrationService(self.lead_persistence, self.domain_persistence, self.integrations_user_sync_persistence, self.integration_persistence, self.client)
 

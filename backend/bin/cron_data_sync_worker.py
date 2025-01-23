@@ -125,7 +125,7 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
         lead_user, five_x_five_user, user_integration, integration_data_sync = get_lead_attributes(session, lead_users_id, data_sync_id)
         
         if service:
-            result = await service.process_data_sync(five_x_five_user, user_integration, integration_data_sync)
+            result = await service.process_data_sync(five_x_five_user, user_integration, integration_data_sync, lead_user)
             import_status = DataSyncImportedStatus.SENT.value
             match result:
                 case ProccessDataSyncResult.INCORRECT_FORMAT.value:
