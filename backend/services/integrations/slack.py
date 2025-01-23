@@ -188,7 +188,7 @@ class SlackService:
                 channels = [
                     {
                         'id': channel["id"],
-                        'channel_name': channel["name"]
+                        'name': channel["name"]
                     }
                     for channel in channels_data
                 ]

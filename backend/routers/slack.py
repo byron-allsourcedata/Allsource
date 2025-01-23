@@ -31,5 +31,5 @@ async def get_channels(slack_create_List_request: SlackCreateListRequest,
                        user=Depends(check_user_authorization),
                        domain = Depends(check_pixel_install_domain),
                        slack_service: SlackService = Depends(get_slack_service)):
-    return slack_service.create_channel(domain_id = domain.id, channel_name = slack_create_List_request.channel_name, is_private = slack_create_List_request.is_private)
+    return slack_service.create_channel(domain_id = domain.id, channel_name = slack_create_List_request.name, is_private = slack_create_List_request.is_private)
 
