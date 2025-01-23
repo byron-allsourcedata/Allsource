@@ -22,7 +22,7 @@ interface RewardData {
     number_of_accounts: number;
     partner_id: number;
     reward_amount: string;
-    reward_approved: string;
+    plan_amount: string;
     join_date: Date;
     reward_payout_date: Date;
     reward_status: string;
@@ -75,15 +75,6 @@ const getStatusStyle = (status: any) => {
     }
 };
 
-const tableHeaders = [
-    { key: 'account_name', label: 'Account name', sortable: false },
-    { key: 'email', label: 'Email', sortable: false },
-    { key: 'join_date', label: 'Join date', sortable: true },
-    { key: 'plan_amount', label: 'Plan amount', sortable: false },
-    { key: 'reward_amount', label: 'Payout amount', sortable: false },
-    { key: 'reward_status', label: 'Payout status', sortable: false },
-    { key: 'reward_payout_date', label: 'Payout date', sortable: true },
-];
 
 const MonthDetails: React.FC<MonthDetailsProps> = ({ partner_id, isMaster, open, onBack, selectedMonth, onPartnerClick, selectedYear }) => {
     const [page, setPage] = useState(0);
@@ -91,18 +82,33 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ partner_id, isMaster, open,
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalCount, setTotalCount] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
+    const [partnerTab, setPartnerTab] = useState(false);
+    const [rewardType, setRewardType] = useState("partner");
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
     const [data, setData] = useState<RewardData[] | []>([]);
-    const [search, setSearch] = useState("");
     const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
+        if (newIndex == 1) {
+            setPartnerTab(true)
+            setRewardType("master_partner")
+        }
+        else {
+            setPartnerTab(false)
+            setRewardType("partner")
+        }
         setTabIndex(newIndex);
     };
 
+    const tableHeaders = [
+        { key: 'account_name', label: 'Account name', sortable: false },
+        { key: 'email', label: 'Email', sortable: false },
+        { key: 'join_date', label: 'Join date', sortable: true },
+        { key: 'plan_amount', label: partnerTab ? 'Partner reward' : 'Plan amount', sortable: false },
+        { key: 'reward_amount', label: 'Payout amount', sortable: false },
+        { key: 'reward_status', label: 'Payout status', sortable: false },
+        { key: 'reward_payout_date', label: 'Payout date', sortable: true },
+    ];
 
-    const handleSearchChange = (event: any) => {
-        setSearch(event.target.value);
-    };
 
 
     const handlePageChange = (event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
@@ -125,7 +131,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ partner_id, isMaster, open,
         if (open) {
             fetchRewardData();
         }
-    }, [open]);
+    }, [open, tabIndex]);
 
     const fetchRewardData = async () => {
         try {
@@ -143,15 +149,14 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ partner_id, isMaster, open,
                 params: {
                     year: selectedYear,
                     month: selectedMonthNumber,
-                    partner_id
+                    partner_id,
+                    reward_type: rewardType
                 },
             });
-            console.log({response})
             const rewards: RewardData[] = response.data.map((reward: any) => {
-                console.log(typeof reward.join_date)
                 let isAutoPayoutDate = false;
-                const rewardPayoutDate = reward.reward_payout_date
-                    ? new Date(reward.reward_payout_date)
+                const rewardPayoutDate = reward.payout_date
+                    ? new Date(reward.payout_date)
                     : (() => {
                         isAutoPayoutDate = true;
                         const currentDate = new Date();
@@ -400,11 +405,11 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ partner_id, isMaster, open,
                                                 </TableCell>
 
                                                 <TableCell className='table-data' sx={partnersStyle.tableBodyColumn}>
-                                                    {item.reward_amount}
+                                                    {item.plan_amount}
                                                 </TableCell>
 
                                                 <TableCell className='table-data' sx={partnersStyle.tableBodyColumn}>
-                                                    {item.reward_approved}
+                                                    {item.reward_amount}
                                                 </TableCell>
 
                                                 <TableCell sx={{ ...partnersStyle.tableColumn, textAlign: 'center' }}>
@@ -423,14 +428,23 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ partner_id, isMaster, open,
                                                     </Typography>
                                                 </TableCell>
 
-                                                <TableCell className="table-data" sx={partnersStyle.tableBodyColumn}>
-                                                    {item.is_auto_payout_date ? (
-                                                        <Typography className="table-data" sx={{ fontStyle: "italic", color: "gray" }}>
-                                                            Would be paid on {dayjs(item.reward_payout_date).format('MMM D, YYYY')}
+                                                <TableCell className="table-data" sx={partnersStyle.tableBodyColumn}>                                                
+                                                    {item.is_auto_payout_date ? 
+                                                        <>
+                                                        <Typography component="div" sx={{
+                                                            width: "100px",
+                                                            fontFamily: 'Roboto',
+                                                            fontSize: '10px',
+                                                            fontWeight: '400',
+                                                            lineHeight: '14px'
+                                                            }}>
+                                                            Would be paid on
                                                         </Typography>
-                                                    ) : (
+                                                        {dayjs(item.reward_payout_date).format('MMM D, YYYY')}
+                                                        </>
+                                                    : 
                                                         dayjs(item.reward_payout_date).format('MMM D, YYYY') || '--'
-                                                    )}
+                                                    }
                                                 </TableCell>
 
                                             

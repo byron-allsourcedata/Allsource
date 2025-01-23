@@ -137,7 +137,6 @@ class PayoutsService:
                         'reward_amount': reward_amount,
                         'reward_approved': rewards_approved,
                         'reward_payout_date': payout_date_formatted,
-                        'status': "paid",
                         'reward_status': self.check_pending_referral_payouts(referral_payouts_for_partner),
                         'is_payment_active': self.check_payment_active_payouts(referral_payouts_for_partner)
                     })
@@ -170,6 +169,7 @@ class PayoutsService:
                 'join_date': referral_payout.created_at.strftime('%Y-%m-%d') if referral_payout.created_at else None,
                 'plan_amount': referral_payout.plan_amount,
                 'reward_amount': referral_payout.reward_amount,
+                'status': referral_payout.status,
                 'payout_date': referral_payout.paid_at.strftime('%Y-%m-%d') if referral_payout.paid_at else None,
                 'referral_link': referral_link,
                 'comment': referral_payout.comment,

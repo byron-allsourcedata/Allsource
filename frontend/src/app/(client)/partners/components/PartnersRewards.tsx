@@ -119,6 +119,7 @@ const PartnersRewards: React.FC<RewardProps> = ({ isMaster, partnerId, loading, 
                                 fontWeight: 400,
                                 zIndex: 0,
                                 color: "rgba(17, 17, 19, 1)",
+                                '@media (max-width: 360px)': { width: '100%' }
                             }}
                             MenuProps={{
                                 PaperProps: { style: { maxHeight: 200, zIndex: 100 } },
@@ -247,7 +248,7 @@ const PartnersRewards: React.FC<RewardProps> = ({ isMaster, partnerId, loading, 
                     >
                       <Box>
                         <Typography variant="body2" className="table-heading">
-                          Total Rewards
+                          Total Payouts
                         </Typography>
                         <Typography variant="subtitle1" className="table-data">
                           {data.total_rewards}
@@ -259,19 +260,7 @@ const PartnersRewards: React.FC<RewardProps> = ({ isMaster, partnerId, loading, 
                           className="table-heading"
                           sx={{ textAlign: "left" }}
                         >
-                          Reward Approved
-                        </Typography>
-                        <Typography variant="subtitle1" className="table-data">
-                          {data.rewards_approved}
-                        </Typography>
-                      </Box>
-                      <Box>
-                        <Typography
-                          variant="body2"
-                          className="table-heading"
-                          sx={{ textAlign: "left" }}
-                        >
-                          Rewards paid
+                          Payouts paid
                         </Typography>
                         <Typography variant="subtitle1" className="table-data">
                           {data.rewards_paid}
@@ -293,7 +282,7 @@ const PartnersRewards: React.FC<RewardProps> = ({ isMaster, partnerId, loading, 
                     >
                       <Box>
                         <Typography variant="body2" className="table-heading">
-                          No. of accounts
+                          No. of invites
                         </Typography>
                         <Typography variant="subtitle1" className="table-data">
                           {data.count_accounts}
