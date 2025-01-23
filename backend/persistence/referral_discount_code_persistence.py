@@ -32,9 +32,3 @@ class ReferralDiscountCodesPersistence:
         
         self.db.add(referral_user)
         self.db.commit()
-
-    def verify_user_relationship(self, parent_id: int, user_id: int) -> bool:
-        return self.db.query(ReferralUser).filter(
-            ReferralUser.parent_user_id == parent_id,
-            ReferralUser.user_id == user_id
-        ).first() is not None

@@ -170,12 +170,13 @@ def get_stripe_service():
 
 
 def get_referral_service(
-        referral_persistence: ReferralDiscountCodesPersistence = Depends(get_referral_persistence_service),
+        referral_persistence_discount_code: ReferralDiscountCodesPersistence = Depends(get_referral_persistence_service),
         user_persistence: UserPersistence = Depends(get_user_persistence_service),
         stripe_service: StripeService = Depends(get_stripe_service),
-        referral_payouts_persistence: ReferralPayoutsPersistence = Depends(get_referral_payouts_persistence)):
-    return ReferralService(referral_persistence_service=referral_persistence, user_persistence=user_persistence,
-                           stripe_service=stripe_service, referral_payouts_persistence=referral_payouts_persistence)
+        referral_payouts_persistence: ReferralPayoutsPersistence = Depends(get_referral_payouts_persistence),
+        referral_user_persistence: ReferralUserPersistence = Depends(get_referral_user_persistence)):
+    return ReferralService(referral_persistence_discount_code_service=referral_persistence_discount_code, user_persistence=user_persistence,
+                           stripe_service=stripe_service, referral_payouts_persistence=referral_payouts_persistence, referral_persistence_service=referral_user_persistence)
 
 
 def get_subscription_service(db: Session = Depends(get_db),
