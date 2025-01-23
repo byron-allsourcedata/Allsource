@@ -85,6 +85,8 @@ class SlackService:
             raise ValueError(f"Failed to decode state: {e}")
 
     def slack_oauth_callback(self, code: str, state):
+        if not state:
+            return {'status': 'State not found'}
         state = self.decode_state(state)
         user_id = state.get('user_id')
         domain_id = state.get('domain_id')
@@ -101,11 +103,11 @@ class SlackService:
             user = self.user_persistence.get_user_by_id(user_id)
             if user:
                 self.save_integration(domain_id, slack_bot_token, user)
-                return {"message": "User authenticated and saved!", "user_id": slack_user_id}
+                return {'status': 'SUCCESS', 'user_id': user_id}
             else:
-                raise SlackApiError(status_code=404, detail="User not found")
+                return {'status': "User not found"}
         else:
-            raise SlackApiError(status_code=400, detail="OAuth failed")
+            return {'status': "OAuth failed"}
 
     def create_channel(self, domain_id, channel_name, is_private=False):
         user_integration = self.get_credential(domain_id)
