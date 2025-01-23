@@ -370,7 +370,7 @@ const Accounts: React.FC = () => {
                                             setPartnerName(null)
                                             setPaymentHistoryPage(false)
                                         }}
-                                        sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "#808080", cursor: "pointer"}}>
+                                        sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "#808080", cursor: "pointer", zIndex: 1000}}>
                                             Account {partnerName ? `- ${partnerName}` : ""}
                                         </Typography>
                                         <NavigateNextIcon width={16}/>
@@ -410,7 +410,13 @@ const Accounts: React.FC = () => {
                                                         id="input-with-icon-textfield"
                                                         placeholder="Search by account name, emails"
                                                         value={search}
-                                                        onChange={handleSearchChange}
+                                                        onChange={(e) => {
+                                                            const value = e.target.value;
+                                                            handleSearchChange(e);
+                                                            if (value === "") {
+                                                              fetchRules();
+                                                            }
+                                                          }}
                                                         onKeyDown={(e) => {
                                                             if (e.key === 'Enter') {
                                                                 fetchRules();
@@ -642,6 +648,7 @@ const Accounts: React.FC = () => {
                                                                                             width: '100%', maxWidth: 360}}
                                                                                         >
                                                                                         <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
+                                                                                            handleCloseMenu()
                                                                                             setPaymentHistoryPage(true)
                                                                                             setPartnerName(data.full_name)
                                                                                         }}>

@@ -1,9 +1,7 @@
 import logging
 from urllib.parse import unquote
-from models.partners_users_invitation import ParntersUsersInvitation
 from persistence.user_persistence import UserPersistence
 from persistence.partners_persistence import PartnersPersistence
-from persistence.partners_invations_persistence import ParntersInvitationsPersistence
 from schemas.accounts import AccountResponse, AccountsObjectResponse, AccountUserData
 from datetime import datetime
 from persistence.referral_user import ReferralUserPersistence
@@ -44,10 +42,9 @@ class AccountsService:
         return {"items": accounts, "totalCount": total_count}
     
     def get_partner_by_id_accounts(self, id, search, start_date, end_date, page, rowsPerPage, order_by, order):
-        partner = self.partner_persistence.get_asset_by_id(id)
+        partner = self.partner_persistence.get_partner_by_id(id)
         return self.get_partner_accounts(partner.user_id, search, start_date, end_date, page, rowsPerPage, order_by, order)
 
-    
     
     def get_admin_accounts(self, search, start_date, end_date, page, rows_per_page, order_by, order):
         offset = page * rows_per_page
