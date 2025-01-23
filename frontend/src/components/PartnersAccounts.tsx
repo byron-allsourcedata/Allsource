@@ -11,6 +11,7 @@ import CalendarPopup from "./CustomCalendar";
 import { DateRangeIcon } from "@mui/x-date-pickers/icons";
 import SearchIcon from '@mui/icons-material/Search';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
+import { useRouter } from "next/navigation";
 import { useUser } from '@/context/UserContext';
 import { Solitreo } from "next/font/google";
 
@@ -93,7 +94,9 @@ interface AccountData {
 
 const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFromMain, id: partnerId, fromAdmin, masterData, setMasterData, loading, setLoading, tabIndex, handleTabChange }) => {
     const [accounts, setAccounts] = useState<AccountData[]>([]);
+    const router = useRouter();
     const [page, setPage] = useState(0);
+    const {setBackButton, triggerBackButton} = useUser();
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalCount, setTotalCount] = useState(0);
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
@@ -252,14 +255,32 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
 
     const handleLogin = async (user_account_id: number) => {
         try {
-            const response = await axiosInstance.get('/referral/generate-token', {params: {
-                user_account_id: user_account_id
-            }},)
+            setLoading(true)
+            const response = await axiosInstance.get('/referral/generate-token', {
+                params: {
+                    user_account_id: user_account_id
+            }})
+            if (response.status === 200){
+                const current_token = localStorage.getItem('token')
+                const current_domain = sessionStorage.getItem('current_domain')
+                sessionStorage.setItem('parent_domain', current_domain || '')
+                if (current_token){
+                    setBackButton(true)
+                    triggerBackButton()
+                    localStorage.setItem('parent_token', current_token)
+                    localStorage.setItem('token', response.data.token)
+                    sessionStorage.removeItem('current_domain')
+                    sessionStorage.removeItem('me')
+                    router.push('/dashboard')
+                    router.refresh()
+                }
+            }
         }
         catch{
-
         }
-        finally{}
+        finally{
+            setLoading(false)
+        }
     }
 
 
@@ -543,7 +564,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                                             }
                                         }}>
                                             <TableCell className='table-data sticky-cell'
-                                            onClick={() => handleLogin()}
+                                            onClick={() => handleLogin(data.id)}
                                             sx={{
                                                 ...suppressionsStyles.tableBodyColumn,
                                                 paddingLeft: "16px",

@@ -1,5 +1,5 @@
 'use client';
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { fetchUserData } from '../services/meService';
 
 interface UserContextType {
@@ -11,7 +11,11 @@ interface UserContextType {
   isTrialPending: boolean | false;
   resetUserData: () => void;
   domains: any[];
-  partner: boolean
+  partner: boolean;
+  backButton: boolean;
+  setBackButton: (value: boolean) => void;
+  triggerBackButton: () => void;
+  
 }
 
 interface UserProviderProps {
@@ -29,6 +33,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [percent_steps, setPercent] = useState<number | 0>(0);
   const [isTrialPending, setIsTrialPending] = useState<boolean>(false);
   const [partner, setIsPartner] = useState<boolean>(false);
+  const [backButton, setBackButton] = useState(false);
   const [domains, setDomans] = useState<[]>([]);
     const resetUserData = () => {
       setEmail(null);
@@ -37,8 +42,13 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       setDaysDifference(null);
       setPercent(0);
       setHasFetched(false);
+
       setDomans([]);
     };
+
+    const triggerBackButton = useCallback(() => {
+      setBackButton(true);
+    }, []);
 
     useEffect(() => {
       const token = localStorage.getItem('token');
@@ -96,7 +106,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     
 
   return (
-    <UserContext.Provider value={{ email, full_name, website, daysDifference, percent_steps, isTrialPending, resetUserData, domains, partner }}>
+    <UserContext.Provider value={{ email, full_name, website, daysDifference, percent_steps, isTrialPending, resetUserData, domains, partner, setBackButton, triggerBackButton, backButton }}>
       {children}
     </UserContext.Provider>
   );

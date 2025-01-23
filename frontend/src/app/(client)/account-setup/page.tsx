@@ -28,6 +28,7 @@ const AccountSetup = () => {
   const [selectedEmployees, setSelectedEmployees] = useState("");
   const [selectedVisits, setSelectedVisits] = useState("");
   const [selectedRoles, setSelectedRoles] = useState("");
+  const { setBackButton, backButton } = useUser()
   const [errors, setErrors] = useState({
     websiteLink: "",
     organizationName: "",
@@ -35,6 +36,7 @@ const AccountSetup = () => {
     selectedVisits: "",
   });
   const router = useRouter();
+  const [visibleButton, setVisibleButton] = useState(false)
   const [fullName, setFullName] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
 
@@ -201,6 +203,36 @@ const AccountSetup = () => {
     }
   };
 
+  useEffect(() => {
+    if (backButton) {
+      setVisibleButton(true);
+    } else {
+      setVisibleButton(false)
+    }
+  }, [backButton, setBackButton]);
+
+  const handleReturnToMain = async () => {
+    const parent_token = localStorage.getItem('parent_token');
+    const parent_domain = sessionStorage.getItem('parent_domain')
+    if (parent_token) {
+      await new Promise<void>((resolve) => {
+        sessionStorage.clear
+        localStorage.removeItem('parent_token');
+        localStorage.setItem('token', parent_token);
+        sessionStorage.setItem('current_domain', parent_domain || '')
+        setBackButton(false)
+
+        setTimeout(() => {
+          resolve();
+        }, 0);
+      });
+
+
+    }
+
+    router.push("/partners");
+  };
+
   const handleSubmit = async () => {
     const newErrors = {
       websiteLink: validateField(websiteLink, "website"),
@@ -354,6 +386,24 @@ const AccountSetup = () => {
           <Box sx={styles.logo}>
             <Image src="/logo.svg" alt="logo" height={30} width={50} />
           </Box>
+          {visibleButton && (
+            <Button
+              onClick={handleReturnToMain}
+              sx={{
+                fontFamily: "Nunito Sans",
+                fontSize: "14px",
+                fontWeight: 600,
+                lineHeight: "19.1px",
+                textAlign: "left",
+                textDecoration: "underline",
+                textTransform: 'none',
+                color: "rgba(80, 82, 178, 1)",
+                marginRight: "1.5rem",
+              }}
+            >
+              Return to main
+            </Button>
+          )}
           <Button
             aria-controls={open ? "profile-menu" : undefined}
             aria-haspopup="true"
@@ -677,7 +727,7 @@ const AccountSetup = () => {
                 }
                 onChange={domainLink ? undefined : handleWebsiteLink}
                 onFocus={domainLink ? undefined : handleFocus}
-                onBlur={domainLink ? undefined : handleBlur} 
+                onBlur={domainLink ? undefined : handleBlur}
                 disabled={!!domainLink}
                 error={!!errors.websiteLink}
                 helperText={errors.websiteLink}
