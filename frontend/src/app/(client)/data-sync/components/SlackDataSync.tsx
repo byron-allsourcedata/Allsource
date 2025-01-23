@@ -596,17 +596,30 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
     };
 
     const handleNewListChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value
-        if (slackList?.some(list => list.name === value)) {
-            setListNameError(true)
-            setListNameErrorMessage('List name must be unique')
+        const value = e.target.value;
+
+        const isValid = /^[а-яА-Яa-zA-Z0-9-_]*$/.test(value);
+
+        if (isValid) {
+            if (slackList?.some(list => list.name === value)) {
+                setListNameError(true);
+                setListNameErrorMessage('List name must be unique');
+            } else {
+                setListNameError(false);
+                setListNameErrorMessage('');
+            }
+            setNewListName(value);
+        } else {
+            setListNameError(true);
+            setListNameErrorMessage('Only alphanumeric characters are allowed and no spaces.');
         }
-        setNewListName(value)
+
         if (!value) {
-            setListNameError(true)
-            setListNameErrorMessage('List name is required')
+            setListNameError(true);
+            setListNameErrorMessage('List name is required');
         }
-    }
+    };
+
 
     const handleNextTab = async () => {
 
@@ -692,7 +705,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                     }
                 }}
             >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                     <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
                         Connect to Slack
                     </Typography>
@@ -709,7 +722,6 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                         </IconButton>
                     </Box>
                 </Box>
-                <Divider />
                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
                     <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                         <TabContext value={value}>
@@ -1014,7 +1026,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                                                     }}
                                                                 >
                                                                     <TextField
-                                                                        label="List Name"
+                                                                        label="Channel Name"
                                                                         variant="outlined"
                                                                         value={newListName}
                                                                         onChange={handleNewListChange}
@@ -1497,7 +1509,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                         {/* Button based on selected tab */}
 
                     </Box>
-                    <Box sx={{ px: 2, py: 3.5, width: '100%', border: '1px solid #e4e4e4' }}>
+                    <Box sx={{ px: 2, py: 2, width: '100%', borderTop: '1px solid #e4e4e4' }}>
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
 
                             {getButton(value)}
