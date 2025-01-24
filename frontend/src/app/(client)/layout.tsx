@@ -19,7 +19,7 @@ interface ClientLayoutProps {
 
 export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   const pathname = usePathname(); // Get the current path
-  const excludedPaths = ['/signin', '/signup', '/email-verificate', '/account-setup', '/reset-password', '/reset-password/confirm-send', '/choose-plan', '/authentication/verify-token', '/admin/users', '/admin/assets', '/admin/partners', '/forgot-password', '/admin', '/thanks-installed-app'];
+  const excludedPaths = ['/signup', '/email-verificate', '/account-setup', '/reset-password', '/reset-password/confirm-send', '/choose-plan', '/authentication/verify-token', '/admin/users', '/admin/assets', '/admin/partners', '/forgot-password', '/admin', '/thanks-installed-app'];
   const isAuthenticated = !excludedPaths.includes(pathname);
   const [showSlider, setSlider] = useState(false);
   const { newNotification } = useSSE();

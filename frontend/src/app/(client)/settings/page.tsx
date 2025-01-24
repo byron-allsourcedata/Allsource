@@ -56,7 +56,7 @@ const Settings: React.FC = () => {
                 right: '16px',
                 left: '170px',
                 background: '#fff',
-                zIndex: '1200',
+                zIndex: '10',
                 paddingLeft: '30px',
                 paddingRight: '24px',
                 mx: '-24px',
