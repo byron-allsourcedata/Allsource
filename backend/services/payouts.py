@@ -137,6 +137,7 @@ class PayoutsService:
                         'reward_amount': reward_amount,
                         'reward_approved': rewards_approved,
                         'reward_payout_date': payout_date_formatted,
+                        'status': "paid",
                         'reward_status': self.check_pending_referral_payouts(referral_payouts_for_partner),
                         'is_payment_active': self.check_payment_active_payouts(referral_payouts_for_partner)
                     })
