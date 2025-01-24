@@ -19,8 +19,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import InvitePartnerPopup from "@/components/InvitePartnerPopup"
 import EnablePartnerPopup from "@/components/EnablePartnerPopup"
 import { showErrorToast, showToast } from '@/components/ToastNotification';
-import PartnersAccounts from "@/components/PartnersAccounts";
-import NavigateNextIcon from '@mui/icons-material/NavigateNext';
+import { useRouter } from "next/navigation";
 
 interface PartnerData {
     id: number;
@@ -100,6 +99,7 @@ type CombinedPartnerData = NewPartner & EnabledPartner;
 
 
 const PartnersMain: React.FC<PartnersProps> = ({setLoading, masterId, appliedDates}) => {
+    const router = useRouter();
     const [partners, setPartners] = useState<PartnerData[]>([]);
     const [partnerStates, setPartnerStates] = useState<PartnerState[]>([])
     const [page, setPage] = useState(0);
@@ -260,6 +260,37 @@ const PartnersMain: React.FC<PartnersProps> = ({setLoading, masterId, appliedDat
         );
     };
 
+    const handleLogin = async (user_account_id: number) => {
+        try {
+            setLoading(true)
+            const response = await axiosInstance.get('/referral/generate-token', {
+                params: {
+                    user_account_id: user_account_id
+            }})
+            if (response.status === 200){
+                const current_token = localStorage.getItem('token')
+                const current_domain = sessionStorage.getItem('current_domain')
+                sessionStorage.setItem('parent_domain', current_domain || '')
+                if (current_token){
+                    setBackButton(true)
+                    triggerBackButton()
+                    localStorage.setItem('parent_token', current_token)
+                    localStorage.setItem('token', response.data.token)
+                    sessionStorage.removeItem('current_domain')
+                    sessionStorage.removeItem('me')
+                    await fetchUserData()
+                    router.push('/dashboard')
+                    router.refresh()
+                }
+            }
+        }
+        catch{
+        }
+        finally{
+            setLoading(false)
+        }
+    }
+
 
     const Toggle: React.FC<{isActive: boolean; onToggle: () => void}> = ({ isActive, onToggle  }) => {
         return (
@@ -414,24 +445,49 @@ const PartnersMain: React.FC<PartnersProps> = ({setLoading, masterId, appliedDat
                                                     }
                                                 },
                                             }}>
-                                                <TableCell className='sticky-cell' 
+                                                <TableCell className='table-data sticky-cell'
+                                            onClick={() => handleLogin(data.id)}
+                                            sx={{
+                                                ...suppressionsStyles.tableBodyColumn,
+                                                paddingLeft: "16px",
+                                                position: 'sticky',
+                                                left: 0,
+                                                zIndex: 1,
+                                                cursor: 'pointer',
+                                                backgroundColor: '#fff',
+                                                "&:hover .icon-button": {
+                                                            display: "flex", // Показываем кнопку при наведении
+                                                        },
+                                            }}>
+
+                                                <Box
                                                     sx={{
-                                                        ...suppressionsStyles.tableBodyColumn, 
-                                                        paddingLeft: "16px",
-                                                        position: 'sticky',
-                                                        left: 0,
-                                                        zIndex: 1, 
-                                                        background: "#fff"}}
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "space-between",
+                                                        color: "rgba(80, 82, 178, 1)",
+                                                        gap: 0,
+                                                        "&:hover .icon-button": {
+                                                            display: "flex",
+                                                        },
+                                                    }}
+                                                >
+                                                    {data.company_name}
+                                                    {data.status !== 'Invitation sent' && 
+                                                    <IconButton
+                                                        className="icon-button"
+                                                        sx={{
+                                                            display: "none",
+                                                            ":hover": { backgroundColor: "transparent" },
+                                                            "@media (max-width: 600px)": {
+                                                                display: "flex",
+                                                            },
+                                                        }}
                                                     >
-                                                    <Box sx={{display: "flex", alignItems: "center", justifyContent: "space-between", color: 'rgba(80, 82, 178, 1)'}}>
-                                                        {data.partner_name}
-                                                        <IconButton
-                                                            className="icon-button"
-                                                            sx={{ display: 'none', ':hover': {backgroundColor: "transparent"}}} >
-                                                            <Image src='/outband.svg' alt="outband" width={15.98} height={16}/>
-                                                        </IconButton>
-                                                    </Box>
-                                                </TableCell>
+                                                        <Image src="/outband.svg" alt="outband" width={15.98} height={16} />
+                                                    </IconButton>}
+                                                </Box>
+                                            </TableCell>
 
                                                 <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
                                                     {data.email}
@@ -548,3 +604,17 @@ const PartnersMain: React.FC<PartnersProps> = ({setLoading, masterId, appliedDat
 };
 
 export default PartnersMain;
+
+function setBackButton(arg0: boolean) {
+    throw new Error("Function not implemented.");
+}
+
+
+function triggerBackButton() {
+    throw new Error("Function not implemented.");
+}
+
+
+function fetchUserData() {
+    throw new Error("Function not implemented.");
+}

@@ -229,10 +229,11 @@ const Leads: React.FC = () => {
 
 
             // Processing "Date Calendly"
+            const timezoneOffsetInHours = new Date().getTimezoneOffset() / 60;
             const startEpoch = appliedDates.start
                 ? Math.floor(new Date(appliedDates.start.toISOString()).getTime() / 1000)
                 : null;
-
+            
             const normalDate = startEpoch 
             ? new Date(startEpoch * 1000).toLocaleString('en-US', { timeZone: 'UTC' }) 
             : null;
@@ -248,7 +249,7 @@ const Leads: React.FC = () => {
 
             let url = `/leads?page=${page + 1}&per_page=${rowsPerPage}`;
             if (startEpoch !== null && endEpoch !== null) {
-                url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
+                url += `&from_date=${startEpoch}&to_date=${endEpoch}&timezone_offset=${timezoneOffsetInHours}`;
             }
             if (sortBy) {
                 url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;

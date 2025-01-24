@@ -1,4 +1,4 @@
-import axiosInterceptorInstance from '../axios/axiosInterceptorInstance';
+import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 
 
 export const fetchUserData = async () => {
@@ -27,6 +27,10 @@ export const fetchUserData = async () => {
           price: userPlan.price,
           currency: userPlan.currency,
         }));
+
+        if (!currentDomain){
+          sessionStorage.setItem('current_domain', responseData.user_domains[0].domain)
+        }
         
         return {
           email: userInfo.email,
