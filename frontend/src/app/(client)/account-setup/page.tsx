@@ -81,6 +81,33 @@ const AccountSetup = () => {
   const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
+    const parent_token = localStorage.getItem("parent_token");
+    setVisibleButton(!!parent_token);
+  }, []);
+
+  const handleReturnToMain = async () => {
+    const parent_token = localStorage.getItem('parent_token');
+    const parent_domain = sessionStorage.getItem('parent_domain')
+    if (parent_token) {
+      await new Promise<void>((resolve) => {
+        sessionStorage.clear
+        localStorage.removeItem('parent_token');
+        localStorage.setItem('token', parent_token);
+        sessionStorage.setItem('current_domain', parent_domain || '')
+        fetchUserData()
+        setBackButton(false)
+        setTimeout(() => {
+          resolve();
+        }, 0);
+      });
+
+
+    }
+
+    router.push("/partners");
+  };
+
+  useEffect(() => {
     const fetchCompanyInfo = async () => {
       try {
         const response = await axiosInterceptorInstance.get("/company-info");
@@ -195,43 +222,23 @@ const AccountSetup = () => {
         const sanitizedValue = value.replace(/^www\./, '');
         const websiteRe = /^(https?:\/\/)?([\da-z.-]+)\.([a-z]{2,20})([/\w .-]*)*\/?$/i;
         return websiteRe.test(sanitizedValue) ? "" : "Invalid website URL";
-      case "organizationName":
-        const orgName = value.trim();
-        return orgName ? "" : "Organization name is required";
+        case "organizationName":
+          const orgName = value.trim();
+        
+          const hasLetter = /[a-zA-Zа-яА-Я0-9]/.test(orgName);
+        
+          if (!orgName) {
+            return "Organization name is required";
+          } else if (!hasLetter) {
+            return "Organization name must contain at least one letter";
+          }
+        
+          return "";
       default:
         return "";
     }
   };
 
-  useEffect(() => {
-    if (backButton) {
-      setVisibleButton(true);
-    } else {
-      setVisibleButton(false)
-    }
-  }, [backButton, setBackButton]);
-
-  const handleReturnToMain = async () => {
-    const parent_token = localStorage.getItem('parent_token');
-    const parent_domain = sessionStorage.getItem('parent_domain')
-    if (parent_token) {
-      await new Promise<void>((resolve) => {
-        sessionStorage.clear
-        localStorage.removeItem('parent_token');
-        localStorage.setItem('token', parent_token);
-        sessionStorage.setItem('current_domain', parent_domain || '')
-        setBackButton(false)
-
-        setTimeout(() => {
-          resolve();
-        }, 0);
-      });
-
-
-    }
-
-    router.push("/partners");
-  };
 
   const handleSubmit = async () => {
     const newErrors = {
@@ -288,28 +295,32 @@ const AccountSetup = () => {
 
   const handleWebsiteLink = (event: { target: { value: string } }) => {
     let input = event.target.value.trim();
-
-    const hasWWW = input.startsWith("www.");
-
-    const sanitizedInput = hasWWW ? input.replace(/^www\./, '') : input;
-
-    const domainPattern = /^[\w-]+\.[a-z]{2,}$/i;
-    const isValidDomain = domainPattern.test(sanitizedInput);
-
-    let finalInput = input;
-
-    if (isValidDomain) {
-      finalInput = hasWWW ? `https://www.${sanitizedInput}` : `https://${sanitizedInput}`;
+  
+    if (!input.startsWith("http://") && !input.startsWith("https://")) {
+      input = `https://${input}`;
     }
-
-    setWebsiteLink(finalInput);
-
-    const websiteError = validateField(input, "website");
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      websiteLink: websiteError,
-    }));
+  
+    try {
+      const url = new URL(input);
+  
+      const sanitizedInput = url.origin;
+  
+      setWebsiteLink(sanitizedInput);
+  
+      const websiteError = validateField(sanitizedInput, "website");
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        websiteLink: websiteError,
+      }));
+    } catch (error) {
+      setWebsiteLink(input);
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        websiteLink: "Invalid website URL",
+      }));
+    }
   };
+  
 
 
 
@@ -386,19 +397,22 @@ const AccountSetup = () => {
           <Box sx={styles.logo}>
             <Image src="/logo.svg" alt="logo" height={30} width={50} />
           </Box>
-          {visibleButton && (
+          {(visibleButton || backButton) && (
             <Button
               onClick={handleReturnToMain}
               sx={{
                 fontFamily: "Nunito Sans",
                 fontSize: "14px",
                 fontWeight: 600,
+                mb: 2,
+                ml: 12,
                 lineHeight: "19.1px",
                 textAlign: "left",
                 textDecoration: "underline",
                 textTransform: 'none',
                 color: "rgba(80, 82, 178, 1)",
-                marginRight: "1.5rem",
+                position: 'absolute',
+
               }}
             >
               Return to main
@@ -549,7 +563,7 @@ const AccountSetup = () => {
                 lineHeight: "normal !important",
                 padding: 0,
                 marginRight: 1.5,
-                marginLeft: 2.5,
+                marginLeft: (visibleButton || backButton) ? 0: 2.5,
                 color:
                   activeTab === 0
                     ? "#F45745"

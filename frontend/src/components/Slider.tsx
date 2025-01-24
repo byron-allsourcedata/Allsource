@@ -20,6 +20,7 @@ const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
   const [fullName, setFullName] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
   const [utmParams, setUtmParams] = useState<string | null>(null);
+  const [rootElement, setRootElement] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
     const meItem = typeof window !== 'undefined' ? sessionStorage.getItem('me') : null;
@@ -133,13 +134,17 @@ const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
     setShowSlider(isSliderOpened === 'true');
   }, [setShowSlider]);
 
-  if (!isPrefillLoaded && showSlider) {
-    return <CustomizedProgressBar />;
-  }
+  useEffect(() => {
+    const element = document.getElementById("calendly-popup-wrapper");
+    if (element) {
+      setRootElement(element);
+    }
+  }, []);
 
   return (
     <>
-      <Backdrop open={showSlider} onClick={handleClose} sx={{ zIndex: 1200, color: '#fff' }} />
+      <div id='calendly-popup-wrapper' className="book-call-button__wrapper" style={{ zIndex: 2000 }}> </div>
+      <Backdrop open={showSlider} onClick={handleClose} sx={{ zIndex: 100,color: '#fff' }} />
       <Drawer
         anchor="right"
         open={showSlider && isPrefillLoaded}
@@ -148,7 +153,7 @@ const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
           sx: {
             width: '45%',
             position: 'fixed',
-            zIndex: 1300,
+            
             top: 0,
             bottom: 0,
             '@media (max-width: 600px)': {
@@ -171,7 +176,6 @@ const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
           '@media (max-width: 600px)': { pl: 2, pr: 2 }
         }}>
           <img src="/slider-bookcall.png" alt="Setup" style={{ width: '40%', marginBottom: '3rem', marginTop: '2rem', }} />
-          <div id='calendly-popup-wrapper' className="book-call-button__wrapper" style={{ zIndex: 2000 }}> </div>
           {prefillData && prefillData.email ? (
             <>
               <Typography
@@ -312,7 +316,7 @@ const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
               </Box>
               </Box>
               <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'end', pb: 5 }}>
-                <Button onClick={handleClose} sx={{ width: '100%' }}>
+                <Button sx={{ width: '100%' }}>
                   <PopupButton
                     className="book-call-button"
                     styles={{

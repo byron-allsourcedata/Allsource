@@ -634,6 +634,9 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                             mb: 0,
                                             margin: 0,
                                             "&:before": { display: "none", borderBottom: 'none', margin: 0 },
+                                            '&.Mui-expanded': {
+                                                    margin: '0px',
+                                                },
                                         }}
                                     >
                                         <AccordionSummary
@@ -645,17 +648,17 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                                 )
                                             }
                                             sx={{
-                                                minHeight: '36px', // Убираем min-height
+                                                minHeight: '36px',
                                                 padding: 0,
                                                 margin: 0,
                                                 '&.Mui-expanded': {
-                                                    minHeight: '10px', // Убираем min-height для раскрытого состояния
+                                                    minHeight: '10px',
                                                 },
                                                 '& .MuiAccordionSummary-content': {
                                                     marginTop: '6px'
                                                 },
                                                 '& .MuiAccordionSummary-content.Mui-expanded': {
-                                                    marginTop: '6px', // Убираем отступы для раскрытого состояния
+                                                    marginTop: '6px',
                                                 },
                                             }}
                                         >
