@@ -238,7 +238,6 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                             </ListItemButton>
                                         </ListItem>)}
                                 {filteredIntegrations.some(integration => integration.service_name === 'shopify') &&
-                                {integrations.some(integration => integration.service_name === 'shopify') &&
                                     !integrationsCredentials.some(integration =>
                                         integration.service_name === 'wordpess' ||
                                         integration.service_name === 'big_commerce' ||
