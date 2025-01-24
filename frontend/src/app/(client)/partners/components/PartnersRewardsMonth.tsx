@@ -12,6 +12,8 @@ import { DateRangeIcon } from "@mui/x-date-pickers";
 import SearchIcon from '@mui/icons-material/Search';
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import CustomizedProgressBar from "@/components/ProgressBar";
+import CustomTooltip from "@/components/customToolTip";
+import SwapVertIcon from '@mui/icons-material/SwapVert';
 
 interface RewardData {
     month: string;
@@ -338,16 +340,26 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ partner_id, isMaster, open,
                                                 onClick={sortable ? () => handleSortRequest(key) : undefined}
                                                 style={{ cursor: sortable ? 'pointer' : 'default' }}
                                             >
-                                                <Box sx={{ display: 'flex', alignItems: 'center' }} style={key === "reward_status" ? { justifyContent: "center" } : {}}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }} style={key === "reward_status" ? { justifyContent: "center" } : {}}>
                                                     <Typography variant="body2" className='table-heading'>{label}</Typography>
-                                                    {sortable && orderBy === key && (
-                                                        <IconButton size="small" sx={{ ml: 1 }}>
-                                                            {order === 'asc' ? (
-                                                                <ArrowUpwardIcon fontSize="inherit" />
-                                                            ) : (
-                                                                <ArrowDownwardIcon fontSize="inherit" />
-                                                            )}
-                                                        </IconButton>
+                                                    {tabIndex === 1 && label === 'Partner reward' && <Box sx={{ "@media (max-width: 600px)": { display: 'none' } }}>
+                                                        <CustomTooltip title={"Collaborate with trusted partners to access exclusive resources and services that drive success."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/referral" />
+                                                    </Box>}
+                                                    {tabIndex === 1 && label === 'Payout amount' && <Box sx={{ "@media (max-width: 600px)": { display: 'none' } }}>
+                                                        <CustomTooltip title={"Collaborate with trusted partners to access exclusive resources and services that drive success."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/referral" />
+                                                    </Box>}
+                                                    {sortable && (
+                                                    <IconButton size="small" sx={{ ml: 1 }}>
+                                                        {orderBy === key ? (
+                                                        order === 'asc' ? (
+                                                            <ArrowUpwardIcon fontSize="inherit" />
+                                                        ) : (
+                                                            <ArrowDownwardIcon fontSize="inherit" />
+                                                        )
+                                                        ) : (
+                                                        <SwapVertIcon fontSize="inherit" />
+                                                        )}
+                                                    </IconButton>
                                                     )}
                                                 </Box>
                                             </TableCell>
