@@ -227,30 +227,6 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                                 }} />
                                             </ListItemButton>
                                         </ListItem>)}
-                                {integrations.some(integration => integration.service_name === 'zapier') && (
-                                    !integrationsCredentials.some(integration => integration.service_name === 'zapier')) && (
-                                        <ListItem sx={{
-                                            p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
-                                            '@media (max-width:600px)': {
-                                                flexBasis: 'calc(50% - 8px)'
-                                            }
-                                        }}>
-                                            <ListItemButton sx={{ p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center' }}>
-                                                <ListItemIcon sx={{ minWidth: 'auto' }}>
-                                                    <Image src="/zapier-icon.svg" alt="zapier" height={26} width={32} />
-                                                </ListItemIcon>
-                                                <ListItemText primary="Zapier" primaryTypographyProps={{
-                                                    sx: {
-                                                        fontFamily: "Nunito Sans",
-                                                        fontSize: "14px",
-                                                        color: "#4a4a4a",
-                                                        fontWeight: "500",
-                                                        lineHeight: "20px"
-                                                    }
-                                                }} />
-                                            </ListItemButton>
-                                        </ListItem>
-                                    )}
                                 {integrations.some(integration => integration.service_name === 'shopify') &&
                                     !integrationsCredentials.some(integration =>
                                         integration.service_name === 'wordpess' ||
