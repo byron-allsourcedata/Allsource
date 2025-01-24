@@ -3,10 +3,10 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Box, Button, Checkbox, FormControlLabel, FormHelperText, TextField, Typography, Link, IconButton, InputAdornment, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
-import axiosInstance from '../../../axios/axiosInterceptorInstance';
+import axiosInstance from '../../axios/axiosInterceptorInstance';
 import { AxiosError } from 'axios';
 import { signupStyles } from './signupStyles';
-import { showErrorToast } from '../../../components/ToastNotification';
+import { showErrorToast } from '../../components/ToastNotification';
 import { GoogleLogin } from '@react-oauth/google';
 import { fetchUserData } from '@/services/meService';
 import { useUser } from '@/context/UserContext';
@@ -98,7 +98,7 @@ const Signup: React.FC = () => {
       localStorage.setItem(UTM_STORAGE_KEY, JSON.stringify(utmParams));
     }
     if (slack_status){
-      showErrorToast(slack_status)
+      showErrorToast(slack_status);
     } 
   }, []);
 
