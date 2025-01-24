@@ -247,9 +247,9 @@ const Leads: React.FC = () => {
                 ? Math.floor(new Date(appliedDates.end.toISOString()).getTime() / 1000)
                 : null;
 
-            let url = `/leads?page=${page + 1}&per_page=${rowsPerPage}`;
+            let url = `/leads?page=${page + 1}&per_page=${rowsPerPage}&timezone_offset=${timezoneOffsetInHours}`;
             if (startEpoch !== null && endEpoch !== null) {
-                url += `&from_date=${startEpoch}&to_date=${endEpoch}&timezone_offset=${timezoneOffsetInHours}`;
+                url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
             }
             if (sortBy) {
                 url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
