@@ -229,7 +229,8 @@ const Leads: React.FC = () => {
 
 
             // Processing "Date Calendly"
-            const timezoneOffsetInHours = new Date().getTimezoneOffset() / 60;
+            const timezoneOffsetInHours = -new Date().getTimezoneOffset() / 60;
+            console.log(timezoneOffsetInHours)
             const startEpoch = appliedDates.start
                 ? Math.floor(new Date(appliedDates.start.toISOString()).getTime() / 1000)
                 : null;
