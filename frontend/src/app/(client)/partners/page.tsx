@@ -10,11 +10,11 @@ import dayjs from "dayjs";
 import Image from "next/image";
 import { useNotification } from '@/context/NotificationContext';
 import PartnersAccounts from "@/components/PartnersAccounts";
-import ReferralRewards from "@/app/(client)/referral/components/ReferralRewards";
 import PartnersAssets from "./components/PartnersAssets";
 import PartnersMain from "./components/PartnersMain";
 import CalendarPopup from "@/components/CustomCalendar";
 import PartnersOverview from "./components/PartnersOverview";
+import PartnersRewards from "./components/PartnersRewards";
 import InvitePartnerPopup from "@/components/InvitePartnerPopup"
 
 const centerContainerStyles = {
@@ -81,7 +81,7 @@ const Partners: React.FC = () => {
     const { hasNotification } = useNotification();
     const [email, setEmail] = useState('');
     const [commission, setCommission] = useState(0);
-    const [masterId, setMasterId] = useState(0)
+    const [id, setId] = useState(0)
     const [formPopupOpen, setFormPopupOpen] = useState(false);
     const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
     const isCalendarOpen = Boolean(calendarAnchorEl);
@@ -92,6 +92,7 @@ const Partners: React.FC = () => {
     const [tabIndex, setTabIndex] = useState(0);
     const [isMaster, setIsMaster] = useState<boolean | null>(null)
     const [loading, setLoading]  = useState(false);
+    const [rewardsOpen, setRewardsOpen]  = useState(false);
     const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -148,7 +149,7 @@ const Partners: React.FC = () => {
         }
     };
 
-    const updateOrAddAsset = (updatedPartner: PartnerData) => {
+    const updateOrAddPartner = (updatedPartner: PartnerData) => {
         let isNewPartner = false;
         setPartners((prevAccounts) => {
             const index = prevAccounts.findIndex((account) => account.id === updatedPartner.id);
@@ -174,7 +175,7 @@ const Partners: React.FC = () => {
             if(responseMe.status === 200) {
                 const masterPartner = responseMe.data.is_master
                 setIsMaster(masterPartner) 
-                setMasterId(responseMe.data.id)  
+                setId(responseMe.data.id)  
                 setCommission(responseMe.data.commission) 
             }
             else {
@@ -197,221 +198,228 @@ const Partners: React.FC = () => {
                 <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', position: 'fixed', top: hasNotification ? '10vw' : '4.25rem', left: '9.1rem', pl: '2rem', pt: '12px', pb: '16px', zIndex: 1200, backgroundColor: '#fff', justifyContent: 'space-between', width: '90%', ml: 0, "@media (max-width: 900px)": { left: 0, zIndex: 50 }, "@media (max-width: 600px)": { flexDirection: 'column', pl: '1.5rem', display: 'flex', alignItems: 'flex-start', zIndex: 50, width: '97%' }, "@media (max-width: 440px)": { flexDirection: 'column', pt: hasNotification ? '3rem' : '0.75rem', top: hasNotification ? '4.5rem' : '', zIndex: 50, justifyContent: 'flex-start' }, "@media (max-width: 400px)": { pt: hasNotification ? '4.25rem' : '', pb: '6px', } }}>
                 {loading && <CustomizedProgressBar/>}
 
-                    <Box sx={{ flexShrink: 0, display: 'flex', justifyContent: "space-between", flexDirection: 'row', alignItems: 'center', width: '15%', gap: 1, "@media (max-width: 900px)": { width: '20%' }, "@media (max-width: 600px)": { mb: 2, width: '97%' }, "@media (max-width: 440px)": { mb: 1 }, }}>
-                        <Box sx={{display: 'flex', justifyContent: "space-between", alignItems: 'center', gap: 1}}>
-                            <Typography className="first-sub-title">{isMaster ? "Master Partner" : "Partner"}</Typography>
-                            <Box sx={{ "@media (max-width: 600px)": { display: 'none' } }}><CustomTooltip title={"Collaborate with trusted partners to access exclusive resources and services that drive success."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/referral" /></Box>
-                        </Box>
-                        {tabIndex === 0 && <IconButton sx={{
-                            display: "none", cursor: "pointer", "@media (max-width: 600px)": { display: "block" }}} onClick={handleFormOpenPopup}>
-                        <Image src='/add.svg' alt="add partner" width={24} height={24}/>
-                        </IconButton>
-                        }
-                    </Box>
-                
-                    <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', width: '51%', pr: tabIndex !== 0 ? "20%" : 0, alignItems: 'center', "@media (max-width: 900px)": { pr: 0, width: '51%' }, "@media (max-width: 600px)": { width: '97%', pr: '0' } }}>
-                        <Tabs
-                                value={tabIndex}
-                                onChange={handleTabChange}
-                                sx={{
-                                    textTransform: 'none',
-                                    minHeight: 0,
-                                    '& .MuiTabs-indicator': {
-                                        backgroundColor: 'rgba(80, 82, 178, 1)',
-                                        height: '1.4px',
-                                    },
-                                    "@media (max-width: 600px)": {
-                                        border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px', width: '100%', '& .MuiTabs-indicator': {
-                                            height: '0',
-                                        },
-                                    }
-                                }}
-                                aria-label="suppression tabs"
-                            >
-                                <Tab className="main-text"
-                                    sx={{
-                                        textTransform: 'none',
-                                        padding: '4px 1px',
-                                        pb: '10px',
-                                        flexGrow: 1,
-                                        marginRight: '3em',
-                                        minHeight: 'auto',
-                                        minWidth: 'auto',
-                                        fontSize: '14px',
-                                        fontWeight: 700,
-                                        lineHeight: '19.1px',
-                                        textAlign: 'left',
-                                        mr: 2,
-                                        '&.Mui-selected': {
-                                            color: 'rgba(80, 82, 178, 1)'
-                                        },
-                                        "@media (max-width: 600px)": {
-                                            mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                                                backgroundColor: 'rgba(249, 249, 253, 1)',
-                                                border: '1px solid rgba(220, 220, 239, 1)'
-                                            },
-                                        }
-                                    }}
-                                    label="Overview"
-                                />
-                                <Tab className="main-text"
-                                    sx={{
-                                        textTransform: 'none',
-                                        padding: '4px 10px',
-                                        minHeight: 'auto',
-                                        flexGrow: 1,
-                                        pb: '10px',
-                                        textAlign: 'center',
-                                        fontSize: '14px',
-                                        fontWeight: 700,
-                                        lineHeight: '19.1px',
-                                        minWidth: 'auto',
-                                        '&.Mui-selected': {
-                                            color: 'rgba(80, 82, 178, 1)'
-                                        },
-                                        "@media (max-width: 600px)": {
-                                            mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                                                backgroundColor: 'rgba(249, 249, 253, 1)',
-                                                border: '1px solid rgba(220, 220, 239, 1)'
-                                            },
-                                        }
-                                    }}
-                                    label="Accounts"
-                                />
-                                {isMaster && <Tab className="main-text"
-                                    sx={{
-                                        textTransform: 'none',
-                                        padding: '4px 10px',
-                                        minHeight: 'auto',
-                                        flexGrow: 1,
-                                        pb: '10px',
-                                        textAlign: 'center',
-                                        fontSize: '14px',
-                                        fontWeight: 700,
-                                        lineHeight: '19.1px',
-                                        minWidth: 'auto',
-                                        '&.Mui-selected': {
-                                            color: 'rgba(80, 82, 178, 1)'
-                                        },
-                                        "@media (max-width: 600px)": {
-                                            mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                                                backgroundColor: 'rgba(249, 249, 253, 1)',
-                                                border: '1px solid rgba(220, 220, 239, 1)'
-                                            },
-                                        }
-                                    }}
-                                    label="Partners"
-                                />}
-                                <Tab className="main-text"
-                                    sx={{
-                                        textTransform: 'none',
-                                        padding: '4px 10px',
-                                        minHeight: 'auto',
-                                        flexGrow: 1,
-                                        pb: '10px',
-                                        textAlign: 'center',
-                                        fontSize: '14px',
-                                        fontWeight: 700,
-                                        lineHeight: '19.1px',
-                                        minWidth: 'auto',
-                                        '&.Mui-selected': {
-                                            color: 'rgba(80, 82, 178, 1)'
-                                        },
-                                        "@media (max-width: 600px)": {
-                                            mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                                                backgroundColor: 'rgba(249, 249, 253, 1)',
-                                                border: '1px solid rgba(220, 220, 239, 1)'
-                                            },
-                                        }
-                                    }}
-                                    label="Rewards"
-                                />
-                                <Tab className="main-text"
-                                    sx={{
-                                        textTransform: 'none',
-                                        padding: '4px 10px',
-                                        minHeight: 'auto',
-                                        flexGrow: 1,
-                                        pb: '10px',
-                                        textAlign: 'center',
-                                        fontSize: '14px',
-                                        fontWeight: 700,
-                                        lineHeight: '19.1px',
-                                        minWidth: 'auto',
-                                        '&.Mui-selected': {
-                                            color: 'rgba(80, 82, 178, 1)'
-                                        },
-                                        "@media (max-width: 600px)": {
-                                            mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                                                backgroundColor: 'rgba(249, 249, 253, 1)',
-                                                border: '1px solid rgba(220, 220, 239, 1)'
-                                            },
-                                        }
-                                    }}
-                                    label="Assets"
-                                />
-
-                        </Tabs>
-                    </Box>
-
-                    {tabIndex === 0 && <Box sx={{flexGrow: 1, display: 'flex', justifyContent: "flex-end", width: '24%', mr:3, gap: "16px", "@media (max-width: 900px)": { display: "none" }, }}>
-                        <Box sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            background: "rgba(250, 250, 246, 1)",
-                            border: "0.2px solid rgba(189, 189, 189, 1)",
-                            padding: "12px 16px",
-                            borderRadius: "4px",
-                            height: "40px"
-                        }}>
-                            <Typography sx={{
-                                fontFamily: "Nunito Sans",
-                                fontSize: "16px",
-                                fontWeight: 700,
-                                lineHeight: "21.82px",
-                                marginRight: "8px",
-                                color: "rgba(32, 33, 36, 1)"               
-                            }}>{commission}%</Typography>
-                            <Typography sx={{
-                                fontFamily: "Nunito Sans",
-                                fontSize: "12px",
-                                fontWeight: 600,
-                                lineHeight: "16.8px",
-                                color: "rgba(74, 74, 74, 1)"               
-                            }}>Commission earned</Typography>
-                        </Box>
-
-                        {isMaster &&
-                        <Button
-                            variant="outlined"
-                            sx={{
-                                height: '40px',
-                                borderRadius: '4px',
-                                textTransform: 'none',
-                                fontSize: '14px',
-                                lineHeight: "19.6px",
-                                fontWeight: '500',
-                                color: '#5052B2',
-                                borderColor: '#5052B2',
-                                '&:hover': {
-                                    backgroundColor: 'rgba(80, 82, 178, 0.1)',
-                                    borderColor: '#5052B2',
-                                },
-                            }}
-                            onClick={() => {
-                                handleFormOpenPopup()
-                            }}
-                        >
-                            Add Partner
-                        </Button>}
-                    </Box>}
-
-                    {tabIndex === 0 && <IconButton sx={{
-                            display: "none", cursor: "pointer", "@media (max-width: 900px)": { display: "block" }, "@media (max-width: 600px)": { display: "none" }}} onClick={handleFormOpenPopup}>
-                        <Image src='/add.svg' alt="add partner" width={24} height={24}/>
-                        </IconButton>
-                        }
+                    {!rewardsOpen && 
                     
+                    <>
+                        <Box sx={{ flexShrink: 0, display: 'flex', justifyContent: "space-between", flexDirection: 'row', alignItems: 'center', width: '15%', gap: 1, "@media (max-width: 900px)": { width: '20%' }, "@media (max-width: 600px)": { mb: 2, width: '97%' }, "@media (max-width: 440px)": { mb: 1 }, }}>
+                            <Box sx={{display: 'flex', justifyContent: "space-between", alignItems: 'center', gap: 1}}>
+                                <Typography className="first-sub-title">{isMaster ? "Master Partner" : "Partner"}</Typography>
+                                <Box sx={{ "@media (max-width: 600px)": { display: 'none' } }}><CustomTooltip title={"Collaborate with trusted partners to access exclusive resources and services that drive success."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/referral" /></Box>
+                            </Box>
+                            {tabIndex === 0 && <IconButton sx={{
+                                display: "none", cursor: "pointer", "@media (max-width: 600px)": { display: "block" }}} onClick={handleFormOpenPopup}>
+                            <Image src='/add.svg' alt="add partner" width={24} height={24}/>
+                            </IconButton>
+                            }
+                        </Box>
+                    
+                        <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', width: '51%', pr: tabIndex !== 0 ? "20%" : 0, alignItems: 'center', "@media (max-width: 900px)": { pr: 0, width: '51%' }, "@media (max-width: 600px)": { width: '97%', pr: '0' } }}>
+                            <Tabs
+                                    value={tabIndex}
+                                    onChange={handleTabChange}
+                                    sx={{
+                                        textTransform: 'none',
+                                        minHeight: 0,
+                                        '& .MuiTabs-indicator': {
+                                            backgroundColor: 'rgba(80, 82, 178, 1)',
+                                            height: '1.4px',
+                                        },
+                                        "@media (max-width: 600px)": {
+                                            border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px', width: '100%', '& .MuiTabs-indicator': {
+                                                height: '0',
+                                            },
+                                        }
+                                    }}
+                                    aria-label="suppression tabs"
+                                >
+                                    <Tab className="main-text"
+                                        sx={{
+                                            textTransform: 'none',
+                                            padding: '4px 1px',
+                                            pb: '10px',
+                                            flexGrow: 1,
+                                            marginRight: '3em',
+                                            minHeight: 'auto',
+                                            minWidth: 'auto',
+                                            fontSize: '14px',
+                                            fontWeight: 700,
+                                            lineHeight: '19.1px',
+                                            textAlign: 'left',
+                                            mr: 2,
+                                            '&.Mui-selected': {
+                                                color: 'rgba(80, 82, 178, 1)'
+                                            },
+                                            "@media (max-width: 600px)": {
+                                                mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                                                    backgroundColor: 'rgba(249, 249, 253, 1)',
+                                                    border: '1px solid rgba(220, 220, 239, 1)'
+                                                },
+                                            }
+                                        }}
+                                        label="Overview"
+                                    />
+                                    <Tab className="main-text"
+                                        sx={{
+                                            textTransform: 'none',
+                                            padding: '4px 10px',
+                                            minHeight: 'auto',
+                                            flexGrow: 1,
+                                            pb: '10px',
+                                            textAlign: 'center',
+                                            fontSize: '14px',
+                                            fontWeight: 700,
+                                            lineHeight: '19.1px',
+                                            minWidth: 'auto',
+                                            '&.Mui-selected': {
+                                                color: 'rgba(80, 82, 178, 1)'
+                                            },
+                                            "@media (max-width: 600px)": {
+                                                mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                                                    backgroundColor: 'rgba(249, 249, 253, 1)',
+                                                    border: '1px solid rgba(220, 220, 239, 1)'
+                                                },
+                                            }
+                                        }}
+                                        label="Accounts"
+                                    />
+                                    {isMaster && <Tab className="main-text"
+                                        sx={{
+                                            textTransform: 'none',
+                                            padding: '4px 10px',
+                                            minHeight: 'auto',
+                                            flexGrow: 1,
+                                            pb: '10px',
+                                            textAlign: 'center',
+                                            fontSize: '14px',
+                                            fontWeight: 700,
+                                            lineHeight: '19.1px',
+                                            minWidth: 'auto',
+                                            '&.Mui-selected': {
+                                                color: 'rgba(80, 82, 178, 1)'
+                                            },
+                                            "@media (max-width: 600px)": {
+                                                mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                                                    backgroundColor: 'rgba(249, 249, 253, 1)',
+                                                    border: '1px solid rgba(220, 220, 239, 1)'
+                                                },
+                                            }
+                                        }}
+                                        label="Partners"
+                                    />}
+                                    <Tab className="main-text"
+                                        sx={{
+                                            textTransform: 'none',
+                                            padding: '4px 10px',
+                                            minHeight: 'auto',
+                                            flexGrow: 1,
+                                            pb: '10px',
+                                            textAlign: 'center',
+                                            fontSize: '14px',
+                                            fontWeight: 700,
+                                            lineHeight: '19.1px',
+                                            minWidth: 'auto',
+                                            '&.Mui-selected': {
+                                                color: 'rgba(80, 82, 178, 1)'
+                                            },
+                                            "@media (max-width: 600px)": {
+                                                mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                                                    backgroundColor: 'rgba(249, 249, 253, 1)',
+                                                    border: '1px solid rgba(220, 220, 239, 1)'
+                                                },
+                                            }
+                                        }}
+                                        label="Payouts"
+                                    />
+                                    <Tab className="main-text"
+                                        sx={{
+                                            textTransform: 'none',
+                                            padding: '4px 10px',
+                                            minHeight: 'auto',
+                                            flexGrow: 1,
+                                            pb: '10px',
+                                            textAlign: 'center',
+                                            fontSize: '14px',
+                                            fontWeight: 700,
+                                            lineHeight: '19.1px',
+                                            minWidth: 'auto',
+                                            '&.Mui-selected': {
+                                                color: 'rgba(80, 82, 178, 1)'
+                                            },
+                                            "@media (max-width: 600px)": {
+                                                mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                                                    backgroundColor: 'rgba(249, 249, 253, 1)',
+                                                    border: '1px solid rgba(220, 220, 239, 1)'
+                                                },
+                                            }
+                                        }}
+                                        label="Assets"
+                                    />
+
+                            </Tabs>
+                        </Box>
+
+                        {tabIndex === 0 && <Box sx={{flexGrow: 1, display: 'flex', justifyContent: "flex-end", width: '24%', mr:3, gap: "16px", "@media (max-width: 900px)": { display: "none" }, }}>
+                            <Box sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                background: "rgba(250, 250, 246, 1)",
+                                border: "0.2px solid rgba(189, 189, 189, 1)",
+                                padding: "12px 16px",
+                                borderRadius: "4px",
+                                height: "40px"
+                            }}>
+                                <Typography sx={{
+                                    fontFamily: "Nunito Sans",
+                                    fontSize: "16px",
+                                    fontWeight: 700,
+                                    lineHeight: "21.82px",
+                                    marginRight: "8px",
+                                    color: "rgba(32, 33, 36, 1)"               
+                                }}>{commission}%</Typography>
+                                <Typography sx={{
+                                    fontFamily: "Nunito Sans",
+                                    fontSize: "12px",
+                                    fontWeight: 600,
+                                    lineHeight: "16.8px",
+                                    color: "rgba(74, 74, 74, 1)"               
+                                }}>Commission earned</Typography>
+                            </Box>
+
+                            {isMaster &&
+                            <Button
+                                variant="outlined"
+                                sx={{
+                                    height: '40px',
+                                    borderRadius: '4px',
+                                    textTransform: 'none',
+                                    fontSize: '14px',
+                                    lineHeight: "19.6px",
+                                    fontWeight: '500',
+                                    color: '#5052B2',
+                                    borderColor: '#5052B2',
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(80, 82, 178, 0.1)',
+                                        borderColor: '#5052B2',
+                                    },
+                                }}
+                                onClick={() => {
+                                    handleFormOpenPopup()
+                                }}
+                            >
+                                Add Partner
+                            </Button>}
+                        </Box>}
+
+                        {tabIndex === 0 && <IconButton sx={{
+                                display: "none", cursor: "pointer", "@media (max-width: 900px)": { display: "block" }, "@media (max-width: 600px)": { display: "none" }}} onClick={handleFormOpenPopup}>
+                            <Image src='/add.svg' alt="add partner" width={24} height={24}/>
+                            </IconButton>
+                            }
+
+                    </>
+                    
+                    }
+
                     {(tabIndex === 1 || tabIndex == 2 && isMaster) &&  <Button
                                 aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
                                 aria-haspopup="true"
@@ -468,10 +476,10 @@ const Partners: React.FC = () => {
                         />
                     <InvitePartnerPopup 
                         maxCommission={commission}
-                        masterId={masterId}
+                        masterId={id}
                         isMaster={false}
                         open={formPopupOpen} 
-                        updateOrAddAsset={updateOrAddAsset}
+                        updateOrAddAsset={updateOrAddPartner}
                         onClose={handleFormClosePopup}  />
                         
 
@@ -489,12 +497,12 @@ const Partners: React.FC = () => {
                     </Box>
                     <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
                         <TabPanel value={tabIndex} index={isMaster ? 2 : 1}>
-                            <PartnersMain setLoading={setLoading} appliedDates={appliedDates} masterId={masterId} />
+                            <PartnersMain setLoading={setLoading} appliedDates={appliedDates} masterId={id} />
                         </TabPanel>
                     </Box>
                     <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
                         <TabPanel value={tabIndex} index={isMaster ? 3 : 2}>
-                            <ReferralRewards />
+                            <PartnersRewards loading={loading} partnerId={id} isMaster={isMaster ?? false} setLoading={setLoading} setRewardsOpen={setRewardsOpen}/>
                         </TabPanel>
                     </Box>
                     <Box sx={{ width: '100%', padding: 0, margin: 0 }}>

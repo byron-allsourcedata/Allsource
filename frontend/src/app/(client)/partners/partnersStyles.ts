@@ -49,6 +49,48 @@ export const partnersStyle: { [key: string]: SxProps<Theme> } = {
             marginTop: '76px',
         }
     },
+    tableColumn: {
+        lineHeight: '16px !important',
+        position: 'relative',
+        paddingLeft: '18px',
+        paddingTop: '18px',
+        paddingBottom: '18px',
+        '&::after': {
+            content: '""',
+            display: 'block',
+            position: 'absolute',
+            top: '15px', // Space from the top
+            bottom: '15px', // Space from the bottom
+            right: 0, // Position the border at the right edge
+            width: '1px',
+            height: 'calc(100% - 30px)', // Full height minus top and bottom spacing
+            backgroundColor: 'rgba(235, 235, 235, 1)', // Border color
+        },
+        '&:last-child::after': {
+            content: 'none'
+        }
+    },
+    tableBodyColumn: {
+        lineHeight: '16px !important',
+        position: 'relative',
+        paddingLeft: '25px',
+        paddingTop: '13.5px',
+        paddingBottom: '13.5px',
+        '&::after': {
+            content: '""',
+            display: 'block',
+            position: 'absolute',
+            top: '15px', // Space from the top
+            bottom: '15px', // Space from the bottom
+            right: 0, // Position the border at the right edge
+            width: '1px',
+            height: 'calc(100% - 30px)', // Full height minus top and bottom spacing
+            backgroundColor: 'rgba(235, 235, 235, 1)', // Border color
+        },
+        '&:last-child::after': {
+            content: 'none'
+        }
+    },
     titleBox: {
         display: 'flex',
         alignItems: 'center',
