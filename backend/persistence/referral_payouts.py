@@ -86,6 +86,7 @@ class ReferralPayoutsPersistence:
             ReferralPayouts.paid_at,
             ReferralPayouts.plan_amount,
             ReferralPayouts.confirmation_status,
+            ReferralPayouts.status,
             ReferralPayouts.comment,
             Users.company_name,
             Users.email,
