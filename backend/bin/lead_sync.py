@@ -44,7 +44,7 @@ from sqlalchemy.dialects.postgresql import insert
 from datetime import datetime, timedelta, timezone
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 from models.integrations.users_domains_integrations import UserIntegration
-from dependencies import (SubscriptionService, UserPersistence, PlansPersistence, ReferralService, PartnersPersistence, ReferralDiscountCodesPersistence, StripeService, ReferralPayoutsPersistence)
+from dependencies import (SubscriptionService, UserPersistence, PlansPersistence, ReferralService, PartnersPersistence, ReferralDiscountCodesPersistence, StripeService, ReferralPayoutsPersistence, ReferralUserPersistence)
 
 load_dotenv()
 
@@ -645,7 +645,7 @@ async def process_files(session, rabbitmq_connection, root_user):
         db=session,
         user_persistence_service=UserPersistence(session),
         plans_persistence=PlansPersistence(session),
-        referral_service=ReferralService(user_persistence=UserPersistence(session), referral_persistence_service=ReferralDiscountCodesPersistence(session), stripe_service=StripeService(), referral_payouts_persistence=ReferralPayoutsPersistence(session)),
+        referral_service=ReferralService(referral_persistence_discount_code_service=ReferralDiscountCodesPersistence(session), user_persistence=UserPersistence(session), referral_persistence_service=ReferralUserPersistence(session), stripe_service=StripeService(), referral_payouts_persistence=ReferralPayoutsPersistence(session)),
         partners_persistence=PartnersPersistence(session)
     )
     notification_persistence = NotificationPersistence(

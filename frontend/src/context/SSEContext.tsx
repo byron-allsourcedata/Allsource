@@ -54,6 +54,9 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
         else if(data.update_subscription && data.status) {
           showToast(`Subscription updated ${data.status}!`);
         }
+        else if(data.status) {
+          showToast(`${data.status}!`);
+        }
         else {
           showToast("Pixel code is installed successfully!");
           if (data.percent) {

@@ -187,8 +187,10 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                 showToast('Please select a valid option.');
                 return;
             }
-    
-            setSavedList(list); // Сохраняем список в состояние
+            if (validateTab2()) {
+                setValue((prevValue) => String(Number(prevValue) + 1));
+            }
+            setSavedList(list);
             showToast('List saved successfully');
         } catch (error) {
             console.error('Error saving list:', error);
@@ -552,12 +554,14 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
     }
 
     const defaultRows: Row[] = [
-        { id: 1, type: 'Email', value: 'Email' },
-        { id: 2, type: 'Phone number', value: 'Phone number' },
-        { id: 3, type: 'First name', value: 'First name' },
-        { id: 4, type: 'Second name', value: 'Second name' },
-        { id: 5, type: 'Job Title', value: 'Job Title' },
-        { id: 6, type: 'Location', value: 'Location' }
+        { id: 1, type: 'LinkedIn URL', value: 'LinkedIn URL' },
+        { id: 2, type: 'Full name', value: 'Full name' },
+        { id: 3, type: 'Title', value: 'Title (Job Title)' },
+        { id: 4, type: 'Company', value: 'Company' },
+        { id: 5, type: 'Detail', value: 'Detail (They show company detail Number of Employee| Revenue| Industry)' },
+        { id: 6, type: 'Email', value: 'Email (Business email)' },
+        { id: 7, type: 'Visited URL', value: 'Visited URL (Which page user visited on the user website)' },
+        { id: 8, type: 'Location', value: 'Location' }
     ];
 
     const [rows, setRows] = useState<Row[]>(defaultRows);

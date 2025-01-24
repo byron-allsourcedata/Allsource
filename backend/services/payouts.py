@@ -169,6 +169,7 @@ class PayoutsService:
                 'join_date': referral_payout.created_at.strftime('%Y-%m-%d') if referral_payout.created_at else None,
                 'plan_amount': referral_payout.plan_amount,
                 'reward_amount': referral_payout.reward_amount,
+                'status': referral_payout.status,
                 'payout_date': referral_payout.paid_at.strftime('%Y-%m-%d') if referral_payout.paid_at else None,
                 'referral_link': referral_link,
                 'comment': referral_payout.comment,
