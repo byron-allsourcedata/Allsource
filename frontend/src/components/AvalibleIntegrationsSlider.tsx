@@ -24,6 +24,16 @@ interface AvailableIntegrationsSliderProps {
     handleSaveSettings?: (new_integration: any) => void
 }
 
+const intergrations = {
+    integrate: {
+        fontFamily: "Nunito Sans",
+        fontSize: "14px",
+        color: "#4a4a4a",
+        fontWeight: "500",
+        lineHeight: "20px"
+    },
+  }
+
 const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, integrationsCredentials, onClose, handleSaveSettings }: AvailableIntegrationsSliderProps) => {
     const [openMetaConnect, setOpenMetaConnect] = useState(false)
     const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false)
@@ -35,6 +45,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
     const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
     const [openZapierConnect, setOPenZapierComnect] = useState(false)
     const [openSlackConnect, setOpenSlackConnect] = useState(false)
+    const [searchQuery, setSearchQuery] = useState("");
 
     const handleClose = () => {
         setOpenMetaConnect(false)
@@ -53,6 +64,15 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
             handleSaveSettings(new_integration)
         }
     }
+
+
+    const filteredIntegrations = integrations.filter((integration) =>
+        integration.service_name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    
+      const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchQuery(event.target.value);
+      };
 
     if (!open) return null
 
@@ -93,6 +113,8 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                         placeholder="Search integrations"
                         variant="outlined"
                         fullWidth
+                        value={searchQuery}
+                        onChange={handleSearchChange}
                         InputProps={{
                             startAdornment: (
                                 <InputAdornment position="start" sx={{
@@ -148,7 +170,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                 Available integrations platform
                             </Typography>
                             <List sx={{ display: 'flex', gap: '16px', py: 2, flexWrap: 'wrap' }}>
-                                {integrations.some(integration => integration.service_name === 'wordpress') &&
+                                {filteredIntegrations.some(integration => integration.service_name === 'wordpress') &&
                                     !integrationsCredentials.some(integration =>
                                         integration.service_name === 'shopify' ||
                                         integration.service_name === 'big_commerce' ||
@@ -167,11 +189,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                                 </ListItemIcon>
                                                 <ListItemText primary="WordPress" primaryTypographyProps={{
                                                     sx: {
-                                                        fontFamily: "Nunito Sans",
-                                                        fontSize: "14px",
-                                                        color: "#4a4a4a",
-                                                        fontWeight: "500",
-                                                        lineHeight: "20px"
+                                                        ...intergrations.integrate
                                                     }
                                                 }} />
                                             </ListItemButton>
@@ -179,7 +197,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                     )}
 
                                 {/* Klaviyo */}
-                                {integrations.some(integration => integration.service_name === 'klaviyo') && (
+                                {filteredIntegrations.some(integration => integration.service_name === 'klaviyo') && (
                                     !integrationsCredentials.some(integration => integration.service_name === 'klaviyo')) && (
                                         <ListItem sx={{
                                             p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
@@ -193,18 +211,14 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                                 </ListItemIcon>
                                                 <ListItemText primary="Klaviyo" primaryTypographyProps={{
                                                     sx: {
-                                                        fontFamily: "Nunito Sans",
-                                                        fontSize: "14px",
-                                                        color: "#4a4a4a",
-                                                        fontWeight: "500",
-                                                        lineHeight: "20px"
+                                                        ...intergrations.integrate
                                                     }
                                                 }} />
                                             </ListItemButton>
                                         </ListItem>)}
 
                                 {/* Attentive */}
-                                {integrations.some(integration => integration.service_name === 'attentive') && (
+                                {filteredIntegrations.some(integration => integration.service_name === 'attentive') && (
                                     !integrationsCredentials.some(integration => integration.service_name === 'attentive')) && (
                                         <ListItem sx={{
                                             p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
@@ -218,15 +232,12 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                                 </ListItemIcon>
                                                 <ListItemText primary="Attentive" primaryTypographyProps={{
                                                     sx: {
-                                                        fontFamily: "Nunito Sans",
-                                                        fontSize: "14px",
-                                                        color: "#4a4a4a",
-                                                        fontWeight: "500",
-                                                        lineHeight: "20px"
+                                                        ...intergrations.integrate
                                                     }
                                                 }} />
                                             </ListItemButton>
                                         </ListItem>)}
+                                {filteredIntegrations.some(integration => integration.service_name === 'shopify') &&
                                 {integrations.some(integration => integration.service_name === 'shopify') &&
                                     !integrationsCredentials.some(integration =>
                                         integration.service_name === 'wordpess' ||
@@ -246,16 +257,12 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                                 </ListItemIcon>
                                                 <ListItemText primary="Shopify" primaryTypographyProps={{
                                                     sx: {
-                                                        fontFamily: "Nunito Sans",
-                                                        fontSize: "14px",
-                                                        color: "#4a4a4a",
-                                                        fontWeight: "500",
-                                                        lineHeight: "20px"
+                                                        ...intergrations.integrate
                                                     }
                                                 }} />
                                             </ListItemButton>
                                         </ListItem>)}
-                                {integrations.some(integration => integration.service_name === 'elastic') && (
+                                {filteredIntegrations.some(integration => integration.service_name === 'elastic') && (
                                     !integrationsCredentials.some(integration => integration.service_name === 'elastic')) && (
                                         <ListItem sx={{
                                             p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
@@ -269,16 +276,12 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                                 </ListItemIcon>
                                                 <ListItemText primary="Elastic" primaryTypographyProps={{
                                                     sx: {
-                                                        fontFamily: "Nunito Sans",
-                                                        fontSize: "14px",
-                                                        color: "#4a4a4a",
-                                                        fontWeight: "500",
-                                                        lineHeight: "20px"
+                                                        ...intergrations.integrate
                                                     }
                                                 }} />
                                             </ListItemButton>
                                         </ListItem>)}
-                                {integrations.some(integration => integration.service_name === 'meta') && (
+                                {filteredIntegrations.some(integration => integration.service_name === 'meta') && (
                                     !integrationsCredentials.some(integration => integration.service_name === 'meta')) && (
                                         <ListItem sx={{
                                             p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
@@ -292,16 +295,12 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                                 </ListItemIcon>
                                                 <ListItemText primary="Meta" primaryTypographyProps={{
                                                     sx: {
-                                                        fontFamily: "Nunito Sans",
-                                                        fontSize: "14px",
-                                                        color: "#4a4a4a",
-                                                        fontWeight: "500",
-                                                        lineHeight: "20px"
+                                                        ...intergrations.integrate
                                                     }
                                                 }} />
                                             </ListItemButton>
                                         </ListItem>)}
-                                {integrations.some(integration => integration.service_name === 'omnisend') && (
+                                {filteredIntegrations.some(integration => integration.service_name === 'omnisend') && (
                                     !integrationsCredentials.some(integration => integration.service_name === 'omnisend')) && (
                                         <ListItem sx={{
                                             p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
@@ -315,16 +314,12 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                                 </ListItemIcon>
                                                 <ListItemText primary="Omnisend" primaryTypographyProps={{
                                                     sx: {
-                                                        fontFamily: "Nunito Sans",
-                                                        fontSize: "14px",
-                                                        color: "#4a4a4a",
-                                                        fontWeight: "500",
-                                                        lineHeight: "20px"
+                                                        ...intergrations.integrate
                                                     }
                                                 }} />
                                             </ListItemButton>
                                         </ListItem>)}
-                                {integrations.some(integration => integration.service_name === 'mailchimp') && (
+                                {filteredIntegrations.some(integration => integration.service_name === 'mailchimp') && (
                                     !integrationsCredentials.some(integration => integration.service_name === 'mailchimp')) && (
                                         <ListItem sx={{
                                             p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
@@ -338,16 +333,12 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                                 </ListItemIcon>
                                                 <ListItemText primary="Mailchimp" primaryTypographyProps={{
                                                     sx: {
-                                                        fontFamily: "Nunito Sans",
-                                                        fontSize: "14px",
-                                                        color: "#4a4a4a",
-                                                        fontWeight: "500",
-                                                        lineHeight: "20px"
+                                                        ...intergrations.integrate
                                                     }
                                                 }} />
                                             </ListItemButton>
                                         </ListItem>)}
-                                {integrations.some(integration => integration.service_name === 'big_commerce') &&
+                                {filteredIntegrations.some(integration => integration.service_name === 'big_commerce') &&
                                     !integrationsCredentials.some(integration =>
                                         integration.service_name === 'shopify' ||
                                         integration.service_name === 'big_commerce' ||
@@ -366,17 +357,13 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                                 </ListItemIcon>
                                                 <ListItemText primary="BCommerce" primaryTypographyProps={{
                                                     sx: {
-                                                        fontFamily: "Nunito Sans",
-                                                        fontSize: "14px",
-                                                        color: "#4a4a4a",
-                                                        fontWeight: "500",
-                                                        lineHeight: "20px"
+                                                        ...intergrations.integrate
                                                     }
                                                 }} />
                                             </ListItemButton>
                                         </ListItem>
                                     )}
-                                {integrations.some(integration => integration.service_name === 'sendlane') && (
+                                {filteredIntegrations.some(integration => integration.service_name === 'sendlane') && (
                                     !integrationsCredentials.some(integration => integration.service_name === 'sendlane')) && (
                                         <ListItem sx={{
                                             p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
@@ -390,17 +377,13 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                                 </ListItemIcon>
                                                 <ListItemText primary="Sendlane" primaryTypographyProps={{
                                                     sx: {
-                                                        fontFamily: "Nunito Sans",
-                                                        fontSize: "14px",
-                                                        color: "#4a4a4a",
-                                                        fontWeight: "500",
-                                                        lineHeight: "20px"
+                                                        ...intergrations.integrate
                                                     }
                                                 }} />
                                             </ListItemButton>
                                         </ListItem>
                                     )}
-                                {integrations.some(integration => integration.service_name === 'zapier') && (
+                                {filteredIntegrations.some(integration => integration.service_name === 'zapier') && (
                                     !integrationsCredentials.some(integration => integration.service_name === 'zapier')) && (
                                         <ListItem sx={{
                                             p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
@@ -414,17 +397,13 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                                 </ListItemIcon>
                                                 <ListItemText primary="Zapier" primaryTypographyProps={{
                                                     sx: {
-                                                        fontFamily: "Nunito Sans",
-                                                        fontSize: "14px",
-                                                        color: "#4a4a4a",
-                                                        fontWeight: "500",
-                                                        lineHeight: "20px"
+                                                        ...intergrations.integrate
                                                     }
                                                 }} />
                                             </ListItemButton>
                                         </ListItem>
                                     )}
-                                {integrations.some(integration => integration.service_name === 'slack') && (
+                                {filteredIntegrations.some(integration => integration.service_name === 'slack') && (
                                     !integrationsCredentials.some(integration => integration.service_name === 'slack')) && (
                                         <ListItem sx={{
                                             p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
@@ -438,11 +417,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                                 </ListItemIcon>
                                                 <ListItemText primary="Slack" primaryTypographyProps={{
                                                     sx: {
-                                                        fontFamily: "Nunito Sans",
-                                                        fontSize: "14px",
-                                                        color: "#4a4a4a",
-                                                        fontWeight: "500",
-                                                        lineHeight: "20px"
+                                                        ...intergrations.integrate
                                                     }
                                                 }} />
                                             </ListItemButton>
