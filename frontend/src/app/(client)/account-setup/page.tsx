@@ -81,9 +81,8 @@ const AccountSetup = () => {
   const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
-    // Проверяем наличие parent_token в localStorage
     const parent_token = localStorage.getItem("parent_token");
-    setVisibleButton(!!parent_token); // Установим true, если parent_token есть
+    setVisibleButton(!!parent_token);
   }, []);
 
   const handleReturnToMain = async () => {
@@ -297,7 +296,6 @@ const AccountSetup = () => {
   const handleWebsiteLink = (event: { target: { value: string } }) => {
     let input = event.target.value.trim();
   
-    // Проверяем, если ввод не начинается с "http://" или "https://"
     if (!input.startsWith("http://") && !input.startsWith("https://")) {
       input = `https://${input}`;
     }
@@ -315,8 +313,7 @@ const AccountSetup = () => {
         websiteLink: websiteError,
       }));
     } catch (error) {
-      // Если URL невалиден, возвращаем ошибку
-      setWebsiteLink(input); // Сохраняем для отображения пользователю
+      setWebsiteLink(input);
       setErrors((prevErrors) => ({
         ...prevErrors,
         websiteLink: "Invalid website URL",
