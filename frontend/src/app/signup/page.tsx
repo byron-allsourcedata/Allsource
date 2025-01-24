@@ -98,7 +98,7 @@ const Signup: React.FC = () => {
       localStorage.setItem(UTM_STORAGE_KEY, JSON.stringify(utmParams));
     }
     if (slack_status){
-      showErrorToast(slack_status)
+      showErrorToast(slack_status);
     } 
   }, []);
 
