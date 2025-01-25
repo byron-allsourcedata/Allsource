@@ -202,10 +202,9 @@ class LeadsPersistence:
         else:
             query = query.order_by(desc(LeadsVisits.start_date))
 
-        if from_date and to_date and timezone_offset:
-            tz_offset = pytz.FixedOffset(timezone_offset * 60)
-            start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC).astimezone(tz_offset)
-            end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC).astimezone(tz_offset)
+        if from_date and to_date:
+            start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
+            end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
             query = query.filter(
                 and_(
                     LeadsVisits.start_date >= start_date,
