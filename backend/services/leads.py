@@ -28,7 +28,7 @@ class LeadsService:
         return None
 
     def get_leads(self, page, per_page, from_date, to_date, regions, page_visits, average_time_sec,
-                  recurring_visits, sort_by, sort_order, search_query, from_time, to_time, behavior_type, status):
+                  recurring_visits, sort_by, sort_order, search_query, from_time, to_time, behavior_type, status, timezone_offset):
         leads, count, max_page, states = self.leads_persistence_service.filter_leads(
             domain_id=self.domain.id,
             page=page,
@@ -45,7 +45,8 @@ class LeadsService:
             search_query=search_query,
             from_time=from_time,
             to_time=to_time,
-            status=status
+            status=status,
+            timezone_offset=timezone_offset
         )
         state_dict = {state.state_code: state.state_name for state in states} if states else {}
         leads_list = []

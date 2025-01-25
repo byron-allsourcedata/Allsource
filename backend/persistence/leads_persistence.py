@@ -3,9 +3,9 @@ import math
 from datetime import datetime
 
 import pytz
-from sqlalchemy import and_, or_, desc, asc, Integer
+from sqlalchemy import and_, or_, desc, asc, Integer, DateTime
 from sqlalchemy.orm import Session, aliased
-from sqlalchemy.sql import func
+from sqlalchemy.sql import func, text
 from utils import format_phone_number
 from models.audience import Audience
 from models.audience_leads import AudienceLeads
@@ -74,7 +74,8 @@ class LeadsPersistence:
         self.db = db
 
     def filter_leads(self, domain_id, page, per_page, from_date, to_date, from_time, to_time, regions, page_visits,
-                     average_time_sec, behavior_type, recurring_visits, sort_by, sort_order, search_query, status):
+                     average_time_sec, behavior_type, recurring_visits, sort_by, sort_order, search_query, status, timezone_offset: int):
+        
         FirstNameAlias = aliased(FiveXFiveNames)
         LastNameAlias = aliased(FiveXFiveNames)
 
@@ -147,7 +148,7 @@ class LeadsPersistence:
                 LeadUser.behavior_type,
                 FiveXFiveUser.personal_state,
                 FiveXFiveUser.personal_city,
-                LeadsVisits.start_date.label('start_date'),
+                (LeadsVisits.start_date + text(f"INTERVAL '{timezone_offset} hours'")).label('start_date'),
                 LeadsVisits.start_time.label('start_time'),
                 LeadsVisits.full_time_sec.label('time_on_site'),
                 recurring_visits_subquery.c.recurring_visits,
@@ -201,15 +202,17 @@ class LeadsPersistence:
         else:
             query = query.order_by(desc(LeadsVisits.start_date))
 
-        if from_date and to_date:
-            start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
-            end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
+        if from_date and to_date and timezone_offset:
+            tz_offset = pytz.FixedOffset(timezone_offset * 60)
+            start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC).astimezone(tz_offset)
+            end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC).astimezone(tz_offset)
             query = query.filter(
                 and_(
                     LeadsVisits.start_date >= start_date,
                     LeadsVisits.start_date <= end_date
                 )
             )
+            
         if status:
             status_list = status.split(',')
             filters = []
@@ -280,6 +283,7 @@ class LeadsPersistence:
                 else:
                     filters.append(recurring_visits_subquery.c.recurring_visits == recurring_visit)
             query = query.filter(or_(*filters))
+            
         if regions:
             filters = []
             region_list = regions.split(',')
