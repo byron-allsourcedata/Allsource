@@ -206,9 +206,21 @@ class LeadsPersistence:
             start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
             end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
             query = query.filter(
-                and_(
-                    LeadsVisits.start_date >= start_date,
-                    LeadsVisits.start_date <= end_date
+                and_(  
+                    or_(
+                        and_(
+                            LeadsVisits.start_date == start_date.date(),
+                            LeadsVisits.start_time >= start_date.time()
+                        ),  
+                        and_(
+                            LeadsVisits.start_date == end_date.date(),
+                            LeadsVisits.start_time <= end_date.time()
+                        ),  
+                        and_(
+                            LeadsVisits.start_date > start_date.date(),
+                            LeadsVisits.start_date < end_date.date()
+                        )
+                    )
                 )
             )
             
