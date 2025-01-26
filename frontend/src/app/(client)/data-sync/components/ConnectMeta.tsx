@@ -142,7 +142,11 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                 service_name: 'meta'
             }
         });
-
+        if (newListResponse.status == 201 && newListResponse.data.terms_link && newListResponse.data.terms_accepted == false) {
+            showErrorToast('User has not accepted the Custom Audience Terms.')
+            window.open(newListResponse.data.terms_link, '_blank');
+            return
+        }
         if (newListResponse.status !== 201) {
             throw new Error('Failed to create a new tags')
         }

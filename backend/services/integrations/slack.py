@@ -133,7 +133,6 @@ class SlackService:
         client = WebClient(token=client_token)
         try:
             response = client.conversations_join(channel=channel_id)
-            print(response['ok'])
             if response["ok"]:
                 return {'status': IntegrationsStatus.SUCCESS.value}
             else:
