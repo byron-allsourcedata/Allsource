@@ -1,4 +1,5 @@
 import logging
+import json
 from datetime import datetime, timedelta
 
 from sqlalchemy import func, desc, asc, and_
@@ -318,6 +319,8 @@ class UserPersistence:
             ReferralUser.parent_user_id,
             ReferralPayouts.status,
             ReferralPayouts.created_at,
+            Users.source_platform,
+            Users.utm_params
             ).outerjoin(ReferralPayouts, Users.id == ReferralPayouts.user_id
             ).outerjoin(ReferralUser, Users.id == ReferralUser.user_id
             ).outerjoin(parent_users, ReferralUser.parent_user_id == parent_users.id
@@ -337,6 +340,13 @@ class UserPersistence:
         query = query.order_by(order_direction)
 
         accounts = query.offset(offset).limit(limit).all()
+
+        def parse_utm_source(utm_params):
+            try:
+                utm_data = json.loads(utm_params) if utm_params else {}
+                return utm_data.get("utm_source", "Other").capitalize()
+            except json.JSONDecodeError:
+                return "Other"
     
         return [
             {
@@ -351,9 +361,9 @@ class UserPersistence:
                     "Inactive"
                 ),
                 "sources": (
-                        f"{account[9].capitalize()}({account[10]})"
-                        if account[9] and account[10]
-                        else "Other"
+                        f"{account[9].capitalize()}({account[10]})" if account[9] and account[10] else
+                        account[14] if account[14] else 
+                        parse_utm_source(account[15])
                 ),
                 "reward_status": account[5].capitalize() if account[5] else "Inactive",
                 "will_pay": True if account[12] else False,
