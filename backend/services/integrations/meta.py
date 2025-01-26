@@ -108,8 +108,6 @@ class MetaIntegrationsService:
             return {"terms_accepted": True}
         
         error_data = response.json()
-        print('----')
-        print(error_data)
         if error_data.get('error', {}).get('error_subcode') == 1870090:
             ad_account_id = ad_account_id.replace("act_", "")
             terms_link = f"https://business.facebook.com/ads/manage/customaudiences/tos/?act={ad_account_id}"
