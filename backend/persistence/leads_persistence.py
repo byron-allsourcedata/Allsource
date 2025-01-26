@@ -1,6 +1,6 @@
 import logging
 import math
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytz
 from sqlalchemy import and_, or_, desc, asc, Integer
@@ -74,7 +74,7 @@ class LeadsPersistence:
         self.db = db
 
     def filter_leads(self, domain_id, page, per_page, from_date, to_date, from_time, to_time, regions, page_visits,
-                     average_time_sec, behavior_type, recurring_visits, sort_by, sort_order, search_query, status):
+                     average_time_sec, behavior_type, recurring_visits, sort_by, sort_order, search_query, status, timezone_offset):
         
         FirstNameAlias = aliased(FiveXFiveNames)
         LastNameAlias = aliased(FiveXFiveNames)
@@ -203,8 +203,10 @@ class LeadsPersistence:
             query = query.order_by(desc(LeadsVisits.start_date))
 
         if from_date and to_date:
-            start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
-            end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
+            timezone_offset
+            offset_delta = timedelta(hours=timezone_offset)
+            start_date = start_date - offset_delta
+            end_date = end_date - offset_delta
             query = query.filter(
                 and_(  
                     or_(
