@@ -73,26 +73,14 @@ class MetaIntegrationsService:
             return
         ad_account_info = self.get_info_by_access_token(access_token.get('access_token'))
         check_facebook_token = self.check_facebook_token(credentials.meta.access_token)
-        if check_facebook_token:
-            new_integration = self.integrations_persisntece.create_integration({
-                'domain_id': domain.id,
-                'ad_account_id': ad_account_info.get('id'),
-                'access_token': access_token.get('access_token'),
-                'expire_access_token': access_token.get('expires_in'),
-                'last_access_token_update': datetime.now(),
-                'service_name': SourcePlatformEnum.META.value,
-                'is_failed': True
-            })
-        else:
-            new_integration = self.integrations_persisntece.create_integration({
-                'domain_id': domain.id,
-                'ad_account_id': ad_account_info.get('id'),
-                'access_token': access_token.get('access_token'),
-                'expire_access_token': access_token.get('expires_in'),
-                'last_access_token_update': datetime.now(),
-                'service_name': SourcePlatformEnum.META.value,
-                'is_failed': False
-            })
+        new_integration = self.integrations_persisntece.create_integration({
+            'domain_id': domain.id,
+            'ad_account_id': ad_account_info.get('id'),
+            'access_token': access_token.get('access_token'),
+            'expire_access_token': access_token.get('expires_in'),
+            'last_access_token_update': datetime.now(),
+            'service_name': SourcePlatformEnum.META.value
+        })
             
         integrations = self.integrations_persisntece.get_all_integrations_filter_by(ad_account_id=ad_account_info.get('id'), domain_id=domain.id)
         for integration in integrations:
