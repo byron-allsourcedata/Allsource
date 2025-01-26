@@ -755,7 +755,20 @@ const Accounts: React.FC = () => {
                                                                         </TableCell>
 
                                                                         <TableCell className='table-data'sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
-                                                                            {data.sources}
+                                                                            {(() => {
+                                                                                switch (data.sources.toLowerCase()) {
+                                                                                    case "google":
+                                                                                        return "Google Ads";
+                                                                                    case "big_commerce":
+                                                                                        return "BigCommerce";
+                                                                                    case "awin":
+                                                                                        return "AWIN";
+                                                                                    case "shopify":
+                                                                                        return "Shopify";
+                                                                                    default:
+                                                                                        return data.sources;
+                                                                                }
+                                                                            })()}
                                                                         </TableCell>
 
                                                                         <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
