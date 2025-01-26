@@ -102,9 +102,9 @@ class MetaIntegrationsService:
             self.integrations_persisntece.db.commit()
         if not new_integration:
             raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
-        check_facebook_token = self.check_facebook_token(credentials.meta.access_token)
+        
         if check_facebook_token:
-            return {'url': check_facebook_token}
+            return check_facebook_token
         
         return new_integration
     
@@ -130,7 +130,7 @@ class MetaIntegrationsService:
                 terms_link = f"https://business.facebook.com/ads/manage/customaudiences/tos/?act={params['client_id']}"
                 print("Custom Audience Terms not accepted. Please accept them here:")
                 print(terms_link)
-                return terms_link
+                return {'url': terms_link}
 
     def get_long_lived_token(self, fb_exchange_token):
         url = 'https://graph.facebook.com/v20.0/oauth/access_token'
@@ -206,11 +206,15 @@ class MetaIntegrationsService:
             'description': description if description else None,
             'customer_file_source': 'USER_PROVIDED_ONLY',
         }
+        try:
+            id_account = AdAccount(f'{list.ad_account_id}').create_custom_audience(
+                    fields=fields,
+                    params=params,
+                ).get('id')
+        except:
+            return self.check_facebook_token(credential.access_token)
         return {
-            'id': AdAccount(f'{list.ad_account_id}').create_custom_audience(
-                fields=fields,
-                params=params,
-            ).get('id'),
+            'id': id_account,
             'list_name': list.name
         }
        
