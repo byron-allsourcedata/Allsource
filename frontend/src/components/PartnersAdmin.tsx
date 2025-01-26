@@ -1,5 +1,5 @@
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { Box, Typography, TextField, Button, List, ListItemText, ListItemButton, IconButton, Tabs, Tab, 
+import { Box, Typography, TextField, Button, List, ListItemText, ListItemButton, IconButton, Tabs, MenuItem, Select, SelectChangeEvent, Tab, 
     InputAdornment, Popover, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
@@ -11,10 +11,13 @@ import Image from "next/image";
 import CalendarPopup from "./CustomCalendar";
 import { DateRangeIcon } from "@mui/x-date-pickers/icons";
 import SwapVertIcon from '@mui/icons-material/SwapVert';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import SearchIcon from '@mui/icons-material/Search';
 import InvitePartnerPopup from "@/components/InvitePartnerPopup"
 import EnablePartnerPopup from "@/components/EnablePartnerPopup"
 import { showErrorToast, showToast } from '@/components/ToastNotification';
+import RewardsHistory from "@/components/Rewardshistory"
 import PartnersAccounts from "./PartnersAccounts";
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 
@@ -89,6 +92,32 @@ interface EnabledPartner {
     fullName?: string
 }
 
+interface RewardData {
+    month: string;
+    total_rewards: number;
+    rewards_approved: number;
+    rewards_paid: number;
+    count_invites: number;
+    payout_date: Date;
+  }
+
+
+interface RewardDataByMonth {
+    month: string;
+    is_payment_active: boolean;
+    company_name: string;
+    email: string;
+    sources: string;
+    number_of_accounts: number;
+    partner_id: number;
+    reward_amount: string;
+    plan_amount: string;
+    join_date: Date;
+    reward_payout_date: Date;
+    reward_status: string;
+    is_auto_payout_date?: boolean;
+}
+
 type CombinedPartnerData = NewPartner & EnabledPartner;
 
 
@@ -107,16 +136,52 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
     const [selectedDateLabel, setSelectedDateLabel] = useState<string>('');
     const [menuAnchor, setMenuAnchor] = useState(null);
     const [formPopupOpen, setFormPopupOpen] = useState(false);
+    const [rewardsPage, setRewardsPage] = useState(false);
     const [noticePopupOpen, setNoticePopupOpen] = useState(false);
     const [fileData, setFileData] = useState<NewPartner>({id: 0, email: "", fullName: "", companyName: "", commission: ""});
     const [enabledData, setEnabledData] = useState<EnabledPartner>({id: 0});
     const [selectedRowData, setSelectedRowData] = useState<any>(null);
+    const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
     const [accountPage, setAccountPage] = useState(false);
+    const [rewardsPageMonthFilter, setRewardsPageMonthFilter] = useState<string | null>(null)
+    const [rewards, setRewards] = useState<RewardData[]>([]);
     const [id, setId] = useState<number | null>(null);
+    const currentYear = new Date().getFullYear();
     const [partnerName, setPartnerName] = useState<string | null>(null);
     const [accountName, setAccountName] = useState<string | null>(null);
     const [search, setSearch] = useState("");
     const [errorResponse, setErrosResponse] = useState(false);
+    const [flagMounthReward, setFlagMounthReward] = useState(true);
+    const [year, setYear] = useState<string>(currentYear.toString());
+    const yearsOptions: (string | number)[] = Array.from(
+        { length: 12 },
+        (_, i) => new Date().getFullYear() - i
+    );
+
+    const handleYearChange = (event: SelectChangeEvent) => {
+        const selectedYear = event.target.value;
+        setYear(selectedYear);
+        fetchRewards(selectedYear);
+    };
+    
+
+    const fetchRewards = async (selectedYear: string, partnerId=null) => {
+        setLoading(true);
+        let response
+        try {
+            response = await axiosInstance.get("/admin-partners/rewards-history", {
+                params: {
+                    year: selectedYear,
+                    partner_id: partnerId ?? id,
+                    is_master: isMaster
+                }
+            });
+            setRewards(response.data);
+        } catch (error) {
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const tableHeaders = [
         { key: 'partner_name', label: `Partner  ${isMaster ? "master" : ''} name`, sortable: false },
@@ -329,7 +394,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
         }
     }, [page, rowsPerPage, search, appliedDates]);
 
-    const updateOrAddAsset = (updatedPartner: PartnerData) => {
+    const updateOrAddPartner = (updatedPartner: PartnerData) => {
         setPartners((prevAccounts) => {
             const index = prevAccounts.findIndex((account) => account.id === updatedPartner.id);
             if (index !== -1) {
@@ -351,6 +416,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
         setSearch(event.target.value);
     };
 
+
     useEffect(() => {
         if (masterData?.id){
             fetchRulesId(masterData.id)
@@ -364,7 +430,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', gap: "24px", justifyContent: 'space-between' }}>
-            {accountPage || partnerName
+            {accountPage || rewardsPage || partnerName
             ?
             <>
                 <Box sx={{display: "flex", alignItems: "center", gap: "5px" }}>
@@ -372,29 +438,126 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                         if(masterData) {
                             handleTabChange(null, 0)
                         }
-                        setAccountPage(false)
+                        if (accountPage) {
+                            setAccountPage(false)
+                        }
+                        if(rewardsPage) {
+                            setRewardsPage(false)
+                            setPartnerName(null)
+                        }
                         setAccountName(null)
+                        setRewardsPageMonthFilter(null)
                     }}
-                    sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "#808080", cursor: "pointer"}}>
+                    sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: rewardsPage ?  "rgba(128, 128, 128, 1)" : "rgba(32, 33, 36, 1)", cursor: "pointer"}}>
                         {isMaster || masterData ? "Master" : ""} Partner {partnerName ? `- ${partnerName}` : ""}
                     </Typography>
                     {accountName && 
                         <>
                             <NavigateNextIcon width={16}/>
-                            <Typography sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "#808080"}}>
+                            <Typography sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "rgba(128, 128, 128, 1)"}}>
                                 {accountName}
                             </Typography>
                         </>
                     }
+                    {rewardsPage && 
+                        <>
+                            <NavigateNextIcon width={16}/>
+                            <Typography sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: rewardsPageMonthFilter ? "rgba(128, 128, 128, 1)" : "rgba(32, 33, 36, 1)", cursor: rewardsPageMonthFilter ? "pointer" : ''}} onClick={() => {
+                                setRewardsPageMonthFilter(null)
+                                setRewards([])
+                                fetchRewards(year)
+                                setRewardsPage(true)
+                                setFlagMounthReward(false)
+                                setSelectedMonth(null)
+                            }}>
+                                Reward History
+                            </Typography>
+                        </>
+                    }
+                    {rewardsPageMonthFilter && 
+                        <>
+                            <NavigateNextIcon width={16}/>
+                            <Typography sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "rgba(32, 33, 36, 1)"}}>
+                                {rewardsPageMonthFilter} Reward
+                            </Typography>
+                        </>
+                    }
                 </Box>
-                {isMaster && <Typography variant="h4" component="h1" sx={{
-                    lineHeight: "22.4px",
-                    color: "#202124",
-                    fontWeight: 'bold',
-                    fontSize: '16px',
-                    fontFamily: 'Nunito Sans'}}>
-                    Master Partners
-                </Typography>}
+                    
+                {!rewardsPageMonthFilter && <Box sx={{display: "flex", justifyContent: 'space-between', width: '100%' }}>
+                    <Box sx={{display: "flex", alignItems: "center" }}>
+                        {isMaster && <Typography variant="h4" component="h1" sx={{
+                            lineHeight: "22.4px",
+                            color: "#202124",
+                            fontWeight: 'bold',
+                            fontSize: '16px',
+                            fontFamily: 'Nunito Sans'}}>
+                            {rewardsPage ? "Reward History" : "Master Partners"}
+                        </Typography>}
+                    </Box>
+                    {rewardsPage && <Box sx={{ display: 'flex', justifyContent: 'end' }}>
+                            <Select
+                                value={year}
+                                onChange={handleYearChange}
+                                sx={{
+                                    backgroundColor: "#fff",
+                                    borderRadius: "4px",
+                                    height: "48px",
+                                    fontFamily: "Nunito Sans",
+                                    fontSize: "14px",
+                                    minWidth: '112px',
+                                    fontWeight: 400,
+                                    zIndex: 0,
+                                    color: "rgba(17, 17, 19, 1)",
+                                    '@media (max-width: 360px)': { width: '100%' }
+                                }}
+                                MenuProps={{
+                                    PaperProps: { style: { maxHeight: 200, zIndex: 100 } },
+                                }}
+                                IconComponent={(props) =>
+                                    year === "" ? (
+                                        <KeyboardArrowUpIcon
+                                            {...props}
+                                            sx={{ color: "rgba(32, 33, 36, 1)" }}
+                                        />
+                                    ) : (
+
+                                        <KeyboardArrowDownIcon
+                                            {...props}
+                                            sx={{ color: "rgba(32, 33, 36, 1)" }}
+                                        />
+                                    )
+                                }
+                            >
+                                {yearsOptions.map((option, index) => (
+                                    <MenuItem
+                                        key={index}
+                                        value={option.toString()}
+                                        sx={{
+                                            fontFamily: "Nunito Sans",
+                                            fontWeight: 500,
+                                            fontSize: "14px",
+                                            lineHeight: "19.6px",
+                                            "&:hover": { backgroundColor: "rgba(80, 82, 178, 0.1)" },
+                                        }}
+                                    >
+                                        {option}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                    </Box>}
+                </Box>}
+
+                {rewardsPageMonthFilter && <Box sx={{display: "flex", alignItems: "center" }}>
+                    {isMaster && <Typography variant="h4" component="h1" sx={{
+                        lineHeight: "22.4px",
+                        color: "#202124",
+                        fontWeight: 'bold',
+                        fontSize: '16px',
+                        fontFamily: 'Nunito Sans'}}>
+                        {rewardsPageMonthFilter} Reward Details
+                    </Typography>}
+                </Box>}
             </>
             : 
             <Typography variant="h4" component="h1" sx={{
@@ -405,8 +568,9 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                 fontFamily: 'Nunito Sans'}}>
                 Partners
             </Typography>}
+            {rewardsPage && <RewardsHistory isMaster={isMaster} id={id ?? 0} selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth} flagMounthReward={flagMounthReward} setFlagMounthReward={setFlagMounthReward} setRewardsPageMonthFilter={setRewardsPageMonthFilter} rewards={rewards} setLoading={setLoading} loading={loading}/>}
             {accountPage && <PartnersAccounts id={id} setLoading={setLoading} loading={loading}/>}
-            {!accountPage &&
+            {!accountPage && !rewardsPage &&
                 <>
                     <Box sx={{
                         backgroundColor: '#fff',
@@ -528,7 +692,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                 }}
                                                 onKeyDown={(e) => {
                                                     if (e.key === 'Enter') {
-                                                        fetchRules();
+                                                        fetchRules();id
                                                     }
                                                 }}
                                                 InputProps={{
@@ -658,8 +822,8 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                     </TableRow>
                                                 </TableHead>
                                                 <TableBody>
-                                                        {partners.map((data) => (
-                                                            <TableRow key={data.id} sx={{
+                                                        {partners.map((data, index) => (
+                                                            <TableRow key={index} sx={{
                                                                 ...suppressionsStyles.tableBodyRow,
                                                                 '&:hover': {
                                                                     backgroundColor: '#F7F7F7',
@@ -764,7 +928,13 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                                                 <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {}}>
                                                                                     <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Payment history"/>
                                                                                 </ListItemButton>
-                                                                                <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {}}>
+                                                                                <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
+                                                                                        handleCloseMenu()
+                                                                                        setRewardsPage(true)
+                                                                                        setPartnerName(selectedRowData.partner_name)
+                                                                                        setId(selectedRowData.id)
+                                                                                        fetchRewards(year, selectedRowData.id)
+                                                                                    }}>
                                                                                     <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Reward history"/>
                                                                                 </ListItemButton>
                                                                                 {selectedRowData?.isActive === true 
@@ -847,7 +1017,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                     </Box>
                                     <InvitePartnerPopup 
                                         isMaster={isMaster}
-                                        updateOrAddAsset={updateOrAddAsset}
+                                        updateOrAddAsset={updateOrAddPartner}
                                         fileData={fileData} 
                                         open={formPopupOpen} 
                                         onClose={handleFormClosePopup}  />

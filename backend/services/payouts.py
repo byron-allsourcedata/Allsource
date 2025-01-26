@@ -28,13 +28,14 @@ class PayoutsService:
         
         for month_year, month_payouts in grouped_by_month.items():
             total_rewards = sum(payout.reward_amount for payout in month_payouts)
+
             rewards_paid = rewards_paid = sum(
                 payout.reward_amount for payout in month_payouts if payout.status == PayoutsStatus.PAID.value
             )
             rewards_approved = sum(
                 payout.reward_amount for payout in month_payouts if payout.confirmation_status == ConfirmationStatus.APPROVED.value
             )
-            
+                 
             payout_date = max(
                 (payout.paid_at for payout in month_payouts if payout.paid_at is not None),
                 default=None
@@ -52,6 +53,7 @@ class PayoutsService:
                 'rewards_approved': round(rewards_approved, 2),
                 'rewards_paid': round(rewards_paid, 2),
                 'count_accounts': len(partners),
+                'count_invites': len(payouts),
                 'payout_date': payout_date_formatted
             })
         
@@ -177,6 +179,10 @@ class PayoutsService:
             })
 
         return processed_payouts
+    
+    def get_total_payouts(self, year, month, partner_id, reward_type):
+        payouts = self.referral_payouts_persistence.get_total_payouts_to_refferal(year=year, month=month, partner_id=partner_id, reward_type=reward_type)
+        return self.process_monthly_payouts(payouts)
 
 
         
