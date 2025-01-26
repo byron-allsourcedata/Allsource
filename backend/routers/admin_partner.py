@@ -88,6 +88,18 @@ async def update_partner(
     
     return result
 
+@router.get('/rewards-history')
+@router.get('/rewards-history/')
+def get_payouts_partners(
+    referral_service: PayoutsService = Depends(get_payouts_service), 
+    year: Optional[int] = Query(None),
+    month: Optional[int] = Query(None),
+    partner_id: Optional[int] = Query(None),
+    is_master: Optional[bool] = Query(default=False),
+    reward_type: Optional[str] = Query(default='partner'),
+    search_query: str = Query(None, description="Search for email, first name")):
+    
+    return referral_service.get_total_payouts(year=year, month=month, partner_id=partner_id, reward_type=reward_type)
 
 @router.get('/rewards')
 @router.get('/rewards/')

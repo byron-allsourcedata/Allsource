@@ -2,7 +2,7 @@ import { Box, Typography, Button } from "@mui/material";
 import { useEffect, useState } from "react";
 import { suppressionsStyles } from "@/css/suppressions";
 import Image from "next/image";
-import MonthDetails from '@/components/PartnersRewardsMonth';
+import MonthDetails from './RewardsMonthFilter';
 import dayjs from "dayjs";  
 
 interface RewardData {

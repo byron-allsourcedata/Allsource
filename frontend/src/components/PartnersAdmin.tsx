@@ -97,7 +97,7 @@ interface RewardData {
     total_rewards: number;
     rewards_approved: number;
     rewards_paid: number;
-    count_accounts: number;
+    count_invites: number;
     payout_date: Date;
   }
 
@@ -163,14 +163,16 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
         setYear(selectedYear);
         fetchRewards(selectedYear);
     };
+    
 
-    const fetchRewards = async (selectedYear: string) => {
+    const fetchRewards = async (selectedYear: string, partnerId=null) => {
         setLoading(true);
+        let response
         try {
-            const response = await axiosInstance.get("/admin-partners/rewards", {
+            response = await axiosInstance.get("/admin-partners/rewards-history", {
                 params: {
                     year: selectedYear,
-                    partner_id: id,
+                    partner_id: partnerId ?? id,
                     is_master: isMaster
                 }
             });
@@ -414,10 +416,6 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
         setSearch(event.target.value);
     };
 
-    useEffect(() => {
-        console.log(rewards)
-    }, [rewards])
-
 
     useEffect(() => {
         if (masterData?.id){
@@ -448,6 +446,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                             setPartnerName(null)
                         }
                         setAccountName(null)
+                        setRewardsPageMonthFilter(null)
                     }}
                     sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: rewardsPage ?  "rgba(128, 128, 128, 1)" : "rgba(32, 33, 36, 1)", cursor: "pointer"}}>
                         {isMaster || masterData ? "Master" : ""} Partner {partnerName ? `- ${partnerName}` : ""}
@@ -465,6 +464,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                             <NavigateNextIcon width={16}/>
                             <Typography sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: rewardsPageMonthFilter ? "rgba(128, 128, 128, 1)" : "rgba(32, 33, 36, 1)", cursor: rewardsPageMonthFilter ? "pointer" : ''}} onClick={() => {
                                 setRewardsPageMonthFilter(null)
+                                setRewards([])
                                 fetchRewards(year)
                                 setRewardsPage(true)
                                 setFlagMounthReward(false)
@@ -933,7 +933,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                                                         setRewardsPage(true)
                                                                                         setPartnerName(selectedRowData.partner_name)
                                                                                         setId(selectedRowData.id)
-                                                                                        fetchRewards(year)
+                                                                                        fetchRewards(year, selectedRowData.id)
                                                                                     }}>
                                                                                     <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Reward history"/>
                                                                                 </ListItemButton>

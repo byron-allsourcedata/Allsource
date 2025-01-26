@@ -54,12 +54,25 @@ class ReferralPayoutsPersistence:
     
     def get_referral_payouts_by_parent_ids(self, user_ids):
         return self.db.query(ReferralPayouts).filter(ReferralPayouts.parent_id.in_(user_ids)).all()
+
+    def get_total_payouts_to_refferal(self, partner_id, reward_type, year=None, month=None):
+        query = self.db.query(ReferralPayouts)\
+            .join(Partner, Partner.user_id == ReferralPayouts.parent_id)\
+            .filter(Partner.id == partner_id)
+
+        if year:
+            query = query.filter(extract("year", ReferralPayouts.created_at) == year)
+        
+        if month:
+            query = query.filter(extract("month", ReferralPayouts.created_at) == month)
+        
+        return query.all()   
     
     def get_all_referral_payouts(self, is_master, year=None, month=None):
         query = self.db.query(ReferralPayouts)\
             .outerjoin(Partner, Partner.user_id == ReferralPayouts.parent_id)\
             .filter(Partner.is_master == is_master)
-        
+
         if year:
             query = query.filter(extract("year", ReferralPayouts.created_at) == year)
         
@@ -85,17 +98,18 @@ class ReferralPayoutsPersistence:
             ReferralDiscountCode.coupon,
         ).join(
            ReferralPayouts, ReferralPayouts.parent_id == Partner.user_id
-        ).join(
+        ).outerjoin(
             ReferralUser, ReferralUser.user_id == ReferralPayouts.user_id
-        ).join(
+        ).outerjoin(
             Users, Users.id == ReferralPayouts.user_id
-        ).join(
+        ).outerjoin(
             ReferralDiscountCode, ReferralDiscountCode.id == ReferralUser.discount_code_id
         ).filter(
             Partner.id == partner_id
         ).order_by(
             ReferralPayouts.created_at.desc()
         )
+
         if reward_type == 'master_partner':
             query = query.filter(ReferralPayouts.reward_type == 'master_partner')
         else:
