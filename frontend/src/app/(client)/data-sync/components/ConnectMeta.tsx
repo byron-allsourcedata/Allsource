@@ -142,7 +142,9 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                 service_name: 'meta'
             }
         });
-
+        if (newListResponse.status == 200 && newListResponse.data.url) {
+            window.location.href = newListResponse.data.url;
+        }
         if (newListResponse.status !== 201) {
             throw new Error('Failed to create a new tags')
         }
