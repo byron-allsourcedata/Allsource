@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends, Query 
 from typing import Optional, List
 from datetime import date
+from services.payouts import PayoutsService
 from schemas.partners import PartnerCreateRequest, PartnerUpdateRequest, PartnersResponse, OpportunityStatus
-from dependencies import get_partners_service, check_user_admin, PartnersService
+from dependencies import get_partners_service, get_payouts_service, check_user_admin, PartnersService
 
 router = APIRouter(dependencies=[Depends(check_user_admin)])
 
@@ -86,3 +87,29 @@ async def update_partner(
     result = await get_partners_service.update_partner(partner_id, partnerNewData)
     
     return result
+
+@router.get('/rewards-history')
+@router.get('/rewards-history/')
+def get_payouts_partners(
+    referral_service: PayoutsService = Depends(get_payouts_service), 
+    year: Optional[int] = Query(None),
+    month: Optional[int] = Query(None),
+    partner_id: Optional[int] = Query(None),
+    is_master: Optional[bool] = Query(default=False),
+    reward_type: Optional[str] = Query(default='partner'),
+    search_query: str = Query(None, description="Search for email, first name")):
+    
+    return referral_service.get_total_payouts(year=year, month=month, partner_id=partner_id, reward_type=reward_type)
+
+@router.get('/rewards')
+@router.get('/rewards/')
+def get_payouts_partners(
+    referral_service: PayoutsService = Depends(get_payouts_service), 
+    year: Optional[int] = Query(None),
+    month: Optional[int] = Query(None),
+    partner_id: Optional[int] = Query(None),
+    is_master: Optional[bool] = Query(default=False),
+    reward_type: Optional[str] = Query(default='partner'),
+    search_query: str = Query(None, description="Search for email, first name")):
+
+    return referral_service.get_payouts_partners(year=year, month=month, partner_id=partner_id, search_query=search_query, is_master=is_master, reward_type=reward_type)

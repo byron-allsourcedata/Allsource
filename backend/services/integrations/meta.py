@@ -19,7 +19,7 @@ from utils import format_phone_number
 from typing import List
 from config.meta import MetaConfig
 
-APP_SERCRET = MetaConfig.app_secret
+APP_SECRET = MetaConfig.app_secret
 APP_ID = MetaConfig.app_piblic
 
 
@@ -78,8 +78,9 @@ class MetaIntegrationsService:
             'access_token': access_token.get('access_token'),
             'expire_access_token': access_token.get('expires_in'),
             'last_access_token_update': datetime.now(),
-            'service_name': SourcePlatformEnum.META.value,
+            'service_name': SourcePlatformEnum.META.value
         })
+            
         integrations = self.integrations_persisntece.get_all_integrations_filter_by(ad_account_id=ad_account_info.get('id'), domain_id=domain.id)
         for integration in integrations:
             integration.access_token == access_token.get('access_token')
@@ -88,14 +89,37 @@ class MetaIntegrationsService:
             self.integrations_persisntece.db.commit()
         if not new_integration:
             raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
+        
         return new_integration
     
+    def check_custom_audience_terms(self, ad_account_id, access_token):
+        url = f"https://graph.facebook.com/v20.0/{ad_account_id}/customaudiences"
+        
+        params = {
+            "access_token": access_token,
+            "name": "Custom Audience test",
+            "subtype": "CUSTOM",
+            "customer_file_source": "USER_PROVIDED_ONLY"
+        }
+
+        response = self.__handle_request("POST", url=url, params=params)
+
+        if response.status_code == 200:
+            return {"terms_accepted": True}
+        
+        error_data = response.json()
+        if error_data.get('error', {}).get('error_subcode') == 1870090:
+            ad_account_id = ad_account_id.replace("act_", "")
+            terms_link = f"https://business.facebook.com/ads/manage/customaudiences/tos/?act={ad_account_id}"
+            return {"terms_accepted": False, "terms_link": terms_link}
+        
+        return {"terms_accepted": False, "error": error_data}
 
     def get_long_lived_token(self, fb_exchange_token):
         url = 'https://graph.facebook.com/v20.0/oauth/access_token'
         params = {
             'client_id': APP_ID,
-            'client_secret': APP_SERCRET,
+            'client_secret': APP_SECRET,
             'code': fb_exchange_token
         }
         response = self.__handle_request('GET', url=url, params=params)
@@ -165,11 +189,17 @@ class MetaIntegrationsService:
             'description': description if description else None,
             'customer_file_source': 'USER_PROVIDED_ONLY',
         }
+        id_account = None
+        try:
+            id_account = AdAccount(f'{list.ad_account_id}').create_custom_audience(
+                    fields=fields,
+                    params=params,
+                ).get('id')
+        except:
+            return self.check_custom_audience_terms(list.ad_account_id, credential.access_token)
+        
         return {
-            'id': AdAccount(f'{list.ad_account_id}').create_custom_audience(
-                fields=fields,
-                params=params,
-            ).get('id'),
+            'id': id_account,
             'list_name': list.name
         }
        

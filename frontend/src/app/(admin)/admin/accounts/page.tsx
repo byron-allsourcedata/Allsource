@@ -1,6 +1,6 @@
 "use client"
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { Box, Grid, Typography, TextField, Button, List, ListItemText, ListItemButton, IconButton, Tabs, Tab, 
+import { Box, Grid, Typography, TextField, Button, List, ListItemText, ListItemButton, IconButton, SelectChangeEvent, Select, MenuItem, Tabs, Tab, 
     InputAdornment, Popover, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
@@ -13,6 +13,8 @@ import CalendarPopup from "@/components/CustomCalendar";
 import { DateRangeIcon } from "@mui/x-date-pickers/icons";
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import SearchIcon from '@mui/icons-material/Search';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import InvitePartnerPopup from "@/components/InvitePartnerPopup"
 import EnablePartnerPopup from "@/components/EnablePartnerPopup"
 import { showErrorToast, showToast } from '@/components/ToastNotification';
@@ -20,6 +22,7 @@ import PartnersAccounts from "@/components/PartnersAccounts";
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import CustomizedProgressBar from "@/components/ProgressBar";
 import PaymentHistory from "@/components/PaymentHistory";
+import RewardsHistory from "./RewardsHistory"
 import Slider from "./MakePartner"
 import MakePartner from "./MakePartner";
 
@@ -91,6 +94,15 @@ interface EnabledPartner {
     fullName?: string
 }
 
+interface RewardData {
+    month: string;
+    total_rewards: number;
+    rewards_approved: number;
+    rewards_paid: number;
+    count_invites: number;
+    payout_date: Date;
+  }
+
 const Accounts: React.FC = () => {
     const [isMaster, setIsMaster] = useState(false);
     const [partners, setPartners] = useState<PartnerData[]>([]);
@@ -110,6 +122,11 @@ const Accounts: React.FC = () => {
     const [noticePopupOpen, setNoticePopupOpen] = useState(false);
     const [fileData, setFileData] = useState<NewPartner>({id: 0, email: "", fullName: "", companyName: "", commission: ""});
     const [enabledData, setEnabledData] = useState<EnabledPartner>({id: 0});
+    const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+    const [rewardsPage, setRewardsPage] = useState(false);
+    const [rewardsPageMonthFilter, setRewardsPageMonthFilter] = useState<string | null>(null)
+    const [rewards, setRewards] = useState<RewardData[]>([]);
+    const currentYear = new Date().getFullYear();
     const [selectedRowData, setSelectedRowData] = useState<any>(null);
     const [paymentHistory, setPaymentHistoryPage] = useState(false);
     const [id, setId] = useState<number | null>(null);
@@ -119,6 +136,35 @@ const Accounts: React.FC = () => {
     const [errorResponse, setErrosResponse] = useState(false);
     const [isSliderOpen, setSliderOpen] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+    const [flagMounthReward, setFlagMounthReward] = useState(true);
+    const [year, setYear] = useState<string>(currentYear.toString());
+    const yearsOptions: (string | number)[] = Array.from(
+        { length: 12 },
+        (_, i) => new Date().getFullYear() - i
+    );
+
+    const handleYearChange = (event: SelectChangeEvent) => {
+        const selectedYear = event.target.value;
+        setYear(selectedYear);
+        fetchRewards(selectedYear);
+    };
+
+    const fetchRewards = async (selectedYear: string, partnerId=null) => {
+        setLoading(true);
+        try {
+            const response = await axiosInstance.get("/admin-partners/rewards-history", {
+                params: {
+                    year: selectedYear,
+                    partner_id: partnerId ?? id,
+                    is_master: isMaster
+                }
+            });
+            setRewards(response.data);
+        } catch (error) {
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const tableHeaders = [
         { key: 'partner_name', label: 'Account name', sortable: false },
@@ -362,26 +408,128 @@ const Accounts: React.FC = () => {
                 <Grid container>
                     <Grid item xs={12} sx={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                         <Box sx={{ display: "flex", flexDirection: "column" }}>
-                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', mt: 3, justifyContent: 'space-between' }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', mt: 3, pr: 3, justifyContent: 'space-between' }}>
                                 {partnerName
                                 &&
-                                <>
                                     <Box sx={{display: "flex", alignItems: "center", gap: "5px" }}>
                                         <Typography onClick={() => {
                                             setPartnerName(null)
                                             setPaymentHistoryPage(false)
+                                            if(rewardsPage) {
+                                                setRewardsPage(false)
+                                            }
+                                            if(rewardsPageMonthFilter) {
+                                                setRewardsPageMonthFilter(null)
+                                            }
                                         }}
                                         sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "#808080", cursor: "pointer", zIndex: 1000}}>
                                             Account {partnerName ? `- ${partnerName}` : ""}
                                         </Typography>
                                         <NavigateNextIcon width={16}/>
+                                        {paymentHistory &&
                                         <Typography sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "#808080"}}>
                                             Payment History
-                                        </Typography>
+                                        </Typography>}
+                                        {rewardsPage &&
+                                        <Typography sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', cursor: rewardsPageMonthFilter ? "pointer" : '', color: rewardsPageMonthFilter ? "rgba(128, 128, 128, 1)" : "rgba(32, 33, 36, 1)"}} onClick={() => {
+                                            setRewardsPageMonthFilter(null)
+                                            fetchRewards(year)
+                                            setRewardsPage(true)
+                                            setFlagMounthReward(false)
+                                            setSelectedMonth(null) 
+                                        }}>
+                                            Reward History
+                                        </Typography>}
+                                        {rewardsPageMonthFilter &&
+                                        <>
+                                            <NavigateNextIcon width={16}/>
+                                            <Typography sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "rgba(32, 33, 36, 1)"}}>
+                                                {rewardsPageMonthFilter} Reward
+                                            </Typography>
+                                        </>
+                                        }
                                     </Box>
-                                </>}
+                                }
+
+                                {rewardsPage && !rewardsPageMonthFilter && 
+                                <Box sx={{display: "flex", justifyContent: 'space-between', mb: 3, mt: 3, width: '100%' }}>
+                                    <Box sx={{display: "flex", alignItems: "center" }}>
+                                        {<Typography variant="h4" component="h1" sx={{
+                                            lineHeight: "22.4px",
+                                            color: "#202124",
+                                            fontWeight: 'bold',
+                                            fontSize: '16px',
+                                            fontFamily: 'Nunito Sans'}}>
+                                            Reward History
+                                        </Typography>}
+                                    </Box>
+                                    {rewardsPage && <Box sx={{ display: 'flex', justifyContent: 'end' }}>
+                                        <Select
+                                            value={year}
+                                            onChange={handleYearChange}
+                                            sx={{
+                                                backgroundColor: "#fff",
+                                                borderRadius: "4px",
+                                                height: "48px",
+                                                fontFamily: "Nunito Sans",
+                                                fontSize: "14px",
+                                                minWidth: '112px',
+                                                fontWeight: 400,
+                                                zIndex: 0,
+                                                color: "rgba(17, 17, 19, 1)",
+                                                '@media (max-width: 360px)': { width: '100%' }
+                                            }}
+                                            MenuProps={{
+                                                PaperProps: { style: { maxHeight: 200, zIndex: 100 } },
+                                            }}
+                                            IconComponent={(props) =>
+                                                year === "" ? (
+                                                    <KeyboardArrowUpIcon
+                                                        {...props}
+                                                        sx={{ color: "rgba(32, 33, 36, 1)" }}
+                                                    />
+                                                ) : (
+
+                                                    <KeyboardArrowDownIcon
+                                                        {...props}
+                                                        sx={{ color: "rgba(32, 33, 36, 1)" }}
+                                                    />
+                                                )
+                                            }
+                                        >
+                                            {yearsOptions.map((option, index) => (
+                                                <MenuItem
+                                                    key={index}
+                                                    value={option.toString()}
+                                                    sx={{
+                                                        fontFamily: "Nunito Sans",
+                                                        fontWeight: 500,
+                                                        fontSize: "14px",
+                                                        lineHeight: "19.6px",
+                                                        "&:hover": { backgroundColor: "rgba(80, 82, 178, 0.1)" },
+                                                    }}
+                                                >
+                                                    {option}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                        </Box>}
+                                </Box>}
+
+                                {rewardsPageMonthFilter && <Box sx={{display: "flex", alignItems: "center", mt: 3, mb: 3 }}>
+                                    <Typography variant="h4" component="h1" sx={{
+                                        lineHeight: "22.4px",
+                                        color: "#202124",
+                                        fontWeight: 'bold',
+                                        fontSize: '16px',
+                                        fontFamily: 'Nunito Sans'}}>
+                                        {rewardsPageMonthFilter} Reward Details
+                                    </Typography>
+                                </Box>}
+
                                 {paymentHistory && <PaymentHistory/>}
-                                {!paymentHistory && 
+                                {rewardsPage && <RewardsHistory isMaster={isMaster} id={id ?? 0} selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth} flagMounthReward={flagMounthReward} setFlagMounthReward={setFlagMounthReward} setRewardsPageMonthFilter={setRewardsPageMonthFilter} rewards={rewards} setLoading={setLoading} loading={loading}/>}
+                                {!paymentHistory && !rewardsPage &&
                                 <>
                                     <Box sx={{
                                         backgroundColor: '#fff',
@@ -390,7 +538,6 @@ const Accounts: React.FC = () => {
                                         margin: '0 auto',
                                         display: 'flex',
                                         mt: 3,
-                                        pr: 3,
                                         flexDirection: 'column',
                                         justifyContent: 'space-between',
                                         minHeight: '77vh',
@@ -608,7 +755,20 @@ const Accounts: React.FC = () => {
                                                                         </TableCell>
 
                                                                         <TableCell className='table-data'sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
-                                                                            {data.sources}
+                                                                            {(() => {
+                                                                                switch (data.sources.toLowerCase()) {
+                                                                                    case "google":
+                                                                                        return "Google Ads";
+                                                                                    case "big_commerce":
+                                                                                        return "BigCommerce";
+                                                                                    case "awin":
+                                                                                        return "AWIN";
+                                                                                    case "shopify":
+                                                                                        return "Shopify";
+                                                                                    default:
+                                                                                        return data.sources;
+                                                                                }
+                                                                            })()}
                                                                         </TableCell>
 
                                                                         <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
@@ -656,15 +816,25 @@ const Accounts: React.FC = () => {
                                                                                         }}>
                                                                                             <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Payment history"/>
                                                                                         </ListItemButton>
+
+                                                                                        <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
+                                                                                                    handleCloseMenu()
+                                                                                                    setRewardsPage(true)
+                                                                                                    setPartnerName(selectedRowData.full_name)
+                                                                                                    setId(selectedRowData.id)
+                                                                                                    fetchRewards(year, selectedRowData.id)
+                                                                                                }}>
+                                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Reward history"/>
+                                                                                        </ListItemButton>
+                                                                                          
+
                                                                                         <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => { handleCloseMenu(), setIsMaster(false), handleOpenSlider(selectedRowData.id) }}>
                                                                                             <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Make partner"/>
                                                                                         </ListItemButton>
                                                                                         <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => { handleCloseMenu(), setIsMaster(true), handleOpenSlider(selectedRowData.id) }}>
                                                                                             <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Make Master partner"/>
                                                                                         </ListItemButton>
-                                                                                        <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {}}>
-                                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Reward history"/>
-                                                                                        </ListItemButton>
+                                                                                        
                                                                                         {selectedRowData?.status === "Active" 
                                                                                         ?   <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
                                                                                                 handleNoticeOpenPopup()
