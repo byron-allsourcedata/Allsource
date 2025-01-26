@@ -34,9 +34,10 @@ interface CalendarPopupProps {
     onDateChange: (dates: { start: Date | null; end: Date | null }) => void;
     onDateLabelChange: (label: string) => void;
     onApply: (dates: { start: Date | null; end: Date | null }) => void;
+    selectedDates?: { start: Date | null; end: Date | null };
 }
 
-const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, onDateChange, onApply, onDateLabelChange }) => {
+const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, onDateChange, onApply, onDateLabelChange, selectedDates }) => {
     const [startDate, setStartDate] = useState<Date | null>(null);
     const [endDate, setEndDate] = useState<Date | null>(null);
     const [activeLabel, setActiveLabel] = useState<string | null>(null);
@@ -44,6 +45,13 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
     const [startDateString, setStartDateString] = useState<string>('');
     const [endDateString, setEndDateString] = useState<string>('');
     const [showDatePicker, setShowDatePicker] = useState(false);
+
+    useEffect(() => {
+        if (open && selectedDates) {
+            setStartDate(selectedDates.start);
+            setEndDate(selectedDates.end);
+        }
+    }, [open]);
 
     const handleChangeStringStart = () => {
         const start = new Date(startDateString);

@@ -467,6 +467,7 @@ const Leads: React.FC = () => {
             setData(Array.isArray(leads) ? leads : []);
             setCount(count || 0);
             setStatus(response.data.status);
+            setSelectedDates({start: null, end: null})
             setSelectedFilters([]);
         } catch (error) {
             console.error('Error fetching leads:', error);
@@ -487,9 +488,11 @@ const Leads: React.FC = () => {
         switch (filterToDelete.label) {
             case 'From Date':
                 filters.from_date = null;
+                setSelectedDates({start: null, end: null})
                 break;
             case 'To Date':
                 filters.to_date = null;
+                setSelectedDates({start: null, end: null})
                 break;
             case 'From Time':
                 filters.from_time = null;
@@ -569,6 +572,7 @@ const Leads: React.FC = () => {
         if (filterToDelete.label === 'Dates') {
             setAppliedDates({ start: null, end: null });
             setFormattedDates('');
+            setSelectedDates({start: null, end: null})
         }
 
         // Обновляем фильтры для применения
@@ -1473,6 +1477,7 @@ const Leads: React.FC = () => {
                         onDateChange={handleDateChange}
                         onApply={handleApply}
                         onDateLabelChange={handleDateLabelChange}
+                        selectedDates={selectedDates}
                     />
                 </Box>
             </Box>
