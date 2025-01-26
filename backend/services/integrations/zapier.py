@@ -67,7 +67,7 @@ class ZapierIntegrationService:
         return
     
 
-    async def process_data_sync(self, five_x_five_user, access_token, integration_data_sync):
+    async def process_data_sync(self, five_x_five_user, access_token, integration_data_sync, lead_user):
         profile = self.__create_profile(five_x_five_user, integration_data_sync)
         if profile == ProccessDataSyncResult.AUTHENTICATION_FAILED.value or profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
             return profile

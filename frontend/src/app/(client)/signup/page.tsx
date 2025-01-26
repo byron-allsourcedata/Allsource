@@ -30,6 +30,7 @@ const Signup: React.FC = () => {
   const ift = searchParams.get('ift')
   const ftd = searchParams.get('ftd')
   const referral = searchParams.get('referral')
+  const slack_status = searchParams.get('slack_status')
   const shop_hash = searchParams.get('shop_hash')
   const source_platform = searchParams.get('source_platform')
   const initialShopifyData = {
@@ -53,7 +54,7 @@ const Signup: React.FC = () => {
     ...{ ftd: ftd },
     ...{ referral: referral },
     ...{ shop_hash: shop_hash },
-    ...{source_platform: source_platform}
+    ...{ source_platform: source_platform }
   });
   const [formSubmitted, setFormSubmitted] = useState(false);
 
@@ -96,6 +97,9 @@ const Signup: React.FC = () => {
     if (Object.keys(utmParams).length > 0) {
       localStorage.setItem(UTM_STORAGE_KEY, JSON.stringify(utmParams));
     }
+    if (slack_status){
+      showErrorToast(slack_status);
+    } 
   }, []);
 
   const validateField = (name: string, value: string) => {
@@ -103,9 +107,18 @@ const Signup: React.FC = () => {
 
     switch (name) {
       case 'full_name':
-        if (!value) {
+        const isValid = /^[а-яА-Яa-zA-Z0-9.\s]+$/.test(value.trim());
+
+        const hasLetter = /[a-zA-Zа-яА-Я]/.test(value);
+
+        if (!value.trim()) {
           newErrors.full_name = 'Full name is required';
-        } else {
+        } else if (!isValid) {
+          newErrors.full_name = 'Only alphanumeric characters and spaces are allowed';
+        } else if (!hasLetter) {
+          newErrors.full_name = 'Full name must contain at least one letter';
+        }
+        else {
           delete newErrors.full_name;
         }
         break;
@@ -143,7 +156,7 @@ const Signup: React.FC = () => {
       ...formValues,
       [name]: value,
     });
-    validateField(name, value);
+    validateField(name, value.trim());
   };
 
   const isPasswordValid = (password: string) => {
@@ -320,7 +333,7 @@ const Signup: React.FC = () => {
                   utm_params: utmData,
                   ...{ referral: referral },
                   ...{ shop_hash: shop_hash },
-                  ...{source_platform: source_platform},
+                  ...{ source_platform: source_platform },
                   ...(isShopifyDataComplete && { shopify_data: initialShopifyData })
                 });
 

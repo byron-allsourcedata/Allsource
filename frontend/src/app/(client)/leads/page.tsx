@@ -229,24 +229,25 @@ const Leads: React.FC = () => {
 
 
             // Processing "Date Calendly"
+            const timezoneOffsetInHours = -new Date().getTimezoneOffset() / 60;
             const startEpoch = appliedDates.start
                 ? Math.floor(new Date(appliedDates.start.toISOString()).getTime() / 1000)
                 : null;
 
-            const normalDate = startEpoch 
-            ? new Date(startEpoch * 1000).toLocaleString('en-US', { timeZone: 'UTC' }) 
-            : null;
-            
-            const normalDateSmr = startEpoch 
-            ? new Date(startEpoch * 1000).toLocaleString('ru-RU', { timeZone: 'Europe/Samara' }) 
-            : null;
-            
+            const normalDate = startEpoch
+                ? new Date(startEpoch * 1000).toLocaleString('en-US', { timeZone: 'UTC' })
+                : null;
+
+            const normalDateSmr = startEpoch
+                ? new Date(startEpoch * 1000).toLocaleString('ru-RU', { timeZone: 'Europe/Samara' })
+                : null;
+
 
             const endEpoch = appliedDates.end
                 ? Math.floor(new Date(appliedDates.end.toISOString()).getTime() / 1000)
                 : null;
 
-            let url = `/leads?page=${page + 1}&per_page=${rowsPerPage}`;
+            let url = `/leads?page=${page + 1}&per_page=${rowsPerPage}&timezone_offset=${timezoneOffsetInHours}`;
             if (startEpoch !== null && endEpoch !== null) {
                 url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
             }
@@ -277,7 +278,10 @@ const Leads: React.FC = () => {
             if (selectedFilters.some(filter => filter.label === 'From Date')) {
                 const fromDate = selectedFilters.find(filter => filter.label === 'From Date')?.value || '';
                 if (fromDate) {
-                    const fromDateEpoch = Math.floor(new Date(fromDate).getTime() / 1000);
+                    const fromDateUtc = new Date(fromDate);
+                    fromDateUtc.setUTCHours(0, 0, 0, 0);
+                    console.log(fromDateUtc)
+                    const fromDateEpoch = Math.floor(fromDateUtc.getTime() / 1000);
                     url += `&from_date=${fromDateEpoch}`;
                 }
             }
@@ -286,10 +290,13 @@ const Leads: React.FC = () => {
             if (selectedFilters.some(filter => filter.label === 'To Date')) {
                 const toDate = selectedFilters.find(filter => filter.label === 'To Date')?.value || '';
                 if (toDate) {
-                    const toDateEpoch = Math.floor(new Date(toDate).getTime() / 1000);
+                    const toDateUtc = new Date(toDate);
+                    toDateUtc.setUTCHours(23, 59, 59, 999);
+                    const toDateEpoch = Math.floor(toDateUtc.getTime() / 1000);
                     url += `&to_date=${toDateEpoch}`;
                 }
             }
+
 
             // Processing "Lead Status"
             if (selectedFilters.some(filter => filter.label === 'Lead Status')) {
@@ -452,7 +459,7 @@ const Leads: React.FC = () => {
 
         try {
             setIsLoading(true)
-            setAppliedDates({start: null, end: null})
+            setAppliedDates({ start: null, end: null })
             setFormattedDates('')
             sessionStorage.removeItem('filters')
             const response = await axiosInstance.get(url);
@@ -1079,16 +1086,16 @@ const Leads: React.FC = () => {
                                     }
                                 }}
                             >
-                                <DateRangeIcon fontSize='medium' sx={{color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',}} />
+                                <DateRangeIcon fontSize='medium' sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)', }} />
                                 <Typography variant="body1" sx={{
                                     fontFamily: 'Nunito Sans',
                                     fontSize: '14px',
                                     fontWeight: '600',
                                     lineHeight: '19.6px',
                                     textAlign: 'left',
-                                    
-                                    "@media (max-width: 600px)":{
-                                        display:'none'
+
+                                    "@media (max-width: 600px)": {
+                                        display: 'none'
                                     },
                                 }}>
                                     {formattedDates}
@@ -1113,7 +1120,7 @@ const Leads: React.FC = () => {
                             </Button>
                         </Box>
                     </Box>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, overflowX: 'auto', "@media (max-width: 600px)": {mb:1} }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, overflowX: 'auto', "@media (max-width: 600px)": { mb: 1 } }}>
                         {selectedFilters.length > 0 && (
                             <Chip
                                 className='second-sub-title'
@@ -1243,15 +1250,15 @@ const Leads: React.FC = () => {
                                                 ? (hasNotification ? '63vh' : '68vh')
                                                 : '72vh',
                                             overflowY: 'auto',
-                                            "@media (max-height: 800px)":{
+                                            "@media (max-height: 800px)": {
                                                 maxHeight: selectedFilters.length > 0
-                                                ? (hasNotification ? '53vh' : '57vh')
-                                                : '70vh',
+                                                    ? (hasNotification ? '53vh' : '57vh')
+                                                    : '70vh',
                                             },
-                                            "@media (max-width: 400px)":{
+                                            "@media (max-width: 400px)": {
                                                 maxHeight: selectedFilters.length > 0
-                                                ? (hasNotification ? '53vh' : '60vh')
-                                                : '67vh',
+                                                    ? (hasNotification ? '53vh' : '60vh')
+                                                    : '67vh',
                                             },
                                         }}
                                     >
@@ -1373,16 +1380,16 @@ const Leads: React.FC = () => {
                                                                 <UnlockButton onClick={() => handleUnlock()} label="Unlock mobile number" />
                                                             )}
                                                         </TableCell>
-                                                        
+
                                                         <TableCell
                                                             sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.first_visited_date
                                                                 ? (() => {
                                                                     const [day, month, year] = row.first_visited_date.split('.');
                                                                     return `${month}/${day}/${year}`;
-                                                                  })()
+                                                                })()
                                                                 : '--'}
                                                         </TableCell>
-                                                        
+
                                                         <TableCell
                                                             sx={{ ...leadsStyles.table_column, position: 'relative' }}
                                                         >
@@ -1437,7 +1444,7 @@ const Leads: React.FC = () => {
                                             </TableBody>
                                         </Table>
                                     </TableContainer>
-                                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0', "@media (max-width: 600px)": {padding: '12px 0 0'}   }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0', "@media (max-width: 600px)": { padding: '12px 0 0' } }}>
                                         <CustomTablePagination
                                             count={count_leads ?? 0}
                                             page={page}

@@ -24,7 +24,7 @@ from config.rmq_connection import RabbitMQConnection
 from services.integrations.base import IntegrationService
 from dependencies import (IntegrationsPresistence, LeadsPersistence, AudiencePersistence, 
                           LeadOrdersPersistence, IntegrationsUserSyncPersistence, 
-                          AWSService, UserDomainsPersistence, SuppressionPersistence, ExternalAppsInstallationsPersistence)
+                          AWSService, UserDomainsPersistence, SuppressionPersistence, ExternalAppsInstallationsPersistence, UserPersistence)
 
 
 load_dotenv()
@@ -117,14 +117,15 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
             'omnisend': integration_service.omnisend,
             'mailchimp': integration_service.mailchimp,
             'sendlane': integration_service.sendlane,
-            'zapier': integration_service.zapier
+            'zapier': integration_service.zapier,
+            'slack': integration_service.slack
         }
         
         service = service_map.get(service_name)
         lead_user, five_x_five_user, user_integration, integration_data_sync = get_lead_attributes(session, lead_users_id, data_sync_id)
         
         if service:
-            result = await service.process_data_sync(five_x_five_user, user_integration, integration_data_sync)
+            result = await service.process_data_sync(five_x_five_user, user_integration, integration_data_sync, lead_user)
             import_status = DataSyncImportedStatus.SENT.value
             match result:
                 case ProccessDataSyncResult.INCORRECT_FORMAT.value:
@@ -200,7 +201,8 @@ async def main():
             aws_service=AWSService(get_s3_client()),
             domain_persistence=UserDomainsPersistence(session),
             suppression_persistence=SuppressionPersistence(session),
-            epi_persistence=ExternalAppsInstallationsPersistence(session)
+            epi_persistence=ExternalAppsInstallationsPersistence(session),
+            user_persistence=UserPersistence(session)
         )
         with integration_service as service:
             await queue.consume(

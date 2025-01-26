@@ -14,6 +14,7 @@ import NotificationsOutlinedIcon from '@mui/icons-material/NotificationsOutlined
 import { useSSE } from "../../../context/SSEContext";
 import QuestionMarkOutlinedIcon from '@mui/icons-material/QuestionMarkOutlined';
 import PersonIcon from '@mui/icons-material/Person';
+import { fetchUserData } from "@/services/meService";
 
 const headerStyles = {
   headers: {
@@ -30,7 +31,7 @@ const headerStyles = {
     left: 0,
     right: 0,
     background: '#fff',
-    zIndex: 1200
+    zIndex: 10
   },
   logoContainer: {
     display: 'flex',
@@ -48,7 +49,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
   const [hasNotification, setHasNotification] = useState(NewRequestNotification);
   const router = useRouter();
   const { newNotification } = useSSE();
-  const { full_name: userFullName, email: userEmail, resetUserData, partner } = useUser();
+  const { full_name: userFullName, email: userEmail, resetUserData, partner, backButton, setBackButton } = useUser();
   const meItem = typeof window !== "undefined" ? sessionStorage.getItem("me") : null;
   const meData = meItem ? JSON.parse(meItem) : { full_name: '', email: '' };
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -60,6 +61,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
   const [notificationIconPopupOpen, setNotificationIconPopupOpen] = useState(false);
   const [hasNewNotifications, setHasNewNotifications] = useState<boolean>(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const [visibleButton, setVisibleButton] = useState(false)
   const handleSignOut = () => {
     localStorage.clear();
     sessionStorage.clear();
@@ -67,6 +69,40 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
     resetTrialData();
     window.location.href = "/signin";
   };
+
+  useEffect(() => {
+    let token = localStorage.getItem('parent_token')
+    if (backButton || token) {
+      setVisibleButton(true);
+    } else {
+      setVisibleButton(false)
+    }
+  }, [backButton, setBackButton]);
+
+  const handleReturnToMain = async () => {
+    const parent_token = localStorage.getItem('parent_token');
+    const parent_domain = sessionStorage.getItem('parent_domain')
+    if (parent_token) {
+      await new Promise<void>((resolve) => {
+        sessionStorage.clear()
+        localStorage.removeItem('parent_token');
+        sessionStorage.removeItem('parent_domain')
+        localStorage.setItem('token', parent_token);
+        sessionStorage.setItem('current_domain', parent_domain || '')
+        fetchUserData()
+        setBackButton(false)
+
+        setTimeout(() => {
+          resolve();
+        }, 0);
+      });
+
+
+    }
+
+    router.push("/partners");
+  };
+
 
   const handleSupportButton = () => {
     window.open('https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai', '_blank');
@@ -122,28 +158,46 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
           <IconButton onClick={handleLogoClick} sx={{ "&:hover": { backgroundColor: 'transparent' } }}>
             <Image src="/logo.svg" alt="logo" height={30} width={50} />
           </IconButton>
+          {visibleButton && (
+            <Button
+              onClick={handleReturnToMain}
+              sx={{
+                fontFamily: "Nunito Sans",
+                fontSize: "14px",
+                fontWeight: 600,
+                lineHeight: "19.1px",
+                textAlign: "left",
+                textDecoration: "underline",
+                textTransform: 'none',
+                color: "rgba(80, 82, 178, 1)",
+                marginRight: "1.5rem",
+              }}
+            >
+              Return to main
+            </Button>
+          )}
           <DomainButton />
         </Box>
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <TrialStatus />
 
-          <Button 
+          <Button
             onClick={handleNotificationIconPopupOpen}
-            ref={buttonRef} 
+            ref={buttonRef}
             sx={{
-            minWidth: '32px',
-            padding: '6px',
-            color: 'rgba(128, 128, 128, 1)',
-            border: (hasNewNotifications || hasNotification) ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
-            borderRadius: '3.27px',
-            marginRight: '1.5rem',
-            '&:hover': {
-              border: '1px solid rgba(80, 82, 178, 1)',
-              '& .MuiSvgIcon-root': {
-                color: 'rgba(80, 82, 178, 1)'
+              minWidth: '32px',
+              padding: '6px',
+              color: 'rgba(128, 128, 128, 1)',
+              border: (hasNewNotifications || hasNotification) ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
+              borderRadius: '3.27px',
+              marginRight: '1.5rem',
+              '&:hover': {
+                border: '1px solid rgba(80, 82, 178, 1)',
+                '& .MuiSvgIcon-root': {
+                  color: 'rgba(80, 82, 178, 1)'
+                }
               }
-            }
-          }}
+            }}
           >
             <NotificationsOutlinedIcon sx={{
               fontSize: '22px',
@@ -200,14 +254,14 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
               border: '1px solid rgba(184, 184, 184, 1)',
               borderRadius: '3.27px',
               '&:hover': {
-              border: '1px solid rgba(80, 82, 178, 1)',
-              '& .MuiSvgIcon-root': {
-                color: 'rgba(80, 82, 178, 1)'
+                border: '1px solid rgba(80, 82, 178, 1)',
+                '& .MuiSvgIcon-root': {
+                  color: 'rgba(80, 82, 178, 1)'
+                }
               }
-            }
             }}
           >
-            <PersonIcon sx={{fontSize: '22px'}} />
+            <PersonIcon sx={{ fontSize: '22px' }} />
           </Button>
           <Menu
             id="profile-menu"

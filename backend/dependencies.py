@@ -18,6 +18,7 @@ from persistence.referral_payouts import ReferralPayoutsPersistence
 from persistence.audience_persistence import AudiencePersistence
 from persistence.domains import UserDomainsPersistence, UserDomains
 from services.payouts import PayoutsService
+from services.integrations.slack import SlackService
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.suppression import IntegrationsSuppressionPersistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
@@ -159,18 +160,24 @@ def get_accounts_service(
 def get_aws_service(s3_client=Depends(get_s3_client)) -> AWSService:
     return AWSService(s3_client)
 
+def get_slack_service(
+    user_persistence: UserPersistence = Depends(get_user_persistence_service),
+    lead_persistence: LeadsPersistence = Depends(get_leads_persistence),
+    user_integrations_persistence: IntegrationsPresistence = Depends(get_user_integrations_presistence), sync_persistence: IntegrationsUserSyncPersistence = Depends(get_integrations_user_sync_persistence)):
+    return SlackService(user_persistence=user_persistence, user_integrations_persistence=user_integrations_persistence, sync_persistence=sync_persistence, lead_persistence=lead_persistence)
 
 def get_stripe_service():
     return StripeService()
 
 
 def get_referral_service(
-        referral_persistence: ReferralDiscountCodesPersistence = Depends(get_referral_persistence_service),
+        referral_persistence_discount_code: ReferralDiscountCodesPersistence = Depends(get_referral_persistence_service),
         user_persistence: UserPersistence = Depends(get_user_persistence_service),
         stripe_service: StripeService = Depends(get_stripe_service),
-        referral_payouts_persistence: ReferralPayoutsPersistence = Depends(get_referral_payouts_persistence)):
-    return ReferralService(referral_persistence_service=referral_persistence, user_persistence=user_persistence,
-                           stripe_service=stripe_service, referral_payouts_persistence=referral_payouts_persistence)
+        referral_payouts_persistence: ReferralPayoutsPersistence = Depends(get_referral_payouts_persistence),
+        referral_user_persistence: ReferralUserPersistence = Depends(get_referral_user_persistence)):
+    return ReferralService(referral_persistence_discount_code_service=referral_persistence_discount_code, user_persistence=user_persistence,
+                           stripe_service=stripe_service, referral_payouts_persistence=referral_payouts_persistence, referral_persistence_service=referral_user_persistence)
 
 
 def get_subscription_service(db: Session = Depends(get_db),
@@ -209,20 +216,20 @@ def get_integration_service(db: Session = Depends(get_db),
                                 get_integrations_user_sync_persistence),
                             aws_service: AWSService = Depends(get_aws_service),
                             domain_persistence=Depends(get_user_domain_persistence),
-                            suppression_persitence: IntegrationsSuppressionPersistence = Depends(
-                                get_suppression_persistence),
+                            suppression_persitence: IntegrationsSuppressionPersistence = Depends(get_suppression_persistence),
+                            user_persistence: UserPersistence = Depends(get_user_persistence_service),
                             epi_persistence: ExternalAppsInstallationsPersistence = Depends(get_epi_persistence)
                             ):
-    return IntegrationService(db,
-                              integration_presistence,
-                              lead_presistence,
-                              audience_persistence,
-                              lead_orders_persistence,
-                              integrations_user_sync_persistence,
-                              aws_service,
-                              domain_persistence,
-                              suppression_persitence, epi_persistence)
-
+    return IntegrationService(db=db,
+                              integration_persistence=integration_presistence,
+                              lead_persistence=lead_presistence,
+                              audience_persistence=audience_persistence,
+                              lead_orders_persistence=lead_orders_persistence,
+                              integrations_user_sync_persistence=integrations_user_sync_persistence,
+                              aws_service=aws_service,
+                              domain_persistence=domain_persistence, user_persistence=user_persistence,
+                              suppression_persistence=suppression_persitence, epi_persistence=epi_persistence
+                              )
 
 def get_partners_service(
         partners_persistence: PartnersPersistence = Depends(get_partners_persistence),

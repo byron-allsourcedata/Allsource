@@ -3,10 +3,10 @@ import React, { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Box, Button, TextField, Typography, Link, IconButton, InputAdornment } from '@mui/material';
-import axiosInterceptorInstance from '../../../axios/axiosInterceptorInstance';
+import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import { AxiosError } from 'axios';
 import { loginStyles } from './loginStyles';
-import { showErrorToast } from '../../../components/ToastNotification';
+import { showErrorToast } from '@/components/ToastNotification';
 import { GoogleLogin } from '@react-oauth/google';
 import { fetchUserData } from '@/services/meService';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
@@ -16,7 +16,6 @@ const Signin: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { partner } = useUser();
-  const [isPartnerAvailable, setIsPartnerAvailable] = useState(false);
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => {
@@ -149,7 +148,7 @@ const Signin: React.FC = () => {
           switch (responseData.status) {
 
             case "SUCCESS":
-              get_me()
+              await get_me()
               checkPartner(response.data.is_partner)
               break;
             case 'NON_SHOPIFY_ACCOUNT':
@@ -191,7 +190,7 @@ const Signin: React.FC = () => {
               break;
 
             default:
-              get_me()
+              await get_me()
               router.push('/dashboard')
               break;
           }

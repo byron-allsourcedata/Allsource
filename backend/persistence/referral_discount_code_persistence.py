@@ -32,5 +32,3 @@ class ReferralDiscountCodesPersistence:
         
         self.db.add(referral_user)
         self.db.commit()
-
-

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Drawer, Box, Typography, IconButton, List, ListItem, ListItemIcon, ListItemButton, ListItemText} from '@mui/material';
+import { Drawer, Box, Typography, IconButton, List, ListItem, ListItemIcon, ListItemButton, ListItemText } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from './ToastNotification';
@@ -8,12 +8,14 @@ import SearchIcon from '@mui/icons-material/Search';
 import ConnectKlaviyo from '@/app/(client)/data-sync/components/ConnectKlaviyo';
 import ConnectMeta from '@/app/(client)/data-sync/components/ConnectMeta';
 import KlaviyoIntegrationPopup from './KlaviyoIntegrationPopup';
+import SlackIntegrationPopup from './SlackIntegrationPopup';
 import MetaConnectButton from './MetaConnectButton';
 import AlivbleIntagrationsSlider from './AvalibleIntegrationsSlider';
 import OmnisendConnect from './OmnisendConnect';
 import OnmisendDataSync from '../app/(client)/data-sync/components/OmnisendDataSync';
 import MailchimpConnect from './MailchimpConnect';
 import MailchimpDatasync from '../app/(client)/data-sync/components/MailchimpDatasync';
+import SlackDatasync from '../app/(client)/data-sync/components/SlackDataSync';
 import SendlaneConnect from './SendlaneConnect';
 import SendlaneDatasync from '../app/(client)/data-sync/components/SendlaneDatasync';
 import ZapierDataSync from '../app/(client)/data-sync/components/ZapierDataSync';
@@ -61,12 +63,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [isExportDisabled, setIsExportDisabled] = useState(true);
     const [integrationsCredentials, setIntegrationsCredentials] = useState<IntegrationsCredentials[]>([])
     const [createKlaviyo, setCreateKlaviyo] = useState<boolean>(false)
+    const [createSlack, setCreateSlack] = useState<boolean>(false)
     const [integrations, setIntegrations] = useState<Integrations[]>([])
     const [metaConnectApp, setMetaConnectApp] = useState(false)
     const [openBigcommrceConnect, setOpenBigcommerceConnect] = useState(false)
     const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false)
     const [omnisendIconPopupOpen, setOpenOmnisendIconPopupOpen] = useState(false)
     const [mailchimpIconPopupOpen, setOpenMailchimpIconPopup] = useState(false)
+    const [slackIconPopupOpen, setOpenSlackIconPopup] = useState(false)
     const [openMailchimpConnect, setOpenmailchimpConnect] = useState(false)
     const [openSendlaneIconPopupOpen, setOpenSendlaneIconPopupOpen] = useState(false)
     const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
@@ -79,32 +83,32 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         } catch (error) {
             showErrorToast('Error fetching list items');
         }
-    }; 
+    };
 
     useEffect(() => {
-        const fetchData = async() => {
+        const fetchData = async () => {
             const response = await axiosInstance.get('/integrations/')
-            if(response.status === 200) {
+            if (response.status === 200) {
                 setIntegrations(response.data)
             }
         }
-        if(open) {
+        if (open) {
             fetchData()
         }
     }, [open])
 
     useEffect(() => {
-        const fetchData = async() => {
+        const fetchData = async () => {
             try {
-            const response = await axiosInstance.get('/integrations/credentials/')
-            if(response.status === 200) {
-                setIntegrationsCredentials(response.data)
+                const response = await axiosInstance.get('/integrations/credentials/')
+                if (response.status === 200) {
+                    setIntegrationsCredentials(response.data)
+                }
+            } catch (error) {
+
             }
-        } catch (error) {
-            
         }
-        }
-        if(open) {
+        if (open) {
             fetchData()
         }
     }, [open])
@@ -178,7 +182,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setOpenOmnisendConnect(true)
     }
 
-    const handleOmnisendConnectClose =() => {
+    const handleOmnisendConnectClose = () => {
         setOpenOmnisendConnect(false)
         handleOmnisendIconPopupOpen()
     }
@@ -197,12 +201,25 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setOpenmailchimpConnect(true)
     }
 
+    const handleSlackIconPopupIconOpen = () => {
+        setOpenSlackIconPopup(true)
+    }
+
     const handleMailchimpIconPopupIconOpen = () => {
         setOpenMailchimpIconPopup(true)
     }
 
+    const handleSlackConnectOpen = () => {
+        setOpenSlackIconPopup(true)
+    }
+
     const handleMailchimpIconPopupIconClose = () => {
         setOpenMailchimpIconPopup(false)
+        setPlusIconPopupOpen(false)
+    }
+
+    const handleSlackIconPopupIconClose = () => {
+        setOpenSlackIconPopup(false)
         setPlusIconPopupOpen(false)
     }
 
@@ -214,7 +231,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setMetaIconPopupOpen(false);
         setPlusIconPopupOpen(false)
     };
-    
+
     const handleOpenMailchimpConnectClose = () => {
         setOpenmailchimpConnect(false)
     }
@@ -222,9 +239,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const handleIntegrationSelect = (integration: string) => {
         setSelectedIntegration(integration);
         setIsExportDisabled(false); // Enable export button when an integration is selected
-      };
+    };
 
-      const handleSaveSettings = (newIntegration: any) => {
+    const handleSaveSettings = (newIntegration: any) => {
         setIntegrationsCredentials(prevIntegrations => {
             if (prevIntegrations.some(integration => integration.service_name === newIntegration.service_name)) {
                 return prevIntegrations.map(integration =>
@@ -235,8 +252,8 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             }
         });
         const service = newIntegration.service_name
-        switch (service){
-            case 'Meta': 
+        switch (service) {
+            case 'Meta':
                 handleMetaIconPopupOpen()
                 break
             case 'Klaviyo':
@@ -250,6 +267,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                 break
             case 'Sendlane':
                 handleSendlaneIconPopupOpen()
+                break
+            case 'Slack':
+                handleSlackIconPopupIconOpen()
                 break
         }
     };
@@ -276,6 +296,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
     const handleCreateKlaviyoClose = () => {
         setCreateKlaviyo(false)
+    }
+
+    const handleCreateSlackClose = () => {
+        setCreateSlack(false)
     }
 
     const handleOpenZapierDataSync = () => {
@@ -322,63 +346,40 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                 }}
                 slotProps={{
                     backdrop: {
-                      sx: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.125)'
-                      }
+                        sx: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.125)'
+                        }
                     }
-                  }}
+                }}
             >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
-                    <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center',  }}>
+                    <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center', }}>
                         Create contact sync
                     </Typography>
-                    <IconButton onClick={onClose} sx={{p: 0}}>
-                        <CloseIcon sx={{width: '20px', height: '20px'}} />
+                    <IconButton onClick={onClose} sx={{ p: 0 }}>
+                        <CloseIcon sx={{ width: '20px', height: '20px' }} />
                     </IconButton>
                 </Box>
                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
-                    <Box sx={{px: 3, py: 2,  width: '100%'}}>
-                        <Box sx={{px: 2, py: 3, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)'}}>
+                    <Box sx={{ px: 3, py: 2, width: '100%' }}>
+                        <Box sx={{ px: 2, py: 3, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
                             <Typography variant="h6" className="first-sub-title">
                                 Choose from integrated platform
                             </Typography>
                             <List sx={{ display: 'flex', gap: '16px', py: 2, flexWrap: 'wrap' }}>
                                 {/* Meta */}
-                                {integrationsCredentials.some(integration => integration.service_name === 'meta')&&(
-                                <ListItem  sx={{p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
-                                    '@media (max-width:600px)': {
-                                        flexBasis: 'calc(50% - 8px)'
-                                    }
-                                }}>
-                                    <ListItemButton onClick={() => setMetaIconPopupOpen(true)} sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center'}}>
-                                        <ListItemIcon sx={{minWidth: 'auto'}}>
-                                            <Image src="/meta-icon.svg" alt="meta" height={26} width={32} />
-                                        </ListItemIcon>
-                                        <ListItemText primary="Meta" primaryTypographyProps={{
-                                            sx: {
-                                                fontFamily: "Nunito Sans",
-                                                fontSize: "14px",
-                                                color: "#4a4a4a",
-                                                fontWeight: "500",
-                                                lineHeight: "20px"
-                                            }
-                                        }}  />
-                                    </ListItemButton>
-                                </ListItem>  )}
-                                {/* HubSpot */}
-                                {integrationsCredentials.some(integration => integration.service_name === 'hubspot') && (
-                                    <ListItem sx={{p: 0, borderRadius: '4px', border: selectedIntegration === 'hubspot' ? '1px solid #5052B2' : '1px solid #e4e4e4', width: 'auto',
+                                {integrationsCredentials.some(integration => integration.service_name === 'meta') && (
+                                    <ListItem sx={{
+                                        p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
                                         '@media (max-width:600px)': {
                                             flexBasis: 'calc(50% - 8px)'
                                         }
                                     }}>
-                                        <ListItemButton sx={{p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center',
-                                            backgroundColor: selectedIntegration === 'hubSpot' ? 'rgba(80, 82, 178, 0.10)' : 'transparent'
-                                        }}>
-                                        <ListItemIcon sx={{minWidth: 'auto'}}>
-                                            <Image src="/hubspot.svg" alt="hubspot" height={28} width={27} />
-                                        </ListItemIcon>
-                                        <ListItemText primary="HubSpot" primaryTypographyProps={{
+                                        <ListItemButton onClick={() => setMetaIconPopupOpen(true)} sx={{ p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center' }}>
+                                            <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                <Image src="/meta-icon.svg" alt="meta" height={26} width={32} />
+                                            </ListItemIcon>
+                                            <ListItemText primary="Meta" primaryTypographyProps={{
                                                 sx: {
                                                     fontFamily: "Nunito Sans",
                                                     fontSize: "14px",
@@ -386,7 +387,33 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                                     fontWeight: "500",
                                                     lineHeight: "20px"
                                                 }
-                                            }}/>
+                                            }} />
+                                        </ListItemButton>
+                                    </ListItem>)}
+                                {/* HubSpot */}
+                                {integrationsCredentials.some(integration => integration.service_name === 'hubspot') && (
+                                    <ListItem sx={{
+                                        p: 0, borderRadius: '4px', border: selectedIntegration === 'hubspot' ? '1px solid #5052B2' : '1px solid #e4e4e4', width: 'auto',
+                                        '@media (max-width:600px)': {
+                                            flexBasis: 'calc(50% - 8px)'
+                                        }
+                                    }}>
+                                        <ListItemButton sx={{
+                                            p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center',
+                                            backgroundColor: selectedIntegration === 'hubSpot' ? 'rgba(80, 82, 178, 0.10)' : 'transparent'
+                                        }}>
+                                            <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                <Image src="/hubspot.svg" alt="hubspot" height={28} width={27} />
+                                            </ListItemIcon>
+                                            <ListItemText primary="HubSpot" primaryTypographyProps={{
+                                                sx: {
+                                                    fontFamily: "Nunito Sans",
+                                                    fontSize: "14px",
+                                                    color: "#4a4a4a",
+                                                    fontWeight: "500",
+                                                    lineHeight: "20px"
+                                                }
+                                            }} />
                                         </ListItemButton>
                                     </ListItem>
                                 )}
@@ -402,9 +429,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                         },
                                     }}>
                                         <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'klaviyo')?.is_failed
-                                                ? handleKlaviyoIconPopupOpen
-                                                : handleCreateKlaviyoOpen
-                                            } sx={{
+                                            ? handleKlaviyoIconPopupOpen
+                                            : handleCreateKlaviyoOpen
+                                        } sx={{
                                             p: 0,
                                             flexDirection: 'column',
                                             px: 3,
@@ -441,9 +468,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                         },
                                     }}>
                                         <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'omnisend')?.is_failed
-                                                ? handleOmnisendIconPopupOpen
-                                                : handleOmnisendConnectOpen
-                                            } sx={{
+                                            ? handleOmnisendIconPopupOpen
+                                            : handleOmnisendConnectOpen
+                                        } sx={{
                                             p: 0,
                                             flexDirection: 'column',
                                             px: 3,
@@ -468,6 +495,45 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                         </ListItemButton>
                                     </ListItem>
                                 )}
+                                {/* Slack */}
+                                {integrationsCredentials.some(integration => integration.service_name === 'slack') && (
+                                    <ListItem sx={{
+                                        p: 0,
+                                        borderRadius: '4px',
+                                        border: selectedIntegration === 'omnisend' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                        width: 'auto',
+                                        '@media (max-width:600px)': {
+                                            flexBasis: 'calc(50% - 8px)',
+                                        },
+                                    }}>
+                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'slack')?.is_failed
+                                            ? handleSlackIconPopupIconOpen
+                                            : handleSlackConnectOpen
+                                        } sx={{
+                                            p: 0,
+                                            flexDirection: 'column',
+                                            px: 3,
+                                            py: 1.5,
+                                            width: '102px',
+                                            height: '72px',
+                                            justifyContent: 'center',
+                                            backgroundColor: selectedIntegration === 'omnisend' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
+                                        }}>
+                                            <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                <Image src="/slack-icon.svg" alt="slack" height={26} width={32} />
+                                            </ListItemIcon>
+                                            <ListItemText primary="Slack" primaryTypographyProps={{
+                                                sx: {
+                                                    fontFamily: "Nunito Sans",
+                                                    fontSize: "14px",
+                                                    color: "#4a4a4a",
+                                                    fontWeight: "500",
+                                                    lineHeight: "20px",
+                                                },
+                                            }} />
+                                        </ListItemButton>
+                                    </ListItem>
+                                )}
                                 {/* Mailchimp */}
                                 {integrationsCredentials.some(integration => integration.service_name === 'mailchimp') && (
                                     <ListItem sx={{
@@ -480,9 +546,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                         },
                                     }}>
                                         <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'mailchimp')?.is_failed
-                                                ? handleMailchimpIconPopupIconOpen
-                                                : handleOpenMailchimpConnect
-                                            } sx={{
+                                            ? handleMailchimpIconPopupIconOpen
+                                            : handleOpenMailchimpConnect
+                                        } sx={{
                                             p: 0,
                                             flexDirection: 'column',
                                             px: 3,
@@ -519,9 +585,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                         },
                                     }}>
                                         <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'sendlane')?.is_failed
-                                                ? handleSendlaneIconPopupOpen
-                                                : handleSendlaneConnectOpen
-                                            } sx={{
+                                            ? handleSendlaneIconPopupOpen
+                                            : handleSendlaneConnectOpen
+                                        } sx={{
                                             p: 0,
                                             flexDirection: 'column',
                                             px: 3,
@@ -557,9 +623,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                         },
                                     }}>
                                         <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'zapier')?.is_failed
-                                                ? handleOpenZapierDataSync
-                                                : handleOpenZapierConnect
-                                            } sx={{
+                                            ? handleOpenZapierDataSync
+                                            : handleOpenZapierConnect
+                                        } sx={{
                                             p: 0,
                                             flexDirection: 'column',
                                             px: 3,
@@ -614,22 +680,24 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                     </Box>
                 </Box>
             </Drawer>
-            
+
             {/* Data Sync */}
-            <ConnectKlaviyo data = {null} open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose}/>
-            <ConnectMeta data = {null} open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} />
-            <OnmisendDataSync open={omnisendIconPopupOpen} onClose={handleOmnisendIconPopupOpenClose} isEdit={false} data={ null } />
-            <SendlaneDatasync open={openSendlaneIconPopupOpen} onClose={handleSendlaneIconPopupClose} data={ null } isEdit={false} />
-            <MailchimpDatasync open={mailchimpIconPopupOpen} onClose={handleMailchimpIconPopupIconClose} data={ null } />
+            <ConnectKlaviyo data={null} open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose} />
+            <ConnectMeta data={null} open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} />
+            <OnmisendDataSync open={omnisendIconPopupOpen} onClose={handleOmnisendIconPopupOpenClose} isEdit={false} data={null} />
+            <SendlaneDatasync open={openSendlaneIconPopupOpen} onClose={handleSendlaneIconPopupClose} data={null} isEdit={false} />
+            <MailchimpDatasync open={mailchimpIconPopupOpen} onClose={handleMailchimpIconPopupIconClose} data={null} />
+            <SlackDatasync open={slackIconPopupOpen} onClose={handleSlackIconPopupIconClose} data={null} isEdit={false} />
             <ZapierDataSync open={openZapierDataSync} handleClose={handleCloseZapierDataSync} />
 
             {/* Add Integration */}
-            <AlivbleIntagrationsSlider open={plusIconPopupOpen} onClose={handlePlusIconPopupClose} isContactSync={true} integrations={integrations} integrationsCredentials={integrationsCredentials} handleSaveSettings={handleSaveSettings}/>
-            <KlaviyoIntegrationPopup open={createKlaviyo} handleClose={handleCreateKlaviyoClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token}/>
-            <MailchimpConnect onSave={handleSaveSettings} open={openMailchimpConnect} handleClose={handleOpenMailchimpConnectClose} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Mailchimp')?.access_token}  />
+            <AlivbleIntagrationsSlider open={plusIconPopupOpen} onClose={handlePlusIconPopupClose} isContactSync={true} integrations={integrations} integrationsCredentials={integrationsCredentials} handleSaveSettings={handleSaveSettings} />
+            <SlackIntegrationPopup open={createSlack} handleClose={handleCreateSlackClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'slack')?.access_token} />
+            <KlaviyoIntegrationPopup open={createKlaviyo} handleClose={handleCreateKlaviyoClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token} />
+            <MailchimpConnect onSave={handleSaveSettings} open={openMailchimpConnect} handleClose={handleOpenMailchimpConnectClose} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Mailchimp')?.access_token} />
             <SendlaneConnect open={openSendlaneConnect} handleClose={handleSendlaneConnectClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Sendlane')?.access_token} />
             <OmnisendConnect open={openOmnisendConnect} handleClose={() => setOpenOmnisendConnect(false)} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Omnisend')?.access_token} />
-            <MetaConnectButton open={metaConnectApp} onClose={handleCloseMetaConnectApp} onSave={handleSaveSettings}/>
+            <MetaConnectButton open={metaConnectApp} onClose={handleCloseMetaConnectApp} onSave={handleSaveSettings} />
         </>
     );
 };

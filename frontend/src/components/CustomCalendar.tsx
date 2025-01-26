@@ -90,31 +90,34 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
     };
 
     const handleToday = () => {
-        const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0);
-    
-        const todayEnd = new Date();
-        todayEnd.setHours(23, 59, 59, 999);
-    
+        const todayStart = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate(), 0, 0, 0, 0));
+        const todayEnd = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate(), 23, 59, 59, 999));
+        
         updateCalendar(todayStart, todayEnd, 'Today');
         setActiveLabel('Today');
     };
     
+    
     const handleYesterday = () => {
         const yesterdayStart = subDays(new Date(), 1);
-        yesterdayStart.setHours(0, 0, 0, 0);
-    
+        yesterdayStart.setUTCHours(0, 0, 0, 0);
+        
         const yesterdayEnd = subDays(new Date(), 1);
-        yesterdayEnd.setHours(23, 59, 59, 999);
-    
+        yesterdayEnd.setUTCHours(23, 59, 59, 999);
+        
         updateCalendar(yesterdayStart, yesterdayEnd, 'Yesterday');
         setActiveLabel('Yesterday');
     };
+    
     
 
     const handleThisWeek = () => {
         const start = startOfWeek(new Date(), { weekStartsOn: 1 });
         const end = new Date();
+        
+        start.setUTCHours(0, 0, 0, 0);
+        end.setUTCHours(23, 59, 59, 999);
+    
         updateCalendar(start, end, 'This Week');
         setActiveLabel('This Week');
     };
@@ -122,44 +125,73 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
     const handleLast7Days = () => {
         const end = new Date();
         const start = subDays(end, 7);
+    
+        start.setUTCHours(0, 0, 0, 0);
+        end.setUTCHours(23, 59, 59, 999);
+    
         updateCalendar(start, end, 'Last 7 days');
         setActiveLabel('Last 7 days');
     };
+    
 
     const handleLast30Days = () => {
         const end = new Date();
         const start = subDays(end, 30);
+    
+        start.setUTCHours(0, 0, 0, 0);
+        end.setUTCHours(23, 59, 59, 999);
+    
         updateCalendar(start, end, 'Last 30 days');
         setActiveLabel('Last 30 days');
     };
+    
 
     const handleThisMonth = () => {
         const start = startOfMonth(new Date());
         const end = new Date();
+    
+        start.setUTCHours(0, 0, 0, 0);
+        end.setUTCHours(23, 59, 59, 999);
+    
         updateCalendar(start, end, 'This Month');
         setActiveLabel('This Month');
     };
+    
 
     const handleLastMonth = () => {
         const now = new Date();
-        const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        const end = new Date(now.getFullYear(), now.getMonth(), 0);
+        const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+        const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 0));
+    
+        start.setUTCHours(0, 0, 0, 0);
+        end.setUTCHours(23, 59, 59, 999);
+    
         updateCalendar(start, end, 'Last Month');
         setActiveLabel('Last Month');
     };
     
-
+    
     const handleLastQuarter = () => {
         const end = new Date();
         const start = subQuarters(end, 1);
+
+        start.setUTCHours(0, 0, 0, 0);
+        end.setUTCHours(23, 59, 59, 999);
+    
         updateCalendar(start, end, 'Last Quarter');
         setActiveLabel('Last Quarter');
     };
+    
 
     const handleAllTime = () => {
-        updateCalendar(null, new Date(), 'All Time');
+        const end = new Date();
+        
+        end.setUTCHours(23, 59, 59, 999);
+    
+        updateCalendar(null, end, 'All Time');
         setActiveLabel('All Time');
     };
+    
 
     const handleApply = () => {
         onApply({ start: startDate, end: endDate });

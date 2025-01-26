@@ -10,6 +10,7 @@ from utils import format_phone_number
 from models.audience import Audience
 from models.audience_leads import AudienceLeads
 from models.five_x_five_emails import FiveXFiveEmails
+from models.leads_requests import LeadsRequests
 from models.five_x_five_locations import FiveXFiveLocations
 from models.five_x_five_names import FiveXFiveNames
 from models.five_x_five_phones import FiveXFivePhones
@@ -74,6 +75,7 @@ class LeadsPersistence:
 
     def filter_leads(self, domain_id, page, per_page, from_date, to_date, from_time, to_time, regions, page_visits,
                      average_time_sec, behavior_type, recurring_visits, sort_by, sort_order, search_query, status):
+        
         FirstNameAlias = aliased(FiveXFiveNames)
         LastNameAlias = aliased(FiveXFiveNames)
 
@@ -204,11 +206,24 @@ class LeadsPersistence:
             start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
             end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
             query = query.filter(
-                and_(
-                    LeadsVisits.start_date >= start_date,
-                    LeadsVisits.start_date <= end_date
+                and_(  
+                    or_(
+                        and_(
+                            LeadsVisits.start_date == start_date.date(),
+                            LeadsVisits.start_time >= start_date.time()
+                        ),  
+                        and_(
+                            LeadsVisits.start_date == end_date.date(),
+                            LeadsVisits.start_time <= end_date.time()
+                        ),  
+                        and_(
+                            LeadsVisits.start_date > start_date.date(),
+                            LeadsVisits.start_date < end_date.date()
+                        )
+                    )
                 )
             )
+            
         if status:
             status_list = status.split(',')
             filters = []
@@ -279,6 +294,7 @@ class LeadsPersistence:
                 else:
                     filters.append(recurring_visits_subquery.c.recurring_visits == recurring_visit)
             query = query.filter(or_(*filters))
+            
         if regions:
             filters = []
             region_list = regions.split(',')
@@ -855,4 +871,10 @@ class LeadsPersistence:
 
     def get_lead_user_by_up_id(self, domain_id, up_id):
         return self.db.query(LeadUser).join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id).filter(FiveXFiveUser.up_id == up_id, LeadUser.domain_id == domain_id).first()
+    
+    def get_first_visited_url(self, lead_user):
+        result = self.db.query(LeadsRequests)\
+            .join(LeadUser, LeadUser.first_visit_id == LeadsRequests.visit_id)\
+            .filter(LeadUser.id == lead_user.id).first()
+        return result.page
     

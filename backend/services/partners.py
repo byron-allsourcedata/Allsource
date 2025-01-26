@@ -56,7 +56,6 @@ class PartnersService:
     
     
     def get_partner(self, email) -> PartnersObjectResponse:
-        print("uiiui", "get_partner")
         partner = self.partners_persistence.get_partner_by_email(email)
 
         return {"data": partner.to_dict()}
@@ -64,7 +63,6 @@ class PartnersService:
     
 
     def get_partner_partners(self, email, start_date, end_date, page, rowsPerPage) -> PartnersObjectResponse:
-        print("uiiui", "get_partner_partners")
         offset = page * rowsPerPage
         limit = rowsPerPage
         
@@ -81,7 +79,6 @@ class PartnersService:
     
 
     def partners_by_partner_id(self, id, search, start_date, end_date, page, rowsPerPage) -> PartnersObjectResponse:
-        print("uiiui", "partners_by_partners_id")
         offset = page * rowsPerPage
         limit = rowsPerPage
 

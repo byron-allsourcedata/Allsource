@@ -33,15 +33,17 @@ import { datasyncStyle } from "@/app/(client)/data-sync/datasyncStyle";
 import MailchimpDatasync from "./MailchimpDatasync";
 import OmnisendDataSync from "./OmnisendDataSync";
 import SendlaneDatasync from "./SendlaneDatasync";
+import SlackDatasync from "./SlackDataSync";
 import CustomTablePagination from "@/components/CustomTablePagination";
-import AttentiveIntegrationPopup from "../../../../components/AttentiveIntegrationPopup";
-import BCommerceConnect from "../../../../components/Bcommerce";
-import KlaviyoIntegrationPopup from "../../../../components/KlaviyoIntegrationPopup";
-import MailchimpConnect from "../../../../components/MailchimpConnect";
-import OmnisendConnect from "../../../../components/OmnisendConnect";
-import SendlaneConnect from "../../../../components/SendlaneConnect";
-import ShopifySettings from "../../../../components/ShopifySettings";
-import ZapierConnectPopup from "../../../../components/ZapierConnectPopup";
+import AttentiveIntegrationPopup from "@/components/AttentiveIntegrationPopup";
+import BCommerceConnect from "@/components/Bcommerce";
+import KlaviyoIntegrationPopup from "@/components/KlaviyoIntegrationPopup";
+import MailchimpConnect from "@/components/MailchimpConnect";
+import OmnisendConnect from "@/components/OmnisendConnect";
+import SendlaneConnect from "@/components/SendlaneConnect";
+import ShopifySettings from "@/components/ShopifySettings";
+import ZapierConnectPopup from "@/components/ZapierConnectPopup";
+import SlackConnectPopup from "@/components/SlackConnectPopup";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface DataSyncProps {
@@ -76,6 +78,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   const [totalRows, setTotalRows] = useState(0);
   const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
   const [sendlaneIconPopupOpen, setOpenSendlaneIconPopup] = useState(false);
+  const [slackIconPopupOpen, setOpenSlackIconPopup] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [isInvalidApiKey, setIsInvalidApiKey] = useState(false);
   const [integrationsCredentials, setIntegrationsCredentials] = useState<
@@ -91,6 +94,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   const [openMailchimpConnect, setOpenMailchimpConnect] = useState(false);
   const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false);
   const [openZapierConnect, setOPenZapierComnect] = useState(false);
+  const [openSlackConnect, setOpenSlackConnect] = useState(false);
   const handleCloseIntegrate = () => {
     setOpenMetaConnect(false);
     setOpenKlaviyoConnect(false);
@@ -100,6 +104,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
     setOpenOmnisendConnect(false);
     setOpenSendlaneConnect(false);
     setOPenZapierComnect(false);
+    setOpenSlackConnect(false)
   };
   const handleSortRequest = (property: string) => {
     const isAsc = orderBy === property && order === "asc";
@@ -285,6 +290,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
         return (
           <Image src={"/zapier-icon.svg"} alt="zapier" width={18} height={18} />
         );
+      case "slack":
+        return (
+          <Image src={"/slack-icon.svg"} alt="slack" width={18} height={18} />
+        );
       default:
         return null;
     }
@@ -449,6 +458,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
         setOmnisendIconPopupOpen(true);
       } else if (dataSyncPlatform === "sendlane") {
         setOpenSendlaneIconPopup(true);
+      } else if (dataSyncPlatform === "slack") {
+        setOpenSlackIconPopup(true);
       }
       setIsLoading(false);
       setAnchorEl(null);
@@ -457,6 +468,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 
   const handleSendlaneIconPopupClose = () => {
     setOpenSendlaneIconPopup(false);
+  };
+
+  const handleSlackIconPopupClose = () => {
+    setOpenSlackIconPopup(false);
   };
 
   const handleDeleteClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -1107,6 +1122,16 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
             />
           </>
         )}
+        {slackIconPopupOpen && isEdit && (
+          <>
+            <SlackDatasync
+              open={slackIconPopupOpen}
+              isEdit={isEdit}
+              onClose={handleSlackIconPopupClose}
+              data={data.find((item) => item.id === selectedId)}
+            />
+          </>
+        )}
         {/*
         <AttentiveIntegrationPopup open={openAttentiveConnect} handleClose={() => setOpenShopifyConnect(false)} onSave={saveIntegration}/>
         <ShopifySettings open={openShopifuConnect} handleClose={() => setOpenShopifyConnect(false)} onSave={saveIntegration} />
@@ -1115,16 +1140,21 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                     onClose={() => setOpenBigcommerceConnect(false)}
                 />
          */}
-        <MailchimpConnect open={openMailchimpConnect} handleClose={() => {setOpenMailchimpConnect(false), setIsInvalidApiKey(false)}}
+        <MailchimpConnect open={openMailchimpConnect} handleClose={() => { setOpenMailchimpConnect(false), setIsInvalidApiKey(false) }}
           initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'mailchimp')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
-        <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={() => {setOpenKlaviyoConnect(false), setIsInvalidApiKey(false)} }
+        <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={() => { setOpenKlaviyoConnect(false), setIsInvalidApiKey(false) }}
           initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
-        <OmnisendConnect open={openOmnisendConnect} handleClose={() => {setOpenOmnisendConnect(false), setIsInvalidApiKey(false)}}
+        <OmnisendConnect open={openOmnisendConnect} handleClose={() => { setOpenOmnisendConnect(false), setIsInvalidApiKey(false) }}
           initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'omnisend')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
         <SendlaneConnect
           open={openSendlaneConnect}
-          handleClose={() => {setOpenSendlaneConnect(false), setIsInvalidApiKey(false)}}
+          handleClose={() => { setOpenSendlaneConnect(false), setIsInvalidApiKey(false) }}
           initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sendlane')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
+        />
+        <SlackConnectPopup
+          open={openSendlaneConnect}
+          handlePopupClose={() => { setOpenSlackConnect(false), setIsInvalidApiKey(false) }}
+          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'slack')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
         />
         <ZapierConnectPopup
           open={openZapierConnect}

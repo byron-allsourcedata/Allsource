@@ -2,7 +2,7 @@ import csv
 import io
 from utils import format_phone_number
 from persistence.leads_persistence import LeadsPersistence
-
+from datetime import datetime, timedelta
 
 class LeadsService:
     def __init__(self, leads_persistence_service: LeadsPersistence, domain):
@@ -28,7 +28,7 @@ class LeadsService:
         return None
 
     def get_leads(self, page, per_page, from_date, to_date, regions, page_visits, average_time_sec,
-                  recurring_visits, sort_by, sort_order, search_query, from_time, to_time, behavior_type, status):
+                  recurring_visits, sort_by, sort_order, search_query, from_time, to_time, behavior_type, status, timezone_offset):
         leads, count, max_page, states = self.leads_persistence_service.filter_leads(
             domain_id=self.domain.id,
             page=page,
@@ -50,14 +50,21 @@ class LeadsService:
         state_dict = {state.state_code: state.state_name for state in states} if states else {}
         leads_list = []
         for lead in leads:
+            first_visited_date = lead[59].strftime('%d.%m.%Y')
+            first_visited_time = lead[60].strftime('%H:%M')
+            combined_datetime = datetime.strptime(f"{first_visited_date} {first_visited_time}", '%d.%m.%Y %H:%M')
+            adjusted_datetime = combined_datetime + timedelta(hours=timezone_offset)
+            adjusted_date = adjusted_datetime.strftime('%d.%m.%Y')
+            adjusted_time = adjusted_datetime.strftime('%H:%M')
+            
             if not lead[66]:
                 leads_list.append({
                     'id': lead[0],
                     'first_name': lead[1],
                     'last_name': lead[9],
                     'behavior_type': 'converted_sales' if lead[65] else lead[56],
-                    'first_visited_date': lead[59].strftime('%d.%m.%Y'),
-                    'first_visited_time': lead[60].strftime('%H:%M'),
+                    'first_visited_date': adjusted_date,
+                    'first_visited_time': adjusted_time,
                     'visitor_type': lead[63],
                     'average_time_sec': lead[64],
                     'is_active': lead[66]
@@ -128,8 +135,8 @@ class LeadsService:
                     'behavior_type': 'converted_sales' if lead[65] else lead[56],
                     'state': self.convert_state_code_to_name(lead[57], state_dict),
                     'city': lead[58].title() if lead[58] else None,
-                    'first_visited_date': lead[59].strftime('%d.%m.%Y'),
-                    'first_visited_time': lead[60].strftime('%H:%M'),
+                    'first_visited_date': adjusted_date,
+                    'first_visited_time': adjusted_time,
                     'time_spent': lead[61],
                     'recurring_visits': lead[62],
                     'visitor_type': lead[63],

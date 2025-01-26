@@ -185,7 +185,7 @@ export const SettingsSubscription: React.FC = () => {
                 setAllPlans(response.data.stripe_plans);
 
                 const stripePlans: StripePlan[] = response.data.stripe_plans;
-                const active = stripePlans.find(plan => plan.is_active && plan.title !== 'Free Trial');
+                const active = stripePlans.find(plan => plan.is_active && plan.title !== 'Free Trial' && plan.title !== 'Partners Live');
                 setActivePlan(active || null);
                 setHasActivePlan(!!active);
 
@@ -281,7 +281,7 @@ export const SettingsSubscription: React.FC = () => {
                         setAllPlans(response.data.stripe_plans)
                         const stripePlans: StripePlan[] = response.data.stripe_plans;
                         const activePlan = stripePlans.find(plan => plan.is_active);
-                        const active = stripePlans.find(plan => plan.is_active && plan.title !== 'Free Trial');
+                        const active = stripePlans.find(plan => plan.is_active && plan.title !== 'Free Trial' && plan.title !== 'Partners Live');
                         setActivePlan(active || null);
                         setHasActivePlan(!!activePlan);
                         let interval = 'month'
