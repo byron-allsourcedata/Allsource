@@ -168,6 +168,9 @@ const MetaConnectButton = ({open, onClose, onSave, isEdit}: MetaConnectPopupProp
                 params: { service_name: 'meta' },
             });
             if (response.status === 200) {
+                if (response.data.url){
+                    window.location.href = response.data.url;
+                }
                 showToast('Connect to Meta Successfuly');
             }
         } finally {

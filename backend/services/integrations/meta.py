@@ -19,7 +19,7 @@ from utils import format_phone_number
 from typing import List
 from config.meta import MetaConfig
 
-APP_SERCRET = MetaConfig.app_secret
+APP_SECRET = MetaConfig.app_secret
 APP_ID = MetaConfig.app_piblic
 
 
@@ -72,14 +72,28 @@ class MetaIntegrationsService:
             self.integrations_persisntece.db.commit()
             return
         ad_account_info = self.get_info_by_access_token(access_token.get('access_token'))
-        new_integration = self.integrations_persisntece.create_integration({
-            'domain_id': domain.id,
-            'ad_account_id': ad_account_info.get('id'),
-            'access_token': access_token.get('access_token'),
-            'expire_access_token': access_token.get('expires_in'),
-            'last_access_token_update': datetime.now(),
-            'service_name': SourcePlatformEnum.META.value,
-        })
+        check_facebook_token = self.check_facebook_token(credentials.meta.access_token)
+        if check_facebook_token:
+            new_integration = self.integrations_persisntece.create_integration({
+                'domain_id': domain.id,
+                'ad_account_id': ad_account_info.get('id'),
+                'access_token': access_token.get('access_token'),
+                'expire_access_token': access_token.get('expires_in'),
+                'last_access_token_update': datetime.now(),
+                'service_name': SourcePlatformEnum.META.value,
+                'is_failed': True
+            })
+        else:
+            new_integration = self.integrations_persisntece.create_integration({
+                'domain_id': domain.id,
+                'ad_account_id': ad_account_info.get('id'),
+                'access_token': access_token.get('access_token'),
+                'expire_access_token': access_token.get('expires_in'),
+                'last_access_token_update': datetime.now(),
+                'service_name': SourcePlatformEnum.META.value,
+                'is_failed': False
+            })
+            
         integrations = self.integrations_persisntece.get_all_integrations_filter_by(ad_account_id=ad_account_info.get('id'), domain_id=domain.id)
         for integration in integrations:
             integration.access_token == access_token.get('access_token')
@@ -88,14 +102,41 @@ class MetaIntegrationsService:
             self.integrations_persisntece.db.commit()
         if not new_integration:
             raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
+        check_facebook_token = self.check_facebook_token(credentials.meta.access_token)
+        if check_facebook_token:
+            return {'url': check_facebook_token}
+        
         return new_integration
     
+    def check_facebook_token(self, fb_exchange_token):
+        url = 'https://graph.facebook.com/v20.0/oauth/access_token'
+        params = {
+            'client_id': APP_ID,
+            'client_secret': APP_SECRET,
+            'code': fb_exchange_token
+        }
+        response = self.__handle_request('GET', url=url, params=params)
+
+        if response.status_code != 200:
+            error_data = response.json()
+            error_detail = error_data.get('error', {})
+            error_message = error_detail.get('message', 'Unknown error')
+            error_code = error_detail.get('code', 'Unknown code')
+            error_user_msg = error_detail.get('error_user_msg', '')
+            print(f"Error occurred: {error_message} (Code: {error_code})")
+            if error_user_msg:
+                print(f"User Message: {error_user_msg}")
+            if error_code == 200 and error_detail.get('error_subcode') == 1870090:
+                terms_link = f"https://business.facebook.com/ads/manage/customaudiences/tos/?act={params['client_id']}"
+                print("Custom Audience Terms not accepted. Please accept them here:")
+                print(terms_link)
+                return terms_link
 
     def get_long_lived_token(self, fb_exchange_token):
         url = 'https://graph.facebook.com/v20.0/oauth/access_token'
         params = {
             'client_id': APP_ID,
-            'client_secret': APP_SERCRET,
+            'client_secret': APP_SECRET,
             'code': fb_exchange_token
         }
         response = self.__handle_request('GET', url=url, params=params)
