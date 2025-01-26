@@ -72,7 +72,6 @@ class MetaIntegrationsService:
             self.integrations_persisntece.db.commit()
             return
         ad_account_info = self.get_info_by_access_token(access_token.get('access_token'))
-        check_facebook_token = self.check_facebook_token(credentials.meta.access_token)
         new_integration = self.integrations_persisntece.create_integration({
             'domain_id': domain.id,
             'ad_account_id': ad_account_info.get('id'),
@@ -91,34 +90,32 @@ class MetaIntegrationsService:
         if not new_integration:
             raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
         
-        if check_facebook_token:
-            return check_facebook_token
-        
         return new_integration
     
-    def check_facebook_token(self, fb_exchange_token):
-        url = 'https://graph.facebook.com/v20.0/oauth/access_token'
+    def check_custom_audience_terms(self, ad_account_id, access_token):
+        url = f"https://graph.facebook.com/v20.0/{ad_account_id}/customaudiences"
+        
         params = {
-            'client_id': APP_ID,
-            'client_secret': APP_SECRET,
-            'code': fb_exchange_token
+            "access_token": access_token,
+            "name": "Custom Audience test",
+            "subtype": "CUSTOM",
+            "customer_file_source": "USER_PROVIDED_ONLY"
         }
-        response = self.__handle_request('GET', url=url, params=params)
 
-        if response.status_code != 200:
-            error_data = response.json()
-            error_detail = error_data.get('error', {})
-            error_message = error_detail.get('message', 'Unknown error')
-            error_code = error_detail.get('code', 'Unknown code')
-            error_user_msg = error_detail.get('error_user_msg', '')
-            print(f"Error occurred: {error_message} (Code: {error_code})")
-            if error_user_msg:
-                print(f"User Message: {error_user_msg}")
-            if error_code == 200 and error_detail.get('error_subcode') == 1870090:
-                terms_link = f"https://business.facebook.com/ads/manage/customaudiences/tos/?act={params['client_id']}"
-                print("Custom Audience Terms not accepted. Please accept them here:")
-                print(terms_link)
-                return {'url': terms_link}
+        response = self.__handle_request("POST", url=url, params=params)
+
+        if response.status_code == 200:
+            return {"terms_accepted": True}
+        
+        error_data = response.json()
+        print('----')
+        print(error_data)
+        if error_data.get('error', {}).get('error_subcode') == 1870090:
+            ad_account_id = ad_account_id.replace("act_", "")
+            terms_link = f"https://business.facebook.com/ads/manage/customaudiences/tos/?act={ad_account_id}"
+            return {"terms_accepted": False, "terms_link": terms_link}
+        
+        return {"terms_accepted": False, "error": error_data}
 
     def get_long_lived_token(self, fb_exchange_token):
         url = 'https://graph.facebook.com/v20.0/oauth/access_token'
@@ -194,13 +191,15 @@ class MetaIntegrationsService:
             'description': description if description else None,
             'customer_file_source': 'USER_PROVIDED_ONLY',
         }
+        id_account = None
         try:
             id_account = AdAccount(f'{list.ad_account_id}').create_custom_audience(
                     fields=fields,
                     params=params,
                 ).get('id')
         except:
-            return self.check_facebook_token(credential.access_token)
+            return self.check_custom_audience_terms(list.ad_account_id, credential.access_token)
+        
         return {
             'id': id_account,
             'list_name': list.name
