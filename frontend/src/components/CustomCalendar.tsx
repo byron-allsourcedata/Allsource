@@ -68,13 +68,20 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
 
     const handleChange = (dates: [Date | null, Date | null]) => {
         let [start, end] = dates;
+        if (end) {
+            end.setHours(23, 59, 59, 999);
+        }
+        if (start) {
+            start.setHours(0, 0, 0, 0);
+        }
+        
         if (start && end && start.getTime() === end.getTime()) {
             end = new Date(start);
             end.setHours(23, 59, 59, 999);
         }
+        onDateChange({ start, end });
         setStartDate(start);
         setEndDate(end);
-        onDateChange({ start, end });
         setStartDateString(start ? start.toLocaleDateString() : '');
         setEndDateString(end ? end.toLocaleDateString() : '');
         onDateLabelChange("");
@@ -90,9 +97,12 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
     };
 
     const handleToday = () => {
-        const todayStart = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate(), 0, 0, 0, 0));
-        const todayEnd = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate(), 23, 59, 59, 999));
-        
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+    
+        const todayEnd = new Date();
+        todayEnd.setHours(23, 59, 59, 999);
+
         updateCalendar(todayStart, todayEnd, 'Today');
         setActiveLabel('Today');
     };
@@ -100,10 +110,10 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
     
     const handleYesterday = () => {
         const yesterdayStart = subDays(new Date(), 1);
-        yesterdayStart.setUTCHours(0, 0, 0, 0);
+        yesterdayStart.setHours(0, 0, 0, 0);
         
         const yesterdayEnd = subDays(new Date(), 1);
-        yesterdayEnd.setUTCHours(23, 59, 59, 999);
+        yesterdayEnd.setHours(23, 59, 59, 999);
         
         updateCalendar(yesterdayStart, yesterdayEnd, 'Yesterday');
         setActiveLabel('Yesterday');
@@ -115,8 +125,8 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
         const start = startOfWeek(new Date(), { weekStartsOn: 1 });
         const end = new Date();
         
-        start.setUTCHours(0, 0, 0, 0);
-        end.setUTCHours(23, 59, 59, 999);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
     
         updateCalendar(start, end, 'This Week');
         setActiveLabel('This Week');
@@ -126,8 +136,8 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
         const end = new Date();
         const start = subDays(end, 7);
     
-        start.setUTCHours(0, 0, 0, 0);
-        end.setUTCHours(23, 59, 59, 999);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
     
         updateCalendar(start, end, 'Last 7 days');
         setActiveLabel('Last 7 days');
@@ -138,8 +148,8 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
         const end = new Date();
         const start = subDays(end, 30);
     
-        start.setUTCHours(0, 0, 0, 0);
-        end.setUTCHours(23, 59, 59, 999);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
     
         updateCalendar(start, end, 'Last 30 days');
         setActiveLabel('Last 30 days');
@@ -150,8 +160,8 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
         const start = startOfMonth(new Date());
         const end = new Date();
     
-        start.setUTCHours(0, 0, 0, 0);
-        end.setUTCHours(23, 59, 59, 999);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
     
         updateCalendar(start, end, 'This Month');
         setActiveLabel('This Month');
@@ -160,11 +170,11 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
 
     const handleLastMonth = () => {
         const now = new Date();
-        const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
-        const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 0));
+        const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const end = new Date(now.getFullYear(), now.getMonth(), 0);
     
-        start.setUTCHours(0, 0, 0, 0);
-        end.setUTCHours(23, 59, 59, 999);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
     
         updateCalendar(start, end, 'Last Month');
         setActiveLabel('Last Month');
@@ -175,8 +185,8 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
         const end = new Date();
         const start = subQuarters(end, 1);
 
-        start.setUTCHours(0, 0, 0, 0);
-        end.setUTCHours(23, 59, 59, 999);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
     
         updateCalendar(start, end, 'Last Quarter');
         setActiveLabel('Last Quarter');
@@ -186,7 +196,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
     const handleAllTime = () => {
         const end = new Date();
         
-        end.setUTCHours(23, 59, 59, 999);
+        end.setHours(23, 59, 59, 999);
     
         updateCalendar(null, end, 'All Time');
         setActiveLabel('All Time');

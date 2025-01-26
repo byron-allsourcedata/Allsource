@@ -279,8 +279,7 @@ const Leads: React.FC = () => {
                 const fromDate = selectedFilters.find(filter => filter.label === 'From Date')?.value || '';
                 if (fromDate) {
                     const fromDateUtc = new Date(fromDate);
-                    fromDateUtc.setUTCHours(0, 0, 0, 0);
-                    console.log(fromDateUtc)
+                    fromDateUtc.setHours(0, 0, 0, 0);
                     const fromDateEpoch = Math.floor(fromDateUtc.getTime() / 1000);
                     url += `&from_date=${fromDateEpoch}`;
                 }
@@ -291,7 +290,7 @@ const Leads: React.FC = () => {
                 const toDate = selectedFilters.find(filter => filter.label === 'To Date')?.value || '';
                 if (toDate) {
                     const toDateUtc = new Date(toDate);
-                    toDateUtc.setUTCHours(23, 59, 59, 999);
+                    toDateUtc.setHours(23, 59, 59, 999);
                     const toDateEpoch = Math.floor(toDateUtc.getTime() / 1000);
                     url += `&to_date=${toDateEpoch}`;
                 }
