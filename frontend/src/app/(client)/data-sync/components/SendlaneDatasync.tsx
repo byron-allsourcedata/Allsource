@@ -6,7 +6,7 @@ import TabPanel from '@mui/lab/TabPanel';
 import Image from 'next/image';
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
-import { showErrorToast, showToast } from '../../../../components/ToastNotification';
+import { showToast } from '@/components/ToastNotification';
 import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface ConnectKlaviyoPopupProps {
@@ -730,7 +730,7 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, d
                 }
               }}
         >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                 <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
                     Connect to Sendlane
                 </Typography>
@@ -747,7 +747,7 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, d
                     </IconButton>
                 </Box>
             </Box>
-            <Divider />
+
             <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
                 <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                 <TabContext value={value}>
@@ -1689,7 +1689,7 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, d
                         {/* Button based on selected tab */}
 
                     </Box>
-                    <Box sx={{ px: 2, py: 3.5, width: '100%', border: '1px solid #e4e4e4' }}>
+                    <Box sx={{ px: 2, py: 2, width: '100%', border: '1px solid #e4e4e4' }}>
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
 
                             {getButton(value)}

@@ -10,6 +10,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from "./ToastNotification";
 import { useAxiosHook } from "@/hooks/AxiosHooks";
+import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface CreateSendlaneProps {
     handleClose: () => void
@@ -91,6 +92,7 @@ const klaviyoStyles = {
 }
 
 const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Invalid_api_key }: CreateSendlaneProps) => {
+    const { triggerSync } = useIntegrationContext();
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
     const [value, setValue] = useState<string>('1')
@@ -117,7 +119,7 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
     const handleApiKeyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value;
         setApiKey(value);
-        setApiKeyError(!value);
+        setApiKeyError(!value.trim());
     };
 
     const instructions: any[] = [
@@ -168,22 +170,22 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
     const handleApiKeySave = async () => {
         try {
             setDisableButton(true)
-            const response = await sendRequest({
-                url: "/integrations/",
-                method: "POST",
-                data: {
-                    sendlane: {
-                        api_key: apiKey,
-                    },
-                },
-                params: { service_name: 'sendlane' },
-            });
-
-            if (response?.status === 200) {
-                showToast("Integration Sendlane Successfully");
-                handleNextTab();
+            const response = await axiosInstance.post('/integrations/', {
+                sendlane: {
+                    api_key: apiKey
+                }
+            }, {params: {service_name: 'sendlane'}})
+            if(response.status === 200) {
+                showToast('Integration Sendlane Successfully')
+                if(onSave){
+                    onSave({'service_name': 'sendlane', 'is_failed': false, access_token: apiKey})
+                }
+                triggerSync();
+                handleNextTab()
             }
-        } catch (error) {}
+        } catch (error) {
+            showErrorToast("Invalid credentials, please try another API key")
+        }
         finally{
             setDisableButton(false)
         }
@@ -225,7 +227,7 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
                     <Button
                         variant="contained"
                         onClick={handleApiKeySave}
-                        disabled={!apiKey || disableButton}
+                        disabled={!apiKey || disableButton || apiKeyError}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito Sans",

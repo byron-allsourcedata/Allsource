@@ -10,6 +10,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from "./ToastNotification";
 import { useAxiosHook } from "@/hooks/AxiosHooks";
+import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface CreateKlaviyoProps {
     handleClose: () => void
@@ -92,6 +93,7 @@ const klaviyoStyles = {
 }
 
 const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxShadow, Invalid_api_key }: CreateKlaviyoProps) => {
+    const { triggerSync } = useIntegrationContext();
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
     const [checked, setChecked] = useState(false);
@@ -119,7 +121,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
     const handleApiKeyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value;
         setApiKey(value);
-        setApiKeyError(!value);
+        setApiKeyError(!value.trim());
     };
 
     const instructions = [
@@ -188,6 +190,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                     })
                 }
                 showToast("Integration Klaviyo Successfully");
+                triggerSync();
                 handleNextTab();
             }
         } catch (err) {
@@ -243,7 +246,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                     <Button
                         variant="contained"
                         onClick={handleApiKeySave}
-                        disabled={!apiKey || disableButton}
+                        disabled={!apiKey || disableButton || apiKeyError}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito Sans",

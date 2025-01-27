@@ -116,4 +116,16 @@ def get_masterpartner_partners(
     
     response = get_partners_service.get_partner_partners(user.get('email'), start_date, end_date, page, rows_per_page)
      
-    return response.get('data') 
+    return response.get('data')
+
+@router.get("/generate-token")
+async def generate_token(user_account_id: int,
+                         partners_service: PartnersService = Depends(get_partners_service),
+                         user: dict = Depends(check_user_partner)):
+    token = partners_service.generate_access_token(user=user, partner_id=user_account_id)
+    if token:
+        return {"token": token}
+    raise HTTPException(
+        status_code=403,
+        detail="Access denied"
+    )

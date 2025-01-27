@@ -115,8 +115,8 @@ export const suppressionsStyles: { [key: string]: SxProps<Theme> } = {
         lineHeight: '16px !important',
         position: 'relative',
         paddingLeft: '45px',
-        paddingTop: '13.5px',
-        paddingBottom: '13.5px',
+        paddingTop: '10.5px',
+        paddingBottom: '10.5px',
         '&::after': {
             content: '""',
             display: 'block',
