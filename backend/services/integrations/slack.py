@@ -110,6 +110,8 @@ class SlackService:
             return {'status': "OAuth failed"}
     
     def slack_events(self, data):
+        print('------')
+        print(data)
         event = data.get("event", {})
         client_token = data.get("token")
         if event.get("type") == "app_home_opened":
