@@ -111,9 +111,8 @@ class SlackService:
     
     def slack_events(self, data):
         event = data.get("event", {})
-        client_token = data.get("token")
         if event.get("type") == "app_home_opened":
-            client = WebClient(token=client_token)
+            client = WebClient(token=SlackConfig.bot_user_OAuth_token)
             channel = event.get("user")
             try:
                 client.chat_postMessage(
