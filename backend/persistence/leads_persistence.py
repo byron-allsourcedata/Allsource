@@ -757,19 +757,14 @@ class LeadsPersistence:
                 FiveXFiveUser.personal_city,
                 FiveXFiveUser.personal_state,
                 FiveXFiveUser.company_name,
+                FiveXFiveUser.personal_zip,
                 FiveXFiveUser.company_domain,
                 FiveXFiveUser.job_title,
                 FiveXFiveUser.last_updated,
                 FiveXFiveUser.age_min,
                 FiveXFiveUser.age_max,
                 FiveXFiveUser.personal_address,
-                FiveXFiveUser.personal_address_2,
-                FiveXFiveUser.personal_zip,
-                FiveXFiveUser.personal_zip4,
-                FiveXFiveUser.professional_zip,
                 FiveXFiveUser.married,
-                FiveXFiveUser.children,
-                FiveXFiveUser.income_range,
                 FiveXFiveUser.homeowner,
                 FiveXFiveUser.dpv_code
             )
@@ -789,8 +784,8 @@ class LeadsPersistence:
                     "personal_emails", "last_name", "personal_city", "personal_state", "company_name", 
                     "company_domain", 
                     "job_title", "last_updated", "age_min", "age_max", 
-                    "personal_address", "personal_address_2", "personal_zip", "personal_zip4", 
-                    "professional_zip", "married", "children", "income_range", "homeowner", "dpv_code"
+                    "personal_address", "personal_zip",
+                    "married", "children", "income_range", "homeowner", "dpv_code"
                 ]
             }
             for user in five_x_five_users

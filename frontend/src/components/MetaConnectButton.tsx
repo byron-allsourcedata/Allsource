@@ -5,6 +5,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useEffect, useState } from "react";
 import { showToast } from "./ToastNotification";
 import axiosInstance from '@/axios/axiosInterceptorInstance';
+import { useIntegrationContext } from "@/context/IntegrationContext";
 
 
 interface MetaConnectPopupProps {
@@ -12,6 +13,7 @@ interface MetaConnectPopupProps {
     onClose: () => void
     onSave: (integration: any) => void
     isEdit?: boolean
+    boxShadow?: string
 }
 
 declare global {
@@ -105,7 +107,8 @@ const metaStyles = {
       
 }
 
-const MetaConnectButton = ({open, onClose, onSave, isEdit}: MetaConnectPopupProps) => {
+const MetaConnectButton = ({open, onClose, onSave, isEdit, boxShadow}: MetaConnectPopupProps) => {
+    const { triggerSync } = useIntegrationContext();
     const [accessToken, setAccessToken] = useState('')
     const [loading, setLoading] = useState(false)
     const appID = process.env.NEXT_PUBLIC_META_APP_ID
@@ -170,6 +173,7 @@ const MetaConnectButton = ({open, onClose, onSave, isEdit}: MetaConnectPopupProp
             if (response.status === 200) {
                 showToast('Connect to Meta Successfuly');
             }
+            triggerSync();
         } finally {
             setLoading(false);
             onClose();
@@ -189,6 +193,7 @@ const MetaConnectButton = ({open, onClose, onSave, isEdit}: MetaConnectPopupProp
                     zIndex: 1301,
                     top: 0,
                     bottom: 0,
+                    boxShadow: boxShadow ? '0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)' : 'none',
                     msOverflowStyle: 'none',
                     scrollbarWidth: 'none',
                     '&::-webkit-scrollbar': {
@@ -202,7 +207,7 @@ const MetaConnectButton = ({open, onClose, onSave, isEdit}: MetaConnectPopupProp
             slotProps={{
                 backdrop: {
                   sx: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.1)'
+                    backgroundColor: boxShadow? boxShadow : 'rgba(0, 0, 0, 0.01)',
                   }
                 }
               }}

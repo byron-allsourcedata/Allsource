@@ -108,6 +108,19 @@ class SlackService:
                 return {'status': "Maximiz user not found"}
         else:
             return {'status': "OAuth failed"}
+    
+    def slack_events(self, data):
+        event = data.get("event", {})
+        if event.get("type") == "app_home_opened":
+            client = WebClient(token=SlackConfig.bot_user_OAuth_token)
+            channel = event.get("user")
+            try:
+                client.chat_postMessage(
+                    channel=channel,
+                    text="Welcome to App Home! I'll share updates via Contacts using the Maximize app."
+                )
+            except SlackApiError as e:
+                logger.error(f"Error sending message: {e.response['error']}")
 
     def create_channel(self, domain_id, channel_name, is_private=False):
         user_integration = self.get_credential(domain_id)

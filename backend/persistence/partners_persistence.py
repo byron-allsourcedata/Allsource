@@ -109,7 +109,8 @@ class PartnersPersistence:
     def get_partners_by_partner_id(self, id, start_date, end_date, offset, limit, search_term=None):
         MasterPartner = aliased(Partner)
         query = self.db.query(
-            Partner.id, 
+            Partner.id,
+            Partner.user_id,
             Partner.email,
             Partner.company_name,
             Partner.user_id,
@@ -204,6 +205,14 @@ class PartnersPersistence:
         self.db.refresh(partner)
 
         return partner, commission_changed
+    
+    def get_partner_by_master(self, parent_user_id, partner_id):
+        MasterPartner = aliased(Partner)
+        return self.db.query(Partner).join(MasterPartner, MasterPartner.id == Partner.master_id)\
+            .filter(
+            Partner.id == partner_id,
+            MasterPartner.user_id == parent_user_id
+        ).first()
 
 
     def update_partner_by_email(self, email: int, **kwargs) -> Optional[Partner]:
