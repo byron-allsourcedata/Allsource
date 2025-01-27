@@ -66,7 +66,8 @@ def check_blacklist_domain_email(business_email, personal_emails, additional_per
 
     return None
 
-async def fetch_users_by_domain(db_session, company_domains, output_file, job_title, mail_domain):
+async def fetch_users_by_domain(db_session, company_domains, output_file, job_titles, mail_domain):
+    job_title = {job_title.lower() for job_title in job_titles}
     results = []
     count = 0
 
@@ -79,7 +80,7 @@ async def fetch_users_by_domain(db_session, company_domains, output_file, job_ti
             continue
 
         for user in users:
-            if not user.job_title or user.job_title.lower() not in job_title:
+            if not user.job_title or user.job_title.lower() in job_title:
                 continue
  
             email = check_blacklist_domain_email(user.business_email, user.personal_emails, user.additional_personal_emails, mail_domain)
@@ -135,15 +136,15 @@ async def main():
             company_domains = [domain.strip() for domain in content.splitlines() if domain.strip()]
         
         with open(job_title_path, "r") as file:
-            job_title = {title.strip().lower() for title in file if title.strip()}
+            job_titles = {title.strip().lower() for title in file if title.strip()}
         
         with open(job_title_path, "r") as file:
-            job_title = {title.strip().lower() for title in file if title.strip()}
+            job_titles = {title.strip().lower() for title in file if title.strip()}
         
         with open(mail_path, "r") as file:
             mail_domain = {title.strip().lower() for title in file if title.strip()}
             
-        await fetch_users_by_domain(db_session, company_domains, output_file, job_title, mail_domain)
+        await fetch_users_by_domain(db_session, company_domains, output_file, job_titles, mail_domain)
 
     except Exception as err:
         logging.error("Unhandled Exception:", exc_info=True)
