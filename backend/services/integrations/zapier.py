@@ -119,7 +119,6 @@ class ZapierIntegrationService:
             "direct_number": lead.direct_number,
             "gender": lead.gender.lower() if lead.gender else None,
             "personal_phone": format_phone_number(lead.personal_phone),
-            "business_email": lead.business_email,
             "personal_emails": first_email,
             "personal_city": lead.personal_city or "N/A",
             "personal_state": lead.personal_state or "N/A",
@@ -133,8 +132,6 @@ class ZapierIntegrationService:
             "personal_zip": lead.personal_zip or "N/A",
             "personal_zip4": lead.personal_zip4 or "N/A",
             "married": lead.married,
-            "children": lead.children,
-            "income_range": lead.income_range,
             "homeowner": lead.homeowner,
             "dpv_code": lead.dpv_code
         }

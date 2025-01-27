@@ -766,8 +766,6 @@ class LeadsPersistence:
                 FiveXFiveUser.personal_zip,
                 FiveXFiveUser.personal_zip4,
                 FiveXFiveUser.married,
-                FiveXFiveUser.children,
-                FiveXFiveUser.income_range,
                 FiveXFiveUser.homeowner,
                 FiveXFiveUser.dpv_code
             )
