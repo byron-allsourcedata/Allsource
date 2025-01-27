@@ -263,7 +263,7 @@ async def main():
 
             await process_user_integrations(rmq_connection, db_session)
 
-            logging.info("Processing completed. Sleeping for 30 minutes...")
+            logging.info("Processing completed. Sleeping for 10 minutes...")
         except Exception as err:
             logging.error('Unhandled Exception:', exc_info=True)
         finally:
