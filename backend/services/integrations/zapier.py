@@ -108,7 +108,7 @@ class ZapierIntegrationService:
             getattr(lead, 'programmatic_business_emails', None)
         )
         first_email = extract_first_email(first_email) if first_email else None
-        if not first_email:
+        if not first_email or not first_email.strip():
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
         
         lead_dict = {
@@ -129,8 +129,6 @@ class ZapierIntegrationService:
             "age_min": lead.age_min,
             "age_max": lead.age_max,
             "personal_address": lead.personal_address or "N/A",
-            "personal_zip": lead.personal_zip or "N/A",
-            "personal_zip4": lead.personal_zip4 or "N/A",
             "married": lead.married,
             "homeowner": lead.homeowner,
             "dpv_code": lead.dpv_code

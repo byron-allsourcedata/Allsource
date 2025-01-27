@@ -763,8 +763,6 @@ class LeadsPersistence:
                 FiveXFiveUser.age_min,
                 FiveXFiveUser.age_max,
                 FiveXFiveUser.personal_address,
-                FiveXFiveUser.personal_zip,
-                FiveXFiveUser.personal_zip4,
                 FiveXFiveUser.married,
                 FiveXFiveUser.homeowner,
                 FiveXFiveUser.dpv_code
@@ -785,7 +783,7 @@ class LeadsPersistence:
                     "personal_emails", "last_name", "personal_city", "personal_state", "company_name", 
                     "company_domain", 
                     "job_title", "last_updated", "age_min", "age_max", 
-                    "personal_address", "personal_zip", "personal_zip4", 
+                    "personal_address", "personal_zip",
                     "married", "children", "income_range", "homeowner", "dpv_code"
                 ]
             }
