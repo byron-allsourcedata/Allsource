@@ -68,47 +68,46 @@ def check_blacklist_domain_email(business_email, personal_emails, additional_per
 
 async def fetch_users_by_domain(db_session, company_domains, job_titles, mail_domain):
     results = []
-    count = 0
+    count = 1
     output_files_counter = 1
     for domain in company_domains:
-        count += 1
-        logging.info(f"Processed domains {count} / {len(company_domains)}")
-        users = db_session.query(FiveXFiveUser).filter(FiveXFiveUser.company_domain == domain).all()
-        
-        if not users:
-            continue
-
-        for user in users:
-            if not user.job_title or user.job_title.lower() in job_titles:
-                continue
- 
-            email = check_blacklist_domain_email(user.business_email, user.personal_emails, user.additional_personal_emails, mail_domain)
-            
-            mobile_number = (
-                user.mobile_phone or 
-                user.personal_phone or 
-                user.company_phone
-            )
-            mobile_number = mobile_number.split(', ')[-1] if mobile_number else None
-            mobile_number = format_phone_number(mobile_number)
-            
-            if email:
-                results.append({
-                    "domain": domain,
-                    "job title": user.job_title,
-                    "first name": user.first_name,
-                    "last name": user.last_name,
-                    "email": email,
-                    "mobile number": mobile_number,
-                    "linkedin URL": user.linkedin_url
-                })
-        if count % 2 == 0:
+        if count % 400 == 0:
             output_file = f"tmp/output_users_{output_files_counter}.csv"
             df = pd.DataFrame(results)
             df.to_csv(output_file, index=False)
             logging.info(f"Results saved to {output_file}")
             output_files_counter += 1
             results = []
+        logging.info(f"Processed domains {count} / {len(company_domains)}")
+        users = db_session.query(FiveXFiveUser).filter(FiveXFiveUser.company_domain == domain).all()
+        
+        if not users:
+            count += 1
+            continue
+
+        for user in users:
+            if user.job_title and any(word.lower() in job_titles for word in user.job_title.split()):
+                email = check_blacklist_domain_email(user.business_email, user.personal_emails, user.additional_personal_emails, mail_domain)
+                mobile_number = (
+                    user.mobile_phone or 
+                    user.personal_phone or 
+                    user.company_phone
+                )
+                mobile_number = mobile_number.split(', ')[-1] if mobile_number else None
+                mobile_number = format_phone_number(mobile_number)
+                
+                if email:
+                    results.append({
+                        "domain": domain,
+                        "job title": user.job_title,
+                        "first name": user.first_name,
+                        "last name": user.last_name,
+                        "email": email,
+                        "mobile number": mobile_number,
+                        "linkedin URL": user.linkedin_url
+                    })
+        count += 1
+    print(results)
     if results:
         output_file = f"tmp/output_users_{output_files_counter}.csv"
         df = pd.DataFrame(results)
