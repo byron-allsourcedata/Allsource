@@ -186,7 +186,7 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotification }) => {
-    const { domains, partner } = useUser();
+    const { domains, partner, backButton } = useUser();
     const router = useRouter();
     const pathname = usePathname();
     const [currentDomain, setCurrentDomain] = useState<string | null>(null);
@@ -223,7 +223,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
 
     useEffect(() => {
         checkPartner()
-    }, []);
+    }, [backButton]);
     
     const handleNavigation = async (route: string) => {
         try {
