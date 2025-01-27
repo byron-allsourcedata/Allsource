@@ -66,11 +66,10 @@ def check_blacklist_domain_email(business_email, personal_emails, additional_per
 
     return None
 
-async def fetch_users_by_domain(db_session, company_domains, output_file, job_titles, mail_domain):
-    job_title = {job_title.lower() for job_title in job_titles}
+async def fetch_users_by_domain(db_session, company_domains, job_titles, mail_domain):
     results = []
     count = 0
-
+    output_files_counter = 1
     for domain in company_domains:
         count += 1
         logging.info(f"Processed domains {count} / {len(company_domains)}")
@@ -80,7 +79,7 @@ async def fetch_users_by_domain(db_session, company_domains, output_file, job_ti
             continue
 
         for user in users:
-            if not user.job_title or user.job_title.lower() in job_title:
+            if not user.job_title or user.job_title.lower() in job_titles:
                 continue
  
             email = check_blacklist_domain_email(user.business_email, user.personal_emails, user.additional_personal_emails, mail_domain)
@@ -103,10 +102,18 @@ async def fetch_users_by_domain(db_session, company_domains, output_file, job_ti
                     "mobile number": mobile_number,
                     "linkedin URL": user.linkedin_url
                 })
-    
-    df = pd.DataFrame(results)
-    df.to_csv(output_file, index=False)
-    logging.info(f"Results saved to {output_file}")
+        if count % 2 == 0:
+            output_file = f"tmp/output_users_{output_files_counter}.csv"
+            df = pd.DataFrame(results)
+            df.to_csv(output_file, index=False)
+            logging.info(f"Results saved to {output_file}")
+            output_files_counter += 1
+            results = []
+    if results:
+        output_file = f"tmp/output_users_{output_files_counter}.csv"
+        df = pd.DataFrame(results)
+        df.to_csv(output_file, index=False)
+        logging.info(f"Results saved to {output_file}")
 
 
 async def main():
@@ -126,7 +133,6 @@ async def main():
             logging.error("input_file is None", exc_info=True)
             return
         input_file = f"tmp/{args.input_file}"
-        output_file = 'tmp/output_users.csv'
         job_title = 'tmp/all-jobs.txt'
         job_title_path = 'tmp/job-titles.txt'
         mail_path = 'tmp/mail-domain.txt'
@@ -143,8 +149,9 @@ async def main():
         
         with open(mail_path, "r") as file:
             mail_domain = {title.strip().lower() for title in file if title.strip()}
-            
-        await fetch_users_by_domain(db_session, company_domains, output_file, job_titles, mail_domain)
+        
+        job_titles = {job_title.lower() for job_title in job_titles}
+        await fetch_users_by_domain(db_session, company_domains, job_titles, mail_domain)
 
     except Exception as err:
         logging.error("Unhandled Exception:", exc_info=True)
