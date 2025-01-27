@@ -1212,7 +1212,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                                                 minWidth: '196px'
                                             }
                                         }}>
-                                            <Image src='/logo.svg' alt='logo' height={15} width={24} />
+                                            <Image src='/logo.svg' alt='logo' height={22} width={34} />
                                         </Grid>
                                         <Grid item xs="auto" sm={1} sx={{
                                             '@media (max-width:599px)': {
@@ -1266,7 +1266,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                                                                         padding: '6.5px 8px',
                                                                         fontFamily: 'Roboto',
                                                                         color: '#202124',
-                                                                        fontSize: '14px',
+                                                                        fontSize: '12px',
                                                                         fontWeight: '400',
                                                                         lineHeight: '20px'
                                                                     },
@@ -1349,7 +1349,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                                                                         padding: '6.5px 8px',
                                                                         fontFamily: 'Roboto',
                                                                         color: '#202124',
-                                                                        fontSize: '14px',
+                                                                        fontSize: '12px',
                                                                         fontWeight: '400',
                                                                         lineHeight: '20px'
                                                                     },

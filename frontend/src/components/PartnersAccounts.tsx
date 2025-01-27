@@ -92,6 +92,23 @@ interface AccountData {
     status: string;
 }
 
+const TruncatedText: React.FC<{ text: string; limit: number }> = ({ text, limit }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const shouldTruncate = text.length > limit;
+
+    const handleToggleExpand = () => {
+        setIsExpanded(!isExpanded);
+    };
+
+    return (
+        <Box onClick={handleToggleExpand} sx={{ cursor: shouldTruncate ? 'pointer' : 'pointer' }}>
+            <Typography className="table-data" sx={{color: 'rgba(80, 82, 178, 1) !important', display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis', WebkitLineClamp: isExpanded ? 'none' : 3 }}>
+                {isExpanded ? text : text.substring(0, limit) + (shouldTruncate ? '...' : '')}
+            </Typography>
+        </Box>
+    );
+    };
+
 
 const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFromMain, id: partnerId, fromAdmin, masterData, setMasterData, loading, setLoading, tabIndex, handleTabChange }) => {
     const [accounts, setAccounts] = useState<AccountData[]>([]);
@@ -548,13 +565,16 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                                             sx={{
                                                 ...suppressionsStyles.tableBodyColumn,
                                                 paddingLeft: "16px",
+                                                minWidth: '155px',
+                                                maxWidth: '155px',
                                                 position: 'sticky',
+                                                justifyContent: 'space-between',
                                                 left: 0,
                                                 zIndex: 1,
                                                 cursor: 'pointer',
                                                 backgroundColor: '#fff',
                                                 "&:hover .icon-button": {
-                                                            display: "flex", // Показываем кнопку при наведении
+                                                            display: "flex", 
                                                         },
                                             }}>
 

@@ -1268,7 +1268,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                 }}>
                                     <Box sx={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
                                         <Typography variant="h6" className='first-sub-title'>Map list</Typography>
-                                        <Typography variant='h6' sx={{
+                                        {selectedOption?.list_name && <Typography variant='h6' sx={{
                                             background: '#EDEDF7',
                                             borderRadius: '3px',
                                             fontFamily: 'Roboto',
@@ -1278,8 +1278,8 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                             padding: '2px 4px',
                                             lineHeight: '16px'
                                         }}>
-                                            {selectedOption?.list_name}
-                                        </Typography>
+                                            {selectedOption.list_name}
+                                        </Typography>}
                                     </Box>
 
                                     <Grid container alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' }, marginBottom: '14px' }}>
@@ -1289,7 +1289,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                 minWidth: '196px'
                                             }
                                         }}>
-                                            <Image src='/logo.svg' alt='logo' height={15} width={24} />
+                                            <Image src='/logo.svg' alt='logo' height={22} width={34} />
                                         </Grid>
                                         <Grid item xs="auto" sm={1} sx={{
                                             '@media (max-width:599px)': {
@@ -1302,7 +1302,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                 minWidth: '196px'
                                             }
                                         }}>
-                                            <Image src='/klaviyo.svg' alt='klaviyo' height={20} width={24} />
+                                            <Image src='/klaviyo.svg' alt='klaviyo' height={20} width={30} />
                                         </Grid>
                                         <Grid item xs="auto" sm={1}>&nbsp;</Grid>
                                     </Grid>
@@ -1344,7 +1344,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                                         padding: '6.5px 8px',
                                                                         fontFamily: 'Roboto',
                                                                         color: '#202124',
-                                                                        fontSize: '14px',
+                                                                        fontSize: '12px',
                                                                         fontWeight: '400',
                                                                         lineHeight: '20px'
                                                                     },
@@ -1428,7 +1428,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                                         padding: '6.5px 8px',
                                                                         fontFamily: 'Roboto',
                                                                         color: '#202124',
-                                                                        fontSize: '14px',
+                                                                        fontSize: '12px',
                                                                         fontWeight: '400',
                                                                         lineHeight: '20px'
                                                                     },
