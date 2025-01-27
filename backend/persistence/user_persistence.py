@@ -89,7 +89,7 @@ class UserPersistence:
                 "is_with_card": user.is_with_card,
                 "is_company_details_filled": user.is_company_details_filled,
                 "is_partner": user.is_partner,
-                "type_business": user.type_business,
+                "business_type": user.business_type,
                 "full_name": user.full_name,
                 "team_owner_id": user.team_owner_id,
                 "image": user.image,

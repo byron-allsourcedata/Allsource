@@ -17,7 +17,7 @@ export const fetchUserData = async () => {
           email: userInfo.email,
           full_name: userInfo.full_name,
           partner: userInfo.is_partner,
-          type_business: userInfo.type_business,
+          business_type: userInfo.business_type,
           source_platform: userInfo.source_platform || '',
           company_website: userInfo.company_website || '',
           trial: userPlan.is_trial,

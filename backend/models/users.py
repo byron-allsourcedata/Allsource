@@ -14,7 +14,7 @@ class Users(Base):
     is_partner = Column(BOOLEAN, default=False, nullable=True)
     password = Column(VARCHAR, nullable=True)
     full_name = Column(VARCHAR, nullable=True)
-    type_business = Column(VARCHAR, nullable=False, default='d2c')
+    business_type = Column(VARCHAR, nullable=False, default='d2c')
     team_owner_id = Column(BIGINT, nullable=True)
     image = Column(VARCHAR, nullable=True)
     company_name = Column(VARCHAR, nullable=True)

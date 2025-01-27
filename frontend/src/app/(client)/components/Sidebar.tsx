@@ -219,7 +219,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
             const storedMe = sessionStorage.getItem('me');
             if (storedMe) {
                 const storedData = JSON.parse(storedMe);
-                setTypeBusiness(storedData.type_business)
+                setTypeBusiness(storedData.business_type)
             }
         }, 2500)
     }   

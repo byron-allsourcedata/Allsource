@@ -285,7 +285,7 @@ const AccountSetup = () => {
         company_role: selectedRoles,
         monthly_visits: selectedVisits,
         employees_workers: selectedEmployees,
-        type_business: typeBusiness.toLowerCase()
+        business_type: typeBusiness.toLowerCase()
       });
 
       switch (response.data.status) {
