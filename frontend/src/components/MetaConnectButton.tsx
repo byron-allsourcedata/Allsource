@@ -5,6 +5,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useEffect, useState } from "react";
 import { showToast } from "./ToastNotification";
 import axiosInstance from '@/axios/axiosInterceptorInstance';
+import { useIntegrationContext } from "@/context/IntegrationContext";
 
 
 interface MetaConnectPopupProps {
@@ -107,6 +108,7 @@ const metaStyles = {
 }
 
 const MetaConnectButton = ({open, onClose, onSave, isEdit, boxShadow}: MetaConnectPopupProps) => {
+    const { triggerSync } = useIntegrationContext();
     const [accessToken, setAccessToken] = useState('')
     const [loading, setLoading] = useState(false)
     const appID = process.env.NEXT_PUBLIC_META_APP_ID
@@ -171,6 +173,7 @@ const MetaConnectButton = ({open, onClose, onSave, isEdit, boxShadow}: MetaConne
             if (response.status === 200) {
                 showToast('Connect to Meta Successfuly');
             }
+            triggerSync();
         } finally {
             setLoading(false);
             onClose();
