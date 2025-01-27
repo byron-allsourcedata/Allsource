@@ -93,7 +93,7 @@ const RewardsHistory: React.FC<RewardProps> = ({ id, loading, isMaster, selected
                                     fontWeight: "600",
                                     lineHeight: "20px"
                                 }}>
-                                No Invitee joined from the referreal link.
+                                There was not a single payment of rewards.
                             </Typography>
                         </Box>
                     ) : (

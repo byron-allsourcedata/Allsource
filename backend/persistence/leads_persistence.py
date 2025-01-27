@@ -205,9 +205,6 @@ class LeadsPersistence:
         if from_date and to_date:
             start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
             end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
-            offset_delta = timedelta(hours=timezone_offset)
-            start_date = start_date - offset_delta
-            end_date = end_date - offset_delta
             query = query.filter(
                 and_(  
                     or_(
