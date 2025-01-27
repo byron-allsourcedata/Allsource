@@ -50,7 +50,7 @@ async def get_channels(slack_create_List_request: SlackCreateListRequest,
                        slack_service: SlackService = Depends(get_slack_service)):
     return slack_service.create_channel(domain_id = domain.id, channel_name = slack_create_List_request.name, is_private = slack_create_List_request.is_private)
 
-@router.get("/events")
+@router.post("/events")
 async def handle_slack_events(request: Request, slack_service: SlackService = Depends(get_slack_service)):
     data = await request.json()
     if "challenge" in data:
