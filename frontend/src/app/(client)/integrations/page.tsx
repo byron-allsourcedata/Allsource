@@ -36,6 +36,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import CloseIcon from '@mui/icons-material/Close';
 import ZapierConnectPopup from "@/components/ZapierConnectPopup";
 import SlackConnectPopup from "@/components/SlackConnectPopup";
+import { useIntegrationContext } from "@/context/IntegrationContext";
 
 
 interface IntegrationBoxProps {
@@ -725,6 +726,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
         onClose={handleClose}
         onSave={handleSaveSettings}
         isEdit={true}
+        boxShadow="rgba(0, 0, 0, 0.1)"
       />
       <ShopifySettings
         open={openShopifyConnect}
@@ -1010,6 +1012,7 @@ const PixelManagment = () => {
 
 const Integrations = () => {
   const { hasNotification } = useNotification();
+  const { needsSync, setNeedsSync } = useIntegrationContext();
   const [value, setValue] = useState('1');
   const [integrationsCredentials, setIntegrationsCredentials] = useState<IntegrationCredentials[]>([]);
   const [integrations, setIntegrations] = useState<any[]>([])
@@ -1093,6 +1096,7 @@ const Integrations = () => {
       }
       finally {
         setLoading(false)
+        setNeedsSync(false);
       }
     }
     if (value === '1') {
@@ -1101,7 +1105,7 @@ const Integrations = () => {
         fetchIntegration()
       }
     }
-  }, [value]);
+  }, [value, needsSync]);
 
   const handleSaveSettings = (newIntegration: IntegrationCredentials) => {
     setIntegrationsCredentials(prevIntegrations => {
@@ -1201,7 +1205,6 @@ const Integrations = () => {
                     }
                   }}
                   onChange={handleTabChange}
-                  variant="scrollable"
                 >
                   <Tab value="1" label="Your Integrations" className="main-text"
                     sx={{

@@ -9,6 +9,7 @@ import CustomizedProgressBar from "./CustomizedProgressBar";
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from "./ToastNotification";
+import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface CreateOmnisendProps {
     handleClose: () => void
@@ -91,6 +92,7 @@ const klaviyoStyles = {
 }
 
 const MailchimpConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Invalid_api_key}: CreateOmnisendProps) => {
+    const { triggerSync } = useIntegrationContext();
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
     const [loading, setLoading] = useState(false)
@@ -117,7 +119,7 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, In
     const handleApiKeyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value;
         setApiKey(value);
-        setApiKeyError(!value); 
+        setApiKeyError(!value.trim()); 
     };
 
     const instructions: any[] = [
@@ -178,6 +180,7 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, In
             if(onSave){
                 onSave({'service_name': 'mailchimp', 'is_failed': false, access_token: apiKey})
             }
+            triggerSync();
             handleNextTab()
         } else {
             showErrorToast("Invalid API Key")
@@ -225,7 +228,7 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, In
                     <Button
                         variant="contained"
                         onClick={handleApiKeySave}
-                        disabled={!apiKey || disableButton}
+                        disabled={!apiKey || disableButton || apiKeyError}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito Sans",

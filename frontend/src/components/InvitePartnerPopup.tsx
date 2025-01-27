@@ -4,6 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { styled } from '@mui/material/styles';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
+import { fontFamily } from '@mui/system';
 
 interface PartnerData {
     id: number;
@@ -97,8 +98,8 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
     
         const requestData: RequestData = {
             commission: parseInt(commission),
-            name: fullName,
-            company_name: companyName
+            name: fullName.trim(),
+            company_name: companyName.trim()
         };
         
     
@@ -115,7 +116,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
                     headers: { 'Content-Type': 'application/json' },
                 });
             } else {
-                requestData.email = email;
+                requestData.email = email.trim();
                 requestData.is_master = isMaster;
                 if(masterId) {
                     requestData.master_id = masterId;
@@ -167,7 +168,15 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
     }, [email, fullName, companyName, commission]);
     
     return (
-        <Drawer anchor="right" onClose={onClose} open={open}>
+        <Drawer anchor="right" onClose={onClose}
+        slotProps={{
+            backdrop: {
+              sx: {
+                backgroundColor: 'rgba(0, 0, 0, 0.01)'
+              }
+            }
+          }}
+           open={open}>
         {processing && (
             <Box
                 sx={{
@@ -186,6 +195,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
                 justifyContent: "space-between",
                 alignItems: "center",
                 padding: "24px",
+                pb: '11px',
                 borderBottom: "1px solid #e4e4e4",
                 position: "sticky",
                 top: 0,
@@ -239,15 +249,28 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
                             id="outlined-required"
                             label="Full name"
                             placeholder='Full name'
+                            InputLabelProps={{
+                                sx: {
+                                    color: 'rgba(17, 17, 19, 0.6)',
+                                    fontFamily: 'Nunito Sans',
+                                    fontWeight: 400,
+                                    fontSize: '15px',
+                                    padding:0,
+                                    margin:0
+                              }}}
                             sx={{
                                 "& .MuiInputLabel-root.Mui-focused": {
                                     color: "rgba(17, 17, 19, 0.6)",
                                 },
                                 "& .MuiInputLabel-root[data-shrink='false']": {
                                     transform: "translate(16px, 50%) scale(1)",
-                                },  
+                                },
                             }}
+                            InputProps={{
+                                className: "form-input"
+                              }}
                             value={fullName}
+                            size='small'
                             onChange={(e) => setFullName(e.target.value)}
                         />
 
@@ -257,6 +280,18 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
                             label="Email"
                             type="email"
                             placeholder='Email'
+                            InputLabelProps={{
+                                sx: {
+                                    color: 'rgba(17, 17, 19, 0.6)',
+                                    fontFamily: 'Nunito Sans',
+                                    fontWeight: 400,
+                                    fontSize: '15px',
+                                    padding:0,
+                                    margin:0
+                              }}}
+                            InputProps={{
+                                className: "form-input"
+                              }}
                             sx={{
                                 width: "556px",
                                 "@media (max-width: 620px)": { width: "calc(100vw - 64px)" },
@@ -277,14 +312,26 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
                             id="outlined-required"
                             label="Company name"
                             placeholder='Company name'
+                            InputLabelProps={{
+                                sx: {
+                                    color: 'rgba(17, 17, 19, 0.6)',
+                                    fontFamily: 'Nunito Sans',
+                                    fontWeight: 400,
+                                    fontSize: '15px',
+                                    padding:0,
+                                    margin:0
+                              }}}
                             sx={{
                                 "& .MuiInputLabel-root.Mui-focused": {
                                     color: "rgba(17, 17, 19, 0.6)",
                                 },
                                 "& .MuiInputLabel-root[data-shrink='false']": {
                                     transform: "translate(16px, 50%) scale(1)",
-                                },  
+                                }
                             }}
+                            InputProps={{
+                                className: "form-input"
+                              }}
                             value={companyName}
                             onChange={(e) => setCompanyName(e.target.value)}
                         />
@@ -293,15 +340,27 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
                             id="outlined-required"
                             label="Commission %"
                             placeholder='Commission'
+                            InputLabelProps={{
+                                sx: {
+                                    color: 'rgba(17, 17, 19, 0.6)',
+                                    fontFamily: 'Nunito Sans',
+                                    fontWeight: 400,
+                                    fontSize: '15px',
+                                    padding:0,
+                                    margin:0
+                              }}}
                             sx={{
-                                paddingBottom: "24px",
                                 "& .MuiInputLabel-root.Mui-focused": {
                                     color: "rgba(17, 17, 19, 0.6)",
                                 },
                                 "& .MuiInputLabel-root[data-shrink='false']": {
                                     transform: "translate(16px, 50%) scale(1)",
-                                },  
+                                },
                             }}
+                            InputProps={{
+                                className: "form-input"
+                              }}
+
                             value={commission}
                             onChange={handleCommissionChange}
                             error={commissionError}

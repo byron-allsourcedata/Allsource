@@ -9,6 +9,7 @@ import CustomizedProgressBar from "./CustomizedProgressBar";
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from "./ToastNotification";
+import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface CreateOmnisendProps {
     handleClose: () => void
@@ -91,6 +92,7 @@ const klaviyoStyles = {
 }
 
 const OmnisendConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Invalid_api_key}: CreateOmnisendProps) => {
+    const { triggerSync } = useIntegrationContext();
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
     const [loading, setLoading] = useState(false)
@@ -117,7 +119,7 @@ const OmnisendConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
     const handleApiKeyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value;
         setApiKey(value);
-        setApiKeyError(!value); 
+        setApiKeyError(!value.trim()); 
     };
 
     const instructions: any[] = [
@@ -173,19 +175,21 @@ const OmnisendConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
                 api_key: apiKey
             }
         }, {params: {service_name: 'omnisend'}})
-        if(response.status === 200) {
+        if(response.status === 200 && response.data !== "CREDENTIALS_INVALID") {
             showToast('Integration Omnisend Successfully')
             if(onSave){
                 onSave({'service_name': 'omnisend', 'is_failed': false, access_token: apiKey})
             }
             handleNextTab()
+            triggerSync();
         }
-        if(response.status === 400){
+        if(response.data === "CREDENTIALS_INVALID"){
             showErrorToast('Invalid API Key, please, try another')
         }
     } catch (error) {}
     finally {
-     setDisableButton(true)
+     setDisableButton(false)
+     setApiKey('')
      setLoading(false)
     }
     }
@@ -226,7 +230,7 @@ const OmnisendConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
                     <Button
                         variant="contained"
                         onClick={handleApiKeySave}
-                        disabled={!apiKey || disableButton}
+                        disabled={!apiKey || disableButton || apiKeyError}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito Sans",
