@@ -4,6 +4,7 @@ import hashlib
 import json
 from typing import Optional
 from models.partner import Partner
+from services.jwt_service import create_access_token
 from persistence.user_persistence import UserPersistence
 from services.referral import ReferralService
 from persistence.partners_persistence import PartnersPersistence
@@ -246,3 +247,13 @@ class PartnersService:
             status=partner.status.capitalize(),
             isActive=partner.is_active
         ).model_dump()
+    
+    def generate_access_token(self, user: dict, partner_id: int):
+        partner = self.partners_persistence.get_partner_by_master(parent_user_id=user.get('id'), partner_id=partner_id)
+        if partner:
+            token_info = {
+                "id": partner.user_id,
+                "requester_access_user_id": user.get('id')
+            }
+            return create_access_token(token_info)
+        return None
