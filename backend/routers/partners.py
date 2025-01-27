@@ -10,14 +10,23 @@ router = APIRouter()
 
 @router.get('/rewards')
 @router.get('/rewards/')
-def get_payouts_partners(referral_service: PayoutsService = Depends(get_payouts_service), 
-                        year: Optional[int] = Query(None),
-                        month: Optional[int] = Query(None),
-                        partner_id: Optional[int] = Query(None),
-                        is_master: Optional[bool] = Query(default=False),
-                        reward_type: Optional[str] = Query(default='partner'),
-                        search_query: str = Query(None, description="Search for email, first name")):
-    return referral_service.get_payouts_partners(year=year, month=month, partner_id=partner_id, search_query=search_query, is_master=is_master, reward_type=reward_type)
+def get_payouts_partners(
+    referral_service: PayoutsService = Depends(get_payouts_service), 
+    year: Optional[int] = Query(None),
+    month: Optional[int] = Query(None),
+    partner_id: Optional[int] = Query(None),
+    is_master: Optional[bool] = Query(default=False),
+    from_date: int = Query(None, description="Start date in integer format"),
+    to_date: int = Query(None, description="End date in integer format"),
+    reward_type: Optional[str] = Query(default='partner'),
+    search_query: str = Query(None, description="Search for email, first name"),
+    sort_by: str = Query(None, description="Field"),
+    sort_order: str = Query('desc', description="Field to sort by: 'asc' or 'desc'")):
+
+    return referral_service.get_payouts_partners(year=year, month=month, partner_id=partner_id,
+                                                 search_query=search_query, is_master=is_master,
+                                                 reward_type=reward_type, from_date=from_date, to_date=to_date,
+                                                 sort_by=sort_by, sort_order=sort_order)
 
 
 @router.get('/assets')
