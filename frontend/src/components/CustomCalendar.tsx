@@ -130,7 +130,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({ anchorEl, open, onClose, 
     
 
     const handleThisWeek = () => {
-        const start = startOfWeek(new Date(), { weekStartsOn: 1 });
+        const start = startOfWeek(new Date(), { weekStartsOn: 0 });
         const end = new Date();
         
         start.setHours(0, 0, 0, 0);

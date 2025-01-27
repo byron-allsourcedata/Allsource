@@ -378,14 +378,6 @@ const DomainButton: React.FC = () => {
           </MenuItem>
         ))}
       </Menu>
-      {deleteDomainPopup && deleteDomain && (
-        <ConfirmDeleteDomain
-          open={deleteDomainPopup}
-          domain={deleteDomain}
-          handleClose={() => setDeleteDomainPopup(false)}
-          handleDelete={handleDeleteDomain}
-        />
-      )}
       {loading && (
         <Box
           sx={{
@@ -403,6 +395,14 @@ const DomainButton: React.FC = () => {
         >
           <CustomizedProgressBar />
         </Box>
+      )}
+      {deleteDomainPopup && deleteDomain && (
+        <ConfirmDeleteDomain
+          open={deleteDomainPopup}
+          domain={deleteDomain}
+          handleClose={() => setDeleteDomainPopup(false)}
+          handleDelete={handleDeleteDomain}
+        />
       )}
     </>
   );
