@@ -383,7 +383,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
                     padding: "20px 1em",
                 }}
             >
-                <Button variant="outlined" onClick={handleClose} disabled={!buttonContain}  sx={{
+                <Button variant="outlined" onClick={handleClose}  sx={{
                     borderColor: "rgba(80, 82, 178, 1)",
                     width: "92px",
                     height: "40px",
