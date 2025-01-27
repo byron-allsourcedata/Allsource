@@ -100,6 +100,23 @@ interface EnabledPartner {
 
 type CombinedPartnerData = NewPartner & EnabledPartner;
 
+const TruncatedText: React.FC<{ text: string; limit: number }> = ({ text, limit }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const shouldTruncate = text.length > limit;
+
+    const handleToggleExpand = () => {
+        setIsExpanded(!isExpanded);
+    };
+
+    return (
+        <Box onClick={handleToggleExpand} sx={{ cursor: shouldTruncate ? 'pointer' : 'pointer' }}>
+            <Typography className="table-data" sx={{ color: 'rgba(80, 82, 178, 1) !important', display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis', WebkitLineClamp: isExpanded ? 'none' : 3 }}>
+                {isExpanded ? text : text.substring(0, limit) + (shouldTruncate ? '...' : '')}
+            </Typography>
+        </Box>
+    );
+};
+
 
 const PartnersMain: React.FC<PartnersProps> = ({ setLoading, masterId, appliedDates }) => {
     const router = useRouter();
@@ -112,7 +129,7 @@ const PartnersMain: React.FC<PartnersProps> = ({ setLoading, masterId, appliedDa
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
     const [menuAnchor, setMenuAnchor] = useState(null);
-    const {setBackButton, triggerBackButton} = useUser();
+    const { setBackButton, triggerBackButton } = useUser();
     const [formPopupOpen, setFormPopupOpen] = useState(false);
     const [noticePopupOpen, setNoticePopupOpen] = useState(false);
     const [fileData, setFileData] = useState<NewPartner>({ id: 0, email: "", fullName: "", companyName: "", commission: "" });
@@ -457,13 +474,16 @@ const PartnersMain: React.FC<PartnersProps> = ({ setLoading, masterId, appliedDa
                                                     sx={{
                                                         ...suppressionsStyles.tableBodyColumn,
                                                         paddingLeft: "16px",
+                                                        minWidth: '155px',
+                                                        maxWidth: '155px',
                                                         position: 'sticky',
+                                                        justifyContent: 'space-between',
                                                         left: 0,
                                                         zIndex: 1,
                                                         cursor: 'pointer',
                                                         backgroundColor: '#fff',
                                                         "&:hover .icon-button": {
-                                                            display: "flex", // Показываем кнопку при наведении
+                                                            display: "flex",
                                                         },
                                                     }}>
 
@@ -471,7 +491,7 @@ const PartnersMain: React.FC<PartnersProps> = ({ setLoading, masterId, appliedDa
                                                         sx={{
                                                             display: "flex",
                                                             alignItems: "center",
-                                                            justifyContent: "space-between",
+                                                            justifyContent: "start",
                                                             color: "rgba(80, 82, 178, 1)",
                                                             gap: 0,
                                                             "&:hover .icon-button": {
@@ -479,20 +499,25 @@ const PartnersMain: React.FC<PartnersProps> = ({ setLoading, masterId, appliedDa
                                                             },
                                                         }}
                                                     >
-                                                        {data.company_name}
+
+                                                        <TruncatedText text={data.company_name || '--'} limit={15} />
                                                         {data.status !== 'Invitation sent' &&
                                                             <IconButton
                                                                 className="icon-button"
                                                                 sx={{
-                                                                    display: "none",
-                                                                    ":hover": { backgroundColor: "transparent" },
-                                                                    "@media (max-width: 600px)": {
+                                                                    display: "flex",
+                                                                    alignItems: "center",
+                                                                    justifyContent: "space-between",
+                                                                    color: "rgba(80, 82, 178, 1)",
+                                                                    gap: 0,
+                                                                    "&:hover .icon-button": {
                                                                         display: "flex",
                                                                     },
                                                                 }}
                                                             >
                                                                 <Image src="/outband.svg" alt="outband" width={15.98} height={16} />
-                                                            </IconButton>}
+                                                            </IconButton>
+                                                        }
                                                     </Box>
                                                 </TableCell>
 

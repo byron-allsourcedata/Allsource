@@ -916,6 +916,7 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
         open={openMetaConnect}
         onClose={handleClose}
         onSave={handleSaveSettings}
+        boxShadow="rgba(0, 0, 0, 0.1)"
       />
       <ShopifySettings open={openShopifyConnect} handleClose={handleClose} onSave={handleSaveSettings} />
       <BCommerceConnect open={openBigcommrceConnect} onClose={handleClose} boxShadow="rgba(0, 0, 0, 0.1)" />

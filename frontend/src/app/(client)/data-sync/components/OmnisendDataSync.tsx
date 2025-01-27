@@ -612,7 +612,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                 }
               }}
         >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '0.125px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                 <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
                     Connect to Omnisend
                 </Typography>
@@ -632,7 +632,6 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                     </IconButton>
                 </Box>
             </Box>
-            <Divider />
             <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
                 <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                 <TabContext value={value}>
@@ -832,7 +831,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                                                 minWidth: '196px'
                                             }
                                         }}>
-                                            <Image src='/logo.svg' alt='logo' height={15} width={24} />
+                                            <Image src='/logo.svg' alt='logo' height={22} width={34} />
                                         </Grid>
                                         <Grid item xs="auto" sm={1} sx={{
                                             '@media (max-width:599px)': {
@@ -887,7 +886,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                                                                         padding: '6.5px 8px',
                                                                         fontFamily: 'Roboto',
                                                                         color: '#202124',
-                                                                        fontSize: '14px',
+                                                                        fontSize: '12px',
                                                                         fontWeight: '400',
                                                                         lineHeight: '20px'
                                                                     },
@@ -971,7 +970,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                                                                         padding: '6.5px 8px',
                                                                         fontFamily: 'Roboto',
                                                                         color: '#202124',
-                                                                        fontSize: '14px',
+                                                                        fontSize: '12px',
                                                                         fontWeight: '400',
                                                                         lineHeight: '20px'
                                                                     },
@@ -1096,10 +1095,11 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                                                         InputLabelProps={{
                                                             sx: {
                                                                 fontFamily: 'Nunito Sans',
-                                                                fontSize: '12px',
+                                                                fontSize: '14px',
                                                                 lineHeight: '16px',
                                                                 color: 'rgba(17, 17, 19, 0.60)',
                                                                 top: '-5px',
+                                                                left:'3px',
                                                                 '&.Mui-focused': {
                                                                     color: '#0000FF',
                                                                     top: 0
@@ -1118,7 +1118,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                                                                         padding: '6.5px 8px',
                                                                         fontFamily: 'Roboto',
                                                                         color: '#202124',
-                                                                        fontSize: '14px',
+                                                                        fontSize: '12px',
                                                                         fontWeight: '400',
                                                                         lineHeight: '20px'
                                                                     },
@@ -1183,12 +1183,12 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                                                         }}
                                                         InputProps={{
                                                             sx: {
-                                                                height: '36px',
+                                                                maxHeight: '36px',
                                                                 '& .MuiOutlinedInput-input': {
                                                                     padding: '6.5px 8px',
                                                                     fontFamily: 'Roboto',
                                                                     color: '#202124',
-                                                                    fontSize: '14px',
+                                                                    fontSize: '12px',
                                                                     fontWeight: '400',
                                                                     lineHeight: '20px',
                                                                 },
@@ -1225,7 +1225,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                                                     textTransform: 'none',
                                                     border: '1px solid rgba(80, 82, 178, 1)',
                                                     borderRadius: '4px',
-                                                    padding: '9px 16px',
+                                                    padding: '6px 12px',
                                                     minWidth: 'auto',
                                                     '@media (max-width: 900px)': {
                                                         display: 'none'
@@ -1233,7 +1233,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
                                                 }}
                                             >
                                                 <Typography sx={{
-                                                    marginRight: '0.5em',
+
                                                     fontFamily: 'Nunito Sans',
                                                     lineHeight: '22.4px',
                                                     fontSize: '16px',
