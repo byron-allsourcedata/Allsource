@@ -757,6 +757,7 @@ class LeadsPersistence:
                 FiveXFiveUser.personal_city,
                 FiveXFiveUser.personal_state,
                 FiveXFiveUser.company_name,
+                FiveXFiveUser.personal_zip,
                 FiveXFiveUser.company_domain,
                 FiveXFiveUser.job_title,
                 FiveXFiveUser.last_updated,
