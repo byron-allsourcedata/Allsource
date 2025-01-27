@@ -26,7 +26,7 @@ async def get_leads(
         search_query: str = Query(None, description="Search for email, first name, lastname and phone number"),
         from_time: str = Query(None, description="Start time in integer format"),
         to_time: str = Query(None, description="End time in integer format"),
-        timezone_offset: int = Query(0, description="timezone offset in integer format"),
+        timezone_offset: float = Query(0, description="timezone offset in integer format"),
         leads_service: LeadsService = Depends(get_leads_service)
 ):
     return leads_service.get_leads(
