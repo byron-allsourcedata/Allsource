@@ -61,12 +61,14 @@ class UsersService:
                 "email": team_member.get('email'),
                 "full_name": team_member.get('full_name'),
                 "is_partner": team_member.get('is_partner'),
+                "type_business": team_member.get('type_business'),
                 "source": team_member.get('source_platform')
             }
         return {
             "email": self.user.get('email'),
             "full_name": self.user.get('full_name'),
             "is_partner": self.user.get('is_partner'),
+            "type_business": self.user.get('type_business'),
             "source_platform": self.user.get('source_platform')
         }
 

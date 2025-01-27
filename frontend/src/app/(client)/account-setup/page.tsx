@@ -81,16 +81,16 @@ const AccountSetup = () => {
     setIsFocused(false);
   };
 
-  const [activeTab, setActiveTab] = useState(2);
+  const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
     const parent_token = localStorage.getItem("parent_token");
     setVisibleButton(!!parent_token);
   }, []);
 
-  useEffect(() => {
-    console.log(activeTab)
-  }, [activeTab])
+  // useEffect(() => {
+  //   console.log(activeTab)
+  // }, [activeTab])
 
   const handleReturnToMain = async () => {
     const parent_token = localStorage.getItem('parent_token');
@@ -625,7 +625,7 @@ const AccountSetup = () => {
                 },
               }}
             />
-            <Tab
+            {/* <Tab
               className="tab-heading"
               label="Pixel Installation"
               sx={{
@@ -643,7 +643,7 @@ const AccountSetup = () => {
                   color: "#F45745",
                 },
               }}
-            />
+            /> */}
             {/* <Tab
               className="tab-heading"
               label="Integrations"
@@ -954,7 +954,7 @@ const AccountSetup = () => {
                     color: "#fff",
                   },
                 }}
-                onClick={handleNextClick}
+                onClick={handleSubmit}
                 disabled={!isFormBusinessValid()}
               >
                 Next
