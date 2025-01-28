@@ -280,9 +280,9 @@ const AccountSetup = () => {
   };
   const handleMethodInstall = (setState: (value: boolean) => void, action?: () => void) => {
     setState(true);
-    // if (action) {
-    //   action();
-    // }
+    if (action) {
+      action();
+    }
   };
 
   const validateField = (
@@ -428,9 +428,21 @@ const AccountSetup = () => {
 
   const installManually = async () => {
     try {
-      const response = await axiosInterceptorInstance.get('/install-pixel/manually');
-      console.log({response})
-      setPixelCode(response.data.manual);
+      // const response = await axiosInterceptorInstance.get('/install-pixel/manually');
+      // setPixelCode(response.data.manual);
+      setPixelCode(`
+                <script id="acegm_pixel_script" type="text/javascript" defer="defer">
+                window.pixelClientId = "{client_id}";
+                var now = new Date();
+                var year = now.getFullYear();
+                var month = String(now.getMonth() + 1).padStart(2, '0');
+                var week = Math.ceil((now.getDate() + 6) / 7);
+                var acegm_pixelScriptUrl = 'https://maximiz-data.s3.us-east-2.amazonaws.com/pixel.js?v=' + year + '-' + month + '-' + week;
+                var acegm_base_pixel_script = document.createElement('script');
+                acegm_base_pixel_script.src = acegm_pixelScriptUrl;
+                document.body.appendChild(acegm_base_pixel_script);
+                </script>
+            `)
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -476,6 +488,13 @@ const AccountSetup = () => {
   ];
 
   const handleBackClick = () => {
+    if (activeTab !== 3){
+      setManuallInstall(false);
+      setBigcommerceInstall(false);
+      setShopifyInstall(false);
+      setWordpressInstall(false);
+      setGoogletagInstall(false);
+    }
     setActiveTab((prev) => prev - 1);
   };
 
@@ -1314,6 +1333,7 @@ const AccountSetup = () => {
                     sx={{
                       ...styles.submitButton,
                       opacity: isFormValid() ? 1 : 0.6,
+                      mb: 2,
                       pointerEvents: isFormValid() ? "auto" : "none",
                       backgroundColor: isFormValid()
                         ? "rgba(244, 87, 69, 1)"
@@ -1334,18 +1354,14 @@ const AccountSetup = () => {
                     variant="contained"
                     sx={{
                       ...styles.submitButton,
-                      opacity: isFormValid() ? 1 : 0.6,
-                      pointerEvents: isFormValid() ? "auto" : "none",
-                      color: isFormValid()
-                        ? "rgba(244, 87, 69, 1)"
-                        : "rgba(244, 87, 69, 0.4)",
-                      "&.Mui-disabled": {
-                        color: "rgba(244, 87, 69, 0.6)",
+                      color: "rgba(244, 87, 69, 1)",
+                      backgroundColor: "#fff",
+                      "&:hover": {
                         backgroundColor: "#fff",
+                        color: "rgba(244, 87, 69, 0.6)"
                       },
                     }}
                     onClick={handleSkip}
-                    disabled={!isFormBusinessValid()}
                   >
                     Skip
                   </Button>
@@ -1372,7 +1388,7 @@ const AccountSetup = () => {
                       },
                     }}
                     onClick={handleVerifyPixel}
-                    disabled={!isFormBusinessValid()}
+                    disabled={domainName.trim() !== ""}
                   >
                     Verify Your Pixel
                   </Button>
