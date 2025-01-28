@@ -283,8 +283,6 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                 const current_domain = sessionStorage.getItem('current_domain')
                 sessionStorage.setItem('parent_domain', current_domain || '')
                 if (current_token){
-                    setBackButton(true)
-                    triggerBackButton()
                     localStorage.setItem('parent_token', current_token)
                     localStorage.setItem('token', response.data.token)
                     sessionStorage.removeItem('current_domain')
@@ -292,6 +290,8 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                     await fetchUserData()
                     router.push('/dashboard')
                     router.refresh()
+                    setBackButton(true)
+                    triggerBackButton()
                 }
             }
         }
