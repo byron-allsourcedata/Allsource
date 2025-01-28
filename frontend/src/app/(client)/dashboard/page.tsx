@@ -392,6 +392,7 @@ const Dashboard: React.FC = () => {
   const [showSlider, setShowSlider] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showCharts, setShowCharts] = useState(false);
+  const [hiddenrevenue, setHiddenRevenue] = useState(false);
   const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
   const isCalendarOpen = Boolean(calendarAnchorEl);
   const [formattedDates, setFormattedDates] = useState<string>('');
@@ -502,7 +503,11 @@ const Dashboard: React.FC = () => {
       try {
         const response = await axiosInstance.get('/dashboard/revenue');
         
-        if (!response.data.total_counts || !response.data.total_counts.total_revenue) {
+        if(!response.data) {
+          setHiddenRevenue(true)
+        }
+        
+        if (!response?.data.total_counts || !response?.data.total_counts.total_revenue) {
           setTabIndex(1)
           return; 
         }
@@ -631,6 +636,7 @@ const Dashboard: React.FC = () => {
                   }}
                   aria-label="dashboard tabs"
                 >
+                  {!hiddenrevenue && 
                   <Tab className="main-text"
                     sx={{
                       textTransform: 'none',
@@ -655,7 +661,7 @@ const Dashboard: React.FC = () => {
                       }
                     }}
                     label="Revenue"
-                  />
+                  />}
                   <Tab className="main-text"
                     sx={{
                       textTransform: 'none',

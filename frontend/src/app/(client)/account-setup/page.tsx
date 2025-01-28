@@ -26,6 +26,7 @@ const AccountSetup = () => {
   const [websiteLink, setWebsiteLink] = useState("");
   const [domainLink, setDomainLink] = useState("");
   const [selectedEmployees, setSelectedEmployees] = useState("");
+  const [typeBusiness, setTypeBusiness] = useState("");
   const [selectedVisits, setSelectedVisits] = useState("");
   const [selectedRoles, setSelectedRoles] = useState("");
   const { setBackButton, backButton } = useUser()
@@ -34,6 +35,8 @@ const AccountSetup = () => {
     organizationName: "",
     selectedEmployees: "",
     selectedVisits: "",
+    typeBusiness: ""
+
   });
   const router = useRouter();
   const [visibleButton, setVisibleButton] = useState(false)
@@ -84,6 +87,10 @@ const AccountSetup = () => {
     const parent_token = localStorage.getItem("parent_token");
     setVisibleButton(!!parent_token);
   }, []);
+
+  // useEffect(() => {
+  //   console.log(activeTab)
+  // }, [activeTab])
 
   const handleReturnToMain = async () => {
     const parent_token = localStorage.getItem('parent_token');
@@ -201,6 +208,12 @@ const AccountSetup = () => {
     setSelectedEmployees(label);
     setErrors({ ...errors, selectedEmployees: "" });
   };
+
+  const handleTypeBusinessChange = (label: string) => {
+    setTypeBusiness(label);
+    setErrors({ ...errors, typeBusiness: "" });
+  };
+
   const handleVisitsRangeChange = (label: string) => {
     setSelectedVisits(label);
     setErrors({ ...errors, selectedVisits: "" });
@@ -239,6 +252,10 @@ const AccountSetup = () => {
     }
   };
 
+  const handleSkip = () => {
+    handleNextClick()
+  }
+
 
   const handleSubmit = async () => {
     const newErrors = {
@@ -247,6 +264,7 @@ const AccountSetup = () => {
       selectedEmployees: selectedEmployees ? "" : "Please select number of employees",
       selectedVisits: selectedVisits ? "" : "Please select number of visits",
       selectedRoles: selectedRoles ? "" : "Please select your`s role",
+      typeBusiness: typeBusiness ? "" : "Please select your`s type business",
     };
     setErrors(newErrors);
 
@@ -266,7 +284,8 @@ const AccountSetup = () => {
         company_website: websiteLink,
         company_role: selectedRoles,
         monthly_visits: selectedVisits,
-        employees_workers: selectedEmployees
+        employees_workers: selectedEmployees,
+        business_type: typeBusiness.toLowerCase()
       });
 
       switch (response.data.status) {
@@ -353,6 +372,17 @@ const AccountSetup = () => {
     { min: 251, max: 500, label: "251-500" },
     { min: 501, max: Infinity, label: ">1k" },
   ];
+  const range_typeBusiness = [
+    { label: "B2B" },
+    { label: "D2C" }
+  ];
+  const method_installingPixel = [
+    { label: "Manually", src: "install_manually.svg" },
+    { label: "Google Tag Manager", src: "install_gtm.svg" },
+    { label: "Shopify", src: "install_cms1.svg" },
+    { label: "WordPress", src: "install_cms2.svg" },
+    { label: "Bigcommerce", src: "bigcommerce-icon.svg" },
+  ];
   const roles = [
     { label: "Digital Marketer" },
     { label: "CEO" },
@@ -374,11 +404,11 @@ const AccountSetup = () => {
   ];
 
   const handleBackClick = () => {
-    setActiveTab(0);
+    setActiveTab((prev) => prev - 1);
   };
 
   const handleNextClick = () => {
-    setActiveTab(1);
+    setActiveTab((prev) => prev + 1);
   };
 
   return (
@@ -509,7 +539,7 @@ const AccountSetup = () => {
               left: -120,
               top: 7,
               marginRight: 2,
-              visibility: activeTab === 1 ? 'visible' : 'hidden',
+              visibility: activeTab === 0 ? 'hidden' : 'visible',
               color: "#202124 !important",
               border: "none",
               textTransform: "none",
@@ -533,7 +563,7 @@ const AccountSetup = () => {
                 position: "inherit",
                 left: 0,
                 top: 0,
-                padding: activeTab === 1 ? 1.25 : 0
+                padding: activeTab === 0 ? 0 : 1.25
               },
             }}
           >
@@ -585,6 +615,7 @@ const AccountSetup = () => {
                 pointerEvents: "none",
                 lineHeight: "normal !important",
                 padding: 0,
+                marginRight: 1.5,
                 color:
                   activeTab === 1
                     ? "#F45745"
@@ -594,6 +625,43 @@ const AccountSetup = () => {
                 },
               }}
             />
+            {/* <Tab
+              className="tab-heading"
+              label="Pixel Installation"
+              sx={{
+                textTransform: "none",
+                fontWeight: "600",
+                pointerEvents: "none",
+                lineHeight: "normal !important",
+                padding: 0,
+                marginRight: 1.5,
+                color:
+                  activeTab === 2
+                    ? "#F45745"
+                    : "#707071",
+                "&.Mui-selected": {
+                  color: "#F45745",
+                },
+              }}
+            /> */}
+            {/* <Tab
+              className="tab-heading"
+              label="Integrations"
+              sx={{
+                textTransform: "none",
+                fontWeight: "600",
+                pointerEvents: "none",
+                lineHeight: "normal !important",
+                padding: 0,
+                color:
+                  activeTab === 1
+                    ? "#F45745"
+                    : "#707071",
+                "&.Mui-selected": {
+                  color: "#F45745",
+                },
+              }}
+            /> */}
           </Tabs>
         </Box>
 
@@ -826,6 +894,29 @@ const AccountSetup = () => {
                 ))}
               </Box>
               <Typography variant="body1" className="first-sub-title" sx={styles.text}>
+                Select the type of business you have
+              </Typography>
+              {errors.typeBusiness && (
+                <Typography variant="body2" color="error">
+                  {errors.typeBusiness}
+                </Typography>
+              )}
+              <Box sx={styles.employeeButtons}>
+                {range_typeBusiness.map((range, index) => (
+                  <Button
+                    className="form-input"
+                    key={index}
+                    variant="outlined"
+                    onClick={() => handleTypeBusinessChange(range.label)}
+                    onTouchStart={() => handleTypeBusinessChange(range.label)}
+                    onMouseDown={() => handleTypeBusinessChange(range.label)}
+                    sx={getButtonStyles(typeBusiness === range.label)}
+                  >
+                    <Typography className="form-input" sx={{ padding: '3px' }}> {range.label}</Typography>
+                  </Button>
+                ))}
+              </Box>
+              <Typography variant="body1" className="first-sub-title" sx={styles.text}>
                 Whats your role?
               </Typography>
               {errors.selectedEmployees && (
@@ -870,6 +961,145 @@ const AccountSetup = () => {
               </Button>
             </>
           )}
+          {activeTab === 2 && (
+            <>
+              <Typography variant="body1" className="first-sub-title" sx={styles.text}>
+                Select how you would like to install the pixel
+              </Typography>
+              {errors.selectedEmployees && (
+                <Typography variant="body2" color="error">
+                  {errors.selectedEmployees}
+                </Typography>
+              )}
+              <Box sx={{...styles.rolesButtons, display: "grid", gridTemplateColumns: "1fr 1fr"}}>
+                {method_installingPixel.map((range, index) => (
+                    <Button
+                      key={index}
+                      variant="outlined"
+                      onClick={() => handleRolesChange(range.label)}
+                      onTouchStart={() => handleRolesChange(range.label)}
+                      onMouseDown={() => handleRolesChange(range.label)}
+                      sx={{...getButtonRolesStyles(selectedRoles === range.label), gap: "8px", justifyContent: "flex-start", p: "12px"}}
+                    >
+                      <Image src={range.src} alt="Method install pixel" width={24} height={24}/>
+                      <Typography className="form-input" style={{color: "rgba(112, 112, 113, 1)", lineHeight: "19.6px" }}> {range.label}</Typography>
+                    </Button>
+                ))}
+              </Box>
+              <Button
+                className='hyperlink-red'
+                fullWidth
+                variant="contained"
+                sx={{
+                  ...styles.submitButton,
+                  opacity: isFormValid() ? 1 : 0.6,
+                  pointerEvents: isFormValid() ? "auto" : "none",
+                  backgroundColor: isFormValid()
+                    ? "rgba(244, 87, 69, 1)"
+                    : "rgba(244, 87, 69, 0.4)",
+                  "&.Mui-disabled": {
+                    backgroundColor: "rgba(244, 87, 69, 0.6)",
+                    color: "#fff",
+                  },
+                }}
+                onClick={handleNextClick}
+                disabled={!isFormBusinessValid()}
+              >
+                Next
+              </Button>
+              <Button
+                className='hyperlink-red'
+                fullWidth
+                variant="contained"
+                sx={{
+                  ...styles.submitButton,
+                  opacity: isFormValid() ? 1 : 0.6,
+                  pointerEvents: isFormValid() ? "auto" : "none",
+                  color: isFormValid()
+                    ? "rgba(244, 87, 69, 1)"
+                    : "rgba(244, 87, 69, 0.4)",
+                  "&.Mui-disabled": {
+                    color: "rgba(244, 87, 69, 0.6)",
+                    backgroundColor: "#fff",
+                  },
+                }}
+                onClick={handleSkip}
+                disabled={!isFormBusinessValid()}
+              >
+                Skip
+              </Button>
+            </>
+          )}
+          {/* {activeTab === 3 && (
+            <>
+              <Typography variant="body1" className="first-sub-title" sx={styles.text}>
+                How many employees work at your organization
+              </Typography>
+              {errors.selectedEmployees && (
+                <Typography variant="body2" color="error">
+                  {errors.selectedEmployees}
+                </Typography>
+              )}
+              <Box sx={styles.employeeButtons}>
+                {ranges.map((range, index) => (
+                  <Button
+                    className="form-input"
+                    key={index}
+                    variant="outlined"
+                    onClick={() => handleEmployeeRangeChange(range.label)}
+                    onTouchStart={() => handleEmployeeRangeChange(range.label)}
+                    onMouseDown={() => handleEmployeeRangeChange(range.label)}
+                    sx={getButtonStyles(selectedEmployees === range.label)}
+                  >
+                    <Typography className="form-input" sx={{ padding: '3px' }}> {range.label}</Typography>
+                  </Button>
+                ))}
+              </Box>
+              <Typography variant="body1" className="first-sub-title" sx={styles.text}>
+                Whats your role?
+              </Typography>
+              {errors.selectedEmployees && (
+                <Typography variant="body2" color="error">
+                  {errors.selectedEmployees}
+                </Typography>
+              )}
+              <Box sx={styles.rolesButtons}>
+                {roles.map((range, index) => (
+                  <Button
+                    key={index}
+                    variant="outlined"
+                    onClick={() => handleRolesChange(range.label)}
+                    onTouchStart={() => handleRolesChange(range.label)}
+                    onMouseDown={() => handleRolesChange(range.label)}
+                    sx={getButtonRolesStyles(selectedRoles === range.label)}
+                  >
+                    <Typography className="form-input" sx={{ padding: '3px' }}> {range.label}</Typography>
+                  </Button>
+                ))}
+              </Box>
+              <Button
+                className='hyperlink-red'
+                fullWidth
+                variant="contained"
+                sx={{
+                  ...styles.submitButton,
+                  opacity: isFormValid() ? 1 : 0.6,
+                  pointerEvents: isFormValid() ? "auto" : "none",
+                  backgroundColor: isFormValid()
+                    ? "rgba(244, 87, 69, 1)"
+                    : "rgba(244, 87, 69, 0.4)",
+                  "&.Mui-disabled": {
+                    backgroundColor: "rgba(244, 87, 69, 0.6)",
+                    color: "#fff",
+                  },
+                }}
+                onClick={handleSubmit}
+                disabled={!isFormBusinessValid()}
+              >
+                Next
+              </Button>
+            </>
+          )} */}
         </Box>
       </Box>
     </Box>

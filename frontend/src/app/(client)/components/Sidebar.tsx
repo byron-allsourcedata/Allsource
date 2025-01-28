@@ -7,6 +7,7 @@ import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard';
 import LeadsIcon from '@mui/icons-material/People';
 import CategoryIcon from '@mui/icons-material/Category';
 import IntegrationsIcon from '@mui/icons-material/IntegrationInstructions';
+import BusinessIcon from '@mui/icons-material/Business';
 import FeaturedPlayListIcon from '@mui/icons-material/FeaturedPlayList';
 import SettingsIcon from '@mui/icons-material/Settings';
 import AccountBoxIcon from '@mui/icons-material/AccountBox';
@@ -192,6 +193,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
     const [currentDomain, setCurrentDomain] = useState<string | null>(null);
     const [activatePercent, setActivatePercent] = useState<number>(0);
     const [isPartnerAvailable, setIsPartnerAvailable] = useState(false);
+    const [typeBusiness, setTypeBusiness] = useState("")
     useEffect(() => {
         const storedDomain = sessionStorage.getItem('current_domain');
         if (storedDomain) {
@@ -210,6 +212,16 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                 setIsPartnerAvailable(false) 
             }
         }, 2500) //NEED this test in dev with 2500
+    }
+
+    const checkB2B = () => {
+        setTimeout(() => {
+            const storedMe = sessionStorage.getItem('me');
+            if (storedMe) {
+                const storedData = JSON.parse(storedMe);
+                setTypeBusiness(storedData.business_type)
+            }
+        }, 2500)
     }   
 
     useEffect(() => {
@@ -223,6 +235,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
 
     useEffect(() => {
         checkPartner()
+        checkB2B()
     }, [backButton]);
     
     const handleNavigation = async (route: string) => {
@@ -270,6 +283,12 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                     </ListItemIcon>
                     <ListItemText primary="Contacts" />
                 </ListItem>
+                {typeBusiness === "b2b" && <ListItem button onClick={() => handleNavigation('/company')} sx={isActive('/company') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                        <BusinessIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Company" />
+                </ListItem>}
                 <ListItem button onClick={() => handleNavigation('/data-sync')} sx={isActive('/data-sync') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <CategoryIcon />
