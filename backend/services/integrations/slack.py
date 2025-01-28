@@ -111,7 +111,7 @@ class SlackService:
             return {'status': "OAuth failed"}
     
     def get_bot_token_by_team_id(self, team_id):
-        user_integration = self.user_integrations_persistence.get_credential(team_id=team_id)
+        user_integration = self.integrations_persistence.get_credential(team_id=team_id)
         if user_integration:
             return user_integration.access_token
     
