@@ -49,7 +49,7 @@ class SlackService:
             'access_token': access_token,
             'full_name': user.get('full_name'),
             'service_name': SourcePlatformEnum.SLACK.value,
-            'team_id': team_id
+            'slack_team_id': team_id
         })
         if not integrations:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
