@@ -13,6 +13,11 @@ export const fetchUserData = async () => {
       if (responseData.user_info && responseData.user_plan) {
         const userInfo = responseData.user_info;
         const userPlan = responseData.user_plan;
+        const userDomains = responseData.user_domains;
+
+        const currentDomainInfo = userDomains.find((domain: { domain: string | null; }) => domain.domain === currentDomain);
+        const percentSteps = currentDomainInfo ? currentDomainInfo.activate_percent : null;
+
         sessionStorage.setItem('me', JSON.stringify({
           email: userInfo.email,
           full_name: userInfo.full_name,
@@ -22,7 +27,7 @@ export const fetchUserData = async () => {
           company_website: userInfo.company_website || '',
           trial: userPlan.is_trial,
           plan_end: userPlan.plan_end,
-          percent_steps: userInfo.activate_percent,
+          activate_percent: percentSteps ? percentSteps : null,
           is_trial_pending: userPlan.is_trial_pending,
           domains: responseData.user_domains,
           price: userPlan.price,
@@ -41,7 +46,7 @@ export const fetchUserData = async () => {
           company_website: userInfo.company_website,
           trial: userPlan.is_trial,
           days_left: userPlan.plan_end,
-          percent_steps: userInfo.percent_steps,
+          activate_percent: percentSteps ? percentSteps : null,
           is_trial_pending: userPlan.is_trial_pending,
           domains: responseData.user_domains,
           price: userPlan.price,
