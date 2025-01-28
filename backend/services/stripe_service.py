@@ -17,8 +17,22 @@ class StripeService:
         pass
 
     def get_stripe_account_info(self, stripe_account_id: str):
-        account = stripe.Account.retrieve(stripe_account_id)
-        return account
+        try:
+            account = stripe.Account.retrieve(stripe_account_id)
+            return account
+        except stripe.error.PermissionError as e:
+            logging.error(f"Permission error: {e.user_message}")
+            return None
+        except stripe.error.InvalidRequestError as e:
+            if e.code == 'resource_missing':
+                logging.error(f"Stripe account not found: {e.user_message}")
+                return None
+            else:
+                logging.error(f"Invalid request error: {e.user_message}")
+                return None
+        except stripe.error.AuthenticationError as e:
+            logging.error(f"Authentication error: {e.user_message}")
+            return None
     
     def create_stripe_transfer(self, amount: int, destination_account: str):
         transfer = stripe.Transfer.create(
