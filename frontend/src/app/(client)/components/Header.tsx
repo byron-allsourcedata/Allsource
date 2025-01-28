@@ -100,7 +100,8 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
 
     }
 
-    router.push("/partners");
+    router.push("/dashboard");
+    router.refresh();
   };
 
 
