@@ -590,7 +590,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                                                         },
                                                     }}
                                                 >
-                                                    {data.account_name}
+                                                    {data.account_name} 
                                                     <IconButton
                                                         className="icon-button"
                                                         sx={{

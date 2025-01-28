@@ -100,7 +100,7 @@ interface EnabledPartner {
 
 type CombinedPartnerData = NewPartner & EnabledPartner;
 
-const TruncatedText: React.FC<{ text: string; limit: number }> = ({ text, limit }) => {
+const TruncatedText: React.FC<{ text: string; limit: number, status: string }> = ({ text, limit, status }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const shouldTruncate = text.length > limit;
 
@@ -109,8 +109,8 @@ const TruncatedText: React.FC<{ text: string; limit: number }> = ({ text, limit 
     };
 
     return (
-        <Box onClick={handleToggleExpand} sx={{ cursor: shouldTruncate ? 'pointer' : 'pointer' }}>
-            <Typography className="table-data" sx={{ color: 'rgba(80, 82, 178, 1) !important', display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis', WebkitLineClamp: isExpanded ? 'none' : 3 }}>
+        <Box onClick={handleToggleExpand} sx={{ cursor: (shouldTruncate && status !== 'Invitation sent' ) ? 'pointer' : 'default' }}>
+            <Typography className="table-data" sx={{maxWidth: '120px', color:status === 'Invitation sent' ? '' : 'rgba(80, 82, 178, 1) !important', display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', textWrap: 'wrap', textOverflow: 'ellipsis', WebkitLineClamp: isExpanded ? 'none' : 3 }}>
                 {isExpanded ? text : text.substring(0, limit) + (shouldTruncate ? '...' : '')}
             </Typography>
         </Box>
@@ -282,8 +282,9 @@ const PartnersMain: React.FC<PartnersProps> = ({ setLoading, masterId, appliedDa
         );
     };
 
-    const handleLogin = async (user_account_id: number) => {
+    const handleLogin = async (user_account_id: number, status: string) => {
         try {
+            if (status !== 'Invitation sent'){
             setLoading(true)
             const response = await axiosInstance.get('/partners/generate-token', {
                 params: {
@@ -306,7 +307,7 @@ const PartnersMain: React.FC<PartnersProps> = ({ setLoading, masterId, appliedDa
                     router.refresh()
                 }
             }
-        }
+        }}
         catch {
         }
         finally {
@@ -470,7 +471,7 @@ const PartnersMain: React.FC<PartnersProps> = ({ setLoading, masterId, appliedDa
                                                 },
                                             }}>
                                                 <TableCell className='table-data sticky-cell'
-                                                    onClick={() => handleLogin(data.id)}
+                                                    onClick={() => handleLogin(data.id, data.status)}
                                                     sx={{
                                                         ...suppressionsStyles.tableBodyColumn,
                                                         paddingLeft: "16px",
@@ -480,7 +481,7 @@ const PartnersMain: React.FC<PartnersProps> = ({ setLoading, masterId, appliedDa
                                                         justifyContent: 'space-between',
                                                         left: 0,
                                                         zIndex: 1,
-                                                        cursor: 'pointer',
+                                                        cursor: data.status === 'Invitation sent' ?  'default' : 'pointer',
                                                         backgroundColor: '#fff',
                                                         "&:hover .icon-button": {
                                                             display: "flex",
@@ -492,6 +493,7 @@ const PartnersMain: React.FC<PartnersProps> = ({ setLoading, masterId, appliedDa
                                                             display: "flex",
                                                             alignItems: "center",
                                                             justifyContent: "start",
+                                                            overflowWrap: 'break-word',
                                                             color: "rgba(80, 82, 178, 1)",
                                                             gap: 0,
                                                             "&:hover .icon-button": {
@@ -500,12 +502,12 @@ const PartnersMain: React.FC<PartnersProps> = ({ setLoading, masterId, appliedDa
                                                         }}
                                                     >
 
-                                                        <TruncatedText text={data.company_name || '--'} limit={15} />
+                                                        <TruncatedText text={data.company_name || '--'} limit={15} status={data.status} />
                                                         {data.status !== 'Invitation sent' &&
                                                             <IconButton
                                                                 className="icon-button"
                                                                 sx={{
-                                                                    display: "flex",
+                                                                    display: "none",
                                                                     alignItems: "center",
                                                                     justifyContent: "space-between",
                                                                     color: "rgba(80, 82, 178, 1)",

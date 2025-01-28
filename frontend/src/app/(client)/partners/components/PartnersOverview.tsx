@@ -9,6 +9,7 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import { showToast } from "@/components/ToastNotification";
+import React from "react";
 
 interface FAQItem {
     question: string;
@@ -56,13 +57,79 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
 
     const faqItems: FAQItem[] = !isMaster
         ? [
-            { question: 'How the referral works?', answer: 'Once a user integrates their Stripe account, they can select a predefined discount code for referrals. A referral code is then generated, which the partner can share with their contacts. When a contact signs up and buy any subscription plan using this referral code, the partner receives a percentage of commission as agreed.' },
-            { question: 'When will the reward credits be available in my Stripe account?', answer: 'Referral rewards are distributed in the first week of the following month.' },
-            { question: 'Who is the Master Partner?', answer: 'A master partner can invite other partners, set their commission rates, and earn when those partners make new referrals. Additionally, the master partner can also refer users directly and earn commissions.' },
+            {
+                question: '1. How do I start?',
+                answer: `To get started, follow these steps: 
+                1. Connect Your Stripe Account: Begin by connecting your Stripe account and ensure all necessary details are filled in accurately. 
+                2. Verify Connection: Once your Stripe account is successfully connected, you can proceed to the next step. 
+                3. Select Discount Code: Choose the available discount code for the referral user. 
+                4. Copy Referral Code: Copy the referral code provided. 
+                5. Share with Your Network: Send the referral code to your network to start referring users.`
+            },
+            {
+                question: '2. How do I connect Stripe to get paid?', answer: `To connect your Stripe account and start receiving payments, follow these steps:
+                1. Click "Connect to Stripe": Begin by clicking the "Connect to Stripe" button.
+                2. Generate Account ID: We will generate an account ID for you.
+                3. Add Information: Click on "Add Information" and fill in all the necessary details to successfully connect your Stripe account.` },
+            {
+                question: '3. How do I invite users to sign up?', answer: `To invite users to sign up, follow these steps:
+                1. Connect Your Stripe Account: Ensure your Stripe account is successfully connected.
+                2. Select Discount Code: Choose the discount code for signup referrals.
+                3. Copy Referral Code: Copy the referral code provided.
+                4. Share the Link: Send the referral link to users to invite them to sign up.` },
+            {
+                question: '4. How do I see my sign-ups?', answer: `To view the users who signed up using your referral link, follow these steps:
+                1. Go to Account: Select the "Account" heading at the top of the page.
+                2. View Referral Details: In the account section, you will find the details of users who signed up through your referral link.` },
+            {
+                question: '5. How do I see my commission?', answer: `To view your commission, follow these steps:
+                1. Go to Payout: Select the "Payout" heading at the top of the page.
+                2. View Commission Details: In the payout section, you will find the details of your commission.` },
+            {
+                question: '6. When do I get paid?', answer: `Referral rewards are distributed in the first week of the following month.` },
         ] :
         [
-            { question: 'How the referral works?', answer: 'Once a user integrates their Stripe account, they can select a predefined discount code for referrals. A referral code is then generated, which the partner can share with their contacts. When a contact signs up and buy any subscription plan using this referral code, the partner receives a percentage of commission as agreed.' },
-            { question: 'When will the reward credits be available in my Stripe account?', answer: 'Referral rewards are distributed in the first week of the following month.' },
+            {
+                question: '1. How do I start?',
+                answer: `To get started, follow these steps: 
+                1. Connect Your Stripe Account: Begin by connecting your Stripe account and ensure all necessary details are filled in accurately.
+                2. Verify Connection: Once your Stripe account is successfully connected, you can proceed to the next step.
+                3. Select Discount Code: Choose the available discount code for the referral user.
+                4. Copy Referral Code: Copy the referral code provided.
+                5. Share with Your Network: Send the referral code to your network to start referring users.
+                6. Invite Partners: Alternatively, you can click on "Add Partner" to invite a partner.`
+            },
+            {
+                question: '2. How do I connect Stripe to get paid?', answer: `To connect your Stripe account and start receiving payments, follow these steps:
+                1. Click "Connect to Stripe": Begin by clicking the "Connect to Stripe" button.
+                2. Generate Account ID: We will generate an account ID for you.
+                3. Add Information: Click on "Add Information" and fill in all the necessary details to successfully connect your Stripe account.` },
+            {
+                question: '3. How do I invite users to sign up?', answer: `To invite users to sign up, follow these steps:
+                1. Connect Your Stripe Account: Ensure your Stripe account is successfully connected.
+                2. Select Discount Code: Choose the discount code for signup referrals.
+                3. Copy Referral Code: Copy the referral code provided.
+                4. Share the Link: Send the referral link to users to invite them to sign up.` },
+            {
+                question: '4. How do I see my sign-ups?', answer: `To view the users who signed up using your referral link, follow these steps:
+                1. Go to Account: Select the "Account" heading at the top of the page.
+                2. View Referral Details: In the account section, you will find the details of users who signed up through your referral link.` },
+            {
+                question: '5. How do I see my sign-ups?', answer: `To view the users who signed up using your referral link, follow these steps:
+                1. Go to Account: Select the "Account" heading at the top of the page.
+                2. View Referral Details: In the account section, you will find the details of users who signed up through your referral link.` },
+            {
+                question: '6. How do I invite a partner?', answer: `To invite a partner, follow these steps:
+                1. Click "Add Partner": Begin by clicking the "Add Partner" button.
+                2. Enter Partner Details: Fill in the partner's full name, email, company name, and commission.
+                3. Set Commission: Ensure the commission you assign to the partner is less than the commission assigned to you.
+                4. Send Invitation: Click "Send" to send the invitation link to the partner's email you entered.` },
+            {
+                question: "7. How do I set up the partner's commission?", answer: `There are two ways to set up a partner's commission:
+                1. During Invitation: When you invite the partner by clicking on the "Add Partner" button, you can assign the commission at that time.
+                2. Edit Existing Partner: Select the "Partner" heading at the top of the page. In the partner table, find the action column and click on "Edit" to change the partner's commission.` },
+            {
+                question: '8. When do I get paid?', answer: `Referral rewards are distributed in the first week of the following month.` },
         ]
 
 
@@ -613,7 +680,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                             <Image src={'/how-works.svg'} width={659} height={140} alt="stripe-icon" />
                         </Box>
 
-                        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'start', borderRadius: '4px', padding: '1rem 1.5rem', gap: 2 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'start', borderRadius: '4px', padding: '1rem 1.5rem', gap: 2, mb:1 }}>
                             <Box sx={{ display: 'flex', justifyContent: 'start', alignItems: 'center', width: '100%' }}>
                                 <Typography className="second-sub-title">
                                     Frequently asked questions
@@ -635,8 +702,8 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                             margin: 0,
                                             "&:before": { display: "none", borderBottom: 'none', margin: 0 },
                                             '&.Mui-expanded': {
-                                                    margin: '0px',
-                                                },
+                                                margin: '0px',
+                                            },
                                         }}
                                     >
                                         <AccordionSummary
@@ -665,10 +732,16 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                             <Typography className="second-sub-title">{item.question}</Typography>
                                         </AccordionSummary>
                                         <AccordionDetails sx={{ margin: 0, paddingTop: 0 }}>
-                                            <Typography className="table-data" sx={{ fontSize: '13px !important' }}>
-                                                {item.answer}
+                                            <Typography className="table-data" sx={{ fontSize: '13px !important', lineHeight: '18px !important' }}>
+                                                {item.answer.split('\n').map((line, i) => (
+                                                    <React.Fragment key={i}>
+                                                        {line}
+                                                        <br />
+                                                    </React.Fragment>
+                                                ))}
                                             </Typography>
                                         </AccordionDetails>
+
                                     </Accordion>
                                 ))}
                             </Box>
