@@ -206,7 +206,7 @@ const Partners: React.FC = () => {
                         <Box sx={{ flexShrink: 0, display: 'flex', justifyContent: "space-between", flexDirection: 'row', alignItems: 'center', width: '15%', gap: 1, "@media (max-width: 900px)": { width: '20%' }, "@media (max-width: 600px)": { mb: 2, width: '97%' }, "@media (max-width: 440px)": { mb: 1 }, }}>
                             <Box sx={{display: 'flex', justifyContent: "space-between", alignItems: 'center', gap: 1}}>
                                 <Typography className="first-sub-title">{isMaster ? "Master Partner" : "Partner"}</Typography>
-                                <Box sx={{ "@media (max-width: 600px)": { display: 'none' } }}><CustomTooltip title={"Collaborate with trusted partners to access exclusive resources and services that drive success."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/referral" /></Box>
+                                <Box sx={{ "@media (max-width: 600px)": { display: 'none' } }}><CustomTooltip title={"Collaborate with trusted partners to access exclusive resources and services that drive success."} linkText="Learn more" linkUrl={isMaster ? "https://maximizai.zohodesk.eu/portal/en/kb/articles/master-partner" :"https://maximizai.zohodesk.eu/portal/en/kb/articles/partner"} /></Box>
                             </Box>
                             {tabIndex === 0 && <IconButton sx={{
                                 display: "none", cursor: "pointer", "@media (max-width: 600px)": { display: "block" }}} onClick={handleFormOpenPopup}>
