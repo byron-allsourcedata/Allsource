@@ -497,7 +497,7 @@ const Partners: React.FC = () => {
                             <PartnersAccounts setLoading={setLoading} appliedDates={appliedDates} />
                         </TabPanel>
                     </Box>
-                    {!backButton && <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
+                    {!backButton && isMaster && <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
                         <TabPanel value={tabIndex} index={isMaster ? 2 : 1}>
                             <PartnersMain setLoading={setLoading} appliedDates={appliedDates} masterId={id} />
                         </TabPanel>
