@@ -62,14 +62,13 @@ class SlackService:
         generator = AuthorizeUrlGenerator(
             client_id=SlackConfig.client_id,
             scopes=[
-                "channels:read",
-                "groups:read",
-                "channels:history",
-                "groups:history",
-                "channels:manage",
-                "groups:write",
                 "channels:join",
-                "chat:write"
+                "channels:manage",
+                "channels:read",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "chat:write.public"
             ],
             user_scopes=[],
             redirect_uri=SlackConfig.redirect_url,
