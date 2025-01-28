@@ -460,8 +460,9 @@ def get_sse_events_service(user_persistence_service: UserPersistence = Depends(g
 
 
 def get_dashboard_service(domain: UserDomains = Depends(check_pixel_install_domain),
+                          user_persistence: UserPersistence = Depends(get_user_persistence_service),
                           leads_persistence_service: LeadsPersistence = Depends(get_leads_persistence)):
-    return DashboardService(domain=domain, leads_persistence_service=leads_persistence_service)
+    return DashboardService(domain=domain, user_persistence=user_persistence, leads_persistence_service=leads_persistence_service)
 
 def get_payouts_service(
         referral_payouts_persistence: ReferralPayoutsPersistence = Depends(get_referral_payouts_persistence),
