@@ -165,76 +165,79 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                 setLoading(true);
                 try {
                     const response = await axiosInstance.get("/dashboard/revenue");
-                    const { total_revenue, total_visitors, total_view_products, total_abandoned_cart } = response.data.total_counts;
-                    setValues({
-                        totalRevenue: total_revenue,
-                        totalVisitors: total_visitors,
-                        viewProducts: total_view_products,
-                        totalAbandonedCart: total_abandoned_cart,
-                    });
-                    const { average_order_visitors, average_order_view_products, average_order_abandoned_cart } = response.data.average_order
-                    const { total_orders_visitors, total_orders_view_products, total_orders_abandoned_cart } = response.data.total_order
-                    setAverageOrders({
-                        averageVisitors: average_order_visitors,
-                        averageAddToCart: average_order_abandoned_cart,
-                        averageViewProducts: average_order_view_products
-                    })
-                    setTotalOrders({
-                        averageVisitors: total_orders_visitors,
-                        averageAddToCart: total_orders_abandoned_cart,
-                        averageViewProducts: total_orders_view_products
-                    })
-                    setLifetimeRevenue(response.data.lifetime_revenue);
-                    setROI(response.data.ROI)
+                    if (response.data) {
 
-                    const { daily_data } = response.data;
-                    const days = Object.keys(daily_data).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+                        const { total_revenue, total_visitors, total_view_products, total_abandoned_cart } = response.data.total_counts;
+                        setValues({
+                            totalRevenue: total_revenue,
+                            totalVisitors: total_visitors,
+                            viewProducts: total_view_products,
+                            totalAbandonedCart: total_abandoned_cart,
+                        });
+                        const { average_order_visitors, average_order_view_products, average_order_abandoned_cart } = response.data.average_order
+                        const { total_orders_visitors, total_orders_view_products, total_orders_abandoned_cart } = response.data.total_order
+                        setAverageOrders({
+                            averageVisitors: average_order_visitors,
+                            averageAddToCart: average_order_abandoned_cart,
+                            averageViewProducts: average_order_view_products
+                        })
+                        setTotalOrders({
+                            averageVisitors: total_orders_visitors,
+                            averageAddToCart: total_orders_abandoned_cart,
+                            averageViewProducts: total_orders_view_products
+                        })
+                        setLifetimeRevenue(response.data.lifetime_revenue);
+                        setROI(response.data.ROI)
+
+                        const { daily_data } = response.data;
+                        const days = Object.keys(daily_data).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
 
-                    const revenueData = days.map((day) => daily_data[day].total_price || 0);
-                    const visitorsData = days.map((day) => daily_data[day].visitor || 0);
-                    const viewedProductData = days.map((day) => daily_data[day].viewed_product || 0);
-                    const abandonedCartData = days.map((day) => daily_data[day].abandoned_cart || 0);
+                        const revenueData = days.map((day) => daily_data[day].total_price || 0);
+                        const visitorsData = days.map((day) => daily_data[day].visitor || 0);
+                        const viewedProductData = days.map((day) => daily_data[day].viewed_product || 0);
+                        const abandonedCartData = days.map((day) => daily_data[day].abandoned_cart || 0);
 
-                    setSeries([
-                        {
-                            id: 'total_revenue',
-                            label: 'Total Revenue',
-                            data: revenueData,
-                            curve: 'linear',
-                            showMark: false,
-                            area: false,
-                            stackOrder: 'ascending',
-                        },
-                        {
-                            id: 'visitors',
-                            label: 'Visitors',
-                            data: visitorsData,
-                            curve: 'linear',
-                            showMark: false,
-                            area: false,
-                            stackOrder: 'ascending',
-                        },
-                        {
-                            id: 'viewed_product',
-                            label: 'View Products',
-                            data: viewedProductData,
-                            curve: 'linear',
-                            showMark: false,
-                            area: false,
-                            stackOrder: 'ascending',
-                        },
-                        {
-                            id: 'abandoned_cart',
-                            label: 'Abandoned to Cart',
-                            data: abandonedCartData,
-                            curve: 'linear',
-                            showMark: false,
-                            area: false,
-                            stackOrder: 'ascending',
-                        },
-                    ]);
-                    setDays(days);
+                        setSeries([
+                            {
+                                id: 'total_revenue',
+                                label: 'Total Revenue',
+                                data: revenueData,
+                                curve: 'linear',
+                                showMark: false,
+                                area: false,
+                                stackOrder: 'ascending',
+                            },
+                            {
+                                id: 'visitors',
+                                label: 'Visitors',
+                                data: visitorsData,
+                                curve: 'linear',
+                                showMark: false,
+                                area: false,
+                                stackOrder: 'ascending',
+                            },
+                            {
+                                id: 'viewed_product',
+                                label: 'View Products',
+                                data: viewedProductData,
+                                curve: 'linear',
+                                showMark: false,
+                                area: false,
+                                stackOrder: 'ascending',
+                            },
+                            {
+                                id: 'abandoned_cart',
+                                label: 'Abandoned to Cart',
+                                data: abandonedCartData,
+                                curve: 'linear',
+                                showMark: false,
+                                area: false,
+                                stackOrder: 'ascending',
+                            },
+                        ]);
+                        setDays(days);
+                    }
                 }
                 finally {
                     setLoading(false)

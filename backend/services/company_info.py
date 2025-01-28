@@ -29,6 +29,7 @@ class CompanyInfoService:
             user.company_website = company_info.company_website
             user.employees_workers = company_info.employees_workers
             user.company_role = company_info.company_role
+            user.type_business = company_info.type_business
             user.company_website_visits = company_info.monthly_visits
             user.is_company_details_filled = True
             self.db.flush()

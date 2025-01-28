@@ -93,6 +93,7 @@ class CompanyInfo(BaseModel):
     company_role: str = Field(...)
     monthly_visits: str = Field(...)
     employees_workers: str = Field(...)
+    type_business: str = Field(...)
 
 
 class BaseFormResponse(BaseModel):
