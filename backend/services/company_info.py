@@ -4,7 +4,7 @@ from enums import CompanyInfoEnum
 from models.users import Users
 from models.users_domains import UserDomains
 from sqlalchemy.orm import Session
-from enums import SourcePlatformEnum
+from enums import SourcePlatformEnum, BusinessType
 from schemas.users import CompanyInfo
 from services.subscriptions import SubscriptionService
 from persistence.partners_persistence import PartnersPersistence
@@ -24,6 +24,10 @@ class CompanyInfoService:
         if result == CompanyInfoEnum.SUCCESS:
             if not self.user.get('is_with_card') and not self.user.get('is_email_confirmed'):
                 return {'status': CompanyInfoEnum.NEED_EMAIL_VERIFIED}
+            
+            if company_info.business_type not in {BusinessType.D2C.value, BusinessType.B2B.value}:
+                company_info.business_type = 'd2c'
+                
             user = self.db.query(Users).filter(Users.id == self.user.get('id')).first()
             user.company_name = company_info.organization_name
             user.company_website = company_info.company_website

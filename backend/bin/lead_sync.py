@@ -63,8 +63,8 @@ QUEUE_CREDITS_CHARGING = 'credits_charging'
 EMAIL_NOTIFICATIONS = 'email_notifications'
 QUEUE_DATA_SYNC = 'data_sync_leads'
 
-ROOT_BOT_CLIENT_EMAIL = 'demo@maximiz.ai'
-ROOT_BOT_CLIENT_DOMAIN = 'all-leads.com'
+ROOT_BOT_CLIENT_EMAIL = 'master-demo@maximiz.ai'
+ROOT_BOT_CLIENT_DOMAIN = 'demo.com'
 
 count = 0
 

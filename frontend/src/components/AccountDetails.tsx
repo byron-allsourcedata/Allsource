@@ -32,7 +32,7 @@ const TruncatedText: React.FC<{ text: string; limit: number }> = ({ text, limit 
 
 const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) => {
     const lead = rowData || {};
-
+    
     const genderText = (gender: string) => {
         switch (gender) {
             case 'M':
@@ -284,7 +284,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Address:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                                {lead.address || '--'}
+                                {lead.personal_address || '--'}
                             </Typography>
                         </Box>
 

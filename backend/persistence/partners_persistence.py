@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql import case
 from sqlalchemy import or_, func
 from typing import Optional, Tuple
-from datetime import datetime, timedelta
+from datetime import datetime, timezone
 from models.referral_payouts import ReferralPayouts
 from models.users import Users
 from models.plans import SubscriptionPlan
@@ -14,6 +14,7 @@ class PartnersPersistence:
 
     def __init__(self, db: Session):
         self.db = db
+        self.DEFAULT_USER_ID = 681
 
     def get_partners_by_user_ids(self, user_ids, search_query=None):
         query = self.db.query(Partner).filter(Partner.user_id.in_(user_ids))
@@ -224,7 +225,20 @@ class PartnersPersistence:
 
         self.db.commit()
         self.db.refresh(partner)
+        if partner.is_master == True:
+            self.add_default_referral_user(partner.user_id)
+            
         return partner
+
+    def add_default_referral_user(self, parent_id):
+        referral = ReferralUser(
+                user_id=self.DEFAULT_USER_ID,
+                parent_user_id=parent_id,
+                referral_program_type='partner',
+                created_at=datetime.now(timezone.utc)
+            )
+        self.db.add(referral)
+        self.db.commit()
 
 
     def terminate_partner(self, partner_id):
