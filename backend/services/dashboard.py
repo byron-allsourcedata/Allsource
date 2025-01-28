@@ -14,7 +14,7 @@ class DashboardService:
         self.domain = domain
 
     def get_revenue(self, from_date, to_date, user):
-        if user.get("business_type") != 'd2c':
+        if user.get("business_type") == 'b2b':
             return 
         
         results, lifetime_revenue, investment = self.leads_persistence_service.get_revenue_data(
