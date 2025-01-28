@@ -231,15 +231,18 @@ class PartnersPersistence:
         return partner
 
     def add_default_referral_user(self, parent_id):
-        default_user = self.db.query(Users).filter(Users.email == os.getenv('DEFAULT_USER_FOR_REFERRAL_USER')).first()
-        referral = ReferralUser(
-                user_id=default_user.id,
-                parent_user_id=parent_id,
-                referral_program_type='partner',
-                created_at=datetime.now(timezone.utc)
-            )
-        self.db.add(referral)
-        self.db.commit()
+        default_email = os.getenv('DEFAULT_USER_FOR_REFERRAL_USER')
+        if default_email:
+            default_user = self.db.query(Users).filter(Users.email == default_email).first()
+            if default_user:
+                referral = ReferralUser(
+                        user_id=default_user.id,
+                        parent_user_id=parent_id,
+                        referral_program_type='partner',
+                        created_at=datetime.now(timezone.utc)
+                    )
+                self.db.add(referral)
+                self.db.commit()
 
 
     def terminate_partner(self, partner_id):
