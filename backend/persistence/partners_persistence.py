@@ -1,6 +1,7 @@
 from models.partner import Partner
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql import case
+import os
 from sqlalchemy import or_, func
 from typing import Optional, Tuple
 from datetime import datetime, timezone
@@ -14,7 +15,6 @@ class PartnersPersistence:
 
     def __init__(self, db: Session):
         self.db = db
-        self.DEFAULT_USER_ID = 681
 
     def get_partners_by_user_ids(self, user_ids, search_query=None):
         query = self.db.query(Partner).filter(Partner.user_id.in_(user_ids))
@@ -231,8 +231,9 @@ class PartnersPersistence:
         return partner
 
     def add_default_referral_user(self, parent_id):
+        default_user = self.db.query(Users).filter(Users.email == os.getenv('DEFAULT_USER_FOR_REFERRAL_USER')).first()
         referral = ReferralUser(
-                user_id=self.DEFAULT_USER_ID,
+                user_id=default_user.id,
                 parent_user_id=parent_id,
                 referral_program_type='partner',
                 created_at=datetime.now(timezone.utc)
