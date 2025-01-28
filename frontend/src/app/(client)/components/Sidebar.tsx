@@ -200,16 +200,14 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
     }, []);
 
     const checkPartner = () => {
-        setTimeout(() => {
-            const storedMe = sessionStorage.getItem('me');
-            if (storedMe) {
-                const storedData = JSON.parse(storedMe);
-                setIsPartnerAvailable(storedData.partner)
-            }
-            else {
-                setIsPartnerAvailable(false) 
-            }
-        }, 2500) //NEED this test in dev with 2500
+        const storedMe = sessionStorage.getItem('me');
+        if (storedMe) {
+            const storedData = JSON.parse(storedMe);
+            setIsPartnerAvailable(storedData.partner)
+        }
+        else {
+            setIsPartnerAvailable(false) 
+        }
     }   
 
     useEffect(() => {

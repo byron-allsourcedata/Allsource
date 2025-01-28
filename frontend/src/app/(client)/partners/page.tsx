@@ -16,6 +16,7 @@ import CalendarPopup from "@/components/CustomCalendar";
 import PartnersOverview from "./components/PartnersOverview";
 import PartnersRewards from "./components/PartnersRewards";
 import InvitePartnerPopup from "@/components/InvitePartnerPopup"
+import { useUser } from "@/context/UserContext";
 
 const centerContainerStyles = {
     display: 'flex',
@@ -80,6 +81,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
 const Partners: React.FC = () => {
     const { hasNotification } = useNotification();
     const [email, setEmail] = useState('');
+    const { backButton } = useUser()
     const [commission, setCommission] = useState(0);
     const [id, setId] = useState(0)
     const [formPopupOpen, setFormPopupOpen] = useState(false);
@@ -495,11 +497,11 @@ const Partners: React.FC = () => {
                             <PartnersAccounts setLoading={setLoading} appliedDates={appliedDates} />
                         </TabPanel>
                     </Box>
-                    <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
+                    {!backButton && <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
                         <TabPanel value={tabIndex} index={isMaster ? 2 : 1}>
                             <PartnersMain setLoading={setLoading} appliedDates={appliedDates} masterId={id} />
                         </TabPanel>
-                    </Box>
+                    </Box>}
                     <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
                         <TabPanel value={tabIndex} index={isMaster ? 3 : 2}>
                             <PartnersRewards loading={loading} partnerId={id} isMaster={isMaster ?? false} setLoading={setLoading} setRewardsOpen={setRewardsOpen}/>
