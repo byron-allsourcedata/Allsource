@@ -2,16 +2,21 @@ import logging
 from models.users import Users
 from models.users_domains import UserDomains
 from persistence.leads_persistence import LeadsPersistence
+from persistence.user_persistence import UserPersistence
 
 logger = logging.getLogger(__name__)
 
 
 class DashboardService:
-    def __init__(self, leads_persistence_service: LeadsPersistence, domain: UserDomains):
+    def __init__(self, leads_persistence_service: LeadsPersistence, user_persistence: UserPersistence, domain: UserDomains):
         self.leads_persistence_service = leads_persistence_service
+        self.user_persistence = user_persistence
         self.domain = domain
 
     def get_revenue(self, from_date, to_date, user):
+        if user.get("business_type") == 'b2b':
+            return 
+        
         results, lifetime_revenue, investment = self.leads_persistence_service.get_revenue_data(
             domain_id=self.domain.id,
             from_date=from_date,
