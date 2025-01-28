@@ -270,8 +270,7 @@ class UsersAuth:
         token = create_access_token(token_info)
         logger.info("Token created")
         
-        if auth_google_data.spi:
-            self.user_persistence_service.book_call_confirmed(user_object.id)
+        self.user_persistence_service.book_call_confirmed(user_object.id)
 
         if shopify_data:
             self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
@@ -283,16 +282,12 @@ class UsersAuth:
         
         if referral:
             self.fill_referral_users(referral=referral, user_object=user_object)
-            self.user_persistence_service.book_call_confirmed(user_object.id)
 
         if referral_token:
-            self.user_persistence_service.book_call_confirmed(user_object.id)
             self.user_persistence_service.set_partner_role(user_object.id)
             self.subscription_service.create_subscription_from_partners(user_id=user_object.id, ftd=ftd)
             self.partners_service.setUser(user_object.email, user_object.id, "signup", datetime.datetime.now())
-        
-        if (ift and ift == 'arwt') or user_object.source_platform in (SourcePlatformEnum.BIG_COMMERCE.value, SourcePlatformEnum.SHOPIFY.value):
-            self.user_persistence_service.book_call_confirmed(user_object.id)
+        else:
             self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)
             
         if not user_object.is_with_card:
@@ -552,9 +547,6 @@ class UsersAuth:
         token = create_access_token(token_info)
         logger.info("Token created")
         
-        if user_form.spi:
-            self.user_persistence_service.book_call_confirmed(user_object.id)
-        
         if shopify_data:
             self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
             self.user_persistence_service.email_confirmed(user_object.id)
@@ -563,14 +555,19 @@ class UsersAuth:
             self._process_big_commerce_integration(user_object, shop_hash)
             self.user_persistence_service.email_confirmed(user_object.id)
             
-        if (ift and ift == 'arwt') or user_object.source_platform in (SourcePlatformEnum.BIG_COMMERCE.value, SourcePlatformEnum.SHOPIFY.value):
-            self.user_persistence_service.book_call_confirmed(user_object.id)
-            self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)
+        self.user_persistence_service.book_call_confirmed(user_object.id)
             
         if referral:
             self.fill_referral_users(referral=referral, user_object=user_object)
-            self.user_persistence_service.book_call_confirmed(user_object.id)
-            
+                
+        if referral_token:
+            self.user_persistence_service.email_confirmed(user_object.id)
+            self.user_persistence_service.set_partner_role(user_object.id)
+            self.subscription_service.create_subscription_from_partners(user_id=user_object.id)
+            self.partners_service.setUser(user_object.email, user_object.id, "signup", datetime.now())
+        else:
+            self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)
+        
         conditions = [
             is_with_card is False,
             teams_token is None,
@@ -578,17 +575,8 @@ class UsersAuth:
             shopify_data is None,
             shop_hash is None
         ]
-
         if all(conditions):
             return self._send_email_verification(user_object, token)
-
-        
-        if referral_token:
-            self.user_persistence_service.book_call_confirmed(user_object.id)
-            self.user_persistence_service.email_confirmed(user_object.id)
-            self.user_persistence_service.set_partner_role(user_object.id)
-            self.subscription_service.create_subscription_from_partners(user_id=user_object.id)
-            self.partners_service.setUser(user_object.email, user_object.id, "signup", datetime.now())
             
         if teams_token:
             return {
