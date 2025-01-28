@@ -230,7 +230,9 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
     }, [currentDomain]);
 
     useEffect(() => {
+        console.log('check')
         checkPartner()
+        console.log(1234)
         checkB2B()
     }, [backButton]);
     
