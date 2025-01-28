@@ -109,13 +109,13 @@ class SlackService:
         else:
             return {'status': "OAuth failed"}
     
-    def get_bot_token_by_team_id(self, team_id):
-        user_integration = self.integrations_persistence.get_credential(team_id=team_id)
+    def get_bot_token_by_slack_team_id(self, team_id):
+        user_integration = self.integrations_persistence.get_credential(slack_team_id=team_id)
         if user_integration:
             return user_integration.access_token
     
     def handle_app_home_opened(self, user_id, team_id):
-        bot_token = self.get_bot_token_by_team_id(team_id)
+        bot_token = self.get_bot_token_by_slack_team_id(team_id)
         if not bot_token:
             logger.error(f"Error sending message: {e.response['error']}")
             
@@ -129,8 +129,8 @@ class SlackService:
             logger.error(f"Error sending message: {e.response['error']}")
 
     def handle_app_uninstalled(self, team_id):
-        self.integrations_persistence.delete_integration_by_team_id(team_id=team_id)
-        logger.info("App was uninstalled. Performing cleanup...")
+        self.integrations_persistence.delete_integration_by_slack_team_id(team_id=team_id)
+        logger.debug("App was uninstalled. Performing cleanup...")
     
     def slack_events(self, data):
         team_id = data.get("team_id")

@@ -18,7 +18,7 @@ class UserIntegration(Base):
     error_message = Column(VARCHAR(64))
     is_failed = Column(Boolean, default=False)
     shop_id = Column(VARCHAR(32))
-    team_id = Column(VARCHAR)
+    slack_team_id = Column(VARCHAR(32))
 
 class Integration(Base):
 

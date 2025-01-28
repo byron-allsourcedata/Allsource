@@ -65,9 +65,9 @@ class IntegrationsPresistence:
         return self.db.query(UserIntegration) \
             .filter(UserIntegration.domain_id == domain_id, UserIntegration.service_name == service_name).filter_by(**filter_by).first()
         
-    def delete_integration_by_team_id(self, team_id: str):
+    def delete_integration_by_slack_team_id(self, team_id: str):
         self.db.query(UserIntegration) \
-            .filter(UserIntegration.team_id == team_id).delete()
+            .filter(UserIntegration.slack_team_id == team_id).delete()
         self.db.commit()
 
     def delete_integration(self, domain_id: int, service_name: str):
