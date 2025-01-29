@@ -485,7 +485,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                 </Button>
                             </Box>
                         )}
-                        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'start', borderRadius: '4px', padding: '1rem 1.5rem', gap: 4, opacity: stripeConnect ? 1 : 0.6 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'start', borderRadius: '4px', padding: '1rem 1.5rem', gap: 4, opacity: 1 }}>
                             <Box sx={{ display: 'flex', justifyContent: 'start', alignItems: 'center', width: '100%' }}>
                                 <Typography className="second-sub-title">
                                     Referral Details
@@ -514,9 +514,8 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                         Without Discount Code
                                     </InputLabel>
                                     <Select
-                                        value={stripeConnect ? discountCode?.name : ''}
+                                        value={discountCode?.name}
                                         onChange={handleDiscountCodeChange}
-                                        disabled={!stripeConnect}
                                         label="Discount Code"
                                         sx={{
                                             backgroundColor: '#fff',
@@ -571,8 +570,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                     label="Referral Link"
                                     variant="outlined"
                                     type="text"
-                                    disabled={!referralLink && !stripeConnect}
-                                    value={stripeConnect ? referralLink : ''}
+                                    value={referralLink}
                                     InputProps={{
                                         style: {
                                             color: 'rgba(17, 17, 19, 1)',
@@ -581,12 +579,11 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                             fontSize: '14px',
                                         },
                                         endAdornment: (
-                                            referralLink && stripeConnect && (
+                                            referralLink && (
                                                 <InputAdornment position="end">
                                                     <IconButton
                                                         onClick={handleCopyClick}
                                                         edge="end"
-                                                        disabled={!referralLink || !stripeConnect}
                                                     >
                                                         <ContentCopyIcon fontSize="small" />
                                                     </IconButton>
@@ -608,9 +605,9 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                         backgroundColor: '#fff',
                                         borderRadius: '4px',
                                         width: '100%',
-                                        pointerEvents: !stripeConnect ? 'none' : 'auto', // Отключение кликов
+                                        pointerEvents: 'auto',
                                         "& .MuiOutlinedInput-root": {
-                                            pointerEvents: !stripeConnect ? 'none' : 'auto', // Важное дополнение
+                                            pointerEvents: 'auto', // Важное дополнение
                                             "& fieldset": {
                                                 borderColor: 'rgba(208, 213, 221, 1)',
                                             },
