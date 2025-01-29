@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Response, Request, status
 from fastapi.responses import JSONResponse
 from dependencies import get_domain_service, check_user_authentication, UserDomainsService, check_pixel_install_domain, check_user_authorization
-from schemas.domains import DomainScheme
+from schemas.domains import DomainScheme, UpdateDomain
 from urllib.parse import unquote
 from enums import TeamAccessLevel
 
@@ -34,6 +34,14 @@ def list_domain(request: Request = None,
     filter_by = dict(request.query_params)
     domains = domain_service.get_domains(user.get('id'), **filter_by)
     return domains
+
+
+@router.put('/')
+def update_domain(request: UpdateDomain,
+                domain_service: UserDomainsService = Depends(get_domain_service),
+                user=Depends(check_user_authentication)):
+    domain_service.update_domain(user.get('id'), request)
+    return True
 
 
 @router.delete('/{domain_id}')

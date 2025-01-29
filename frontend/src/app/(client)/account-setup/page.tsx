@@ -39,13 +39,6 @@ const AccountSetup = () => {
   const [typeBusiness, setTypeBusiness] = useState("");
   const [selectedVisits, setSelectedVisits] = useState("");
   const [selectedRoles, setSelectedRoles] = useState("");
-  // const [organizationName, setOrganizationName] = useState("kaka");
-  // const [websiteLink, setWebsiteLink] = useState("kaka.com");
-  // const [domainLink, setDomainLink] = useState("");
-  // const [selectedEmployees, setSelectedEmployees] = useState("1-10");
-  // const [typeBusiness, setTypeBusiness] = useState("D2C");
-  // const [selectedVisits, setSelectedVisits] = useState("0-10K");
-  // const [selectedRoles, setSelectedRoles] = useState("CEO");
   const [selectedMethodInstall, setSelectedMethodInstall] = useState("");
   const [pixelCode, setPixelCode] = useState('');
   const [stripeUrl, setStripeUrl] = useState('');
@@ -68,6 +61,7 @@ const AccountSetup = () => {
   });
   const router = useRouter();
   const [visibleButton, setVisibleButton] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [fullName, setFullName] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
 
@@ -137,6 +131,24 @@ const AccountSetup = () => {
 
     router.push("/partners");
   };
+
+
+  const fetchEditDomain = async () => {
+    try {
+      setLoading(true)
+      const response = await axiosInstance.put(`domains/`, {new_domain: domainName}, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (response.status === 200) {
+          showToast("Domain name successfully updated!");
+      }
+    }
+    catch {
+    }
+    finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
     const fetchCompanyInfo = async () => {
@@ -292,12 +304,6 @@ const AccountSetup = () => {
     setSelectedMethodInstall(label);
     setErrors({ ...errors, selectedMethodInstall: "" });
   };
-  // const handleMethodInstall = (setState: (value: boolean) => void, action?: () => void) => {
-  //   setState(true);
-  //   if (action) {
-  //     action();
-  //   }
-  // };
 
   const validateField = (
     value: string,
@@ -571,8 +577,6 @@ const AccountSetup = () => {
   const handleVerifyPixel = () => {
     let url = domainName.trim();
 
-    console.log("url", {url})
-
     if (url) {
       if (!/^https?:\/\//i.test(url)) {
         url = "http://" + url;
@@ -583,6 +587,8 @@ const AccountSetup = () => {
             .then(response => {
                 const status = response.data.status;
                 if (status === "PIXEL_CODE_INSTALLED") {
+                    alert("Pixel code is installed successfully!");
+                    endSetup()
                     showToast("Pixel code is installed successfully!");
                 }
             })
@@ -1211,7 +1217,10 @@ const AccountSetup = () => {
                               }}
                             />
                             <Button
-                              onClick={() => setEditingName(false)}
+                              onClick={() => {
+                                setEditingName(false)
+                                fetchEditDomain()
+                              }}
                               sx={{
                                 ml: 2,
                                 border: '1px solid rgba(80, 82, 178, 1)',

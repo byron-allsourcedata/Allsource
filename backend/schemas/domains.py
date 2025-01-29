@@ -9,3 +9,6 @@ class DomainResponse(BaseModel):
     data_provider_id: Optional[str] = None
     is_pixel_installed: bool
     enable: bool
+
+class UpdateDomain(BaseModel):
+    new_domain: str

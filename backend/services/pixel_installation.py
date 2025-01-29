@@ -86,16 +86,10 @@ class PixelInstallationService:
         return False
 
     def check_pixel_installed_via_parse(self, url, user, domain):
+        # url = "https://lolly.com"
+        
         result = {'success': False}
         result_parser = self.parse_website(url, domain)
-
-        print("user.get('id')", user.get('id'))
-
-        print("result_parser", result_parser)
-
-        print("url", url)
-
-        print("domain", domain.data_provider_id)
 
         if result_parser:
             self.db.query(UserDomains).filter(

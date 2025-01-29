@@ -3,7 +3,7 @@ import uuid
 from enums import SubscriptionStatus
 from persistence.domains import UserDomainsPersistence, UserDomains
 from persistence.plans_persistence import PlansPersistence
-from schemas.domains import DomainResponse
+from schemas.domains import DomainResponse, UpdateDomain
 from services.subscriptions import SubscriptionService
 from utils import normalize_url
 
@@ -33,6 +33,9 @@ class UserDomainsService:
             self.domain_mapped(domain)
             for i, domain in enumerate(sorted_domains)
         ]
+    
+    def update_domain(self, user_id: int, request: UpdateDomain):
+        self.domain_persistence.update_domain(user_id, request.new_domain)
 
     def domain_mapped(self, domain: UserDomains):
         return DomainResponse(
