@@ -895,7 +895,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                                 </TableCell>
 
                                                                 <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
-                                                                    {data.sources}
+                                                                    {data.sources ?? "Direct"}
                                                                 </TableCell>
 
                                                                 <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
