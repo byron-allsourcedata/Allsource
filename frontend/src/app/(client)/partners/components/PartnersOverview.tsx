@@ -26,6 +26,12 @@ interface PartnersOverviewProps {
     isMaster: boolean
 }
 
+const withoutDiscountCode = {
+    id: 0,
+    name: "Without discount code",
+    discount_amount: 0,
+};
+
 
 const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
     const [loading, setLoading] = useState(false);
@@ -40,20 +46,29 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
     const [referralLink, setReferralLink] = useState('');
     const [discountCodeOptions, setDiscountCodeOptions] = useState<ReferralDiscountCode[]>([]);
     const [discountCode, setDiscountCode] = useState<ReferralDiscountCode>();
+    const [initialDiscountCode, setInitialDiscountCode] = useState('');
 
     const handleDiscountCodeChange = async (event: SelectChangeEvent<string>) => {
-        const selectedCode = discountCodeOptions.find(option => option.name === event.target.value);
-        if (selectedCode) {
-            setDiscountCode(selectedCode);
-            try {
-                const response = await axiosInstance.get(`referral/details?discount_code_id=${selectedCode.id}`);
-                const fullReferralLink = `${process.env.NEXT_PUBLIC_BASE_URL}/signup?referral=${response.data.referral_code}`;
-                setReferralLink(fullReferralLink);
-            } catch (err) {
-                console.error("Error fetching referral details:", err);
-            }
+        const selectedCode = discountCodeOptions.find(option => option.name === event.target.value) || withoutDiscountCode;
+    
+        setDiscountCode(selectedCode);
+    
+        if (selectedCode.id === 0) {
+            setReferralLink(initialDiscountCode);
+            return;
+        }
+    
+        try {
+            setLoading(true)
+            const response = await axiosInstance.get(`referral/details?discount_code_id=${selectedCode.id}`);
+            setReferralLink(`${process.env.NEXT_PUBLIC_BASE_URL}/signup?referral=${response.data.referral_code}`);
+        } catch (err) {
+            console.error("Error fetching referral details:", err);
+        } finally{
+            setLoading(false)
         }
     };
+    
 
     const faqItems: FAQItem[] = !isMaster
         ? [
@@ -152,6 +167,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
             setDiscountCodeOptions(responseDetails.data.discount_codes)
             const fullReferralLink = `${process.env.NEXT_PUBLIC_BASE_URL}/signup?referral=${responseDetails.data.referral_code}`;
             setReferralLink(fullReferralLink);
+            setInitialDiscountCode(fullReferralLink)
         } catch (err) {
         } finally {
             setIsLoading(false);
@@ -550,7 +566,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                             )
                                         )}
                                     >
-                                        {discountCodeOptions?.map((option, index) => (
+                                        {[withoutDiscountCode, ...discountCodeOptions].map((option, index) => (
                                             <MenuItem
                                                 key={index}
                                                 value={option.name}
