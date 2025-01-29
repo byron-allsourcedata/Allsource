@@ -64,7 +64,7 @@ class ReferralService:
         }
 
     def get_referral_discount_code_by_id(self, discount_code_id: int, user: dict):
-        if user.get('partner_is_active') is False and user.get('is_stripe_connected') == False:
+        if user.get('partner_is_active') is False:
             return {
             'discount_codes': None,
             'referral_code': None
@@ -85,13 +85,6 @@ class ReferralService:
         user_id = user.get('id')
         formatted_discount_codes = None
         referral_code = None
-
-        if user.get('is_stripe_connected') is False:
-            return {
-                'discount_codes': formatted_discount_codes,
-                'referral_code': referral_code
-            }
-                
         if user.get('partner_is_active') is False:
             return {
                 'discount_codes': formatted_discount_codes,
