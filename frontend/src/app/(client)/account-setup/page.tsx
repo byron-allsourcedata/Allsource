@@ -8,17 +8,27 @@ import {
   MenuItem,
   Tab,
   Tabs,
+  Link,
+  Divider,
   TextField,
+  IconButton,
+  InputBase,
   Typography,
 } from "@mui/material";
 import Image from "next/image";
 import { styles } from "./accountStyles";
+import { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
 import { useUser } from "../../../context/UserContext";
 import axiosInterceptorInstance from "../../../axios/axiosInterceptorInstance";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import CloseIcon from '@mui/icons-material/Close';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import PersonIcon from '@mui/icons-material/Person';
+import EditIcon from '@mui/icons-material/Edit';
+import axiosInstance from '@/axios/axiosInterceptorInstance';
+import { showToast, showErrorToast } from '@/components/ToastNotification';
 import { fetchUserData } from '@/services/meService';
 
 const AccountSetup = () => {
@@ -29,6 +39,14 @@ const AccountSetup = () => {
   const [typeBusiness, setTypeBusiness] = useState("");
   const [selectedVisits, setSelectedVisits] = useState("");
   const [selectedRoles, setSelectedRoles] = useState("");
+  const [pixelCode, setPixelCode] = useState('');
+  const [domainName, setDomainName] = useState("");
+  const [editingName, setEditingName] = useState(true)
+  const [manuallInstall, setManuallInstall] = useState(false)
+  const [shopifyInstall, setShopifyInstall] = useState(false)
+  const [bigcommerceInstall, setBigcommerceInstall] = useState(false)
+  const [wordpressInstall, setWordpressInstall] = useState(false)
+  const [googletagInstall, setGoogletagInstall] = useState(false)
   const { setBackButton, backButton } = useUser()
   const [errors, setErrors] = useState({
     websiteLink: "",
@@ -81,16 +99,12 @@ const AccountSetup = () => {
     setIsFocused(false);
   };
 
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState(2);
 
   useEffect(() => {
     const parent_token = localStorage.getItem("parent_token");
     setVisibleButton(!!parent_token);
   }, []);
-
-  // useEffect(() => {
-  //   console.log(activeTab)
-  // }, [activeTab])
 
   const handleReturnToMain = async () => {
     const parent_token = localStorage.getItem('parent_token');
@@ -204,6 +218,48 @@ const AccountSetup = () => {
       : { ...styles.roleButton, color: "#707071" };
   };
 
+  const style = {
+    position: 'fixed' as 'fixed',
+    top: 0,
+    right: 0,
+    width: '45%',
+    height: '100%',
+    bgcolor: 'background.paper',
+    boxShadow: 24,
+    p: 4,
+    display: 'flex',
+    flexDirection: 'column',
+    transition: 'transform 0.3s ease-in-out',
+    transform: 'translateX(100%)',
+    '@media (max-width: 600px)': {
+      width: '100%',
+      height: '100%',
+      p: 0
+    },
+  };
+  
+  const openStyle = {
+    transform: 'translateX(0%)',
+    right: 0,
+  };
+
+  const maintext = {
+    textAlign: 'left',
+    color: 'rgba(32,33, 36, 1) !important',
+    padding: '0em 0em 0em 1em',
+  };
+
+  const subtext = {
+    fontFamily: 'Nunito Sans',
+    fontSize: '14px',
+    fontWeight: '400',
+    lineHeight: '16.8px',
+    textAlign: 'left',
+    color: 'rgba(0, 0, 0, 1)',
+    paddingTop: '0.25em',
+    paddingLeft: '3.7em',
+  };
+
   const handleEmployeeRangeChange = (label: string) => {
     setSelectedEmployees(label);
     setErrors({ ...errors, selectedEmployees: "" });
@@ -221,6 +277,12 @@ const AccountSetup = () => {
   const handleRolesChange = (label: string) => {
     setSelectedRoles(label);
     setErrors({ ...errors, selectedVisits: "" });
+  };
+  const handleMethodInstall = (setState: (value: boolean) => void, action?: () => void) => {
+    setState(true);
+    // if (action) {
+    //   action();
+    // }
   };
 
   const validateField = (
@@ -364,6 +426,16 @@ const AccountSetup = () => {
     return !errors.selectedRoles && !errors.selectedEmployees;
   };
 
+  const installManually = async () => {
+    try {
+      const response = await axiosInterceptorInstance.get('/install-pixel/manually');
+      console.log({response})
+      setPixelCode(response.data.manual);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
   const ranges = [
     { min: 1, max: 10, label: "1-10" },
     { min: 11, max: 50, label: "11-50" },
@@ -377,11 +449,11 @@ const AccountSetup = () => {
     { label: "D2C" }
   ];
   const method_installingPixel = [
-    { label: "Manually", src: "install_manually.svg" },
-    { label: "Google Tag Manager", src: "install_gtm.svg" },
-    { label: "Shopify", src: "install_cms1.svg" },
-    { label: "WordPress", src: "install_cms2.svg" },
-    { label: "Bigcommerce", src: "bigcommerce-icon.svg" },
+    { label: "Manually", src: "install_manually.svg", setState: setManuallInstall, action: installManually },
+    { label: "Google Tag Manager", src: "install_gtm.svg", setState: setGoogletagInstall },
+    { label: "Shopify", src: "install_cms1.svg", setState: setShopifyInstall },
+    { label: "WordPress", src: "install_cms2.svg", setState: setWordpressInstall },
+    { label: "Bigcommerce", src: "bigcommerce-icon.svg", setState: setBigcommerceInstall },
   ];
   const roles = [
     { label: "Digital Marketer" },
@@ -409,6 +481,45 @@ const AccountSetup = () => {
 
   const handleNextClick = () => {
     setActiveTab((prev) => prev + 1);
+  };
+
+  const handleButtonClick = () => {
+    axiosInstance.post('/install-pixel/send-pixel-code', { email })
+      .then(response => {
+        showToast('Successfully send email')
+      })
+      .catch(error => {
+      });
+  };
+
+  const handleVerifyPixel = () => {
+    let url = domainName.trim();
+
+    if (url) {
+      if (!/^https?:\/\//i.test(url)) {
+        url = "http://" + url;
+      }
+
+      axiosInstance.post("/install-pixel/check-pixel-installed-parse", { url })
+            .then(response => {
+                const status = response.data.status;
+                if (status === "PIXEL_CODE_INSTALLED") {
+                    showToast("Pixel code is installed successfully!");
+                }
+            })
+            .catch(error => {
+                showErrorToast("An error occurred while checking the pixel code.");
+            });
+
+      const hasQuery = url.includes("?");
+      const newUrl = url + (hasQuery ? "&" : "?") + "vge=true" + "&api=https://api-dev.maximiz.ai";
+      window.open(newUrl, "_blank");
+    }
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(pixelCode);
+    alert('Copied to clipboard');
   };
 
   return (
@@ -625,7 +736,7 @@ const AccountSetup = () => {
                 },
               }}
             />
-            {/* <Tab
+            <Tab
               className="tab-heading"
               label="Pixel Installation"
               sx={{
@@ -643,7 +754,7 @@ const AccountSetup = () => {
                   color: "#F45745",
                 },
               }}
-            /> */}
+            />
             {/* <Tab
               className="tab-heading"
               label="Integrations"
@@ -654,7 +765,7 @@ const AccountSetup = () => {
                 lineHeight: "normal !important",
                 padding: 0,
                 color:
-                  activeTab === 1
+                  activeTab === 3
                     ? "#F45745"
                     : "#707071",
                 "&.Mui-selected": {
@@ -758,12 +869,15 @@ const AccountSetup = () => {
               },
             }}
           >
-            <Typography variant="h5" component="h1" className="heading-text" sx={styles.title}>
-              Welcome {fullName},
-            </Typography>
-            <Typography variant="body1" component="h2" className="first-sub-title" sx={styles.subtitle}>
-              Let&apos;s set up your account
-            </Typography>
+            {!shopifyInstall && !bigcommerceInstall && !googletagInstall && !wordpressInstall && !manuallInstall && <>
+              <Typography variant="h5" component="h1" className="heading-text" sx={styles.title}>
+                Welcome {fullName},
+              </Typography>
+              <Typography variant="body1" component="h2" className="first-sub-title" sx={styles.subtitle}>
+                Let&apos;s set up your account
+              </Typography>
+              </>
+            }
           </Box>
           {activeTab === 0 && (
             <>
@@ -954,82 +1068,346 @@ const AccountSetup = () => {
                     color: "#fff",
                   },
                 }}
-                onClick={handleSubmit}
-                disabled={!isFormBusinessValid()}
-              >
-                Next
-              </Button>
-            </>
-          )}
-          {activeTab === 2 && (
-            <>
-              <Typography variant="body1" className="first-sub-title" sx={styles.text}>
-                Select how you would like to install the pixel
-              </Typography>
-              {errors.selectedEmployees && (
-                <Typography variant="body2" color="error">
-                  {errors.selectedEmployees}
-                </Typography>
-              )}
-              <Box sx={{...styles.rolesButtons, display: "grid", gridTemplateColumns: "1fr 1fr"}}>
-                {method_installingPixel.map((range, index) => (
-                    <Button
-                      key={index}
-                      variant="outlined"
-                      onClick={() => handleRolesChange(range.label)}
-                      onTouchStart={() => handleRolesChange(range.label)}
-                      onMouseDown={() => handleRolesChange(range.label)}
-                      sx={{...getButtonRolesStyles(selectedRoles === range.label), gap: "8px", justifyContent: "flex-start", p: "12px"}}
-                    >
-                      <Image src={range.src} alt="Method install pixel" width={24} height={24}/>
-                      <Typography className="form-input" style={{color: "rgba(112, 112, 113, 1)", lineHeight: "19.6px" }}> {range.label}</Typography>
-                    </Button>
-                ))}
-              </Box>
-              <Button
-                className='hyperlink-red'
-                fullWidth
-                variant="contained"
-                sx={{
-                  ...styles.submitButton,
-                  opacity: isFormValid() ? 1 : 0.6,
-                  pointerEvents: isFormValid() ? "auto" : "none",
-                  backgroundColor: isFormValid()
-                    ? "rgba(244, 87, 69, 1)"
-                    : "rgba(244, 87, 69, 0.4)",
-                  "&.Mui-disabled": {
-                    backgroundColor: "rgba(244, 87, 69, 0.6)",
-                    color: "#fff",
-                  },
-                }}
                 onClick={handleNextClick}
                 disabled={!isFormBusinessValid()}
               >
                 Next
               </Button>
-              <Button
-                className='hyperlink-red'
-                fullWidth
-                variant="contained"
-                sx={{
-                  ...styles.submitButton,
-                  opacity: isFormValid() ? 1 : 0.6,
-                  pointerEvents: isFormValid() ? "auto" : "none",
-                  color: isFormValid()
-                    ? "rgba(244, 87, 69, 1)"
-                    : "rgba(244, 87, 69, 0.4)",
-                  "&.Mui-disabled": {
-                    color: "rgba(244, 87, 69, 0.6)",
-                    backgroundColor: "#fff",
-                  },
-                }}
-                onClick={handleSkip}
-                disabled={!isFormBusinessValid()}
-              >
-                Skip
-              </Button>
             </>
           )}
+          {activeTab === 2 && 
+            <>
+              {manuallInstall && 
+                  <Box>
+                    <Box display="flex" justifyContent="space-between" sx={{ width: '100%', alignItems: 'center', paddingBottom: '1rem' }}>
+                        <Box display="flex" gap="16px">
+                        <Image src="install_manually.svg" alt="Manually install pixel" width={24} height={24}/>
+                          <Typography className='first-sub-title' sx={{  textAlign: 'left', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
+                            Install Manually
+                          </Typography>
+                        </Box>    
+                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-insta" 
+                              target="_blank" className='first-sub-title' style={{fontSize: "14px", color: "rgba(80, 82, 178, 1)"}} 
+                              sx={{ textDecoration: "underline", cursor: "pointer",'@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
+                          Tutorial
+                        </Link>
+                    </Box>
+                    <Divider />
+                    <Box sx={{mt: 4}}>
+                      {editingName 
+                        ? 
+                          <>
+                            <TextField
+                              id="filled-basic"
+                              placeholder="Enter your domain"
+                              value={domainName}
+                              onChange={(e) => {
+                                setDomainName(e.target.value)
+                              }}
+                              onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    setEditingName(false)
+                                  }
+                              }}
+                              variant="outlined"
+                              sx={{
+                                  flex: 1,
+                                  width: '360px',
+                                  '& .MuiOutlinedInput-root': {
+                                      borderRadius: '4px',
+                                      height: '40px',
+                                  },
+                                  '& input': {
+                                      paddingLeft: "16px",
+                                  },
+                                  '& input::placeholder': {
+                                      fontSize: '14px',
+                                      color: '#8C8C8C',
+                                  },
+                              }}
+                            />
+                            <Button
+                              onClick={() => setEditingName(false)}
+                              sx={{
+                                ml: 2,
+                                border: '1px solid rgba(80, 82, 178, 1)',
+                                textTransform: 'none',
+                                background: '#fff',
+                                color: 'rgba(80, 82, 178, 1)',
+                                fontFamily: 'Nunito Sans',
+                                padding: '0.65em 2em',
+                                mr: 1,
+                                '@media (max-width: 600px)': { padding: '0.5em 1.5em', mr: 0, ml: 0, left: 0 }
+                              }}
+                            >
+                              <Typography className='second-sub-title' sx={{
+                                color:'rgba(80, 82, 178, 1) !important', textAlign: 'left'
+                              }}>
+                                Save
+                              </Typography>
+                            </Button>
+                          </> 
+                        : 
+                          <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
+                            <Typography className='first-sub-title' sx={{  textAlign: 'left', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
+                              {domainName}
+                            </Typography>
+                            <IconButton onClick={() => setEditingName(true)} sx={{ p: "4px", ':hover': { backgroundColor: 'transparent', } }} >
+                              <EditIcon height={8} width={8} sx={{ color: "rgba(80, 82, 178, 1)"}}/>
+                            </IconButton>
+                          </Box>
+
+                      }
+                    </Box>
+                    <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '10px', '@media (max-width: 600px)': { p: 2 } }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', pt: 3, justifyContent: 'start' }}>
+                        <Image src='/1.svg' alt='1' width={28} height={28} />
+                        <Typography className='first-sub-title' sx={maintext}>Copy the pixel code</Typography>
+                      </Box>
+                      <Box
+                        component="pre"
+                        sx={{
+                          backgroundColor: '#ffffff',
+                          gap: 2,
+                          position: 'relative',
+                          wordWrap: 'break-word',
+                          whiteSpace: 'pre-wrap',
+                          border: '1px solid rgba(228, 228, 228, 1)',
+                          borderRadius: '10px',
+                          marginLeft: '3em',
+                          maxHeight: '14em',
+                          overflowY: 'auto',
+                          overflowX: 'hidden',
+                          '@media (max-width: 600px)': {
+                            maxHeight: '14em',
+                          },
+                        }}
+                      >
+                        <IconButton
+                          onClick={handleCopy}
+                          sx={{ position: 'absolute', right: '10px', top: '10px' }}
+                        >
+                          <ContentCopyIcon />
+                        </IconButton>
+                        <code style={{ color: 'rgba(95, 99, 104, 1)', fontSize: '12px', margin: 0, fontWeight: 400, fontFamily: 'Nunito Sans', textWrap: 'nowrap' }}>{pixelCode?.trim()}</code>
+                      </Box>
+                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '0.5em 0em 0em 0em', justifyContent: 'start' }}>
+                        <Image src='/2.svg' alt='2' width={28} height={28} />
+                        <Typography className='first-sub-title' sx={maintext}>Paste the pixel in your website</Typography>
+                      </Box>
+                      <Typography className='paragraph' sx={subtext}>Paste the above pixel in the header of your website. The header script starts with &lt;head&gt; and ends with &lt;/head&gt;.</Typography>
+                      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1.25em 0em 0em 0em', justifyContent: 'start' }}>
+                        <Image src='/3.svg' alt='3' width={28} height={28} />
+                        <Typography className='first-sub-title' sx={maintext}>Verify Your Pixel</Typography>
+                      </Box>
+                      <Typography className='paragraph' sx={subtext}>Once the pixel is pasted in your website, wait for 10-15 mins and verify your pixel.</Typography>
+                      <Box sx={{ position: 'relative', width: '100%', pt: 5, '@media (max-width: 600px)': { pt: 2 } }}>
+                        <Box
+                          sx={{
+                            padding: '1.1em',
+                            border: '1px solid #e4e4e4',
+                            borderRadius: '8px',
+                            backgroundColor: 'rgba(247, 247, 247, 1)',
+                            boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+                            marginBottom: '1.9em',
+                            '@media (max-width: 600px)': { m: 2 }
+                          }}
+                        >
+                          <Typography
+                            variant="h6"
+                            component="div"
+                            mb={2}
+                            className='first-sub-title'
+                            sx={{
+                              textAlign: 'left',
+                            }}
+                          >
+                            Send this to my developer
+                          </Typography>
+                          <Box display="flex" alignItems="center" justifyContent="space-between" flexDirection="row" sx={{ '@media (max-width: 600px)': { flexDirection: 'column', display: 'flex', alignContent: 'flex-start', alignItems: 'flex-start', gap: 1 } }}>
+                            <InputBase
+                              id="email_send"
+                              type="text"
+                              placeholder="Enter Email ID"
+                              value={email}
+                              onChange={(e: any) => setEmail(e.target.value)}
+                              className='paragraph'
+                              sx={{
+                                padding: '0.5rem 2em 0.5em 1em',
+                                width: '65%',
+                                border: '1px solid #e4e4e4',
+                                borderRadius: '4px',
+                                maxHeight: '2.5em',
+                                fontSize: '14px !important',
+                                textAlign: 'left',
+                                backgroundColor: 'rgba(255, 255, 255, 1)',
+                                boxShadow: 'none',
+                                outline: 'none',  
+                                '&:focus': {
+                                  borderColor: '#3f51b5',
+                                },
+                                '@media (max-width: 600px)': {
+                                  width: '100%',
+                                },
+                              }}
+                            />
+            
+                            <Button
+                              onClick={handleButtonClick}
+                              sx={{
+                                ml: 2,
+                                border: '1px solid rgba(80, 82, 178, 1)',
+                                textTransform: 'none',
+                                background: '#fff',
+                                color: 'rgba(80, 82, 178, 1)',
+                                fontFamily: 'Nunito Sans',
+                                padding: '0.65em 2em',
+                                mr: 1,
+                                '@media (max-width: 600px)': { padding: '0.5em 1.5em', mr: 0, ml: 0, left: 0 }
+                              }}
+                            >
+                              <Typography className='second-sub-title' sx={{
+                                color:'rgba(80, 82, 178, 1) !important', textAlign: 'left'
+                              }}>
+                                Send
+                              </Typography>
+                            </Button>
+                          </Box>
+                        </Box>
+                      </Box>
+                    </Box>
+                  </Box>
+              }
+              {shopifyInstall && <Box/>}
+              {bigcommerceInstall && <Box/>}
+              {googletagInstall && <Box/>}
+              {wordpressInstall && <Box/>}
+              {!shopifyInstall && !manuallInstall && !bigcommerceInstall && !googletagInstall && !wordpressInstall &&
+                <>
+                  <Typography variant="body1" className="first-sub-title" sx={styles.text}>
+                    Select how you would like to install the pixel
+                  </Typography>
+                  {errors.selectedEmployees && (
+                    <Typography variant="body2" color="error">
+                      {errors.selectedEmployees}
+                    </Typography>
+                  )}
+                  <Box sx={{...styles.rolesButtons, display: "grid", gridTemplateColumns: "1fr 1fr"}}>
+                    {method_installingPixel.map((range, index) => (
+                        <Button
+                          key={index}
+                          variant="outlined"
+                          onClick={() => handleMethodInstall(range.setState, range.action)}
+                          onTouchStart={() => handleMethodInstall(range.setState, range.action)}
+                          onMouseDown={() => handleMethodInstall(range.setState, range.action)}
+                          sx={{...getButtonRolesStyles(selectedRoles === range.label), gap: "8px", justifyContent: "flex-start", p: "12px"}}
+                        >
+                          <Image src={range.src} alt="Method install pixel" width={24} height={24}/>
+                          <Typography className="form-input" style={{color: "rgba(112, 112, 113, 1)", lineHeight: "19.6px" }}>{range.label}</Typography>
+                        </Button>
+                    ))}
+                  </Box>
+                  <Button
+                    className='hyperlink-red'
+                    fullWidth
+                    variant="contained"
+                    sx={{
+                      ...styles.submitButton,
+                      opacity: isFormValid() ? 1 : 0.6,
+                      pointerEvents: isFormValid() ? "auto" : "none",
+                      backgroundColor: isFormValid()
+                        ? "rgba(244, 87, 69, 1)"
+                        : "rgba(244, 87, 69, 0.4)",
+                      "&.Mui-disabled": {
+                        backgroundColor: "rgba(244, 87, 69, 0.6)",
+                        color: "#fff",
+                      },
+                    }}
+                    onClick={handleNextClick}
+                    disabled={!isFormBusinessValid()}
+                  >
+                    Next
+                  </Button>
+                  <Button
+                    className='hyperlink-red'
+                    fullWidth
+                    variant="contained"
+                    sx={{
+                      ...styles.submitButton,
+                      opacity: isFormValid() ? 1 : 0.6,
+                      pointerEvents: isFormValid() ? "auto" : "none",
+                      color: isFormValid()
+                        ? "rgba(244, 87, 69, 1)"
+                        : "rgba(244, 87, 69, 0.4)",
+                      "&.Mui-disabled": {
+                        color: "rgba(244, 87, 69, 0.6)",
+                        backgroundColor: "#fff",
+                      },
+                    }}
+                    onClick={handleSkip}
+                    disabled={!isFormBusinessValid()}
+                  >
+                    Skip
+                  </Button>
+                </>
+              }
+
+              {(shopifyInstall || bigcommerceInstall || googletagInstall || wordpressInstall || manuallInstall) && 
+                <>
+                  <Button
+                    className='hyperlink-red'
+                    fullWidth
+                    variant="contained"
+                    sx={{
+                      ...styles.submitButton,
+                      opacity: isFormValid() ? 1 : 0.6,
+                      pointerEvents: isFormValid() ? "auto" : "none",
+                      mb: 2,
+                      backgroundColor: isFormValid()
+                        ? "rgba(244, 87, 69, 1)"
+                        : "rgba(244, 87, 69, 0.4)",
+                      "&.Mui-disabled": {
+                        backgroundColor: "rgba(244, 87, 69, 0.6)",
+                        color: "#fff",
+                      },
+                    }}
+                    onClick={handleVerifyPixel}
+                    disabled={!isFormBusinessValid()}
+                  >
+                    Verify Your Pixel
+                  </Button>
+                  <Button
+                    className='hyperlink-red'
+                    fullWidth
+                    variant="contained"
+                    sx={{
+                      ...styles.submitButton,
+                      opacity: isFormValid() ? 1 : 0.6,
+                      pointerEvents: isFormValid() ? "auto" : "none",
+                      backgroundColor: "#fff",
+                      boxShadow: "none",
+                      color: isFormValid()
+                        ? "rgba(244, 87, 69, 0.4)"
+                        : "rgba(244, 87, 69, 1)",
+                      "&:hover": {
+                        backgroundColor: "#fff",
+              
+                      },
+                      "&.Mui-disabled": {
+                        color: "rgba(244, 87, 69, 0.6)",
+                        backgroundColor: "#fff",
+                      },
+                    }}
+                    onClick={handleSkip}
+                    disabled={!isFormBusinessValid()}
+                  >
+                    Cancel
+                  </Button>
+                </>
+              }
+
+            </>
+          }
           {/* {activeTab === 3 && (
             <>
               <Typography variant="body1" className="first-sub-title" sx={styles.text}>
