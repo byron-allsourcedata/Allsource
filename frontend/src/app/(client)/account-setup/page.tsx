@@ -39,7 +39,16 @@ const AccountSetup = () => {
   const [typeBusiness, setTypeBusiness] = useState("");
   const [selectedVisits, setSelectedVisits] = useState("");
   const [selectedRoles, setSelectedRoles] = useState("");
+  // const [organizationName, setOrganizationName] = useState("kaka");
+  // const [websiteLink, setWebsiteLink] = useState("kaka.com");
+  // const [domainLink, setDomainLink] = useState("");
+  // const [selectedEmployees, setSelectedEmployees] = useState("1-10");
+  // const [typeBusiness, setTypeBusiness] = useState("D2C");
+  // const [selectedVisits, setSelectedVisits] = useState("0-10K");
+  // const [selectedRoles, setSelectedRoles] = useState("CEO");
+  const [selectedMethodInstall, setSelectedMethodInstall] = useState("");
   const [pixelCode, setPixelCode] = useState('');
+  const [stripeUrl, setStripeUrl] = useState('');
   const [domainName, setDomainName] = useState("");
   const [editingName, setEditingName] = useState(true)
   const [manuallInstall, setManuallInstall] = useState(false)
@@ -53,7 +62,8 @@ const AccountSetup = () => {
     organizationName: "",
     selectedEmployees: "",
     selectedVisits: "",
-    typeBusiness: ""
+    typeBusiness: "",
+    selectedMethodInstall: ""
 
   });
   const router = useRouter();
@@ -99,7 +109,7 @@ const AccountSetup = () => {
     setIsFocused(false);
   };
 
-  const [activeTab, setActiveTab] = useState(2);
+  const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
     const parent_token = localStorage.getItem("parent_token");
@@ -278,12 +288,16 @@ const AccountSetup = () => {
     setSelectedRoles(label);
     setErrors({ ...errors, selectedVisits: "" });
   };
-  const handleMethodInstall = (setState: (value: boolean) => void, action?: () => void) => {
-    setState(true);
-    if (action) {
-      action();
-    }
+  const handleMethodInstall = (label: string) => {
+    setSelectedMethodInstall(label);
+    setErrors({ ...errors, selectedMethodInstall: "" });
   };
+  // const handleMethodInstall = (setState: (value: boolean) => void, action?: () => void) => {
+  //   setState(true);
+  //   if (action) {
+  //     action();
+  //   }
+  // };
 
   const validateField = (
     value: string,
@@ -318,6 +332,15 @@ const AccountSetup = () => {
     handleNextClick()
   }
 
+  const endSetup = () => {
+    if (stripeUrl) {
+      router.push(stripeUrl)
+    } 
+    else {
+      router.push(partner ? '/partners' : '/dashboard');
+    }
+  }
+
 
   const handleSubmit = async () => {
     const newErrors = {
@@ -327,6 +350,7 @@ const AccountSetup = () => {
       selectedVisits: selectedVisits ? "" : "Please select number of visits",
       selectedRoles: selectedRoles ? "" : "Please select your`s role",
       typeBusiness: typeBusiness ? "" : "Please select your`s type business",
+      selectedMethodInstall: selectedMethodInstall ? "" : "Please select method install pixel"
     };
     setErrors(newErrors);
 
@@ -335,7 +359,8 @@ const AccountSetup = () => {
       newErrors.organizationName ||
       newErrors.selectedEmployees ||
       newErrors.selectedRoles ||
-      newErrors.selectedVisits
+      newErrors.selectedVisits ||
+      newErrors.typeBusiness
     ) {
       return;
     }
@@ -352,12 +377,13 @@ const AccountSetup = () => {
 
       switch (response.data.status) {
         case "SUCCESS":
-          sessionStorage.setItem('current_domain', websiteLink.replace(/^https?:\/\//, ""))
+          const domain = websiteLink.replace(/^https?:\/\//, "")
+          sessionStorage.setItem('current_domain', domain)
+          setDomainName(domain)
+          setEditingName(false)
           await fetchUserData();
           if (response.data.stripe_payment_url) {
-            router.push(`${response.data.stripe_payment_url}`)
-          } else {
-            router.push(partner ? '/partners' : '/dashboard');
+            setStripeUrl(`${response.data.stripe_payment_url}`)
           }
           break;
         case "NEED_EMAIL_VERIFIED":
@@ -405,44 +431,44 @@ const AccountSetup = () => {
 
 
 
-  const isFormValid = () => {
+  const isFormValidFirst = () => {
     const errors = {
       websiteLink: validateField(websiteLink, "website"),
-      organizationName: validateField(organizationName, "organizationName"),
-      selectedVisits: selectedVisits ? "" : "Please select number of visits",
+      organizationName: validateField(organizationName, "organizationName")
     };
 
     return (
-      !errors.websiteLink && !errors.organizationName && !errors.selectedVisits
+      errors.websiteLink === "" && errors.organizationName === "" && selectedVisits !== ""
     );
   };
 
-  const isFormBusinessValid = () => {
-    const errors = {
-      selectedEmployees: selectedEmployees ? "" : "Please select a number of employees",
-      selectedRoles: selectedRoles ? "" : "Please select your role",
-    };
+  const isFormValidSecond = () => {
+    return (
+      typeBusiness !== "" && selectedRoles !== "" && selectedEmployees !== ""
+    );
+  };
 
-    return !errors.selectedRoles && !errors.selectedEmployees;
+  const isFormValidThird = () => {
+    return selectedMethodInstall !== ""
   };
 
   const installManually = async () => {
     try {
-      // const response = await axiosInterceptorInstance.get('/install-pixel/manually');
-      // setPixelCode(response.data.manual);
-      setPixelCode(`
-                <script id="acegm_pixel_script" type="text/javascript" defer="defer">
-                window.pixelClientId = "{client_id}";
-                var now = new Date();
-                var year = now.getFullYear();
-                var month = String(now.getMonth() + 1).padStart(2, '0');
-                var week = Math.ceil((now.getDate() + 6) / 7);
-                var acegm_pixelScriptUrl = 'https://maximiz-data.s3.us-east-2.amazonaws.com/pixel.js?v=' + year + '-' + month + '-' + week;
-                var acegm_base_pixel_script = document.createElement('script');
-                acegm_base_pixel_script.src = acegm_pixelScriptUrl;
-                document.body.appendChild(acegm_base_pixel_script);
-                </script>
-            `)
+      const response = await axiosInterceptorInstance.get('/install-pixel/manually');
+      setPixelCode(response.data.manual);
+      // setPixelCode(`
+      //           <script id="acegm_pixel_script" type="text/javascript" defer="defer">
+      //           window.pixelClientId = "{client_id}";
+      //           var now = new Date();
+      //           var year = now.getFullYear();
+      //           var month = String(now.getMonth() + 1).padStart(2, '0');
+      //           var week = Math.ceil((now.getDate() + 6) / 7);
+      //           var acegm_pixelScriptUrl = 'https://maximiz-data.s3.us-east-2.amazonaws.com/pixel.js?v=' + year + '-' + month + '-' + week;
+      //           var acegm_base_pixel_script = document.createElement('script');
+      //           acegm_base_pixel_script.src = acegm_pixelScriptUrl;
+      //           document.body.appendChild(acegm_base_pixel_script);
+      //           </script>
+      //       `)
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -462,10 +488,10 @@ const AccountSetup = () => {
   ];
   const method_installingPixel = [
     { label: "Manually", src: "install_manually.svg", setState: setManuallInstall, action: installManually },
-    { label: "Google Tag Manager", src: "install_gtm.svg", setState: setGoogletagInstall },
-    { label: "Shopify", src: "install_cms1.svg", setState: setShopifyInstall },
-    { label: "WordPress", src: "install_cms2.svg", setState: setWordpressInstall },
-    { label: "Bigcommerce", src: "bigcommerce-icon.svg", setState: setBigcommerceInstall },
+    { label: "Google Tag Manager", src: "install_gtm.svg", setState: setGoogletagInstall, action: () => {} },
+    { label: "Shopify", src: "install_cms1.svg", setState: setShopifyInstall, action: () => {} },
+    { label: "WordPress", src: "install_cms2.svg", setState: setWordpressInstall, action: () => {} },
+    { label: "Bigcommerce", src: "bigcommerce-icon.svg", setState: setBigcommerceInstall, action: () => {} },
   ];
   const roles = [
     { label: "Digital Marketer" },
@@ -499,8 +525,39 @@ const AccountSetup = () => {
   };
 
   const handleNextClick = () => {
-    setActiveTab((prev) => prev + 1);
+    if (activeTab === 1) {
+      handleSubmit()
+    }
+    let isMatched = false;
+
+    method_installingPixel.forEach(({ label, setState, action }) => {
+      if (selectedMethodInstall === label) {
+        setState(true);
+        isMatched = true;
+        action()
+      } else {
+        setState(false);
+      }
+    });
+
+    if (activeTab === 3) {
+      endSetup()
+    }
+    else {
+      if (!isMatched) {
+        setActiveTab((prev) => prev + 1);
+      }
+    }
+    
   };
+
+  const handleCancel = () => {
+    method_installingPixel.forEach(({ label, setState }) => {
+      if (selectedMethodInstall === label) {
+        setState(false);
+      }
+    });
+  }
 
   const handleButtonClick = () => {
     axiosInstance.post('/install-pixel/send-pixel-code', { email })
@@ -660,7 +717,7 @@ const AccountSetup = () => {
           </Menu>
         </Box>
         <Box sx={{ ...styles.nav, position: "relative" }}>
-          <Button
+          {selectedMethodInstall !== "" && <Button
             className="hyperlink-red"
             variant="outlined"
             onClick={handleBackClick}
@@ -704,7 +761,7 @@ const AccountSetup = () => {
               }}
             />
             Back
-          </Button>
+          </Button>}
           <Tabs
             value={activeTab}
             sx={{
@@ -983,9 +1040,9 @@ const AccountSetup = () => {
                 variant="contained"
                 sx={{
                   ...styles.submitButton,
-                  opacity: isFormValid() ? 1 : 0.6,
-                  pointerEvents: isFormValid() ? "auto" : "none",
-                  backgroundColor: isFormValid()
+                  opacity: isFormValidFirst() ? 1 : 0.6,
+                  pointerEvents: isFormValidFirst() ? "auto" : "none",
+                  backgroundColor: isFormValidFirst()
                     ? "rgba(244, 87, 69, 1)"
                     : "rgba(244, 87, 69, 0.4)",
                   "&.Mui-disabled": {
@@ -994,7 +1051,7 @@ const AccountSetup = () => {
                   },
                 }}
                 onClick={handleNextClick}
-                disabled={!isFormValid()}
+                disabled={!isFormValidFirst()}
               >
                 Next
               </Button>
@@ -1077,9 +1134,9 @@ const AccountSetup = () => {
                 variant="contained"
                 sx={{
                   ...styles.submitButton,
-                  opacity: isFormValid() ? 1 : 0.6,
-                  pointerEvents: isFormValid() ? "auto" : "none",
-                  backgroundColor: isFormValid()
+                  opacity: isFormValidSecond() ? 1 : 0.6,
+                  pointerEvents: isFormValidSecond() ? "auto" : "none",
+                  backgroundColor: isFormValidSecond()
                     ? "rgba(244, 87, 69, 1)"
                     : "rgba(244, 87, 69, 0.4)",
                   "&.Mui-disabled": {
@@ -1088,7 +1145,7 @@ const AccountSetup = () => {
                   },
                 }}
                 onClick={handleNextClick}
-                disabled={!isFormBusinessValid()}
+                disabled={!isFormValidSecond()}
               >
                 Next
               </Button>
@@ -1128,6 +1185,11 @@ const AccountSetup = () => {
                                     setEditingName(false)
                                   }
                               }}
+                              InputProps={{
+                                startAdornment: (
+                                  <InputAdornment position="start">https://</InputAdornment>
+                                )
+                              }}
                               variant="outlined"
                               sx={{
                                   flex: 1,
@@ -1137,7 +1199,7 @@ const AccountSetup = () => {
                                       height: '40px',
                                   },
                                   '& input': {
-                                      paddingLeft: "16px",
+                                      paddingLeft: 0,
                                   },
                                   '& input::placeholder': {
                                       fontSize: '14px',
@@ -1316,10 +1378,10 @@ const AccountSetup = () => {
                         <Button
                           key={index}
                           variant="outlined"
-                          onClick={() => handleMethodInstall(range.setState, range.action)}
-                          onTouchStart={() => handleMethodInstall(range.setState, range.action)}
-                          onMouseDown={() => handleMethodInstall(range.setState, range.action)}
-                          sx={{...getButtonRolesStyles(selectedRoles === range.label), gap: "8px", justifyContent: "flex-start", p: "12px"}}
+                          onClick={() => handleMethodInstall(range.label)}
+                          onTouchStart={() => handleMethodInstall(range.label)}
+                          onMouseDown={() => handleMethodInstall(range.label)}
+                          sx={{...getButtonRolesStyles(selectedMethodInstall=== range.label), gap: "8px", justifyContent: "flex-start", p: "12px"}}
                         >
                           <Image src={range.src} alt="Method install pixel" width={24} height={24}/>
                           <Typography className="form-input" style={{color: "rgba(112, 112, 113, 1)", lineHeight: "19.6px" }}>{range.label}</Typography>
@@ -1332,10 +1394,10 @@ const AccountSetup = () => {
                     variant="contained"
                     sx={{
                       ...styles.submitButton,
-                      opacity: isFormValid() ? 1 : 0.6,
+                      opacity: isFormValidThird() ? 1 : 0.6,
                       mb: 2,
-                      pointerEvents: isFormValid() ? "auto" : "none",
-                      backgroundColor: isFormValid()
+                      pointerEvents: isFormValidThird() ? "auto" : "none",
+                      backgroundColor: isFormValidThird()
                         ? "rgba(244, 87, 69, 1)"
                         : "rgba(244, 87, 69, 0.4)",
                       "&.Mui-disabled": {
@@ -1344,7 +1406,7 @@ const AccountSetup = () => {
                       },
                     }}
                     onClick={handleNextClick}
-                    disabled={!isFormBusinessValid()}
+                    disabled={!isFormValidThird()}
                   >
                     Next
                   </Button>
@@ -1376,10 +1438,10 @@ const AccountSetup = () => {
                     variant="contained"
                     sx={{
                       ...styles.submitButton,
-                      opacity: isFormValid() ? 1 : 0.6,
-                      pointerEvents: isFormValid() ? "auto" : "none",
+                      opacity: domainName.trim() !== "" ? 1 : 0.6,
+                      pointerEvents: domainName.trim() !== "" ? "auto" : "none",
                       mb: 2,
-                      backgroundColor: isFormValid()
+                      backgroundColor: domainName.trim() !== ""
                         ? "rgba(244, 87, 69, 1)"
                         : "rgba(244, 87, 69, 0.4)",
                       "&.Mui-disabled": {
@@ -1398,11 +1460,11 @@ const AccountSetup = () => {
                     variant="contained"
                     sx={{
                       ...styles.submitButton,
-                      opacity: isFormValid() ? 1 : 0.6,
-                      pointerEvents: isFormValid() ? "auto" : "none",
+                      opacity: true ? 1 : 0.6,
+                      pointerEvents: true ? "auto" : "none",
                       backgroundColor: "#fff",
                       boxShadow: "none",
-                      color: isFormValid()
+                      color: true
                         ? "rgba(244, 87, 69, 0.4)"
                         : "rgba(244, 87, 69, 1)",
                       "&:hover": {
@@ -1414,8 +1476,8 @@ const AccountSetup = () => {
                         backgroundColor: "#fff",
                       },
                     }}
-                    onClick={handleSkip}
-                    disabled={!isFormBusinessValid()}
+                    onClick={handleCancel}
+                    disabled={false}
                   >
                     Cancel
                   </Button>
@@ -1488,7 +1550,7 @@ const AccountSetup = () => {
                   },
                 }}
                 onClick={handleSubmit}
-                disabled={!isFormBusinessValid()}
+                disabled={!isFormValid()}
               >
                 Next
               </Button>

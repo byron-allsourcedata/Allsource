@@ -335,8 +335,7 @@ def check_user_authorization_without_pixel(Authorization: Annotated[str, Header(
             detail={'status': auth_status.value,
                     'stripe_payment_url': get_stripe_payment_url(user.get('customer_id'), user.get('stripe_payment_url'))}
         )
-    if auth_status != UserAuthorizationStatus.SUCCESS and not user[
-        'is_partner'] and auth_status != UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED:
+    if auth_status != UserAuthorizationStatus.SUCCESS and auth_status != UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED and auth_status != UserAuthorizationStatus.NEED_BOOK_CALL:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={'status': auth_status.value}
@@ -410,6 +409,8 @@ def check_domain(
         domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)
 ) -> UserDomains:
     current_domain = domain_persistence.get_domains_by_user(user.get('id'), domain_substr=CurrentDomain)
+    print("CurrentDomain", CurrentDomain)
+    print("current_domain", current_domain)
     if not CurrentDomain:
         return None
     if not current_domain or len(current_domain) == 0:
