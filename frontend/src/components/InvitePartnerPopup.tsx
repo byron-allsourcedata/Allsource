@@ -182,7 +182,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
                 sx={{
                 width: '100%',
                 position: 'fixed',
-                top: '5rem',
+                top: '4.2rem',
                 zIndex: 1200,   
                 }}
             >
