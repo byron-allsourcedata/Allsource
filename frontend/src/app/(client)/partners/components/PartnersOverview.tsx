@@ -47,7 +47,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
             setDiscountCode(selectedCode);
             try {
                 const response = await axiosInstance.get(`referral/details?discount_code_id=${selectedCode.id}`);
-                const fullReferralLink = `https://dev.maximiz.ai/signup?referral=${response.data.referral_code}`;
+                const fullReferralLink = `${process.env.NEXT_PUBLIC_URL}/signup?referral=${response.data.referral_code}`;
                 setReferralLink(fullReferralLink);
             } catch (err) {
                 console.error("Error fetching referral details:", err);
@@ -150,7 +150,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
             setStripeEmail(responseOverview.data.stripe_connected_email)
             const responseDetails = await axiosInstance.get(`referral/details`)
             setDiscountCodeOptions(responseDetails.data.discount_codes)
-            const fullReferralLink = `https://dev.maximiz.ai/signup?referral=${responseDetails.data.referral_code}`;
+            const fullReferralLink = `${process.env.NEXT_PUBLIC_URL}/signup?referral=${responseDetails.data.referral_code}`;
             setReferralLink(fullReferralLink);
         } catch (err) {
         } finally {
