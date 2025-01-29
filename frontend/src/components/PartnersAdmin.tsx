@@ -798,7 +798,11 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                         {tableHeaders.map(({ key, label, sortable }) => (
                                                             <TableCell
                                                                 key={key}
-                                                                sx={{...suppressionsStyles.tableColumn, paddingLeft: "16px", cursor: sortable ? 'pointer' : 'default'}}
+                                                                sx={{
+                                                                    ...suppressionsStyles.tableColumn, 
+                                                                    paddingLeft: "16px", 
+                                                                    cursor: sortable ? 'pointer' : 'default',
+                                                                }}
                                                                 onClick={sortable ? () => handleSortRequest(key) : undefined}
                                                             >
                                                                 <Box sx={{ display: 'flex', alignItems: 'center' }} style={key === "status" || key === "actions" ? { justifyContent: "center" } : {}}>
@@ -854,11 +858,20 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                                             setAccountPage(true)
                                                                         }
                                                                         }}>
-                                                                    <Box sx={{display: "flex", alignItems: "center", justifyContent: "space-between", color: 'rgba(80, 82, 178, 1)'}}>
+                                                                    <Box 
+                                                                        sx={{ 
+                                                                            display: "flex", 
+                                                                            alignItems: "center", 
+                                                                            justifyContent: "space-between", 
+                                                                            color: 'rgba(80, 82, 178, 1)'
+                                                                        }}>
                                                                         {data.partner_name}
                                                                         <IconButton
                                                                             className="icon-button"
-                                                                            sx={{ display: 'none', ':hover': {backgroundColor: "transparent"}}} >
+                                                                            sx={{ 
+                                                                                display: 'none', 
+                                                                                ':hover': {backgroundColor: "transparent"}
+                                                                            }} >
                                                                             <Image src='/outband.svg' alt="outband" width={15.98} height={16}/>
                                                                         </IconButton>
                                                                     </Box>
