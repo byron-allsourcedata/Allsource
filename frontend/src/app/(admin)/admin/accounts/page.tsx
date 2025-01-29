@@ -1,7 +1,9 @@
 "use client"
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { Box, Grid, Typography, TextField, Button, List, ListItemText, ListItemButton, IconButton, SelectChangeEvent, Select, MenuItem, Tabs, Tab, 
-    InputAdornment, Popover, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
+import {
+    Box, Grid, Typography, TextField, Button, List, ListItemText, ListItemButton, IconButton, SelectChangeEvent, Select, MenuItem, Tabs, Tab,
+    InputAdornment, Popover, Table, TableBody, TableCell, TableContainer, TableHead, TableRow
+} from "@mui/material";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
@@ -82,15 +84,15 @@ interface PartnerData {
 }
 
 interface NewPartner {
-    id: number, 
+    id: number,
     email: string,
-    fullName: string, 
+    fullName: string,
     companyName: string,
     commission: string
 }
 
 interface EnabledPartner {
-    id: number, 
+    id: number,
     fullName?: string
 }
 
@@ -101,7 +103,7 @@ interface RewardData {
     rewards_paid: number;
     count_invites: number;
     payout_date: Date;
-  }
+}
 
 const Accounts: React.FC = () => {
     const [isMaster, setIsMaster] = useState(false);
@@ -120,8 +122,8 @@ const Accounts: React.FC = () => {
     const [menuAnchor, setMenuAnchor] = useState(null);
     const [formPopupOpen, setFormPopupOpen] = useState(false);
     const [noticePopupOpen, setNoticePopupOpen] = useState(false);
-    const [fileData, setFileData] = useState<NewPartner>({id: 0, email: "", fullName: "", companyName: "", commission: ""});
-    const [enabledData, setEnabledData] = useState<EnabledPartner>({id: 0});
+    const [fileData, setFileData] = useState<NewPartner>({ id: 0, email: "", fullName: "", companyName: "", commission: "" });
+    const [enabledData, setEnabledData] = useState<EnabledPartner>({ id: 0 });
     const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
     const [rewardsPage, setRewardsPage] = useState(false);
     const [rewardsPageMonthFilter, setRewardsPageMonthFilter] = useState<string | null>(null)
@@ -149,7 +151,7 @@ const Accounts: React.FC = () => {
         fetchRewards(selectedYear);
     };
 
-    const fetchRewards = async (selectedYear: string, partnerId=null) => {
+    const fetchRewards = async (selectedYear: string, partnerId = null) => {
         setLoading(true);
         try {
             const response = await axiosInstance.get("/admin-partners/rewards-history", {
@@ -201,7 +203,7 @@ const Accounts: React.FC = () => {
     const handleCloseMenu = () => {
         setMenuAnchor(null);
         setIsMaster(false),
-        setSelectedRowData(null);
+            setSelectedRowData(null);
     };
 
     const open = Boolean(menuAnchor);
@@ -217,7 +219,7 @@ const Accounts: React.FC = () => {
         setSelectedDateLabel(label);
     };
 
-    const allowedRowsPerPage = [10, 25, 50, 100];   
+    const allowedRowsPerPage = [10, 25, 50, 100];
 
     const handleDateChange = (dates: { start: Date | null; end: Date | null }) => {
         const { start, end } = dates;
@@ -239,7 +241,7 @@ const Accounts: React.FC = () => {
 
     const handleApply = (dates: { start: Date | null; end: Date | null }) => {
         if (dates.start && dates.end) {
-            setAppliedDates({ ...dates }); 
+            setAppliedDates({ ...dates });
             setCalendarAnchorEl(null);
             handleCalendarClose();
         }
@@ -264,30 +266,30 @@ const Accounts: React.FC = () => {
         const newOrder = isAsc ? 'desc' : 'asc';
         setOrder(newOrder);
         setOrderBy(key);
-    
+
         const sortedAccounts = [...partners].sort((a, b) => {
             const aValue = a[key as keyof typeof a];
             const bValue = b[key as keyof typeof b];
-    
+
             const isANullOrDash = aValue === null || aValue === '--';
             const isBNullOrDash = bValue === null || bValue === '--';
-    
+
             if (isANullOrDash && !isBNullOrDash) return newOrder === 'asc' ? 1 : -1;
             if (isBNullOrDash && !isANullOrDash) return newOrder === 'asc' ? -1 : 1;
-    
+
             if (typeof aValue === 'string' && typeof bValue === 'string') {
                 return newOrder === 'asc'
                     ? aValue.localeCompare(bValue)
                     : bValue.localeCompare(aValue);
             }
-    
+
             if (typeof aValue === 'number' && typeof bValue === 'number') {
                 return newOrder === 'asc' ? aValue - bValue : bValue - aValue;
             }
-    
+
             return 0;
         });
-    
+
         setPartners(sortedAccounts);
     };
 
@@ -309,9 +311,9 @@ const Accounts: React.FC = () => {
 
     const setEnabled = async () => {
         setLoading(true);
-    
+
         try {
-            const response = await axiosInstance.put(`admin-partners/${selectedRowData.id}/`, {status: "active"}, {
+            const response = await axiosInstance.put(`admin-partners/${selectedRowData.id}/`, { status: "active" }, {
                 headers: { 'Content-Type': 'application/json' },
             });
             if (response.status === 200) {
@@ -329,19 +331,20 @@ const Accounts: React.FC = () => {
         setLoading(true);
         try {
             const response = await axiosInstance.get("/admin-accounts", {
-                params: { 
+                params: {
                     search,
                     start_date: appliedDates.start ? appliedDates.start.toLocaleDateString('en-CA') : null,
                     end_date: appliedDates.end ? appliedDates.end.toLocaleDateString('en-CA') : null,
-                    page, 
+                    page,
                     rows_per_page: rowsPerPage,
                     order_by: orderBy,
                     order,
-                }})
+                }
+            })
             if (response.status === 200 && response.data.totalCount > 0) {
                 setErrosResponse(false)
                 setPartners([...response.data.items])
-                setTotalCount(response.data.totalCount)   
+                setTotalCount(response.data.totalCount)
             }
             else {
                 setPartners([])
@@ -410,272 +413,275 @@ const Accounts: React.FC = () => {
                         <Box sx={{ display: "flex", flexDirection: "column" }}>
                             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', mt: 3, pr: 3, justifyContent: 'space-between' }}>
                                 {partnerName
-                                &&
-                                    <Box sx={{display: "flex", alignItems: "center", gap: "5px" }}>
+                                    &&
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: "5px" }}>
                                         <Typography onClick={() => {
                                             setPartnerName(null)
                                             setPaymentHistoryPage(false)
-                                            if(rewardsPage) {
+                                            if (rewardsPage) {
                                                 setRewardsPage(false)
                                             }
-                                            if(rewardsPageMonthFilter) {
+                                            if (rewardsPageMonthFilter) {
                                                 setRewardsPageMonthFilter(null)
                                             }
                                         }}
-                                        sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "#808080", cursor: "pointer", zIndex: 1000}}>
+                                            sx={{ fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "#808080", cursor: "pointer", zIndex: 1000 }}>
                                             Account {partnerName ? `- ${partnerName}` : ""}
                                         </Typography>
-                                        <NavigateNextIcon width={16}/>
+                                        <NavigateNextIcon width={16} />
                                         {paymentHistory &&
-                                        <Typography sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "#808080"}}>
-                                            Payment History
-                                        </Typography>}
+                                            <Typography sx={{ fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "#808080" }}>
+                                                Payment History
+                                            </Typography>}
                                         {rewardsPage &&
-                                        <Typography sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', cursor: rewardsPageMonthFilter ? "pointer" : '', color: rewardsPageMonthFilter ? "rgba(128, 128, 128, 1)" : "rgba(32, 33, 36, 1)"}} onClick={() => {
-                                            setRewardsPageMonthFilter(null)
-                                            fetchRewards(year)
-                                            setRewardsPage(true)
-                                            setFlagMounthReward(false)
-                                            setSelectedMonth(null) 
-                                        }}>
-                                            Reward History
-                                        </Typography>}
+                                            <Typography sx={{ fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', cursor: rewardsPageMonthFilter ? "pointer" : '', color: rewardsPageMonthFilter ? "rgba(128, 128, 128, 1)" : "rgba(32, 33, 36, 1)" }} onClick={() => {
+                                                setRewardsPageMonthFilter(null)
+                                                fetchRewards(year)
+                                                setRewardsPage(true)
+                                                setFlagMounthReward(false)
+                                                setSelectedMonth(null)
+                                            }}>
+                                                Reward History
+                                            </Typography>}
                                         {rewardsPageMonthFilter &&
-                                        <>
-                                            <NavigateNextIcon width={16}/>
-                                            <Typography sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "rgba(32, 33, 36, 1)"}}>
-                                                {rewardsPageMonthFilter} Reward
-                                            </Typography>
-                                        </>
+                                            <>
+                                                <NavigateNextIcon width={16} />
+                                                <Typography sx={{ fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "rgba(32, 33, 36, 1)" }}>
+                                                    {rewardsPageMonthFilter} Reward
+                                                </Typography>
+                                            </>
                                         }
                                     </Box>
                                 }
 
-                                {rewardsPage && !rewardsPageMonthFilter && 
-                                <Box sx={{display: "flex", justifyContent: 'space-between', mb: 3, mt: 3, width: '100%' }}>
-                                    <Box sx={{display: "flex", alignItems: "center" }}>
-                                        {<Typography variant="h4" component="h1" sx={{
-                                            lineHeight: "22.4px",
-                                            color: "#202124",
-                                            fontWeight: 'bold',
-                                            fontSize: '16px',
-                                            fontFamily: 'Nunito Sans'}}>
-                                            Reward History
-                                        </Typography>}
-                                    </Box>
-                                    {rewardsPage && <Box sx={{ display: 'flex', justifyContent: 'end' }}>
-                                        <Select
-                                            value={year}
-                                            onChange={handleYearChange}
-                                            sx={{
-                                                backgroundColor: "#fff",
-                                                borderRadius: "4px",
-                                                height: "48px",
-                                                fontFamily: "Nunito Sans",
-                                                fontSize: "14px",
-                                                minWidth: '112px',
-                                                fontWeight: 400,
-                                                zIndex: 0,
-                                                color: "rgba(17, 17, 19, 1)",
-                                                '@media (max-width: 360px)': { width: '100%' }
-                                            }}
-                                            MenuProps={{
-                                                PaperProps: { style: { maxHeight: 200, zIndex: 100 } },
-                                            }}
-                                            IconComponent={(props) =>
-                                                year === "" ? (
-                                                    <KeyboardArrowUpIcon
-                                                        {...props}
-                                                        sx={{ color: "rgba(32, 33, 36, 1)" }}
-                                                    />
-                                                ) : (
+                                {rewardsPage && !rewardsPageMonthFilter &&
+                                    <Box sx={{ display: "flex", justifyContent: 'space-between', mb: 3, mt: 3, width: '100%' }}>
+                                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                                            {<Typography variant="h4" component="h1" sx={{
+                                                lineHeight: "22.4px",
+                                                color: "#202124",
+                                                fontWeight: 'bold',
+                                                fontSize: '16px',
+                                                fontFamily: 'Nunito Sans'
+                                            }}>
+                                                Reward History
+                                            </Typography>}
+                                        </Box>
+                                        {rewardsPage && <Box sx={{ display: 'flex', justifyContent: 'end' }}>
+                                            <Select
+                                                value={year}
+                                                onChange={handleYearChange}
+                                                sx={{
+                                                    backgroundColor: "#fff",
+                                                    borderRadius: "4px",
+                                                    height: "48px",
+                                                    fontFamily: "Nunito Sans",
+                                                    fontSize: "14px",
+                                                    minWidth: '112px',
+                                                    fontWeight: 400,
+                                                    zIndex: 0,
+                                                    color: "rgba(17, 17, 19, 1)",
+                                                    '@media (max-width: 360px)': { width: '100%' }
+                                                }}
+                                                MenuProps={{
+                                                    PaperProps: { style: { maxHeight: 200, zIndex: 100 } },
+                                                }}
+                                                IconComponent={(props) =>
+                                                    year === "" ? (
+                                                        <KeyboardArrowUpIcon
+                                                            {...props}
+                                                            sx={{ color: "rgba(32, 33, 36, 1)" }}
+                                                        />
+                                                    ) : (
 
-                                                    <KeyboardArrowDownIcon
-                                                        {...props}
-                                                        sx={{ color: "rgba(32, 33, 36, 1)" }}
-                                                    />
-                                                )
-                                            }
-                                        >
-                                            {yearsOptions.map((option, index) => (
-                                                <MenuItem
-                                                    key={index}
-                                                    value={option.toString()}
-                                                    sx={{
-                                                        fontFamily: "Nunito Sans",
-                                                        fontWeight: 500,
-                                                        fontSize: "14px",
-                                                        lineHeight: "19.6px",
-                                                        "&:hover": { backgroundColor: "rgba(80, 82, 178, 0.1)" },
-                                                    }}
-                                                >
-                                                    {option}
-                                                </MenuItem>
-                                            ))}
-                                        </Select>
+                                                        <KeyboardArrowDownIcon
+                                                            {...props}
+                                                            sx={{ color: "rgba(32, 33, 36, 1)" }}
+                                                        />
+                                                    )
+                                                }
+                                            >
+                                                {yearsOptions.map((option, index) => (
+                                                    <MenuItem
+                                                        key={index}
+                                                        value={option.toString()}
+                                                        sx={{
+                                                            fontFamily: "Nunito Sans",
+                                                            fontWeight: 500,
+                                                            fontSize: "14px",
+                                                            lineHeight: "19.6px",
+                                                            "&:hover": { backgroundColor: "rgba(80, 82, 178, 0.1)" },
+                                                        }}
+                                                    >
+                                                        {option}
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
                                         </Box>}
-                                </Box>}
+                                    </Box>}
 
-                                {rewardsPageMonthFilter && <Box sx={{display: "flex", alignItems: "center", mt: 3, mb: 3 }}>
+                                {rewardsPageMonthFilter && <Box sx={{ display: "flex", alignItems: "center", mt: 3, mb: 3 }}>
                                     <Typography variant="h4" component="h1" sx={{
                                         lineHeight: "22.4px",
                                         color: "#202124",
                                         fontWeight: 'bold',
                                         fontSize: '16px',
-                                        fontFamily: 'Nunito Sans'}}>
+                                        fontFamily: 'Nunito Sans'
+                                    }}>
                                         {rewardsPageMonthFilter} Reward Details
                                     </Typography>
                                 </Box>}
 
-                                {paymentHistory && <PaymentHistory/>}
-                                {rewardsPage && <RewardsHistory isMaster={isMaster} id={id ?? 0} selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth} flagMounthReward={flagMounthReward} setFlagMounthReward={setFlagMounthReward} setRewardsPageMonthFilter={setRewardsPageMonthFilter} rewards={rewards} setLoading={setLoading} loading={loading}/>}
+                                {paymentHistory && <PaymentHistory />}
+                                {rewardsPage && <RewardsHistory isMaster={isMaster} id={id ?? 0} selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth} flagMounthReward={flagMounthReward} setFlagMounthReward={setFlagMounthReward} setRewardsPageMonthFilter={setRewardsPageMonthFilter} rewards={rewards} setLoading={setLoading} loading={loading} />}
                                 {!paymentHistory && !rewardsPage &&
-                                <>
-                                    <Box sx={{
-                                        backgroundColor: '#fff',
-                                        width: '100%',
-                                        padding: 0,
-                                        margin: '0 auto',
-                                        display: 'flex',
-                                        mt: 3,
-                                        flexDirection: 'column',
-                                        justifyContent: 'space-between',
-                                        minHeight: '77vh',
-                                        '@media (max-width: 600px)': {margin: '0rem auto 0rem'}
-                                    }}>
-                                        <Box>
-                                            <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', mb: 2, alignItems: 'center', gap: 2 }}>
-                                                <Typography variant="h4" component="h1" sx={{
-                                                    lineHeight: "22.4px",
-                                                    color: "rgba(32, 33, 36, 1)",
-                                                    fontWeight: 'bold',
-                                                    fontSize: '16px',
-                                                    fontFamily: 'Nunito Sans'}}>
-                                                    Accounts
-                                                </Typography>
-                                                <Box sx={{display: 'flex', gap: "16px"}}>
-                                                    <TextField
-                                                        id="input-with-icon-textfield"
-                                                        placeholder="Search by account name, emails"
-                                                        value={search}
-                                                        onChange={(e) => {
-                                                            const value = e.target.value;
-                                                            handleSearchChange(e);
-                                                            if (value === "") {
-                                                              fetchRules();
-                                                            }
-                                                          }}
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === 'Enter') {
-                                                                fetchRules();
-                                                            }
-                                                        }}
-                                                        InputProps={{
-                                                            startAdornment: (
-                                                                <InputAdornment position="start">
-                                                                        <SearchIcon onClick={fetchRules} style={{ cursor: "pointer" }}/>
-                                                                </InputAdornment>
-                                                            ),
-                                                        }}
-                                                        variant="outlined"
-                                                        sx={{
-                                                            flex: 1,
-                                                            width: '360px',
-                                                            '& .MuiOutlinedInput-root': {
-                                                                borderRadius: '4px',
-                                                                height: '40px',
-                                                            },
-                                                            '& input': {
-                                                                paddingLeft: 0,
-                                                            },
-                                                            '& input::placeholder': {
-                                                                fontSize: '14px',
-                                                                color: '#8C8C8C',
-                                                            },
-                                                        }}
-                                                    />
-                                                    <Button
-                                                        aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
-                                                        aria-haspopup="true"
-                                                        aria-expanded={isCalendarOpen ? 'true' : undefined}
-                                                        onClick={handleCalendarClick}
-                                                        sx={{
-                                                            textTransform: 'none',
-                                                            color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
-                                                            border: formattedDates ? '1.5px solid rgba(80, 82, 178, 1)' : '1.5px solid rgba(184, 184, 184, 1)',
-                                                            borderRadius: '4px',
-                                                            padding: '8px',
-                                                            minWidth: 'auto',
-                                                            '@media (max-width: 900px)': {
-                                                                border: 'none',
-                                                                padding: 0
-                                                            },
-                                                            '&:hover': {
-                                                                border: '1.5px solid rgba(80, 82, 178, 1)',
-                                                                '& .MuiSvgIcon-root': {
-                                                                    color: 'rgba(80, 82, 178, 1)'
+                                    <>
+                                        <Box sx={{
+                                            backgroundColor: '#fff',
+                                            width: '100%',
+                                            padding: 0,
+                                            margin: '0 auto',
+                                            display: 'flex',
+                                            mt: 3,
+                                            flexDirection: 'column',
+                                            justifyContent: 'space-between',
+                                            minHeight: '77vh',
+                                            '@media (max-width: 600px)': { margin: '0rem auto 0rem' }
+                                        }}>
+                                            <Box>
+                                                <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', mb: 2, alignItems: 'center', gap: 2 }}>
+                                                    <Typography variant="h4" component="h1" sx={{
+                                                        lineHeight: "22.4px",
+                                                        color: "rgba(32, 33, 36, 1)",
+                                                        fontWeight: 'bold',
+                                                        fontSize: '16px',
+                                                        fontFamily: 'Nunito Sans'
+                                                    }}>
+                                                        Accounts
+                                                    </Typography>
+                                                    <Box sx={{ display: 'flex', gap: "16px" }}>
+                                                        <TextField
+                                                            id="input-with-icon-textfield"
+                                                            placeholder="Search by account name, emails"
+                                                            value={search}
+                                                            onChange={(e) => {
+                                                                const value = e.target.value;
+                                                                handleSearchChange(e);
+                                                                if (value === "") {
+                                                                    fetchRules();
                                                                 }
-                                                            }
-                                                        }}
-                                                    >
-                                                        <DateRangeIcon
-                                                            fontSize="medium"
-                                                            sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }}
+                                                            }}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter') {
+                                                                    fetchRules();
+                                                                }
+                                                            }}
+                                                            InputProps={{
+                                                                startAdornment: (
+                                                                    <InputAdornment position="start">
+                                                                        <SearchIcon onClick={fetchRules} style={{ cursor: "pointer" }} />
+                                                                    </InputAdornment>
+                                                                ),
+                                                            }}
+                                                            variant="outlined"
+                                                            sx={{
+                                                                flex: 1,
+                                                                width: '360px',
+                                                                '& .MuiOutlinedInput-root': {
+                                                                    borderRadius: '4px',
+                                                                    height: '40px',
+                                                                },
+                                                                '& input': {
+                                                                    paddingLeft: 0,
+                                                                },
+                                                                '& input::placeholder': {
+                                                                    fontSize: '14px',
+                                                                    color: '#8C8C8C',
+                                                                },
+                                                            }}
                                                         />
-                                                        <Typography variant="body1" sx={{
-                                                            fontFamily: 'Roboto',
-                                                            fontSize: '14px',
-                                                            fontWeight: '400',
-                                                            color: 'rgba(32, 33, 36, 1)',
-                                                            lineHeight: '19.6px',
-                                                            textAlign: 'left'
-                                                        }}>
-                                                            {formattedDates}
-                                                        </Typography>
-                                                        {formattedDates &&
-                                                            <Box sx={{ pl: 2, display: 'flex', alignItems: 'center' }}>
-                                                                <Image src="/arrow_down.svg" alt="arrow down" width={16} height={16} />
-                                                            </Box>
-                                                        }
-                                                    </Button>
+                                                        <Button
+                                                            aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
+                                                            aria-haspopup="true"
+                                                            aria-expanded={isCalendarOpen ? 'true' : undefined}
+                                                            onClick={handleCalendarClick}
+                                                            sx={{
+                                                                textTransform: 'none',
+                                                                color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
+                                                                border: formattedDates ? '1.5px solid rgba(80, 82, 178, 1)' : '1.5px solid rgba(184, 184, 184, 1)',
+                                                                borderRadius: '4px',
+                                                                padding: '8px',
+                                                                minWidth: 'auto',
+                                                                '@media (max-width: 900px)': {
+                                                                    border: 'none',
+                                                                    padding: 0
+                                                                },
+                                                                '&:hover': {
+                                                                    border: '1.5px solid rgba(80, 82, 178, 1)',
+                                                                    '& .MuiSvgIcon-root': {
+                                                                        color: 'rgba(80, 82, 178, 1)'
+                                                                    }
+                                                                }
+                                                            }}
+                                                        >
+                                                            <DateRangeIcon
+                                                                fontSize="medium"
+                                                                sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }}
+                                                            />
+                                                            <Typography variant="body1" sx={{
+                                                                fontFamily: 'Roboto',
+                                                                fontSize: '14px',
+                                                                fontWeight: '400',
+                                                                color: 'rgba(32, 33, 36, 1)',
+                                                                lineHeight: '19.6px',
+                                                                textAlign: 'left'
+                                                            }}>
+                                                                {formattedDates}
+                                                            </Typography>
+                                                            {formattedDates &&
+                                                                <Box sx={{ pl: 2, display: 'flex', alignItems: 'center' }}>
+                                                                    <Image src="/arrow_down.svg" alt="arrow down" width={16} height={16} />
+                                                                </Box>
+                                                            }
+                                                        </Button>
+                                                    </Box>
                                                 </Box>
-                                            </Box>
 
-                                            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                                                <TableContainer sx={{
-                                                    border: '1px solid #EBEBEB',
-                                                    borderRadius: '4px 4px 0px 0px',
-                                                }}>
-                                                    <Table>
-                                                        <TableHead>
-                                                            <TableRow>
-                                                                {tableHeaders.map(({ key, label, sortable }) => (
-                                                                    <TableCell
-                                                                        key={key}
-                                                                        sx={{...suppressionsStyles.tableColumn, paddingLeft: "16px", cursor: sortable ? 'pointer' : 'default'}}
-                                                                        onClick={sortable ? () => handleSortRequest(key) : undefined}
-                                                                    >
-                                                                        <Box sx={{ display: 'flex', alignItems: 'center' }} style={key === "status" || key === "actions" ? { justifyContent: "center" } : {}}>
-                                                                            <Typography variant="body2" className='table-heading'>{label}</Typography>
-                                                                            {sortable && (
-                                                                            <IconButton size="small" sx={{ ml: 1 }}>
-                                                                                {orderBy === key ? (
-                                                                                order === 'asc' ? (
-                                                                                    <ArrowUpwardIcon fontSize="inherit" />
-                                                                                ) : (
-                                                                                    <ArrowDownwardIcon fontSize="inherit" />
-                                                                                )
-                                                                                ) : (
-                                                                                <SwapVertIcon fontSize="inherit" />
+                                                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                                                    <TableContainer sx={{
+                                                        border: '1px solid #EBEBEB',
+                                                        borderRadius: '4px 4px 0px 0px',
+                                                    }}>
+                                                        <Table>
+                                                            <TableHead>
+                                                                <TableRow>
+                                                                    {tableHeaders.map(({ key, label, sortable }) => (
+                                                                        <TableCell
+                                                                            key={key}
+                                                                            sx={{ ...suppressionsStyles.tableColumn, paddingLeft: "16px", cursor: sortable ? 'pointer' : 'default' }}
+                                                                            onClick={sortable ? () => handleSortRequest(key) : undefined}
+                                                                        >
+                                                                            <Box sx={{ display: 'flex', alignItems: 'center' }} style={key === "status" || key === "actions" ? { justifyContent: "center" } : {}}>
+                                                                                <Typography variant="body2" className='table-heading'>{label}</Typography>
+                                                                                {sortable && (
+                                                                                    <IconButton size="small" sx={{ ml: 1 }}>
+                                                                                        {orderBy === key ? (
+                                                                                            order === 'asc' ? (
+                                                                                                <ArrowUpwardIcon fontSize="inherit" />
+                                                                                            ) : (
+                                                                                                <ArrowDownwardIcon fontSize="inherit" />
+                                                                                            )
+                                                                                        ) : (
+                                                                                            <SwapVertIcon fontSize="inherit" />
+                                                                                        )}
+                                                                                    </IconButton>
                                                                                 )}
-                                                                            </IconButton>
-                                                                            )}
-                                                                        </Box>
-                                                                    </TableCell>
-                                                                ))}
-                                                            </TableRow>
-                                                        </TableHead>
-                                                        <TableBody>
+                                                                            </Box>
+                                                                        </TableCell>
+                                                                    ))}
+                                                                </TableRow>
+                                                            </TableHead>
+                                                            <TableBody>
                                                                 {partners.map((data) => (
                                                                     <TableRow key={data.id} sx={{
                                                                         ...suppressionsStyles.tableBodyRow,
@@ -686,36 +692,37 @@ const Accounts: React.FC = () => {
                                                                             }
                                                                         },
                                                                     }}>
-                                                                        <TableCell className='sticky-cell table-data' 
+                                                                        <TableCell className='sticky-cell table-data'
                                                                             sx={{
-                                                                                ...suppressionsStyles.tableBodyColumn, 
+                                                                                ...suppressionsStyles.tableBodyColumn,
                                                                                 paddingLeft: "16px",
                                                                                 position: 'sticky',
                                                                                 left: 0,
-                                                                                zIndex: 1}}>
-                                                                            <Box sx={{display: "flex", alignItems: "center", justifyContent: "space-between", color: 'rgba(80, 82, 178, 1)'}}>
+                                                                                zIndex: 1
+                                                                            }}>
+                                                                            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", color: 'rgba(80, 82, 178, 1)' }}>
                                                                                 {data.full_name}
                                                                             </Box>
                                                                         </TableCell>
 
-                                                                        <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
+                                                                        <TableCell className='table-data' sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px" }}>
                                                                             {data.email}
                                                                         </TableCell>
 
-                                                                        <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
+                                                                        <TableCell className='table-data' sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px" }}>
                                                                             {dayjs(data.created_at).isValid() ? dayjs(data.created_at).format('MMM D, YYYY') : '--'}
                                                                         </TableCell>
 
-                                                                        <TableCell className='table-data'sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
+                                                                        <TableCell className='table-data' sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px" }}>
                                                                             {data.plan_amount}
                                                                         </TableCell>
 
-                                                                        <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
+                                                                        <TableCell className='table-data' sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px" }}>
                                                                             {dayjs(data.last_payment_date).isValid() ? dayjs(data.last_payment_date).format('MMM D, YYYY') : '--'}
                                                                         </TableCell>
 
                                                                         <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
-                                                                            <Box sx={{display: "flex", justifyContent: "center"}}>
+                                                                            <Box sx={{ display: "flex", justifyContent: "center" }}>
                                                                                 <Typography component="div" sx={{
                                                                                     width: "100px",
                                                                                     margin: 0,
@@ -733,10 +740,10 @@ const Accounts: React.FC = () => {
                                                                             </Box>
                                                                         </TableCell>
 
-                                                                        <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
+                                                                        <TableCell className='table-data' sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px" }}>
                                                                             {data.will_pay ?
-                                                                            <>
-                                                                                {data.paid_at && <Typography component="div" sx={{
+                                                                                <>
+                                                                                    {data.paid_at && <Typography component="div" sx={{
                                                                                         width: "100px",
                                                                                         fontFamily: 'Roboto',
                                                                                         fontSize: '10px',
@@ -744,17 +751,17 @@ const Accounts: React.FC = () => {
                                                                                         lineHeight: '14px'
                                                                                     }}>
                                                                                         Would be paid on
-                                                                                </Typography>}
-                                                                                {dayjs(data.reward_payout_date).isValid() ? dayjs(data.reward_payout_date).format('MMM D, YYYY') : '--'}
-                                                                            </>
-                                                                            : 
-                                                                            <>
-                                                                                --
-                                                                            </>
+                                                                                    </Typography>}
+                                                                                    {dayjs(data.reward_payout_date).isValid() ? dayjs(data.reward_payout_date).format('MMM D, YYYY') : '--'}
+                                                                                </>
+                                                                                :
+                                                                                <>
+                                                                                    --
+                                                                                </>
                                                                             }
                                                                         </TableCell>
 
-                                                                        <TableCell className='table-data'sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
+                                                                        <TableCell className='table-data' sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px" }}>
                                                                             {(() => {
                                                                                 switch (data.sources.toLowerCase()) {
                                                                                     case "google":
@@ -772,7 +779,7 @@ const Accounts: React.FC = () => {
                                                                         </TableCell>
 
                                                                         <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
-                                                                            <Box sx={{display: "flex", justifyContent: "center"}}>
+                                                                            <Box sx={{ display: "flex", justifyContent: "center" }}>
                                                                                 <Typography component="div" sx={{
                                                                                     width: "100px",
                                                                                     margin: 0,
@@ -791,89 +798,93 @@ const Accounts: React.FC = () => {
                                                                         </TableCell>
 
                                                                         <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
-                                                                            <IconButton onClick={(event) => handleOpenMenu(event, data)} sx={{ ':hover': { backgroundColor: 'transparent', }}} >
+                                                                            <IconButton onClick={(event) => handleOpenMenu(event, data)} sx={{ ':hover': { backgroundColor: 'transparent', } }} >
                                                                                 <Image src='/more_horizontal.svg' alt='more' height={16.18} width={22.91} />
                                                                             </IconButton>
 
                                                                             <Popover
-                                                                                    open={open}
-                                                                                    anchorEl={menuAnchor}
-                                                                                    onClose={handleCloseMenu}
-                                                                                    anchorOrigin={{
-                                                                                        vertical: 'bottom',
-                                                                                        horizontal: 'left',
+                                                                                open={open}
+                                                                                anchorEl={menuAnchor}
+                                                                                onClose={handleCloseMenu}
+                                                                                anchorOrigin={{
+                                                                                    vertical: 'bottom',
+                                                                                    horizontal: 'left',
+                                                                                }}
+                                                                                slotProps={{ paper: { sx: { boxShadow: 'none', border: '1px solid rgba(228, 228, 228, 1)', padding: 0 } } }}
+                                                                            >
+                                                                                <List
+                                                                                    sx={{
+                                                                                        width: '100%', maxWidth: 360, padding: 0
                                                                                     }}
-                                                                                    slotProps={{paper: {sx:{boxShadow: 'none', border: '1px solid rgba(228, 228, 228, 1)', padding:0}}}}
-                                                                                    >
-                                                                                    <List
-                                                                                        sx={{ 
-                                                                                            width: '100%', maxWidth: 360, padding:0}}
-                                                                                        >
-                                                                                        <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
-                                                                                            handleCloseMenu()
-                                                                                            setPaymentHistoryPage(true)
-                                                                                            setPartnerName(data.full_name)
-                                                                                        }}>
-                                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Payment history"/>
-                                                                                        </ListItemButton>
+                                                                                >
+                                                                                    <ListItemButton sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
+                                                                                        handleCloseMenu()
+                                                                                        setPaymentHistoryPage(true)
+                                                                                        setPartnerName(data.full_name)
+                                                                                    }}>
+                                                                                        <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Payment history" />
+                                                                                    </ListItemButton>
 
-                                                                                        <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
-                                                                                                    handleCloseMenu()
-                                                                                                    setRewardsPage(true)
-                                                                                                    setPartnerName(selectedRowData.full_name)
-                                                                                                    setId(selectedRowData.id)
-                                                                                                    fetchRewards(year, selectedRowData.id)
-                                                                                                }}>
-                                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Reward history"/>
-                                                                                        </ListItemButton>
-                                                                                          
+                                                                                    <ListItemButton sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
+                                                                                        handleCloseMenu()
+                                                                                        setRewardsPage(true)
+                                                                                        setPartnerName(selectedRowData.full_name)
+                                                                                        setId(selectedRowData.id)
+                                                                                        fetchRewards(year, selectedRowData.id)
+                                                                                    }}>
+                                                                                        <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Reward history" />
+                                                                                    </ListItemButton>
 
-                                                                                        <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => { handleCloseMenu(), setIsMaster(false), handleOpenSlider(selectedRowData.id) }}>
-                                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Make partner"/>
-                                                                                        </ListItemButton>
-                                                                                        <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => { handleCloseMenu(), setIsMaster(true), handleOpenSlider(selectedRowData.id) }}>
-                                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Make Master partner"/>
-                                                                                        </ListItemButton>
-                                                                                        
-                                                                                        {selectedRowData?.status === "Active" 
-                                                                                        ?   <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
-                                                                                                handleNoticeOpenPopup()
-                                                                                                setEnabledData({ 
-                                                                                                    id: selectedRowData.id});
-                                                                                                handleCloseMenu()
-                                                                                            }}>
-                                                                                                <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Disable"/>
-                                                                                            </ListItemButton>
-                                                                                        :   <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
-                                                                                                setEnabled()
-                                                                                                setEnabledData({ 
-                                                                                                    id: selectedRowData.id});
-                                                                                                handleCloseMenu()
-                                                                                            }}>
-                                                                                                <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Enable"/>
-                                                                                            </ListItemButton>
-                                                                                        }
-                                                                                        <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
+
+                                                                                    <ListItemButton sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => { handleCloseMenu(), setIsMaster(false), handleOpenSlider(selectedRowData.id) }}>
+                                                                                        <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Make partner" />
+                                                                                    </ListItemButton>
+                                                                                    <ListItemButton sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => { handleCloseMenu(), setIsMaster(true), handleOpenSlider(selectedRowData.id) }}>
+                                                                                        <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Make Master partner" />
+                                                                                    </ListItemButton>
+
+                                                                                    {selectedRowData?.status === "Active"
+                                                                                        ? <ListItemButton sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
                                                                                             handleNoticeOpenPopup()
                                                                                             setEnabledData({
-                                                                                                id: selectedRowData.id,
-                                                                                                fullName: selectedRowData.partner_name});
+                                                                                                id: selectedRowData.id
+                                                                                            });
                                                                                             handleCloseMenu()
                                                                                         }}>
-                                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Terminate"/>
+                                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Disable" />
                                                                                         </ListItemButton>
-                                                                                        <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {}}>
-                                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Log info"/>
+                                                                                        : <ListItemButton sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
+                                                                                            setEnabled()
+                                                                                            setEnabledData({
+                                                                                                id: selectedRowData.id
+                                                                                            });
+                                                                                            handleCloseMenu()
+                                                                                        }}>
+                                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Enable" />
                                                                                         </ListItemButton>
-                                                                                    </List>
+                                                                                    }
+                                                                                    <ListItemButton sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
+                                                                                        handleNoticeOpenPopup()
+                                                                                        setEnabledData({
+                                                                                            id: selectedRowData.id,
+                                                                                            fullName: selectedRowData.partner_name
+                                                                                        });
+                                                                                        handleCloseMenu()
+                                                                                    }}>
+                                                                                        <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Terminate" />
+                                                                                    </ListItemButton>
+                                                                                    <ListItemButton sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => { }}>
+                                                                                        <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Log info" />
+                                                                                    </ListItemButton>
+                                                                                </List>
                                                                             </Popover>
                                                                         </TableCell>
                                                                     </TableRow>
                                                                 ))}
-                                                        </TableBody>
-                                                    </Table>
-                                                </TableContainer>
-                                                {errorResponse && !loading && (
+                                                            </TableBody>
+                                                        </Table>
+                                                    </TableContainer>
+                                                    {errorResponse && !loading && (
                                                         <Box sx={suppressionsStyles.centerContainerStyles}>
                                                             <Typography variant="h5" sx={{
                                                                 mb: 3,
@@ -898,37 +909,37 @@ const Accounts: React.FC = () => {
                                                                 No Invitee joined from the referreal link.
                                                             </Typography>
                                                         </Box>
-                                                        )}
+                                                    )}
+                                                </Box>
                                             </Box>
+                                            <Box sx={{ display: 'flex', justifyContent: 'end' }}>
+                                                <CustomTablePagination
+                                                    count={totalCount}
+                                                    page={page}
+                                                    rowsPerPage={allowedRowsPerPage.includes(rowsPerPage) ? rowsPerPage : 10}
+                                                    onPageChange={handlePageChange}
+                                                    onRowsPerPageChange={handleRowsPerPageChange}
+                                                    rowsPerPageOptions={[10, 25, 50, 100]}
+                                                />
+                                            </Box>
+
                                         </Box>
-                                        <Box sx={{ display: 'flex', justifyContent: 'end' }}>
-                                            <CustomTablePagination
-                                                count={totalCount}
-                                                page={page}
-                                                rowsPerPage={allowedRowsPerPage.includes(rowsPerPage) ? rowsPerPage : 10}
-                                                onPageChange={handlePageChange}
-                                                onRowsPerPageChange={handleRowsPerPageChange}
-                                                rowsPerPageOptions={[10, 25, 50, 100]}
-                                            />
-                                        </Box>
-                                        
-                                    </Box>
-                                    <CalendarPopup
-                                        anchorEl={calendarAnchorEl}
-                                        open={isCalendarOpen}
-                                        onClose={handleCalendarClose}
-                                        onDateChange={handleDateChange}
-                                        onDateLabelChange={handleDateLabelChange}
-                                        onApply={handleApply}
-                                    />
-                                </>}
+                                        <CalendarPopup
+                                            anchorEl={calendarAnchorEl}
+                                            open={isCalendarOpen}
+                                            onClose={handleCalendarClose}
+                                            onDateChange={handleDateChange}
+                                            onDateLabelChange={handleDateLabelChange}
+                                            onApply={handleApply}
+                                        />
+                                    </>}
                             </Box>
                         </Box>
                         {(isSliderOpen && selectedUserId) && <MakePartner isOpen={isSliderOpen}
-                        onClose={handleCloseSlider}
-                        onSumbit={handleSubmit}
-                        is_master={isMaster}
-                        user_id={selectedUserId} />}
+                            onClose={handleCloseSlider}
+                            onSumbit={handleSubmit}
+                            is_master={isMaster}
+                            user_id={selectedUserId} />}
                     </Grid>
                 </Grid>
             </Box>
