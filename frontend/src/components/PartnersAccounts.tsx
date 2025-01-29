@@ -519,13 +519,13 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                                                     ...suppressionsStyles.tableColumn,
                                                     paddingLeft: "16px",
                                                     cursor: sortable ? 'pointer' : 'default',
-                                                    ...(key === 'account_name' && {
-                                                        position: 'sticky',
-                                                        left: 0,
-                                                        zIndex: 99,
-                                                        backgroundColor: '#fff',
+                                                    // ...(key === 'account_name' && {
+                                                    //     position: 'sticky',
+                                                    //     left: 0,
+                                                    //     zIndex: 99,
+                                                    //     backgroundColor: '#fff',
 
-                                                    })
+                                                    // })
                                                 }}
                                                 onClick={sortable ? () => handleSortRequest(key) : undefined}
                                             >
@@ -560,7 +560,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                                                 }
                                             }
                                         }}>
-                                            <TableCell className='table-data sticky-cell'
+                                            <TableCell className='sticky-cell table-data'
                                             onClick={() => handleLogin(data.id)}
                                             sx={{
                                                 ...suppressionsStyles.tableBodyColumn,

@@ -427,13 +427,13 @@ const PartnersMain: React.FC<PartnersProps> = ({ setLoading, masterId, appliedDa
                                                     ...suppressionsStyles.tableColumn,
                                                     paddingLeft: "16px",
                                                     cursor: sortable ? 'pointer' : 'default',
-                                                    ...(key === 'partner_name' && {
-                                                        position: 'sticky',
-                                                        left: 0,
-                                                        zIndex: 99,
-                                                        backgroundColor: '#fff',
+                                                    // ...(key === 'partner_name' && {
+                                                    //     position: 'sticky',
+                                                    //     left: 0,
+                                                    //     zIndex: 99,
+                                                    //     backgroundColor: '#fff',
 
-                                                    })
+                                                    // })
                                                 }}
                                                 onClick={sortable ? () => handleSortRequest(key) : undefined}
                                             >
