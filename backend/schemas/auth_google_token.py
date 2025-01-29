@@ -9,6 +9,7 @@ class AuthGoogleData(BaseModel):
     referral_token: Optional[str] = None
     spi: Optional[str] = None
     awc: Optional[str] = None
+    pft: Optional[str] = None
     shopify_data: Optional[ShopifyPayloadModel] = None
     coupon: Optional[str] = None
     ift: Optional[str] = None

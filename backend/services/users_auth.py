@@ -54,6 +54,7 @@ class UsersAuth:
         self.domain_persistence = domain_persistence
         self.referral_persistence_service = referral_persistence_service
         self.UNLIMITED = -1
+        self.FREE_TRIAL_DAYS = 14
 
     def get_utc_aware_date(self):
         return datetime.now(timezone.utc).replace(microsecond=0)
@@ -118,7 +119,7 @@ class UsersAuth:
         return account_notification.id
 
     def add_user(self, is_with_card: bool, customer_id: str, user_form: dict, spi: str, awin_awc: str, access_token: str, shop_id: str, 
-                 shop_data, coupon: str, utm_params: UtmParams, source_platform: str):
+                 shop_data, coupon: str, utm_params: UtmParams, source_platform: str, pft: str):
         stripe_payment_url = None
         shop_domain = None
         if spi:
@@ -127,8 +128,11 @@ class UsersAuth:
                 raise HTTPException(status.HTTP_404_NOT_FOUND, detail={'error': 'spi with this value does not exist'})
             stripe_payment_url = {
                 'stripe_price_id': spi,
-                'coupon': coupon
+                'coupon': coupon,
+                'trial_period': 0
             }
+            if pft and pft == 'ftt':
+                stripe_payment_url['trial_period'] = self.FREE_TRIAL_DAYS
             
         if shop_data and shop_data.shop:
             shop_domain = shop_data.shop
@@ -252,7 +256,7 @@ class UsersAuth:
         customer_id = stripe_service.create_customer_google(google_payload)
         user_object = self.add_user(is_with_card=is_with_card, customer_id=customer_id, user_form=google_payload,
                                     spi=auth_google_data.spi, awin_awc=awc, access_token=shopify_access_token, shop_id=shop_id, shop_data=shopify_data, 
-                                    coupon=coupon, utm_params=auth_google_data.utm_params, source_platform=auth_google_data.source_platform)
+                                    coupon=coupon, utm_params=auth_google_data.utm_params, source_platform=auth_google_data.source_platform, pft=auth_google_data.pft)
         
         if teams_token:
             notification_id = self.save_account_notification(user_object.id, NotificationTitles.TEAM_MEMBER_ADDED.value)
@@ -529,7 +533,7 @@ class UsersAuth:
             
         user_object = self.add_user(is_with_card=is_with_card, customer_id=customer_id, user_form=user_data,
                                     spi=user_form.spi, awin_awc=awc, access_token=shopify_access_token, shop_id=shop_id, shop_data=shopify_data,
-                                    coupon=coupon, utm_params=user_form.utm_params, source_platform=user_form.source_platform)
+                                    coupon=coupon, utm_params=user_form.utm_params, source_platform=user_form.source_platform, pft=user_form.pft)
         
         if teams_token:
             notification_id = self.save_account_notification(user_object.id, NotificationTitles.TEAM_MEMBER_ADDED.value)
@@ -565,7 +569,8 @@ class UsersAuth:
             self.user_persistence_service.set_partner_role(user_object.id)
             self.subscription_service.create_subscription_from_partners(user_id=user_object.id)
             self.partners_service.setUser(user_object.email, user_object.id, "signup", datetime.now())
-        else:
+       
+        if not user_form.spi:
             self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)
         
         conditions = [

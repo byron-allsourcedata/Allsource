@@ -10,7 +10,7 @@ from schemas.users import UserSignUpForm
 stripe.api_key = StripeConfig.api_key
 
 logging.getLogger("stripe").setLevel(logging.WARNING)
-
+TRIAL_PERIOD_WITH_COUPON = 7
 
 class StripeService:
     def __init__(self):
@@ -331,7 +331,8 @@ def get_stripe_payment_url(customer_id, stripe_payment_hash):
         customer_id=customer_id,
         line_items=[{"price": stripe_payment_hash['stripe_price_id'], "quantity": 1}],
         mode="subscription",
-        coupon=stripe_payment_hash['coupon']
+        coupon=stripe_payment_hash['coupon'],
+        trial_period = stripe_payment_hash.get('trial_period', 0)
     )
     return stripe_payment_url.get('link')
 
@@ -342,7 +343,7 @@ def create_stripe_checkout_session(customer_id: str,
                                    coupon: str = None):
     if trial_period > 0:
         if coupon:
-            trial_period = 7
+            trial_period = TRIAL_PERIOD_WITH_COUPON
         subscription_data = {
             'trial_period_days': trial_period
         }

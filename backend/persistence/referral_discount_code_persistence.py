@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import desc
 from models.referral_users import ReferralUser
 from models.users import Users
 from datetime import datetime, timezone
@@ -11,7 +12,7 @@ class ReferralDiscountCodesPersistence:
         self.db = db
     
     def get_referral_discount_codes(self):
-        return self.db.query(ReferralDiscountCode).all()
+        return self.db.query(ReferralDiscountCode).order_by(desc(ReferralDiscountCode.id)).all()
     
     def get_discount_code(self, user_id):
         return self.db.query(ReferralDiscountCode.coupon).join(ReferralUser, ReferralUser.discount_code_id == ReferralDiscountCode.id).where(ReferralUser.user_id == user_id).scalar()

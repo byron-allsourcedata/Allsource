@@ -31,6 +31,7 @@ class UserSignUpForm(BaseModel):
     teams_token: Optional[str] = None
     referral_token: Optional[str] = None
     spi: Optional[str] = None
+    pft: Optional[str] = None
     shopify_data: Optional[ShopifyPayloadModel] = None
     awc: Optional[str] = None
     coupon: Optional[str] = None
