@@ -28,6 +28,7 @@ class ReferralService:
         if user.get('connected_stripe_account_id'):
             account = self.stripe_service.get_stripe_account_info(user.get('connected_stripe_account_id'))
             if not account:
+                account = {}
                 self.user_persistence.delete_stripe_info(user_id=user.get('id'))
             
         email = account.get('email')
