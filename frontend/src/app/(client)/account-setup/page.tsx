@@ -28,7 +28,7 @@ import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import PersonIcon from '@mui/icons-material/Person';
 import EditIcon from '@mui/icons-material/Edit';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
-import { showToast, showErrorToast } from '@/components/ToastNotification';
+import { showErrorToast, showToast } from '@/components/ToastNotification';
 import { fetchUserData } from '@/services/meService';
 
 const AccountSetup = () => {
@@ -136,11 +136,11 @@ const AccountSetup = () => {
   const fetchEditDomain = async () => {
     try {
       setLoading(true)
-      const response = await axiosInstance.put(`domains/`, {new_domain: domainName}, {
+      const response = await axiosInstance.put(`install-pixel/update-domain`, {new_domain: domainName.replace(/^https?:\/\//, "")}, {
         headers: { 'Content-Type': 'application/json' },
       });
       if (response.status === 200) {
-          showToast("Domain name successfully updated!");
+          showToast('Domain name successfully updated!');
       }
     }
     catch {
@@ -385,7 +385,7 @@ const AccountSetup = () => {
         case "SUCCESS":
           const domain = websiteLink.replace(/^https?:\/\//, "")
           sessionStorage.setItem('current_domain', domain)
-          setDomainName(websiteLink)
+          setDomainName(domain)
           setEditingName(false)
           await fetchUserData();
           if (response.data.stripe_payment_url) {
@@ -462,19 +462,6 @@ const AccountSetup = () => {
     try {
       const response = await axiosInterceptorInstance.get('/install-pixel/manually');
       setPixelCode(response.data.manual);
-      // setPixelCode(`
-      //           <script id="acegm_pixel_script" type="text/javascript" defer="defer">
-      //           window.pixelClientId = "{client_id}";
-      //           var now = new Date();
-      //           var year = now.getFullYear();
-      //           var month = String(now.getMonth() + 1).padStart(2, '0');
-      //           var week = Math.ceil((now.getDate() + 6) / 7);
-      //           var acegm_pixelScriptUrl = 'https://maximiz-data.s3.us-east-2.amazonaws.com/pixel.js?v=' + year + '-' + month + '-' + week;
-      //           var acegm_base_pixel_script = document.createElement('script');
-      //           acegm_base_pixel_script.src = acegm_pixelScriptUrl;
-      //           document.body.appendChild(acegm_base_pixel_script);
-      //           </script>
-      //       `)
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -558,6 +545,8 @@ const AccountSetup = () => {
   };
 
   const handleCancel = () => {
+    console.log("Pixel code is installed successfully!")
+    showToast('Pixel code is installed successfully!')
     method_installingPixel.forEach(({ label, setState }) => {
       if (selectedMethodInstall === label) {
         setState(false);
@@ -588,8 +577,8 @@ const AccountSetup = () => {
                 const status = response.data.status;
                 if (status === "PIXEL_CODE_INSTALLED") {
                     alert("Pixel code is installed successfully!");
-                    endSetup()
-                    showToast("Pixel code is installed successfully!");
+                    // endSetup()
+                    showToast('Pixel code is installed successfully!');
                 }
             })
             .catch(error => {

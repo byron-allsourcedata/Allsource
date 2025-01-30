@@ -77,11 +77,6 @@ def get_partners_asset_persistence(db: Session = Depends(get_db)) -> PartnersAss
     return PartnersAssetPersistence(db)
 
 
-def get_partners_assets_service(
-        partners_asset_persistence: PartnersAssetPersistence = Depends(get_partners_asset_persistence)):
-    return PartnersAssetService(partners_asset_persistence=partners_asset_persistence)
-
-
 def get_partners_persistence(db: Session = Depends(get_db)) -> PartnersPersistence:
     return PartnersPersistence(db)
 
@@ -308,6 +303,7 @@ def check_user_authorization(Authorization: Annotated[str, Header()],
             get_users_auth_service)) -> Token:
     user = check_user_authentication(Authorization, user_persistence_service)
     auth_status = get_user_authorization_status(user, users_auth_service)
+    print("auth_status", auth_status)
     if auth_status == UserAuthorizationStatus.PAYMENT_NEEDED:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -374,7 +370,6 @@ def check_user_authentication(Authorization: Annotated[str, Header()],
                               user_persistence_service: UserPersistence = Depends(
                                   get_user_persistence_service)) -> Token:
     user_data = parse_jwt_data(Authorization)
-    print("user_data.id", user_data.id)
     user = user_persistence_service.get_user_by_id(user_data.id)
     if not user:
         raise HTTPException(
@@ -476,8 +471,7 @@ def get_payouts_service(
 
 
 def get_pixel_installation_service(db: Session = Depends(get_db),
-                                   send_grid_persistence_service: SendgridPersistence = Depends(
-                                       get_send_grid_persistence_service),
+                                    send_grid_persistence_service: SendgridPersistence = Depends(get_send_grid_persistence_service)
                                    ):
     return PixelInstallationService(db=db, send_grid_persistence_service=send_grid_persistence_service)
 

@@ -36,14 +36,6 @@ def list_domain(request: Request = None,
     return domains
 
 
-@router.put('/')
-def update_domain(request: UpdateDomain,
-                domain_service: UserDomainsService = Depends(get_domain_service),
-                user=Depends(check_user_authentication)):
-    domain_service.update_domain(user.get('id'), request)
-    return True
-
-
 @router.delete('/{domain_id}')
 def delete_domain(domain_id: int, domain_service: UserDomainsService = Depends(get_domain_service),
                   user=Depends(check_user_authentication)):
