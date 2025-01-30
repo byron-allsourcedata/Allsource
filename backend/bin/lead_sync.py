@@ -363,7 +363,8 @@ def get_or_create_company(session: Session, five_x_five_user: FiveXFiveUser, sta
                                 revenue=five_x_five_user.company_revenue,
                                 employee_count=five_x_five_user.company_employee_count,
                                 last_updated=five_x_five_user.company_last_updated,
-                                description=five_x_five_user.company_description
+                                description=five_x_five_user.company_description,
+                                primary_industry=five_x_five_user.primary_industry
                             )
             session.add(lead_company)
             session.flush()
