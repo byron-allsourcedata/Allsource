@@ -667,11 +667,11 @@ const Leads: React.FC = () => {
         setActiveFilter(filters.selectedStatus?.[0] || '');
     };
 
-    const capitalizeCity = (city) => {
+    const capitalizeCity = (city: string) => {
         return city
-            .split(' ') // Разделяем строку по пробелам, чтобы обработать составные города
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Первая буква заглавная, остальные строчные
-            .join(' '); // Собираем обратно в строку
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
     }
 
 

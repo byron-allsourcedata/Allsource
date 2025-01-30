@@ -62,19 +62,17 @@ class CompanyPersistence:
                 LeadCompany.employee_count,
                 LeadCompany.address,
                 LeadCompany.primary_industry,
-
                 LeadCompany.domain,
                 LeadCompany.zip,
                 LeadCompany.description,
                 FiveXFiveLocations.city,
                 States.state_name,
                 LeadCompany.last_updated,
-
             )
                 .join(LeadUser, LeadUser.company_id == LeadCompany.id)
                 .outerjoin(first_visit_subquery, first_visit_subquery.c.company_id == LeadCompany.id)
-                .outerjoin(FiveXFiveLocations, FiveXFiveLocations.id == LeadCompany.five_x_five_location_id)  # Соединяем таблицу FiveXFiveLocations
-                .outerjoin(States, States.id == FiveXFiveLocations.state_id)  # Соединяем таблицу States по state_code
+                .outerjoin(FiveXFiveLocations, FiveXFiveLocations.id == LeadCompany.five_x_five_location_id)
+                .outerjoin(States, States.id == FiveXFiveLocations.state_id)
                 .filter(LeadUser.domain_id == domain_id)
                 .group_by(LeadCompany.id, first_visit_subquery.c.visited_date, FiveXFiveLocations.city, States.state_name)
                 .order_by(asc(LeadCompany.name), desc(first_visit_subquery.c.visited_date))
