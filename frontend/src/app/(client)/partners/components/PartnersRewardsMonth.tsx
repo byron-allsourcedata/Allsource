@@ -208,8 +208,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ partner_id, isMaster, open,
             <CustomizedProgressBar />
             }
             <Box>
-                <Box sx={{ 
-                    // display: 'flex', 
+                <Box sx={{
                     display: "grid",
                     gridTemplateColumns: "45% 55%",
                     flexDirection: 'row', 
