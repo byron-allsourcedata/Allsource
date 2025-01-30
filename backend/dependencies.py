@@ -374,6 +374,7 @@ def check_user_authentication(Authorization: Annotated[str, Header()],
                               user_persistence_service: UserPersistence = Depends(
                                   get_user_persistence_service)) -> Token:
     user_data = parse_jwt_data(Authorization)
+    print("user_data.id", user_data.id)
     user = user_persistence_service.get_user_by_id(user_data.id)
     if not user:
         raise HTTPException(

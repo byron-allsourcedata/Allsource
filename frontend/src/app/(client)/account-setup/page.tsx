@@ -379,7 +379,7 @@ const AccountSetup = () => {
         case "SUCCESS":
           const domain = websiteLink.replace(/^https?:\/\//, "")
           sessionStorage.setItem('current_domain', domain)
-          setDomainName(domain)
+          setDomainName(websiteLink)
           setEditingName(false)
           await fetchUserData();
           if (response.data.stripe_payment_url) {
@@ -571,10 +571,13 @@ const AccountSetup = () => {
   const handleVerifyPixel = () => {
     let url = domainName.trim();
 
+    console.log("url", {url})
+
     if (url) {
       if (!/^https?:\/\//i.test(url)) {
         url = "http://" + url;
       }
+
 
       axiosInstance.post("/install-pixel/check-pixel-installed-parse", { url })
             .then(response => {
@@ -717,7 +720,7 @@ const AccountSetup = () => {
           </Menu>
         </Box>
         <Box sx={{ ...styles.nav, position: "relative" }}>
-          {selectedMethodInstall !== "" && <Button
+          {selectedMethodInstall === "" && <Button
             className="hyperlink-red"
             variant="outlined"
             onClick={handleBackClick}
@@ -1450,7 +1453,7 @@ const AccountSetup = () => {
                       },
                     }}
                     onClick={handleVerifyPixel}
-                    disabled={domainName.trim() !== ""}
+                    disabled={domainName.trim() === ""}
                   >
                     Verify Your Pixel
                   </Button>
