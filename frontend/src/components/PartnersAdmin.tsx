@@ -394,7 +394,8 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
         }
     }, [page, rowsPerPage, search, appliedDates]);
 
-    const updateOrAddPartner = (updatedPartner: PartnerData) => {
+    const updateOrAddPartner = (updatedPartner: any) => {
+        
         setPartners((prevAccounts) => {
             const index = prevAccounts.findIndex((account) => account.id === updatedPartner.id);
             if (index !== -1) {
@@ -402,7 +403,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                 newAccounts[index] = updatedPartner;
                 return newAccounts;
             }
-            return [...prevAccounts, updatedPartner];
+            return [...prevAccounts, {...updatedPartner, partner_name: updatedPartner.name, isActive: updatedPartner.is_active, last_payment_date: null}];
         });
     };
 
@@ -906,16 +907,16 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                                         <Typography component="div" sx={{
                                                                             width: "100px",
                                                                             margin: 0,
-                                                                            background: getStatusStyle(data.isActive ? data.status : "Inactive" ).background,
+                                                                            background: getStatusStyle(data.isActive ? data.status.charAt(0).toUpperCase() + data.status.slice(1) : "Inactive" ).background,
                                                                             padding: '3px 8px',
                                                                             borderRadius: '2px',
                                                                             fontFamily: 'Roboto',
                                                                             fontSize: '12px',
                                                                             fontWeight: '400',
                                                                             lineHeight: '16px',
-                                                                            color: getStatusStyle(data.isActive ? data.status : "Inactive" ).color,
+                                                                            color: getStatusStyle(data.isActive ? data.status.charAt(0).toUpperCase() + data.status.slice(1) : "Inactive" ).color,
                                                                         }}>
-                                                                            {data.isActive ? data.status : "Inactive"}
+                                                                            {data.isActive ? data.status.charAt(0).toUpperCase() + data.status.slice(1) : "Inactive"}
                                                                         </Typography>
                                                                     </Box>
                                                                 </TableCell>
