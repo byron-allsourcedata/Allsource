@@ -39,7 +39,7 @@ class Partner(Base):
         Index('partners_email_idx', 'email'),
         Index('partners_is_master_idx', 'is_master'),
         Index('partners_user_id_idx', 'user_id'),
-        Index('partners_pkey', 'id')
+        Index('partners_pkey', 'id'),
     )
 
 event.listen(Partner, "before_insert", create_timestamps)
