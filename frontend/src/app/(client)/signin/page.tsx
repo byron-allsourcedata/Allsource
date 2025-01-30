@@ -77,7 +77,7 @@ const Signin: React.FC = () => {
   };
 
   const get_me = async () => {
-    const userData = await fetchUserData();
+    
   };
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -148,7 +148,7 @@ const Signin: React.FC = () => {
           switch (responseData.status) {
 
             case "SUCCESS":
-              await get_me()
+              await fetchUserData();
               checkPartner(response.data.is_partner)
               break;
             case 'NON_SHOPIFY_ACCOUNT':
@@ -160,37 +160,37 @@ const Signin: React.FC = () => {
               break;
 
             case "NEED_CONFIRM_EMAIL":
-              get_me()
+              await fetchUserData();
               router.push('/email-verificate');
               break;
 
             case "NEED_CHOOSE_PLAN":
-              get_me()
+              await fetchUserData();
               router.push('/settings?section=subscription')
               break;
 
             case "FILL_COMPANY_DETAILS":
-              get_me()
+              await fetchUserData();
               router.push('/account-setup')
               break;
 
             case "NEED_BOOK_CALL":
-              get_me()
+              await fetchUserData();
               router.push('/dashboard')
               break;
 
             case "PAYMENT_NEEDED":
-              get_me()
+              await fetchUserData();
               router.push(`${response.data.stripe_payment_url}`)
               break;
 
             case "PIXEL_INSTALLATION_NEEDED":
-              get_me()
+              await fetchUserData();
               router.push(partner ? '/partners' : '/dashboard');
               break;
 
             default:
-              await get_me()
+              await fetchUserData();
               router.push('/dashboard')
               break;
           }

@@ -72,8 +72,16 @@ class UsersService:
             "source_platform": self.user.get('source_platform')
         }
 
-    def add_percent_to_domain(self, domain: UserDomains, activate_percent):
-        domain_percent = 75 if domain.is_pixel_installed else activate_percent 
+    def add_percent_to_domain(self, domain: UserDomains, activate_percent, is_current_subscription_id):
+        domain_percent = 0
+        if domain.is_pixel_installed:
+            domain_percent = 75
+        else:
+            if activate_percent and activate_percent > 0:
+                domain_percent = activate_percent
+            elif is_current_subscription_id:
+                domain_percent = 50
+                
         domain_data = self.domain_mapped(domain)
         domain_data["activate_percent"] = domain_percent
         return domain_data
@@ -86,7 +94,7 @@ class UsersService:
         disabled_domains_sorted = sorted(disabled_domains, key=lambda x: (x.created_at, x.id))
         sorted_domains = enabled_domains_sorted + disabled_domains_sorted
         return [
-            self.add_percent_to_domain(domain, self.user.get('activate_steps_percent'))
+            self.add_percent_to_domain(domain, self.user.get('activate_steps_percent'), self.user.get('current_subscription_id'))
             for domain in sorted_domains
         ]
 

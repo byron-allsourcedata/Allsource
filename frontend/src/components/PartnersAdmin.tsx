@@ -394,7 +394,8 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
         }
     }, [page, rowsPerPage, search, appliedDates]);
 
-    const updateOrAddPartner = (updatedPartner: PartnerData) => {
+    const updateOrAddPartner = (updatedPartner: any) => {
+        
         setPartners((prevAccounts) => {
             const index = prevAccounts.findIndex((account) => account.id === updatedPartner.id);
             if (index !== -1) {
@@ -402,7 +403,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                 newAccounts[index] = updatedPartner;
                 return newAccounts;
             }
-            return [...prevAccounts, updatedPartner];
+            return [...prevAccounts, {...updatedPartner, partner_name: updatedPartner.name, isActive: updatedPartner.is_active, last_payment_date: null}];
         });
     };
 
@@ -798,7 +799,11 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                         {tableHeaders.map(({ key, label, sortable }) => (
                                                             <TableCell
                                                                 key={key}
-                                                                sx={{...suppressionsStyles.tableColumn, paddingLeft: "16px", cursor: sortable ? 'pointer' : 'default'}}
+                                                                sx={{
+                                                                    ...suppressionsStyles.tableColumn, 
+                                                                    paddingLeft: "16px", 
+                                                                    cursor: sortable ? 'pointer' : 'default',
+                                                                }}
                                                                 onClick={sortable ? () => handleSortRequest(key) : undefined}
                                                             >
                                                                 <Box sx={{ display: 'flex', alignItems: 'center' }} style={key === "status" || key === "actions" ? { justifyContent: "center" } : {}}>
@@ -854,11 +859,20 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                                             setAccountPage(true)
                                                                         }
                                                                         }}>
-                                                                    <Box sx={{display: "flex", alignItems: "center", justifyContent: "space-between", color: 'rgba(80, 82, 178, 1)'}}>
+                                                                    <Box 
+                                                                        sx={{ 
+                                                                            display: "flex", 
+                                                                            alignItems: "center", 
+                                                                            justifyContent: "space-between", 
+                                                                            color: 'rgba(80, 82, 178, 1)'
+                                                                        }}>
                                                                         {data.partner_name}
                                                                         <IconButton
                                                                             className="icon-button"
-                                                                            sx={{ display: 'none', ':hover': {backgroundColor: "transparent"}}} >
+                                                                            sx={{
+                                                                                display: 'none', 
+                                                                                ':hover': {backgroundColor: "transparent"}
+                                                                            }} >
                                                                             <Image src='/outband.svg' alt="outband" width={15.98} height={16}/>
                                                                         </IconButton>
                                                                     </Box>
@@ -881,7 +895,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                                 </TableCell>
 
                                                                 <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
-                                                                    {data.sources}
+                                                                    {data.sources ?? "Direct"}
                                                                 </TableCell>
 
                                                                 <TableCell className='table-data' sx={{...suppressionsStyles.tableBodyColumn, paddingLeft: "16px"}}>
@@ -893,16 +907,16 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                                         <Typography component="div" sx={{
                                                                             width: "100px",
                                                                             margin: 0,
-                                                                            background: getStatusStyle(data.isActive ? data.status : "Inactive" ).background,
+                                                                            background: getStatusStyle(data.isActive ? data.status.charAt(0).toUpperCase() + data.status.slice(1) : "Inactive" ).background,
                                                                             padding: '3px 8px',
                                                                             borderRadius: '2px',
                                                                             fontFamily: 'Roboto',
                                                                             fontSize: '12px',
                                                                             fontWeight: '400',
                                                                             lineHeight: '16px',
-                                                                            color: getStatusStyle(data.isActive ? data.status : "Inactive" ).color,
+                                                                            color: getStatusStyle(data.isActive ? data.status.charAt(0).toUpperCase() + data.status.slice(1) : "Inactive" ).color,
                                                                         }}>
-                                                                            {data.isActive ? data.status : "Inactive"}
+                                                                            {data.isActive ? data.status.charAt(0).toUpperCase() + data.status.slice(1) : "Inactive"}
                                                                         </Typography>
                                                                     </Box>
                                                                 </TableCell>

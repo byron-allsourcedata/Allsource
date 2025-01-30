@@ -39,7 +39,7 @@ class SlackService:
     def update_credential(self, domain_id, access_token):
         return self.integrations_persistence.update_credential_for_service(domain_id, SourcePlatformEnum.SLACK.value, access_token)
 
-    def save_integration(self, domain_id: int, access_token: str, user: dict):
+    def save_integration(self, domain_id: int, access_token: str, user: dict, team_id):
         credential = self.get_credential(domain_id)
         if credential:
             return self.update_credential(domain_id, access_token)
@@ -48,7 +48,8 @@ class SlackService:
             'domain_id': domain_id,
             'access_token': access_token,
             'full_name': user.get('full_name'),
-            'service_name': SourcePlatformEnum.SLACK.value
+            'service_name': SourcePlatformEnum.SLACK.value,
+            'slack_team_id': team_id
         })
         if not integrations:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
@@ -61,14 +62,13 @@ class SlackService:
         generator = AuthorizeUrlGenerator(
             client_id=SlackConfig.client_id,
             scopes=[
-                "channels:read",
-                "groups:read",
-                "channels:history",
-                "groups:history",
-                "channels:manage",
-                "groups:write",
                 "channels:join",
-                "chat:write"
+                "channels:manage",
+                "channels:read",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "chat:write.public"
             ],
             user_scopes=[],
             redirect_uri=SlackConfig.redirect_url,
@@ -98,29 +98,51 @@ class SlackService:
             redirect_uri=SlackConfig.redirect_url
         )
         if response['ok']:
-            slack_user_id = response['authed_user']['id']
             slack_bot_token = response['access_token']
+            team_id = response['team']['id']
             user = self.user_persistence.get_user_by_id(user_id)
             if user:
-                self.save_integration(domain_id, slack_bot_token, user)
+                self.save_integration(domain_id, slack_bot_token, user, team_id)
                 return {'status': 'SUCCESS', 'user_id': user_id}
             else:
                 return {'status': "Maximiz user not found"}
         else:
             return {'status': "OAuth failed"}
     
+    def get_bot_token_by_slack_team_id(self, team_id):
+        user_integration = self.integrations_persistence.get_credential(slack_team_id=team_id)
+        if user_integration:
+            return user_integration.access_token
+    
+    def handle_app_home_opened(self, user_id, team_id):
+        bot_token = self.get_bot_token_by_slack_team_id(team_id)
+        if not bot_token:
+            logger.error(f"Error sending message: {e.response['error']}")
+            
+        client = WebClient(token=bot_token)
+        try:
+            client.chat_postMessage(
+                channel=user_id,
+                text="Welcome to App Home! I'll share updates via Contacts using the Maximize app."
+            )
+        except SlackApiError as e:
+            logger.error(f"Error sending message: {e.response['error']}")
+
+    def handle_app_uninstalled(self, team_id):
+        self.integrations_persistence.delete_integration_by_slack_team_id(team_id=team_id)
+        logger.debug("App was uninstalled. Performing cleanup...")
+    
     def slack_events(self, data):
+        team_id = data.get("team_id")
         event = data.get("event", {})
-        if event.get("type") == "app_home_opened":
-            client = WebClient(token=SlackConfig.bot_user_OAuth_token)
-            channel = event.get("user")
-            try:
-                client.chat_postMessage(
-                    channel=channel,
-                    text="Welcome to App Home! I'll share updates via Contacts using the Maximize app."
-                )
-            except SlackApiError as e:
-                logger.error(f"Error sending message: {e.response['error']}")
+        event_type = event.get("type")
+        user_id = event.get("user")
+
+        if event_type == "app_home_opened":
+            self.handle_app_home_opened(user_id, team_id)
+
+        elif event_type == "app_uninstalled":
+            self.handle_app_uninstalled(team_id)
 
     def create_channel(self, domain_id, channel_name, is_private=False):
         user_integration = self.get_credential(domain_id)

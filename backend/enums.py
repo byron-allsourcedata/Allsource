@@ -11,7 +11,10 @@ class OauthShopify(Enum):
     NEED_UPGRADE_PLAN = 'NEED_UPGRADE_PLAN'
     ERROR_SHOPIFY_TOKEN = 'ERROR_SHOPIFY_TOKEN'
     NON_SHOPIFY_ACCOUNT = 'NON_SHOPIFY_ACCOUNT'
-    
+
+class BusinessType(Enum):
+    D2C = 'd2c'
+    B2B = 'b2b'
     
 class SourcePlatformEnum(Enum):
     SHOPIFY = 'shopify'

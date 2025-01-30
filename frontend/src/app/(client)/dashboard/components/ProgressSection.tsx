@@ -74,7 +74,7 @@ export const ProgressSection: React.FC = () => {
   const meItem =
     typeof window !== "undefined" ? sessionStorage.getItem("me") : null;
   const meData = meItem ? JSON.parse(meItem) : { percent_steps: 0 };
-  const percentSteps = userPercentSteps || meData.percent_steps;
+  const percentSteps = userPercentSteps || meData.activate_percent;
   const isIntegrateDisabled = percentSteps < 90;
   const isSetupDisabled = percentSteps < 50;
   const [isLoading, setIsLoading] = useState(false);

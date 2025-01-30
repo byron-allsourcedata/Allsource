@@ -16,6 +16,7 @@ import CalendarPopup from "@/components/CustomCalendar";
 import PartnersOverview from "./components/PartnersOverview";
 import PartnersRewards from "./components/PartnersRewards";
 import InvitePartnerPopup from "@/components/InvitePartnerPopup"
+import { useUser } from "@/context/UserContext";
 
 const centerContainerStyles = {
     display: 'flex',
@@ -80,6 +81,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
 const Partners: React.FC = () => {
     const { hasNotification } = useNotification();
     const [email, setEmail] = useState('');
+    const { backButton } = useUser()
     const [commission, setCommission] = useState(0);
     const [id, setId] = useState(0)
     const [formPopupOpen, setFormPopupOpen] = useState(false);
@@ -204,7 +206,7 @@ const Partners: React.FC = () => {
                         <Box sx={{ flexShrink: 0, display: 'flex', justifyContent: "space-between", flexDirection: 'row', alignItems: 'center', width: '15%', gap: 1, "@media (max-width: 900px)": { width: '20%' }, "@media (max-width: 600px)": { mb: 2, width: '97%' }, "@media (max-width: 440px)": { mb: 1 }, }}>
                             <Box sx={{display: 'flex', justifyContent: "space-between", alignItems: 'center', gap: 1}}>
                                 <Typography className="first-sub-title">{isMaster ? "Master Partner" : "Partner"}</Typography>
-                                <Box sx={{ "@media (max-width: 600px)": { display: 'none' } }}><CustomTooltip title={"Collaborate with trusted partners to access exclusive resources and services that drive success."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/referral" /></Box>
+                                <Box sx={{ "@media (max-width: 600px)": { display: 'none' } }}><CustomTooltip title={"Collaborate with trusted partners to access exclusive resources and services that drive success."} linkText="Learn more" linkUrl={isMaster ? "https://maximizai.zohodesk.eu/portal/en/kb/articles/master-partner" :"https://maximizai.zohodesk.eu/portal/en/kb/articles/partner"} /></Box>
                             </Box>
                             {tabIndex === 0 && <IconButton sx={{
                                 display: "none", cursor: "pointer", "@media (max-width: 600px)": { display: "block" }}} onClick={handleFormOpenPopup}>
@@ -420,7 +422,7 @@ const Partners: React.FC = () => {
                     
                     }
 
-                    {(tabIndex === 1 || tabIndex == 2 && isMaster) &&  <Button
+                    {(tabIndex === 1 || tabIndex == 2 && isMaster && !rewardsOpen) &&  <Button
                                 aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
                                 aria-haspopup="true"
                                 aria-expanded={isCalendarOpen ? 'true' : undefined}
@@ -495,11 +497,11 @@ const Partners: React.FC = () => {
                             <PartnersAccounts setLoading={setLoading} appliedDates={appliedDates} />
                         </TabPanel>
                     </Box>
-                    <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
+                    {!backButton && isMaster && <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
                         <TabPanel value={tabIndex} index={isMaster ? 2 : 1}>
-                            <PartnersMain setLoading={setLoading} appliedDates={appliedDates} masterId={id} />
+                            <PartnersMain setLoading={setLoading} loading={loading} appliedDates={appliedDates} masterId={id} setRewardsOpen={setRewardsOpen}/>
                         </TabPanel>
-                    </Box>
+                    </Box>}
                     <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
                         <TabPanel value={tabIndex} index={isMaster ? 3 : 2}>
                             <PartnersRewards loading={loading} partnerId={id} isMaster={isMaster ?? false} setLoading={setLoading} setRewardsOpen={setRewardsOpen}/>

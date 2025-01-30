@@ -317,18 +317,18 @@ const AccountSetup = () => {
         const sanitizedValue = value.replace(/^www\./, '');
         const websiteRe = /^(https?:\/\/)?([\da-z.-]+)\.([a-z]{2,20})([/\w .-]*)*\/?$/i;
         return websiteRe.test(sanitizedValue) ? "" : "Invalid website URL";
-        case "organizationName":
-          const orgName = value.trim();
-        
-          const hasLetter = /[a-zA-Zа-яА-Я0-9]/.test(orgName);
-        
-          if (!orgName) {
-            return "Organization name is required";
-          } else if (!hasLetter) {
-            return "Organization name must contain at least one letter";
-          }
-        
-          return "";
+      case "organizationName":
+        const orgName = value.trim();
+
+        const hasLetter = /[a-zA-Zа-яА-Я0-9]/.test(orgName);
+
+        if (!orgName) {
+          return "Organization name is required";
+        } else if (!hasLetter) {
+          return "Organization name must contain at least one letter";
+        }
+
+        return "";
       default:
         return "";
     }
@@ -408,18 +408,18 @@ const AccountSetup = () => {
 
   const handleWebsiteLink = (event: { target: { value: string } }) => {
     let input = event.target.value.trim();
-  
+
     if (!input.startsWith("http://") && !input.startsWith("https://")) {
       input = `https://${input}`;
     }
-  
+
     try {
       const url = new URL(input);
-  
+
       const sanitizedInput = url.origin;
-  
+
       setWebsiteLink(sanitizedInput);
-  
+
       const websiteError = validateField(sanitizedInput, "website");
       setErrors((prevErrors) => ({
         ...prevErrors,
@@ -433,7 +433,7 @@ const AccountSetup = () => {
       }));
     }
   };
-  
+
 
 
 
@@ -778,7 +778,7 @@ const AccountSetup = () => {
                 lineHeight: "normal !important",
                 padding: 0,
                 marginRight: 1.5,
-                marginLeft: (visibleButton || backButton) ? 0: 2.5,
+                marginLeft: (visibleButton || backButton) ? 0 : 2.5,
                 color:
                   activeTab === 0
                     ? "#F45745"
@@ -1081,7 +1081,7 @@ const AccountSetup = () => {
                   </Button>
                 ))}
               </Box>
-              <Typography variant="body1" className="first-sub-title" sx={styles.text}>
+              {/* <Typography variant="body1" className="first-sub-title" sx={styles.text}>
                 Select the type of business you have
               </Typography>
               {errors.typeBusiness && (
@@ -1103,7 +1103,7 @@ const AccountSetup = () => {
                     <Typography className="form-input" sx={{ padding: '3px' }}> {range.label}</Typography>
                   </Button>
                 ))}
-              </Box>
+              </Box> */}
               <Typography variant="body1" className="first-sub-title" sx={styles.text}>
                 Whats your role?
               </Typography>
@@ -1484,7 +1484,6 @@ const AccountSetup = () => {
                   </Button>
                 </>
               }
-
             </>
           }
           {/* {activeTab === 3 && (

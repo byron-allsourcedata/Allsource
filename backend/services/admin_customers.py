@@ -89,7 +89,7 @@ class AdminCustomersService:
                 creating_data = {
                     'user_id': user.id,
                     'join_date': datetime.now(timezone.utc),
-                    "full_name": user.full_name,
+                    "name": user.full_name,
                     "email": user.email,
                     "company_name": user.company_name,
                     "commission": commission,

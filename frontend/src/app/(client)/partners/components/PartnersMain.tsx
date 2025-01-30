@@ -21,6 +21,7 @@ import SwapVertIcon from '@mui/icons-material/SwapVert';
 import SearchIcon from '@mui/icons-material/Search';
 import InvitePartnerPopup from "@/components/InvitePartnerPopup"
 import EnablePartnerPopup from "@/components/EnablePartnerPopup"
+import PartnersAccounts from "@/components/PartnersAccounts"
 import { showErrorToast, showToast } from '@/components/ToastNotification';
 import { useRouter } from "next/navigation";
 
@@ -73,9 +74,11 @@ const getStatusStyle = (status: string) => {
 };
 
 interface PartnersProps {
-    setLoading: any;
+    setLoading: (state: boolean) => void;
+    loading: boolean;
     appliedDates: { start: Date | null; end: Date | null };
     masterId: number;
+    setRewardsOpen: (state: boolean) => void;
 }
 
 interface PartnerState {
@@ -100,7 +103,7 @@ interface EnabledPartner {
 
 type CombinedPartnerData = NewPartner & EnabledPartner;
 
-const TruncatedText: React.FC<{ text: string; limit: number }> = ({ text, limit }) => {
+const TruncatedText: React.FC<{ text: string; limit: number, status: string }> = ({ text, limit, status }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const shouldTruncate = text.length > limit;
 
@@ -109,8 +112,8 @@ const TruncatedText: React.FC<{ text: string; limit: number }> = ({ text, limit 
     };
 
     return (
-        <Box onClick={handleToggleExpand} sx={{ cursor: shouldTruncate ? 'pointer' : 'pointer' }}>
-            <Typography className="table-data" sx={{ color: 'rgba(80, 82, 178, 1) !important', display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis', WebkitLineClamp: isExpanded ? 'none' : 3 }}>
+        <Box onClick={handleToggleExpand} sx={{ cursor: (shouldTruncate && status !== 'Invitation sent' ) ? 'pointer' : 'default' }}>
+            <Typography className="table-data" sx={{maxWidth: '120px', color:status === 'Invitation sent' ? '' : 'rgba(80, 82, 178, 1) !important', display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', textWrap: 'wrap', textOverflow: 'ellipsis', WebkitLineClamp: isExpanded ? 'none' : 3 }}>
                 {isExpanded ? text : text.substring(0, limit) + (shouldTruncate ? '...' : '')}
             </Typography>
         </Box>
@@ -118,7 +121,7 @@ const TruncatedText: React.FC<{ text: string; limit: number }> = ({ text, limit 
 };
 
 
-const PartnersMain: React.FC<PartnersProps> = ({ setLoading, masterId, appliedDates }) => {
+const PartnersMain: React.FC<PartnersProps> = ({ setLoading, loading, masterId, appliedDates, setRewardsOpen }) => {
     const router = useRouter();
     const [partners, setPartners] = useState<PartnerData[]>([]);
     const [partnerStates, setPartnerStates] = useState<PartnerState[]>([])
@@ -135,6 +138,9 @@ const PartnersMain: React.FC<PartnersProps> = ({ setLoading, masterId, appliedDa
     const [fileData, setFileData] = useState<NewPartner>({ id: 0, email: "", fullName: "", companyName: "", commission: "" });
     const [enabledData, setEnabledData] = useState<EnabledPartner>({ id: 0 });
     const [selectedRowData, setSelectedRowData] = useState<any>(null);
+    const [accountPage, setAccountPage] = useState(false);
+    const [accountName, setAccountName] = useState<string>();
+    const [id, setId] = useState<number | null>(null);
     const [errorResponse, setErrosResponse] = useState(false);
 
     const tableHeaders = [
@@ -282,8 +288,9 @@ const PartnersMain: React.FC<PartnersProps> = ({ setLoading, masterId, appliedDa
         );
     };
 
-    const handleLogin = async (user_account_id: number) => {
+    const handleLogin = async (user_account_id: number, status: string) => {
         try {
+            if (status !== 'Invitation sent'){
             setLoading(true)
             const response = await axiosInstance.get('/partners/generate-token', {
                 params: {
@@ -295,8 +302,6 @@ const PartnersMain: React.FC<PartnersProps> = ({ setLoading, masterId, appliedDa
                 const current_domain = sessionStorage.getItem('current_domain')
                 sessionStorage.setItem('parent_domain', current_domain || '')
                 if (current_token) {
-                    setBackButton(true)
-                    triggerBackButton()
                     localStorage.setItem('parent_token', current_token)
                     localStorage.setItem('token', response.data.token)
                     sessionStorage.removeItem('current_domain')
@@ -304,9 +309,11 @@ const PartnersMain: React.FC<PartnersProps> = ({ setLoading, masterId, appliedDa
                     await fetchUserData()
                     router.push('/dashboard')
                     router.refresh()
+                    setBackButton(true)
+                    triggerBackButton()
                 }
             }
-        }
+        }}
         catch {
         }
         finally {
@@ -394,245 +401,262 @@ const PartnersMain: React.FC<PartnersProps> = ({ setLoading, masterId, appliedDa
         }
     };
 
+    const handleBack = () => {
+        setAccountPage(false);
+        setRewardsOpen(false)
+    };
+
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', gap: "24px", justifyContent: 'space-between' }}>
-            <Box sx={{
-                backgroundColor: '#fff',
-                width: '100%',
-                padding: 0,
-                margin: '0 auto',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                minHeight: '77vh',
-                '@media (max-width: 600px)': { margin: '0rem auto 0rem' }
-            }}>
-                <Box>
-                    <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', mb: 6, alignItems: 'center', gap: 2 }}>
-                    </Box>
+        <>
+            {accountPage && <PartnersAccounts accountName={accountName} onBack={handleBack} id={id} fromMain={true} setLoading={setLoading} loading={loading}/>}
+            {!accountPage &&
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', gap: "24px", justifyContent: 'space-between' }}>
+                <Box sx={{
+                    backgroundColor: '#fff',
+                    width: '100%',
+                    padding: 0,
+                    margin: '0 auto',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    minHeight: '77vh',
+                    '@media (max-width: 600px)': { margin: '0rem auto 0rem' }
+                }}>
+                    <Box>
+                        <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', mb: 6, alignItems: 'center', gap: 2 }}>
+                        </Box>
 
-                    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                        <TableContainer sx={{
-                            border: '1px solid #EBEBEB',
-                            borderRadius: '4px 4px 0px 0px',
-                        }}>
-                            <Table>
-                                <TableHead>
-                                    <TableRow>
-                                        {tableHeaders.map(({ key, label, sortable }) => (
-                                            <TableCell
-                                                key={key}
-                                                sx={{
-                                                    ...suppressionsStyles.tableColumn,
-                                                    paddingLeft: "16px",
-                                                    cursor: sortable ? 'pointer' : 'default',
-                                                    ...(key === 'partner_name' && {
-                                                        position: 'sticky',
-                                                        left: 0,
-                                                        zIndex: 99,
-                                                        backgroundColor: '#fff',
-
-                                                    })
-                                                }}
-                                                onClick={sortable ? () => handleSortRequest(key) : undefined}
-                                            >
-                                                <Box sx={{ display: 'flex', alignItems: 'center' }} style={key === "status" || key === "actions" ? { justifyContent: "center" } : {}}>
-                                                    <Typography variant="body2" className='table-heading'>{label}</Typography>
-                                                    {sortable && (
-                                                        <IconButton size="small" sx={{ ml: 1 }}>
-                                                            {orderBy === key ? (
-                                                                order === 'asc' ? (
-                                                                    <ArrowUpwardIcon fontSize="inherit" />
-                                                                ) : (
-                                                                    <ArrowDownwardIcon fontSize="inherit" />
-                                                                )
-                                                            ) : (
-                                                                <SwapVertIcon fontSize="inherit" />
-                                                            )}
-                                                        </IconButton>
-                                                    )}
-                                                </Box>
-                                            </TableCell>
-                                        ))}
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {partners.map((data) => {
-                                        const isActive = partnerStates.find((p: any) => p.id === data.id)?.isActive;
-                                        return (
-                                            <TableRow key={data.id} sx={{
-                                                ...suppressionsStyles.tableBodyRow,
-                                                '&:hover': {
-                                                    backgroundColor: '#F7F7F7',
-                                                    '& .sticky-cell': {
-                                                        backgroundColor: '#F7F7F7',
-                                                    }
-                                                },
-                                            }}>
-                                                <TableCell className='table-data sticky-cell'
-                                                    onClick={() => handleLogin(data.id)}
+                        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                            <TableContainer sx={{
+                                border: '1px solid #EBEBEB',
+                                borderRadius: '4px 4px 0px 0px',
+                            }}>
+                                <Table>
+                                    <TableHead>
+                                        <TableRow>
+                                            {tableHeaders.map(({ key, label, sortable }) => (
+                                                <TableCell
+                                                    key={key}
                                                     sx={{
-                                                        ...suppressionsStyles.tableBodyColumn,
+                                                        ...suppressionsStyles.tableColumn,
                                                         paddingLeft: "16px",
-                                                        minWidth: '155px',
-                                                        maxWidth: '155px',
-                                                        position: 'sticky',
-                                                        justifyContent: 'space-between',
-                                                        left: 0,
-                                                        zIndex: 1,
-                                                        cursor: 'pointer',
-                                                        backgroundColor: '#fff',
-                                                        "&:hover .icon-button": {
-                                                            display: "flex",
-                                                        },
-                                                    }}>
+                                                        cursor: sortable ? 'pointer' : 'default',
+                                                        // ...(key === 'partner_name' && {
+                                                        //     position: 'sticky',
+                                                        //     left: 0,
+                                                        //     zIndex: 99,
+                                                        //     backgroundColor: '#fff',
 
-                                                    <Box
+                                                        // })
+                                                    }}
+                                                    onClick={sortable ? () => handleSortRequest(key) : undefined}
+                                                >
+                                                    <Box sx={{ display: 'flex', alignItems: 'center' }} style={key === "status" || key === "actions" ? { justifyContent: "center" } : {}}>
+                                                        <Typography variant="body2" className='table-heading'>{label}</Typography>
+                                                        {sortable && (
+                                                            <IconButton size="small" sx={{ ml: 1 }}>
+                                                                {orderBy === key ? (
+                                                                    order === 'asc' ? (
+                                                                        <ArrowUpwardIcon fontSize="inherit" />
+                                                                    ) : (
+                                                                        <ArrowDownwardIcon fontSize="inherit" />
+                                                                    )
+                                                                ) : (
+                                                                    <SwapVertIcon fontSize="inherit" />
+                                                                )}
+                                                            </IconButton>
+                                                        )}
+                                                    </Box>
+                                                </TableCell>
+                                            ))}
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {partners.map((data) => {
+                                            const isActive = partnerStates.find((p: any) => p.id === data.id)?.isActive;
+                                            return (
+                                                <TableRow key={data.id} sx={{
+                                                    ...suppressionsStyles.tableBodyRow,
+                                                    '&:hover': {
+                                                        backgroundColor: '#F7F7F7',
+                                                        '& .sticky-cell': {
+                                                            backgroundColor: '#F7F7F7',
+                                                        }
+                                                    },
+                                                }}>
+                                                    <TableCell className='table-data sticky-cell'
                                                         sx={{
-                                                            display: "flex",
-                                                            alignItems: "center",
-                                                            justifyContent: "start",
-                                                            color: "rgba(80, 82, 178, 1)",
-                                                            gap: 0,
+                                                            ...suppressionsStyles.tableBodyColumn,
+                                                            paddingLeft: "16px",
+                                                            minWidth: '155px',
+                                                            maxWidth: '155px',
+                                                            position: 'sticky',
+                                                            justifyContent: 'space-between',
+                                                            left: 0,
+                                                            zIndex: 1,
+                                                            cursor: data.status === 'Invitation sent' ?  'default' : 'pointer',
+                                                            backgroundColor: '#fff',
                                                             "&:hover .icon-button": {
                                                                 display: "flex",
                                                             },
                                                         }}
-                                                    >
+                                                            onClick={() => {
+                                                                setAccountName(data.partner_name)
+                                                                setId(data.id)
+                                                                setAccountPage(true)
+                                                                setRewardsOpen(true)
+                                                            }}>
 
-                                                        <TruncatedText text={data.company_name || '--'} limit={15} />
-                                                        {data.status !== 'Invitation sent' &&
-                                                            <IconButton
-                                                                className="icon-button"
-                                                                sx={{
+                                                        <Box
+                                                            sx={{
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                overflowWrap: 'break-word',
+                                                                justifyContent: 'space-between',
+                                                                color: "rgba(80, 82, 178, 1)",
+                                                                gap: 0,
+                                                                "&:hover .icon-button": {
                                                                     display: "flex",
-                                                                    alignItems: "center",
-                                                                    justifyContent: "space-between",
-                                                                    color: "rgba(80, 82, 178, 1)",
-                                                                    gap: 0,
-                                                                    "&:hover .icon-button": {
-                                                                        display: "flex",
-                                                                    },
-                                                                }}
-                                                            >
-                                                                <Image src="/outband.svg" alt="outband" width={15.98} height={16} />
-                                                            </IconButton>
-                                                        }
-                                                    </Box>
-                                                </TableCell>
+                                                                },
+                                                            }}
+                                                        >
+                                                            
+                                                            <TruncatedText  text={data.company_name || '--'} limit={15} status={data.status} />
+                                                            
+                                                            
+                                                            {data.status !== 'Invitation sent' &&
+                                                                <IconButton
+                                                                    onClick={() => handleLogin(data.id, data.status)}
+                                                                    className="icon-button"
+                                                                    sx={{
+                                                                        display: "none",
+                                                                        alignItems: "center",
+                                                                        color: "rgba(80, 82, 178, 1)",
+                                                                        gap: 0,
+                                                                        "&:hover .icon-button": {
+                                                                            display: "flex",
+                                                                        },
+                                                                    }}
+                                                                >
+                                                                    <Image src="/outband.svg" alt="outband" width={15.98} height={16} />
+                                                                </IconButton>
+                                                            }
+                                                        </Box>
+                                                    </TableCell>
 
-                                                <TableCell className='table-data' sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px" }}>
-                                                    {data.email}
-                                                </TableCell>
+                                                    <TableCell className='table-data' sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px" }}>
+                                                        {data.email}
+                                                    </TableCell>
 
-                                                <TableCell className='table-data' sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px" }}>
-                                                    {dayjs(data.join_date).isValid() ? dayjs(data.join_date).format('MMM D, YYYY') : '--'}
-                                                </TableCell>
+                                                    <TableCell className='table-data' sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px" }}>
+                                                        {dayjs(data.join_date).isValid() ? dayjs(data.join_date).format('MMM D, YYYY') : '--'}
+                                                    </TableCell>
 
-                                                <TableCell className='table-data' sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px" }}>
-                                                    {data.count}
-                                                </TableCell>
+                                                    <TableCell className='table-data' sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px" }}>
+                                                        {data.count}
+                                                    </TableCell>
 
-                                                <TableCell className='table-data' sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px" }}>
-                                                    {data.commission}
-                                                </TableCell>
+                                                    <TableCell className='table-data' sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px" }}>
+                                                        {data.commission}
+                                                    </TableCell>
 
-                                                <TableCell className='table-data' sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px" }}>
-                                                    {data.reward_amount ?? '--'}
-                                                </TableCell>
+                                                    <TableCell className='table-data' sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px" }}>
+                                                        {data.reward_amount ?? '--'}
+                                                    </TableCell>
 
-                                                <TableCell className='table-data' sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px" }}>
-                                                    {data.reward_status ?? '--'}
-                                                </TableCell>
+                                                    <TableCell className='table-data' sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px" }}>
+                                                        {data.reward_status ?? '--'}
+                                                    </TableCell>
 
-                                                <TableCell className='table-data' sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px" }}>
-                                                    {dayjs(data.reward_payout_date).isValid() ? dayjs(data.reward_payout_date).format('MMM D, YYYY') : '--'}
-                                                </TableCell>
+                                                    <TableCell className='table-data' sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px" }}>
+                                                        {dayjs(data.reward_payout_date).isValid() ? dayjs(data.reward_payout_date).format('MMM D, YYYY') : '--'}
+                                                    </TableCell>
 
-                                                <TableCell className='table-data' sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px" }}>
-                                                    {dayjs(data.last_payment_date).isValid() ? dayjs(data.last_payment_date).format('MMM D, YYYY') : '--'}
-                                                </TableCell>
+                                                    <TableCell className='table-data' sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px" }}>
+                                                        {dayjs(data.last_payment_date).isValid() ? dayjs(data.last_payment_date).format('MMM D, YYYY') : '--'}
+                                                    </TableCell>
 
-                                                <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
-                                                    <Toggle isActive={isActive || false} onToggle={() => handleStatusChange(data.id)} />
-                                                </TableCell>
+                                                    <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
+                                                        <Toggle isActive={isActive || false} onToggle={() => handleStatusChange(data.id)} />
+                                                    </TableCell>
 
-                                                <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
-                                                    <Box sx={{ display: "flex", justifyContent: "center" }}>
-                                                        <Typography component="div" sx={{
-                                                            width: "100px",
-                                                            margin: 0,
-                                                            background: getStatusStyle(data.isActive ? data.status : "Inactive").background,
-                                                            padding: '3px 8px',
-                                                            borderRadius: '2px',
-                                                            fontFamily: 'Roboto',
-                                                            fontSize: '12px',
-                                                            fontWeight: '400',
-                                                            lineHeight: '16px',
-                                                            color: getStatusStyle(data.isActive ? data.status : "Inactive").color,
-                                                        }}>
-                                                            {data.isActive ? data.status : "Inactive"}
-                                                        </Typography>
-                                                    </Box>
-                                                </TableCell>
-                                                <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
-                                                    <IconButton onClick={(event) => handleOpenMenu(event, data)} sx={{ ':hover': { backgroundColor: 'transparent', } }} >
-                                                        <Image src='/edit-partner.svg' alt='edit' height={16.18} width={22.91} />
-                                                    </IconButton>
-                                                </TableCell>
-                                            </TableRow>
-                                        )
-                                    })}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                        {errorResponse && (
-                            <Box sx={suppressionsStyles.centerContainerStyles}>
-                                <Typography variant="h5" sx={{
-                                    mb: 3,
-                                    fontFamily: 'Nunito Sans',
-                                    fontSize: "20px",
-                                    color: "#4a4a4a",
-                                    fontWeight: "600",
-                                    lineHeight: "28px"
-                                }}>
-                                    Data not matched yet!
-                                </Typography>
-                                <Image src='/no-data.svg' alt='No Data' height={250} width={300} />
-                                <Typography variant="body1" color="textSecondary"
-                                    sx={{
-                                        mt: 3,
+                                                    <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
+                                                        <Box sx={{ display: "flex", justifyContent: "center" }}>
+                                                            <Typography component="div" sx={{
+                                                                width: "100px",
+                                                                margin: 0,
+                                                                background: getStatusStyle(data.isActive ? data.status : "Inactive").background,
+                                                                padding: '3px 8px',
+                                                                borderRadius: '2px',
+                                                                fontFamily: 'Roboto',
+                                                                fontSize: '12px',
+                                                                fontWeight: '400',
+                                                                lineHeight: '16px',
+                                                                color: getStatusStyle(data.isActive ? data.status : "Inactive").color,
+                                                            }}>
+                                                                {data.isActive ? data.status : "Inactive"}
+                                                            </Typography>
+                                                        </Box>
+                                                    </TableCell>
+                                                    <TableCell sx={{ ...suppressionsStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
+                                                        <IconButton onClick={(event) => handleOpenMenu(event, data)} sx={{ ':hover': { backgroundColor: 'transparent', } }} >
+                                                            <Image src='/edit-partner.svg' alt='edit' height={16.18} width={22.91} />
+                                                        </IconButton>
+                                                    </TableCell>
+                                                </TableRow>
+                                            )
+                                        })}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                            {errorResponse && (
+                                <Box sx={suppressionsStyles.centerContainerStyles}>
+                                    <Typography variant="h5" sx={{
+                                        mb: 3,
                                         fontFamily: 'Nunito Sans',
-                                        fontSize: "14px",
-                                        color: "#808080",
+                                        fontSize: "20px",
+                                        color: "#4a4a4a",
                                         fontWeight: "600",
-                                        lineHeight: "20px"
+                                        lineHeight: "28px"
                                     }}>
-                                    No Invitee joined from the referreal link.
-                                </Typography>
-                            </Box>
-                        )}
+                                        Data not matched yet!
+                                    </Typography>
+                                    <Image src='/no-data.svg' alt='No Data' height={250} width={300} />
+                                    <Typography variant="body1" color="textSecondary"
+                                        sx={{
+                                            mt: 3,
+                                            fontFamily: 'Nunito Sans',
+                                            fontSize: "14px",
+                                            color: "#808080",
+                                            fontWeight: "600",
+                                            lineHeight: "20px"
+                                        }}>
+                                        No Invitee joined from the referreal link.
+                                    </Typography>
+                                </Box>
+                            )}
+                        </Box>
+                        <InvitePartnerPopup
+                            masterId={masterId}
+                            updateOrAddAsset={updateOrAddAsset}
+                            fileData={fileData}
+                            open={formPopupOpen}
+                            onClose={handleFormClosePopup} />
                     </Box>
-                    <InvitePartnerPopup
-                        masterId={masterId}
-                        updateOrAddAsset={updateOrAddAsset}
-                        fileData={fileData}
-                        open={formPopupOpen}
-                        onClose={handleFormClosePopup} />
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'end' }}>
-                    <CustomTablePagination
-                        count={totalCount}
-                        page={page}
-                        rowsPerPage={allowedRowsPerPage.includes(rowsPerPage) ? rowsPerPage : 10}
-                        onPageChange={handlePageChange}
-                        onRowsPerPageChange={handleRowsPerPageChange}
-                        rowsPerPageOptions={[10, 25, 50, 100]}
-                    />
-                </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'end' }}>
+                        <CustomTablePagination
+                            count={totalCount}
+                            page={page}
+                            rowsPerPage={allowedRowsPerPage.includes(rowsPerPage) ? rowsPerPage : 10}
+                            onPageChange={handlePageChange}
+                            onRowsPerPageChange={handleRowsPerPageChange}
+                            rowsPerPageOptions={[10, 25, 50, 100]}
+                        />
+                    </Box>
 
-            </Box>
-        </Box>
+                </Box>
+            </Box>}
+        </>
     );
 };
 

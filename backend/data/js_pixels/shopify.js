@@ -230,7 +230,7 @@ function PixelSendFunction(params) {
             boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
             border: "1px solid #ccc",
             width: "400px",
-            zIndex: "999",
+            zIndex: "9999",
             padding: "1rem",
         });
 

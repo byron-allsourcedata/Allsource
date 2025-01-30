@@ -58,7 +58,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         setEmail(storedData.email);
         setFullName(storedData.full_name);
         setWebsite(storedData.company_website);
-        setPercent(storedData.percent_steps);
+        setPercent(storedData.activate_percent);
         setIsTrialPending(storedData.is_trial_pending);
         setDomans(storedData.domains);
         setIsPartner(storedData.partner)
@@ -76,7 +76,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
                 setEmail(userData.email);
                 setFullName(userData.full_name);
                 setWebsite(userData.company_website);
-                setPercent(userData.percent_steps);
+                setPercent(userData.activate_percent);
                 setIsTrialPending(userData.is_trial_pending);
                 setDomans(userData.domains);
                 setIsPartner(userData.partner)
@@ -94,7 +94,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
             setEmail(userData.email);
             setFullName(userData.full_name);
             setWebsite(userData.company_website);
-            setPercent(userData.percent_steps);
+            setPercent(userData.activate_percent);
             setIsTrialPending(userData.is_trial_pending);
             setDomans(userData.domains);
             setIsPartner(userData.partner)
