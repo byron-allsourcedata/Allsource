@@ -66,6 +66,7 @@ class UserLoginFormResponse(BaseModel):
 
 class PixelFormResponse(BaseModel):
     status: PixelStatus
+    need_reload_page: bool
 
 
 class UserLoginForm(BaseModel):

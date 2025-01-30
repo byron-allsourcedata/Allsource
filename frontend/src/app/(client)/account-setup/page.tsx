@@ -151,39 +151,39 @@ const AccountSetup = () => {
     }
   }
 
-  useEffect(() => {
-    const fetchCompanyInfo = async () => {
-      try {
-        const response = await axiosInterceptorInstance.get("/company-info");
+  // useEffect(() => {
+  //   const fetchCompanyInfo = async () => {
+  //     try {
+  //       const response = await axiosInterceptorInstance.get("/company-info");
 
-        const status = response.data.status;
-        const domain_url = response.data.domain_url
-        if (domain_url) {
-          setWebsiteLink(domain_url)
-          setDomainLink(domain_url)
-        }
+  //       const status = response.data.status;
+  //       const domain_url = response.data.domain_url
+  //       if (domain_url) {
+  //         setWebsiteLink(domain_url)
+  //         setDomainLink(domain_url)
+  //       }
 
-        switch (status) {
-          case "SUCCESS":
-            break;
-          case "NEED_EMAIL_VERIFIED":
-            router.push("/email-verificate");
-            break;
-          case "NEED_CHOOSE_PLAN":
-            router.push("/settings?section=subscription");
-            break;
-          case "DASHBOARD_ALLOWED":
-            router.push("/dashboard");
-            break;
-          default:
-            console.error("Unknown status:", status);
-        }
-      } catch (error) {
-        console.error("Error fetching company info:", error);
-      }
-    };
-    fetchCompanyInfo();
-  }, [router]);
+  //       switch (status) {
+  //         case "SUCCESS":
+  //           break;
+  //         case "NEED_EMAIL_VERIFIED":
+  //           router.push("/email-verificate");
+  //           break;
+  //         case "NEED_CHOOSE_PLAN":
+  //           router.push("/settings?section=subscription");
+  //           break;
+  //         case "DASHBOARD_ALLOWED":
+  //           router.push("/dashboard");
+  //           break;
+  //         default:
+  //           console.error("Unknown status:", status);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching company info:", error);
+  //     }
+  //   };
+  //   fetchCompanyInfo();
+  // }, [router]);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -239,31 +239,6 @@ const AccountSetup = () => {
         border: '1px solid #f45745'
       }
       : { ...styles.roleButton, color: "#707071" };
-  };
-
-  const style = {
-    position: 'fixed' as 'fixed',
-    top: 0,
-    right: 0,
-    width: '45%',
-    height: '100%',
-    bgcolor: 'background.paper',
-    boxShadow: 24,
-    p: 4,
-    display: 'flex',
-    flexDirection: 'column',
-    transition: 'transform 0.3s ease-in-out',
-    transform: 'translateX(100%)',
-    '@media (max-width: 600px)': {
-      width: '100%',
-      height: '100%',
-      p: 0
-    },
-  };
-  
-  const openStyle = {
-    transform: 'translateX(0%)',
-    right: 0,
   };
 
   const maintext = {
@@ -520,7 +495,7 @@ const AccountSetup = () => {
 
   const handleNextClick = () => {
     if (activeTab === 1) {
-      // handleSubmit()
+      handleSubmit()
     }
     let isMatched = false;
 
@@ -546,8 +521,6 @@ const AccountSetup = () => {
   };
 
   const handleCancel = () => {
-    console.log("Pixel code is installed successfully!")
-    showToast('Pixel code is installed successfully!')
     method_installingPixel.forEach(({ label, setState }) => {
       if (selectedMethodInstall === label) {
         setState(false);
@@ -573,13 +546,12 @@ const AccountSetup = () => {
       }
 
 
-      axiosInstance.post("/install-pixel/check-pixel-installed-parse", { url })
+      axiosInstance.post("/install-pixel/check-pixel-installed-parse", { url, need_reload_page: true })
             .then(response => {
                 const status = response.data.status;
                 if (status === "PIXEL_CODE_INSTALLED") {
-                    // alert("Pixel code is installed successfully!");
-                    endSetup()
                     showToast('Pixel code is installed successfully!');
+                    endSetup()
                 }
             })
             .catch(error => {
@@ -1082,7 +1054,7 @@ const AccountSetup = () => {
                   </Button>
                 ))}
               </Box>
-              {/* <Typography variant="body1" className="first-sub-title" sx={styles.text}>
+              <Typography variant="body1" className="first-sub-title" sx={styles.text}>
                 Select the type of business you have
               </Typography>
               {errors.typeBusiness && (
@@ -1104,7 +1076,7 @@ const AccountSetup = () => {
                     <Typography className="form-input" sx={{ padding: '3px' }}> {range.label}</Typography>
                   </Button>
                 ))}
-              </Box> */}
+              </Box>
               <Typography variant="body1" className="first-sub-title" sx={styles.text}>
                 Whats your role?
               </Typography>

@@ -303,7 +303,6 @@ def check_user_authorization(Authorization: Annotated[str, Header()],
             get_users_auth_service)) -> Token:
     user = check_user_authentication(Authorization, user_persistence_service)
     auth_status = get_user_authorization_status(user, users_auth_service)
-    print("auth_status", auth_status)
     if auth_status == UserAuthorizationStatus.PAYMENT_NEEDED:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -405,8 +404,6 @@ def check_domain(
         domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)
 ) -> UserDomains:
     current_domain = domain_persistence.get_domains_by_user(user.get('id'), domain_substr=CurrentDomain)
-    print("CurrentDomain", CurrentDomain)
-    print("current_domain", current_domain)
     if not CurrentDomain:
         return None
     if not current_domain or len(current_domain) == 0:

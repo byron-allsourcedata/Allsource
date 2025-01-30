@@ -35,7 +35,7 @@ class UserDomainsService:
         ]
     
     def update_domain(self, user_id: int, request: UpdateDomain):
-        self.domain_persistence.update_domain(user_id, request.new_domain)
+        self.domain_persistence.update_first_domain_by_user_id(user_id, request.new_domain)
 
     def domain_mapped(self, domain: UserDomains):
         return DomainResponse(
