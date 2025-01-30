@@ -344,7 +344,7 @@ def get_five_x_five_location(session, company_city, company_state, states_dict):
 def get_or_create_company(session: Session, five_x_five_user: FiveXFiveUser, states_dict: dict):
     if five_x_five_user.company_name:
         company_name = five_x_five_user.company_name.strip()
-        alias = regex.sub(r'[\p{Z}\s]+', ' ', alias)
+        alias = regex.sub(r'[\p{Z}\s]+', ' ', company_name)
         alias = company_name.replace(" ", "_")
         alias = alias.lower()
         lead_company = session.query(LeadCompany).filter_by(alias=alias).first()
