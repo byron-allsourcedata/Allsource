@@ -12,14 +12,15 @@ class LeadCompany(Base):
     phone = Column(VARCHAR(256), nullable=True)
     sic = Column(VARCHAR(256), nullable=True)
     address = Column(VARCHAR(256), nullable=True)
-    five_x_five_location_id = Column(Integer, ForeignKey('users_domains.id'), nullable=True)
+    five_x_five_location_id = Column(Integer, ForeignKey('five_x_five_locations.id'), nullable=True)
     zip = Column(VARCHAR(64), nullable=True)
     linkedin_url = Column(VARCHAR(256), nullable=True)
     revenue = Column(VARCHAR(256), nullable=True)
     employee_count = Column(VARCHAR(128), nullable=True)
     last_updated = Column(TIMESTAMP, nullable=True)
     description = Column(TEXT, nullable=True)
-    
+    primary_industry = Column(VARCHAR(256), nullable=True)
+
     __table_args__ = (
         Index('leads_companies_alias_idx', 'alias'),
     )
