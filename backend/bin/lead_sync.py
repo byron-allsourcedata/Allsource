@@ -25,6 +25,9 @@ from urllib.parse import urlparse, parse_qs
 from models.leads_requests import LeadsRequests
 from models.users_domains import UserDomains
 from models.suppression_rule import SuppressionRule
+from models.lead_company import LeadCompany
+from models.state import States
+from models.five_x_five_locations import FiveXFiveLocations
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
 from models.leads_users_ordered import LeadsUsersOrdered
 from models.leads_visits import LeadsVisits
@@ -97,7 +100,7 @@ def get_all_five_x_user_emails(business_email, personal_emails, additional_perso
     return list(emails)
 
 
-async def process_table(session, groupped_requests, rabbitmq_connection, subscription_service, leads_persistence,
+async def process_table(session, states_dict, groupped_requests, rabbitmq_connection, subscription_service, leads_persistence,
                         notification_persistence,
                         root_user=None):
     for key, possible_leads in groupped_requests.items():
@@ -119,11 +122,11 @@ async def process_table(session, groupped_requests, rabbitmq_connection, subscri
                     FiveXFiveUser.up_id == str(up_id).lower()).first()
                 if five_x_five_user:
                     logging.info(f"Lead found by UP_ID {up_id}")
-                    await process_user_data(possible_lead, five_x_five_user, session, rabbitmq_connection,
+                    await process_user_data(states_dict, possible_lead, five_x_five_user, session, rabbitmq_connection,
                                             subscription_service, leads_persistence, notification_persistence,
                                             None)
                     if root_user:
-                        await process_user_data(possible_lead, five_x_five_user, session, rabbitmq_connection,
+                        await process_user_data(states_dict, possible_lead, five_x_five_user, session, rabbitmq_connection,
                                                 subscription_service, leads_persistence, notification_persistence,
                                                 root_user)
                     break
@@ -315,8 +318,56 @@ async def dispatch_leads_to_rabbitmq(session, user, rabbitmq_connection, plan_id
 
         logging.info(f"Push to RMQ: {{'customer_id': {user.customer_id}, 'plan_id': {plan_id}")
 
+def get_five_x_five_location(session, company_city, company_state, states_dict):
+    city = company_city
+    state = company_state
+    state_id = None
+    if city is None and state is None:
+        return None
+    
+    if city:
+        city = city.lower()
+    if state:
+        state = state.lower()
+        state_id = states_dict[state]
+        
+    location = session.query(FiveXFiveLocations).filter(
+        FiveXFiveLocations.country == 'us',
+        FiveXFiveLocations.city == city,
+        FiveXFiveLocations.state_id == state_id
+    ).first()
+    if not location:
+        return None
+    return location.id
+    
+def get_or_create_company(session: Session, five_x_five_user: FiveXFiveUser, states_dict: dict):
+    if five_x_five_user.company_name:
+        alias = five_x_five_user.company_name.strip().replace(",", "").replace(" ", "_").lower()
+        lead_company = session.query(LeadCompany).filter_by(alias=alias).first()
+        if not lead_company:
+            five_x_five_location_id = get_five_x_five_location(session, five_x_five_user.company_city, five_x_five_user.company_state, states_dict)
+            lead_company = LeadCompany(
+                                name=five_x_five_user.company_name,
+                                alias=alias,
+                                domain=five_x_five_user.company_domain,
+                                phone=five_x_five_user.company_phone,
+                                sic=five_x_five_user.company_sic,
+                                address=five_x_five_user.company_address,
+                                five_x_five_location_id=five_x_five_location_id,
+                                zip=five_x_five_user.company_zip,
+                                linkedin_url=five_x_five_user.company_linkedin_url,
+                                revenue=five_x_five_user.company_revenue,
+                                employee_count=five_x_five_user.company_employee_count,
+                                last_updated=five_x_five_user.company_last_updated,
+                                description=five_x_five_user.company_description
+                            )
+            session.add(lead_company)
+            session.flush()
+        return lead_company.id
+    
+    return None
 
-async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, session: Session, rabbitmq_connection,
+async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXFiveUser, session: Session, rabbitmq_connection,
                             subscription_service: SubscriptionService, leads_persistence: LeadsPersistence,
                             notification_persistence: NotificationPersistence,
                             root_user=None):
@@ -440,8 +491,9 @@ async def process_user_data(possible_lead, five_x_five_user: FiveXFiveUser, sess
             return
 
         is_first_request = True
+        company_id = get_or_create_company(session, five_x_five_user, states_dict)
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type,
-                             domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0)
+                             domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0, company_id=company_id)
 
         plan_contact_credits_id = None
 
@@ -655,6 +707,9 @@ async def process_files(session, rabbitmq_connection, root_user):
     leads_persistence = LeadsPersistence(
         db=session
     )
+    
+    states = session.query(States).all()
+    states_dict = {state.state_code: state.id for state in states}
 
     while True:
         try:
@@ -694,11 +749,11 @@ async def process_files(session, rabbitmq_connection, root_user):
         if not groupped_requests:
             logging.info('All 5x5 files processed')
             return
-        await process_table(session, groupped_requests, rabbitmq_connection, subscription_service,
+        await process_table(session, states_dict, groupped_requests, rabbitmq_connection, subscription_service,
                             leads_persistence,
                             notification_persistence, None)
         if root_user:
-            await process_table(session, groupped_requests, rabbitmq_connection, subscription_service,
+            await process_table(session, states_dict,groupped_requests, rabbitmq_connection, subscription_service,
                                 leads_persistence,
                                 notification_persistence, root_user)
         logging.debug(f"Last processed event time {str(last_processed_file_name)}")
