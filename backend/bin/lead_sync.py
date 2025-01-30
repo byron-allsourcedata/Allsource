@@ -330,7 +330,10 @@ def get_five_x_five_location(session, company_city, company_state, states_dict):
         city = city.lower()
     if state:
         state = state.lower()
-        state_id = states_dict[state]
+        state_id = states_dict.get(state)
+    
+    if not state_id:
+        return None
         
     location = session.query(FiveXFiveLocations).filter(
         FiveXFiveLocations.country == 'us',

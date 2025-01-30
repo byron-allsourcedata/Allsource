@@ -35,7 +35,7 @@ def save_city_and_state_to_user(session, personal_city, personal_state, five_x_f
         city = city.lower()
     if state:
         state = state.lower()
-        state_id = states_dict[state]
+        state_id = states_dict.get(state)
         if state_id is None:
             state_data = States(
                 state_code=state
