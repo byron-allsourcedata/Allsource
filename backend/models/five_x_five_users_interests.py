@@ -7,5 +7,6 @@ class FiveXFiveUserInterest(Base):
     __tablename__ = '5x5_users_interests'
 
     id = Column(Integer, primary_key=True)
-    interest_id = Column(Integer, ForeignKey('5x5_interests.id'), nullable=False, primary_key=True)
-    five_x_five_user_id = Column(Integer, ForeignKey('5x5_users.id'), nullable=False, primary_key=True)
+    hem = Column(VARCHAR, nullable=True)
+    up_id = Column(VARCHAR, nullable=True)
+    topic_id = Column(VARCHAR, nullable=True)

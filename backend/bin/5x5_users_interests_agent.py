@@ -63,8 +63,7 @@ async def on_message_received(message, s3_session, rmq_connection):
                     file_data = await body.read()
                     temp_file.write(file_data)
                     temp_file.seek(0)
-                    with gzip.open(temp_file.name, 'rt', encoding='utf-8') as f:
-                        df = pd.read_csv(f)
+                    df = pd.read_parquet(temp_file.name, engine="pyarrow")
                     rows_counter = 0
                     for _, row in df.iterrows():
                         await publish_rabbitmq_message(

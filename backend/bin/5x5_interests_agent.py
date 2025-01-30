@@ -12,18 +12,10 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
-from models.five_x_five_locations import FiveXFiveLocations
-from models.five_x_five_users_locations import FiveXFiveUsersLocations
-from models.five_x_five_phones import FiveXFivePhones
-from models.five_x_five_users_phones import FiveXFiveUsersPhones
-from models.five_x_five_emails import FiveXFiveEmails
-from models.five_x_five_names import FiveXFiveNames
-from models.state import States
-from models.five_x_five_users_emails import FiveXFiveUsersEmails
+from models.five_x_five_users_interests import FiveXFiveUserInterest
 from config.rmq_connection import RabbitMQConnection
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import sessionmaker
-from models.five_x_five_users import FiveXFiveUser
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -42,12 +34,18 @@ async def on_message_received(message, session):
     try:
         message_json = json.loads(message.body)
         interest_json = message_json['interest']
-        last_updated = convert_to_none(
-            pd.to_datetime(interest_json.get('LAST_UPDATED', None), unit='s', errors='coerce'))
-        
-
+        hem = convert_to_none(str(interest_json.get('_COL_0')))
+        up_id = convert_to_none(str(interest_json.get('_COL_1')))
+        topic_id = convert_to_none(str(interest_json.get('_COL_2')))
+        if topic_id:
+            topic_id = f"b2c_{topic_id}"
+        five_x_five_user_phone = insert(FiveXFiveUserInterest).values(
+                hem=hem,
+                up_id=up_id,
+                topic_id=topic_id
+            ).on_conflict_do_nothing()
+        session.execute(five_x_five_user_phone)
         session.commit()
-
         await message.ack()
 
     except Exception as e:

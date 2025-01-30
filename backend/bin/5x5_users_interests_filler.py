@@ -16,7 +16,7 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
 BUCKET_NAME = 'trovo-coop-shakespeare'
-FILE_PATH = 'outgoing/universal_person_2_7_0/'
+FILE_PATH = 'outgoing/mp_consumer_sample_3day/'
 REGION_NAME = 'us-west-2'
 QUEUE_USERS_FILES = '5x5_users_interests'
 
