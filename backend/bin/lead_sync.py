@@ -342,8 +342,8 @@ def get_five_x_five_location(session, company_city, company_state, states_dict):
     return location.id
     
 def get_or_create_company(session: Session, five_x_five_user: FiveXFiveUser, states_dict: dict):
-    company_name = five_x_five_user.company_name.strip()
-    if company_name:
+    if five_x_five_user.company_name:
+        company_name = five_x_five_user.company_name.strip()
         alias = regex.sub(r'[\p{Z}\s]+', ' ', alias)
         alias = company_name.replace(" ", "_")
         alias = alias.lower()
