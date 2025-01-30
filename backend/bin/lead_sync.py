@@ -7,6 +7,7 @@ import sys
 import time
 import traceback
 import urllib.parse
+import regex
 
 import pytz
 from dateutil.relativedelta import relativedelta
@@ -341,8 +342,11 @@ def get_five_x_five_location(session, company_city, company_state, states_dict):
     return location.id
     
 def get_or_create_company(session: Session, five_x_five_user: FiveXFiveUser, states_dict: dict):
-    if five_x_five_user.company_name:
-        alias = five_x_five_user.company_name.strip().replace(",", "").replace(" ", "_").lower()
+    company_name = five_x_five_user.company_name.strip()
+    if company_name:
+        alias = regex.sub(r'[\p{Z}\s]+', ' ', alias)
+        alias = company_name.replace(" ", "_")
+        alias = alias.lower()
         lead_company = session.query(LeadCompany).filter_by(alias=alias).first()
         if not lead_company:
             five_x_five_location_id = get_five_x_five_location(session, five_x_five_user.company_city, five_x_five_user.company_state, states_dict)
