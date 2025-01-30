@@ -5,9 +5,9 @@ from .base import Base, create_timestamps
 class LeadUser(Base):
     __tablename__ = 'leads_users'
     id = Column(Integer, primary_key=True, nullable=False)
-    domain_id = Column(Integer, nullable=False)
-    user_id = Column(Integer, nullable=False)
-    five_x_five_user_id = Column(Integer, nullable=False)
+    domain_id = Column(Integer, ForeignKey('users_domains.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    five_x_five_user_id = Column(Integer, ForeignKey('5x5_users.id'), nullable=False)
     klaviyo_user_id = Column(Integer, nullable=True)
     shopify_user_id = Column(Integer, nullable=True)
     bigcommerce_user_id = Column(Integer, nullable=True)
@@ -21,6 +21,7 @@ class LeadUser(Base):
     avarage_visit_time = Column(Integer, nullable=True)
     total_visit_time = Column(Integer, nullable=True)
     is_active = Column(Boolean, nullable=False, default=True)
+    company_id = Column(Integer, ForeignKey('leads_companies.id'), nullable=False)
     
     __table_args__ = (
         Index('leads_users_is_active_idx', 'is_active'),
