@@ -330,7 +330,10 @@ def get_five_x_five_location(session, company_city, company_state, states_dict):
         city = city.lower()
     if state:
         state = state.lower()
-        state_id = states_dict[state]
+        state_id = states_dict.get(state)
+    
+    if not state_id:
+        return None
         
     location = session.query(FiveXFiveLocations).filter(
         FiveXFiveLocations.country == 'us',
@@ -342,9 +345,9 @@ def get_five_x_five_location(session, company_city, company_state, states_dict):
     return location.id
     
 def get_or_create_company(session: Session, five_x_five_user: FiveXFiveUser, states_dict: dict):
-    company_name = five_x_five_user.company_name.strip()
-    if company_name:
-        alias = regex.sub(r'[\p{Z}\s]+', ' ', alias)
+    if five_x_five_user.company_name:
+        company_name = five_x_five_user.company_name.strip()
+        alias = regex.sub(r'[\p{Z}\s]+', ' ', company_name)
         alias = company_name.replace(" ", "_")
         alias = alias.lower()
         lead_company = session.query(LeadCompany).filter_by(alias=alias).first()
@@ -363,7 +366,8 @@ def get_or_create_company(session: Session, five_x_five_user: FiveXFiveUser, sta
                                 revenue=five_x_five_user.company_revenue,
                                 employee_count=five_x_five_user.company_employee_count,
                                 last_updated=five_x_five_user.company_last_updated,
-                                description=five_x_five_user.company_description
+                                description=five_x_five_user.company_description,
+                                primary_industry=five_x_five_user.primary_industry
                             )
             session.add(lead_company)
             session.flush()

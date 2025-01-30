@@ -20,7 +20,7 @@ class LeadCompany(Base):
     last_updated = Column(TIMESTAMP, nullable=True)
     description = Column(TEXT, nullable=True)
     primary_industry = Column(VARCHAR(256), nullable=True)
-
+    
     __table_args__ = (
         Index('leads_companies_alias_idx', 'alias'),
     )

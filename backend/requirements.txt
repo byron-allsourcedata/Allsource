@@ -105,6 +105,7 @@ python-multipart==0.0.9
 python-pptx==1.0.2
 pytz==2024.1
 PyYAML==6.0.1
+regex==2024.11.6
 requests==2.32.3
 requests-oauthlib==2.0.0
 requests-toolbelt==1.0.0

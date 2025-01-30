@@ -847,8 +847,10 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
         break;
       case 'zapier':
         setOpenZapierConnect(true)
+        break;
       case 'slack':
-        setOpenSlackConnect(true)
+        setOpenSlackConnect(true);
+        break;
       default:
         break;
     }
