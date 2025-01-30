@@ -422,7 +422,7 @@ const Partners: React.FC = () => {
                     
                     }
 
-                    {(tabIndex === 1 || tabIndex == 2 && isMaster) &&  <Button
+                    {(tabIndex === 1 || tabIndex == 2 && isMaster && !rewardsOpen) &&  <Button
                                 aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
                                 aria-haspopup="true"
                                 aria-expanded={isCalendarOpen ? 'true' : undefined}
@@ -499,7 +499,7 @@ const Partners: React.FC = () => {
                     </Box>
                     {!backButton && isMaster && <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
                         <TabPanel value={tabIndex} index={isMaster ? 2 : 1}>
-                            <PartnersMain setLoading={setLoading} appliedDates={appliedDates} masterId={id} />
+                            <PartnersMain setLoading={setLoading} loading={loading} appliedDates={appliedDates} masterId={id} setRewardsOpen={setRewardsOpen}/>
                         </TabPanel>
                     </Box>}
                     <Box sx={{ width: '100%', padding: 0, margin: 0 }}>

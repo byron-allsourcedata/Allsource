@@ -869,7 +869,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                                         {data.partner_name}
                                                                         <IconButton
                                                                             className="icon-button"
-                                                                            sx={{ 
+                                                                            sx={{
                                                                                 display: 'none', 
                                                                                 ':hover': {backgroundColor: "transparent"}
                                                                             }} >
