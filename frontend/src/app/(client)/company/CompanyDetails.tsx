@@ -92,6 +92,13 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
         };
     }, [open]);
 
+    const capitalizeCity = (city: string) => {
+        return city
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+    }
+
     return (
         <>
             <Backdrop open={open} onClick={onClose} sx={{ zIndex: 1200, color: '#fff' }} />
@@ -295,7 +302,10 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 City:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {company.city || '--'}
+                            {company.city 
+                                ? [capitalizeCity(company.city)].filter(Boolean).join(', ')
+                                : '--'
+                            }
                             </Typography>
                         </Box>
 

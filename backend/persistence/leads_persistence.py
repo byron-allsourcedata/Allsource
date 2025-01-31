@@ -3,7 +3,7 @@ import math
 from datetime import datetime, timedelta
 
 import pytz
-from sqlalchemy import and_, or_, desc, asc, Integer
+from sqlalchemy import and_, or_, desc, asc, Integer, distinct
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql import func
 from utils import format_phone_number
@@ -155,12 +155,14 @@ class LeadsPersistence:
                 LeadUser.is_returning_visitor,
                 LeadUser.avarage_visit_time,
                 LeadUser.is_converted_sales,
-                LeadUser.is_active
+                LeadUser.is_active,
+                func.array_agg(distinct(LeadsRequests.page)).label('unique_pages')
             )
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
-            .join(FirstNameAlias, FirstNameAlias.id == FiveXFiveUser.first_name_id)
-            .join(LastNameAlias, LastNameAlias.id == FiveXFiveUser.last_name_id)
             .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
+            .join(LeadsRequests, LeadsRequests.lead_id == LeadUser.id)
+            .outerjoin(FirstNameAlias, FirstNameAlias.id == FiveXFiveUser.first_name_id)
+            .outerjoin(LastNameAlias, LastNameAlias.id == FiveXFiveUser.last_name_id)
             .outerjoin(FiveXFiveUsersLocations, FiveXFiveUsersLocations.five_x_five_user_id == FiveXFiveUser.id)
             .outerjoin(FiveXFiveLocations, FiveXFiveLocations.id == FiveXFiveUsersLocations.location_id)
             .outerjoin(States, States.id == FiveXFiveLocations.state_id)

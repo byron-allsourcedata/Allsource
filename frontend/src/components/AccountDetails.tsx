@@ -32,7 +32,7 @@ const TruncatedText: React.FC<{ text: string; limit: number }> = ({ text, limit 
 
 const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) => {
     const lead = rowData || {};
-    
+
     const genderText = (gender: string) => {
         switch (gender) {
             case 'M':
@@ -113,7 +113,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                     },
                 }}
             >
-                <Box sx={{ width: '100%', boxSizing: 'border-box', display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, mt: '0.5em', borderBottom: '1px solid #e4e4e4', position: "sticky", top: 0, zIndex: 1400, backgroundColor: "#fff" }}>
+                <Box sx={{ width: '100%', boxSizing: 'border-box', display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, pb: 1.35, borderBottom: '1px solid #e4e4e4', position: "sticky", top: 0, zIndex: 1400, backgroundColor: "#fff" }}>
                     <Box sx={{ display: 'flex', gap: 4 }}>
                         <Typography sx={{ fontSize: '16px', fontFamily: 'Nunito Sans', fontWeight: 700, lineHeight: '22.4px' }}>
                             Person Overview
@@ -181,7 +181,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                         margin: '4px',
                                         mb: 2,
                                         minWidth: 'auto',
-                                        '& :hover': {color: 'rgba(80, 82, 178, 1)'},
+                                        '& :hover': { color: 'rgba(80, 82, 178, 1)' },
                                         '@media (max-width: 900px)': {
                                             border: 'none',
                                             padding: 0
@@ -189,7 +189,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                     }}
                                     onClick={handleDownload}
                                 >
-                                    <DownloadIcon fontSize='medium' sx={{color: 'rgba(128, 128, 128, 1)', '& :hover': {color: 'rgba(80, 82, 178, 1)'}}} />
+                                    <DownloadIcon fontSize='medium' sx={{ color: 'rgba(128, 128, 128, 1)', '& :hover': { color: 'rgba(80, 82, 178, 1)' } }} />
                                 </Button>
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 5, '@media (max-width: 600px)': { flexDirection: 'column', gap: 1 }, }}>
@@ -245,6 +245,48 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
 
                             </Box>
                         </Box>
+                    </Box>
+                    {/* Web Details */}
+                    <Box sx={accountStyles.box_param}>
+                        <Typography sx={{ ...accountStyles.title }}>
+                            <Image src={'/website-icon.svg'} width={18} height={18} alt='iphone icon' />
+                            Website Pages Visited
+                        </Typography>
+                        {lead.url_visited?.map((page: string, index: number) => {
+                            const trimmedPage = page.split('?')[0];
+
+                            return (
+                                <Box
+                                    key={index}
+                                    sx={{
+                                        ...accountStyles.rows_pam,
+                                        display: 'flex',
+                                        borderBottom: index === lead.url_visited.length - 1 ? 'none' : '1px solid rgba(240, 240, 240, 1)',
+                                    }}
+                                >
+                                    <Box sx={{ display: 'flex', width: '30%' }}>
+                                        <Typography sx={{ ...accountStyles.title_text, }}>
+                                            Page {index + 1}:
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', width: '70%' }}>
+                                        {trimmedPage ? (
+                                            <Link
+                                                href={trimmedPage}
+                                                underline="none"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                sx={{ ...accountStyles.text, textDecoration: 'none', color: 'rgba(80, 82, 178, 1)', }}
+                                            >
+                                                {trimmedPage}
+                                            </Link>
+                                        ) : (
+                                            <Typography sx={accountStyles.text}> --</Typography>
+                                        )}
+                                    </Box>
+                                </Box>
+                            );
+                        })}
                     </Box>
                     {/* Basic Details */}
                     <Box sx={accountStyles.box_param}>
@@ -351,7 +393,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Business email:
                             </Typography>
                             <Typography sx={{ ...accountStyles.text }}>
-                            {lead.business_email || '--'}
+                                {lead.business_email || '--'}
                             </Typography>
                         </Box>
 
@@ -364,7 +406,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             </Typography>
                         </Box>
 
-                        <Box sx={{...accountStyles.rows_pam, borderBottom: 'none'}}>
+                        <Box sx={{ ...accountStyles.rows_pam, borderBottom: 'none' }}>
                             <Typography sx={{ ...accountStyles.title_text, }}>
                                 Personal LinkedIn url:
                             </Typography>
@@ -419,7 +461,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             </Typography>
                         </Box>
 
-                        <Box sx={{...accountStyles.rows_pam, borderBottom: 'none'}}>
+                        <Box sx={{ ...accountStyles.rows_pam, borderBottom: 'none' }}>
                             <Typography sx={{ ...accountStyles.title_text }}>
                                 Children:
                             </Typography>
@@ -565,7 +607,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             </Typography>
                         </Box>
 
-                        <Box sx={{...accountStyles.rows_pam, borderBottom: 'none'}}>
+                        <Box sx={{ ...accountStyles.rows_pam, borderBottom: 'none' }}>
                             <Typography sx={{ ...accountStyles.title_text }}>
                                 Company Zipcode:
                             </Typography>
@@ -618,7 +660,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             </Typography>
                         </Box>
 
-                        <Box sx={{...accountStyles.rows_pam, borderBottom: 'none'}}>
+                        <Box sx={{ ...accountStyles.rows_pam, borderBottom: 'none' }}>
                             <Typography sx={{ ...accountStyles.title_text }}>
                                 Primary industry
                             </Typography>
@@ -644,7 +686,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             </Typography>
                         </Box>
 
-                        <Box sx={{...accountStyles.rows_pam, borderBottom: 'none'}}>
+                        <Box sx={{ ...accountStyles.rows_pam, borderBottom: 'none' }}>
                             <Typography sx={{ ...accountStyles.title_text }}>
                                 Company LinkedIn url
                             </Typography>
