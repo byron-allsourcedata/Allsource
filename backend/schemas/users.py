@@ -66,7 +66,7 @@ class UserLoginFormResponse(BaseModel):
 
 class PixelFormResponse(BaseModel):
     status: PixelStatus
-    need_reload_page: bool
+    need_reload_page: Optional[bool] = False
 
 
 class UserLoginForm(BaseModel):
