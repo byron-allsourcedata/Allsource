@@ -496,7 +496,7 @@ const AccountSetup = () => {
   ];
   const method_installingPixel = [
     { label: "Manually", src: "install_manually.svg", setState: setManuallInstall, action: installManually },
-    { label: "Google Tag Manager", src: "install_gtm.svg", setState: setGoogletagInstall, action: () => {setGoogleOpen(true)} },
+    { label: "Google Tag Manager", src: "install_gtm.svg", setState: setGoogletagInstall, action: () => { setGoogleOpen(true) } },
     { label: "Shopify", src: "install_cms1.svg", setState: setShopifyInstall, action: () => { } },
     { label: "WordPress", src: "install_cms2.svg", setState: setWordpressInstall, action: () => { } },
     { label: "Bigcommerce", src: "bigcommerce-icon.svg", setState: setBigcommerceInstall, action: () => { } },
@@ -609,7 +609,7 @@ const AccountSetup = () => {
   };
 
   return (
-    <Box sx={styles.pageContainer}>
+    <Box sx={{ ...styles.pageContainer }}>
       <Box sx={styles.headers}>
         <Box
           sx={{
@@ -942,7 +942,7 @@ const AccountSetup = () => {
           </MenuItem>
         </Menu>
       </Box>
-      <Box sx={styles.formContainer}>
+      <Box sx={{ ...styles.formContainer }}>
         <Box sx={styles.form}>
           <Box
             sx={{
@@ -1250,8 +1250,91 @@ const AccountSetup = () => {
                           <EditIcon height={8} width={8} sx={{ color: "rgba(80, 82, 178, 1)" }} />
                         </IconButton>
                       </Box>
+                    }
+                  </Box>
+                  <Divider />
+                  <Box sx={{ mt: 4 }}>
+                    {editingName
+                      ?
+                      <>
+                        <TextField
+                          id="filled-basic"
+                          placeholder="Enter your domain"
+                          value={domainName}
+                          onChange={(e) => {
+                            setDomainName(e.target.value)
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              setEditingName(false)
+                            }
+                          }}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">https://</InputAdornment>
+                            )
+                          }}
+                          variant="outlined"
+                          sx={{
+                            flex: 1,
+                            width: '360px',
+                            '& .MuiOutlinedInput-root': {
+                              borderRadius: '4px',
+                              height: '40px',
+                            },
+                            '& input': {
+                              paddingLeft: 0,
+                            },
+                            '& input::placeholder': {
+                              fontSize: '14px',
+                              color: '#8C8C8C',
+                            },
+                          }}
+                        />
+                        <Button
+                          onClick={() => {
+                            setEditingName(false)
+                            setDomainName(prev => prev.replace(/^https?:\/\//, ""))
+                            sessionStorage.setItem('current_domain', domainName.replace(/^https?:\/\//, ""))
+                            fetchEditDomain()
+                          }}
+                          sx={{
+                            ml: 2,
+                            border: '1px solid rgba(80, 82, 178, 1)',
+                            textTransform: 'none',
+                            background: '#fff',
+                            color: 'rgba(80, 82, 178, 1)',
+                            fontFamily: 'Nunito Sans',
+                            padding: '0.65em 2em',
+                            mr: 1,
+                            '@media (max-width: 600px)': { padding: '0.5em 1.5em', mr: 0, ml: 0, left: 0 }
+                          }}
+                        >
+                          <Typography className='second-sub-title' sx={{
+                            color: 'rgba(80, 82, 178, 1) !important', textAlign: 'left'
+                          }}>
+                            Save
+                          </Typography>
+                        </Button>
+                      </>
+                      :
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <Typography className='first-sub-title' sx={{ textAlign: 'left', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
+                          {domainName}
+                        </Typography>
+                        <IconButton onClick={() => setEditingName(true)} sx={{ p: "4px", ':hover': { backgroundColor: 'transparent', } }} >
+                          <EditIcon height={8} width={8} sx={{ color: "rgba(80, 82, 178, 1)" }} />
+                        </IconButton>
+                      </Box>
 
                     }
+                  </Box>
+                  <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '10px', '@media (max-width: 600px)': { p: 2 } }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', pt: 3, justifyContent: 'start' }}>
+                      <Image src='/1.svg' alt='1' width={28} height={28} />
+                      <Typography className='first-sub-title' sx={maintext}>Copy the pixel code</Typography>
+                    </Box>
+
                   </Box>
                   <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '10px', '@media (max-width: 600px)': { p: 2 } }}>
                     <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', pt: 3, justifyContent: 'start' }}>

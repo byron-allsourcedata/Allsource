@@ -200,7 +200,7 @@ const Leads: React.FC = () => {
                 ? Math.floor(new Date(appliedDates.end.toISOString()).getTime() / 1000)
                 : null;
 
-            let url = `/leads?page=${page + 1}&per_page=${rowsPerPage}&timezone_offset=${timezoneOffsetInHours}`;
+            let url = `/company?page=${page + 1}&per_page=${rowsPerPage}&timezone_offset=${timezoneOffsetInHours}`;
             if (startEpoch !== null && endEpoch !== null) {
                 url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
             }
@@ -580,42 +580,28 @@ const Leads: React.FC = () => {
         return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
     };
 
-    // interface FilterParams {
-    //     from_date: number | null;
-    //     to_date: number | null;
-    //     from_time: string | null;
-    //     to_time: string | null;
-    //     selectedStatus: string[];
-    //     regions: string[];
-    //     emails: string[];
-    //     selectedFunnels: string[];
-    //     searchQuery: string | null;
-    //     checkedFilters: {
-    //         lastWeek: boolean;
-    //         last30Days: boolean;
-    //         last6Months: boolean;
-    //         allTime: boolean;
-    //     };
-    //     checkedFiltersPageVisits: {
-    //         page: boolean;
-    //         two_page: boolean;
-    //         three_page: boolean;
-    //         more_three: boolean;
-    //     };
-    //     checkedFiltersTime: {
-    //         morning: boolean;
-    //         evening: boolean;
-    //         afternoon: boolean;
-    //         all_day: boolean;
-    //     };
-    //     checkedFiltersTimeSpent: {
-    //         under_10: boolean;
-    //         over_10: boolean;
-    //         over_30: boolean;
-    //         over_60: boolean;
-    //     };
-    //     recurringVisits: any[];
-    // }
+    interface FilterParams {
+        from_date: number | null;
+        to_date: number | null;
+        selectedStatus: string[];
+        regions: string[];
+        emails: string[];
+        selectedFunnels: string[];
+        searchQuery: string | null;
+        checkedFilters: {
+            lastWeek: boolean;
+            last30Days: boolean;
+            last6Months: boolean;
+            allTime: boolean;
+        };
+        checkedFiltersPageVisits: {
+            page: boolean;
+            two_page: boolean;
+            three_page: boolean;
+            more_three: boolean;
+        };
+        recurringVisits: any[];
+    }
     // const [filterParams, setFilterParams] = useState<FilterParams>({
     //     from_date: null,
     //     to_date: null,
@@ -633,68 +619,60 @@ const Leads: React.FC = () => {
     //     recurringVisits: [],
     // });
 
-    // const handleApplyFilters = (filters: FilterParams) => {
-    //     const newSelectedFilters: { label: string; value: string }[] = [];
 
-    //     const dateFormat = 'YYYY-MM-DD';
 
-    //     // Map of filter conditions to their labels
-    //     const filterMappings: { condition: boolean | string | string[] | number | null, label: string, value: string | ((f: any) => string) }[] = [
-    //         { condition: filters.from_date, label: 'From Date', value: () => dayjs.unix(filters.from_date!).format(dateFormat) },
-    //         { condition: filters.to_date, label: 'To Date', value: () => dayjs.unix(filters.to_date!).format(dateFormat) },
-    //         { condition: filters.selectedStatus?.length, label: 'Visitor Type', value: () => filters.selectedStatus!.join(', ') },
-    //         { condition: filters.selectedFunnels?.length, label: 'Lead Status', value: () => filters.selectedFunnels!.join(', ') },
-    //         { condition: filters.regions?.length, label: 'Regions', value: () => filters.regions!.join(', ') },
-    //         { condition: filters.recurringVisits?.length, label: 'Recurring Visits', value: () => filters.recurringVisits!.join(', ') },
-    //         { condition: filters.searchQuery?.trim() !== '', label: 'Search', value: filters.searchQuery || '' },
-    //         { condition: filters.from_time, label: 'From Time', value: filters.from_time! },
-    //         { condition: filters.to_time, label: 'To Time', value: filters.to_time! },
-    //     ];
+    const handleApplyFilters = (filters: FilterParams) => {
+        const newSelectedFilters: { label: string; value: string }[] = [];
 
-    //     const pageVisitFilters = [
-    //         filters.checkedFiltersPageVisits.page && '1 page',
-    //         filters.checkedFiltersPageVisits.two_page && '2 pages',
-    //         filters.checkedFiltersPageVisits.three_page && '3 pages',
-    //         filters.checkedFiltersPageVisits.more_three && 'more than 3 pages',
-    //     ].filter(Boolean).join(', ');
+        const dateFormat = 'YYYY-MM-DD';
 
-    //     if (pageVisitFilters) {
-    //         filterMappings.push({
-    //             condition: true,
-    //             label: 'Page Visits',
-    //             value: pageVisitFilters,
-    //         });
-    //     }
+        // Map of filter conditions to their labels
+        const filterMappings: { condition: boolean | string | string[] | number | null, label: string, value: string | ((f: any) => string) }[] = [
+            { condition: filters.from_date, label: 'From Date', value: () => dayjs.unix(filters.from_date!).format(dateFormat) },
+            { condition: filters.to_date, label: 'To Date', value: () => dayjs.unix(filters.to_date!).format(dateFormat) },
+            { condition: filters.selectedStatus?.length, label: 'Visitor Type', value: () => filters.selectedStatus!.join(', ') },
+            { condition: filters.selectedFunnels?.length, label: 'Lead Status', value: () => filters.selectedFunnels!.join(', ') },
+            { condition: filters.regions?.length, label: 'Regions', value: () => filters.regions!.join(', ') },
+            { condition: filters.recurringVisits?.length, label: 'Recurring Visits', value: () => filters.recurringVisits!.join(', ') },
+            { condition: filters.searchQuery?.trim() !== '', label: 'Search', value: filters.searchQuery || '' },
+        ];
 
-    //     const timeSpentFilters = [
-    //         filters.checkedFiltersTimeSpent.under_10 && 'under 10',
-    //         filters.checkedFiltersTimeSpent.over_10 && '10-30 secs',
-    //         filters.checkedFiltersTimeSpent.over_30 && '30-60 secs',
-    //         filters.checkedFiltersTimeSpent.over_60 && 'over 60 secs',
-    //     ].filter(Boolean).join(', ');
+        const pageVisitFilters = [
+            filters.checkedFiltersPageVisits.page && '1 page',
+            filters.checkedFiltersPageVisits.two_page && '2 pages',
+            filters.checkedFiltersPageVisits.three_page && '3 pages',
+            filters.checkedFiltersPageVisits.more_three && 'more than 3 pages',
+        ].filter(Boolean).join(', ');
 
-    //     if (timeSpentFilters) {
-    //         filterMappings.push({
-    //             condition: true,
-    //             label: 'Time Spent',
-    //             value: timeSpentFilters,
-    //         });
-    //     }
+        if (pageVisitFilters) {
+            filterMappings.push({
+                condition: true,
+                label: 'Page Visits',
+                value: pageVisitFilters,
+            });
+        }
 
 
 
 
-    //     // Iterate over the mappings to populate newSelectedFilters
-    //     filterMappings.forEach(({ condition, label, value }) => {
-    //         if (condition) {
-    //             newSelectedFilters.push({ label, value: typeof value === 'function' ? value(filters) : value });
-    //         }
-    //     });
+        // Iterate over the mappings to populate newSelectedFilters
+        filterMappings.forEach(({ condition, label, value }) => {
+            if (condition) {
+                newSelectedFilters.push({ label, value: typeof value === 'function' ? value(filters) : value });
+            }
+        });
 
 
-    //     setSelectedFilters(newSelectedFilters);
-    //     setActiveFilter(filters.selectedStatus?.[0] || '');
-    // };
+        setSelectedFilters(newSelectedFilters);
+        setActiveFilter(filters.selectedStatus?.[0] || '');
+    };
+
+    const capitalizeCity = (city: string) => {
+        return city
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+    }
 
 
     return (
@@ -1020,6 +998,7 @@ const Leads: React.FC = () => {
                                         component={Paper}
                                         sx={{
                                             border: '1px solid rgba(235, 235, 235, 1)',
+                                            overflowX: 'scroll',
                                             maxHeight: selectedFilters.length > 0
                                                 ? (hasNotification ? '63vh' : '68vh')
                                                 : '72vh',
@@ -1048,7 +1027,7 @@ const Leads: React.FC = () => {
                                                         { key: 'revenue', label: 'Revenue' },
                                                         { key: 'number_of_employees', label: 'No. of Employees' },
                                                         { key: 'location', label: 'Location', },
-                                                        { key: 'industry', label: 'Industry', },
+                                                        { key: 'average_time_sec', label: 'Industry', },
                                                     ].map(({ key, label, sortable = false }) => (
                                                         <TableCell
                                                             key={key}
@@ -1059,7 +1038,7 @@ const Leads: React.FC = () => {
                                                                     left: 0,
                                                                     zIndex: 99
                                                                 }),
-                                                                ...(key === 'industry' && {
+                                                                ...(key === 'average_time_sec' && {
                                                                     "::after": { content: 'none' }
                                                                 })
                                                             }}
@@ -1086,97 +1065,92 @@ const Leads: React.FC = () => {
                                             </TableHead>
                                             <TableBody>
                                                 {data.map((row) => (
-                                                    row.company_name && (
-                                                        <TableRow
-                                                            key={row.id}
-                                                            selected={selectedRows.has(row.id)}
-                                                            sx={{
-                                                                backgroundColor: selectedRows.has(row.id) ? 'rgba(247, 247, 247, 1)' : '#fff',
-                                                                '&:hover': {
+                                                    <TableRow
+                                                        key={row.id}
+                                                        selected={selectedRows.has(row.id)}
+                                                        sx={{
+                                                            backgroundColor: selectedRows.has(row.id) ? 'rgba(247, 247, 247, 1)' : '#fff',
+                                                            '&:hover': {
+                                                                backgroundColor: 'rgba(247, 247, 247, 1)',
+                                                                '& .sticky-cell': {
                                                                     backgroundColor: 'rgba(247, 247, 247, 1)',
-                                                                    '& .sticky-cell': {
-                                                                        backgroundColor: 'rgba(247, 247, 247, 1)',
-                                                                    }
                                                                 }
+                                                            }
+                                                        }}
+                                                    >
+                                                        {/* Company name Column */}
+                                                        <TableCell className="sticky-cell"
+                                                            sx={{
+                                                                ...companyStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, color: 'rgba(80, 82, 178, 1)', backgroundColor: '#fff'
+
+                                                            }} onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleOpenPopup(row);
+
+                                                            }}>{row.name || '--'}</TableCell>
+
+                                                        {/* Company phone Column */}
+                                                        <TableCell sx={{ ...companyStyles.table_array, position: 'relative' }}>
+                                                            {row.phone?.split(',')[0] || '--'}
+                                                        </TableCell>
+
+                                                        {/* Company linkedIn Column */}
+                                                        <TableCell sx={{ ...companyStyles.table_array, position: 'relative', color: row.linkedin_url ? 'rgba(80, 82, 178, 1)' : '', cursor: row.linkedin_url ? 'pointer' : 'default' }} onClick={() => { window.open(`https://${row.company_linkedin_url}`, '_blank') }}>
+                                                            {row.linkedin_url ? (
+                                                                <>
+                                                                    <Image src="/linkedIn.svg" alt="linkedIn" width={16} height={16} style={{ marginRight: '2px' }} />/
+                                                                    {row.linkedin_url}
+                                                                </>
+                                                            ) : (
+                                                                '--'
+                                                            )}
+                                                        </TableCell>
+
+                                                        {/* Employess Visited  Column */}
+                                                        <TableCell sx={companyStyles.table_array_phone}>
+                                                            {row.employees_visited || '--'}
+                                                        </TableCell>
+
+                                                        {/* Employess Visited date  Column */}
+                                                        <TableCell
+                                                            sx={{ ...companyStyles.table_array, position: 'relative' }}>
+                                                            {row.visited_date || '--'}
+                                                        </TableCell>
+
+                                                        {/* Company revenue  Column */}
+                                                        <TableCell
+                                                            sx={{ ...companyStyles.table_column, position: 'relative' }}
+                                                        >
+                                                            {row.company_revenue || '--'}
+                                                        </TableCell>
+
+                                                        {/* Company employee count  Column */}
+                                                        <TableCell
+                                                            sx={{
+                                                                ...companyStyles.table_column, position: 'relative', color: row.company_employee_count ? 'rgba(80, 82, 178, 1)' : '',
+                                                                cursor: row.employee_count ? 'pointer' : 'default'
                                                             }}
                                                         >
-                                                            <TableCell className="sticky-cell"
-                                                                sx={{
-                                                                    ...companyStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, color: 'rgba(80, 82, 178, 1)', backgroundColor: '#fff'
+                                                            {row.employee_count || '--'}
+                                                        </TableCell>
 
-                                                                }} onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleOpenPopup(row);
+                                                        {/* Company location  Column */}
+                                                        <TableCell
+                                                            sx={{ ...companyStyles.table_column, position: 'relative' }}
+                                                        >
+                                                            {(row.city || row.state)
+                                                                ? [capitalizeCity(row.city), row.state].filter(Boolean).join(', ')
+                                                                : '--'}
+                                                        </TableCell>
 
-                                                                }}>{row.company_name || '--'}</TableCell>
-                                                            <TableCell sx={{ ...companyStyles.table_array, position: 'relative' }}>
-                                                                {row.company_phone?.split(',')[0] || '--'}
-                                                            </TableCell>
+                                                        {/* Company industry  Column */}
+                                                        <TableCell sx={{ ...companyStyles.table_array, "::after": { content: 'none' }, cursor: row.primary_industry ? "pointer" : "default", }} onClick={(e) => row.industry ? handleOpenPopover(e, row.industry || "--") : ''}>
+                                                            {row.industry && row.industry.length > 30
+                                                                ? `${row.industry.slice(0, 20)}...`
+                                                                : row.industry || "--"}
+                                                        </TableCell>
 
-                                                            {/* Business Email Column */}
-                                                            <TableCell
-                                                                sx={{
-                                                                    ...companyStyles.table_array,
-                                                                    alignItems: 'center !important',
-                                                                    color: row.company_linkedin_url ? 'rgba(80, 82, 178, 1)' : '',
-                                                                    cursor: row.company_linkedin_url ? 'pointer' : 'default'
-                                                                }}
-                                                                onClick={() => { window.open(`https://${row.company_linkedin_url}`, '_blank') }}
-                                                            >
-                                                                {row.company_linkedin_url ? (
-                                                                    <>
-                                                                        <Image src="/linkedIn.svg" alt="linkedIn" width={16} height={16} style={{ marginRight: '2px' }} />/
-                                                                        {row.company_linkedin_url}
-                                                                    </>
-                                                                ) : (
-                                                                    '--'
-                                                                )}
-                                                            </TableCell>
-
-
-                                                            {/* Mobile Phone Column */}
-                                                            <TableCell sx={companyStyles.table_array_phone}>
-                                                                {row.employess_visited || '--'}
-                                                            </TableCell>
-
-                                                            <TableCell sx={{ ...companyStyles.table_array, position: 'relative' }}>
-                                                                {row.visited_date || '--'}
-                                                            </TableCell>
-
-                                                            <TableCell
-                                                                sx={{ ...companyStyles.table_column, position: 'relative' }}
-                                                            >
-                                                                {row.company_revenue || '--'}
-                                                            </TableCell>
-                                                            <TableCell
-                                                                sx={{
-                                                                    ...companyStyles.table_column, position: 'relative',
-                                                                    color: row.company_employee_count ? 'rgba(80, 82, 178, 1)' : '',
-                                                                    cursor: row.company_employee_count ? 'pointer' : 'default'
-                                                                }}
-                                                            >
-                                                                {row.company_employee_count || '--'}
-                                                            </TableCell>
-                                                            <TableCell
-                                                                sx={{ ...companyStyles.table_column, position: 'relative' }}
-                                                            >
-                                                                {row.company_city || row.company_state
-                                                                    ? [row.company_city, row.company_state].filter(Boolean).join(', ')
-                                                                    : '--'}
-                                                            </TableCell>
-
-
-                                                            <TableCell
-                                                                sx={{cursor: "pointer", "::after": { content: 'none' } }}
-                                                                onClick={(e) => row.primary_industry ? handleOpenPopover(e, row.primary_industry || "--") : ''}
-                                                            >
-                                                                {row.primary_industry && row.primary_industry.length > 30
-                                                                    ? `${row.primary_industry.slice(0, 20)}...`
-                                                                    : row.primary_industry || "--"}
-                                                            </TableCell>
-
-                                                        </TableRow>
-                                                    )
+                                                    </TableRow>
                                                 ))}
                                             </TableBody>
                                         </Table>
@@ -1243,7 +1217,7 @@ const Leads: React.FC = () => {
                     <PopupDetails open={openPopup}
                         onClose={handleClosePopup}
                         rowData={popupData} />
-                    {/* <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose} onApply={handleApplyFilters} /> */}
+                    <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose} onApply={handleApplyFilters} />
                     <CalendarPopup
                         anchorEl={calendarAnchorEl}
                         open={isCalendarOpen}
