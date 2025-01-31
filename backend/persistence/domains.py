@@ -40,12 +40,17 @@ class UserDomainsPersistence:
     def count_domain(self, user_id: int):
         return self.db.query(func.count(UserDomains.id)).filter_by(user_id=user_id).scalar()
     
-    def update_domain(self, user_id: int, new_domain):
-        self.db.query(UserDomains).filter(UserDomains.user_id == user_id).update(
-            {UserDomains.domain: new_domain},
-            synchronize_session="fetch"
-        )
-        self.db.commit()
+    def update_firt_domain_by_user_id(self, user_id: int, new_domain):
+        domain_query = self.db.query(UserDomains).filter(UserDomains.user_id == user_id).limit(1)
+    
+        domain = domain_query.first()
+
+        if domain:
+            domain_query.update(
+                {UserDomains.domain: new_domain},
+                synchronize_session="fetch"
+            )
+            self.db.commit()
 
     def delete_domain(self, user_id: int, domain: int):
         domain = self.db.query(UserDomains).filter(UserDomains.user_id == user_id, UserDomains.id == domain).first()

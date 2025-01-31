@@ -43,6 +43,7 @@ const AccountSetup = () => {
   const [pixelCode, setPixelCode] = useState('');
   const [stripeUrl, setStripeUrl] = useState('');
   const [domainName, setDomainName] = useState("");
+  const [shopDomain, setShopDomain] = useState("");
   const [editingName, setEditingName] = useState(true)
   const [manuallInstall, setManuallInstall] = useState(false)
   const [shopifyInstall, setShopifyInstall] = useState(false)
@@ -519,7 +520,7 @@ const AccountSetup = () => {
 
   const handleNextClick = () => {
     if (activeTab === 1) {
-      handleSubmit()
+      // handleSubmit()
     }
     let isMatched = false;
 
@@ -576,8 +577,8 @@ const AccountSetup = () => {
             .then(response => {
                 const status = response.data.status;
                 if (status === "PIXEL_CODE_INSTALLED") {
-                    alert("Pixel code is installed successfully!");
-                    // endSetup()
+                    // alert("Pixel code is installed successfully!");
+                    endSetup()
                     showToast('Pixel code is installed successfully!');
                 }
             })
@@ -1360,7 +1361,73 @@ const AccountSetup = () => {
                     </Box>
                   </Box>
               }
-              {shopifyInstall && <Box/>}
+              {shopifyInstall && 
+                  <Box>
+                    <Box display="flex" justifyContent="space-between" sx={{ width: '100%', alignItems: 'center', paddingBottom: '1rem' }}>
+                        <Box display="flex" gap="16px">
+                        <Image src="install_cms1.svg" alt="Shopify install pixel" width={24} height={24}/>
+                          <Typography className='first-sub-title' sx={{  textAlign: 'left', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
+                            Install with Shopify
+                          </Typography>
+                        </Box>    
+                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store" 
+                              target="_blank" className='first-sub-title' style={{fontSize: "14px", color: "rgba(80, 82, 178, 1)"}} 
+                              sx={{ textDecoration: "underline", cursor: "pointer",'@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
+                          Tutorial
+                        </Link>
+                    </Box>
+                    <Divider />
+                    <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
+                        <Image src='/1.svg' alt='1' width={28} height={28} />
+                        <Box sx={{display: 'flex', alignItems: "center"}}>
+                          <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Shopify shop domain in the designated field. This allows our system to identify your store.</Typography>
+                        </Box>
+                        <Box/>
+                        <TextField
+                          fullWidth
+                          label="Shop Domain"
+                          variant="outlined"
+                          placeholder='Enter your Shop Domain'
+                          margin="normal"
+                          InputProps={{
+                            style: {
+                                color: 'rgba(17, 17, 19, 1)',
+                                fontFamily: 'Nunito Sans',
+                                fontWeight: 400,
+                                fontSize: '14px',
+                            },
+                          }}
+                          value={isFocused
+                            ? (websiteLink ? websiteLink.replace(/^https?:\/\//, "") : "")
+                            : (websiteLink ? `https://${websiteLink.replace(/^https?:\/\//, "")}` : "https://")
+                          }
+                          sx={{
+                            pl: 2,
+                            "& .MuiOutlinedInput-root": {
+                              "& label": {
+                                transformOrigin: "inherit"
+                              },
+                              "& fieldset": {
+                                borderColor: "rgba(80, 82, 178, 1)",
+                              },
+                              "&:hover fieldset": {
+                                borderColor: "rgba(86, 153, 237, 1)",
+                              },
+                            "& .MuiInputLabel-root.Mui-focused": {
+                                color: "rgba(17, 17, 19, 0.6)",
+                            },
+                            "&.MuiFormLabel-root-MuiInputLabel-root": {
+                              transformOrigin: "inherit"
+                            }
+                          }}}
+                          onFocus={handleFocus}
+                          onBlur={handleBlur}
+                          onChange={(e) => setShopDomain(e.target.value)}
+                          InputLabelProps={{ sx: styles.inputLabel }}
+                        />
+                      </Box>
+                  </Box>
+              }
               {bigcommerceInstall && <Box/>}
               {googletagInstall && <Box/>}
               {wordpressInstall && <Box/>}
