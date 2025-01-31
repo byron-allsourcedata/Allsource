@@ -1022,7 +1022,6 @@ const Integrations = () => {
   const router = useRouter();
   const [showSlider, setShowSlider] = useState(false);
   const [isLoading, setLoading] = useState(true)
-  const urlParams = new URLSearchParams(window.location.search);
   const [activeTab, setActiveTab] = useState("1");
   const searchParams = useSearchParams();
   const statusIntegrate = searchParams.get('message');
@@ -1036,9 +1035,8 @@ const Integrations = () => {
   };
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
-    const scope = urlParams.get('scope');
+    const code = searchParams.get('code');
+    const scope = searchParams.get('scope');
     if (code && scope) {
       setValue("3")
       setActiveTab("3");
