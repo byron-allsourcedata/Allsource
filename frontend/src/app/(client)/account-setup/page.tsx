@@ -715,7 +715,7 @@ const AccountSetup = () => {
           const status = response.data.status;
           if (status === "PIXEL_CODE_INSTALLED") {
             showToast('Pixel code is installed successfully!');
-            endSetup()
+            setActiveTab((prev) => prev + 1);
           }
         })
         .catch(error => {
