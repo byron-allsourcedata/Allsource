@@ -40,10 +40,8 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
     }
     const evtSource = new EventSource(`${url}event-source?token=${token}`);
     evtSource.onmessage = (event) => {
-      console.log({event})
       if (event.data) {
         const data = JSON.parse(event.data);
-        console.log({data})
         if (data.status === "PIXEL_CODE_PARSE_FAILED") {
           showErrorToast("Could not find pixel code on your site")
         }
