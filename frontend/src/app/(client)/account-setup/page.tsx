@@ -570,7 +570,7 @@ const AccountSetup = () => {
   };
 
   return (
-    <Box sx={styles.pageContainer}>
+    <Box sx={{...styles.pageContainer}}>
       <Box sx={styles.headers}>
         <Box
           sx={{
@@ -903,7 +903,7 @@ const AccountSetup = () => {
           </MenuItem>
         </Menu>
       </Box>
-      <Box sx={styles.formContainer}>
+      <Box sx={{...styles.formContainer}}>
         <Box sx={styles.form}>
           <Box
             sx={{
@@ -1181,6 +1181,8 @@ const AccountSetup = () => {
                             <Button
                               onClick={() => {
                                 setEditingName(false)
+                                setDomainName(prev => prev.replace(/^https?:\/\//, ""))
+                                sessionStorage.setItem('current_domain', domainName.replace(/^https?:\/\//, ""))
                                 fetchEditDomain()
                               }}
                               sx={{
