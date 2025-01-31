@@ -1095,7 +1095,7 @@ const Leads: React.FC = () => {
                                                         </TableCell>
 
                                                         {/* Company linkedIn Column */}
-                                                        <TableCell sx={{ ...companyStyles.table_array, position: 'relative', color: row.linkedin_url ? 'rgba(80, 82, 178, 1)' : '', cursor: row.linkedin_url ? 'pointer' : 'default' }} onClick={() => { window.open(`https://${row.company_linkedin_url}`, '_blank') }}>
+                                                        <TableCell sx={{ ...companyStyles.table_array, position: 'relative', color: row.linkedin_url ? 'rgba(80, 82, 178, 1)' : '', cursor: row.linkedin_url ? 'pointer' : 'default' }} onClick={() => { window.open(`https://${row.linkedin_url}`, '_blank') }}>
                                                             {row.linkedin_url ? (
                                                                 <>
                                                                     <Image src="/linkedIn.svg" alt="linkedIn" width={16} height={16} style={{ marginRight: '2px' }} />/

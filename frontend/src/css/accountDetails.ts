@@ -74,7 +74,7 @@ export const accountStyles: { [key: string]: SxProps<Theme> } = {
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
     paddingLeft: 3,
-    paddingRight: 3,
+    paddingRight: 2,
     borderBottom: '1px solid rgba(240, 240, 240, 1)',
     pb: 1,
     '@media (max-width:600px)': {pl:1.5, pr: 1.5}
