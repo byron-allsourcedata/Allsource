@@ -1,9 +1,9 @@
-import React, {useEffect, useState} from 'react';
-import {GoogleLogin} from '@react-oauth/google';
-import {Box, Button, FormControl, IconButton, InputLabel, MenuItem, Modal, Select, Typography} from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { GoogleLogin } from '@react-oauth/google';
+import { Box, Button, FormControl, IconButton, InputLabel, MenuItem, Modal, Select, Typography } from '@mui/material';
 import axios from 'axios';
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
-import {showErrorToast, showToast} from "@/components/ToastNotification";
+import { showErrorToast, showToast } from "@/components/ToastNotification";
 import CloseIcon from "@mui/icons-material/Close";
 
 interface GTMContainer {
@@ -21,14 +21,9 @@ interface PopupProps {
     handleClose: () => void;
 }
 
-interface GoogleLoginResponse {
-    credential?: string;
-}
-
-const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
+const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
     const clientSecret = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET
-    const dashboard_url: string = process.env.NEXT_PUBLIC_API_DASHBOARD_URL || 'http://localhost:3000';
 
     const [loading, setLoading] = useState(false);
     const [session, setSession] = useState<{ token: string } | null>(null);
@@ -47,7 +42,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                 try {
                     const tokenResponse = await exchangeCodeForToken(authorizationCode);
                     const accessToken = tokenResponse.access_token;
-                    setSession({token: accessToken});
+                    setSession({ token: accessToken });
                     fetchAccounts(accessToken);
                 } catch (error) {
                 } finally {
@@ -102,7 +97,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                 try {
                     const response = await axios.get(
                         `https://www.googleapis.com/tagmanager/v2/accounts/${selectedAccount}/containers`,
-                        {headers: {Authorization: `Bearer ${session.token}`}}
+                        { headers: { Authorization: `Bearer ${session.token}` } }
                     );
                     setContainers(response.data.container || []);
                 } catch (error) {
@@ -119,7 +114,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                 try {
                     const response = await axios.get(
                         `https://www.googleapis.com/tagmanager/v2/accounts/${selectedAccount}/containers/${selectedContainer}/workspaces`,
-                        {headers: {Authorization: `Bearer ${session.token}`}}
+                        { headers: { Authorization: `Bearer ${session.token}` } }
                     );
                     setWorkspaces(response.data.workspace || []);
                 } catch (error) {
@@ -133,7 +128,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
     const fetchAccounts = async (accessToken: string) => {
         try {
             const response = await axios.get('https://www.googleapis.com/tagmanager/v2/accounts', {
-                headers: {Authorization: `Bearer ${accessToken}`}
+                headers: { Authorization: `Bearer ${accessToken}` }
             });
             setAccounts(response.data.account || []);
         } catch (error) {
@@ -182,14 +177,14 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                 },
                 { headers: { Authorization: `Bearer ${accessToken}` } }
             );
-    
+
             const containerVersionId = commitResponse.data.containerVersion.containerVersionId;
             const publishResponse = await axios.post(
                 `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/versions/${containerVersionId}:publish`,
                 {},
                 { headers: { Authorization: `Bearer ${accessToken}` } }
             );
-    
+
             showToast('Changes submitted and published successfully!');
         } catch (error) {
             if (axios.isAxiosError(error)) {
@@ -231,17 +226,17 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
                     }
                 ]
             };
-            try{
+            try {
                 const tagResponse = await axios.post(
                     `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/tags`,
                     tagData,
-                    {headers: {Authorization: `Bearer ${accessToken}`}}
+                    { headers: { Authorization: `Bearer ${accessToken}` } }
                 );
                 const tagId = tagResponse.data.tagId;
                 await updateTagWithTrigger(accessToken, accountId, containerId, workspaceId, tagId, triggerId)
                 showToast('Tag created and sent successfully!')
                 await submitAndPublishWorkspace(accessToken, accountId, containerId, workspaceId);
-            }catch (e){
+            } catch (e) {
                 showErrorToast('Tag already created!')
                 handleClose();
             }
@@ -262,11 +257,14 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
 
     const exchangeCodeForToken = async (authorizationCode: string) => {
         try {
+            const currentUrl = new URL(window.location.href);
+            currentUrl.search = '';
+            const redirectUri = currentUrl.href;
             const response = await axios.post('https://oauth2.googleapis.com/token', {
                 code: authorizationCode,
                 client_id: clientId,
                 client_secret: clientSecret,
-                redirect_uri: dashboard_url,
+                redirect_uri: redirectUri,
                 grant_type: 'authorization_code'
             });
             return response.data;
@@ -274,310 +272,335 @@ const GoogleTagPopup: React.FC<PopupProps> = ({open, handleClose}) => {
             throw error;
         }
     };
-    const handleLoginSuccess = async (response: GoogleLoginResponse) => {
+
+    const redirectToGoogleAuth = async () => {
         try {
-            if (response.credential) {
-                setSession({token: response.credential});
-                const redirectUri = dashboard_url;
-                const scope = [
-                    'https://www.googleapis.com/auth/tagmanager.edit.containers',
-                    'https://www.googleapis.com/auth/tagmanager.manage.accounts',
-                    'https://www.googleapis.com/auth/tagmanager.publish',
-                    'https://www.googleapis.com/auth/tagmanager.edit.containerversions'
-                ].join(' ');
-                window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
-            } else {
-                showErrorToast('Account data not available')
-            }
+            const scope = [
+                'https://www.googleapis.com/auth/tagmanager.edit.containers',
+                'https://www.googleapis.com/auth/tagmanager.manage.accounts',
+                'https://www.googleapis.com/auth/tagmanager.publish',
+                'https://www.googleapis.com/auth/tagmanager.edit.containerversions'
+            ].join(' ');
+            const currentUrl = new URL(window.location.href);
+            currentUrl.search = '';
+            const redirectUri = currentUrl.href;
+            const authUrl = `https://accounts.google.com/o/oauth2/v2/auth
+                ?client_id=${clientId}
+                &redirect_uri=${encodeURIComponent(redirectUri)}
+                &response_type=code
+                &scope=${encodeURIComponent(scope)}
+                &access_type=offline
+                &prompt=select_account`.replace(/\s+/g, '');
+
+            window.location.href = authUrl
+
         } catch (error) {
-            showErrorToast('Failed to log in.')
+            showErrorToast('Failed to log in.');
         }
     };
-
+    
     return (
         <>
-        {loading && (
-            <Box
-                sx={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'rgba(255, 255, 255, 0.8)',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    zIndex: 1000,
-                }}
-            >
+            {loading && (
                 <Box
                     sx={{
-                        border: '8px solid #f3f3f3',
-                        borderTop: '8px solid #3498db',
-                        borderRadius: '50%',
-                        width: '40px',
-                        height: '40px',
-                        animation: 'spin 1s linear infinite',
-                        '@keyframes spin': {
-                            '0%': {transform: 'rotate(0deg)'},
-                            '100%': {transform: 'rotate(360deg)'},
-                        },
-                    }}
-                />
-            </Box>
-        )}
-        <Modal
-            open={open}
-            onClose={handleClose}
-            aria-labelledby="modal-modal-title"
-            aria-describedby="modal-modal-description"
-            sx={{overflow: 'hidden'}}
-        >
-            <Box
-                sx={{
-                    position: 'fixed',
-                    top: '0',
-                    right: '0',
-                    width: '40%',
-                    height: '100%',
-                    backgroundColor: 'white',
-                    padding: '20px',
-                    borderRadius: '8px',
-                    boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
-                    zIndex: 1000,
-                    transition: 'transform 0.3s ease-in-out',
-                    transform: open ? 'translateX(0)' : 'translateX(100%)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                }}
-            >
-                <Box
-                    sx={{
-                        width: '100%',
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(255, 255, 255, 0.8)',
                         display: 'flex',
-                        justifyContent: 'space-between',
-                        paddingBottom: '1em',
+                        justifyContent: 'center',
                         alignItems: 'center',
-                        mb: '1em',
+                        zIndex: 1000,
                     }}
                 >
-                    <Typography
-                        variant="h6"
+                    <Box
                         sx={{
-                            fontFamily: 'Nunito, sans-serif',
-                            fontSize: '22px',
-                            fontWeight: 'bold',
-                            color: 'rgba(33, 43, 54, 1)',
-                            lineHeight: '1.4',
-                            letterSpacing: '0.5px',
-                            textShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-                            textAlign: 'center',
-                            textWrap: 'nowrap',
-                            mb: '1em',
-                            '@media (max-width: 600px)': {
-                                fontSize: '18px',
-                                textAlign: 'left',
+                            border: '8px solid #f3f3f3',
+                            borderTop: '8px solid #3498db',
+                            borderRadius: '50%',
+                            width: '40px',
+                            height: '40px',
+                            animation: 'spin 1s linear infinite',
+                            '@keyframes spin': {
+                                '0%': { transform: 'rotate(0deg)' },
+                                '100%': { transform: 'rotate(360deg)' },
                             },
                         }}
-                    >
-                        Welcome to GTM Integration Page
-                    </Typography>
-
-                    <IconButton onClick={handleClose}>
-                        <CloseIcon/>
-                    </IconButton>
-                </Box>
-                {!session ? (
-                    <GoogleLogin
-                        onSuccess={handleLoginSuccess}
-                        onError={() => showErrorToast('Failed to log in.')}
-                        ux_mode="popup"
                     />
-                ) : (
-                    <>
+                </Box>
+            )}
+            <Modal
+                open={open}
+                onClose={handleClose}
+                aria-labelledby="modal-modal-title"
+                aria-describedby="modal-modal-description"
+                sx={{ overflow: 'hidden' }}
+            >
+                <Box
+                    sx={{
+                        position: 'fixed',
+                        top: '0',
+                        right: '0',
+                        width: '40%',
+                        height: '100%',
+                        backgroundColor: 'white',
+                        padding: '20px',
+                        borderRadius: '8px',
+                        boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
+                        zIndex: 1000,
+                        transition: 'transform 0.3s ease-in-out',
+                        transform: open ? 'translateX(0)' : 'translateX(100%)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                    }}
+                >
+                    <Box
+                        sx={{
+                            width: '100%',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            paddingBottom: '1em',
+                            alignItems: 'center',
+                            mb: '1em',
+                        }}
+                    >
                         <Typography
                             variant="h6"
                             sx={{
                                 fontFamily: 'Nunito, sans-serif',
-                                fontSize: '20px',
-                                fontWeight: '600',
-                                color: 'rgba(33, 43, 54, 0.87)',
-                                mb: '1.2em',
-                                textAlign: 'center',
-                                lineHeight: '1.5',
+                                fontSize: '22px',
+                                fontWeight: 'bold',
+                                color: 'rgba(33, 43, 54, 1)',
+                                lineHeight: '1.4',
                                 letterSpacing: '0.5px',
+                                textShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+                                textAlign: 'center',
+                                textWrap: 'nowrap',
+                                mb: '1em',
                                 '@media (max-width: 600px)': {
                                     fontSize: '18px',
                                     textAlign: 'left',
-                                    mb: '1em',
                                 },
                             }}
                         >
-                            Select GTM Account and Container
+                            Welcome to GTM Integration Page
                         </Typography>
 
-                        <FormControl fullWidth sx={{mb: 2, mt: 1}}>
-                            <InputLabel sx={{
+                        <IconButton onClick={handleClose}>
+                            <CloseIcon />
+                        </IconButton>
+                    </Box>
+                    {!session ? (
+                        <Button
+                            onClick={redirectToGoogleAuth}
+                            sx={{
+                                backgroundColor: '#4285F4',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '10px 20px',
                                 fontSize: '16px',
-                                fontWeight: '500',
-                                color: 'rgba(33, 43, 54, 0.87)'
-                            }}>Account</InputLabel>
-                            <Select
-                                value={selectedAccount || ''}
-                                onChange={(e) => {
-                                    const selectedValue = e.target.value as string;
-                                    setSelectedAccount(selectedValue);
-                                }}
-                                label="Account"
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                transition: 'background-color 0.3s ease',
+                                '&:hover': {
+                                    backgroundColor: '#357AE8',
+                                },
+                                '&:active': {
+                                    backgroundColor: '#2C6BB5',
+                                },
+                            }}
+                        >
+                            Login with Google
+                        </Button>
+                    
+                    ) : (
+                        <>
+                            <Typography
+                                variant="h6"
                                 sx={{
-                                    backgroundColor: '#ffffff',
-                                    borderRadius: '4px',
-                                    border: '1px solid rgba(224, 224, 224, 1)',
-                                    '&:focus': {
-                                        borderColor: 'rgba(80, 82, 178, 1)',
-                                        boxShadow: '0 0 0 2px rgba(80, 82, 178, 0.2)',
-                                    },
-                                }}
-                            >
-                                <MenuItem value="">Select an account</MenuItem>
-                                {accounts.map(account => (
-                                    <MenuItem key={account.accountId} value={account.accountId}>
-                                        {account.name}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-
-                        <FormControl fullWidth sx={{mb: 2, mt: 1}}>
-                            <InputLabel sx={{
-                                fontSize: '16px',
-                                fontWeight: '500',
-                                color: 'rgba(33, 43, 54, 0.87)'
-                            }}>Container</InputLabel>
-                            <Select
-                                value={selectedContainer}
-                                onChange={e => setSelectedContainer(e.target.value as string)}
-                                label="Container"
-                                sx={{
-                                    backgroundColor: '#ffffff',
-                                    borderRadius: '4px',
-                                    border: '1px solid rgba(224, 224, 224, 1)',
-                                    '&:focus': {
-                                        borderColor: 'rgba(80, 82, 178, 1)',
-                                        boxShadow: '0 0 0 2px rgba(80, 82, 178, 0.2)',
-                                    },
-                                }}
-                            >
-                                <MenuItem value="">Select a container</MenuItem>
-                                {containers.map(container => (
-                                    <MenuItem key={container.containerId} value={container.containerId}>
-                                        {container.name}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-
-                        {accounts.length === 0 && (
-                            <Typography color="error" variant="body2" sx={{mb: 2, fontSize: '14px', fontWeight: '400'}}>
-                                No accounts available. Please check your Google Tag Manager setup.
-                            </Typography>
-                        )}
-
-                        {containers.length === 0 && selectedAccount && (
-                            <Typography color="error" variant="body2" sx={{mb: 2, fontSize: '14px', fontWeight: '400'}}>
-                                No containers available for the selected account. Please try another account.
-                            </Typography>
-                        )}
-
-                        <FormControl fullWidth sx={{mb: 2, mt: 1}}>
-                            <InputLabel sx={{
-                                fontSize: '16px',
-                                fontWeight: '500',
-                                color: 'rgba(33, 43, 54, 0.87)'
-                            }}>Workspace</InputLabel>
-                            <Select
-                                value={selectedWorkspace || ''}
-                                onChange={(e) => setSelectedWorkspace(e.target.value as string)}
-                                label="Workspace"
-                                sx={{
-                                    backgroundColor: '#ffffff',
-                                    borderRadius: '4px',
-                                    border: '1px solid rgba(224, 224, 224, 1)',
-                                    '&:focus': {
-                                        borderColor: 'rgba(80, 82, 178, 1)',
-                                        boxShadow: '0 0 0 2px rgba(80, 82, 178, 0.2)',
-                                    },
-                                }}
-                            >
-                                <MenuItem value="">Select a workspace</MenuItem>
-                                {workspaces.map(workspace => (
-                                    <MenuItem key={workspace.workspaceId} value={workspace.workspaceId}>
-                                        {workspace.name}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                        <Box sx={{mt: 2, width: '100%', display: 'flex', gap: 1}}>
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                onClick={handleCreateAndSendTag}
-                                sx={{
-                                    flex: 1,
-                                    padding: '12px 0',
-                                    borderRadius: '8px',
-                                    fontSize: '16px',
+                                    fontFamily: 'Nunito, sans-serif',
+                                    fontSize: '20px',
                                     fontWeight: '600',
-                                    textTransform: 'none',
-                                    backgroundColor: '#0853C4',
-                                    color: '#ffffff',
-                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                                    transition: 'background-color 0.3s, box-shadow 0.3s',
-                                    '&:hover': {
-                                        backgroundColor: '#06479F',
-                                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.15)',
-                                    },
-                                    '&:focus': {
-                                        outline: 'none',
-                                        boxShadow: '0 0 0 2px rgba(8, 83, 196, 0.3)',
+                                    color: 'rgba(33, 43, 54, 0.87)',
+                                    mb: '1.2em',
+                                    textAlign: 'center',
+                                    lineHeight: '1.5',
+                                    letterSpacing: '0.5px',
+                                    '@media (max-width: 600px)': {
+                                        fontSize: '18px',
+                                        textAlign: 'left',
+                                        mb: '1em',
                                     },
                                 }}
                             >
-                                Send
-                            </Button>
-                            <Button
-                                variant="outlined"
-                                color="secondary"
-                                onClick={handleClose}
-                                sx={{
-                                    flex: 1,
-                                    padding: '12px 0',
-                                    borderRadius: '8px',
+                                Select GTM Account and Container
+                            </Typography>
+
+                            <FormControl fullWidth sx={{ mb: 2, mt: 1 }}>
+                                <InputLabel sx={{
                                     fontSize: '16px',
-                                    fontWeight: '600',
-                                    textTransform: 'none',
-                                    border: '1px solid rgba(80, 82, 178, 1)',
-                                    color: 'rgba(80, 82, 178, 1)',
-                                    transition: 'background-color 0.3s, border-color 0.3s',
-                                    '&:hover': {
-                                        backgroundColor: 'rgba(80, 82, 178, 0.1)',
-                                        borderColor: 'rgba(80, 82, 178, 0.8)',
-                                    },
-                                    '&:focus': {
-                                        outline: 'none',
-                                        boxShadow: '0 0 0 2px rgba(80, 82, 178, 0.3)',
-                                    },
-                                }}
-                            >
-                                Cancel
-                            </Button>
-                        </Box>
-                    </>
-                )}
-            </Box>
-        </Modal>
+                                    fontWeight: '500',
+                                    color: 'rgba(33, 43, 54, 0.87)'
+                                }}>Account</InputLabel>
+                                <Select
+                                    value={selectedAccount || ''}
+                                    onChange={(e) => {
+                                        const selectedValue = e.target.value as string;
+                                        setSelectedAccount(selectedValue);
+                                    }}
+                                    label="Account"
+                                    sx={{
+                                        backgroundColor: '#ffffff',
+                                        borderRadius: '4px',
+                                        border: '1px solid rgba(224, 224, 224, 1)',
+                                        '&:focus': {
+                                            borderColor: 'rgba(80, 82, 178, 1)',
+                                            boxShadow: '0 0 0 2px rgba(80, 82, 178, 0.2)',
+                                        },
+                                    }}
+                                >
+                                    <MenuItem value="">Select an account</MenuItem>
+                                    {accounts.map(account => (
+                                        <MenuItem key={account.accountId} value={account.accountId}>
+                                            {account.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+
+                            <FormControl fullWidth sx={{ mb: 2, mt: 1 }}>
+                                <InputLabel sx={{
+                                    fontSize: '16px',
+                                    fontWeight: '500',
+                                    color: 'rgba(33, 43, 54, 0.87)'
+                                }}>Container</InputLabel>
+                                <Select
+                                    value={selectedContainer}
+                                    onChange={e => setSelectedContainer(e.target.value as string)}
+                                    label="Container"
+                                    sx={{
+                                        backgroundColor: '#ffffff',
+                                        borderRadius: '4px',
+                                        border: '1px solid rgba(224, 224, 224, 1)',
+                                        '&:focus': {
+                                            borderColor: 'rgba(80, 82, 178, 1)',
+                                            boxShadow: '0 0 0 2px rgba(80, 82, 178, 0.2)',
+                                        },
+                                    }}
+                                >
+                                    <MenuItem value="">Select a container</MenuItem>
+                                    {containers.map(container => (
+                                        <MenuItem key={container.containerId} value={container.containerId}>
+                                            {container.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+
+                            {accounts.length === 0 && (
+                                <Typography color="error" variant="body2" sx={{ mb: 2, fontSize: '14px', fontWeight: '400' }}>
+                                    No accounts available. Please check your Google Tag Manager setup.
+                                </Typography>
+                            )}
+
+                            {containers.length === 0 && selectedAccount && (
+                                <Typography color="error" variant="body2" sx={{ mb: 2, fontSize: '14px', fontWeight: '400' }}>
+                                    No containers available for the selected account. Please try another account.
+                                </Typography>
+                            )}
+
+                            <FormControl fullWidth sx={{ mb: 2, mt: 1 }}>
+                                <InputLabel sx={{
+                                    fontSize: '16px',
+                                    fontWeight: '500',
+                                    color: 'rgba(33, 43, 54, 0.87)'
+                                }}>Workspace</InputLabel>
+                                <Select
+                                    value={selectedWorkspace || ''}
+                                    onChange={(e) => setSelectedWorkspace(e.target.value as string)}
+                                    label="Workspace"
+                                    sx={{
+                                        backgroundColor: '#ffffff',
+                                        borderRadius: '4px',
+                                        border: '1px solid rgba(224, 224, 224, 1)',
+                                        '&:focus': {
+                                            borderColor: 'rgba(80, 82, 178, 1)',
+                                            boxShadow: '0 0 0 2px rgba(80, 82, 178, 0.2)',
+                                        },
+                                    }}
+                                >
+                                    <MenuItem value="">Select a workspace</MenuItem>
+                                    {workspaces.map(workspace => (
+                                        <MenuItem key={workspace.workspaceId} value={workspace.workspaceId}>
+                                            {workspace.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                            <Box sx={{ mt: 2, width: '100%', display: 'flex', gap: 1 }}>
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={handleCreateAndSendTag}
+                                    sx={{
+                                        flex: 1,
+                                        padding: '12px 0',
+                                        borderRadius: '8px',
+                                        fontSize: '16px',
+                                        fontWeight: '600',
+                                        textTransform: 'none',
+                                        backgroundColor: '#0853C4',
+                                        color: '#ffffff',
+                                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                                        transition: 'background-color 0.3s, box-shadow 0.3s',
+                                        '&:hover': {
+                                            backgroundColor: '#06479F',
+                                            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.15)',
+                                        },
+                                        '&:focus': {
+                                            outline: 'none',
+                                            boxShadow: '0 0 0 2px rgba(8, 83, 196, 0.3)',
+                                        },
+                                    }}
+                                >
+                                    Send
+                                </Button>
+                                <Button
+                                    variant="outlined"
+                                    color="secondary"
+                                    onClick={handleClose}
+                                    sx={{
+                                        flex: 1,
+                                        padding: '12px 0',
+                                        borderRadius: '8px',
+                                        fontSize: '16px',
+                                        fontWeight: '600',
+                                        textTransform: 'none',
+                                        border: '1px solid rgba(80, 82, 178, 1)',
+                                        color: 'rgba(80, 82, 178, 1)',
+                                        transition: 'background-color 0.3s, border-color 0.3s',
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(80, 82, 178, 0.1)',
+                                            borderColor: 'rgba(80, 82, 178, 0.8)',
+                                        },
+                                        '&:focus': {
+                                            outline: 'none',
+                                            boxShadow: '0 0 0 2px rgba(80, 82, 178, 0.3)',
+                                        },
+                                    }}
+                                >
+                                    Cancel
+                                </Button>
+                            </Box>
+                        </>
+                    )}
+                </Box>
+            </Modal>
         </>
     );
 };
