@@ -28,6 +28,15 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import PersonIcon from '@mui/icons-material/Person';
 import MetaConnectButton from "@/components/MetaConnectButton";
+import KlaviyoIntegrationPopup from "@/components/KlaviyoIntegrationPopup";
+import OmnisendConnect from "@/components/OmnisendConnect";
+import MailchimpConnect from "@/components/MailchimpConnect";
+import AttentiveIntegrationPopup from "@/components/AttentiveIntegrationPopup";
+import SendlaneConnect from "@/components/SendlaneConnect";
+import ZapierConnectPopup from "@/components/ZapierConnectPopup";
+import SlackConnectPopup from "@/components/SlackConnectPopup";
+import ShopifySettings from "@/components/ShopifySettings";
+import BCommerceConnect from "@/components/Bcommerce";
 import EditIcon from '@mui/icons-material/Edit';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
@@ -42,12 +51,14 @@ const AccountSetup = () => {
   const [selectedVisits, setSelectedVisits] = useState("");
   const [selectedRoles, setSelectedRoles] = useState("");
   const [selectedMethodInstall, setSelectedMethodInstall] = useState("");
+  const [selectedIntegration, setSelectedIntegration] = useState("");
   const [pixelCode, setPixelCode] = useState('');
   const [stripeUrl, setStripeUrl] = useState('');
   const [domainName, setDomainName] = useState("");
   const [shopDomain, setShopDomain] = useState("");
   const [accessToken, setAccessToken] = useState("");
   const [bigcommerceHash, setBigcommerceHash] = useState("");
+  const [integrationsCredentials, setIntegrationsCredentials] = useState<IntegrationCredentials[]>([]);
   const [editingName, setEditingName] = useState(true)
   const [manuallInstall, setManuallInstall] = useState(false)
   const [shopifyInstall, setShopifyInstall] = useState(false)
@@ -55,7 +66,12 @@ const AccountSetup = () => {
   const [wordpressInstall, setWordpressInstall] = useState(false)
   const [googletagInstall, setGoogletagInstall] = useState(false)
   const [sendlanePopupOpen, setSendlanePopupOpen] = useState(false)
+  const [bigcommercePopupOpen, setBigcommercePopupOpen] = useState(false)
+  const [shopifyPopupOpen, setShopifyPopupOpen] = useState(false)
   const [mailChimpPopupOpen, setMailchimpPopupOpen] = useState(false)
+  const [attentivePopupOpen, setAttentivePopupOpen] = useState(false)
+  const [klaviyoPopupOpen, setKlaviyoPopupOpen] = useState(false)
+  const [zapierPopupOpen, setZapierPopupOpen] = useState(false)
   const [omnisendPopupOpen, setOmnisendPopupOpen] = useState(false)
   const [metaPopupOpen, setMetaPopupOpen] = useState(false)
   const [opengoogle, setGoogleOpen] = useState(false);
@@ -68,7 +84,8 @@ const AccountSetup = () => {
     selectedEmployees: "",
     selectedVisits: "",
     typeBusiness: "",
-    selectedMethodInstall: ""
+    selectedMethodInstall: "",
+    selectedIntegration: ""
 
   });
   const router = useRouter();
@@ -78,6 +95,16 @@ const AccountSetup = () => {
   const [email, setEmail] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState(0);
   const { full_name: userFullName, email: userEmail, partner } = useUser();
+
+  interface IntegrationCredentials {
+    access_token: string;
+    service_name: string;
+    shop_domain: string;
+    ad_account_id: string;
+    is_with_suppresions: boolean;
+    error_message?: string
+    is_failed: boolean
+  }
 
   useEffect(() => {
     const fetchCompanyInfo = async () => {
@@ -94,7 +121,6 @@ const AccountSetup = () => {
             router.push("/settings?section=subscription");
             break;
           case "DASHBOARD_ALLOWED":
-            // setActiveTab(2)
             break;
           default:
             console.error("Unknown status:", status);
@@ -117,10 +143,10 @@ const AccountSetup = () => {
 
     handleRedirect();
     fetchCompanyInfo();
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
+    // document.body.style.overflow = 'hidden';
+    // return () => {
+    //   document.body.style.overflow = 'auto';
+    // };
   }, []);
 
   const getUserDataFromStorage = () => {
@@ -326,6 +352,12 @@ const AccountSetup = () => {
     setSelectedMethodInstall(label);
     setErrors({ ...errors, selectedMethodInstall: "" });
   };
+  const handleIntegration = (label: string) => {
+    setSelectedIntegration(label);
+    setErrors({ ...errors, selectedIntegration: "" });
+  };
+
+
 
   const validateField = (
     value: string,
@@ -357,7 +389,13 @@ const AccountSetup = () => {
   };
 
   const handleSkip = () => {
-    handleNextClick()
+    if (activeTab === 3) {
+      endSetup()
+    }
+    else {
+      setActiveTab((prev) => prev + 1);
+    }
+
   }
 
   const endSetup = () => {
@@ -378,7 +416,8 @@ const AccountSetup = () => {
       selectedVisits: selectedVisits ? "" : "Please select number of visits",
       selectedRoles: selectedRoles ? "" : "Please select your`s role",
       typeBusiness: typeBusiness ? "" : "Please select your`s type business",
-      selectedMethodInstall: selectedMethodInstall ? "" : "Please select method install pixel"
+      selectedMethodInstall: selectedMethodInstall ? "" : "Please select method install pixel",
+      selectedIntegration: selectedIntegration ? "" : "Please choice integration"
     };
     setErrors(newErrors);
 
@@ -480,6 +519,10 @@ const AccountSetup = () => {
     return selectedMethodInstall !== ""
   };
 
+  const isFormValidFourth = () => {
+    return selectedIntegration !== ""
+  };
+
   const installManually = async () => {
     try {
       const response = await axiosInterceptorInstance.get('/install-pixel/manually');
@@ -509,10 +552,15 @@ const AccountSetup = () => {
     { label: "Bigcommerce", src: "bigcommerce-icon.svg", setState: setBigcommerceInstall, action: () => { } },
   ];
   const integrations = [
+    { label: "Attentive", src: "attentive.svg", setState: setAttentivePopupOpen },
+    { label: "Klaviyo", src: "klaviyo.svg", setState: setKlaviyoPopupOpen },
+    { label: "Mailchimp", src: "mailchimp-icon.svg", setState: setMailchimpPopupOpen },
     { label: "Meta", src: "meta-icon.svg", setState: setMetaPopupOpen },
     { label: "Omnisend", src: "omnisend_icon_black.svg", setState: setOmnisendPopupOpen },
-    { label: "Mailchimp", src: "mailchimp-icon.svg", setState: setMailchimpPopupOpen },
     { label: "Sendlane", src: "sendlane-icon.svg", setState: setSendlanePopupOpen},
+    { label: "Shopify", src: "install_cms1.svg", setState: setShopifyPopupOpen},
+    { label: "Zapier", src: "zapier-icon.svg", setState: setZapierPopupOpen},
+    { label: "Bigcommerce", src: "bigcommerce-icon.svg", setState: setBigcommercePopupOpen},
   ];
   const roles = [
     { label: "Digital Marketer" },
@@ -552,7 +600,6 @@ const AccountSetup = () => {
     let isMatched = false;
 
     method_installingPixel.forEach(({ label, setState, action }) => {
-      console.log(label, selectedMethodInstall)
       if (selectedMethodInstall === label) {
         setState(true);
         isMatched = true;
@@ -573,6 +620,17 @@ const AccountSetup = () => {
 
   };
 
+  const handleLastSlide = () => {
+    integrations.forEach(({ label, setState }) => {
+      if (selectedIntegration === label) {
+        setState(true);
+      } else {
+        setState(false);
+      }
+
+    });
+  } 
+
   const handleCancel = () => {
     method_installingPixel.forEach(({ label, setState }) => {
       if (selectedMethodInstall === label) {
@@ -588,6 +646,18 @@ const AccountSetup = () => {
       })
       .catch(error => {
       });
+  };
+
+  const handleSaveSettings = (newIntegration: IntegrationCredentials) => {
+    setIntegrationsCredentials(prevIntegrations => {
+      if (prevIntegrations.some(integration => integration.service_name === newIntegration.service_name)) {
+        return prevIntegrations.map(integration =>
+          integration.service_name === newIntegration.service_name ? newIntegration : integration
+        );
+      } else {
+        return [...prevIntegrations, newIntegration];
+      }
+    });
   };
 
   const handleInstallShopify = async () => {
@@ -1126,29 +1196,6 @@ const AccountSetup = () => {
             <>
               {/* Business info */}
               <Typography variant="body1" className="first-sub-title" sx={styles.text}>
-                How many employees work at your organization
-              </Typography>
-              {errors.selectedEmployees && (
-                <Typography variant="body2" color="error">
-                  {errors.selectedEmployees}
-                </Typography>
-              )}
-              <Box sx={styles.employeeButtons}>
-                {ranges.map((range, index) => (
-                  <Button
-                    className="form-input"
-                    key={index}
-                    variant="outlined"
-                    onClick={() => handleEmployeeRangeChange(range.label)}
-                    onTouchStart={() => handleEmployeeRangeChange(range.label)}
-                    onMouseDown={() => handleEmployeeRangeChange(range.label)}
-                    sx={getButtonStyles(selectedEmployees === range.label)}
-                  >
-                    <Typography className="form-input" sx={{ padding: '3px' }}> {range.label}</Typography>
-                  </Button>
-                ))}
-              </Box>
-              <Typography variant="body1" className="first-sub-title" sx={styles.text}>
                 Select the type of business you have
               </Typography>
               {errors.typeBusiness && (
@@ -1166,6 +1213,29 @@ const AccountSetup = () => {
                     onTouchStart={() => handleTypeBusinessChange(range.label)}
                     onMouseDown={() => handleTypeBusinessChange(range.label)}
                     sx={getButtonStyles(typeBusiness === range.label)}
+                  >
+                    <Typography className="form-input" sx={{ padding: '3px' }}> {range.label}</Typography>
+                  </Button>
+                ))}
+              </Box>
+              <Typography variant="body1" className="first-sub-title" sx={styles.text}>
+                How many employees work at your organization
+              </Typography>
+              {errors.selectedEmployees && (
+                <Typography variant="body2" color="error">
+                  {errors.selectedEmployees}
+                </Typography>
+              )}
+              <Box sx={styles.employeeButtons}>
+                {ranges.map((range, index) => (
+                  <Button
+                    className="form-input"
+                    key={index}
+                    variant="outlined"
+                    onClick={() => handleEmployeeRangeChange(range.label)}
+                    onTouchStart={() => handleEmployeeRangeChange(range.label)}
+                    onMouseDown={() => handleEmployeeRangeChange(range.label)}
+                    sx={getButtonStyles(selectedEmployees === range.label)}
                   >
                     <Typography className="form-input" sx={{ padding: '3px' }}> {range.label}</Typography>
                   </Button>
@@ -1909,7 +1979,6 @@ const AccountSetup = () => {
           }
           {activeTab === 3 && (
             <>
-                            {!metaPopupOpen && !omnisendPopupOpen && !mailChimpPopupOpen && !sendlanePopupOpen &&
                 <>
                   <Typography variant="body1" className="first-sub-title" sx={styles.text}>
                     These Will Be Available on Your Integration Page for quick Setup.
@@ -1924,26 +1993,85 @@ const AccountSetup = () => {
                       <Button
                         key={index}
                         variant="outlined"
-                        onClick={() => handleMethodInstall(range.label)}
-                        onTouchStart={() => handleMethodInstall(range.label)}
-                        onMouseDown={() => handleMethodInstall(range.label)}
-                        sx={{ ...getButtonRolesStyles(selectedMethodInstall === range.label), gap: "8px", justifyContent: "flex-start", p: "12px" }}
+                        onClick={() => handleIntegration(range.label)}
+                        onTouchStart={() => handleIntegration(range.label)}
+                        onMouseDown={() => handleIntegration(range.label)}
+                        sx={{ ...getButtonRolesStyles(selectedIntegration === range.label), gap: "8px", justifyContent: "flex-start", p: "12px" }}
                       >
                         <Image src={range.src} alt="Integration item" width={24} height={24} />
                         <Typography className="form-input" style={{ color: "rgba(112, 112, 113, 1)", lineHeight: "19.6px" }}>{range.label}</Typography>
                       </Button>
                     ))}
                   </Box>
+                  <MetaConnectButton
+                      open={metaPopupOpen}
+                      onClose={() => setMetaPopupOpen(false)}
+                      isEdit={true}
+                      onSave={handleSaveSettings}
+                      boxShadow="rgba(0, 0, 0, 0.1)"
+                    />
+                  {/* <KlaviyoIntegrationPopup
+                    open={klaviyoPopupOpen}
+                    handleClose={() => setKlaviyoPopupOpen(false)}
+                    onSave={handleSaveSettings}
+                    boxShadow="rgba(0, 0, 0, 0.1)"
+                    initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'klaviyo')?.access_token}
+                  /> */}
+                  <AttentiveIntegrationPopup
+                    open={attentivePopupOpen}
+                    handleClose={() => setAttentivePopupOpen(false)}
+                    onSave={handleSaveSettings}
+                    boxShadow="rgba(0, 0, 0, 0.1)"
+                    initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'attentive')?.access_token}
+                  />
+                  <ZapierConnectPopup 
+                    open={zapierPopupOpen} 
+                    boxShadow="rgba(0, 0, 0, 0.1)"
+                    handlePopupClose={() => setZapierPopupOpen(false)} 
+                  />
+                  <MailchimpConnect 
+                    open={mailChimpPopupOpen} 
+                    boxShadow="rgba(0, 0, 0, 0.1)"
+                    handleClose={() => setMailchimpPopupOpen(false)} 
+                    onSave={handleSaveSettings} 
+                    initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'mailchimp')?.access_token}
+                    />
+                  <OmnisendConnect 
+                    open={omnisendPopupOpen} 
+                    handleClose={()=> setOmnisendPopupOpen(false)} 
+                    onSave={handleSaveSettings} 
+                    boxShadow="rgba(0, 0, 0, 0.1)" />
+                  <SendlaneConnect 
+                    open={sendlanePopupOpen} 
+                    handleClose={() => setSendlanePopupOpen(false)} 
+                    onSave={handleSaveSettings} 
+                    boxShadow="rgba(0, 0, 0, 0.1)"
+                    initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'sendlane')?.access_token}
+                    />
+                  <ShopifySettings
+                    open={shopifyPopupOpen}
+                    handleClose={() => setShopifyPopupOpen(false)}
+                    onSave={handleSaveSettings}
+                    initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'shopify')?.access_token}
+                    initShopDomain={integrationsCredentials?.find(integration => integration.service_name === 'shopify')?.shop_domain}
+                  />
+                    <BCommerceConnect
+                      open={bigcommercePopupOpen}
+                      onClose={() => setBigcommercePopupOpen(false)}
+                      initShopHash={integrationsCredentials?.find(integration => integration.service_name === 'big_commerce')?.shop_domain}
+                      error_message={integrationsCredentials?.find(integration => integration.service_name === 'big_commerce')?.error_message}
+                    />
+
                   <Button
                     className='hyperlink-red'
                     fullWidth
                     variant="contained"
                     sx={{
                       ...styles.submitButton,
-                      opacity: isFormValidThird() ? 1 : 0.6,
+                      opacity: isFormValidFourth() ? 1 : 0.6,
                       mb: 2,
-                      pointerEvents: isFormValidThird() ? "auto" : "none",
-                      backgroundColor: isFormValidThird()
+                      pointerEvents: isFormValidFourth() ? "auto" : "none",
+                      backgroundColor: isFormValidFourth()
                         ? "rgba(244, 87, 69, 1)"
                         : "rgba(244, 87, 69, 0.4)",
                       "&.Mui-disabled": {
@@ -1951,8 +2079,8 @@ const AccountSetup = () => {
                         color: "#fff",
                       },
                     }}
-                    onClick={handleNextClick}
-                    disabled={!isFormValidThird()}
+                    onClick={handleLastSlide}
+                    disabled={!isFormValidFourth()}
                   >
                     Next
                   </Button>
@@ -1974,28 +2102,6 @@ const AccountSetup = () => {
                     Skip
                   </Button>
                 </>
-              }
-
-              {metaPopupOpen &&
-                  <MetaConnectButton
-                      open={metaPopupOpen}
-                      onClose={() => setMetaPopupOpen(false)}
-                      onSave={() => {}}
-                      boxShadow="rgba(0, 0, 0, 0.1)"
-                    />
-              }
-
-              {omnisendPopupOpen &&
-                  <GoogleTagPopup open={omnisendPopupOpen} handleClose={handleGoogleClose} />
-              }
-
-              {mailChimpPopupOpen &&
-                  <GoogleTagPopup open={mailChimpPopupOpen} handleClose={handleGoogleClose} />
-              }
-
-              {sendlanePopupOpen &&
-                  <GoogleTagPopup open={sendlanePopupOpen} handleClose={handleGoogleClose} />
-              }
             </>
           )}
         </Box>
