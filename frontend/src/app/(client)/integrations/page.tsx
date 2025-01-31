@@ -423,7 +423,7 @@ const DeleteIntegrationPopup = ({ service_name, open, handleDelete, onClose }: D
         }}
       >
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', p: '24px', pb:'19px', borderBottom: '1px solid rgba(0, 0, 0, 0.1)', }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', p: '24px', pb: '19px', borderBottom: '1px solid rgba(0, 0, 0, 0.1)', }}>
           <Typography variant='h3' fontSize={'1rem'}>Confirm deletion {service_name ? formatServiceName(service_name) : ''}</Typography>
           <CloseIcon sx={{ cursor: 'pointer' }} onClick={onClose} />
         </Box>
@@ -473,7 +473,7 @@ const DeleteIntegrationPopup = ({ service_name, open, handleDelete, onClose }: D
             variant='outlined'
             onClick={onClose}
           >
-            <Typography padding={'0rem 1rem'} sx={{textTransform: 'none'}} fontSize={'0.8rem'}>Cancel</Typography>
+            <Typography padding={'0rem 1rem'} sx={{ textTransform: 'none' }} fontSize={'0.8rem'}>Cancel</Typography>
           </Button>
           <Button
             sx={{
@@ -491,7 +491,7 @@ const DeleteIntegrationPopup = ({ service_name, open, handleDelete, onClose }: D
             variant='contained'
             onClick={handleDeleteClick}
           >
-            <Typography padding={'0.35rem 2rem'} sx={{textTransform: 'none'}} fontSize={'0.8rem'}>Confirm</Typography>
+            <Typography padding={'0.35rem 2rem'} sx={{ textTransform: 'none' }} fontSize={'0.8rem'}>Confirm</Typography>
           </Button>
         </Box>
       </Drawer>
@@ -746,10 +746,10 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
       <SendlaneConnect open={openSendlaneConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'sendlane')?.access_token} boxShadow="rgba(0, 0, 0, 0.1)" />
       {OpenAttentiveConnect && (
         <>
-        <AttentiveIntegrationPopup open={OpenAttentiveConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'attentive')?.access_token} boxShadow="rgba(0, 0, 0, 0.1)" />
-          </>
-        )
-        }
+          <AttentiveIntegrationPopup open={OpenAttentiveConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'attentive')?.access_token} boxShadow="rgba(0, 0, 0, 0.1)" />
+        </>
+      )
+      }
       <ZapierConnectPopup open={openZapierConnect} handlePopupClose={handleClose} boxShadow="rgba(0, 0, 0, 0.01)" />
       <AlivbleIntagrationsSlider
         isContactSync={false}
@@ -1022,6 +1022,7 @@ const Integrations = () => {
   const router = useRouter();
   const [showSlider, setShowSlider] = useState(false);
   const [isLoading, setLoading] = useState(true)
+  const urlParams = new URLSearchParams(window.location.search);
   const [activeTab, setActiveTab] = useState("1");
   const searchParams = useSearchParams();
   const statusIntegrate = searchParams.get('message');
@@ -1033,6 +1034,16 @@ const Integrations = () => {
   const installPixel = () => {
     router.push('/dashboard');
   };
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const scope = urlParams.get('scope');
+    if (code && scope) {
+      setValue("3")
+      setActiveTab("3");
+    }
+  }, []);
 
   useEffect(() => {
     if (statusIntegrate) {
@@ -1056,7 +1067,7 @@ const Integrations = () => {
     border: '1px solid rgba(235, 235, 235, 1)',
     borderRadius: 2,
     padding: 3,
-    pb:0,
+    pb: 0,
     width: '100%',
     textAlign: 'center',
     flex: 1,
@@ -1179,9 +1190,9 @@ const Integrations = () => {
 
               <Box sx={{ "@media (max-width: 600px)": { display: 'none' } }}>
                 <CustomTooltip
-                title={"Connect your favourite tools to automate tasks and ensure all your data is accessible in one place."}
-                linkText="Learn more"
-                linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/integration"
+                  title={"Connect your favourite tools to automate tasks and ensure all your data is accessible in one place."}
+                  linkText="Learn more"
+                  linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/integration"
                 />
               </Box>
             </Box>
@@ -1282,19 +1293,19 @@ const Integrations = () => {
                       }
                     }} />
                 </TabList>
-              )}   
+              )}
             </Box>
 
             {status !== 'PIXEL_INSTALLATION_NEEDED' && !isLoading && activeTab === "3" && (
-            <Box sx={{
-              border: '1px solid #E4E4E4',
-              mt: 2.5,
-              width: '86%',
-              position: 'fixed',
-              top: '7rem',
-              "@media (max-width: 700px)": {display: 'none'}
-              
-            }}></Box>)}    
+              <Box sx={{
+                border: '1px solid #E4E4E4',
+                mt: 2.5,
+                width: '86%',
+                position: 'fixed',
+                top: '7rem',
+                "@media (max-width: 700px)": { display: 'none' }
+
+              }}></Box>)}
           </Box>
         </Box>
         <Box sx={{
@@ -1334,7 +1345,7 @@ const Integrations = () => {
             </Box>
           ) : (!isLoading && (
             <>
-              <TabPanel value="1" sx={{ mt: 6, "@media (max-width: 600px)": {mt: 10}}}>
+              <TabPanel value="1" sx={{ mt: 6, "@media (max-width: 600px)": { mt: 10 } }}>
                 <UserIntegrationsList
                   integrationsCredentials={integrationsCredentials}
                   changeTab={changeTab}
@@ -1343,7 +1354,7 @@ const Integrations = () => {
                   handleDeleteSettings={handleDeleteSettings}
                 />
               </TabPanel>
-              <TabPanel value="2" sx={{ mt: 6, "@media (max-width: 600px)": {mt: 8}}}>
+              <TabPanel value="2" sx={{ mt: 6, "@media (max-width: 600px)": { mt: 8 } }}>
                 <IntegrationsAvaliable
                   integrationsCredentials={integrationsCredentials}
                   integrations={integrations}
@@ -1351,7 +1362,7 @@ const Integrations = () => {
                 />
               </TabPanel>
               <TabPanel value="3" >
-                <Box sx={{ mt: 6, "@media (max-width: 600px)": {mt: 8}} }>
+                <Box sx={{ mt: 6, "@media (max-width: 600px)": { mt: 8 } }}>
                   <PixelManagment />
                 </Box>
               </TabPanel>

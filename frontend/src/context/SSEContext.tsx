@@ -54,7 +54,8 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
         else if(data.update_subscription && data.status) {
           showToast(`Subscription updated ${data.status}!`);
         }
-        else if(data.status && data.need_reload_page) {
+        // else if(data.status && data.need_reload_page) {
+        else if(data.status) {
           showToast("Pixel code is installed successfully!");
         }
         else {
@@ -66,7 +67,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
             sessionStorage.setItem('me', JSON.stringify(meData));
           }
           setData(data);
-          // window.location.reload();
+          window.location.reload();
         }
       }
     };
