@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, Query
 from starlette.responses import StreamingResponse
 
-from dependencies import get_companies_service
+from dependencies import get_companies_service, check_user_company
 from enums import BaseEnum
 from schemas.leads import LeadsRequest
 from services.companies import CompanyService
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(check_user_company)])
 
 
 @router.get("")
