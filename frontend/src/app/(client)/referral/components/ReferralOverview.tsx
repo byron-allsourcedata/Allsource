@@ -35,7 +35,6 @@ const ReferralOverview: React.FC = () => {
 
     const [accountCreatePending, setAccountCreatePending] = useState(false);
     const [error, setError] = useState(false);
-    const [stripeConnect, setStripeConnect] = useState(false);
     const [connectedAccountId, setConnectedAccountId] = useState();
     const [buttonText, setButtonText] = useState('View Dashboard');
     const [referralLink, setReferralLink] = useState('');
@@ -48,7 +47,7 @@ const ReferralOverview: React.FC = () => {
             setDiscountCode(selectedCode);
             try {
                 const response = await axiosInstance.get(`referral/details?discount_code_id=${selectedCode.id}`);
-                const fullReferralLink = `https://dev.maximiz.ai/signup?referral=${response.data.referral_code}`;
+                const fullReferralLink = `${process.env.NEXT_PUBLIC_BASE_URL}/signup?referral=${response.data.referral_code}`;
                 setReferralLink(fullReferralLink);
             } catch (err) {
                 console.error("Error fetching referral details:", err);
@@ -69,10 +68,9 @@ const ReferralOverview: React.FC = () => {
         try {
             const responseOverview = await axiosInstance.get('referral/overview')
             setConnectedAccountId(responseOverview.data.connected_stripe_account_id)
-            setStripeConnect(responseOverview.data.is_stripe_connected)
             const responseDetails = await axiosInstance.get(`referral/details`)
             setDiscountCodeOptions(responseDetails.data.discount_codes)
-            const fullReferralLink = `https://dev.maximiz.ai/signup?referral=${responseDetails.data.referral_code}`;
+            const fullReferralLink = `${process.env.NEXT_PUBLIC_BASE_URL}/signup?referral=${responseDetails.data.referral_code}`;
             setReferralLink(fullReferralLink);
         } catch (err) {
         } finally {
@@ -255,7 +253,7 @@ const ReferralOverview: React.FC = () => {
                                 </Button>
                             </Box>
                         )}
-                        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'start', borderRadius: '4px', padding: '1rem 1.5rem', gap: 4, opacity: stripeConnect ? 1 : 0.6  }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', border: '1px solid rgba(235, 235, 235, 1)', justifyContent: 'start', borderRadius: '4px', padding: '1rem 1.5rem', gap: 4, opacity: 0.6  }}>
                             <Box sx={{ display: 'flex', justifyContent: 'start', alignItems: 'center', width: '100%' }}>
                                 <Typography className="second-sub-title">
                                     Referral Details
@@ -279,9 +277,8 @@ const ReferralOverview: React.FC = () => {
                                         Discount Code
                                     </InputLabel>
                                     <Select
-                                        value={stripeConnect ? discountCode?.name : ''}
+                                        value={discountCode?.name}
                                         onChange={handleDiscountCodeChange}
-                                        disabled={!stripeConnect}
                                         label="Discount Code"
                                         sx={{
                                             backgroundColor: '#fff',
@@ -328,12 +325,11 @@ const ReferralOverview: React.FC = () => {
                                     variant="outlined"
                                     type="text"
                                     rows={2}
-                                    disabled={!referralLink && !stripeConnect}
-                                    value={stripeConnect ? referralLink : ''}
+                                    value={referralLink}
                                     InputProps={{
                                         style: { color: 'rgba(17, 17, 19, 1)', fontFamily: 'Nunito Sans', fontWeight: 400, fontSize: '14px' },
                                         endAdornment: (
-                                            (referralLink && stripeConnect && (
+                                            (referralLink && (
                                                 <InputAdornment position="end">
                                                     <IconButton onClick={handleCopyClick} edge="end" >
                                                         <ContentCopyIcon fontSize="small" />

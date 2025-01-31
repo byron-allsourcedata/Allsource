@@ -10,6 +10,7 @@ import Image from "next/image";
 import CalendarPopup from "./CustomCalendar";
 import { DateRangeIcon } from "@mui/x-date-pickers/icons";
 import SearchIcon from '@mui/icons-material/Search';
+import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import { useRouter } from "next/navigation";
 import { useUser } from '@/context/UserContext';
@@ -71,8 +72,11 @@ interface PartnersAccountsProps {
     appliedDates?: { start: Date | null; end: Date | null };
     id?: number | null;
     fromAdmin?: boolean;
+    fromMain?: boolean;
     masterData?: any;
+    accountName?: string;
     loading?: boolean;
+    onBack?: () => void;
     setLoading: (state: boolean) => void;
     tabIndex?: number;
     handleTabChange?: (event: React.SyntheticEvent | null, newIndex: number) => void;
@@ -110,7 +114,7 @@ const TruncatedText: React.FC<{ text: string; limit: number }> = ({ text, limit 
     };
 
 
-const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFromMain, id: partnerId, fromAdmin, masterData, setMasterData, loading, setLoading, tabIndex, handleTabChange }) => {
+const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFromMain, id: partnerId, accountName, onBack, fromAdmin, fromMain, masterData, setMasterData, loading, setLoading, tabIndex, handleTabChange }) => {
     const [accounts, setAccounts] = useState<AccountData[]>([]);
     const router = useRouter();
     const [page, setPage] = useState(0);
@@ -283,8 +287,6 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                 const current_domain = sessionStorage.getItem('current_domain')
                 sessionStorage.setItem('parent_domain', current_domain || '')
                 if (current_token){
-                    setBackButton(true)
-                    triggerBackButton()
                     localStorage.setItem('parent_token', current_token)
                     localStorage.setItem('token', response.data.token)
                     sessionStorage.removeItem('current_domain')
@@ -292,6 +294,8 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                     await fetchUserData()
                     router.push('/dashboard')
                     router.refresh()
+                    setBackButton(true)
+                    triggerBackButton()
                 }
             }
         }
@@ -317,6 +321,22 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                 '@media (max-width: 600px)': { margin: '0rem auto 0rem' }
             }}>
                 <Box>
+                    {fromMain && <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 2, mt: 1}}>
+                        <IconButton
+                            onClick={onBack}
+                            sx={{
+                                textTransform: "none",
+                                backgroundColor: "#fff",
+                                border: '0.73px solid rgba(184, 184, 184, 1)',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                padding: 0.25
+                            }}
+                        >
+                            <KeyboardArrowLeftIcon sx={{ color: "rgba(128, 128, 128, 1)" }} />
+                        </IconButton>
+                        <Typography sx={{ color: "rgba(0, 0, 0, 1)", fontSize: "16px", lineHeight: "22.4px", fontWeight: 600, fontFamily: "Nunito Sans" }}>Accounts - ({accountName})</Typography>
+                    </Box> }
                     {fromAdmin &&
                         <>
                             <Box sx={{ display: "flex", alignItems: "center", gap: "5px", mb: "24px" }}>
@@ -329,10 +349,6 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                                     sx={{ fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "#808080", cursor: "pointer" }}>
                                     Master Partner {masterData.partner_name ? `- ${masterData.partner_name}` : ""}
                                 </Typography>
-                                {/* <NavigateNextIcon width={16}/>
-                        <Typography sx={{fontWeight: 'bold', fontSize: '12px', fontFamily: 'Nunito Sans', color: "#808080"}}>
-                            {accountName}
-                        </Typography> */}
                             </Box>
                             <Typography variant="h4" component="h1" sx={{
                                 lineHeight: "22.4px",
@@ -519,13 +535,13 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                                                     ...suppressionsStyles.tableColumn,
                                                     paddingLeft: "16px",
                                                     cursor: sortable ? 'pointer' : 'default',
-                                                    ...(key === 'account_name' && {
-                                                        position: 'sticky',
-                                                        left: 0,
-                                                        zIndex: 99,
-                                                        backgroundColor: '#fff',
+                                                    // ...(key === 'account_name' && {
+                                                    //     position: 'sticky',
+                                                    //     left: 0,
+                                                    //     zIndex: 99,
+                                                    //     backgroundColor: '#fff',
 
-                                                    })
+                                                    // })
                                                 }}
                                                 onClick={sortable ? () => handleSortRequest(key) : undefined}
                                             >
@@ -560,7 +576,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                                                 }
                                             }
                                         }}>
-                                            <TableCell className='table-data sticky-cell'
+                                            <TableCell className='sticky-cell table-data'
                                             onClick={() => handleLogin(data.id)}
                                             sx={{
                                                 ...suppressionsStyles.tableBodyColumn,
@@ -590,7 +606,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                                                         },
                                                     }}
                                                 >
-                                                    {data.account_name}
+                                                    {data.account_name} 
                                                     <IconButton
                                                         className="icon-button"
                                                         sx={{

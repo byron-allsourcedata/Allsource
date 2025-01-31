@@ -32,6 +32,7 @@ const Signup: React.FC = () => {
   const referral = searchParams.get('referral')
   const slack_status = searchParams.get('slack_status')
   const shop_hash = searchParams.get('shop_hash')
+  const pft = searchParams.get('pft')
   const source_platform = searchParams.get('source_platform')
   const initialShopifyData = {
     code: searchParams.get('code') || null,
@@ -52,6 +53,7 @@ const Signup: React.FC = () => {
     ...{ spi: spi },
     ...{ ift: ift },
     ...{ ftd: ftd },
+    ...{ pft: pft },
     ...{ referral: referral },
     ...{ shop_hash: shop_hash },
     ...{ source_platform: source_platform }
@@ -331,6 +333,7 @@ const Signup: React.FC = () => {
                   ift,
                   ftd,
                   utm_params: utmData,
+                  ...{ pft: pft },
                   ...{ referral: referral },
                   ...{ shop_hash: shop_hash },
                   ...{ source_platform: source_platform },

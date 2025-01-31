@@ -62,6 +62,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
   const [hasNewNotifications, setHasNewNotifications] = useState<boolean>(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [visibleButton, setVisibleButton] = useState(false)
+  const [shouldRerender, setShouldRerender] = useState(false);
   const handleSignOut = () => {
     localStorage.clear();
     sessionStorage.clear();
@@ -83,24 +84,25 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
     const parent_token = localStorage.getItem('parent_token');
     const parent_domain = sessionStorage.getItem('parent_domain')
     if (parent_token) {
-      await new Promise<void>((resolve) => {
+      await new Promise<void>(async (resolve) => {
         sessionStorage.clear()
         localStorage.removeItem('parent_token');
         sessionStorage.removeItem('parent_domain')
         localStorage.setItem('token', parent_token);
         sessionStorage.setItem('current_domain', parent_domain || '')
-        fetchUserData()
+        await fetchUserData()
         setBackButton(false)
-
         setTimeout(() => {
           resolve();
         }, 0);
       });
 
-
+      setShouldRerender((prev) => !prev);
     }
 
     router.push("/partners");
+    router.refresh();
+    
   };
 
 

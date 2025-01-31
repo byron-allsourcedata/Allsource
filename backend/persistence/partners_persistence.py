@@ -1,9 +1,10 @@
 from models.partner import Partner
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql import case
+import os
 from sqlalchemy import or_, func
 from typing import Optional, Tuple
-from datetime import datetime, timedelta
+from datetime import datetime, timezone
 from models.referral_payouts import ReferralPayouts
 from models.users import Users
 from models.plans import SubscriptionPlan
@@ -224,7 +225,24 @@ class PartnersPersistence:
 
         self.db.commit()
         self.db.refresh(partner)
+        if partner.is_master == True:
+            self.add_default_referral_user(partner.user_id)
+            
         return partner
+
+    def add_default_referral_user(self, parent_id):
+        default_email = os.getenv('DEFAULT_USER_FOR_REFERRAL_USER')
+        if default_email:
+            default_user = self.db.query(Users).filter(Users.email == default_email).first()
+            if default_user:
+                referral = ReferralUser(
+                        user_id=default_user.id,
+                        parent_user_id=parent_id,
+                        referral_program_type='partner',
+                        created_at=datetime.now(timezone.utc)
+                    )
+                self.db.add(referral)
+                self.db.commit()
 
 
     def terminate_partner(self, partner_id):

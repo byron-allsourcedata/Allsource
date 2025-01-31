@@ -182,7 +182,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
                 sx={{
                 width: '100%',
                 position: 'fixed',
-                top: '5rem',
+                top: '4.2rem',
                 zIndex: 1200,   
                 }}
             >
@@ -256,6 +256,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
                                     fontWeight: 400,
                                     fontSize: '15px',
                                     padding:0,
+                                    top: '-1px',
                                     margin:0
                               }}}
                             sx={{
@@ -265,6 +266,9 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
                                 "& .MuiInputLabel-root[data-shrink='false']": {
                                     transform: "translate(16px, 50%) scale(1)",
                                 },
+                                "& .MuiOutlinedInput-root":{
+                                    maxHeight: '40px'
+                                }
                             }}
                             InputProps={{
                                 className: "form-input"
@@ -287,6 +291,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
                                     fontWeight: 400,
                                     fontSize: '15px',
                                     padding:0,
+                                    top: '-1px',
                                     margin:0
                               }}}
                             InputProps={{
@@ -301,6 +306,9 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
                                 "& .MuiInputLabel-root[data-shrink='false']": {
                                     transform: "translate(16px, 50%) scale(1)",
                                 },
+                                "& .MuiOutlinedInput-root":{
+                                    maxHeight: '40px'
+                                }
                             }}
                             value={email}
                             onChange={handleEmailChange}
@@ -319,6 +327,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
                                     fontWeight: 400,
                                     fontSize: '15px',
                                     padding:0,
+                                    top: '-1px',
                                     margin:0
                               }}}
                             sx={{
@@ -327,6 +336,9 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
                                 },
                                 "& .MuiInputLabel-root[data-shrink='false']": {
                                     transform: "translate(16px, 50%) scale(1)",
+                                },
+                                "& .MuiOutlinedInput-root":{
+                                    maxHeight: '40px'
                                 }
                             }}
                             InputProps={{
@@ -346,6 +358,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
                                     fontFamily: 'Nunito Sans',
                                     fontWeight: 400,
                                     fontSize: '15px',
+                                    top: '-1px',
                                     padding:0,
                                     margin:0
                               }}}
@@ -356,6 +369,9 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
                                 "& .MuiInputLabel-root[data-shrink='false']": {
                                     transform: "translate(16px, 50%) scale(1)",
                                 },
+                                "& .MuiOutlinedInput-root":{
+                                    maxHeight: '40px'
+                                }
                             }}
                             InputProps={{
                                 className: "form-input"

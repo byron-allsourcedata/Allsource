@@ -4,11 +4,11 @@ from enums import CompanyInfoEnum
 from models.users import Users
 from models.users_domains import UserDomains
 from sqlalchemy.orm import Session
-from enums import SourcePlatformEnum
+from enums import SourcePlatformEnum, BusinessType
 from schemas.users import CompanyInfo
 from services.subscriptions import SubscriptionService
 from persistence.partners_persistence import PartnersPersistence
-from services.stripe_service import create_stripe_checkout_session
+from services.stripe_service import get_stripe_payment_url
 logger = logging.getLogger(__name__)
 
 
@@ -24,6 +24,10 @@ class CompanyInfoService:
         if result == CompanyInfoEnum.SUCCESS:
             if not self.user.get('is_with_card') and not self.user.get('is_email_confirmed'):
                 return {'status': CompanyInfoEnum.NEED_EMAIL_VERIFIED}
+            
+            if company_info.business_type not in {BusinessType.D2C.value, BusinessType.B2B.value}:
+                company_info.business_type = 'd2c'
+                
             user = self.db.query(Users).filter(Users.id == self.user.get('id')).first()
             user.company_name = company_info.organization_name
             user.company_website = company_info.company_website
@@ -40,14 +44,7 @@ class CompanyInfoService:
             self.db.commit()
             stripe_payment_url = None
             if user.stripe_payment_url:
-                stripe_payment = create_stripe_checkout_session(
-                    customer_id=user.customer_id,
-                    line_items=[{"price": user.stripe_payment_url['stripe_price_id'], "quantity": 1}],
-                    mode="subscription",
-                    coupon=user.stripe_payment_url['coupon']
-                )
-                stripe_payment_url = stripe_payment.get('link')
-                
+                stripe_payment_url = get_stripe_payment_url(user.customer_id, user.stripe_payment_url)
             return{
                     'status': CompanyInfoEnum.SUCCESS,
                     'stripe_payment_url': stripe_payment_url

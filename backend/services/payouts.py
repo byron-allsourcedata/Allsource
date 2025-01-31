@@ -108,7 +108,7 @@ class PayoutsService:
             if partner:
                 source = 'Direct'
                 if partner.master_id:
-                    master_partner = self.partners_persistence.get_asset_by_id(partner.master_id)
+                    master_partner = self.partners_persistence.get_partner_by_id(partner.master_id)
                     if master_partner:
                         source = master_partner.company_name
                 
