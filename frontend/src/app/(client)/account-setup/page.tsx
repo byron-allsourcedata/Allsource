@@ -45,6 +45,8 @@ const AccountSetup = () => {
   const [stripeUrl, setStripeUrl] = useState('');
   const [domainName, setDomainName] = useState("");
   const [shopDomain, setShopDomain] = useState("");
+  const [accessToken, setAccessToken] = useState("");
+  const [bigcommerceHash, setBigcommerceHash] = useState("");
   const [editingName, setEditingName] = useState(true)
   const [manuallInstall, setManuallInstall] = useState(false)
   const [shopifyInstall, setShopifyInstall] = useState(false)
@@ -576,6 +578,20 @@ const AccountSetup = () => {
       });
   };
 
+  const handleInstallShopify = () => {
+
+  }
+
+  const handleInstallBigCommerce = async () => {
+    console.log("loof")
+    const response = await axiosInstance.get('/integrations/bigcommerce/oauth', { params: { store_hash: bigcommerceHash } })
+    console.log({response})
+  }
+
+  const handleInstallWordPress = () => {
+    
+  }
+
   const handleVerifyPixel = () => {
     let url = domainName.trim();
 
@@ -942,7 +958,7 @@ const AccountSetup = () => {
           </MenuItem>
         </Menu>
       </Box>
-      <Box sx={{ ...styles.formContainer }}>
+      <Box sx={{...styles.formContainer, overflowX: "hidden"}}>
         <Box sx={styles.form}>
           <Box
             sx={{
@@ -1452,78 +1468,273 @@ const AccountSetup = () => {
                         </Box>
                       </Box>
                     </Box>
+                    <Button
+                      className='hyperlink-red'
+                      fullWidth
+                      variant="contained"
+                      sx={{
+                        ...styles.submitButton,
+                        opacity: domainName.trim() !== "" ? 1 : 0.6,
+                        pointerEvents: domainName.trim() !== "" ? "auto" : "none",
+                        mb: 2,
+                        backgroundColor: domainName.trim() !== ""
+                          ? "rgba(244, 87, 69, 1)"
+                          : "rgba(244, 87, 69, 0.4)",
+                        "&.Mui-disabled": {
+                          backgroundColor: "rgba(244, 87, 69, 0.6)",
+                          color: "#fff",
+                        },
+                      }}
+                      onClick={handleVerifyPixel}
+                      disabled={domainName.trim() === ""}
+                    >
+                      Verify Your Pixel
+                    </Button>
                   </Box>
                 </Box>
               }
-              {shopifyInstall &&
+              {shopifyInstall && 
                 <Box>
                   <Box display="flex" justifyContent="space-between" sx={{ width: '100%', alignItems: 'center', paddingBottom: '1rem' }}>
-                    <Box display="flex" gap="16px">
-                      <Image src="install_cms1.svg" alt="Shopify install pixel" width={24} height={24} />
-                      <Typography className='first-sub-title' sx={{ textAlign: 'left', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
-                        Install with Shopify
-                      </Typography>
-                    </Box>
-                    <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store"
-                      target="_blank" className='first-sub-title' style={{ fontSize: "14px", color: "rgba(80, 82, 178, 1)" }}
-                      sx={{ textDecoration: "underline", cursor: "pointer", '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
-                      Tutorial
-                    </Link>
+                      <Box display="flex" gap="16px">
+                      <Image src="install_cms1.svg" alt="Shopify install pixel" width={24} height={24}/>
+                        <Typography className='first-sub-title' sx={{  textAlign: 'left', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
+                          Install with Shopify
+                        </Typography>
+                      </Box>    
+                      <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store" 
+                            target="_blank" className='first-sub-title' style={{fontSize: "14px", color: "rgba(80, 82, 178, 1)"}} 
+                            sx={{ textDecoration: "underline", cursor: "pointer",'@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
+                        Tutorial
+                      </Link>
                   </Box>
                   <Divider />
                   <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
-                    <Image src='/1.svg' alt='1' width={28} height={28} />
-                    <Box sx={{ display: 'flex', alignItems: "center" }}>
-                      <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Shopify shop domain in the designated field. This allows our system to identify your store.</Typography>
-                    </Box>
-                    <Box />
-                    <TextField
-                      fullWidth
-                      label="Shop Domain"
-                      variant="outlined"
-                      placeholder='Enter your Shop Domain'
-                      margin="normal"
-                      InputProps={{
-                        style: {
-                          color: 'rgba(17, 17, 19, 1)',
-                          fontFamily: 'Nunito Sans',
-                          fontWeight: 400,
-                          fontSize: '14px',
-                        },
-                      }}
-                      value={isFocused
-                        ? (websiteLink ? websiteLink.replace(/^https?:\/\//, "") : "")
-                        : (websiteLink ? `https://${websiteLink.replace(/^https?:\/\//, "")}` : "https://")
-                      }
-                      sx={{
-                        pl: 2,
-                        "& .MuiOutlinedInput-root": {
-                          "& label": {
-                            transformOrigin: "inherit"
+                      <Image src='/1.svg' alt='1' width={28} height={28} />
+                      <Box sx={{display: 'flex', alignItems: "center"}}>
+                        <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Shopify shop domain in the designated field. This allows our system to identify your store.</Typography>
+                      </Box>
+                      <Box/>
+                      <TextField
+                        fullWidth
+                        label="Shop Domain"
+                        variant="outlined"
+                        placeholder='Enter your Shop Domain'
+                        margin="normal"
+                        InputProps={{
+                          style: {
+                              color: 'rgba(17, 17, 19, 1)',
+                              fontFamily: 'Nunito Sans',
+                              fontWeight: 400,
+                              fontSize: '14px',
+                              
                           },
-                          "& fieldset": {
-                            borderColor: "rgba(80, 82, 178, 1)",
-                          },
-                          "&:hover fieldset": {
-                            borderColor: "rgba(86, 153, 237, 1)",
-                          },
-                          "& .MuiInputLabel-root.Mui-focused": {
-                            color: "rgba(17, 17, 19, 0.6)",
-                          },
-                          "&.MuiFormLabel-root-MuiInputLabel-root": {
-                            transformOrigin: "inherit"
-                          }
+                        }}
+                        value={isFocused
+                          ? (websiteLink ? websiteLink.replace(/^https?:\/\//, "") : "")
+                          : (websiteLink ? `https://${websiteLink.replace(/^https?:\/\//, "")}` : "https://")
                         }
-                      }}
-                      onFocus={handleFocus}
-                      onBlur={handleBlur}
-                      onChange={(e) => setShopDomain(e.target.value)}
-                      InputLabelProps={{ sx: styles.inputLabel }}
-                    />
+                        sx={{
+                          pl: 2,
+                          "& .MuiOutlinedInput-root": {
+                            "& label": {
+                              transformOrigin: "inherit"
+                            },
+                            "& fieldset": {
+                              borderColor: "rgba(80, 82, 178, 1)",
+                            },
+                            "&:hover fieldset": {
+                              borderColor: "rgba(86, 153, 237, 1)",
+                            },
+                            "& .MuiInputLabel-root.Mui-focused": {
+                                color: "rgba(17, 17, 19, 0.6)",
+                            },
+                            "&.MuiFormLabel-root-MuiInputLabel-root": {
+                              transformOrigin: "inherit"
+                            }
+                          },
+                          "& .MuiInputLabel-shrink": {
+                              transformOrigin: "center",
+                            },
+                        }}
+                        onFocus={handleFocus}
+                        onBlur={handleBlur}
+                        onChange={(e) => setShopDomain(e.target.value)}
+                        InputLabelProps={{ sx: styles.inputLabel }}
+                      />
                   </Box>
+                  <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
+                      <Image src='/2.svg' alt='2' width={28} height={28} />
+                      <Box sx={{display: 'flex', alignItems: "center"}}>
+                        <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Shopify shop domain in the designated field. This allows our system to identify your store.</Typography>
+                      </Box>
+                      <Box/>
+                      <TextField
+                        InputProps={{
+                          style: {
+                              color: 'rgba(17, 17, 19, 1)',
+                              fontFamily: 'Nunito Sans',
+                              fontWeight: 400,
+                              fontSize: '14px',
+                          },
+                        }}
+                        fullWidth
+                        label="Access Token"
+                        variant="outlined"
+                        placeholder='Enter your Access Token'
+                        margin="normal"
+                        sx={{
+                          pl: 2,
+                          "& .MuiOutlinedInput-root": {
+                            "& fieldset": {
+                              borderColor: "rgba(80, 82, 178, 1)",
+                            },
+                            "&:hover fieldset": {
+                              borderColor: "rgba(86, 153, 237, 1)",
+                            },
+                            "& .MuiInputLabel-root.Mui-focused": {
+                                color: "rgba(17, 17, 19, 0.6)",
+                            }
+                          },
+                          "& .MuiInputLabel-shrink": {
+                              transformOrigin: "center",
+                              left: 10
+                            },
+                          "& .MuiInputLabel-root[data-shrink='false']": {
+                                transform: "translate(16px, 15px) scale(1)",
+                            }, 
+                            
+                        }}
+                        value={accessToken}
+                        onChange={(e) => setAccessToken(e.target.value)}
+                        InputLabelProps={{ sx: styles.inputLabel }}
+                      />
+                  </Box>
+                  <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
+                      <Image src='/3.svg' alt='3' width={28} height={28} />
+                      <Box sx={{display: 'flex', alignItems: "center"}}>
+                        <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Once you have submitted the required information, our system will automatically install the script on your Shopify store. You don’t need to take any further action.</Typography>
+                      </Box>
+                  </Box>
+                  <Button
+                    className='hyperlink-red'
+                    fullWidth
+                    variant="contained"
+                    sx={{
+                      ...styles.submitButton,
+                      opacity: accessToken.trim() !== "" || shopDomain.trim() !== "" ? 1 : 0.6,
+                      pointerEvents: accessToken.trim() !== "" || shopDomain.trim() !== "" ? "auto" : "none",
+                      mb: 2,
+                      mt: 2,
+                      backgroundColor: accessToken.trim() !== "" || shopDomain.trim() !== ""
+                        ? "rgba(244, 87, 69, 1)"
+                        : "rgba(244, 87, 69, 0.4)",
+                      "&.Mui-disabled": {
+                        backgroundColor: "rgba(244, 87, 69, 0.6)",
+                        color: "#fff",
+                      },
+                    }}
+                    onClick={handleInstallShopify}
+                    disabled={accessToken.trim() === "" || shopDomain.trim() === ""}
+                  >
+                    Install Pixel
+                  </Button>
                 </Box>
               }
-              {bigcommerceInstall && <Box />}
+              {bigcommerceInstall && 
+                <Box>
+                  <Box display="flex" justifyContent="space-between" sx={{ width: '100%', alignItems: 'center', paddingBottom: '1rem' }}>
+                      <Box display="flex" gap="16px">
+                      <Image src="bigcommerce-icon.svg" alt="Bigcommerce install pixel" width={24} height={24}/>
+                        <Typography className='first-sub-title' sx={{  textAlign: 'left', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
+                          Install with Bigcommerce
+                        </Typography>
+                      </Box>    
+                      <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store" 
+                            target="_blank" className='first-sub-title' style={{fontSize: "14px", color: "rgba(80, 82, 178, 1)"}} 
+                            sx={{ textDecoration: "underline", cursor: "pointer",'@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
+                        Tutorial
+                      </Link>
+                  </Box>
+                  <Divider />
+                  <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
+                      <Image src='/1.svg' alt='1' width={28} height={28} />
+                      <Box sx={{display: 'flex', alignItems: "center"}}>
+                        <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Bigcommerce store hash in the designated field. This allows our system to identify your store.</Typography>
+                      </Box>
+                      <Box/>
+                      <TextField
+                        InputProps={{
+                          style: {
+                              color: 'rgba(17, 17, 19, 1)',
+                              fontFamily: 'Nunito Sans',
+                              fontWeight: 400,
+                              fontSize: '14px',
+                          },
+                        }}
+                        fullWidth
+                        label="Store Hash"
+                        variant="outlined"
+                        placeholder='Enter your store hash'
+                        margin="normal"
+                        sx={{
+                          pl: 2,
+                          "& .MuiOutlinedInput-root": {
+                            "& fieldset": {
+                              borderColor: "rgba(80, 82, 178, 1)",
+                            },
+                            "&:hover fieldset": {
+                              borderColor: "rgba(86, 153, 237, 1)",
+                            },
+                            "& .MuiInputLabel-root.Mui-focused": {
+                                color: "rgba(17, 17, 19, 0.6)",
+                            }
+                          },
+                          "& .MuiInputLabel-shrink": {
+                              transformOrigin: "center",
+                              left: 10
+                            },
+                          "& .MuiInputLabel-root[data-shrink='false']": {
+                                transform: "translate(16px, 15px) scale(1)",
+                            }, 
+                            
+                        }}
+                        value={bigcommerceHash}
+                        onChange={(e) => setBigcommerceHash(e.target.value)}
+                        InputLabelProps={{ sx: styles.inputLabel }}
+                      />
+                  </Box>
+                  <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
+                      <Image src='/2.svg' alt='2' width={28} height={28} />
+                      <Box sx={{display: 'flex', alignItems: "center"}}>
+                        <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Once you have submitted the required information, our system will automatically install the script on your Bigcommerce store. You don’t need to take any further action.</Typography>
+                      </Box>
+                  </Box>
+                  <Button
+                    className='hyperlink-red'
+                    fullWidth
+                    variant="contained"
+                    sx={{
+                      ...styles.submitButton,
+                      opacity: bigcommerceHash.trim() !== "" ? 1 : 0.6,
+                      pointerEvents: bigcommerceHash.trim() !== "" ? "auto" : "none",
+                      mb: 2,
+                      mt: 2,
+                      backgroundColor: bigcommerceHash.trim() !== ""
+                        ? "rgba(244, 87, 69, 1)"
+                        : "rgba(244, 87, 69, 0.4)",
+                      "&.Mui-disabled": {
+                        backgroundColor: "rgba(244, 87, 69, 0.6)",
+                        color: "#fff",
+                      },
+                    }}
+                    onClick={handleInstallBigCommerce}
+                    disabled={bigcommerceHash.trim() === ""}
+                  >
+                    Install Pixel
+                  </Button>
+                </Box>
+              }
               {googletagInstall &&
                 <Box>
                   <Box display="flex" justifyContent="space-between" sx={{ width: '100%', alignItems: 'center', paddingBottom: '1rem' }}>
@@ -1543,7 +1754,100 @@ const AccountSetup = () => {
                   <GoogleTagPopup open={opengoogle} handleClose={handleGoogleClose} />
                 </Box>
               }
-              {wordpressInstall && <Box />}
+              {wordpressInstall && 
+                <Box>
+                  <Box display="flex" justifyContent="space-between" sx={{ width: '100%', alignItems: 'center', paddingBottom: '1rem' }}>
+                      <Box display="flex" gap="16px">
+                      <Image src="install_cms2.svg" alt="WordPress install pixel" width={24} height={24}/>
+                        <Typography className='first-sub-title' sx={{  textAlign: 'left', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
+                          Install with WordPress
+                        </Typography>
+                      </Box>    
+                      <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store" 
+                            target="_blank" className='first-sub-title' style={{fontSize: "14px", color: "rgba(80, 82, 178, 1)"}} 
+                            sx={{ textDecoration: "underline", cursor: "pointer",'@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
+                        Tutorial
+                      </Link>
+                  </Box>
+                  <Divider />
+                  <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
+                      <Image src='/1.svg' alt='1' width={28} height={28} />
+                      <Box sx={{display: 'flex', alignItems: "center"}}>
+                        <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Bigcommerce store hash in the designated field. This allows our system to identify your store.</Typography>
+                      </Box>
+                      <Box/>
+                      <TextField
+                        InputProps={{
+                          style: {
+                              color: 'rgba(17, 17, 19, 1)',
+                              fontFamily: 'Nunito Sans',
+                              fontWeight: 400,
+                              fontSize: '14px',
+                          },
+                        }}
+                        fullWidth
+                        label="Store Hash"
+                        variant="outlined"
+                        placeholder='Enter your store hash'
+                        margin="normal"
+                        sx={{
+                          pl: 2,
+                          "& .MuiOutlinedInput-root": {
+                            "& fieldset": {
+                              borderColor: "rgba(80, 82, 178, 1)",
+                            },
+                            "&:hover fieldset": {
+                              borderColor: "rgba(86, 153, 237, 1)",
+                            },
+                            "& .MuiInputLabel-root.Mui-focused": {
+                                color: "rgba(17, 17, 19, 0.6)",
+                            }
+                          },
+                          "& .MuiInputLabel-shrink": {
+                              transformOrigin: "center",
+                              left: 10
+                            },
+                          "& .MuiInputLabel-root[data-shrink='false']": {
+                                transform: "translate(16px, 15px) scale(1)",
+                            }, 
+                            
+                        }}
+                        value={bigcommerceHash}
+                        onChange={(e) => setBigcommerceHash(e.target.value)}
+                        InputLabelProps={{ sx: styles.inputLabel }}
+                      />
+                  </Box>
+                  <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
+                      <Image src='/2.svg' alt='2' width={28} height={28} />
+                      <Box sx={{display: 'flex', alignItems: "center"}}>
+                        <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Once you have submitted the required information, our system will automatically install the script on your Bigcommerce store. You don’t need to take any further action.</Typography>
+                      </Box>
+                  </Box>
+                  <Button
+                    className='hyperlink-red'
+                    fullWidth
+                    variant="contained"
+                    sx={{
+                      ...styles.submitButton,
+                      opacity: bigcommerceHash.trim() !== "" ? 1 : 0.6,
+                      pointerEvents: bigcommerceHash.trim() !== "" ? "auto" : "none",
+                      mb: 2,
+                      mt: 2,
+                      backgroundColor: bigcommerceHash.trim() !== ""
+                        ? "rgba(244, 87, 69, 1)"
+                        : "rgba(244, 87, 69, 0.4)",
+                      "&.Mui-disabled": {
+                        backgroundColor: "rgba(244, 87, 69, 0.6)",
+                        color: "#fff",
+                      },
+                    }}
+                    onClick={handleInstallBigCommerce}
+                    disabled={bigcommerceHash.trim() === ""}
+                  >
+                    Install Pixel
+                  </Button>
+                </Box>
+              }
               {!shopifyInstall && !manuallInstall && !bigcommerceInstall && !googletagInstall && !wordpressInstall &&
                 <>
                   <Typography variant="body1" className="first-sub-title" sx={styles.text}>
@@ -1613,28 +1917,6 @@ const AccountSetup = () => {
 
               {(shopifyInstall || bigcommerceInstall || wordpressInstall || manuallInstall) &&
                 <>
-                  <Button
-                    className='hyperlink-red'
-                    fullWidth
-                    variant="contained"
-                    sx={{
-                      ...styles.submitButton,
-                      opacity: domainName.trim() !== "" ? 1 : 0.6,
-                      pointerEvents: domainName.trim() !== "" ? "auto" : "none",
-                      mb: 2,
-                      backgroundColor: domainName.trim() !== ""
-                        ? "rgba(244, 87, 69, 1)"
-                        : "rgba(244, 87, 69, 0.4)",
-                      "&.Mui-disabled": {
-                        backgroundColor: "rgba(244, 87, 69, 0.6)",
-                        color: "#fff",
-                      },
-                    }}
-                    onClick={handleVerifyPixel}
-                    disabled={domainName.trim() === ""}
-                  >
-                    Verify Your Pixel
-                  </Button>
                   <Button
                     className='hyperlink-red'
                     fullWidth
