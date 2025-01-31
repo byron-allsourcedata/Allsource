@@ -48,7 +48,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
 
     const handleDownload = async () => {
         const requestBody = {
-            company_id: company.id ? [company.id] : []
+            id: company.id ? [company.id] : []
         };
         try {
             const response = await axiosInstance.post('/company/download_company', requestBody, {
@@ -170,7 +170,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                         <Box sx={{ flex: 1, textAlign: 'start' }}>
                             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <Typography variant="body1" gutterBottom sx={{ ...companyStyles.name, pb: 1 }}>
-                                    {company.company_name}
+                                    {company.name}
                                 </Typography>
                                 <Button
                                     sx={{
@@ -194,16 +194,16 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 5, '@media (max-width: 600px)': { flexDirection: 'column', gap: 1 }, }}>
                                 <Typography variant="body1" gutterBottom sx={{ ...companyStyles.header_text, display: 'flex', flexDirection: 'row', gap: 1 }}>
-                                    {company.company_domain ? (
+                                    {company.domain ? (
                                         <Link
-                                            href={`https://${company.company_domain}`}
+                                            href={`https://${company.domain}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             underline="none"
                                             sx={{ ...companyStyles.header_text, display: 'flex', flexDirection: 'row', gap: 1, color: 'rgba(80, 82, 178, 1)' }}
                                         >
                                             <Image src={'/web.svg'} width={18} height={18} alt='iphone icon' />
-                                            {`https://${company.company_domain}` || '--'}
+                                            {`https://${company.domain}` || '--'}
                                         </Link>
                                     ) : (
                                         <>
@@ -223,9 +223,9 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                         color: 'rgba(80, 82, 178, 1)',
                                     }}
                                 >
-                                    {company.company_phone ? (
+                                    {company.phone ? (
                                         <Link
-                                            href={`tel:${company.company_phone.split(',')[0]}` || '--'}
+                                            href={`tel:${company.phone.split(',')[0]}` || '--'}
                                             underline="none"
                                             sx={{
                                                 color: 'rgba(80, 82, 178, 1)',
@@ -235,7 +235,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                             }}
                                         >
                                             <Image src={'/iphone-02.svg'} width={18} height={18} alt='iphone icon' />
-                                            {company.company_phone.split(',')[0] || '--'}
+                                            {company.phone.split(',')[0] || '--'}
                                         </Link>
                                     ) : (
                                         <>
@@ -260,7 +260,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Company name:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {company.company_name || '--'}
+                                {company.name || '--'}
                             </Typography>
                         </Box>
                         <Box sx={companyStyles.rows_pam}>
@@ -268,7 +268,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Company phone:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {company.company_phone || '--'}
+                                {company.phone || '--'}
                             </Typography>
                         </Box>
 
@@ -277,7 +277,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Company description:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                <TruncatedText text={company.company_description || '--'} limit={100} />
+                                <TruncatedText text={company.description || '--'} limit={100} />
                             </Typography>
                         </Box>
 
@@ -286,7 +286,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Address:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {company.company_address || '--'}
+                                {company.location|| '--'}
                             </Typography>
                         </Box>
 
@@ -295,7 +295,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 City:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {company.company_city || '--'}
+                                {company.city || '--'}
                             </Typography>
                         </Box>
 
@@ -304,7 +304,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 State:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {company.company_state || '--'}
+                                {company.state || '--'}
                             </Typography>
                         </Box>
 
@@ -313,7 +313,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Zipcode:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {company.company_zip || '--'}
+                                {company.zipcode || '--'}
                             </Typography>
                         </Box>
 
@@ -322,15 +322,15 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 LinkedIn url
                             </Typography>
                             <Typography sx={{ ...companyStyles.text, color: 'rgba(80, 82, 178, 1)' }}>
-                                {company.company_linkedin_url ? (
+                                {company.linkedin_url ? (
                                     <Link
-                                        href={`https://${company.company_linkedin_url}`}
+                                        href={`https://${company.linkedin_url}`}
                                         underline="none"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         sx={{ ...companyStyles.text, textDecoration: 'none', color: 'rgba(80, 82, 178, 1)', }}
                                     >
-                                        {company.company_linkedin_url}
+                                        {company.linkedin_url}
                                     </Link>
                                 ) : (
                                     <Typography sx={companyStyles.text}> --</Typography>
@@ -360,7 +360,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Employee count
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {company.company_employee_count || '--'}
+                                {company.employee_count || '--'}
                             </Typography>
                         </Box>
 
@@ -369,7 +369,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 Industry
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {company.state || '--'}
+                                {company.industry || '--'}
                             </Typography>
                         </Box>
 

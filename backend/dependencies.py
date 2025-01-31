@@ -13,10 +13,12 @@ from config.database import SessionLocal
 from enums import DomainStatus, UserAuthorizationStatus
 from exceptions import InvalidToken
 from models.users import Users as User
+from persistence.company_persistence import CompanyPersistence
 from persistence.referral_user import ReferralUserPersistence
 from persistence.referral_payouts import ReferralPayoutsPersistence
 from persistence.audience_persistence import AudiencePersistence
 from persistence.domains import UserDomainsPersistence, UserDomains
+from services.companies import CompanyService
 from services.payouts import PayoutsService
 from services.integrations.slack import SlackService
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
@@ -80,21 +82,29 @@ def get_partners_asset_persistence(db: Session = Depends(get_db)) -> PartnersAss
 def get_partners_persistence(db: Session = Depends(get_db)) -> PartnersPersistence:
     return PartnersPersistence(db)
 
+
 def get_referral_user_persistence(db: Session = Depends(get_db)) -> ReferralUserPersistence:
     return ReferralUserPersistence(db)
 
 
 def get_referral_discount_codes_persistence(db: Session = Depends(get_db)) -> ReferralDiscountCodesPersistence:
     return ReferralDiscountCodesPersistence(db)
-  
+
+
 def get_plans_persistence(db: Session = Depends(get_db)):
     return PlansPersistence(db=db)
+
 
 def get_referral_payouts_persistence(db: Session = Depends(get_db)):
     return ReferralPayoutsPersistence(db=db)
 
+
 def get_leads_persistence(db: Session = Depends(get_db)):
     return LeadsPersistence(db=db)
+
+
+def get_company_persistence(db: Session = Depends(get_db)):
+    return CompanyPersistence(db=db)
 
 
 def get_suppression_persistence(db: Session = Depends(get_db)) -> SuppressionPersistence:
@@ -149,30 +159,38 @@ def get_accounts_service(
         referral_user_persistence: ReferralUserPersistence = Depends(get_referral_user_persistence),
         user_persistence: UserPersistence = Depends(get_user_persistence_service),
         partner_persistence: PartnersPersistence = Depends(get_partners_persistence)):
-    return AccountsService(referral_user_persistence=referral_user_persistence, user_persistence=user_persistence, partner_persistence=partner_persistence)
+    return AccountsService(referral_user_persistence=referral_user_persistence, user_persistence=user_persistence,
+                           partner_persistence=partner_persistence)
 
 
 def get_aws_service(s3_client=Depends(get_s3_client)) -> AWSService:
     return AWSService(s3_client)
 
+
 def get_slack_service(
-    user_persistence: UserPersistence = Depends(get_user_persistence_service),
-    lead_persistence: LeadsPersistence = Depends(get_leads_persistence),
-    user_integrations_persistence: IntegrationsPresistence = Depends(get_user_integrations_presistence), sync_persistence: IntegrationsUserSyncPersistence = Depends(get_integrations_user_sync_persistence)):
-    return SlackService(user_persistence=user_persistence, user_integrations_persistence=user_integrations_persistence, sync_persistence=sync_persistence, lead_persistence=lead_persistence)
+        user_persistence: UserPersistence = Depends(get_user_persistence_service),
+        lead_persistence: LeadsPersistence = Depends(get_leads_persistence),
+        user_integrations_persistence: IntegrationsPresistence = Depends(get_user_integrations_presistence),
+        sync_persistence: IntegrationsUserSyncPersistence = Depends(get_integrations_user_sync_persistence)):
+    return SlackService(user_persistence=user_persistence, user_integrations_persistence=user_integrations_persistence,
+                        sync_persistence=sync_persistence, lead_persistence=lead_persistence)
+
 
 def get_stripe_service():
     return StripeService()
 
 
 def get_referral_service(
-        referral_persistence_discount_code: ReferralDiscountCodesPersistence = Depends(get_referral_persistence_service),
+        referral_persistence_discount_code: ReferralDiscountCodesPersistence = Depends(
+            get_referral_persistence_service),
         user_persistence: UserPersistence = Depends(get_user_persistence_service),
         stripe_service: StripeService = Depends(get_stripe_service),
         referral_payouts_persistence: ReferralPayoutsPersistence = Depends(get_referral_payouts_persistence),
         referral_user_persistence: ReferralUserPersistence = Depends(get_referral_user_persistence)):
-    return ReferralService(referral_persistence_discount_code_service=referral_persistence_discount_code, user_persistence=user_persistence,
-                           stripe_service=stripe_service, referral_payouts_persistence=referral_payouts_persistence, referral_persistence_service=referral_user_persistence)
+    return ReferralService(referral_persistence_discount_code_service=referral_persistence_discount_code,
+                           user_persistence=user_persistence,
+                           stripe_service=stripe_service, referral_payouts_persistence=referral_payouts_persistence,
+                           referral_persistence_service=referral_user_persistence)
 
 
 def get_subscription_service(db: Session = Depends(get_db),
@@ -211,7 +229,8 @@ def get_integration_service(db: Session = Depends(get_db),
                                 get_integrations_user_sync_persistence),
                             aws_service: AWSService = Depends(get_aws_service),
                             domain_persistence=Depends(get_user_domain_persistence),
-                            suppression_persitence: IntegrationsSuppressionPersistence = Depends(get_suppression_persistence),
+                            suppression_persitence: IntegrationsSuppressionPersistence = Depends(
+                                get_suppression_persistence),
                             user_persistence: UserPersistence = Depends(get_user_persistence_service),
                             epi_persistence: ExternalAppsInstallationsPersistence = Depends(get_epi_persistence)
                             ):
@@ -225,6 +244,7 @@ def get_integration_service(db: Session = Depends(get_db),
                               domain_persistence=domain_persistence, user_persistence=user_persistence,
                               suppression_persistence=suppression_persitence, epi_persistence=epi_persistence
                               )
+
 
 def get_partners_service(
         partners_persistence: PartnersPersistence = Depends(get_partners_persistence),
@@ -307,7 +327,8 @@ def check_user_authorization(Authorization: Annotated[str, Header()],
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={'status': auth_status.value,
-                    'stripe_payment_url': get_stripe_payment_url(user.get('customer_id'), user.get('stripe_payment_url')) }
+                    'stripe_payment_url': get_stripe_payment_url(user.get('customer_id'),
+                                                                 user.get('stripe_payment_url'))}
         )
     if auth_status != UserAuthorizationStatus.SUCCESS:
         raise HTTPException(
@@ -328,7 +349,8 @@ def check_user_authorization_without_pixel(Authorization: Annotated[str, Header(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={'status': auth_status.value,
-                    'stripe_payment_url': get_stripe_payment_url(user.get('customer_id'), user.get('stripe_payment_url'))}
+                    'stripe_payment_url': get_stripe_payment_url(user.get('customer_id'),
+                                                                 user.get('stripe_payment_url'))}
         )
     if auth_status != UserAuthorizationStatus.SUCCESS and auth_status != UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED and auth_status != UserAuthorizationStatus.NEED_BOOK_CALL:
         raise HTTPException(
@@ -444,6 +466,11 @@ def get_leads_service(user=Depends(check_user_authorization),
     return LeadsService(domain=domain, leads_persistence_service=leads_persistence_service)
 
 
+def get_companies_service(domain: UserDomains = Depends(check_pixel_install_domain),
+                          companies_persistence_service: CompanyPersistence = Depends(get_company_persistence)):
+    return CompanyService(domain=domain, company_persistence_service=companies_persistence_service)
+
+
 def get_audience_service(user: User = Depends(check_user_authorization),
                          audience_persistence_service: AudiencePersistence = Depends(get_audience_persistence)):
     return AudienceService(user=user, audience_persistence_service=audience_persistence_service)
@@ -456,14 +483,17 @@ def get_sse_events_service(user_persistence_service: UserPersistence = Depends(g
 def get_dashboard_service(domain: UserDomains = Depends(check_pixel_install_domain),
                           user_persistence: UserPersistence = Depends(get_user_persistence_service),
                           leads_persistence_service: LeadsPersistence = Depends(get_leads_persistence)):
-    return DashboardService(domain=domain, user_persistence=user_persistence, leads_persistence_service=leads_persistence_service)
+    return DashboardService(domain=domain, user_persistence=user_persistence,
+                            leads_persistence_service=leads_persistence_service)
+
 
 def get_payouts_service(
         referral_payouts_persistence: ReferralPayoutsPersistence = Depends(get_referral_payouts_persistence),
         referral_user_persistence: ReferralUserPersistence = Depends(get_referral_user_persistence),
         partners_persistence: PartnersPersistence = Depends(get_partners_persistence),
         stripe_service: StripeService = Depends(get_stripe_service)):
-    return PayoutsService(referral_payouts_persistence=referral_payouts_persistence, referral_user_persistence=referral_user_persistence, 
+    return PayoutsService(referral_payouts_persistence=referral_payouts_persistence,
+                          referral_user_persistence=referral_user_persistence,
                           partners_persistence=partners_persistence, stripe_service=stripe_service)
 
 
@@ -528,7 +558,8 @@ def get_payments_service(plans_service: PlansService = Depends(get_plans_service
 def get_company_info_service(db: Session = Depends(get_db), user=Depends(check_user_authentication),
                              subscription_service: SubscriptionService = Depends(get_subscription_service),
                              partners_persistence: PartnersPersistence = Depends(get_partners_persistence)):
-    return CompanyInfoService(db=db, user=user, subscription_service=subscription_service, partners_persistence=partners_persistence)
+    return CompanyInfoService(db=db, user=user, subscription_service=subscription_service,
+                              partners_persistence=partners_persistence)
 
 
 def get_users_email_verification_service(user=Depends(check_user_authentication),
