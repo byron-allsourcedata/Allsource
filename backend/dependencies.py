@@ -77,11 +77,6 @@ def get_partners_asset_persistence(db: Session = Depends(get_db)) -> PartnersAss
     return PartnersAssetPersistence(db)
 
 
-def get_partners_assets_service(
-        partners_asset_persistence: PartnersAssetPersistence = Depends(get_partners_asset_persistence)):
-    return PartnersAssetService(partners_asset_persistence=partners_asset_persistence)
-
-
 def get_partners_persistence(db: Session = Depends(get_db)) -> PartnersPersistence:
     return PartnersPersistence(db)
 
@@ -335,8 +330,7 @@ def check_user_authorization_without_pixel(Authorization: Annotated[str, Header(
             detail={'status': auth_status.value,
                     'stripe_payment_url': get_stripe_payment_url(user.get('customer_id'), user.get('stripe_payment_url'))}
         )
-    if auth_status != UserAuthorizationStatus.SUCCESS and not user[
-        'is_partner'] and auth_status != UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED:
+    if auth_status != UserAuthorizationStatus.SUCCESS and auth_status != UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED and auth_status != UserAuthorizationStatus.NEED_BOOK_CALL:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={'status': auth_status.value}
@@ -474,8 +468,7 @@ def get_payouts_service(
 
 
 def get_pixel_installation_service(db: Session = Depends(get_db),
-                                   send_grid_persistence_service: SendgridPersistence = Depends(
-                                       get_send_grid_persistence_service),
+                                    send_grid_persistence_service: SendgridPersistence = Depends(get_send_grid_persistence_service)
                                    ):
     return PixelInstallationService(db=db, send_grid_persistence_service=send_grid_persistence_service)
 

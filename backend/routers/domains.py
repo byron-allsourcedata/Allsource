@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Response, Request, status
 from fastapi.responses import JSONResponse
 from dependencies import get_domain_service, check_user_authentication, UserDomainsService, check_pixel_install_domain, check_user_authorization
-from schemas.domains import DomainScheme
+from schemas.domains import DomainScheme, UpdateDomain
 from urllib.parse import unquote
 from enums import TeamAccessLevel
 
