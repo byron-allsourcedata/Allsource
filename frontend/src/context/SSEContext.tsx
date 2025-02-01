@@ -40,6 +40,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
     }
     const evtSource = new EventSource(`${url}event-source?token=${token}`);
     evtSource.onmessage = (event) => {
+      console.log({event})
       if (event.data) {
         const data = JSON.parse(event.data);
         console.log({data})
@@ -67,7 +68,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
             sessionStorage.setItem('me', JSON.stringify(meData));
           }
           setData(data);
-          window.location.reload();
+          // window.location.reload();
         }
       }
     };

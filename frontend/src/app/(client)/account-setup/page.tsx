@@ -27,6 +27,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import PersonIcon from '@mui/icons-material/Person';
+import MetaConnectButton from "@/components/MetaConnectButton";
 import EditIcon from '@mui/icons-material/Edit';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
@@ -53,6 +54,10 @@ const AccountSetup = () => {
   const [bigcommerceInstall, setBigcommerceInstall] = useState(false)
   const [wordpressInstall, setWordpressInstall] = useState(false)
   const [googletagInstall, setGoogletagInstall] = useState(false)
+  const [sendlanePopupOpen, setSendlanePopupOpen] = useState(false)
+  const [mailChimpPopupOpen, setMailchimpPopupOpen] = useState(false)
+  const [omnisendPopupOpen, setOmnisendPopupOpen] = useState(false)
+  const [metaPopupOpen, setMetaPopupOpen] = useState(false)
   const [opengoogle, setGoogleOpen] = useState(false);
   const handleGoogleClose = () => setGoogleOpen(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -503,6 +508,12 @@ const AccountSetup = () => {
     { label: "WordPress", src: "install_cms2.svg", setState: setWordpressInstall, action: () => { } },
     { label: "Bigcommerce", src: "bigcommerce-icon.svg", setState: setBigcommerceInstall, action: () => { } },
   ];
+  const integrations = [
+    { label: "Meta", src: "meta-icon.svg", setState: setMetaPopupOpen },
+    { label: "Omnisend", src: "omnisend_icon_black.svg", setState: setOmnisendPopupOpen },
+    { label: "Mailchimp", src: "mailchimp-icon.svg", setState: setMailchimpPopupOpen },
+    { label: "Sendlane", src: "sendlane-icon.svg", setState: setSendlanePopupOpen},
+  ];
   const roles = [
     { label: "Digital Marketer" },
     { label: "CEO" },
@@ -551,7 +562,7 @@ const AccountSetup = () => {
       }
     });
 
-    if (activeTab === 2) {
+    if (activeTab === 3) {
       endSetup()
     }
     else {
@@ -1264,80 +1275,6 @@ const AccountSetup = () => {
                         <Button
                           onClick={() => {
                             setEditingName(false)
-                            fetchEditDomain()
-                          }}
-                          sx={{
-                            ml: 2,
-                            border: '1px solid rgba(80, 82, 178, 1)',
-                            textTransform: 'none',
-                            background: '#fff',
-                            color: 'rgba(80, 82, 178, 1)',
-                            fontFamily: 'Nunito Sans',
-                            padding: '0.65em 2em',
-                            mr: 1,
-                            '@media (max-width: 600px)': { padding: '0.5em 1.5em', mr: 0, ml: 0, left: 0 }
-                          }}
-                        >
-                          <Typography className='second-sub-title' sx={{
-                            color: 'rgba(80, 82, 178, 1) !important', textAlign: 'left'
-                          }}>
-                            Save
-                          </Typography>
-                        </Button>
-                      </>
-                      :
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <Typography className='first-sub-title' sx={{ textAlign: 'left', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
-                          {domainName}
-                        </Typography>
-                        <IconButton onClick={() => setEditingName(true)} sx={{ p: "4px", ':hover': { backgroundColor: 'transparent', } }} >
-                          <EditIcon height={8} width={8} sx={{ color: "rgba(80, 82, 178, 1)" }} />
-                        </IconButton>
-                      </Box>
-                    }
-                  </Box>
-                  <Divider />
-                  <Box sx={{ mt: 4 }}>
-                    {editingName
-                      ?
-                      <>
-                        <TextField
-                          id="filled-basic"
-                          placeholder="Enter your domain"
-                          value={domainName}
-                          onChange={(e) => {
-                            setDomainName(e.target.value)
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              setEditingName(false)
-                            }
-                          }}
-                          InputProps={{
-                            startAdornment: (
-                              <InputAdornment position="start">https://</InputAdornment>
-                            )
-                          }}
-                          variant="outlined"
-                          sx={{
-                            flex: 1,
-                            width: '360px',
-                            '& .MuiOutlinedInput-root': {
-                              borderRadius: '4px',
-                              height: '40px',
-                            },
-                            '& input': {
-                              paddingLeft: 0,
-                            },
-                            '& input::placeholder': {
-                              fontSize: '14px',
-                              color: '#8C8C8C',
-                            },
-                          }}
-                        />
-                        <Button
-                          onClick={() => {
-                            setEditingName(false)
                             setDomainName(prev => prev.replace(/^https?:\/\//, ""))
                             sessionStorage.setItem('current_domain', domainName.replace(/^https?:\/\//, ""))
                             fetchEditDomain()
@@ -1373,13 +1310,7 @@ const AccountSetup = () => {
 
                     }
                   </Box>
-                  <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '10px', '@media (max-width: 600px)': { p: 2 } }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', pt: 3, justifyContent: 'start' }}>
-                      <Image src='/1.svg' alt='1' width={28} height={28} />
-                      <Typography className='first-sub-title' sx={maintext}>Copy the pixel code</Typography>
-                    </Box>
-
-                  </Box>
+                  
                   <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '10px', '@media (max-width: 600px)': { p: 2 } }}>
                     <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', pt: 3, justifyContent: 'start' }}>
                       <Image src='/1.svg' alt='1' width={28} height={28} />
@@ -1976,76 +1907,97 @@ const AccountSetup = () => {
               }
             </>
           }
-          {/* {activeTab === 3 && (
+          {activeTab === 3 && (
             <>
-              <Typography variant="body1" className="first-sub-title" sx={styles.text}>
-                How many employees work at your organization
-              </Typography>
-              {errors.selectedEmployees && (
-                <Typography variant="body2" color="error">
-                  {errors.selectedEmployees}
-                </Typography>
-              )}
-              <Box sx={styles.employeeButtons}>
-                {ranges.map((range, index) => (
+                            {!metaPopupOpen && !omnisendPopupOpen && !mailChimpPopupOpen && !sendlanePopupOpen &&
+                <>
+                  <Typography variant="body1" className="first-sub-title" sx={styles.text}>
+                    These Will Be Available on Your Integration Page for quick Setup.
+                  </Typography>
+                  {errors.selectedEmployees && (
+                    <Typography variant="body2" color="error">
+                      {errors.selectedEmployees}
+                    </Typography>
+                  )}
+                  <Box sx={{ ...styles.rolesButtons, display: "grid", gridTemplateColumns: "1fr 1fr 1fr" }}>
+                    {integrations.map((range, index) => (
+                      <Button
+                        key={index}
+                        variant="outlined"
+                        onClick={() => handleMethodInstall(range.label)}
+                        onTouchStart={() => handleMethodInstall(range.label)}
+                        onMouseDown={() => handleMethodInstall(range.label)}
+                        sx={{ ...getButtonRolesStyles(selectedMethodInstall === range.label), gap: "8px", justifyContent: "flex-start", p: "12px" }}
+                      >
+                        <Image src={range.src} alt="Integration item" width={24} height={24} />
+                        <Typography className="form-input" style={{ color: "rgba(112, 112, 113, 1)", lineHeight: "19.6px" }}>{range.label}</Typography>
+                      </Button>
+                    ))}
+                  </Box>
                   <Button
-                    className="form-input"
-                    key={index}
-                    variant="outlined"
-                    onClick={() => handleEmployeeRangeChange(range.label)}
-                    onTouchStart={() => handleEmployeeRangeChange(range.label)}
-                    onMouseDown={() => handleEmployeeRangeChange(range.label)}
-                    sx={getButtonStyles(selectedEmployees === range.label)}
+                    className='hyperlink-red'
+                    fullWidth
+                    variant="contained"
+                    sx={{
+                      ...styles.submitButton,
+                      opacity: isFormValidThird() ? 1 : 0.6,
+                      mb: 2,
+                      pointerEvents: isFormValidThird() ? "auto" : "none",
+                      backgroundColor: isFormValidThird()
+                        ? "rgba(244, 87, 69, 1)"
+                        : "rgba(244, 87, 69, 0.4)",
+                      "&.Mui-disabled": {
+                        backgroundColor: "rgba(244, 87, 69, 0.6)",
+                        color: "#fff",
+                      },
+                    }}
+                    onClick={handleNextClick}
+                    disabled={!isFormValidThird()}
                   >
-                    <Typography className="form-input" sx={{ padding: '3px' }}> {range.label}</Typography>
+                    Next
                   </Button>
-                ))}
-              </Box>
-              <Typography variant="body1" className="first-sub-title" sx={styles.text}>
-                Whats your role?
-              </Typography>
-              {errors.selectedEmployees && (
-                <Typography variant="body2" color="error">
-                  {errors.selectedEmployees}
-                </Typography>
-              )}
-              <Box sx={styles.rolesButtons}>
-                {roles.map((range, index) => (
                   <Button
-                    key={index}
-                    variant="outlined"
-                    onClick={() => handleRolesChange(range.label)}
-                    onTouchStart={() => handleRolesChange(range.label)}
-                    onMouseDown={() => handleRolesChange(range.label)}
-                    sx={getButtonRolesStyles(selectedRoles === range.label)}
+                    className='hyperlink-red'
+                    fullWidth
+                    variant="contained"
+                    sx={{
+                      ...styles.submitButton,
+                      color: "rgba(244, 87, 69, 1)",
+                      backgroundColor: "#fff",
+                      "&:hover": {
+                        backgroundColor: "#fff",
+                        color: "rgba(244, 87, 69, 0.6)"
+                      },
+                    }}
+                    onClick={handleSkip}
                   >
-                    <Typography className="form-input" sx={{ padding: '3px' }}> {range.label}</Typography>
+                    Skip
                   </Button>
-                ))}
-              </Box>
-              <Button
-                className='hyperlink-red'
-                fullWidth
-                variant="contained"
-                sx={{
-                  ...styles.submitButton,
-                  opacity: isFormValid() ? 1 : 0.6,
-                  pointerEvents: isFormValid() ? "auto" : "none",
-                  backgroundColor: isFormValid()
-                    ? "rgba(244, 87, 69, 1)"
-                    : "rgba(244, 87, 69, 0.4)",
-                  "&.Mui-disabled": {
-                    backgroundColor: "rgba(244, 87, 69, 0.6)",
-                    color: "#fff",
-                  },
-                }}
-                onClick={handleSubmit}
-                disabled={!isFormValid()}
-              >
-                Next
-              </Button>
+                </>
+              }
+
+              {metaPopupOpen &&
+                  <MetaConnectButton
+                      open={metaPopupOpen}
+                      onClose={() => setMetaPopupOpen(false)}
+                      onSave={() => {}}
+                      boxShadow="rgba(0, 0, 0, 0.1)"
+                    />
+              }
+
+              {omnisendPopupOpen &&
+                  <GoogleTagPopup open={omnisendPopupOpen} handleClose={handleGoogleClose} />
+              }
+
+              {mailChimpPopupOpen &&
+                  <GoogleTagPopup open={mailChimpPopupOpen} handleClose={handleGoogleClose} />
+              }
+
+              {sendlanePopupOpen &&
+                  <GoogleTagPopup open={sendlanePopupOpen} handleClose={handleGoogleClose} />
+              }
             </>
-          )} */}
+          )}
         </Box>
       </Box>
     </Box >
