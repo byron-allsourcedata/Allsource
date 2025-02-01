@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, Query
 from starlette.responses import StreamingResponse
 
-from dependencies import get_companies_service
+from dependencies import get_companies_service, check_user_company
 from enums import BaseEnum
 from schemas.leads import LeadsRequest
 from services.companies import CompanyService
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(check_user_company)])
 
 
 @router.get("")
@@ -33,6 +33,11 @@ async def get_companies(
         search_query=search_query,
         timezone_offset=timezone_offset
     )
+
+
+@router.get("/industry")
+async def get_industry(company_service: CompanyService = Depends(get_companies_service)):
+    return company_service.get_uniq_primary_industry()
 
 
 # @router.get("/search-location")
