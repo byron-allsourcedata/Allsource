@@ -102,5 +102,4 @@ class CompanyService:
 
     def get_uniq_primary_industry(self):
         industry = self.company_persistence_service.get_unique_primary_industries(domain_id=self.domain.id)
-        print(industry)
         return industry
