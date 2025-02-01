@@ -152,13 +152,10 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
       <Box sx={{ display: { md: 'none' } }}>
         <SliderProvider><NavigationMenu NewRequestNotification={hasNewNotifications || hasNewNotifications} /></SliderProvider>
       </Box>
-
-
-
       <Box sx={{ ...headerStyles.headers, display: { xs: 'none', md: 'flex' } }}>
         <Box sx={headerStyles.logoContainer}>
           <IconButton onClick={handleLogoClick} sx={{ "&:hover": { backgroundColor: 'transparent' } }}>
-            <Image src="/logo.svg" alt="logo" height={30} width={50} />
+            <Image priority={true} src="/logo.svg" alt="logo" height={30} width={50} />
           </IconButton>
           {visibleButton && (
             <Button

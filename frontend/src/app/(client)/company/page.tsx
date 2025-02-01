@@ -26,6 +26,7 @@ import CalendarPopup from '@/components/CustomCalendar';
 import CustomTablePagination from '@/components/CustomTablePagination';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useNotification } from '@/context/NotificationContext';
+import { showErrorToast } from '@/components/ToastNotification';
 
 
 interface FetchDataParams {
@@ -331,8 +332,8 @@ const Leads: React.FC = () => {
                 } else {
                     setShowSlider(false);
                 }
-            } else {
-                console.error('Error fetching data:', error);
+            }
+             else {
             }
             setIsLoading(false);
         } finally {
@@ -340,12 +341,27 @@ const Leads: React.FC = () => {
         }
     };
 
+    const handleIndustry = async () => {
+        setLoading(true);
+        try {
+            const response = await axiosInstance.get('/company/industry')
+            console.log(response) 
+        }
+        catch{
+
+        }
+        finally{ 
+            setLoading(false)
+        }
+    }
+
 
 
 
 
 
     useEffect(() => {
+        handleIndustry()
         fetchData({
             sortBy: orderBy,
             sortOrder: order,
@@ -1114,7 +1130,12 @@ const Leads: React.FC = () => {
                                                         {/* Employess Visited date  Column */}
                                                         <TableCell
                                                             sx={{ ...companyStyles.table_array, position: 'relative' }}>
-                                                            {row.visited_date || '--'}
+                                                            {row.visited_date
+                                                                ? (() => {
+                                                                    const [day, month, year] = row.visited_date.split('.');
+                                                                    return `${month}/${day}/${year}`;
+                                                                })()
+                                                                : '--'}
                                                         </TableCell>
 
                                                         {/* Company revenue  Column */}

@@ -96,6 +96,9 @@ axiosInterceptorInstance.interceptors.response.use(
               break;
           }
           break;
+        case 404:
+          navigateTo('/not_found')
+          break;
         case 500:
           // Handle 500 Internal Server Error
           showErrorToast("Internal Server Error. Please try again later.");

@@ -239,3 +239,13 @@ class CompanyPersistence:
         locations = query.all()
         return locations
 
+    def get_unique_primary_industries(self, domain_id):
+        query = (
+            self.db.query(LeadCompany.primary_industry)
+                .join(LeadUser, LeadUser.company_id == LeadCompany.id)
+                .filter(LeadUser.domain_id == domain_id, LeadCompany.primary_industry.isnot(None))
+                .distinct()
+                .order_by(LeadCompany.primary_industry)
+        )
+        industries = [row.primary_industry for row in query.all()]
+        return industries
