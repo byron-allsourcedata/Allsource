@@ -1087,8 +1087,6 @@ const Integrations = () => {
           if (status === 'NEED_BOOK_CALL') {
             sessionStorage.setItem('is_slider_opened', 'true');
             setShowSlider(true);
-          } else if (status === 'PIXEL_INSTALLATION_NEEDED') {
-            setStatus('PIXEL_INSTALLATION_NEEDED');
           } else {
             setShowSlider(false);
           }

@@ -18,6 +18,7 @@ import {
 } from "@mui/material";
 import React, { useState, useEffect, memo } from "react";
 import Image from "next/image";
+import axios, { AxiosError } from "axios";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
@@ -28,7 +29,6 @@ import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { leadsStyles } from "@/app/(client)/leads/leadsStyles";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
-import axios from "axios";
 import { datasyncStyle } from "@/app/(client)/data-sync/datasyncStyle";
 import MailchimpDatasync from "./MailchimpDatasync";
 import OmnisendDataSync from "./OmnisendDataSync";
@@ -160,6 +160,12 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
       }
       setRowsPerPageOptions(newRowsPerPageOptions);
     } catch (error) {
+      if (error instanceof AxiosError && error.response?.status === 403) {
+        const status = error.response.data.status
+        if (status === 'NEED_BOOK_CALL') {
+          sessionStorage.setItem('is_slider_opened', 'true');
+        }
+      }
     } finally {
       setIsLoading(false);
     }
