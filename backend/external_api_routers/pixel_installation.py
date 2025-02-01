@@ -27,7 +27,8 @@ async def manual(pixel_installation_request: PixelInstallationRequest,
         status = PixelStatus.PIXEL_CODE_PARSE_FAILED
     
     message_body = {
-        'status': status.value
+        'status': status.value,
+        'need_reload_page': pixel_installation_request.need_reload_page
     }
 
     try:

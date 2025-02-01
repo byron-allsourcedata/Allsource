@@ -89,7 +89,7 @@ const AccountSetup = () => {
             router.push("/settings?section=subscription");
             break;
           case "DASHBOARD_ALLOWED":
-            setActiveTab(2)
+            // setActiveTab(2)
             break;
           default:
             console.error("Unknown status:", status);
@@ -541,6 +541,7 @@ const AccountSetup = () => {
     let isMatched = false;
 
     method_installingPixel.forEach(({ label, setState, action }) => {
+      console.log(label, selectedMethodInstall)
       if (selectedMethodInstall === label) {
         setState(true);
         isMatched = true;
@@ -550,7 +551,7 @@ const AccountSetup = () => {
       }
     });
 
-    if (activeTab === 3) {
+    if (activeTab === 2) {
       endSetup()
     }
     else {
@@ -578,14 +579,41 @@ const AccountSetup = () => {
       });
   };
 
-  const handleInstallShopify = () => {
+  const handleInstallShopify = async () => {
+    const accessToken = localStorage.getItem('token');
+    if (!accessToken) return;
 
-  }
+    const body: Record<string, any> = {
+      shopify: {
+        shop_domain: domainName.trim(),
+        access_token: accessToken.trim()
+      },
+      pixel_install: true
+    };
+
+    try {
+      const response = await axiosInstance.post("/integrations/", body, {
+        params: {
+          service_name: "shopify",
+        },
+      });
+
+      if (response.status === 200) {
+        showToast('Successfully installed pixel');
+      } else {
+        showErrorToast('Failed to install pixel');
+      }
+    } catch (error) {
+      showErrorToast('An error occurred while installing the pixel');
+    }
+  };
 
   const handleInstallBigCommerce = async () => {
-    console.log("loof")
     const response = await axiosInstance.get('/integrations/bigcommerce/oauth', { params: { store_hash: bigcommerceHash } })
-    console.log({response})
+    if (response.status === 200) {
+      showToast("Success")
+      window.open(response.data.url, '_blank');
+    }
   }
 
   const handleInstallWordPress = () => {
@@ -857,7 +885,7 @@ const AccountSetup = () => {
                 },
               }}
             />
-            {/* <Tab
+            <Tab
               className="tab-heading"
               label="Integrations"
               sx={{
@@ -874,7 +902,7 @@ const AccountSetup = () => {
                   color: "#F45745",
                 },
               }}
-            /> */}
+            />
           </Tabs>
         </Box>
 
@@ -1531,8 +1559,8 @@ const AccountSetup = () => {
                           },
                         }}
                         value={isFocused
-                          ? (websiteLink ? websiteLink.replace(/^https?:\/\//, "") : "")
-                          : (websiteLink ? `https://${websiteLink.replace(/^https?:\/\//, "")}` : "https://")
+                          ? (domainName ? domainName.replace(/^https?:\/\//, "") : "")
+                          : (domainName ? `https://${domainName.replace(/^https?:\/\//, "")}` : "https://")
                         }
                         sx={{
                           pl: 2,
@@ -1559,7 +1587,7 @@ const AccountSetup = () => {
                         }}
                         onFocus={handleFocus}
                         onBlur={handleBlur}
-                        onChange={(e) => setShopDomain(e.target.value)}
+                        onChange={(e) => setDomainName(e.target.value)}
                         InputLabelProps={{ sx: styles.inputLabel }}
                       />
                   </Box>
@@ -1622,11 +1650,11 @@ const AccountSetup = () => {
                     variant="contained"
                     sx={{
                       ...styles.submitButton,
-                      opacity: accessToken.trim() !== "" || shopDomain.trim() !== "" ? 1 : 0.6,
-                      pointerEvents: accessToken.trim() !== "" || shopDomain.trim() !== "" ? "auto" : "none",
+                      opacity: accessToken.trim() !== "" || domainName.trim() !== "" ? 1 : 0.6,
+                      pointerEvents: accessToken.trim() !== "" || domainName.trim() !== "" ? "auto" : "none",
                       mb: 2,
                       mt: 2,
-                      backgroundColor: accessToken.trim() !== "" || shopDomain.trim() !== ""
+                      backgroundColor: accessToken.trim() !== "" || domainName.trim() !== ""
                         ? "rgba(244, 87, 69, 1)"
                         : "rgba(244, 87, 69, 0.4)",
                       "&.Mui-disabled": {
@@ -1635,7 +1663,7 @@ const AccountSetup = () => {
                       },
                     }}
                     onClick={handleInstallShopify}
-                    disabled={accessToken.trim() === "" || shopDomain.trim() === ""}
+                    disabled={accessToken.trim() === "" || domainName.trim() === ""}
                   >
                     Install Pixel
                   </Button>
@@ -1915,7 +1943,7 @@ const AccountSetup = () => {
                 </>
               }
 
-              {(shopifyInstall || bigcommerceInstall || wordpressInstall || manuallInstall) &&
+              {(shopifyInstall || bigcommerceInstall || googletagInstall || wordpressInstall || manuallInstall) &&
                 <>
                   <Button
                     className='hyperlink-red'

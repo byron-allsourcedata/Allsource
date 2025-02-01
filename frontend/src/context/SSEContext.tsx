@@ -42,6 +42,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
     evtSource.onmessage = (event) => {
       if (event.data) {
         const data = JSON.parse(event.data);
+        console.log({data})
         if (data.status === "PIXEL_CODE_PARSE_FAILED") {
           showErrorToast("Could not find pixel code on your site")
         }
@@ -54,8 +55,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
         else if(data.update_subscription && data.status) {
           showToast(`Subscription updated ${data.status}!`);
         }
-        // else if(data.status && data.need_reload_page) {
-        else if(data.status) {
+        else if(data.status && data.need_reload_page) {
           showToast("Pixel code is installed successfully!");
         }
         else {
