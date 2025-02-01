@@ -470,7 +470,7 @@ const Leads: React.FC = () => {
             const startEpoch = appliedDates.start ? Math.floor(appliedDates.start.getTime() / 1000) : null;
             const endEpoch = appliedDates.end ? Math.floor(appliedDates.end.getTime() / 1000) : null;
 
-            let url = '/leads/download_leads';
+            let url = '/company/download-companies';
             let params = [];
 
             if (startEpoch !== null && endEpoch !== null) {

@@ -499,29 +499,22 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                                     >
                                         Setup GTM connection
                                     </Typography>
-                                    <FormControl fullWidth sx={{ mb: 2 }}>
-                                        <InputLabel
-                                            shrink
-                                            sx={{
-                                                fontSize: '16px',
-                                                fontWeight: '500',
+                                    <FormControl fullWidth sx={{ mb: 2, mt: 1 }}>
+                                        <InputLabel sx={{
+                                            fontSize: '16px',
+                                            fontWeight: '500',
+                                            color: 'rgba(33, 43, 54, 0.87)',
+                                            '&.Mui-focused': {
                                                 color: 'rgba(33, 43, 54, 0.87)',
-                                                position: 'absolute',
-                                                left: '12px',
-                                                backgroundColor: '#ffffff',
-                                                padding: '0 4px',
-                                                zIndex: 1,
-                                            }}
-                                        >
-                                            Select an account
-                                        </InputLabel>
+                                            },
+                                        }}>Select an account</InputLabel>
                                         <Select
                                             value={selectedAccount || ''}
                                             onChange={(e) => {
                                                 const selectedValue = e.target.value as string;
                                                 setSelectedAccount(selectedValue);
                                             }}
-                                            label="Select an account"
+                                            label="Account"
                                             sx={{
                                                 backgroundColor: '#ffffff',
                                                 borderRadius: '4px',
@@ -530,8 +523,6 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                                                     borderColor: 'rgba(80, 82, 178, 1)',
                                                     boxShadow: '0 0 0 2px rgba(80, 82, 178, 0.2)',
                                                 },
-                                                paddingTop: '20px',
-                                                paddingBottom: '12px',
                                             }}
                                         >
                                             <MenuItem value="">Select an account</MenuItem>
@@ -543,21 +534,14 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                                         </Select>
                                     </FormControl>
                                     <FormControl fullWidth sx={{ mb: 2, mt: 1 }}>
-                                        <InputLabel
-                                            shrink
-                                            sx={{
-                                                fontSize: '16px',
-                                                fontWeight: '500',
+                                        <InputLabel sx={{
+                                            fontSize: '16px',
+                                            fontWeight: '500',
+                                            color: 'rgba(33, 43, 54, 0.87)',
+                                            '&.Mui-focused': {
                                                 color: 'rgba(33, 43, 54, 0.87)',
-                                                position: 'absolute',
-                                                left: '12px',
-                                                backgroundColor: '#ffffff',
-                                                padding: '0 4px',
-                                                zIndex: 1,
-                                            }}
-                                        >
-                                            Container
-                                        </InputLabel>
+                                            },
+                                        }}>Select domain</InputLabel>
                                         <Select
                                             value={selectedContainer}
                                             onChange={e => setSelectedContainer(e.target.value as string)}
@@ -570,8 +554,6 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                                                     borderColor: 'rgba(80, 82, 178, 1)',
                                                     boxShadow: '0 0 0 2px rgba(80, 82, 178, 0.2)',
                                                 },
-                                                paddingTop: '20px',
-                                                paddingBottom: '12px',
                                             }}
                                         >
                                             <MenuItem value="">Select a container</MenuItem>
@@ -595,21 +577,14 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                                     )}
 
                                     <FormControl fullWidth sx={{ mb: 2, mt: 1 }}>
-                                        <InputLabel
-                                            shrink
-                                            sx={{
-                                                fontSize: '16px',
-                                                fontWeight: '500',
+                                        <InputLabel sx={{
+                                            fontSize: '16px',
+                                            fontWeight: '500',
+                                            color: 'rgba(33, 43, 54, 0.87)',
+                                            '&.Mui-focused': {
                                                 color: 'rgba(33, 43, 54, 0.87)',
-                                                position: 'absolute',
-                                                left: '12px',
-                                                backgroundColor: '#ffffff',
-                                                padding: '0 4px',
-                                                zIndex: 1,
-                                            }}
-                                        >
-                                            Workspace
-                                        </InputLabel>
+                                            },
+                                        }}>Select workspace</InputLabel>
                                         <Select
                                             value={selectedWorkspace || ''}
                                             onChange={(e) => setSelectedWorkspace(e.target.value as string)}
@@ -622,8 +597,6 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                                                     borderColor: 'rgba(80, 82, 178, 1)',
                                                     boxShadow: '0 0 0 2px rgba(80, 82, 178, 0.2)',
                                                 },
-                                                paddingTop: '20px',
-                                                paddingBottom: '12px',
                                             }}
                                         >
                                             <MenuItem value="">Select a workspace</MenuItem>
@@ -634,6 +607,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                                             ))}
                                         </Select>
                                     </FormControl>
+
                                 </Box>
                                 <Box sx={{ mt: 2, width: '100%', display: 'flex', justifyContent: 'flex-end', gap: 1, position: 'absolute', bottom: 0, right: '3%', top: '91%' }}>
                                     <Button

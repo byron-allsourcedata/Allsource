@@ -48,10 +48,10 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
 
     const handleDownload = async () => {
         const requestBody = {
-            id: company.id ? [company.id] : []
+            companies_ids: company.id ? [company.id] : []
         };
         try {
-            const response = await axiosInstance.post('/company/download_company', requestBody, {
+            const response = await axiosInstance.post('/company/download-company', requestBody, {
                 responseType: 'blob'
             });
 
