@@ -12,7 +12,7 @@ class LeadCompany(Base):
     phone = Column(VARCHAR(256), nullable=True)
     sic = Column(VARCHAR(256), nullable=True)
     address = Column(VARCHAR(256), nullable=True)
-    five_x_five_location_id = Column(Integer, ForeignKey('five_x_five_locations.id'), nullable=True)
+    five_x_five_location_id = Column(Integer, ForeignKey('5x5_locations.id'), nullable=True)
     zip = Column(VARCHAR(64), nullable=True)
     linkedin_url = Column(VARCHAR(256), nullable=True)
     revenue = Column(VARCHAR(256), nullable=True)
