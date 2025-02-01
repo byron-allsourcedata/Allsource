@@ -43,7 +43,6 @@ class CompanyService:
             timezone_offset=timezone_offset
         )
 
-        state_dict = {state.state_code: state.state_name for state in states} if states else {}
         company_list = []
         for company in companies:
             first_visited_date = company[5].strftime('%d.%m.%Y') if company[5] else None
@@ -100,3 +99,8 @@ class CompanyService:
         results = [dict(item) for item in results_set]
         limited_results = list(results)[:10]
         return limited_results
+
+    def get_uniq_primary_industry(self):
+        industry = self.company_persistence_service.get_unique_primary_industries(domain_id=self.domain.id)
+        print(industry)
+        return industry

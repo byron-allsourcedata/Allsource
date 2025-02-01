@@ -35,6 +35,11 @@ async def get_companies(
     )
 
 
+@router.get("/industry")
+async def get_industry(company_service: CompanyService = Depends(get_companies_service)):
+    return company_service.get_uniq_primary_industry()
+
+
 # @router.get("/search-location")
 # async def search_location(start_letter: str = Query(..., min_length=3),
 #                           leads_service: LeadsService = Depends(get_leads_service)):

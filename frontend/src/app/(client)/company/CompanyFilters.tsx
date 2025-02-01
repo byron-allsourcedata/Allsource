@@ -24,6 +24,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   const [isVisitedDateOpen, setIsVisitedDateOpen] = useState(false);
   const [isVisitedPageOpen, setIsVisitedPageOpen] = useState(false);
   const [isNumberOfEmployeeOpen, setIsNumberOfEmployeeOpen] = useState(false);
+  const [isRevenueOpen, setIsRevenueOpen] = useState(false);
   const [isTimeSpentOpen, setIsTimeSpentOpen] = useState(false);
   const [isVisitedTimeOpen, setIsVisitedTimeOpen] = useState(false);
   const [isRegionOpen, setIsRegionOpen] = useState(false);
@@ -46,6 +47,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       region: [],
       pageVisits: [],
       numberOfEmployees: [],
+      revenue: [],
       timeSpents: [],
     }
   );
@@ -203,23 +205,19 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         }
       }
 
-      // if (category === "pageVisits") {
-      //   const tagMap: { [key: string]: string } = {
-      //     "1": "1",
-      //     "2": "2",
-      //     "3": "3",
-      //     "4": "4",
-      //     "4+": "4+"
-      //   };
+      if (category === "numberOfEmployees") {
+        setCheckedFiltersNumberOfEmployees((prevFilters: any) => ({
+          ...prevFilters,
+          [tag]: false,
+        }));
+      }
 
-      //   const filterName = tagMap[tag];
-      //   if (filterName) {
-      //     setCheckedFiltersPageVisits((prevFilters) => ({
-      //       ...prevFilters,
-      //       [filterName]: false,
-      //     }));
-      //   }
-      // }
+      if (category === "revenue") {
+        setCheckedFiltersRevenue((prevFilters: any) => ({
+          ...prevFilters,
+          [tag]: false,
+        }));
+      }
 
       return { ...prevTags, [category]: updatedTags };
     });
@@ -443,65 +441,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   });
 
 
-  const handleTimeChange = (name: string) => (newValue: any) => {
-    setTimeRange((prevRange) => {
-      const updatedRange = {
-        ...prevRange,
-        [name]: newValue,
-      };
-
-      setCheckedFiltersTime((prevFiltersTime) => {
-        // Explicitly type `prevFilters` for better TypeScript support
-        const prevFiltersTimeTyped = prevFiltersTime as Record<string, boolean>;
-
-        // Find the previously selected radio button
-        const previouslySelectedTime = Object.keys(prevFiltersTimeTyped).find((key) => prevFiltersTimeTyped[key]);
-
-        // Reset all filters and select the new one
-        const newFiltersTime = {
-          morning: false,
-          afternoon: false,
-          evening: false,
-          all_day: false,
-          [name]: true,
-        };
-
-        const tagMapTime: { [key: string]: string } = {
-          morning: "Morning 12AM - 11AM",
-          afternoon: "Afternoon 11AM - 5PM",
-          evening: "Evening 5PM - 9PM",
-          all_day: "All day",
-        };
-
-        // Remove the tag for the previously selected radio button, if any
-        if (previouslySelectedTime && previouslySelectedTime !== name) {
-          removeTag("visitedTime", tagMapTime[previouslySelectedTime]);
-        }
-
-        setCheckedFiltersTime({
-          morning: false,
-          evening: false,
-          afternoon: false,
-          all_day: false,
-        });
-
-        return newFiltersTime;
-      });
-
-      const fromTime = updatedRange.fromTime ? dayjs(updatedRange.fromTime).format('h:mm A') : '';
-      const toTime = updatedRange.toTime ? dayjs(updatedRange.toTime).format('h:mm A') : '';
-
-      // Set the formatted time range if both times are selected
-      if (fromTime && toTime) {
-        setSelectedTimeRange(`${fromTime} to ${toTime}`);
-      } else {
-        setSelectedTimeRange(null);
-      }
-
-      return updatedRange;
-    });
-  };
-
   const deleteTagTime = () => {
     setSelectedTimeRange(null)
     setTimeRange({
@@ -509,6 +448,45 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       toTime: null,
     });
   }
+
+  // Revenue
+
+  const [checkedFiltersRevenue, setCheckedFiltersRevenue] = useState({
+    "Below 10k": false,
+    "$10k - $50k": false,
+    "$50k - $100k": false,
+    "$100k - $500k": false,
+    "$500k - $1M": false,
+    "$1M - $5M": false,
+    "$5M - $10M": false,
+    "$10M - $50M": false,
+    "$50M - $100M": false,
+    "$100M - $500M": false,
+    "$500M - $1B": false,
+    "$1 Billion +": false,
+    "unknown": false,
+  });
+
+  const handleCheckboxChangeRevenue = (event: { target: { name: string; checked: boolean } }) => {
+    const { name, checked } = event.target;
+
+    setCheckedFiltersRevenue((prevFilters) => {
+      const newFilters = {
+        ...prevFilters,
+        [name]: checked,
+      };
+
+      if (checked) {
+        addTag("revenue", name);
+      } else {
+        removeTag("revenue", name);
+      }
+
+      return newFilters;
+    });
+  };
+
+
 
   ////Number of Employees
   const [checkedFiltersNumberOfEmployees, setCheckedFiltersNumberOfEmployees] = useState({
@@ -547,7 +525,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   };
 
 
-
+  // Employee Visits
   const [selectedPageVisit, setSelectedPageVisit] = useState<string | null>(null);
 
   const handleRadioChangePageVisits = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -567,6 +545,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     }
     addTag("pageVisits", tagMap[value]);
   };
+
 
   ////time spent
   const [checkedFiltersTimeSpent, setCheckedFiltersTimeSpent] = useState({
@@ -632,24 +611,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     // Check that at least one of the time filters is active
     const isDateFilterChecked = Object.values(checkedFilters).some((value) => value);
 
-    let fromTime = timeRange.fromTime ? dayjs(timeRange.fromTime).format('HH:mm') : null;
-    let toTime = timeRange.toTime ? dayjs(timeRange.toTime).format('HH:mm') : null;
-
-    // Process filters by time (morning, afternoon, evening, all day)
-    if (checkedFiltersTime.morning) {
-      fromTime = "00:00"; // 12AM
-      toTime = "11:00";   // 11AM
-    } else if (checkedFiltersTime.afternoon) {
-      fromTime = "11:00"; // 11AM
-      toTime = "17:00";   // 5PM
-    } else if (checkedFiltersTime.evening) {
-      fromTime = "17:00"; // 5PM
-      toTime = "21:00";   // 9PM
-    } else if (checkedFiltersTime.all_day) {
-      fromTime = "00:00"; // 12AM
-      toTime = "23:59";   // 11:59PM
-    }
-
     // Determine from_date and to_date values ​​based on active filters
     let fromDateTime = null;
     let toDateTime = null;
@@ -685,15 +646,12 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       ...buttonFilters, // Existing button filters
       from_date: fromDateTime, // Set value from_date
       to_date: toDateTime, // Set value of to_date
-      selectedFunnels: buttonFilters ? buttonFilters.selectedFunnels : selectedFunnels,
-      button: buttonFilters ? buttonFilters.button : selectedButton,
       checkedFiltersTime,     // Filters by time (morning, afternoon, evening, etc.)
       selectedPageVisit: selectedPageVisit ? selectedPageVisit : '',
       checkedFiltersNumberOfEmployees,
+      checkedFiltersRevenue,
       checkedFilters,
       regions,
-      checkedFiltersTimeSpent,
-      selectedStatus,
       recurringVisits: selectedValues,
       searchQuery,
     };
@@ -708,8 +666,21 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   const saveFiltersToSessionStorage = (filters: {
     from_date: number | null;
     to_date: number | null;
-    selectedFunnels: string[]; button: string | null;
-    checkedFiltersTime: { morning: boolean; evening: boolean; afternoon: boolean; all_day: boolean; };
+    checkedFiltersRevenue: {
+      "Below 10k": boolean,
+      "$10k - $50k": boolean,
+      "$50k - $100k": boolean,
+      "$100k - $500k": boolean,
+      "$500k - $1M": boolean,
+      "$1M - $5M": boolean,
+      "$5M - $10M": boolean,
+      "$10M - $50M": boolean,
+      "$50M - $100M": boolean,
+      "$100M - $500M": boolean,
+      "$500M - $1B": boolean,
+      "$1 Billion +": boolean,
+      "unknown": boolean,
+    };
     checkedFiltersNumberOfEmployees: {
       "1-10": boolean,
       "11-20": boolean,
@@ -726,8 +697,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     };
     regions: string[];
     selectedPageVisit: string,
-    checkedFiltersTimeSpent: { under_10: boolean; over_10: boolean; over_30: boolean; over_60: boolean; };
-    selectedStatus: string[]; recurringVisits: string[];
     searchQuery: string; dateRange?: { fromDate: number | null; toDate: number | null; } | undefined;
   }) => {
     sessionStorage.setItem('filters', JSON.stringify(filters));
@@ -745,7 +714,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     const savedFilters = loadFiltersFromSessionStorage();
     if (savedFilters) {
 
-      // Page visits
+      
       setCheckedFiltersNumberOfEmployees(savedFilters.checkedFiltersNumberOfEmployees || {
         "1-10": false,
         "11-20": false,
@@ -761,10 +730,47 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         "unknown": false,
       });
 
+      // Page visits
+
       // Checking active page visit filters
       const isPageVisitsFilterActive = Object.values(savedFilters.checkedFiltersPageVisits || {}).some(value => value === true);
 
       if (isPageVisitsFilterActive) {
+        const pageVisitsTagMap: { [key: string]: string } = {
+          "1": "1",
+          "2": "2",
+          "3": "3",
+          "4": "4",
+          "4+": "4+"
+        };
+
+        // Go through all filters and add a tag for each active one
+        Object.keys(savedFilters.checkedFiltersPageVisits).forEach((key) => {
+          if (savedFilters.checkedFiltersPageVisits[key]) {
+            addTag("pageVisits", pageVisitsTagMap[key]);
+          }
+        });
+      }
+
+      setCheckedFiltersRevenue(savedFilters.checkedFiltersRevenue || {
+        "1-10": false,
+        "11-20": false,
+        "21-50": false,
+        "51-100": false,
+        "101-200": false,
+        "201-500": false,
+        "501-1000": false,
+        "1001-2000": false,
+        "2001-5000": false,
+        "5001-10000": false,
+        "10001+": false,
+        "unknown": false,
+      });
+
+      // Checking active page visit filters
+      const isRevenueFilterActive = Object.values(savedFilters.checkedFiltersPageVisits || {}).some(value => value === true);
+
+      if (isRevenueFilterActive) {
         const pageVisitsTagMap: { [key: string]: string } = {
           "1": "1",
           "2": "2",
@@ -781,12 +787,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         });
       }
 
-      setCheckedFiltersTime(savedFilters.checkedFiltersTime || {
-        morning: false,
-        afternoon: false,
-        evening: false,
-        all_day: false,
-      });
       setCheckedFilters(savedFilters.checkedFilters || {
         lastWeek: false,
         last30Days: false,
@@ -819,48 +819,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       }
 
 
-      setSelectedFunnels(savedFilters.selectedFunnels || []);
-      setSelectedStatus(savedFilters.selectedStatus || []);
       setSelectedValues(savedFilters.recurringVisits || []);
       setSearchQuery(savedFilters.searchQuery || '');
 
-
-      const isTimeFilterActive = Object.values(savedFilters.checkedFiltersTime || {}).some(value => value === true);
-      if (isTimeFilterActive) {
-        const timeTagMap: { [key: string]: string } = {
-          morning: "Morning 12AM - 11AM",
-          afternoon: "Afternoon 11AM - 5PM",
-          evening: "Evening 5PM - 9PM",
-          all_day: "All day",
-        };
-
-        // Process active filters
-        Object.keys(savedFilters.checkedFiltersTime).forEach((key) => {
-          if (savedFilters.checkedFiltersTime[key]) {
-            addTag("visitedTime", timeTagMap[key]);
-          }
-        });
-
-      } else {
-        // Convert time from string format to Dayjs
-        const fromTime = savedFilters.from_time ? dayjs(savedFilters.from_time, 'HH:mm') : null;
-        const toTime = savedFilters.to_time ? dayjs(savedFilters.to_time, 'HH:mm') : null;
-
-        // Formatting time for tag
-        const formattedFromTime = fromTime ? fromTime.format('h:mm A') : '';
-        const formattedToTime = toTime ? toTime.format('h:mm A') : '';
-        if (fromTime && toTime) {
-          setSelectedTimeRange(`${formattedFromTime} to ${formattedToTime}`);
-        } else {
-          setSelectedTimeRange(null);
-        }
-
-        // Обновление состояния
-        setTimeRange({
-          fromTime: fromTime && fromTime.isValid() ? fromTime : null,
-          toTime: toTime && toTime.isValid() ? toTime : null,
-        });
-      }
 
 
       const isAnyFilterActive = Object.values(savedFilters.checkedFilters || {}).some(value => value === true);
@@ -922,29 +883,12 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     );
   };
 
-  const isTimeFilterActive = () => {
-    return (
-      Object.values(checkedFiltersTime).some(value => value) || // Checking checkboxes for time
-      (timeRange.fromTime && timeRange.toTime) // Validate custom time range selection
-    );
-  };
-
   const isNumberOfEmployeesFilterActive = () => {
     return Object.values(checkedFiltersNumberOfEmployees).some(value => value);
   };
 
   const isTimeSpentFilterActive = () => {
     return Object.values(checkedFiltersTimeSpent).some(value => value);
-  };
-
-  // Lead Funnel
-  const isLeadFunnelActive = () => {
-    return selectedFunnels.length > 0;
-  };
-
-  // Status
-  const isStatusFilterActive = () => {
-    return selectedStatus.length > 0;
   };
 
   // Recurring Visits
@@ -994,46 +938,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     });
   };
 
-  const handleRadioChangeTime = (event: { target: { name: string } }) => {
-
-    const { name } = event.target;
-    deleteTagTime()
-
-    setCheckedFiltersTime((prevFiltersTime) => {
-      // Explicitly type `prevFilters` for better TypeScript support
-      const prevFiltersTimeTyped = prevFiltersTime as Record<string, boolean>;
-
-      // Find the previously selected radio button
-      const previouslySelectedTime = Object.keys(prevFiltersTimeTyped).find((key) => prevFiltersTimeTyped[key]);
-
-      // Reset all filters and select the new one
-      const newFiltersTime = {
-        morning: false,
-        afternoon: false,
-        evening: false,
-        all_day: false,
-        [name]: true,
-      };
-
-      const tagMapTime: { [key: string]: string } = {
-        morning: "Morning 12AM - 11AM",
-        afternoon: "Afternoon 11AM - 5PM",
-        evening: "Evening 5PM - 9PM",
-        all_day: "All day",
-      };
-
-      // Remove the tag for the previously selected radio button, if any
-      if (previouslySelectedTime && previouslySelectedTime !== name) {
-        removeTag("visitedTime", tagMapTime[previouslySelectedTime]);
-      }
-
-      // Add the tag for the currently selected radio button
-      addTag("visitedTime", tagMapTime[name]);
-
-      return newFiltersTime;
-    });
-  };
-
   const handleClearFilters = () => {
     setSelectedButton(null);
     setIsVisitedDateOpen(false);
@@ -1041,7 +945,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     setIsTimeSpentOpen(false);
     setIsVisitedTimeOpen(false);
     setIsNumberOfEmployeeOpen(false),
-    setIsRegionOpen(false);
+      setIsRegionOpen(false);
     setIsLeadFunnel(false);
     setIsStatus(false);
     setIsRecurringVisits(false);
@@ -1173,7 +1077,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
 
   return (
     <>
-      <Backdrop open={open} sx={{ zIndex: 1200, color: "#fff" }} />
       <Drawer
         anchor="right"
         open={open}
@@ -1182,7 +1085,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           sx: {
             width: "40%",
             position: "fixed",
-            zIndex: 2602,
             top: 0,
             bottom: 0,
             "@media (max-width: 600px)": {
@@ -1207,7 +1109,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             borderBottom: "1px solid #e4e4e4",
             position: "sticky",
             top: 0,
-            zIndex: 9900,
             backgroundColor: "#fff",
           }}
         >
@@ -1317,7 +1218,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   visibility: selectedPageVisit ? "visible" : "hidden"
                 }}
               />
-              <Image src="/people.svg" alt="calendar" width={18} height={18} />
+              <Image src="/employee-visit.svg" alt="calendar" width={18} height={16} />
               <Typography
                 sx={{
                   ...filterStyles.filter_name
@@ -1578,101 +1479,88 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               </Box>
             </Collapse>
           </Box>
-          {/* Location */}
-          <Box
-            sx={filterStyles.main_filter_form}
-          >
+          {/* Revenue */}
+          <Box sx={filterStyles.main_filter_form}>
             <Box
               sx={filterStyles.filter_form}
-              onClick={() => setIsRegionOpen(!isRegionOpen)}
+              onClick={() => setIsRevenueOpen(!isRevenueOpen)}
             >
               <Box
                 sx={{
                   ...filterStyles.active_filter_dote,
-                  visibility: regions.length > 0 ? 'visible' : "hidden",
+                  visibility: isNumberOfEmployeesFilterActive() ? "visible" : "hidden",
                 }}
               />
-              <Image
-                src="/location.svg"
-                alt="calendar"
-                width={18}
-                height={18}
-              />
-              <Typography
-                sx={{
-                  ...filterStyles.filter_name
-                }}
-              >
-                Location
+              <Image src="/revenue-filter.svg" alt="revenue" width={18} height={18} />
+              <Typography sx={filterStyles.filter_name}>
+                Revenue
               </Typography>
-              <Box
-                sx={{ display: "flex", flexWrap: "wrap", gap: "8px", mb: 2 }}
-              >
-                {regions.map((tag, index) => (
-                  <CustomChip
-                    key={index}
-                    label={tag}
-                    onDelete={() =>
-                      setTags(regions.filter((_, i) => i !== index))
-                    }
-                  />
-                ))}
-              </Box>
+              {selectedTags.revenue.map((tag, index) => (
+                <CustomChip
+                  key={index}
+                  label={tag}
+                  onDelete={() => removeTag("revenue", tag)}
+                />
+              ))}
               <IconButton
-                onClick={() => setIsRegionOpen(!isRegionOpen)}
+                onClick={() => setIsRevenueOpen(!isRevenueOpen)}
                 aria-label="toggle-content"
               >
-                {isRegionOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                {isRevenueOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
               </IconButton>
             </Box>
-            <Collapse in={isRegionOpen}>
-              <TextField
-                placeholder="Search by town, city or state.."
-                variant="outlined"
-                fullWidth
-                value={region}
-                onChange={handleRegionChange}
-                onKeyDown={handleAddTag}
-                InputProps={{
-                  sx: {
-                    fontFamily: 'Roboto',
-                    fontSize: '0.875rem',
-                    fontWeight: 400,
-                    lineHeight: '19.6px',
-                    textAlign: 'left',
-                    color: 'rgba(74, 74, 74, 1)',
-                  },
-                }}
-                sx={{
-                  mb: '3px',
-                  '& .MuiInputBase-input::placeholder': {
-                    fontFamily: 'Roboto',
-                    fontSize: '0.875rem',
-                    fontWeight: 400,
-                    lineHeight: '19.6px',
-                    textAlign: 'left',
-                    color: 'rgba(74, 74, 74, 1)',
-                  },
-                }}
-              />
-              {cities.map((city, index) => (
-                <ListItem button key={index} onClick={() => handleSelectCity(city)}>
-                  <ListItemText
-                    primary={
-                      <span style={{ fontFamily: 'Nunito Sans', fontSize: '13px', fontWeight: 600, lineHeight: '16.8px', textAlign: 'left', color: 'rgba(74, 74, 74, 1)' }}>
-                        {city.city},{' '}
-                        <span style={{ color: 'rgba(200, 202, 203, 1)' }}>
-                          {city.state}
-                        </span>
-                      </span>
-                    }
-                  />
-                </ListItem>
-              ))}
 
-
+            <Collapse in={isRevenueOpen}>
+              <Box sx={filterStyles.filter_dropdown}>
+                <Grid container spacing={0}>
+                  {[
+                    "Below 10k",
+                    "$10k - $50k",
+                    "$50k - $100k",
+                    "$100k - $500k",
+                    "$500k - $1M",
+                    "$1M - $5M",
+                    "$5M - $10M",
+                    "$10M - $50M",
+                    "$50M - $100M",
+                    "$100M - $500M",
+                    "$500M - $1B",
+                    "$1 Billion +",
+                    "unknown"
+                  ].map((range, index) => (
+                    <Grid item xs={6} key={range}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={checkedFiltersRevenue[range as keyof typeof checkedFiltersRevenue]}
+                            onChange={handleCheckboxChangeRevenue}
+                            name={range}
+                            size="small"
+                            sx={{
+                              "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
+                            }}
+                          />
+                        }
+                        label={
+                          <Typography
+                            className="table-data"
+                            sx={{
+                              color: checkedFiltersRevenue[range as keyof typeof checkedFiltersRevenue]
+                                ? "rgba(80, 82, 178, 1) !important"
+                                : "rgba(74, 74, 74, 1)",
+                            }}
+                          >
+                            {range === "unknown" ? "# of employees is unknown" : range}
+                          </Typography>
+                        }
+                      />
+                    </Grid>
+                  ))}
+                </Grid>
+              </Box>
             </Collapse>
           </Box>
+
           {/* Number of Employees */}
           <Box sx={filterStyles.main_filter_form}>
             <Box
@@ -1872,6 +1760,101 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               </Box>
             </Collapse>
           </Box>
+          {/* Location */}
+          <Box
+            sx={filterStyles.main_filter_form}
+          >
+            <Box
+              sx={filterStyles.filter_form}
+              onClick={() => setIsRegionOpen(!isRegionOpen)}
+            >
+              <Box
+                sx={{
+                  ...filterStyles.active_filter_dote,
+                  visibility: regions.length > 0 ? 'visible' : "hidden",
+                }}
+              />
+              <Image
+                src="/location.svg"
+                alt="calendar"
+                width={18}
+                height={18}
+              />
+              <Typography
+                sx={{
+                  ...filterStyles.filter_name
+                }}
+              >
+                Location
+              </Typography>
+              <Box
+                sx={{ display: "flex", flexWrap: "wrap", gap: "8px", mb: 2 }}
+              >
+                {regions.map((tag, index) => (
+                  <CustomChip
+                    key={index}
+                    label={tag}
+                    onDelete={() =>
+                      setTags(regions.filter((_, i) => i !== index))
+                    }
+                  />
+                ))}
+              </Box>
+              <IconButton
+                onClick={() => setIsRegionOpen(!isRegionOpen)}
+                aria-label="toggle-content"
+              >
+                {isRegionOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </IconButton>
+            </Box>
+            <Collapse in={isRegionOpen}>
+              <TextField
+                placeholder="Search by town, city or state.."
+                variant="outlined"
+                fullWidth
+                value={region}
+                onChange={handleRegionChange}
+                onKeyDown={handleAddTag}
+                InputProps={{
+                  sx: {
+                    fontFamily: 'Roboto',
+                    fontSize: '0.875rem',
+                    fontWeight: 400,
+                    lineHeight: '19.6px',
+                    textAlign: 'left',
+                    color: 'rgba(74, 74, 74, 1)',
+                  },
+                }}
+                sx={{
+                  mb: '3px',
+                  '& .MuiInputBase-input::placeholder': {
+                    fontFamily: 'Roboto',
+                    fontSize: '0.875rem',
+                    fontWeight: 400,
+                    lineHeight: '19.6px',
+                    textAlign: 'left',
+                    color: 'rgba(74, 74, 74, 1)',
+                  },
+                }}
+              />
+              {cities.map((city, index) => (
+                <ListItem button key={index} onClick={() => handleSelectCity(city)}>
+                  <ListItemText
+                    primary={
+                      <span style={{ fontFamily: 'Nunito Sans', fontSize: '13px', fontWeight: 600, lineHeight: '16.8px', textAlign: 'left', color: 'rgba(74, 74, 74, 1)' }}>
+                        {city.city},{' '}
+                        <span style={{ color: 'rgba(200, 202, 203, 1)' }}>
+                          {city.state}
+                        </span>
+                      </span>
+                    }
+                  />
+                </ListItem>
+              ))}
+
+
+            </Collapse>
+          </Box>
           {/* Recurring Visits */}
           <Box
             sx={{
@@ -1954,6 +1937,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               </Box>
             </Collapse>
           </Box>
+
           <Box
             sx={{
               mb: 0,

@@ -341,12 +341,27 @@ const Leads: React.FC = () => {
         }
     };
 
+    const handleIndustry = async () => {
+        setLoading(true);
+        try {
+            const response = await axiosInstance.get('/company/industry')
+            console.log(response) 
+        }
+        catch{
+
+        }
+        finally{ 
+            setLoading(false)
+        }
+    }
+
 
 
 
 
 
     useEffect(() => {
+        handleIndustry()
         fetchData({
             sortBy: orderBy,
             sortOrder: order,
