@@ -1,8 +1,6 @@
-from fastapi import APIRouter, HTTPException, Depends, Response, Request, status
-from fastapi.responses import JSONResponse
-from dependencies import get_domain_service, check_user_authentication, UserDomainsService, check_pixel_install_domain, check_user_authorization
-from schemas.domains import DomainScheme, UpdateDomain
-from urllib.parse import unquote
+from fastapi import APIRouter, HTTPException, Depends, Request, status
+from dependencies import get_domain_service, check_user_authentication, UserDomainsService, check_domain, check_user_authorization, check_user_authorization_without_pixel
+from schemas.domains import DomainScheme
 from enums import TeamAccessLevel
 
 router = APIRouter(dependencies=[Depends(check_user_authorization)])
@@ -52,10 +50,9 @@ def delete_domain(domain_id: int, domain_service: UserDomainsService = Depends(g
 
 
 @router.get('/api_key')
-def get_api_key_domain(domain = Depends(check_pixel_install_domain), 
-                       user = Depends(check_user_authentication), 
+def get_api_key_domain(domain = Depends(check_domain), 
+                       user = Depends(check_user_authorization_without_pixel), 
                        domain_service: UserDomainsService = Depends(get_domain_service)):
     return domain_service.get_api_key(domain.id)
 
-        
     

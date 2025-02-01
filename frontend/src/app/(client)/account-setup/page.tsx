@@ -109,6 +109,7 @@ const AccountSetup = () => {
   useEffect(() => {
     const fetchCompanyInfo = async () => {
       try {
+        setLoading(true)
         const response = await axiosInterceptorInstance.get("/company-info");
         const status = response.data.status;
         switch (status) {
@@ -121,12 +122,16 @@ const AccountSetup = () => {
             router.push("/settings?section=subscription");
             break;
           case "DASHBOARD_ALLOWED":
+            setActiveTab(2)
             break;
           default:
             console.error("Unknown status:", status);
         }
       } catch (error) {
         console.error("Error fetching company info:", error);
+      }
+      finally{
+        setLoading(false)
       }
     };
     const handleRedirect = async () => {
@@ -733,6 +738,10 @@ const AccountSetup = () => {
     alert('Copied to clipboard');
   };
 
+  if (loading) {
+    return <CustomizedProgressBar />;
+}
+
   return (
     <Box sx={{ ...styles.pageContainer }}>
       <Box sx={styles.headers}>
@@ -852,7 +861,7 @@ const AccountSetup = () => {
           </Menu>
         </Box>
         <Box sx={{ ...styles.nav, position: "relative" }}>
-          {selectedMethodInstall === "" && <Button
+          {selectedMethodInstall === "" && activeTab != 2 && <Button
             className="hyperlink-red"
             variant="outlined"
             onClick={handleBackClick}

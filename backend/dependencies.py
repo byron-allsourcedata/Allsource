@@ -352,7 +352,7 @@ def check_user_authorization_without_pixel(Authorization: Annotated[str, Header(
                     'stripe_payment_url': get_stripe_payment_url(user.get('customer_id'),
                                                                  user.get('stripe_payment_url'))}
         )
-    if auth_status != UserAuthorizationStatus.SUCCESS and auth_status != UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED and auth_status != UserAuthorizationStatus.NEED_BOOK_CALL:
+    if auth_status != UserAuthorizationStatus.SUCCESS and auth_status != UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={'status': auth_status.value}
