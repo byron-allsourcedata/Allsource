@@ -27,6 +27,16 @@ import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import PersonIcon from '@mui/icons-material/Person';
+import MetaConnectButton from "@/components/MetaConnectButton";
+import KlaviyoIntegrationPopup from "@/components/KlaviyoIntegrationPopup";
+import OmnisendConnect from "@/components/OmnisendConnect";
+import MailchimpConnect from "@/components/MailchimpConnect";
+import AttentiveIntegrationPopup from "@/components/AttentiveIntegrationPopup";
+import SendlaneConnect from "@/components/SendlaneConnect";
+import ZapierConnectPopup from "@/components/ZapierConnectPopup";
+import SlackConnectPopup from "@/components/SlackConnectPopup";
+import ShopifySettings from "@/components/ShopifySettings";
+import BCommerceConnect from "@/components/Bcommerce";
 import EditIcon from '@mui/icons-material/Edit';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
@@ -41,18 +51,29 @@ const AccountSetup = () => {
   const [selectedVisits, setSelectedVisits] = useState("");
   const [selectedRoles, setSelectedRoles] = useState("");
   const [selectedMethodInstall, setSelectedMethodInstall] = useState("");
+  const [selectedIntegration, setSelectedIntegration] = useState("");
   const [pixelCode, setPixelCode] = useState('');
   const [stripeUrl, setStripeUrl] = useState('');
   const [domainName, setDomainName] = useState("");
   const [shopDomain, setShopDomain] = useState("");
   const [accessToken, setAccessToken] = useState("");
   const [bigcommerceHash, setBigcommerceHash] = useState("");
+  const [integrationsCredentials, setIntegrationsCredentials] = useState<IntegrationCredentials[]>([]);
   const [editingName, setEditingName] = useState(true)
   const [manuallInstall, setManuallInstall] = useState(false)
   const [shopifyInstall, setShopifyInstall] = useState(false)
   const [bigcommerceInstall, setBigcommerceInstall] = useState(false)
   const [wordpressInstall, setWordpressInstall] = useState(false)
   const [googletagInstall, setGoogletagInstall] = useState(false)
+  const [sendlanePopupOpen, setSendlanePopupOpen] = useState(false)
+  const [bigcommercePopupOpen, setBigcommercePopupOpen] = useState(false)
+  const [shopifyPopupOpen, setShopifyPopupOpen] = useState(false)
+  const [mailChimpPopupOpen, setMailchimpPopupOpen] = useState(false)
+  const [attentivePopupOpen, setAttentivePopupOpen] = useState(false)
+  const [klaviyoPopupOpen, setKlaviyoPopupOpen] = useState(false)
+  const [zapierPopupOpen, setZapierPopupOpen] = useState(false)
+  const [omnisendPopupOpen, setOmnisendPopupOpen] = useState(false)
+  const [metaPopupOpen, setMetaPopupOpen] = useState(false)
   const [opengoogle, setGoogleOpen] = useState(false);
   const handleGoogleClose = () => setGoogleOpen(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -63,7 +84,8 @@ const AccountSetup = () => {
     selectedEmployees: "",
     selectedVisits: "",
     typeBusiness: "",
-    selectedMethodInstall: ""
+    selectedMethodInstall: "",
+    selectedIntegration: ""
 
   });
   const router = useRouter();
@@ -73,6 +95,16 @@ const AccountSetup = () => {
   const [email, setEmail] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState(0);
   const { full_name: userFullName, email: userEmail, partner } = useUser();
+
+  interface IntegrationCredentials {
+    access_token: string;
+    service_name: string;
+    shop_domain: string;
+    ad_account_id: string;
+    is_with_suppresions: boolean;
+    error_message?: string
+    is_failed: boolean
+  }
 
   useEffect(() => {
     const fetchCompanyInfo = async () => {
@@ -89,7 +121,6 @@ const AccountSetup = () => {
             router.push("/settings?section=subscription");
             break;
           case "DASHBOARD_ALLOWED":
-            // setActiveTab(2)
             break;
           default:
             console.error("Unknown status:", status);
@@ -112,10 +143,10 @@ const AccountSetup = () => {
 
     handleRedirect();
     fetchCompanyInfo();
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
+    // document.body.style.overflow = 'hidden';
+    // return () => {
+    //   document.body.style.overflow = 'auto';
+    // };
   }, []);
 
   const getUserDataFromStorage = () => {
@@ -321,6 +352,12 @@ const AccountSetup = () => {
     setSelectedMethodInstall(label);
     setErrors({ ...errors, selectedMethodInstall: "" });
   };
+  const handleIntegration = (label: string) => {
+    setSelectedIntegration(label);
+    setErrors({ ...errors, selectedIntegration: "" });
+  };
+
+
 
   const validateField = (
     value: string,
@@ -352,7 +389,13 @@ const AccountSetup = () => {
   };
 
   const handleSkip = () => {
-    handleNextClick()
+    if (activeTab === 3) {
+      endSetup()
+    }
+    else {
+      setActiveTab((prev) => prev + 1);
+    }
+
   }
 
   const endSetup = () => {
@@ -373,7 +416,8 @@ const AccountSetup = () => {
       selectedVisits: selectedVisits ? "" : "Please select number of visits",
       selectedRoles: selectedRoles ? "" : "Please select your`s role",
       typeBusiness: typeBusiness ? "" : "Please select your`s type business",
-      selectedMethodInstall: selectedMethodInstall ? "" : "Please select method install pixel"
+      selectedMethodInstall: selectedMethodInstall ? "" : "Please select method install pixel",
+      selectedIntegration: selectedIntegration ? "" : "Please choice integration"
     };
     setErrors(newErrors);
 
@@ -475,6 +519,10 @@ const AccountSetup = () => {
     return selectedMethodInstall !== ""
   };
 
+  const isFormValidFourth = () => {
+    return selectedIntegration !== ""
+  };
+
   const installManually = async () => {
     try {
       const response = await axiosInterceptorInstance.get('/install-pixel/manually');
@@ -502,6 +550,17 @@ const AccountSetup = () => {
     { label: "Shopify", src: "install_cms1.svg", setState: setShopifyInstall, action: () => { } },
     { label: "WordPress", src: "install_cms2.svg", setState: setWordpressInstall, action: () => { } },
     { label: "Bigcommerce", src: "bigcommerce-icon.svg", setState: setBigcommerceInstall, action: () => { } },
+  ];
+  const integrations = [
+    { label: "Attentive", src: "attentive.svg", setState: setAttentivePopupOpen },
+    { label: "Klaviyo", src: "klaviyo.svg", setState: setKlaviyoPopupOpen },
+    { label: "Mailchimp", src: "mailchimp-icon.svg", setState: setMailchimpPopupOpen },
+    { label: "Meta", src: "meta-icon.svg", setState: setMetaPopupOpen },
+    { label: "Omnisend", src: "omnisend_icon_black.svg", setState: setOmnisendPopupOpen },
+    { label: "Sendlane", src: "sendlane-icon.svg", setState: setSendlanePopupOpen},
+    { label: "Shopify", src: "install_cms1.svg", setState: setShopifyPopupOpen},
+    { label: "Zapier", src: "zapier-icon.svg", setState: setZapierPopupOpen},
+    { label: "Bigcommerce", src: "bigcommerce-icon.svg", setState: setBigcommercePopupOpen},
   ];
   const roles = [
     { label: "Digital Marketer" },
@@ -541,7 +600,6 @@ const AccountSetup = () => {
     let isMatched = false;
 
     method_installingPixel.forEach(({ label, setState, action }) => {
-      console.log(label, selectedMethodInstall)
       if (selectedMethodInstall === label) {
         setState(true);
         isMatched = true;
@@ -551,7 +609,7 @@ const AccountSetup = () => {
       }
     });
 
-    if (activeTab === 2) {
+    if (activeTab === 3) {
       endSetup()
     }
     else {
@@ -561,6 +619,17 @@ const AccountSetup = () => {
     }
 
   };
+
+  const handleLastSlide = () => {
+    integrations.forEach(({ label, setState }) => {
+      if (selectedIntegration === label) {
+        setState(true);
+      } else {
+        setState(false);
+      }
+
+    });
+  } 
 
   const handleCancel = () => {
     method_installingPixel.forEach(({ label, setState }) => {
@@ -577,6 +646,18 @@ const AccountSetup = () => {
       })
       .catch(error => {
       });
+  };
+
+  const handleSaveSettings = (newIntegration: IntegrationCredentials) => {
+    setIntegrationsCredentials(prevIntegrations => {
+      if (prevIntegrations.some(integration => integration.service_name === newIntegration.service_name)) {
+        return prevIntegrations.map(integration =>
+          integration.service_name === newIntegration.service_name ? newIntegration : integration
+        );
+      } else {
+        return [...prevIntegrations, newIntegration];
+      }
+    });
   };
 
   const handleInstallShopify = async () => {
@@ -634,7 +715,7 @@ const AccountSetup = () => {
           const status = response.data.status;
           if (status === "PIXEL_CODE_INSTALLED") {
             showToast('Pixel code is installed successfully!');
-            endSetup()
+            setActiveTab((prev) => prev + 1);
           }
         })
         .catch(error => {
@@ -1115,29 +1196,6 @@ const AccountSetup = () => {
             <>
               {/* Business info */}
               <Typography variant="body1" className="first-sub-title" sx={styles.text}>
-                How many employees work at your organization
-              </Typography>
-              {errors.selectedEmployees && (
-                <Typography variant="body2" color="error">
-                  {errors.selectedEmployees}
-                </Typography>
-              )}
-              <Box sx={styles.employeeButtons}>
-                {ranges.map((range, index) => (
-                  <Button
-                    className="form-input"
-                    key={index}
-                    variant="outlined"
-                    onClick={() => handleEmployeeRangeChange(range.label)}
-                    onTouchStart={() => handleEmployeeRangeChange(range.label)}
-                    onMouseDown={() => handleEmployeeRangeChange(range.label)}
-                    sx={getButtonStyles(selectedEmployees === range.label)}
-                  >
-                    <Typography className="form-input" sx={{ padding: '3px' }}> {range.label}</Typography>
-                  </Button>
-                ))}
-              </Box>
-              <Typography variant="body1" className="first-sub-title" sx={styles.text}>
                 Select the type of business you have
               </Typography>
               {errors.typeBusiness && (
@@ -1155,6 +1213,29 @@ const AccountSetup = () => {
                     onTouchStart={() => handleTypeBusinessChange(range.label)}
                     onMouseDown={() => handleTypeBusinessChange(range.label)}
                     sx={getButtonStyles(typeBusiness === range.label)}
+                  >
+                    <Typography className="form-input" sx={{ padding: '3px' }}> {range.label}</Typography>
+                  </Button>
+                ))}
+              </Box>
+              <Typography variant="body1" className="first-sub-title" sx={styles.text}>
+                How many employees work at your organization
+              </Typography>
+              {errors.selectedEmployees && (
+                <Typography variant="body2" color="error">
+                  {errors.selectedEmployees}
+                </Typography>
+              )}
+              <Box sx={styles.employeeButtons}>
+                {ranges.map((range, index) => (
+                  <Button
+                    className="form-input"
+                    key={index}
+                    variant="outlined"
+                    onClick={() => handleEmployeeRangeChange(range.label)}
+                    onTouchStart={() => handleEmployeeRangeChange(range.label)}
+                    onMouseDown={() => handleEmployeeRangeChange(range.label)}
+                    sx={getButtonStyles(selectedEmployees === range.label)}
                   >
                     <Typography className="form-input" sx={{ padding: '3px' }}> {range.label}</Typography>
                   </Button>
@@ -1264,80 +1345,6 @@ const AccountSetup = () => {
                         <Button
                           onClick={() => {
                             setEditingName(false)
-                            fetchEditDomain()
-                          }}
-                          sx={{
-                            ml: 2,
-                            border: '1px solid rgba(80, 82, 178, 1)',
-                            textTransform: 'none',
-                            background: '#fff',
-                            color: 'rgba(80, 82, 178, 1)',
-                            fontFamily: 'Nunito Sans',
-                            padding: '0.65em 2em',
-                            mr: 1,
-                            '@media (max-width: 600px)': { padding: '0.5em 1.5em', mr: 0, ml: 0, left: 0 }
-                          }}
-                        >
-                          <Typography className='second-sub-title' sx={{
-                            color: 'rgba(80, 82, 178, 1) !important', textAlign: 'left'
-                          }}>
-                            Save
-                          </Typography>
-                        </Button>
-                      </>
-                      :
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <Typography className='first-sub-title' sx={{ textAlign: 'left', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
-                          {domainName}
-                        </Typography>
-                        <IconButton onClick={() => setEditingName(true)} sx={{ p: "4px", ':hover': { backgroundColor: 'transparent', } }} >
-                          <EditIcon height={8} width={8} sx={{ color: "rgba(80, 82, 178, 1)" }} />
-                        </IconButton>
-                      </Box>
-                    }
-                  </Box>
-                  <Divider />
-                  <Box sx={{ mt: 4 }}>
-                    {editingName
-                      ?
-                      <>
-                        <TextField
-                          id="filled-basic"
-                          placeholder="Enter your domain"
-                          value={domainName}
-                          onChange={(e) => {
-                            setDomainName(e.target.value)
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              setEditingName(false)
-                            }
-                          }}
-                          InputProps={{
-                            startAdornment: (
-                              <InputAdornment position="start">https://</InputAdornment>
-                            )
-                          }}
-                          variant="outlined"
-                          sx={{
-                            flex: 1,
-                            width: '360px',
-                            '& .MuiOutlinedInput-root': {
-                              borderRadius: '4px',
-                              height: '40px',
-                            },
-                            '& input': {
-                              paddingLeft: 0,
-                            },
-                            '& input::placeholder': {
-                              fontSize: '14px',
-                              color: '#8C8C8C',
-                            },
-                          }}
-                        />
-                        <Button
-                          onClick={() => {
-                            setEditingName(false)
                             setDomainName(prev => prev.replace(/^https?:\/\//, ""))
                             sessionStorage.setItem('current_domain', domainName.replace(/^https?:\/\//, ""))
                             fetchEditDomain()
@@ -1373,13 +1380,7 @@ const AccountSetup = () => {
 
                     }
                   </Box>
-                  <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '10px', '@media (max-width: 600px)': { p: 2 } }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', pt: 3, justifyContent: 'start' }}>
-                      <Image src='/1.svg' alt='1' width={28} height={28} />
-                      <Typography className='first-sub-title' sx={maintext}>Copy the pixel code</Typography>
-                    </Box>
-
-                  </Box>
+                  
                   <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '10px', '@media (max-width: 600px)': { p: 2 } }}>
                     <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', pt: 3, justifyContent: 'start' }}>
                       <Image src='/1.svg' alt='1' width={28} height={28} />
@@ -1976,76 +1977,133 @@ const AccountSetup = () => {
               }
             </>
           }
-          {/* {activeTab === 3 && (
+          {activeTab === 3 && (
             <>
-              <Typography variant="body1" className="first-sub-title" sx={styles.text}>
-                How many employees work at your organization
-              </Typography>
-              {errors.selectedEmployees && (
-                <Typography variant="body2" color="error">
-                  {errors.selectedEmployees}
-                </Typography>
-              )}
-              <Box sx={styles.employeeButtons}>
-                {ranges.map((range, index) => (
+                <>
+                  <Typography variant="body1" className="first-sub-title" sx={styles.text}>
+                    These Will Be Available on Your Integration Page for quick Setup.
+                  </Typography>
+                  {errors.selectedEmployees && (
+                    <Typography variant="body2" color="error">
+                      {errors.selectedEmployees}
+                    </Typography>
+                  )}
+                  <Box sx={{ ...styles.rolesButtons, display: "grid", gridTemplateColumns: "1fr 1fr 1fr" }}>
+                    {integrations.map((range, index) => (
+                      <Button
+                        key={index}
+                        variant="outlined"
+                        onClick={() => handleIntegration(range.label)}
+                        onTouchStart={() => handleIntegration(range.label)}
+                        onMouseDown={() => handleIntegration(range.label)}
+                        sx={{ ...getButtonRolesStyles(selectedIntegration === range.label), gap: "8px", justifyContent: "flex-start", p: "12px" }}
+                      >
+                        <Image src={range.src} alt="Integration item" width={24} height={24} />
+                        <Typography className="form-input" style={{ color: "rgba(112, 112, 113, 1)", lineHeight: "19.6px" }}>{range.label}</Typography>
+                      </Button>
+                    ))}
+                  </Box>
+                  <MetaConnectButton
+                      open={metaPopupOpen}
+                      onClose={() => setMetaPopupOpen(false)}
+                      isEdit={true}
+                      onSave={handleSaveSettings}
+                      boxShadow="rgba(0, 0, 0, 0.1)"
+                    />
+                  {/* <KlaviyoIntegrationPopup
+                    open={klaviyoPopupOpen}
+                    handleClose={() => setKlaviyoPopupOpen(false)}
+                    onSave={handleSaveSettings}
+                    boxShadow="rgba(0, 0, 0, 0.1)"
+                    initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'klaviyo')?.access_token}
+                  /> */}
+                  <AttentiveIntegrationPopup
+                    open={attentivePopupOpen}
+                    handleClose={() => setAttentivePopupOpen(false)}
+                    onSave={handleSaveSettings}
+                    boxShadow="rgba(0, 0, 0, 0.1)"
+                    initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'attentive')?.access_token}
+                  />
+                  <ZapierConnectPopup 
+                    open={zapierPopupOpen} 
+                    boxShadow="rgba(0, 0, 0, 0.1)"
+                    handlePopupClose={() => setZapierPopupOpen(false)} 
+                  />
+                  <MailchimpConnect 
+                    open={mailChimpPopupOpen} 
+                    boxShadow="rgba(0, 0, 0, 0.1)"
+                    handleClose={() => setMailchimpPopupOpen(false)} 
+                    onSave={handleSaveSettings} 
+                    initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'mailchimp')?.access_token}
+                    />
+                  <OmnisendConnect 
+                    open={omnisendPopupOpen} 
+                    handleClose={()=> setOmnisendPopupOpen(false)} 
+                    onSave={handleSaveSettings} 
+                    boxShadow="rgba(0, 0, 0, 0.1)" />
+                  <SendlaneConnect 
+                    open={sendlanePopupOpen} 
+                    handleClose={() => setSendlanePopupOpen(false)} 
+                    onSave={handleSaveSettings} 
+                    boxShadow="rgba(0, 0, 0, 0.1)"
+                    initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'sendlane')?.access_token}
+                    />
+                  <ShopifySettings
+                    open={shopifyPopupOpen}
+                    handleClose={() => setShopifyPopupOpen(false)}
+                    onSave={handleSaveSettings}
+                    initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'shopify')?.access_token}
+                    initShopDomain={integrationsCredentials?.find(integration => integration.service_name === 'shopify')?.shop_domain}
+                  />
+                    <BCommerceConnect
+                      open={bigcommercePopupOpen}
+                      onClose={() => setBigcommercePopupOpen(false)}
+                      initShopHash={integrationsCredentials?.find(integration => integration.service_name === 'big_commerce')?.shop_domain}
+                      error_message={integrationsCredentials?.find(integration => integration.service_name === 'big_commerce')?.error_message}
+                    />
+
                   <Button
-                    className="form-input"
-                    key={index}
-                    variant="outlined"
-                    onClick={() => handleEmployeeRangeChange(range.label)}
-                    onTouchStart={() => handleEmployeeRangeChange(range.label)}
-                    onMouseDown={() => handleEmployeeRangeChange(range.label)}
-                    sx={getButtonStyles(selectedEmployees === range.label)}
+                    className='hyperlink-red'
+                    fullWidth
+                    variant="contained"
+                    sx={{
+                      ...styles.submitButton,
+                      opacity: isFormValidFourth() ? 1 : 0.6,
+                      mb: 2,
+                      pointerEvents: isFormValidFourth() ? "auto" : "none",
+                      backgroundColor: isFormValidFourth()
+                        ? "rgba(244, 87, 69, 1)"
+                        : "rgba(244, 87, 69, 0.4)",
+                      "&.Mui-disabled": {
+                        backgroundColor: "rgba(244, 87, 69, 0.6)",
+                        color: "#fff",
+                      },
+                    }}
+                    onClick={handleLastSlide}
+                    disabled={!isFormValidFourth()}
                   >
-                    <Typography className="form-input" sx={{ padding: '3px' }}> {range.label}</Typography>
+                    Next
                   </Button>
-                ))}
-              </Box>
-              <Typography variant="body1" className="first-sub-title" sx={styles.text}>
-                Whats your role?
-              </Typography>
-              {errors.selectedEmployees && (
-                <Typography variant="body2" color="error">
-                  {errors.selectedEmployees}
-                </Typography>
-              )}
-              <Box sx={styles.rolesButtons}>
-                {roles.map((range, index) => (
                   <Button
-                    key={index}
-                    variant="outlined"
-                    onClick={() => handleRolesChange(range.label)}
-                    onTouchStart={() => handleRolesChange(range.label)}
-                    onMouseDown={() => handleRolesChange(range.label)}
-                    sx={getButtonRolesStyles(selectedRoles === range.label)}
+                    className='hyperlink-red'
+                    fullWidth
+                    variant="contained"
+                    sx={{
+                      ...styles.submitButton,
+                      color: "rgba(244, 87, 69, 1)",
+                      backgroundColor: "#fff",
+                      "&:hover": {
+                        backgroundColor: "#fff",
+                        color: "rgba(244, 87, 69, 0.6)"
+                      },
+                    }}
+                    onClick={handleSkip}
                   >
-                    <Typography className="form-input" sx={{ padding: '3px' }}> {range.label}</Typography>
+                    Skip
                   </Button>
-                ))}
-              </Box>
-              <Button
-                className='hyperlink-red'
-                fullWidth
-                variant="contained"
-                sx={{
-                  ...styles.submitButton,
-                  opacity: isFormValid() ? 1 : 0.6,
-                  pointerEvents: isFormValid() ? "auto" : "none",
-                  backgroundColor: isFormValid()
-                    ? "rgba(244, 87, 69, 1)"
-                    : "rgba(244, 87, 69, 0.4)",
-                  "&.Mui-disabled": {
-                    backgroundColor: "rgba(244, 87, 69, 0.6)",
-                    color: "#fff",
-                  },
-                }}
-                onClick={handleSubmit}
-                disabled={!isFormValid()}
-              >
-                Next
-              </Button>
+                </>
             </>
-          )} */}
+          )}
         </Box>
       </Box>
     </Box >

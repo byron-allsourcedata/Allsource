@@ -42,7 +42,6 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
     evtSource.onmessage = (event) => {
       if (event.data) {
         const data = JSON.parse(event.data);
-        console.log({data})
         if (data.status === "PIXEL_CODE_PARSE_FAILED") {
           showErrorToast("Could not find pixel code on your site")
         }
@@ -67,7 +66,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
             sessionStorage.setItem('me', JSON.stringify(meData));
           }
           setData(data);
-          window.location.reload();
+          // window.location.reload();
         }
       }
     };
