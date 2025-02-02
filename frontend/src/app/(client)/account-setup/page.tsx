@@ -743,7 +743,7 @@ const AccountSetup = () => {
 }
 
   return (
-    <Box sx={{ ...styles.pageContainer }}>
+    <Box sx={{ ...styles.pageContainer, overflowX: "hidden" }}>
       <Box sx={styles.headers}>
         <Box
           sx={{
@@ -860,7 +860,7 @@ const AccountSetup = () => {
             </MenuItem>
           </Menu>
         </Box>
-        <Box sx={{ ...styles.nav, position: "relative" }}>
+        <Box sx={{ ...styles.nav }}>
           {selectedMethodInstall === "" && activeTab != 2 && <Button
             className="hyperlink-red"
             variant="outlined"
@@ -1076,7 +1076,7 @@ const AccountSetup = () => {
           </MenuItem>
         </Menu>
       </Box>
-      <Box sx={{...styles.formContainer, overflowX: "hidden"}}>
+      <Box sx={{...styles.formContainer}}>
         <Box sx={styles.form}>
           <Box
             sx={{
