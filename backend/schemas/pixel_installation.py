@@ -3,7 +3,8 @@ from typing import Optional
 
 class PixelInstallationRequest(BaseModel):
     pixelClientId: Optional[str] = Field(None)
-    url: str = Field(...)      
+    url: str = Field(...)
+    need_reload_page: Optional[bool] = Field(False)
 
 
 class EmailFormRequest(BaseModel):

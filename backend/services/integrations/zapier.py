@@ -118,7 +118,7 @@ class ZapierIntegrationService:
             "mobile_phone": format_phone_number(lead.mobile_phone),
             "direct_number": lead.direct_number,
             "gender": lead.gender.lower() if lead.gender else None,
-            "personal_zip": lead.personal_zip,
+            "personal_zip": lead.personal_zip or "N/A",
             "personal_phone": format_phone_number(lead.personal_phone),
             "personal_emails": first_email,
             "personal_city": lead.personal_city or "N/A",

@@ -25,11 +25,17 @@ async def manual(pixel_installation_request: PixelInstallationRequest,
         status = PixelStatus.PIXEL_CODE_INSTALLED
     else:
         status = PixelStatus.PIXEL_CODE_PARSE_FAILED
+    
+    message_body = {
+        'status': status.value,
+        'need_reload_page': pixel_installation_request.need_reload_page
+    }
+
     try:
         await publish_rabbitmq_message(
             connection=connection,
             queue_name=queue_name,
-            message_body={'status': status.value}
+            message_body=message_body
         )
     except Exception as e:
         logger.error(e)

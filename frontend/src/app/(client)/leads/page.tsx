@@ -1276,7 +1276,8 @@ const Leads: React.FC = () => {
                                                         { key: 'first_visited_date', label: 'Visited date', sortable: true },
                                                         { key: 'funnel', label: 'Lead Status' },
                                                         { key: 'status', label: 'Visitor Type' },
-                                                        { key: 'average_time_sec', label: 'Average time on site', sortable: true },
+                                                        { key: 'number_of_page', label: 'URL Visited'},
+                                                        { key: 'average_time_sec', label: 'Time on site', sortable: true },
                                                     ].map(({ key, label, sortable = false }) => (
                                                         <TableCell
                                                             key={key}
@@ -1288,6 +1289,7 @@ const Leads: React.FC = () => {
                                                                     zIndex: 99
                                                                 }),
                                                                 ...(key === 'average_time_sec' && {
+                                                                    ...leadsStyles.table_array,
                                                                     "::after": { content: 'none' }
                                                                 })
                                                             }}
@@ -1436,6 +1438,13 @@ const Leads: React.FC = () => {
                                                             >
                                                                 {formatFunnelText(row.visitor_type) || '--'}
                                                             </Box>
+                                                        </TableCell>
+
+                                                        <TableCell onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleOpenPopup(row)
+                                                         }} sx={{ ...leadsStyles.table_array, position: 'relative', cursor: 'pointer', color: 'rgba(80, 82, 178, 1)' }}>
+                                                        {Array.isArray(row.url_visited) ? row.url_visited.length : '--'}
                                                         </TableCell>
 
                                                         <TableCell sx={{ ...leadsStyles.table_array, "::after": { content: 'none' } }}>

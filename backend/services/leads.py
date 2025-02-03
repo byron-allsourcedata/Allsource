@@ -142,7 +142,8 @@ class LeadsService:
                     'recurring_visits': lead[62],
                     'visitor_type': lead[63],
                     'average_time_sec': lead[64],
-                    'is_active': lead[66]
+                    'is_active': lead[66],
+                    'url_visited': lead[67]
                 })
 
         return leads_list, count, max_page

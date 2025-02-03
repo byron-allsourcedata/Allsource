@@ -48,10 +48,10 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
 
     const handleDownload = async () => {
         const requestBody = {
-            id: company.id ? [company.id] : []
+            companies_ids: company.id ? [company.id] : []
         };
         try {
-            const response = await axiosInstance.post('/company/download_company', requestBody, {
+            const response = await axiosInstance.post('/company/download-company', requestBody, {
                 responseType: 'blob'
             });
 
@@ -91,6 +91,13 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
             window.removeEventListener('keydown', handleKeyDown);
         };
     }, [open]);
+
+    const capitalizeCity = (city: string) => {
+        return city
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+    }
 
     return (
         <>
@@ -295,7 +302,10 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 City:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {company.city || '--'}
+                            {company.city 
+                                ? [capitalizeCity(company.city)].filter(Boolean).join(', ')
+                                : '--'
+                            }
                             </Typography>
                         </Box>
 

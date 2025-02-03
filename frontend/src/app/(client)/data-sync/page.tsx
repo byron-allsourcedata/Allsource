@@ -80,8 +80,6 @@ const DataSync = () => {
       if (error instanceof AxiosError && error.response?.status === 403) {
         if (error.response.data.status === 'NEED_BOOK_CALL') {
           sessionStorage.setItem('is_slider_opened', 'true');
-        } else if (error.response.data.status === 'PIXEL_INSTALLATION_NEEDED') {
-          setStatus(error.response.data.status);
         }
       } else {
         console.error('Error fetching data:', error);

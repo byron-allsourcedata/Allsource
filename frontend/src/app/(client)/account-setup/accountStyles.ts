@@ -7,6 +7,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     flexDirection: 'column',
     alignItems: 'center',
     paddingLeft: '0px',
+    height: "100vh",
     paddingTop: '1.5em'
   },
   employeeButtons: {
@@ -150,7 +151,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     flexDirection: 'column',
     maxWidth: '556px',
     width: '100%',
-    height: '82vh',
+    marginTop: '90px',
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: '0.5em',

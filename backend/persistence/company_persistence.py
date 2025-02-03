@@ -25,20 +25,163 @@ from models.lead_company import LeadCompany
 
 logger = logging.getLogger(__name__)
 
-
-def normalize_profession(profession: str) -> str:
-    return profession.lower().replace(" ", "-")
-
-
 class CompanyPersistence:
     def __init__(self, db: Session):
         self.db = db
+        
+    def get_full_information_companies_by_filters(self, domain_id, from_date, to_date, regions, search_query, timezone_offset):
+        first_visit_subquery = (
+            self.db.query(
+                LeadUser.company_id,
+                func.min(LeadsVisits.start_date).label("visited_date")
+            )
+                .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
+                .group_by(LeadUser.company_id)
+                .subquery()
+        )
+
+        query = (
+            self.db.query(
+                LeadCompany.id,
+                LeadCompany.name,
+                LeadCompany.phone,
+                LeadCompany.linkedin_url,
+                func.count(LeadUser.id).label("number_of_employees"),
+                first_visit_subquery.c.visited_date,
+                LeadCompany.revenue,
+                LeadCompany.employee_count,
+                LeadCompany.address,
+                LeadCompany.primary_industry,
+                LeadCompany.domain,
+                LeadCompany.zip,
+                LeadCompany.description,
+                FiveXFiveLocations.city,
+                States.state_name,
+                LeadCompany.last_updated,
+            )
+                .join(LeadUser, LeadUser.company_id == LeadCompany.id)
+                .outerjoin(first_visit_subquery, first_visit_subquery.c.company_id == LeadCompany.id)
+                .outerjoin(FiveXFiveLocations, FiveXFiveLocations.id == LeadCompany.five_x_five_location_id)
+                .outerjoin(States, States.id == FiveXFiveLocations.state_id)
+                .filter(LeadUser.domain_id == domain_id)
+                .group_by(LeadCompany.id, first_visit_subquery.c.visited_date, FiveXFiveLocations.city, States.state_name)
+                .order_by(asc(LeadCompany.name), desc(first_visit_subquery.c.visited_date))
+        )
+
+        sort_options = {
+            'company_name': FiveXFiveUser.first_name,
+            'phone_name': FiveXFiveUser.business_email,
+            'linkedln': FiveXFiveUser.personal_emails,
+            'empl': FiveXFiveUser.mobile_phone,
+            'gender': FiveXFiveUser.gender,
+            'state': FiveXFiveLocations.state_id,
+            'city': FiveXFiveLocations.city,
+            'age': FiveXFiveUser.age_min,
+            'average_time_sec': LeadUser.avarage_visit_time,
+            'status': LeadUser.is_returning_visitor,
+            'funnel': LeadUser.behavior_type,
+        }
+        
+        if from_date and to_date:
+            start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
+            end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
+            query = query.filter(
+                and_(
+                    or_(
+                        and_(
+                            LeadsVisits.start_date == start_date.date(),
+                            LeadsVisits.start_time >= start_date.time()
+                        ),
+                        and_(
+                            LeadsVisits.start_date == end_date.date(),
+                            LeadsVisits.start_time <= end_date.time()
+                        ),
+                        and_(
+                            LeadsVisits.start_date > start_date.date(),
+                            LeadsVisits.start_date < end_date.date()
+                        )
+                    )
+                )
+            )
+
+        if regions:
+            filters = []
+            region_list = regions.split(',')
+            for region_data in region_list:
+                region_data = region_data.split('-')
+                filters.append(FiveXFiveLocations.city.ilike(f'{region_data[0]}%'))
+
+                if len(region_data) > 1 and region_data[1]:
+                    filters.append(States.state_name.ilike(f'{region_data[1]}%'))
+
+            query = query.filter(or_(*filters))
+
+        if search_query:
+            query = (
+                query
+                    .outerjoin(FiveXFiveUsersEmails, FiveXFiveUsersEmails.user_id == FiveXFiveUser.id)
+                    .outerjoin(FiveXFiveEmails, FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id)
+                    .outerjoin(FiveXFiveUsersPhones, FiveXFiveUsersPhones.user_id == FiveXFiveUser.id)
+                    .outerjoin(FiveXFivePhones, FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id)
+            )
+
+            filters = [
+                FiveXFiveEmails.email.ilike(f'{search_query}%'),
+                FiveXFiveEmails.email_host.ilike(f'{search_query}%'),
+                FiveXFivePhones.number.ilike(f'{search_query}%')
+            ]
+            search_query = search_query.split()
+
+            query = query.filter(or_(*filters))
+
+        leads = query.limit(1000).all()
+        return leads
+    
+    def get_full_companies_by_ids(self, domain_id, companies_ids):
+        first_visit_subquery = (
+            self.db.query(
+                LeadUser.company_id,
+                func.min(LeadsVisits.start_date).label("visited_date")
+            )
+                .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
+                .group_by(LeadUser.company_id)
+                .subquery()
+        )
+
+        query = (
+            self.db.query(
+                LeadCompany.id,
+                LeadCompany.name,
+                LeadCompany.phone,
+                LeadCompany.linkedin_url,
+                func.count(LeadUser.id).label("number_of_employees"),
+                first_visit_subquery.c.visited_date,
+                LeadCompany.revenue,
+                LeadCompany.employee_count,
+                LeadCompany.address,
+                LeadCompany.primary_industry,
+                LeadCompany.domain,
+                LeadCompany.zip,
+                LeadCompany.description,
+                FiveXFiveLocations.city,
+                States.state_name,
+                LeadCompany.last_updated,
+            )
+                .join(LeadUser, LeadUser.company_id == LeadCompany.id)
+                .outerjoin(first_visit_subquery, first_visit_subquery.c.company_id == LeadCompany.id)
+                .outerjoin(FiveXFiveLocations, FiveXFiveLocations.id == LeadCompany.five_x_five_location_id)
+                .outerjoin(States, States.id == FiveXFiveLocations.state_id)
+                .filter(LeadUser.domain_id == domain_id)
+                .group_by(LeadCompany.id, first_visit_subquery.c.visited_date, FiveXFiveLocations.city, States.state_name)
+                .order_by(asc(LeadCompany.name), desc(first_visit_subquery.c.visited_date))
+                .filter(LeadCompany.id.in_(companies_ids))
+        )
+
+        leads = query.all()
+        return leads
 
     def filter_companies(self, domain_id, page, per_page, from_date, to_date, regions,  sort_by, sort_order,
                          search_query, timezone_offset):
-
-        FirstNameAlias = aliased(FiveXFiveNames)
-        LastNameAlias = aliased(FiveXFiveNames)
 
         first_visit_subquery = (
             self.db.query(
@@ -79,10 +222,10 @@ class CompanyPersistence:
         )
 
         sort_options = {
-            'name': FiveXFiveUser.first_name,
-            'business_email': FiveXFiveUser.business_email,
-            'personal_email': FiveXFiveUser.personal_emails,
-            'mobile_phone': FiveXFiveUser.mobile_phone,
+            'company_name': FiveXFiveUser.first_name,
+            'phone_name': FiveXFiveUser.business_email,
+            'linkedln': FiveXFiveUser.personal_emails,
+            'empl': FiveXFiveUser.mobile_phone,
             'gender': FiveXFiveUser.gender,
             'state': FiveXFiveLocations.state_id,
             'city': FiveXFiveLocations.city,
@@ -147,17 +290,6 @@ class CompanyPersistence:
                 FiveXFivePhones.number.ilike(f'{search_query}%')
             ]
             search_query = search_query.split()
-            if len(search_query) == 1:
-                filters.extend([
-                    FirstNameAlias.name.ilike(f'{search_query[0].strip()}%'),
-                    LastNameAlias.name.ilike(f'{search_query[0].strip()}%')
-                ])
-            elif len(search_query) == 2:
-                name_filter = and_(
-                    FirstNameAlias.name.ilike(f'{search_query[0].strip()}%'),
-                    LastNameAlias.name.ilike(f'{search_query[1].strip()}%')
-                )
-                filters.append(name_filter)
 
             query = query.filter(or_(*filters))
 
@@ -165,10 +297,7 @@ class CompanyPersistence:
         leads = query.limit(per_page).offset(offset).all()
         count = query.count()
         max_page = math.ceil(count / per_page)
-        states = None
-        if leads:
-            states = self.db.query(States).all()
-        return leads, count, max_page, states
+        return leads, count, max_page
 
     def search_contact(self, start_letter, domain_id):
         letters = start_letter.split()
