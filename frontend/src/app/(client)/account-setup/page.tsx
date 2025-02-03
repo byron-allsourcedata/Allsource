@@ -1,5 +1,5 @@
 "use client";
-import React, { Suspense, useState, useEffect } from "react";
+import React, { Suspense, ChangeEvent, useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -94,6 +94,7 @@ const AccountSetup = () => {
   const [loading, setLoading] = useState(false)
   const [fullName, setFullName] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
+  const [emailDeveloper, setEmailDeveloper] = useState<string>();
   const [activeTab, setActiveTab] = useState(0);
   const { full_name: userFullName, email: userEmail, partner } = useUser();
 
@@ -532,6 +533,7 @@ const AccountSetup = () => {
   };
 
   const installManually = async () => {
+    setEmailDeveloper(email ?? "")
     try {
       const response = await axiosInterceptorInstance.get('/install-pixel/manually');
       setPixelCode(response.data.manual);
@@ -646,7 +648,7 @@ const AccountSetup = () => {
   }
 
   const handleButtonClick = () => {
-    axiosInstance.post('/install-pixel/send-pixel-code', { email })
+    axiosInstance.post('/install-pixel/send-pixel-code', { email: emailDeveloper })
       .then(response => {
         showToast('Successfully send email')
       })
@@ -745,8 +747,9 @@ const AccountSetup = () => {
 }
 
   return (
-    <Box sx={{ ...styles.pageContainer, overflowX: "hidden" }}>
-      <Box sx={styles.headers}>
+    <Box sx={{ ...styles.pageContainer, 
+    }}>
+      <Box sx={{...styles.headers, overflow: "hidden"}}>
         <Box
           sx={{
             display: "flex",
@@ -1006,8 +1009,8 @@ const AccountSetup = () => {
           sx={{
             minWidth: '32px',
             padding: '6px',
-            mr: '1.5rem',
-            mb: '1.125rem',
+            // mr: '1.5rem',
+            // mb: '1.125rem',
             color: 'rgba(128, 128, 128, 1)',
             border: '1px solid rgba(184, 184, 184, 1)',
             borderRadius: '3.27px',
@@ -1078,838 +1081,108 @@ const AccountSetup = () => {
           </MenuItem>
         </Menu>
       </Box>
-      <Box sx={{...styles.formContainer}}>
-        <Box sx={styles.form}>
-          <Box
-            sx={{
-              "@media (max-width: 600px)": {
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                pb: 1
-              },
-            }}
-          >
-            {!shopifyInstall && !bigcommerceInstall && !googletagInstall && !wordpressInstall && !manuallInstall && <>
-              <Typography variant="h5" component="h1" className="heading-text" sx={styles.title}>
-                Welcome {fullName},
-              </Typography>
-              <Typography variant="body1" component="h2" className="first-sub-title" sx={styles.subtitle}>
-                Let&apos;s set up your account
-              </Typography>
-            </>
-            }
-          </Box>
-          {activeTab === 0 && (
-            <>
-              <Typography variant="body1" component="h3" className="first-sub-title" sx={styles.text}>
-                What is your organization&apos;s name
-              </Typography>
-              <TextField
-                InputProps={{ className: "form-input" }}
-                fullWidth
-                label="Organization name"
-                variant="outlined"
-                margin="normal"
-                sx={styles.formField}
-                value={organizationName}
-                onChange={(e) => setOrganizationName(e.target.value)}
-                error={!!errors.organizationName}
-                helperText={errors.organizationName}
-                InputLabelProps={{
-                  className: "form-input-label",
-                  focused: false
-                }}
-              />
-              <Typography variant="body1" component="h3" className="first-sub-title" sx={styles.text}>
-                Share your company website
-              </Typography>
 
-              <TextField
-                fullWidth
-                label="Enter website link"
-                variant="outlined"
-                placeholder={isFocused ? "example.com" : ""}
-                sx={styles.formField}
-                InputLabelProps={{
-                  className: "form-input-label",
-                  focused: false,
+      <Box sx={{display: "flex", justifyContent: "center", width: "100%"}}>
+        <Box sx={{...styles.formContainer, overflow: "hidden"}}>
+            <Box sx={{...styles.form, overflow: "auto", marginTop: "1px"}}>
+              <Box
+                sx={{
+                  "@media (max-width: 600px)": {
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    pb: 1
+                  },
                 }}
-                value={
-                  websiteLink
-                    ? websiteLink.replace(/^https?:\/\//, "")
-                    : isFocused
-                      ? websiteLink.replace(/^https?:\/\//, "")
-                      : `https://${websiteLink.replace(/^https?:\/\//, "")}`
+              >
+                {!shopifyInstall && !bigcommerceInstall && !googletagInstall && !wordpressInstall && !manuallInstall && 
+                  <>
+                    <Typography variant="h5" component="h1" className="heading-text" sx={styles.title}>
+                      Welcome {fullName},
+                    </Typography>
+                    <Typography variant="body1" component="h2" className="first-sub-title" sx={styles.subtitle}>
+                      Let&apos;s set up your account
+                    </Typography>
+                  </>
                 }
-                onChange={domainLink ? undefined : handleWebsiteLink}
-                onFocus={domainLink ? undefined : handleFocus}
-                onBlur={domainLink ? undefined : handleBlur}
-                disabled={!!domainLink}
-                error={!!errors.websiteLink}
-                helperText={errors.websiteLink}
-                InputProps={{
-                  className: "form-input",
-                  startAdornment: isFocused && !websiteLink && (
-                    <InputAdornment position="start">https://</InputAdornment>
-                  ),
-                }}
-              />
-
-              <Typography variant="body1" className="first-sub-title" sx={styles.text}>
-                How many monthly visits to your website?
-              </Typography>
-              {errors.selectedEmployees && (
-                <Typography variant="body2" color="error">
-                  {errors.selectedEmployees}
-                </Typography>
-              )}
-              <Box className="form-input" sx={styles.visitsButtons}>
-                {ranges_visits.map((range, index) => (
-                  <Button
-                    className="form-input"
-                    key={index}
-                    variant="outlined"
-                    onClick={() => handleVisitsRangeChange(range.label)}
-                    onTouchStart={() => handleVisitsRangeChange(range.label)}
-                    onMouseDown={() => handleVisitsRangeChange(range.label)}
-                    sx={getButtonVisitsStyles(selectedVisits === range.label)}
-                  >
-                    {range.label}
-                  </Button>
-                ))}
               </Box>
-              <Button
-                className='hyperlink-red'
-                fullWidth
-                variant="contained"
-                sx={{
-                  ...styles.submitButton,
-                  opacity: isFormValidFirst() ? 1 : 0.6,
-                  pointerEvents: isFormValidFirst() ? "auto" : "none",
-                  backgroundColor: isFormValidFirst()
-                    ? "rgba(244, 87, 69, 1)"
-                    : "rgba(244, 87, 69, 0.4)",
-                  "&.Mui-disabled": {
-                    backgroundColor: "rgba(244, 87, 69, 0.6)",
-                    color: "#fff",
-                  },
-                }}
-                onClick={handleNextClick}
-                disabled={!isFormValidFirst()}
-              >
-                Next
-              </Button>
-            </>
-          )}
-          {activeTab === 1 && (
-            <>
-              {/* Business info */}
-              <Typography variant="body1" className="first-sub-title" sx={styles.text}>
-                Select the type of business you have
-              </Typography>
-              {errors.typeBusiness && (
-                <Typography variant="body2" color="error">
-                  {errors.typeBusiness}
-                </Typography>
-              )}
-              <Box sx={styles.employeeButtons}>
-                {range_typeBusiness.map((range, index) => (
-                  <Button
-                    className="form-input"
-                    key={index}
-                    variant="outlined"
-                    onClick={() => handleTypeBusinessChange(range.label)}
-                    onTouchStart={() => handleTypeBusinessChange(range.label)}
-                    onMouseDown={() => handleTypeBusinessChange(range.label)}
-                    sx={getButtonStyles(typeBusiness === range.label)}
-                  >
-                    <Typography className="form-input" sx={{ padding: '3px' }}> {range.label}</Typography>
-                  </Button>
-                ))}
-              </Box>
-              <Typography variant="body1" className="first-sub-title" sx={styles.text}>
-                How many employees work at your organization
-              </Typography>
-              {errors.selectedEmployees && (
-                <Typography variant="body2" color="error">
-                  {errors.selectedEmployees}
-                </Typography>
-              )}
-              <Box sx={styles.employeeButtons}>
-                {ranges.map((range, index) => (
-                  <Button
-                    className="form-input"
-                    key={index}
-                    variant="outlined"
-                    onClick={() => handleEmployeeRangeChange(range.label)}
-                    onTouchStart={() => handleEmployeeRangeChange(range.label)}
-                    onMouseDown={() => handleEmployeeRangeChange(range.label)}
-                    sx={getButtonStyles(selectedEmployees === range.label)}
-                  >
-                    <Typography className="form-input" sx={{ padding: '3px' }}> {range.label}</Typography>
-                  </Button>
-                ))}
-              </Box>
-              <Typography variant="body1" className="first-sub-title" sx={styles.text}>
-                Whats your role?
-              </Typography>
-              {errors.selectedEmployees && (
-                <Typography variant="body2" color="error">
-                  {errors.selectedEmployees}
-                </Typography>
-              )}
-              <Box sx={styles.rolesButtons}>
-                {roles.map((range, index) => (
-                  <Button
-                    key={index}
-                    variant="outlined"
-                    onClick={() => handleRolesChange(range.label)}
-                    onTouchStart={() => handleRolesChange(range.label)}
-                    onMouseDown={() => handleRolesChange(range.label)}
-                    sx={getButtonRolesStyles(selectedRoles === range.label)}
-                  >
-                    <Typography className="form-input" sx={{ padding: '3px' }}> {range.label}</Typography>
-                  </Button>
-                ))}
-              </Box>
-              <Button
-                className='hyperlink-red'
-                fullWidth
-                variant="contained"
-                sx={{
-                  ...styles.submitButton,
-                  opacity: isFormValidSecond() ? 1 : 0.6,
-                  pointerEvents: isFormValidSecond() ? "auto" : "none",
-                  backgroundColor: isFormValidSecond()
-                    ? "rgba(244, 87, 69, 1)"
-                    : "rgba(244, 87, 69, 0.4)",
-                  "&.Mui-disabled": {
-                    backgroundColor: "rgba(244, 87, 69, 0.6)",
-                    color: "#fff",
-                  },
-                }}
-                onClick={handleNextClick}
-                disabled={!isFormValidSecond()}
-              >
-                Next
-              </Button>
-            </>
-          )}
-          {activeTab === 2 &&
-            <>
-              {manuallInstall &&
-                <Box>
-                  <Box display="flex" justifyContent="space-between" sx={{ width: '100%', alignItems: 'center', paddingBottom: '1rem' }}>
-                    <Box display="flex" gap="16px">
-                      <Image src="install_manually.svg" alt="Manually install pixel" width={24} height={24} />
-                      <Typography className='first-sub-title' sx={{ textAlign: 'left', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
-                        Install Manually
-                      </Typography>
-                    </Box>
-                    <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-insta"
-                      target="_blank" className='first-sub-title' style={{ fontSize: "14px", color: "rgba(80, 82, 178, 1)" }}
-                      sx={{ textDecoration: "underline", cursor: "pointer", '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
-                      Tutorial
-                    </Link>
-                  </Box>
-                  <Divider />
-                  <Box sx={{ mt: 4 }}>
-                    {editingName
-                      ?
-                      <>
-                        <TextField
-                          id="filled-basic"
-                          placeholder="Enter your domain"
-                          value={domainName}
-                          onChange={(e) => {
-                            setDomainName(e.target.value)
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              setEditingName(false)
-                            }
-                          }}
-                          InputProps={{
-                            startAdornment: (
-                              <InputAdornment position="start">https://</InputAdornment>
-                            )
-                          }}
-                          variant="outlined"
-                          sx={{
-                            flex: 1,
-                            width: '360px',
-                            '& .MuiOutlinedInput-root': {
-                              borderRadius: '4px',
-                              height: '40px',
-                            },
-                            '& input': {
-                              paddingLeft: 0,
-                            },
-                            '& input::placeholder': {
-                              fontSize: '14px',
-                              color: '#8C8C8C',
-                            },
-                          }}
-                        />
-                        <Button
-                          onClick={() => {
-                            setEditingName(false)
-                            setDomainName(prev => prev.replace(/^https?:\/\//, ""))
-                            sessionStorage.setItem('current_domain', domainName.replace(/^https?:\/\//, ""))
-                            fetchEditDomain()
-                          }}
-                          sx={{
-                            ml: 2,
-                            border: '1px solid rgba(80, 82, 178, 1)',
-                            textTransform: 'none',
-                            background: '#fff',
-                            color: 'rgba(80, 82, 178, 1)',
-                            fontFamily: 'Nunito Sans',
-                            padding: '0.65em 2em',
-                            mr: 1,
-                            '@media (max-width: 600px)': { padding: '0.5em 1.5em', mr: 0, ml: 0, left: 0 }
-                          }}
-                        >
-                          <Typography className='second-sub-title' sx={{
-                            color: 'rgba(80, 82, 178, 1) !important', textAlign: 'left'
-                          }}>
-                            Save
-                          </Typography>
-                        </Button>
-                      </>
-                      :
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <Typography className='first-sub-title' sx={{ textAlign: 'left', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
-                          {domainName}
-                        </Typography>
-                        <IconButton onClick={() => setEditingName(true)} sx={{ p: "4px", ':hover': { backgroundColor: 'transparent', } }} >
-                          <EditIcon height={8} width={8} sx={{ color: "rgba(80, 82, 178, 1)" }} />
-                        </IconButton>
-                      </Box>
-
-                    }
-                  </Box>
-                  
-                  <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '10px', '@media (max-width: 600px)': { p: 2 } }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', pt: 3, justifyContent: 'start' }}>
-                      <Image src='/1.svg' alt='1' width={28} height={28} />
-                      <Typography className='first-sub-title' sx={maintext}>Copy the pixel code</Typography>
-                    </Box>
-                    <Box
-                      component="pre"
-                      sx={{
-                        backgroundColor: '#ffffff',
-                        gap: 2,
-                        position: 'relative',
-                        wordWrap: 'break-word',
-                        whiteSpace: 'pre-wrap',
-                        border: '1px solid rgba(228, 228, 228, 1)',
-                        borderRadius: '10px',
-                        marginLeft: '3em',
-                        maxHeight: '14em',
-                        overflowY: 'auto',
-                        overflowX: 'hidden',
-                        '@media (max-width: 600px)': {
-                          maxHeight: '14em',
-                        },
-                      }}
-                    >
-                      <IconButton
-                        onClick={handleCopy}
-                        sx={{ position: 'absolute', right: '10px', top: '10px' }}
-                      >
-                        <ContentCopyIcon />
-                      </IconButton>
-                      <code style={{ color: 'rgba(95, 99, 104, 1)', fontSize: '12px', margin: 0, fontWeight: 400, fontFamily: 'Nunito Sans', textWrap: 'nowrap' }}>{pixelCode?.trim()}</code>
-                    </Box>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '0.5em 0em 0em 0em', justifyContent: 'start' }}>
-                      <Image src='/2.svg' alt='2' width={28} height={28} />
-                      <Typography className='first-sub-title' sx={maintext}>Paste the pixel in your website</Typography>
-                    </Box>
-                    <Typography className='paragraph' sx={subtext}>Paste the above pixel in the header of your website. The header script starts with &lt;head&gt; and ends with &lt;/head&gt;.</Typography>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1.25em 0em 0em 0em', justifyContent: 'start' }}>
-                      <Image src='/3.svg' alt='3' width={28} height={28} />
-                      <Typography className='first-sub-title' sx={maintext}>Verify Your Pixel</Typography>
-                    </Box>
-                    <Typography className='paragraph' sx={subtext}>Once the pixel is pasted in your website, wait for 10-15 mins and verify your pixel.</Typography>
-                    <Box sx={{ position: 'relative', width: '100%', pt: 5, '@media (max-width: 600px)': { pt: 2 } }}>
-                      <Box
-                        sx={{
-                          padding: '1.1em',
-                          border: '1px solid #e4e4e4',
-                          borderRadius: '8px',
-                          backgroundColor: 'rgba(247, 247, 247, 1)',
-                          boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-                          marginBottom: '1.9em',
-                          '@media (max-width: 600px)': { m: 2 }
-                        }}
-                      >
-                        <Typography
-                          variant="h6"
-                          component="div"
-                          mb={2}
-                          className='first-sub-title'
-                          sx={{
-                            textAlign: 'left',
-                          }}
-                        >
-                          Send this to my developer
-                        </Typography>
-                        <Box display="flex" alignItems="center" justifyContent="space-between" flexDirection="row" sx={{ '@media (max-width: 600px)': { flexDirection: 'column', display: 'flex', alignContent: 'flex-start', alignItems: 'flex-start', gap: 1 } }}>
-                          <InputBase
-                            id="email_send"
-                            type="text"
-                            placeholder="Enter Email ID"
-                            value={email}
-                            onChange={(e: any) => setEmail(e.target.value)}
-                            className='paragraph'
-                            sx={{
-                              padding: '0.5rem 2em 0.5em 1em',
-                              width: '65%',
-                              border: '1px solid #e4e4e4',
-                              borderRadius: '4px',
-                              maxHeight: '2.5em',
-                              fontSize: '14px !important',
-                              textAlign: 'left',
-                              backgroundColor: 'rgba(255, 255, 255, 1)',
-                              boxShadow: 'none',
-                              outline: 'none',
-                              '&:focus': {
-                                borderColor: '#3f51b5',
-                              },
-                              '@media (max-width: 600px)': {
-                                width: '100%',
-                              },
-                            }}
-                          />
-
-                          <Button
-                            onClick={handleButtonClick}
-                            sx={{
-                              ml: 2,
-                              border: '1px solid rgba(80, 82, 178, 1)',
-                              textTransform: 'none',
-                              background: '#fff',
-                              color: 'rgba(80, 82, 178, 1)',
-                              fontFamily: 'Nunito Sans',
-                              padding: '0.65em 2em',
-                              mr: 1,
-                              '@media (max-width: 600px)': { padding: '0.5em 1.5em', mr: 0, ml: 0, left: 0 }
-                            }}
-                          >
-                            <Typography className='second-sub-title' sx={{
-                              color: 'rgba(80, 82, 178, 1) !important', textAlign: 'left'
-                            }}>
-                              Send
-                            </Typography>
-                          </Button>
-                        </Box>
-                      </Box>
-                    </Box>
-                    <Button
-                      className='hyperlink-red'
-                      fullWidth
-                      variant="contained"
-                      sx={{
-                        ...styles.submitButton,
-                        opacity: domainName.trim() !== "" ? 1 : 0.6,
-                        pointerEvents: domainName.trim() !== "" ? "auto" : "none",
-                        mb: 2,
-                        backgroundColor: domainName.trim() !== ""
-                          ? "rgba(244, 87, 69, 1)"
-                          : "rgba(244, 87, 69, 0.4)",
-                        "&.Mui-disabled": {
-                          backgroundColor: "rgba(244, 87, 69, 0.6)",
-                          color: "#fff",
-                        },
-                      }}
-                      onClick={handleVerifyPixel}
-                      disabled={domainName.trim() === ""}
-                    >
-                      Verify Your Pixel
-                    </Button>
-                  </Box>
-                </Box>
-              }
-              {shopifyInstall && 
-                <Box>
-                  <Box display="flex" justifyContent="space-between" sx={{ width: '100%', alignItems: 'center', paddingBottom: '1rem' }}>
-                      <Box display="flex" gap="16px">
-                      <Image src="install_cms1.svg" alt="Shopify install pixel" width={24} height={24}/>
-                        <Typography className='first-sub-title' sx={{  textAlign: 'left', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
-                          Install with Shopify
-                        </Typography>
-                      </Box>    
-                      <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store" 
-                            target="_blank" className='first-sub-title' style={{fontSize: "14px", color: "rgba(80, 82, 178, 1)"}} 
-                            sx={{ textDecoration: "underline", cursor: "pointer",'@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
-                        Tutorial
-                      </Link>
-                  </Box>
-                  <Divider />
-                  <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
-                      <Image src='/1.svg' alt='1' width={28} height={28} />
-                      <Box sx={{display: 'flex', alignItems: "center"}}>
-                        <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Shopify shop domain in the designated field. This allows our system to identify your store.</Typography>
-                      </Box>
-                      <Box/>
-                      <TextField
-                        fullWidth
-                        label="Shop Domain"
-                        variant="outlined"
-                        placeholder='Enter your Shop Domain'
-                        margin="normal"
-                        InputProps={{
-                          style: {
-                              color: 'rgba(17, 17, 19, 1)',
-                              fontFamily: 'Nunito Sans',
-                              fontWeight: 400,
-                              fontSize: '14px',
-                              
-                          },
-                        }}
-                        value={isFocused
-                          ? (domainName ? domainName.replace(/^https?:\/\//, "") : "")
-                          : (domainName ? `https://${domainName.replace(/^https?:\/\//, "")}` : "https://")
-                        }
-                        sx={{
-                          pl: 2,
-                          "& .MuiOutlinedInput-root": {
-                            "& label": {
-                              transformOrigin: "inherit"
-                            },
-                            "& fieldset": {
-                              borderColor: "rgba(80, 82, 178, 1)",
-                            },
-                            "&:hover fieldset": {
-                              borderColor: "rgba(86, 153, 237, 1)",
-                            },
-                            "& .MuiInputLabel-root.Mui-focused": {
-                                color: "rgba(17, 17, 19, 0.6)",
-                            },
-                            "&.MuiFormLabel-root-MuiInputLabel-root": {
-                              transformOrigin: "inherit"
-                            }
-                          },
-                          "& .MuiInputLabel-shrink": {
-                              transformOrigin: "center",
-                            },
-                        }}
-                        onFocus={handleFocus}
-                        onBlur={handleBlur}
-                        onChange={(e) => setDomainName(e.target.value)}
-                        InputLabelProps={{ sx: styles.inputLabel }}
-                      />
-                  </Box>
-                  <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
-                      <Image src='/2.svg' alt='2' width={28} height={28} />
-                      <Box sx={{display: 'flex', alignItems: "center"}}>
-                        <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Shopify shop domain in the designated field. This allows our system to identify your store.</Typography>
-                      </Box>
-                      <Box/>
-                      <TextField
-                        InputProps={{
-                          style: {
-                              color: 'rgba(17, 17, 19, 1)',
-                              fontFamily: 'Nunito Sans',
-                              fontWeight: 400,
-                              fontSize: '14px',
-                          },
-                        }}
-                        fullWidth
-                        label="Access Token"
-                        variant="outlined"
-                        placeholder='Enter your Access Token'
-                        margin="normal"
-                        sx={{
-                          pl: 2,
-                          "& .MuiOutlinedInput-root": {
-                            "& fieldset": {
-                              borderColor: "rgba(80, 82, 178, 1)",
-                            },
-                            "&:hover fieldset": {
-                              borderColor: "rgba(86, 153, 237, 1)",
-                            },
-                            "& .MuiInputLabel-root.Mui-focused": {
-                                color: "rgba(17, 17, 19, 0.6)",
-                            }
-                          },
-                          "& .MuiInputLabel-shrink": {
-                              transformOrigin: "center",
-                              left: 10
-                            },
-                          "& .MuiInputLabel-root[data-shrink='false']": {
-                                transform: "translate(16px, 15px) scale(1)",
-                            }, 
-                            
-                        }}
-                        value={accessToken}
-                        onChange={(e) => setAccessToken(e.target.value)}
-                        InputLabelProps={{ sx: styles.inputLabel }}
-                      />
-                  </Box>
-                  <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
-                      <Image src='/3.svg' alt='3' width={28} height={28} />
-                      <Box sx={{display: 'flex', alignItems: "center"}}>
-                        <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Once you have submitted the required information, our system will automatically install the script on your Shopify store. You don’t need to take any further action.</Typography>
-                      </Box>
-                  </Box>
-                  <Button
-                    className='hyperlink-red'
-                    fullWidth
-                    variant="contained"
-                    sx={{
-                      ...styles.submitButton,
-                      opacity: accessToken.trim() !== "" || domainName.trim() !== "" ? 1 : 0.6,
-                      pointerEvents: accessToken.trim() !== "" || domainName.trim() !== "" ? "auto" : "none",
-                      mb: 2,
-                      mt: 2,
-                      backgroundColor: accessToken.trim() !== "" || domainName.trim() !== ""
-                        ? "rgba(244, 87, 69, 1)"
-                        : "rgba(244, 87, 69, 0.4)",
-                      "&.Mui-disabled": {
-                        backgroundColor: "rgba(244, 87, 69, 0.6)",
-                        color: "#fff",
-                      },
-                    }}
-                    onClick={handleInstallShopify}
-                    disabled={accessToken.trim() === "" || domainName.trim() === ""}
-                  >
-                    Install Pixel
-                  </Button>
-                </Box>
-              }
-              {bigcommerceInstall && 
-                <Box>
-                  <Box display="flex" justifyContent="space-between" sx={{ width: '100%', alignItems: 'center', paddingBottom: '1rem' }}>
-                      <Box display="flex" gap="16px">
-                      <Image src="bigcommerce-icon.svg" alt="Bigcommerce install pixel" width={24} height={24}/>
-                        <Typography className='first-sub-title' sx={{  textAlign: 'left', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
-                          Install with Bigcommerce
-                        </Typography>
-                      </Box>    
-                      <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store" 
-                            target="_blank" className='first-sub-title' style={{fontSize: "14px", color: "rgba(80, 82, 178, 1)"}} 
-                            sx={{ textDecoration: "underline", cursor: "pointer",'@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
-                        Tutorial
-                      </Link>
-                  </Box>
-                  <Divider />
-                  <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
-                      <Image src='/1.svg' alt='1' width={28} height={28} />
-                      <Box sx={{display: 'flex', alignItems: "center"}}>
-                        <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Bigcommerce store hash in the designated field. This allows our system to identify your store.</Typography>
-                      </Box>
-                      <Box/>
-                      <TextField
-                        InputProps={{
-                          style: {
-                              color: 'rgba(17, 17, 19, 1)',
-                              fontFamily: 'Nunito Sans',
-                              fontWeight: 400,
-                              fontSize: '14px',
-                          },
-                        }}
-                        fullWidth
-                        label="Store Hash"
-                        variant="outlined"
-                        placeholder='Enter your store hash'
-                        margin="normal"
-                        sx={{
-                          pl: 2,
-                          "& .MuiOutlinedInput-root": {
-                            "& fieldset": {
-                              borderColor: "rgba(80, 82, 178, 1)",
-                            },
-                            "&:hover fieldset": {
-                              borderColor: "rgba(86, 153, 237, 1)",
-                            },
-                            "& .MuiInputLabel-root.Mui-focused": {
-                                color: "rgba(17, 17, 19, 0.6)",
-                            }
-                          },
-                          "& .MuiInputLabel-shrink": {
-                              transformOrigin: "center",
-                              left: 10
-                            },
-                          "& .MuiInputLabel-root[data-shrink='false']": {
-                                transform: "translate(16px, 15px) scale(1)",
-                            }, 
-                            
-                        }}
-                        value={bigcommerceHash}
-                        onChange={(e) => setBigcommerceHash(e.target.value)}
-                        InputLabelProps={{ sx: styles.inputLabel }}
-                      />
-                  </Box>
-                  <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
-                      <Image src='/2.svg' alt='2' width={28} height={28} />
-                      <Box sx={{display: 'flex', alignItems: "center"}}>
-                        <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Once you have submitted the required information, our system will automatically install the script on your Bigcommerce store. You don’t need to take any further action.</Typography>
-                      </Box>
-                  </Box>
-                  <Button
-                    className='hyperlink-red'
-                    fullWidth
-                    variant="contained"
-                    sx={{
-                      ...styles.submitButton,
-                      opacity: bigcommerceHash.trim() !== "" ? 1 : 0.6,
-                      pointerEvents: bigcommerceHash.trim() !== "" ? "auto" : "none",
-                      mb: 2,
-                      mt: 2,
-                      backgroundColor: bigcommerceHash.trim() !== ""
-                        ? "rgba(244, 87, 69, 1)"
-                        : "rgba(244, 87, 69, 0.4)",
-                      "&.Mui-disabled": {
-                        backgroundColor: "rgba(244, 87, 69, 0.6)",
-                        color: "#fff",
-                      },
-                    }}
-                    onClick={handleInstallBigCommerce}
-                    disabled={bigcommerceHash.trim() === ""}
-                  >
-                    Install Pixel
-                  </Button>
-                </Box>
-              }
-              {googletagInstall &&
-                <Box>
-                  <Box display="flex" justifyContent="space-between" sx={{ width: '100%', alignItems: 'center', paddingBottom: '1rem' }}>
-                    <Box display="flex" gap="16px">
-                      <Image src="install_gtm.svg" alt="Google tag install pixel" width={24} height={24} />
-                      <Typography className='first-sub-title' sx={{ textAlign: 'left', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
-                        Install with GoogleTag
-                      </Typography>
-                    </Box>
-                    <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store"
-                      target="_blank" className='first-sub-title' style={{ fontSize: "14px", color: "rgba(80, 82, 178, 1)" }}
-                      sx={{ textDecoration: "underline", cursor: "pointer", '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
-                      Tutorial
-                    </Link>
-                  </Box>
-                  <Divider />
-                  <GoogleTagPopup open={opengoogle} handleClose={handleGoogleClose} />
-                </Box>
-              }
-              {wordpressInstall && 
-                <Box>
-                  <Box display="flex" justifyContent="space-between" sx={{ width: '100%', alignItems: 'center', paddingBottom: '1rem' }}>
-                      <Box display="flex" gap="16px">
-                      <Image src="install_cms2.svg" alt="WordPress install pixel" width={24} height={24}/>
-                        <Typography className='first-sub-title' sx={{  textAlign: 'left', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
-                          Install with WordPress
-                        </Typography>
-                      </Box>    
-                      <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store" 
-                            target="_blank" className='first-sub-title' style={{fontSize: "14px", color: "rgba(80, 82, 178, 1)"}} 
-                            sx={{ textDecoration: "underline", cursor: "pointer",'@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
-                        Tutorial
-                      </Link>
-                  </Box>
-                  <Divider />
-                  <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
-                      <Image src='/1.svg' alt='1' width={28} height={28} />
-                      <Box sx={{display: 'flex', alignItems: "center"}}>
-                        <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Bigcommerce store hash in the designated field. This allows our system to identify your store.</Typography>
-                      </Box>
-                      <Box/>
-                      <TextField
-                        InputProps={{
-                          style: {
-                              color: 'rgba(17, 17, 19, 1)',
-                              fontFamily: 'Nunito Sans',
-                              fontWeight: 400,
-                              fontSize: '14px',
-                          },
-                        }}
-                        fullWidth
-                        label="Store Hash"
-                        variant="outlined"
-                        placeholder='Enter your store hash'
-                        margin="normal"
-                        sx={{
-                          pl: 2,
-                          "& .MuiOutlinedInput-root": {
-                            "& fieldset": {
-                              borderColor: "rgba(80, 82, 178, 1)",
-                            },
-                            "&:hover fieldset": {
-                              borderColor: "rgba(86, 153, 237, 1)",
-                            },
-                            "& .MuiInputLabel-root.Mui-focused": {
-                                color: "rgba(17, 17, 19, 0.6)",
-                            }
-                          },
-                          "& .MuiInputLabel-shrink": {
-                              transformOrigin: "center",
-                              left: 10
-                            },
-                          "& .MuiInputLabel-root[data-shrink='false']": {
-                                transform: "translate(16px, 15px) scale(1)",
-                            }, 
-                            
-                        }}
-                        value={bigcommerceHash}
-                        onChange={(e) => setBigcommerceHash(e.target.value)}
-                        InputLabelProps={{ sx: styles.inputLabel }}
-                      />
-                  </Box>
-                  <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
-                      <Image src='/2.svg' alt='2' width={28} height={28} />
-                      <Box sx={{display: 'flex', alignItems: "center"}}>
-                        <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Once you have submitted the required information, our system will automatically install the script on your Bigcommerce store. You don’t need to take any further action.</Typography>
-                      </Box>
-                  </Box>
-                  <Button
-                    className='hyperlink-red'
-                    fullWidth
-                    variant="contained"
-                    sx={{
-                      ...styles.submitButton,
-                      opacity: bigcommerceHash.trim() !== "" ? 1 : 0.6,
-                      pointerEvents: bigcommerceHash.trim() !== "" ? "auto" : "none",
-                      mb: 2,
-                      mt: 2,
-                      backgroundColor: bigcommerceHash.trim() !== ""
-                        ? "rgba(244, 87, 69, 1)"
-                        : "rgba(244, 87, 69, 0.4)",
-                      "&.Mui-disabled": {
-                        backgroundColor: "rgba(244, 87, 69, 0.6)",
-                        color: "#fff",
-                      },
-                    }}
-                    onClick={handleInstallBigCommerce}
-                    disabled={bigcommerceHash.trim() === ""}
-                  >
-                    Install Pixel
-                  </Button>
-                </Box>
-              }
-              {!shopifyInstall && !manuallInstall && !bigcommerceInstall && !googletagInstall && !wordpressInstall &&
+              {activeTab === 0 && (
                 <>
+                  <Typography variant="body1" component="h3" className="first-sub-title" sx={styles.text}>
+                    What is your organization&apos;s name
+                  </Typography>
+                  <TextField
+                    InputProps={{ className: "form-input" }}
+                    fullWidth
+                    label="Organization name"
+                    variant="outlined"
+                    margin="normal"
+                    sx={styles.formField}
+                    value={organizationName}
+                    onChange={(e) => setOrganizationName(e.target.value)}
+                    error={!!errors.organizationName}
+                    helperText={errors.organizationName}
+                    InputLabelProps={{
+                      className: "form-input-label",
+                      focused: false
+                    }}
+                  />
+                  <Typography variant="body1" component="h3" className="first-sub-title" sx={styles.text}>
+                    Share your company website
+                  </Typography>
+
+                  <TextField
+                    fullWidth
+                    label="Enter website link"
+                    variant="outlined"
+                    placeholder={isFocused ? "example.com" : ""}
+                    sx={styles.formField}
+                    InputLabelProps={{
+                      className: "form-input-label",
+                      focused: false,
+                    }}
+                    value={
+                      websiteLink
+                        ? websiteLink.replace(/^https?:\/\//, "")
+                        : isFocused
+                          ? websiteLink.replace(/^https?:\/\//, "")
+                          : `https://${websiteLink.replace(/^https?:\/\//, "")}`
+                    }
+                    onChange={domainLink ? undefined : handleWebsiteLink}
+                    onFocus={domainLink ? undefined : handleFocus}
+                    onBlur={domainLink ? undefined : handleBlur}
+                    disabled={!!domainLink}
+                    error={!!errors.websiteLink}
+                    helperText={errors.websiteLink}
+                    InputProps={{
+                      className: "form-input",
+                      startAdornment: isFocused && !websiteLink && (
+                        <InputAdornment position="start">https://</InputAdornment>
+                      ),
+                    }}
+                  />
+
                   <Typography variant="body1" className="first-sub-title" sx={styles.text}>
-                    Select how you would like to install the pixel
+                    How many monthly visits to your website?
                   </Typography>
                   {errors.selectedEmployees && (
                     <Typography variant="body2" color="error">
                       {errors.selectedEmployees}
                     </Typography>
                   )}
-                  <Box sx={{ ...styles.rolesButtons, display: "grid", gridTemplateColumns: "1fr 1fr" }}>
-                    {method_installingPixel.map((range, index) => (
+                  <Box className="form-input" sx={styles.visitsButtons}>
+                    {ranges_visits.map((range, index) => (
                       <Button
+                        className="form-input"
                         key={index}
                         variant="outlined"
-                        onClick={() => handleMethodInstall(range.label)}
-                        onTouchStart={() => handleMethodInstall(range.label)}
-                        onMouseDown={() => handleMethodInstall(range.label)}
-                        sx={{ ...getButtonRolesStyles(selectedMethodInstall === range.label), gap: "8px", justifyContent: "flex-start", p: "12px" }}
+                        onClick={() => handleVisitsRangeChange(range.label)}
+                        onTouchStart={() => handleVisitsRangeChange(range.label)}
+                        onMouseDown={() => handleVisitsRangeChange(range.label)}
+                        sx={getButtonVisitsStyles(selectedVisits === range.label)}
                       >
-                        <Image src={range.src} alt="Method install pixel" width={24} height={24} />
-                        <Typography className="form-input" style={{ color: "rgba(112, 112, 113, 1)", lineHeight: "19.6px" }}>{range.label}</Typography>
+                        {range.label}
                       </Button>
                     ))}
                   </Box>
@@ -1919,10 +1192,9 @@ const AccountSetup = () => {
                     variant="contained"
                     sx={{
                       ...styles.submitButton,
-                      opacity: isFormValidThird() ? 1 : 0.6,
-                      mb: 2,
-                      pointerEvents: isFormValidThird() ? "auto" : "none",
-                      backgroundColor: isFormValidThird()
+                      opacity: isFormValidFirst() ? 1 : 0.6,
+                      pointerEvents: isFormValidFirst() ? "auto" : "none",
+                      backgroundColor: isFormValidFirst()
                         ? "rgba(244, 87, 69, 1)"
                         : "rgba(244, 87, 69, 0.4)",
                       "&.Mui-disabled": {
@@ -1931,65 +1203,798 @@ const AccountSetup = () => {
                       },
                     }}
                     onClick={handleNextClick}
-                    disabled={!isFormValidThird()}
+                    disabled={!isFormValidFirst()}
                   >
                     Next
                   </Button>
-                  <Button
-                    className='hyperlink-red'
-                    fullWidth
-                    variant="contained"
-                    sx={{
-                      ...styles.submitButton,
-                      color: "rgba(244, 87, 69, 1)",
-                      backgroundColor: "#fff",
-                      "&:hover": {
-                        backgroundColor: "#fff",
-                        color: "rgba(244, 87, 69, 0.6)"
-                      },
-                    }}
-                    onClick={handleSkip}
-                  >
-                    Skip
-                  </Button>
                 </>
-              }
-
-              {(shopifyInstall || bigcommerceInstall || googletagInstall || wordpressInstall || manuallInstall) &&
+              )}
+              {activeTab === 1 && (
                 <>
+                  {/* Business info */}
+                  <Typography variant="body1" className="first-sub-title" sx={styles.text}>
+                    Select the type of business you have
+                  </Typography>
+                  {errors.typeBusiness && (
+                    <Typography variant="body2" color="error">
+                      {errors.typeBusiness}
+                    </Typography>
+                  )}
+                  <Box sx={styles.employeeButtons}>
+                    {range_typeBusiness.map((range, index) => (
+                      <Button
+                        className="form-input"
+                        key={index}
+                        variant="outlined"
+                        onClick={() => handleTypeBusinessChange(range.label)}
+                        onTouchStart={() => handleTypeBusinessChange(range.label)}
+                        onMouseDown={() => handleTypeBusinessChange(range.label)}
+                        sx={getButtonStyles(typeBusiness === range.label)}
+                      >
+                        <Typography className="form-input" sx={{ padding: '3px' }}> {range.label}</Typography>
+                      </Button>
+                    ))}
+                  </Box>
+                  <Typography variant="body1" className="first-sub-title" sx={styles.text}>
+                    How many employees work at your organization
+                  </Typography>
+                  {errors.selectedEmployees && (
+                    <Typography variant="body2" color="error">
+                      {errors.selectedEmployees}
+                    </Typography>
+                  )}
+                  <Box sx={styles.employeeButtons}>
+                    {ranges.map((range, index) => (
+                      <Button
+                        className="form-input"
+                        key={index}
+                        variant="outlined"
+                        onClick={() => handleEmployeeRangeChange(range.label)}
+                        onTouchStart={() => handleEmployeeRangeChange(range.label)}
+                        onMouseDown={() => handleEmployeeRangeChange(range.label)}
+                        sx={getButtonStyles(selectedEmployees === range.label)}
+                      >
+                        <Typography className="form-input" sx={{ padding: '3px' }}> {range.label}</Typography>
+                      </Button>
+                    ))}
+                  </Box>
+                  <Typography variant="body1" className="first-sub-title" sx={styles.text}>
+                    Whats your role?
+                  </Typography>
+                  {errors.selectedEmployees && (
+                    <Typography variant="body2" color="error">
+                      {errors.selectedEmployees}
+                    </Typography>
+                  )}
+                  <Box sx={styles.rolesButtons}>
+                    {roles.map((range, index) => (
+                      <Button
+                        key={index}
+                        variant="outlined"
+                        onClick={() => handleRolesChange(range.label)}
+                        onTouchStart={() => handleRolesChange(range.label)}
+                        onMouseDown={() => handleRolesChange(range.label)}
+                        sx={getButtonRolesStyles(selectedRoles === range.label)}
+                      >
+                        <Typography className="form-input" sx={{ padding: '3px' }}> {range.label}</Typography>
+                      </Button>
+                    ))}
+                  </Box>
                   <Button
                     className='hyperlink-red'
                     fullWidth
                     variant="contained"
                     sx={{
                       ...styles.submitButton,
-                      opacity: true ? 1 : 0.6,
-                      pointerEvents: true ? "auto" : "none",
-                      backgroundColor: "#fff",
-                      boxShadow: "none",
-                      color: true
-                        ? "rgba(244, 87, 69, 0.4)"
-                        : "rgba(244, 87, 69, 1)",
-                      "&:hover": {
-                        backgroundColor: "#fff",
-
-                      },
+                      opacity: isFormValidSecond() ? 1 : 0.6,
+                      pointerEvents: isFormValidSecond() ? "auto" : "none",
+                      backgroundColor: isFormValidSecond()
+                        ? "rgba(244, 87, 69, 1)"
+                        : "rgba(244, 87, 69, 0.4)",
                       "&.Mui-disabled": {
-                        color: "rgba(244, 87, 69, 0.6)",
-                        backgroundColor: "#fff",
+                        backgroundColor: "rgba(244, 87, 69, 0.6)",
+                        color: "#fff",
                       },
                     }}
-                    onClick={handleCancel}
-                    disabled={false}
+                    onClick={handleNextClick}
+                    disabled={!isFormValidSecond()}
                   >
-                    Cancel
+                    Next
                   </Button>
                 </>
+              )}
+              {activeTab === 2 &&
+                <>
+                  {manuallInstall &&
+                    <Box>
+                      <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ width: '100%', alignItems: 'center', paddingBottom: '1rem' }}>
+                        <Box sx={{display: "flex", gap:"16px", alignItems: "center"}}>
+                          <Image src="install_manually.svg" alt="Manually install pixel" width={24} height={24} />
+                          <Typography className='first-sub-title'>
+                            Install Manually
+                          </Typography>
+                        </Box>
+                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-insta"
+                          target="_blank" className='first-sub-title' style={{ fontSize: "14px", color: "rgba(80, 82, 178, 1)" }}
+                          sx={{ textDecoration: "underline", cursor: "pointer", '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
+                          Tutorial
+                        </Link>
+                      </Box>
+                      <Divider />
+                      <Box sx={{ mt: 4, display: "flex", alignItems: "center", gap: 8 }}>
+                        {editingName
+                          ?
+                          <>
+                            <TextField
+                              id="filled-basic"
+                              placeholder="Enter your domain"
+                              value={domainName}
+                              onChange={(e) => {
+                                setDomainName(e.target.value)
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  setEditingName(false)
+                                }
+                              }}
+                              InputProps={{
+                                startAdornment: (
+                                  <InputAdornment position="start">https://</InputAdornment>
+                                )
+                              }}
+                              variant="outlined"
+                              sx={{
+                                flex: 1,
+                                width: '360px',
+                                '& .MuiOutlinedInput-root': {
+                                  borderRadius: '4px',
+                                  height: '40px',
+                                },
+                                '& input': {
+                                  paddingLeft: 0,
+                                },
+                                '& input::placeholder': {
+                                  fontSize: '14px',
+                                  color: '#8C8C8C',
+                                },
+                              }}
+                            />
+                            <Button
+                              onClick={() => {
+                                setEditingName(false)
+                                setDomainName(prev => prev.replace(/^https?:\/\//, ""))
+                                sessionStorage.setItem('current_domain', domainName.replace(/^https?:\/\//, ""))
+                                fetchEditDomain()
+                              }}
+                              sx={{
+                                ml: 2,
+                                border: '1px solid rgba(80, 82, 178, 1)',
+                                textTransform: 'none',
+                                background: '#fff',
+                                color: 'rgba(80, 82, 178, 1)',
+                                fontFamily: 'Nunito Sans',
+                                padding: '0.65em 2em',
+                                mr: 1,
+                                '@media (max-width: 600px)': { padding: '0.5em 1.5em', mr: 0, ml: 0, left: 0 }
+                              }}
+                            >
+                              <Typography className='second-sub-title' sx={{
+                                color: 'rgba(80, 82, 178, 1) !important', textAlign: 'left'
+                              }}>
+                                Save
+                              </Typography>
+                            </Button>
+                          </>
+                          :
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                            <Typography className='first-sub-title' sx={{ textAlign: 'left', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
+                              {domainName}
+                            </Typography>
+                            <IconButton onClick={() => setEditingName(true)} sx={{ p: "4px", ':hover': { backgroundColor: 'transparent', } }} >
+                              <EditIcon height={8} width={8} sx={{ color: "rgba(80, 82, 178, 1)" }} />
+                            </IconButton>
+                          </Box>
+
+                        }
+                      </Box>
+                      
+                      <Box sx={{ flex: 1, overflowY: "auto", paddingBottom: '10px', '@media (max-width: 600px)': { p: 2 } }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', pt: 3, justifyContent: 'start' }}>
+                          <Image src='/1.svg' alt='1' width={28} height={28} />
+                          <Typography className='first-sub-title' sx={maintext}>Copy the pixel code</Typography>
+                        </Box>
+                        <Box
+                          component="pre"
+                          sx={{
+                            backgroundColor: '#ffffff',
+                            gap: 2,
+                            position: 'relative',
+                            wordWrap: 'break-word',
+                            whiteSpace: 'pre-wrap',
+                            border: '1px solid rgba(228, 228, 228, 1)',
+                            borderRadius: '10px',
+                            marginLeft: '3em',
+                            maxHeight: '14em',
+                            overflowY: 'auto',
+                            overflowX: 'hidden',
+                            '@media (max-width: 600px)': {
+                              maxHeight: '14em',
+                            },
+                          }}
+                        >
+                          <IconButton
+                            onClick={handleCopy}
+                            sx={{ position: 'absolute', right: '10px', top: '10px' }}
+                          >
+                            <ContentCopyIcon />
+                          </IconButton>
+                          <code style={{ color: 'rgba(95, 99, 104, 1)', fontSize: '12px', margin: 0, fontWeight: 400, fontFamily: 'Nunito Sans', textWrap: 'nowrap' }}>{pixelCode?.trim()}</code>
+                        </Box>
+                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '0.5em 0em 0em 0em', justifyContent: 'start' }}>
+                          <Image src='/2.svg' alt='2' width={28} height={28} />
+                          <Typography className='first-sub-title' sx={maintext}>Paste the pixel in your website</Typography>
+                        </Box>
+                        <Typography className='paragraph' sx={subtext}>Paste the above pixel in the header of your website. The header script starts with &lt;head&gt; and ends with &lt;/head&gt;.</Typography>
+                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1.25em 0em 0em 0em', justifyContent: 'start' }}>
+                          <Image src='/3.svg' alt='3' width={28} height={28} />
+                          <Typography className='first-sub-title' sx={maintext}>Verify Your Pixel</Typography>
+                        </Box>
+                        <Typography className='paragraph' sx={subtext}>Once the pixel is pasted in your website, wait for 10-15 mins and verify your pixel.</Typography>
+                        <Box sx={{ position: 'relative', width: '100%', pt: 5, '@media (max-width: 600px)': { pt: 2 } }}>
+                          <Box
+                            sx={{
+                              padding: '1.1em',
+                              border: '1px solid #e4e4e4',
+                              borderRadius: '8px',
+                              backgroundColor: 'rgba(247, 247, 247, 1)',
+                              boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+                              marginBottom: '1.9em',
+                              '@media (max-width: 600px)': { m: 2 }
+                            }}
+                          >
+                            <Typography
+                              variant="h6"
+                              component="div"
+                              mb={2}
+                              className='first-sub-title'
+                              sx={{
+                                textAlign: 'left',
+                              }}
+                            >
+                              Send this to my developer
+                            </Typography>
+                            <Box display="flex" alignItems="center" justifyContent="space-between" flexDirection="row" sx={{ '@media (max-width: 600px)': { flexDirection: 'column', display: 'flex', alignContent: 'flex-start', alignItems: 'flex-start', gap: 1 } }}>
+                              <InputBase
+                                id="email_send"
+                                type="text"
+                                placeholder="Enter Email ID"
+                                value={emailDeveloper}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) => setEmailDeveloper(e.target.value)}
+                                className='paragraph'
+                                sx={{
+                                  padding: '0.5rem 2em 0.5em 1em',
+                                  width: '65%',
+                                  border: '1px solid #e4e4e4',
+                                  borderRadius: '4px',
+                                  maxHeight: '2.5em',
+                                  fontSize: '14px !important',
+                                  textAlign: 'left',
+                                  backgroundColor: 'rgba(255, 255, 255, 1)',
+                                  boxShadow: 'none',
+                                  outline: 'none',
+                                  '&:focus': {
+                                    borderColor: '#3f51b5',
+                                  },
+                                  '@media (max-width: 600px)': {
+                                    width: '100%',
+                                  },
+                                }}
+                              />
+
+                              <Button
+                                onClick={handleButtonClick}
+                                sx={{
+                                  ml: 2,
+                                  border: '1px solid rgba(80, 82, 178, 1)',
+                                  textTransform: 'none',
+                                  background: '#fff',
+                                  color: 'rgba(80, 82, 178, 1)',
+                                  fontFamily: 'Nunito Sans',
+                                  padding: '0.65em 2em',
+                                  mr: 1,
+                                  '@media (max-width: 600px)': { padding: '0.5em 1.5em', mr: 0, ml: 0, left: 0 }
+                                }}
+                              >
+                                <Typography className='second-sub-title' sx={{
+                                  color: 'rgba(80, 82, 178, 1) !important', textAlign: 'left'
+                                }}>
+                                  Send
+                                </Typography>
+                              </Button>
+                            </Box>
+                          </Box>
+                        </Box>
+                        <Button
+                          className='hyperlink-red'
+                          fullWidth
+                          variant="contained"
+                          sx={{
+                            ...styles.submitButton,
+                            opacity: domainName.trim() !== "" ? 1 : 0.6,
+                            pointerEvents: domainName.trim() !== "" ? "auto" : "none",
+                            mb: 2,
+                            backgroundColor: domainName.trim() !== ""
+                              ? "rgba(244, 87, 69, 1)"
+                              : "rgba(244, 87, 69, 0.4)",
+                            "&.Mui-disabled": {
+                              backgroundColor: "rgba(244, 87, 69, 0.6)",
+                              color: "#fff",
+                            },
+                          }}
+                          onClick={handleVerifyPixel}
+                          disabled={domainName.trim() === ""}
+                        >
+                          Verify Your Pixel
+                        </Button>
+                      </Box>
+                    </Box>
+                  }
+                  {shopifyInstall && 
+                    <Box>
+                      <Box display="flex" justifyContent="space-between" sx={{ width: '100%', alignItems: 'center', paddingBottom: '1rem' }}>
+                          <Box display="flex" gap="16px">
+                          <Image src="install_cms1.svg" alt="Shopify install pixel" width={24} height={24}/>
+                            <Typography className='first-sub-title' sx={{  textAlign: 'left', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
+                              Install with Shopify
+                            </Typography>
+                          </Box>    
+                          <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store" 
+                                target="_blank" className='first-sub-title' style={{fontSize: "14px", color: "rgba(80, 82, 178, 1)"}} 
+                                sx={{ textDecoration: "underline", cursor: "pointer",'@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
+                            Tutorial
+                          </Link>
+                      </Box>
+                      <Divider />
+                      <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
+                          <Image src='/1.svg' alt='1' width={28} height={28} />
+                          <Box sx={{display: 'flex', alignItems: "center"}}>
+                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Shopify shop domain in the designated field. This allows our system to identify your store.</Typography>
+                          </Box>
+                          <Box/>
+                          <TextField
+                            fullWidth
+                            label="Shop Domain"
+                            variant="outlined"
+                            placeholder='Enter your Shop Domain'
+                            margin="normal"
+                            InputProps={{
+                              style: {
+                                  color: 'rgba(17, 17, 19, 1)',
+                                  fontFamily: 'Nunito Sans',
+                                  fontWeight: 400,
+                                  fontSize: '14px',
+                                  
+                              },
+                            }}
+                            value={isFocused
+                              ? (domainName ? domainName.replace(/^https?:\/\//, "") : "")
+                              : (domainName ? `https://${domainName.replace(/^https?:\/\//, "")}` : "https://")
+                            }
+                            sx={{
+                              pl: 2,
+                              "& .MuiOutlinedInput-root": {
+                                "& label": {
+                                  transformOrigin: "inherit"
+                                },
+                                "& fieldset": {
+                                  borderColor: "rgba(80, 82, 178, 1)",
+                                },
+                                "&:hover fieldset": {
+                                  borderColor: "rgba(86, 153, 237, 1)",
+                                },
+                                "& .MuiInputLabel-root.Mui-focused": {
+                                    color: "rgba(17, 17, 19, 0.6)",
+                                },
+                                "&.MuiFormLabel-root-MuiInputLabel-root": {
+                                  transformOrigin: "inherit"
+                                }
+                              },
+                              "& .MuiInputLabel-shrink": {
+                                  transformOrigin: "center",
+                                },
+                            }}
+                            onFocus={handleFocus}
+                            onBlur={handleBlur}
+                            onChange={(e) => setDomainName(e.target.value)}
+                            InputLabelProps={{ sx: styles.inputLabel }}
+                          />
+                      </Box>
+                      <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
+                          <Image src='/2.svg' alt='2' width={28} height={28} />
+                          <Box sx={{display: 'flex', alignItems: "center"}}>
+                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Shopify shop domain in the designated field. This allows our system to identify your store.</Typography>
+                          </Box>
+                          <Box/>
+                          <TextField
+                            InputProps={{
+                              style: {
+                                  color: 'rgba(17, 17, 19, 1)',
+                                  fontFamily: 'Nunito Sans',
+                                  fontWeight: 400,
+                                  fontSize: '14px',
+                              },
+                            }}
+                            fullWidth
+                            label="Access Token"
+                            variant="outlined"
+                            placeholder='Enter your Access Token'
+                            margin="normal"
+                            sx={{
+                              pl: 2,
+                              "& .MuiOutlinedInput-root": {
+                                "& fieldset": {
+                                  borderColor: "rgba(80, 82, 178, 1)",
+                                },
+                                "&:hover fieldset": {
+                                  borderColor: "rgba(86, 153, 237, 1)",
+                                },
+                                "& .MuiInputLabel-root.Mui-focused": {
+                                    color: "rgba(17, 17, 19, 0.6)",
+                                }
+                              },
+                              "& .MuiInputLabel-shrink": {
+                                  transformOrigin: "center",
+                                  left: 10
+                                },
+                              "& .MuiInputLabel-root[data-shrink='false']": {
+                                    transform: "translate(16px, 15px) scale(1)",
+                                }, 
+                                
+                            }}
+                            value={accessToken}
+                            onChange={(e) => setAccessToken(e.target.value)}
+                            InputLabelProps={{ sx: styles.inputLabel }}
+                          />
+                      </Box>
+                      <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
+                          <Image src='/3.svg' alt='3' width={28} height={28} />
+                          <Box sx={{display: 'flex', alignItems: "center"}}>
+                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Once you have submitted the required information, our system will automatically install the script on your Shopify store. You don’t need to take any further action.</Typography>
+                          </Box>
+                      </Box>
+                      <Button
+                        className='hyperlink-red'
+                        fullWidth
+                        variant="contained"
+                        sx={{
+                          ...styles.submitButton,
+                          opacity: accessToken.trim() !== "" || domainName.trim() !== "" ? 1 : 0.6,
+                          pointerEvents: accessToken.trim() !== "" || domainName.trim() !== "" ? "auto" : "none",
+                          mb: 2,
+                          mt: 2,
+                          backgroundColor: accessToken.trim() !== "" || domainName.trim() !== ""
+                            ? "rgba(244, 87, 69, 1)"
+                            : "rgba(244, 87, 69, 0.4)",
+                          "&.Mui-disabled": {
+                            backgroundColor: "rgba(244, 87, 69, 0.6)",
+                            color: "#fff",
+                          },
+                        }}
+                        onClick={handleInstallShopify}
+                        disabled={accessToken.trim() === "" || domainName.trim() === ""}
+                      >
+                        Install Pixel
+                      </Button>
+                    </Box>
+                  }
+                  {bigcommerceInstall && 
+                    <Box>
+                      <Box display="flex" justifyContent="space-between" sx={{ width: '100%', alignItems: 'center', paddingBottom: '1rem' }}>
+                          <Box display="flex" gap="16px">
+                          <Image src="bigcommerce-icon.svg" alt="Bigcommerce install pixel" width={24} height={24}/>
+                            <Typography className='first-sub-title' sx={{  textAlign: 'left', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
+                              Install with Bigcommerce
+                            </Typography>
+                          </Box>    
+                          <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store" 
+                                target="_blank" className='first-sub-title' style={{fontSize: "14px", color: "rgba(80, 82, 178, 1)"}} 
+                                sx={{ textDecoration: "underline", cursor: "pointer",'@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
+                            Tutorial
+                          </Link>
+                      </Box>
+                      <Divider />
+                      <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
+                          <Image src='/1.svg' alt='1' width={28} height={28} />
+                          <Box sx={{display: 'flex', alignItems: "center"}}>
+                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Bigcommerce store hash in the designated field. This allows our system to identify your store.</Typography>
+                          </Box>
+                          <Box/>
+                          <TextField
+                            InputProps={{
+                              style: {
+                                  color: 'rgba(17, 17, 19, 1)',
+                                  fontFamily: 'Nunito Sans',
+                                  fontWeight: 400,
+                                  fontSize: '14px',
+                              },
+                            }}
+                            fullWidth
+                            label="Store Hash"
+                            variant="outlined"
+                            placeholder='Enter your store hash'
+                            margin="normal"
+                            sx={{
+                              pl: 2,
+                              "& .MuiOutlinedInput-root": {
+                                "& fieldset": {
+                                  borderColor: "rgba(80, 82, 178, 1)",
+                                },
+                                "&:hover fieldset": {
+                                  borderColor: "rgba(86, 153, 237, 1)",
+                                },
+                                "& .MuiInputLabel-root.Mui-focused": {
+                                    color: "rgba(17, 17, 19, 0.6)",
+                                }
+                              },
+                              "& .MuiInputLabel-shrink": {
+                                  transformOrigin: "center",
+                                  left: 10
+                                },
+                              "& .MuiInputLabel-root[data-shrink='false']": {
+                                    transform: "translate(16px, 15px) scale(1)",
+                                }, 
+                                
+                            }}
+                            value={bigcommerceHash}
+                            onChange={(e) => setBigcommerceHash(e.target.value)}
+                            InputLabelProps={{ sx: styles.inputLabel }}
+                          />
+                      </Box>
+                      <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
+                          <Image src='/2.svg' alt='2' width={28} height={28} />
+                          <Box sx={{display: 'flex', alignItems: "center"}}>
+                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Once you have submitted the required information, our system will automatically install the script on your Bigcommerce store. You don’t need to take any further action.</Typography>
+                          </Box>
+                      </Box>
+                      <Button
+                        className='hyperlink-red'
+                        fullWidth
+                        variant="contained"
+                        sx={{
+                          ...styles.submitButton,
+                          opacity: bigcommerceHash.trim() !== "" ? 1 : 0.6,
+                          pointerEvents: bigcommerceHash.trim() !== "" ? "auto" : "none",
+                          mb: 2,
+                          mt: 2,
+                          backgroundColor: bigcommerceHash.trim() !== ""
+                            ? "rgba(244, 87, 69, 1)"
+                            : "rgba(244, 87, 69, 0.4)",
+                          "&.Mui-disabled": {
+                            backgroundColor: "rgba(244, 87, 69, 0.6)",
+                            color: "#fff",
+                          },
+                        }}
+                        onClick={handleInstallBigCommerce}
+                        disabled={bigcommerceHash.trim() === ""}
+                      >
+                        Install Pixel
+                      </Button>
+                    </Box>
+                  }
+                  {googletagInstall &&
+                    <Box>
+                      <Box display="flex" justifyContent="space-between" sx={{ width: '100%', alignItems: 'center', paddingBottom: '1rem' }}>
+                        <Box display="flex" gap="16px">
+                          <Image src="install_gtm.svg" alt="Google tag install pixel" width={24} height={24} />
+                          <Typography className='first-sub-title' sx={{ textAlign: 'left', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
+                            Install with GoogleTag
+                          </Typography>
+                        </Box>
+                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store"
+                          target="_blank" className='first-sub-title' style={{ fontSize: "14px", color: "rgba(80, 82, 178, 1)" }}
+                          sx={{ textDecoration: "underline", cursor: "pointer", '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
+                          Tutorial
+                        </Link>
+                      </Box>
+                      <Divider />
+                      <GoogleTagPopup open={opengoogle} handleClose={handleGoogleClose} />
+                    </Box>
+                  }
+                  {wordpressInstall && 
+                    <Box>
+                      <Box display="flex" justifyContent="space-between" sx={{ width: '100%', alignItems: 'center', paddingBottom: '1rem' }}>
+                          <Box display="flex" gap="16px">
+                          <Image src="install_cms2.svg" alt="WordPress install pixel" width={24} height={24}/>
+                            <Typography className='first-sub-title' sx={{  textAlign: 'left', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
+                              Install with WordPress
+                            </Typography>
+                          </Box>    
+                          <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store" 
+                                target="_blank" className='first-sub-title' style={{fontSize: "14px", color: "rgba(80, 82, 178, 1)"}} 
+                                sx={{ textDecoration: "underline", cursor: "pointer",'@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
+                            Tutorial
+                          </Link>
+                      </Box>
+                      <Divider />
+                      <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
+                          <Image src='/1.svg' alt='1' width={28} height={28} />
+                          <Box sx={{display: 'flex', alignItems: "center"}}>
+                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Bigcommerce store hash in the designated field. This allows our system to identify your store.</Typography>
+                          </Box>
+                          <Box/>
+                          <TextField
+                            InputProps={{
+                              style: {
+                                  color: 'rgba(17, 17, 19, 1)',
+                                  fontFamily: 'Nunito Sans',
+                                  fontWeight: 400,
+                                  fontSize: '14px',
+                              },
+                            }}
+                            fullWidth
+                            label="Store Hash"
+                            variant="outlined"
+                            placeholder='Enter your store hash'
+                            margin="normal"
+                            sx={{
+                              pl: 2,
+                              "& .MuiOutlinedInput-root": {
+                                "& fieldset": {
+                                  borderColor: "rgba(80, 82, 178, 1)",
+                                },
+                                "&:hover fieldset": {
+                                  borderColor: "rgba(86, 153, 237, 1)",
+                                },
+                                "& .MuiInputLabel-root.Mui-focused": {
+                                    color: "rgba(17, 17, 19, 0.6)",
+                                }
+                              },
+                              "& .MuiInputLabel-shrink": {
+                                  transformOrigin: "center",
+                                  left: 10
+                                },
+                              "& .MuiInputLabel-root[data-shrink='false']": {
+                                    transform: "translate(16px, 15px) scale(1)",
+                                }, 
+                                
+                            }}
+                            value={bigcommerceHash}
+                            onChange={(e) => setBigcommerceHash(e.target.value)}
+                            InputLabelProps={{ sx: styles.inputLabel }}
+                          />
+                      </Box>
+                      <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
+                          <Image src='/2.svg' alt='2' width={28} height={28} />
+                          <Box sx={{display: 'flex', alignItems: "center"}}>
+                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Once you have submitted the required information, our system will automatically install the script on your Bigcommerce store. You don’t need to take any further action.</Typography>
+                          </Box>
+                      </Box>
+                      <Button
+                        className='hyperlink-red'
+                        fullWidth
+                        variant="contained"
+                        sx={{
+                          ...styles.submitButton,
+                          opacity: bigcommerceHash.trim() !== "" ? 1 : 0.6,
+                          pointerEvents: bigcommerceHash.trim() !== "" ? "auto" : "none",
+                          mb: 2,
+                          mt: 2,
+                          backgroundColor: bigcommerceHash.trim() !== ""
+                            ? "rgba(244, 87, 69, 1)"
+                            : "rgba(244, 87, 69, 0.4)",
+                          "&.Mui-disabled": {
+                            backgroundColor: "rgba(244, 87, 69, 0.6)",
+                            color: "#fff",
+                          },
+                        }}
+                        onClick={handleInstallBigCommerce}
+                        disabled={bigcommerceHash.trim() === ""}
+                      >
+                        Install Pixel
+                      </Button>
+                    </Box>
+                  }
+                  {!shopifyInstall && !manuallInstall && !bigcommerceInstall && !googletagInstall && !wordpressInstall &&
+                    <>
+                      <Typography variant="body1" className="first-sub-title" sx={styles.text}>
+                        Select how you would like to install the pixel
+                      </Typography>
+                      {errors.selectedEmployees && (
+                        <Typography variant="body2" color="error">
+                          {errors.selectedEmployees}
+                        </Typography>
+                      )}
+                      <Box sx={{ ...styles.rolesButtons, display: "grid", gridTemplateColumns: "1fr 1fr" }}>
+                        {method_installingPixel.map((range, index) => (
+                          <Button
+                            key={index}
+                            variant="outlined"
+                            onClick={() => handleMethodInstall(range.label)}
+                            onTouchStart={() => handleMethodInstall(range.label)}
+                            onMouseDown={() => handleMethodInstall(range.label)}
+                            sx={{ ...getButtonRolesStyles(selectedMethodInstall === range.label), gap: "8px", justifyContent: "flex-start", p: "12px" }}
+                          >
+                            <Image src={range.src} alt="Method install pixel" width={24} height={24} />
+                            <Typography className="form-input" style={{ color: "rgba(112, 112, 113, 1)", lineHeight: "19.6px" }}>{range.label}</Typography>
+                          </Button>
+                        ))}
+                      </Box>
+                      <Button
+                        className='hyperlink-red'
+                        fullWidth
+                        variant="contained"
+                        sx={{
+                          ...styles.submitButton,
+                          opacity: isFormValidThird() ? 1 : 0.6,
+                          mb: 2,
+                          pointerEvents: isFormValidThird() ? "auto" : "none",
+                          backgroundColor: isFormValidThird()
+                            ? "rgba(244, 87, 69, 1)"
+                            : "rgba(244, 87, 69, 0.4)",
+                          "&.Mui-disabled": {
+                            backgroundColor: "rgba(244, 87, 69, 0.6)",
+                            color: "#fff",
+                          },
+                        }}
+                        onClick={handleNextClick}
+                        disabled={!isFormValidThird()}
+                      >
+                        Next
+                      </Button>
+                      <Button
+                        className='hyperlink-red'
+                        fullWidth
+                        variant="contained"
+                        sx={{
+                          ...styles.submitButton,
+                          color: "rgba(244, 87, 69, 1)",
+                          backgroundColor: "#fff",
+                          "&:hover": {
+                            backgroundColor: "#fff",
+                            color: "rgba(244, 87, 69, 0.6)"
+                          },
+                        }}
+                        onClick={handleSkip}
+                      >
+                        Skip
+                      </Button>
+                    </>
+                  }
+
+                  {(shopifyInstall || bigcommerceInstall || googletagInstall || wordpressInstall || manuallInstall) &&
+                    <>
+                      <Button
+                        className='hyperlink-red'
+                        fullWidth
+                        variant="contained"
+                        sx={{
+                          ...styles.submitButton,
+                          opacity: true ? 1 : 0.6,
+                          pointerEvents: true ? "auto" : "none",
+                          backgroundColor: "#fff",
+                          boxShadow: "none",
+                          color: true
+                            ? "rgba(244, 87, 69, 0.4)"
+                            : "rgba(244, 87, 69, 1)",
+                          "&:hover": {
+                            backgroundColor: "#fff",
+
+                          },
+                          "&.Mui-disabled": {
+                            color: "rgba(244, 87, 69, 0.6)",
+                            backgroundColor: "#fff",
+                          },
+                        }}
+                        onClick={handleCancel}
+                        disabled={false}
+                      >
+                        Cancel
+                      </Button>
+                    </>
+                  }
+                </>
               }
-            </>
-          }
-          {activeTab === 3 && (
-            <>
+              {activeTab === 3 && (
                 <>
                   <Typography variant="body1" className="first-sub-title" sx={styles.text}>
                     These Will Be Available on Your Integration Page for quick Setup.
@@ -2105,11 +2110,11 @@ const AccountSetup = () => {
                     Skip
                   </Button>
                 </>
-            </>
-          )}
+              )}
+            </Box>
         </Box>
       </Box>
-    </Box >
+    </Box>
   );
 };
 

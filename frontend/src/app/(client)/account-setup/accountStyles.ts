@@ -5,10 +5,9 @@ export const styles: { [key: string]: SxProps<Theme> } = {
   pageContainer: {
     display: 'flex',
     flexDirection: 'column',
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingLeft: '0px',
     height: "100vh",
-    paddingTop: '1.5em'
   },
   employeeButtons: {
     display: 'flex',
@@ -89,15 +88,12 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginRight: '2em',
-    marginLeft: '2em',
-    textTransform: 'none',
-    textDecoration: 'none',
+    position: "fixed",
+    top: 0,
+    padding: "1.125rem 1.5rem",
     width: '100%',
     color: 'rgba(244, 87, 69, 1)',
     borderBottom: `1px solid rgba(228, 228, 228, 1)`,
-    marginBottom: '1.25em',
-    '@media (max-height: 670px)': { marginBottom: 1 },
     '@media (max-width: 600px)': { display: 'flex', flexDirection: 'column', justifyContent: 'start', alignItems: 'start' },
 
   },
@@ -109,21 +105,10 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     fontSize: '16px',
     fontWeight: '600',
     lineHeight: '21.82px',
-    textAlign: 'left',
     width: '100%',
     color: 'rgba(244, 87, 69, 1)',
     borderBottom: `1px solid rgba(244, 87, 69, 1)`,
     marginBottom: '1.25em',
-  },
-  subheader: {
-    fontFamily: 'Nunito Sans',
-    fontSize: '16px',
-    fontWeight: '400',
-    lineHeight: '21.82px',
-    textAlign: 'center',
-    whiteSpace: 'nowrap',
-    marginTop: '10px',
-    color: 'rgba(142, 142, 142, 1)'
   },
   account: {
     padding: '10px',
@@ -137,25 +122,21 @@ export const styles: { [key: string]: SxProps<Theme> } = {
   nav: {
     display: 'flex',
     gap: '1em',
-    marginBottom: '1em',
     '@media (max-width: 600px)': { gap: 0.5 }
   },
   logo: {
     display: 'flex',
     justifyItems: 'start',
-    paddingBottom: '20px',
-    paddingLeft: '20px'
   },
   formContainer: {
     display: 'flex',
     flexDirection: 'column',
     maxWidth: '556px',
     width: '100%',
-    marginTop: '90px',
+    marginTop: '85px',
+    maxHeight: "calc(100vh - 85px)",
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: '0.5em',
-    backgroundColor: '#fff',
     '@media (max-height: 670px)': { pl: 0, gap: 0 },
     '@media (max-width: 600px)': { height: '77vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' },
     '@media (max-width: 400px)': { pl: 0, pt: 0, height: '77vh', },
@@ -225,15 +206,17 @@ export const styles: { [key: string]: SxProps<Theme> } = {
       paddingTop: '13px',
       paddingBottom: '13px',
     },
-    // '& .MuiInputLabel-root': {
-    //   top: '-5px',
-    // },
     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
       borderColor: '#0000FF',
     },
   },
   form: {
-    display: 'flex', flexDirection: 'column', width: '100%', justifyContent: 'center', alignContent: 'center', '@media (max-width: 400px)': { paddingLeft: 2.5, }, '@media (max-width: 600px)': { paddingRight: 2.5, paddingLeft: 2.5, }
+    display: 'flex', 
+    flexDirection: 'column', 
+    width: '100%', 
+    height: '100%',
+    '@media (max-width: 400px)': { paddingLeft: 2.5, }, 
+    '@media (max-width: 600px)': { paddingRight: 2.5, paddingLeft: 2.5, }
   },
   submitButton: {
     backgroundColor: 'rgba(244, 87, 69, 1)',
