@@ -117,13 +117,14 @@ class SlackService:
     def handle_app_home_opened(self, user_id, team_id):
         bot_token = self.get_bot_token_by_slack_team_id(team_id)
         if not bot_token:
-            logger.error(f"Error sending message: {e.response['error']}")
+            logger.error(f"Error: Bot token: {bot_token} not found")
+            return
             
         client = WebClient(token=bot_token)
         try:
             client.chat_postMessage(
                 channel=user_id,
-                text="Welcome to App Home! I'll share updates via Contacts using the Maximize app."
+                text="Welcome to App Home! I'll share updates via Contacts using the Maximiz app."
             )
         except SlackApiError as e:
             logger.error(f"Error sending message: {e.response['error']}")

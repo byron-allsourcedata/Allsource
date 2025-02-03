@@ -1,10 +1,12 @@
 import json
 import os
 import hashlib
+import logging
 from urllib.parse import urlencode
 from fastapi import APIRouter, Depends, Query, HTTPException, status, Body, Request
 from fastapi.responses import RedirectResponse
-from enums import UserAuthorizationStatus
+from enums import CreateDataSync
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from persistence.settings_persistence import SettingsPersistence
 from dependencies import get_integration_service, IntegrationService, IntegrationsPresistence, \
             get_user_integrations_presistence, check_user_authorization, check_domain, check_user_authorization_without_pixel, \
@@ -348,7 +350,22 @@ async def subscribe_zapier_webhook(hook_data = Body(...), domain = Depends(check
     with integrations_service as service:
         
         user = user_persistence.get_user_by_id(domain.user_id)
-        return await service.zapier.create_data_sync(domain_id=domain.id, leads_type=hook_data.get('leadsType'), hook_url=hook_data.get('hookUrl'), list_name=hook_data.get('listName'), created_by=user.get('full_name'))
+        await service.zapier.create_data_sync(domain_id=domain.id, leads_type=hook_data.get('leadsType'), hook_url=hook_data.get('hookUrl'), list_name=hook_data.get('listName'), created_by=user.get('full_name'))
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+        queue_name = f"sse_events_{str(user.get('id'))}"
+        try:
+            await publish_rabbitmq_message(
+            connection=connection,
+            queue_name=queue_name,
+            message_body={'status': CreateDataSync.ZAPIER_CONNECTED.value}
+            )
+        except:
+            logging.error('Failed to publish rabbitmq message')
+        finally:
+            await rabbitmq_connection.close()
+            
+    return "OK"
 
 
 @router.delete('/zapier/webhook')

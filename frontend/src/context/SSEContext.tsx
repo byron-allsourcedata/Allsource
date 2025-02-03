@@ -54,7 +54,16 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
         else if(data.update_subscription && data.status) {
           showToast(`Subscription updated ${data.status}!`);
         }
-        else if(data.status && data.need_reload_page) {
+        else if(data.status == 'ZAPIER_CONNECTED') {
+          showToast("Zapier has been successfully integrated!");
+          const currentPath = window.location.pathname;
+          if (currentPath === "/account-setup") {
+            window.location.href = "/dashboard";
+          }else{
+            window.location.reload();
+          }
+        }
+        else if(data.status == 'PIXEL_CODE_INSTALLED' && data.need_reload_page) {
           showToast("Pixel code is installed successfully!");
         }
         else {

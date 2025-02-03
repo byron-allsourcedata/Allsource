@@ -15,6 +15,9 @@ class OauthShopify(Enum):
 class BusinessType(Enum):
     D2C = 'd2c'
     B2B = 'b2b'
+
+class CreateDataSync(Enum):
+    ZAPIER_CONNECTED = 'ZAPIER_CONNECTED'
     
 class SourcePlatformEnum(Enum):
     SHOPIFY = 'shopify'
