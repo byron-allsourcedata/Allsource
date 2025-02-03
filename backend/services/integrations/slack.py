@@ -7,6 +7,7 @@ import json
 from typing import List
 from urllib.parse import unquote
 import base64
+from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from schemas.integrations.integrations import DataMap
 from slack_sdk.oauth import AuthorizeUrlGenerator
 from models.five_x_five_users import FiveXFiveUser
@@ -26,12 +27,13 @@ logger.addHandler(handler)
 
 class SlackService:
     def __init__(self, user_persistence: UserPersistence, user_integrations_persistence: IntegrationsPresistence,
-                 sync_persistence: IntegrationsUserSyncPersistence,
+                 sync_persistence: IntegrationsUserSyncPersistence, million_verifier_integrations: MillionVerifierIntegrationsService,
                  lead_persistence: LeadsPersistence):
         self.user_persistence = user_persistence
         self.integrations_persistence = user_integrations_persistence
         self.sync_persistence = sync_persistence
         self.lead_persistence = lead_persistence
+        self.million_verifier_integrations = million_verifier_integrations
 
     def get_credential(self, domain_id):
         return self.integrations_persistence.get_credentials_for_service(domain_id, SourcePlatformEnum.SLACK.value)
@@ -193,7 +195,7 @@ class SlackService:
     
     def generate_user_text(self, five_x_five_user: FiveXFiveUser, visited_url) -> str:
         if not five_x_five_user.linkedin_url:
-            return None
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
         
         email_priorities = [
             five_x_five_user.business_email,
@@ -202,6 +204,9 @@ class SlackService:
             five_x_five_user.programmatic_business_emails
         ]
         email = next((email.strip() for email in email_priorities if email), "N/A")
+        email = email.strip()
+        if not self.million_verifier_integrations.is_email_verify(email=email):
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
         data = {
             "LinkedIn URL": five_x_five_user.linkedin_url,

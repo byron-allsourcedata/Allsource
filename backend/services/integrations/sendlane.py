@@ -5,6 +5,7 @@ import httpx
 from utils import format_phone_number
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
 from models.five_x_five_users import FiveXFiveUser
+from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from schemas.integrations.sendlane import SendlaneContact, SendlaneSender
 from schemas.integrations.integrations import DataMap, IntegrationCredentials, ListFromIntegration
 from persistence.domains import UserDomainsPersistence
@@ -16,10 +17,11 @@ from persistence.leads_persistence import LeadsPersistence
 class SendlaneIntegrationService:
 
     def __init__(self, domain_persistence: UserDomainsPersistence, integrations_persistence: IntegrationsPresistence, leads_persistence: LeadsPersistence,
-                 sync_persistence: IntegrationsUserSyncPersistence, client: httpx.Client):
+                 sync_persistence: IntegrationsUserSyncPersistence, client: httpx.Client, million_verifier_integrations: MillionVerifierIntegrationsService):
         self.domain_persistence = domain_persistence
         self.integrations_persisntece = integrations_persistence
         self.leads_persistence = leads_persistence
+        self.million_verifier_integrations = million_verifier_integrations
         self.sync_persistence = sync_persistence
         self.QUEUE_DATA_SYNC = 'data_sync_leads'
         self.client = client
@@ -198,6 +200,9 @@ class SendlaneIntegrationService:
         
         first_email = extract_first_email(first_email) if first_email else None
         if not first_email:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+        first_email = first_email.strip()
+        if not self.million_verifier_integrations.is_email_verify(email=first_email):
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
         
         first_phone = (

@@ -20,6 +20,7 @@ from persistence.audience_persistence import AudiencePersistence
 from persistence.domains import UserDomainsPersistence, UserDomains
 from services.companies import CompanyService
 from services.payouts import PayoutsService
+from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from services.integrations.slack import SlackService
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.suppression import IntegrationsSuppressionPersistence
@@ -179,6 +180,9 @@ def get_slack_service(
 def get_stripe_service():
     return StripeService()
 
+def get_million_verifier_service():
+    return MillionVerifierIntegrationsService()
+
 
 def get_referral_service(
         referral_persistence_discount_code: ReferralDiscountCodesPersistence = Depends(
@@ -232,7 +236,8 @@ def get_integration_service(db: Session = Depends(get_db),
                             suppression_persitence: IntegrationsSuppressionPersistence = Depends(
                                 get_suppression_persistence),
                             user_persistence: UserPersistence = Depends(get_user_persistence_service),
-                            epi_persistence: ExternalAppsInstallationsPersistence = Depends(get_epi_persistence)
+                            epi_persistence: ExternalAppsInstallationsPersistence = Depends(get_epi_persistence),
+                            million_verifier_integrations: MillionVerifierIntegrationsService = Depends(get_million_verifier_service)
                             ):
     return IntegrationService(db=db,
                               integration_persistence=integration_presistence,
@@ -242,7 +247,8 @@ def get_integration_service(db: Session = Depends(get_db),
                               integrations_user_sync_persistence=integrations_user_sync_persistence,
                               aws_service=aws_service,
                               domain_persistence=domain_persistence, user_persistence=user_persistence,
-                              suppression_persistence=suppression_persitence, epi_persistence=epi_persistence
+                              suppression_persistence=suppression_persitence, epi_persistence=epi_persistence,
+                              million_verifier_integrations=million_verifier_integrations
                               )
 
 

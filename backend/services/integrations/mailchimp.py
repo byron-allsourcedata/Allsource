@@ -2,6 +2,7 @@ from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.domains import UserDomainsPersistence
+from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from schemas.integrations.integrations import *
 from schemas.integrations.klaviyo import *
 from fastapi import HTTPException
@@ -18,11 +19,12 @@ class MailchimpIntegrationsService:
 
     def __init__(self, domain_persistence: UserDomainsPersistence, 
                  integrations_persistence: IntegrationsPresistence, leads_persistence: LeadsPersistence,
-                 sync_persistence: IntegrationsUserSyncPersistence):
+                 sync_persistence: IntegrationsUserSyncPersistence, million_verifier_integrations: MillionVerifierIntegrationsService):
         self.domain_persistence = domain_persistence
         self.integrations_persisntece = integrations_persistence
         self.leads_persistence = leads_persistence
         self.sync_persistence = sync_persistence
+        self.million_verifier_integrations = million_verifier_integrations
         self.client = MailchimpMarketing.Client()
 
     def get_credentials(self, domain_id: int):
@@ -258,6 +260,10 @@ class MailchimpIntegrationsService:
         )
         first_email = extract_first_email(first_email) if first_email else None
         if not first_email:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+        first_email = first_email.strip()
+        
+        if not self.million_verifier_integrations.is_email_verify(email=first_email):
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
         
         first_phone = (

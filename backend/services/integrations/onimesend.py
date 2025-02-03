@@ -9,6 +9,7 @@ from persistence.leads_persistence import LeadsPersistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.domains import UserDomainsPersistence
+from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from utils import extract_first_email
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
 from models.five_x_five_users import FiveXFiveUser
@@ -17,12 +18,13 @@ from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 class OmnisendIntegrationService:
 
     def __init__(self, leads_persistence: LeadsPersistence, sync_persistence: IntegrationsUserSyncPersistence,
-                 integration_persistence: IntegrationsPresistence, domain_persistence: UserDomainsPersistence, client: httpx.Client):
+                 integration_persistence: IntegrationsPresistence, domain_persistence: UserDomainsPersistence, client: httpx.Client, million_verifier_integrations: MillionVerifierIntegrationsService):
         self.client = client
         self.leads_persistence = leads_persistence
         self.sync_persistence = sync_persistence
         self.integration_persistence = integration_persistence
         self.domain_persistence = domain_persistence
+        self.million_verifier_integrations = million_verifier_integrations
         self.QUEUE_DATA_SYNC = 'data_sync_leads'
 
     def get_credentials(self, domain_id: int):
@@ -160,6 +162,10 @@ class OmnisendIntegrationService:
         first_email = extract_first_email(first_email) if first_email else None
         if not first_email:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
+        first_email = first_email.strip()
+        if not self.million_verifier_integrations.is_email_verify(email=first_email):
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+        
         return Identifiers(id=first_email)
     
 

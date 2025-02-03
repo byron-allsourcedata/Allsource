@@ -22,6 +22,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from aio_pika import IncomingMessage
 from config.rmq_connection import RabbitMQConnection
 from services.integrations.base import IntegrationService
+from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from dependencies import (IntegrationsPresistence, LeadsPersistence, AudiencePersistence, 
                           LeadOrdersPersistence, IntegrationsUserSyncPersistence, 
                           AWSService, UserDomainsPersistence, SuppressionPersistence, ExternalAppsInstallationsPersistence, UserPersistence)
@@ -29,7 +30,7 @@ from dependencies import (IntegrationsPresistence, LeadsPersistence, AudiencePer
 
 load_dotenv()
 
-CRON_DATA_SYNC_LEADS = 'cron_data_sync_leads'
+CRON_DATA_SYNC_LEADS = 'cron_data_sync_leads_test'
 
 
 def setup_logging(level):
@@ -202,7 +203,8 @@ async def main():
             domain_persistence=UserDomainsPersistence(session),
             suppression_persistence=SuppressionPersistence(session),
             epi_persistence=ExternalAppsInstallationsPersistence(session),
-            user_persistence=UserPersistence(session)
+            user_persistence=UserPersistence(session),
+            million_verifier_integrations=MillionVerifierIntegrationsService()
         )
         with integration_service as service:
             await queue.consume(

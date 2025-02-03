@@ -3,6 +3,7 @@ from utils import format_phone_number
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from persistence.domains import UserDomainsPersistence
 from persistence.leads_persistence import LeadsPersistence
+from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from fastapi import HTTPException
@@ -13,10 +14,11 @@ from utils import extract_first_email
 class ZapierIntegrationService: 
 
     def __init__(self, lead_persistence: LeadsPersistence, domain_persistence: UserDomainsPersistence, sync_persistence: IntegrationsUserSyncPersistence,
-                 integration_persistence: IntegrationsPresistence, client: Client):
+                 integration_persistence: IntegrationsPresistence, client: Client, million_verifier_integrations: MillionVerifierIntegrationsService):
         self.leads_persistence = lead_persistence
         self.domain_persistence = domain_persistence
         self.sync_persistence = sync_persistence
+        self.million_verifier_integrations = million_verifier_integrations
         self.integration_persistence = integration_persistence
         self.client = client
     
@@ -108,7 +110,10 @@ class ZapierIntegrationService:
             getattr(lead, 'programmatic_business_emails', None)
         )
         first_email = extract_first_email(first_email) if first_email else None
-        if not first_email or not first_email.strip():
+        if not first_email:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+        first_email = first_email.strip()
+        if not self.million_verifier_integrations.is_email_verify(email=first_email):
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
         
         lead_dict = {
