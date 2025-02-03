@@ -209,7 +209,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                             underline="none"
                                             sx={{ ...companyStyles.header_text, display: 'flex', flexDirection: 'row', gap: 1, color: 'rgba(80, 82, 178, 1)' }}
                                         >
-                                            <Image src={'/web.svg'} width={18} height={18} alt='iphone icon' />
+                                            <Image src={'/web.svg'} width={18} height={18} alt='web icon' />
                                             {`https://${company.domain}` || '--'}
                                         </Link>
                                     ) : (

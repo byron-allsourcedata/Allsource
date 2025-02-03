@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Drawer, Box, Typography, Button, IconButton, Backdrop, TextField, InputAdornment, Collapse, Divider, FormControlLabel, Checkbox, Radio, List, ListItem, ListItemText, RadioGroup, Grid } from '@mui/material';
+import { Drawer, Box, Typography, Button, IconButton, Backdrop, TextField, InputAdornment, Collapse, Divider, FormControlLabel, Checkbox, Radio, List, ListItem, ListItemText, RadioGroup, Grid, InputLabel, FormControl, MenuItem, Select } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -17,126 +17,49 @@ interface FilterPopupProps {
   open: boolean;
   onClose: () => void;
   onApply: (filters: any) => void;
+  industry: string[];
 }
 
-const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => {
-  const [selectedButton, setSelectedButton] = useState<string | null>(null);
+const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, industry }) => {
   const [isVisitedDateOpen, setIsVisitedDateOpen] = useState(false);
   const [isVisitedPageOpen, setIsVisitedPageOpen] = useState(false);
   const [isNumberOfEmployeeOpen, setIsNumberOfEmployeeOpen] = useState(false);
   const [isRevenueOpen, setIsRevenueOpen] = useState(false);
-  const [isTimeSpentOpen, setIsTimeSpentOpen] = useState(false);
-  const [isVisitedTimeOpen, setIsVisitedTimeOpen] = useState(false);
+  const [isIndustryOpen, setIsIndustryOpen] = useState(false);
   const [isRegionOpen, setIsRegionOpen] = useState(false);
-  const [isLeadFunnel, setIsLeadFunnel] = useState(false);
-  const [isStatus, setIsStatus] = useState(false);
-  const [isRecurringVisits, setIsRecurringVisits] = useState(false);
   const [region, setRegions] = useState("");
-  const [selectedDateRange, setSelectedDateRange] = useState<string | null>(
-    null
-  );
-  const [selectedTimeRange, setSelectedTimeRange] = useState<string | null>(
-    null
-  );
   const [cities, setCities] = useState<{ city: string, state: string }[]>([]);
   const [contacts, setContacts] = useState<{ name: string }[]>([]);
   const [selectedTags, setSelectedTags] = useState<{ [key: string]: string[] }>(
     {
       visitedDate: [],
-      visitedTime: [],
       region: [],
       pageVisits: [],
       numberOfEmployees: [],
       revenue: [],
-      timeSpents: [],
     }
   );
   const [regions, setTags] = useState<string[]>([]);
-  const [selectedFunnels, setSelectedFunnels] = useState<string[]>([]);
-  const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
-  const [buttonFilters, setButtonFilters] = useState<ButtonFilters>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [openSelect, setOpenSelect] = useState(false);
   // const [open_save, setOpen] = useState(false);
   // const [openLoadDrawer, setOpenLoadDrawer] = useState(false);
-  const [filterName, setFilterName] = useState("");
+  // const [filterName, setFilterName] = useState("");
   // const [isButtonDisabled, setIsButtonDisabled] = useState(true);
 
-
-  type SavedFilter = {
-    name: string;
-    data: ReturnType<typeof handleFilters>; // Use the return type of handleFilters directly
-  };
-  const [savedFilters, setSavedFilters] = useState<SavedFilter[]>([]);
-
-  const handleClear = () => {
-    setFilterName("");
-  };
+  // type SavedFilter = {
+  //   name: string;
+  //   data: ReturnType<typeof handleFilters>; // Use the return type of handleFilters directly
+  // };
 
   // const handleOpen = () => setOpen(true);
   // const handleClose = () => setOpen(false);
-
-
-  type ButtonFilters = {
-    button: string;
-    dateRange: {
-      fromDate: number;
-      toDate: number;
-    };
-    selectedFunnels: string[];
-  } | null;
 
   const handleAddTag = (e: { key: string }) => {
     if (e.key === "Enter" && region.trim()) {
       setTags([...regions, region.trim()]);
       setRegions("");
     }
-  };
-
-  const [selectedValues, setSelectedValues] = useState<string[]>([]);
-
-  const handleChangeRecurringVisits = (event: React.ChangeEvent<HTMLInputElement>) => {
-    let value = event.target.value;
-
-
-    setSelectedValues((prevSelectedValues) => {
-      if (prevSelectedValues.includes(value)) {
-        return prevSelectedValues.filter((item) => item !== value);
-      } else {
-        return [...prevSelectedValues, value];
-      }
-    });
-  };
-
-
-  const handleDeleteRecurringVisit = (valueToDelete: string) => {
-    setSelectedValues((prevSelectedValues) =>
-      prevSelectedValues.filter((value) => value !== valueToDelete)
-    );
-  };
-
-
-
-  const handleButtonLeadFunnelClick = (label: string) => {
-    setSelectedFunnels((prev) =>
-      prev.includes(label)
-        ? prev.filter((item) => item !== label)
-        : [...prev, label]
-    );
-  };
-
-  // Status button
-  const handleButtonStatusClick = (label: string) => {
-    const mappedStatus = statusMapping[label];
-    setSelectedStatus((prev) =>
-      prev.includes(mappedStatus)
-        ? prev.filter((item) => item !== mappedStatus)
-        : [...prev, mappedStatus]
-    );
-  };
-
-  const statusMapping: Record<string, string> = {
-    New: "New",
-    "Returning": "Returning"
   };
 
   const addTag = (category: string, tag: string) => {
@@ -160,7 +83,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       // If the last tag and category "visitedDate" are deleted, clear the state
       if (category === "visitedDate" && isLastTagRemoved) {
         setDateRange({ fromDate: null, toDate: null });
-        setSelectedDateRange(null);
       }
 
       // Update checkbox states if necessary
@@ -176,30 +98,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         if (filterName) {
           setCheckedFilters((prevFilters) => ({
             ...prevFilters,
-            [filterName]: false,
-          }));
-        }
-      }
-
-      if (category === "visitedTime") {
-        if (updatedTags.length === 0) {
-          setTimeRange({ fromTime: null, toTime: null });
-          setSelectedTimeRange(null);
-        }
-      }
-
-      if (category === "visitedTime") {
-        const tagMapTime: { [key: string]: string } = {
-          "Morning 12AM - 11AM": "morning",
-          "Afternoon 11AM - 5PM": "afternoon",
-          "Evening 5PM - 9PM": "evening",
-          "All day": "all_day",
-        };
-
-        const filterName = tagMapTime[tag];
-        if (filterName) {
-          setCheckedFiltersTime((prevFiltersTime) => ({
-            ...prevFiltersTime,
             [filterName]: false,
           }));
         }
@@ -244,30 +142,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     });
   };
 
-  const handleDeleteTimeSpent = (valueToDelete: string) => {
-    setSelectedTags((prevTags) => {
-      const updatedTags = prevTags.timeSpents.filter((tag) => tag !== valueToDelete);
-
-      const tagMap: { [key: string]: string } = {
-        "under 10 secs": "under_10",
-        "10-30 secs": "over_10",
-        "30-60 secs": "over_30",
-        "Over 60 secs": "over_60",
-      };
-
-      const filterName = tagMap[valueToDelete];
-      if (filterName) {
-        setCheckedFiltersTimeSpent((prevFilters) => ({
-          ...prevFilters,
-          [filterName]: false,
-        }));
-      }
-
-      return { ...prevTags, timeSpents: updatedTags };
-    });
-  };
-
-
 
   interface TagMap {
     [key: string]: string;
@@ -299,11 +173,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       if (category === "visitedDate") {
         setCheckedFilters((prevFilters) => ({
           ...prevFilters,
-          [filterName]: isChecked,
-        }));
-      } else if (category === "visitedTime") {
-        setCheckedFiltersTime((prevFiltersTime) => ({
-          ...prevFiltersTime,
           [filterName]: isChecked,
         }));
       }
@@ -410,7 +279,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         // If the label has been replaced or removed, clear the date range
         if (!newTag && prevTags.visitedDate.length > 0) {
           setDateRange({ fromDate: null, toDate: null });
-          setSelectedDateRange(null);
         } else if (newTag && oldFromDate && oldToDate) {
           removeTag("visitedDate", `From ${oldFromDate} to ${oldToDate}`);
         }
@@ -422,32 +290,38 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     });
   };
 
-  /////// Time
-  type TimeRange = {
-    fromTime: dayjs.Dayjs | null;
-    toTime: dayjs.Dayjs | null;
+  // Industry
+  const [checkedFiltersIndustries, setCheckedFiltersIndustries] = useState<Record<string, boolean>>({});
+
+  const handleClose = () => {
+    setOpenSelect(false);
   };
 
-  // Инициализация состояния
-  const [timeRange, setTimeRange] = useState<TimeRange>({
-    fromTime: null,
-    toTime: null,
-  });
-  const [checkedFiltersTime, setCheckedFiltersTime] = useState({
-    morning: false,
-    evening: false,
-    afternoon: false,
-    all_day: false,
-  });
+  const handleOpen = () => {
+    setOpenSelect(true);
+  };
+
+  const handleIndustryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { value, checked } = event.target;
+
+    setCheckedFiltersIndustries((prev) => ({
+      ...prev,
+      [value]: checked
+    }));
+  };
 
 
-  const deleteTagTime = () => {
-    setSelectedTimeRange(null)
-    setTimeRange({
-      fromTime: null,
-      toTime: null,
-    });
-  }
+  const handleMenuItemClick = (item: string) => {
+    setCheckedFiltersIndustries((prevState) => ({
+      ...prevState,
+      [item]: !prevState[item],
+    }));
+
+    handleIndustryChange({
+      target: { value: item, checked: !checkedFiltersIndustries[item] },
+    } as React.ChangeEvent<HTMLInputElement>);
+  };
+
 
   // Revenue
 
@@ -547,42 +421,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   };
 
 
-  ////time spent
-  const [checkedFiltersTimeSpent, setCheckedFiltersTimeSpent] = useState({
-    under_10: false,
-    over_10: false,
-    over_30: false,
-    over_60: false,
-  });
-
-  const handleCheckboxChangeTimeSpent = (event: {
-    target: { name: any; checked: any };
-  }) => {
-    const { name, checked } = event.target;
-
-    setCheckedFiltersTimeSpent((prevFilters) => {
-      const newFilters = {
-        ...prevFilters,
-        [name]: checked,
-      };
-
-      const tagMap: { [key: string]: string } = {
-        under_10: "under 10 secs",
-        over_10: "10-30 secs",
-        over_30: "30-60 secs",
-        over_60: "Over 60 secs",
-      };
-
-      if (checked) {
-        addTag("timeSpents", tagMap[name]);
-      } else {
-        removeTag("timeSpents", tagMap[name]);
-      }
-
-      return newFilters;
-    });
-  };
-
   const getFilterDates = () => {
     const today = dayjs();
     return {
@@ -643,16 +481,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
 
     // Составление объекта с фильтрами
     const filters = {
-      ...buttonFilters, // Existing button filters
       from_date: fromDateTime, // Set value from_date
       to_date: toDateTime, // Set value of to_date
-      checkedFiltersTime,     // Filters by time (morning, afternoon, evening, etc.)
       selectedPageVisit: selectedPageVisit ? selectedPageVisit : '',
       checkedFiltersNumberOfEmployees,
       checkedFiltersRevenue,
+      industry: checkedFiltersIndustries,
       checkedFilters,
       regions,
-      recurringVisits: selectedValues,
       searchQuery,
     };
 
@@ -696,6 +532,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       "unknown": boolean,
     };
     regions: string[];
+    industry: typeof checkedFiltersIndustries,
     selectedPageVisit: string,
     searchQuery: string; dateRange?: { fromDate: number | null; toDate: number | null; } | undefined;
   }) => {
@@ -714,7 +551,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     const savedFilters = loadFiltersFromSessionStorage();
     if (savedFilters) {
 
-      
+      setCheckedFiltersIndustries(savedFilters.industry || {})
+
+
       setCheckedFiltersNumberOfEmployees(savedFilters.checkedFiltersNumberOfEmployees || {
         "1-10": false,
         "11-20": false,
@@ -730,27 +569,44 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         "unknown": false,
       });
 
-      // Page visits
-
       // Checking active page visit filters
-      const isPageVisitsFilterActive = Object.values(savedFilters.checkedFiltersPageVisits || {}).some(value => value === true);
+      const isNumberOfEmployeesFilterActive = Object.values(savedFilters.checkedFiltersNumberOfEmployees || {}).some(value => value === true);
 
-      if (isPageVisitsFilterActive) {
-        const pageVisitsTagMap: { [key: string]: string } = {
-          "1": "1",
-          "2": "2",
-          "3": "3",
-          "4": "4",
-          "4+": "4+"
+      if (isNumberOfEmployeesFilterActive) {
+        const NumberOfEmployeesTagMap: { [key: string]: string } = {
+          "1-10": "1-10",
+          "11-20": "11-20",
+          "21-50": "21-50",
+          "51-100": "51-100",
+          "101-200": "101-200",
+          "201-500": "201-500",
+          "501-1000": "501-1000",
+          "1001-2000": "1001-2000",
+          "2001-5000": "2001-5000",
+          "5001-10000": "5001-10000",
+          "10001+": "10001+",
+          "unknown": "unknown",
         };
 
         // Go through all filters and add a tag for each active one
-        Object.keys(savedFilters.checkedFiltersPageVisits).forEach((key) => {
-          if (savedFilters.checkedFiltersPageVisits[key]) {
-            addTag("pageVisits", pageVisitsTagMap[key]);
+        Object.keys(savedFilters.checkedFiltersNumberOfEmployees).forEach((key) => {
+          if (savedFilters.checkedFiltersNumberOfEmployees[key]) {
+            addTag("numberOfEmployees", NumberOfEmployeesTagMap[key]);
           }
         });
       }
+
+
+
+      const savedPageVisit = savedFilters.selectedPageVisit || "";
+
+      if (savedPageVisit) {
+        addTag("pageVisits", savedPageVisit); // Добавляем тег
+        setSelectedPageVisit(savedPageVisit); // Устанавливаем радиокнопку
+      } else {
+        setSelectedPageVisit(""); // Сбрасываем выбор, если фильтр не активен
+      }
+
 
       setCheckedFiltersRevenue(savedFilters.checkedFiltersRevenue || {
         "1-10": false,
@@ -768,21 +624,29 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       });
 
       // Checking active page visit filters
-      const isRevenueFilterActive = Object.values(savedFilters.checkedFiltersPageVisits || {}).some(value => value === true);
+      const isRevenueFilterActive = Object.values(savedFilters.checkedFiltersRevenue || {}).some(value => value === true);
 
       if (isRevenueFilterActive) {
         const pageVisitsTagMap: { [key: string]: string } = {
-          "1": "1",
-          "2": "2",
-          "3": "3",
-          "4": "4",
-          "5": "5"
+          "Below 10k": "Below 10k",
+          "$10k - $50k": "$10k - $50k",
+          "$50k - $100k": "$50k - $100k",
+          "$100k - $500k":  "$100k - $500k",
+          "$500k - $1M": "$500k - $1M",
+          "$1M - $5M": "$1M - $5M",
+          "$5M - $10M": "$5M - $10M",
+          "$10M - $50M": "$10M - $50M",
+          "$50M - $100M": "$50M - $100M",
+          "$100M - $500M": "$100M - $500M",
+          "$500M - $1B": "$500M - $1B",
+          "$1 Billion +": "$1 Billion +",
+          "unknown": "unknown",
         };
 
         // Go through all filters and add a tag for each active one
-        Object.keys(savedFilters.checkedFiltersPageVisits).forEach((key) => {
-          if (savedFilters.checkedFiltersPageVisits[key]) {
-            addTag("pageVisits", pageVisitsTagMap[key]);
+        Object.keys(savedFilters.checkedFiltersRevenue).forEach((key) => {
+          if (savedFilters.checkedFiltersRevenue[key]) {
+            addTag("revenue", pageVisitsTagMap[key]);
           }
         });
       }
@@ -794,39 +658,13 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         allTime: false,
       });
 
-      // Time spent
-      setCheckedFiltersTimeSpent(savedFilters.checkedFiltersTimeSpent || {
-        under_10: false,
-        over_10: false,
-        over_30: false,
-        over_60: false,
-      });
 
-      const isTimeSpentFilterActive = Object.values(savedFilters.checkedFiltersTimeSpent || {}).some(value => value === true);
-      if (isTimeSpentFilterActive) {
-        const timeSpentTagMap: { [key: string]: string } = {
-          under_10: "under 10 secs",
-          over_10: "10-30 secs",
-          over_30: "30-60 secs",
-          over_60: "Over 60 secs",
-        };
-
-        Object.keys(savedFilters.checkedFiltersTimeSpent).forEach((key) => {
-          if (savedFilters.checkedFiltersTimeSpent[key]) {
-            addTag("timeSpents", timeSpentTagMap[key]);
-          }
-        });
-      }
-
-
-      setSelectedValues(savedFilters.recurringVisits || []);
       setSearchQuery(savedFilters.searchQuery || '');
 
 
 
       const isAnyFilterActive = Object.values(savedFilters.checkedFilters || {}).some(value => value === true);
       if (isAnyFilterActive) {
-        setButtonFilters(savedFilters.button);
         const tagMap: { [key: string]: string } = {
           lastWeek: "Last week",
           last30Days: "Last 30 days",
@@ -850,7 +688,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           toDate: savedFilters.to_date ? dayjs.unix(savedFilters.to_date) : null,
         });
       }
-      setButtonFilters(savedFilters.button)
       if (savedFilters.regions) {
         setTags((prevTags) => {
           const uniqueTags = new Set(prevTags);
@@ -864,13 +701,24 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   }
 
   useEffect(() => {
-    initializeFilters();
-  }, [open]);
+    if (open) {
+      if (industry) {
+        const initialState = industry.reduce((acc, item) => {
+          acc[item] = false;
+          return acc;
+        }, {} as Record<string, boolean>);
+        setCheckedFiltersIndustries(initialState);
+      }
+      initializeFilters();
+    }
+  }, [open, industry]);
+
 
 
 
   const handleApply = () => {
     const filters = handleFilters();
+    console.log(checkedFiltersIndustries)
     onApply(filters);
     onClose();
   };
@@ -887,15 +735,13 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     return Object.values(checkedFiltersNumberOfEmployees).some(value => value);
   };
 
-  const isTimeSpentFilterActive = () => {
-    return Object.values(checkedFiltersTimeSpent).some(value => value);
+  const isRevenueFilterActive = () => {
+    return Object.values(checkedFiltersRevenue).some(value => value);
   };
 
-  // Recurring Visits
-  const isRecurringVisitsFilterActive = () => {
-    return selectedValues.length > 0;
+  const isIndustryFilterActive = () => {
+    return Object.values(checkedFiltersIndustries).some(value => value);
   };
-
 
 
   const handleRadioChange = (event: { target: { name: string } }) => {
@@ -939,16 +785,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   };
 
   const handleClearFilters = () => {
-    setSelectedButton(null);
     setIsVisitedDateOpen(false);
     setIsVisitedPageOpen(false);
-    setIsTimeSpentOpen(false);
-    setIsVisitedTimeOpen(false);
     setIsNumberOfEmployeeOpen(false),
-      setIsRegionOpen(false);
-    setIsLeadFunnel(false);
-    setIsStatus(false);
-    setIsRecurringVisits(false);
+    setIsRegionOpen(false);
+    setIsRevenueOpen(false)
+    setIsIndustryOpen(false);
+    setCheckedFiltersIndustries({})
+    setSelectedPageVisit('')
 
     setCheckedFiltersNumberOfEmployees({
       "1-10": false,
@@ -965,17 +809,22 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       "unknown": false,
     });
 
-    setTimeRange({
-      fromTime: null,
-      toTime: null,
+    setCheckedFiltersRevenue({
+      "Below 10k": false,
+      "$10k - $50k": false,
+      "$50k - $100k": false,
+      "$100k - $500k": false,
+      "$500k - $1M": false,
+      "$1M - $5M": false,
+      "$5M - $10M": false,
+      "$10M - $50M": false,
+      "$50M - $100M": false,
+      "$100M - $500M": false,
+      "$500M - $1B": false,
+      "$1 Billion +": false,
+      "unknown": false,
     });
 
-    setCheckedFiltersTimeSpent({
-      under_10: false,
-      over_10: false,
-      over_30: false,
-      over_60: false,
-    });
 
     // Reset date
     setDateRange({
@@ -990,32 +839,18 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       allTime: false,
     });
 
-    // Reset time filters
-    setCheckedFiltersTime({
-      morning: false,
-      evening: false,
-      afternoon: false,
-      all_day: false,
-    });
 
-    setSelectedValues([]);
 
     // Reset filter values
     setRegions("");
-    setSelectedDateRange(null);
-    setSelectedTimeRange(null);
     setSelectedTags({
       visitedDate: [],
-      visitedTime: [],
       region: [],
       pageVisits: [],
       numberOfEmployees: [],
-      timeSpents: [],
+      revenue: [],
     });
     setTags([]);
-    setSelectedFunnels([]);
-    setSelectedStatus([]);
-    setButtonFilters(null);
     setSearchQuery("");
 
     sessionStorage.removeItem('filters')
@@ -1108,6 +943,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             padding: "1.2em 1em 0.5em 1em",
             borderBottom: "1px solid #e4e4e4",
             position: "sticky",
+            zIndex: 10,
             top: 0,
             backgroundColor: "#fff",
           }}
@@ -1488,7 +1324,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               <Box
                 sx={{
                   ...filterStyles.active_filter_dote,
-                  visibility: isNumberOfEmployeesFilterActive() ? "visible" : "hidden",
+                  visibility: isRevenueFilterActive() ? "visible" : "hidden",
                 }}
               />
               <Image src="/revenue-filter.svg" alt="revenue" width={18} height={18} />
@@ -1642,127 +1478,113 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             </Collapse>
           </Box>
 
-          {/* Average time spent */}
-          <Box
-            sx={filterStyles.main_filter_form}
-          >
+          {/* Industry */}
+          <Box sx={filterStyles.main_filter_form}>
             <Box
               sx={filterStyles.filter_form}
-              onClick={() => setIsTimeSpentOpen(!isTimeSpentOpen)}
+              onClick={() => setIsIndustryOpen(!isIndustryOpen)}
             >
               <Box
                 sx={{
                   ...filterStyles.active_filter_dote,
-                  visibility: isTimeSpentFilterActive() ? "visible" : "hidden"
+                  visibility: isIndustryFilterActive() ? "visible" : "hidden",
                 }}
               />
-              <Image
-                src="/sand_clock.svg"
-                alt="calendar"
-                width={18}
-                height={18}
-              />
-              <Typography
-                sx={{
-                  ...filterStyles.filter_name
-                }}
-              >
-                Average time spent
+              <Image src="/industry-icon.svg" alt="industry" width={18} height={18} />
+              <Typography sx={filterStyles.filter_name}>
+                Industry
               </Typography>
-              {selectedTags.timeSpents.map((tag, index) => (
-                <CustomChip
-                  key={index}
-                  label={tag}
-                  onDelete={() => handleDeleteTimeSpent(tag)}
-                />
-              ))}
               <IconButton
-                onClick={() => setIsTimeSpentOpen(!isTimeSpentOpen)}
+                onClick={() => setIsIndustryOpen(!isIndustryOpen)}
                 aria-label="toggle-content"
               >
-                {isTimeSpentOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                {isIndustryOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
               </IconButton>
+
             </Box>
-            <Collapse in={isTimeSpentOpen}>
-              <Box
-                sx={{
-                  ...filterStyles.filter_dropdown
-                }}
-              >
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={checkedFiltersTimeSpent.under_10}
-                        onChange={handleCheckboxChangeTimeSpent}
-                        name="under_10"
-                        size='small'
-                        sx={{
-                          '&.Mui-checked': {
-                            color: "rgba(80, 82, 178, 1)",
+            {Object.keys(checkedFiltersIndustries).some((key) => checkedFiltersIndustries[key]) && (
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1, mb: 2 }}>
+                {Object.keys(checkedFiltersIndustries)
+                  .filter((key) => checkedFiltersIndustries[key])
+                  .map((tag, index) => (
+                    <CustomChip
+                      key={index}
+                      label={tag}
+                      onDelete={() => handleMenuItemClick(tag)}
+                    />
+                  ))}
+              </Box>
+            )}
+
+
+            <Collapse in={isIndustryOpen}>
+              <Box sx={{ ...filterStyles.filter_dropdown, height: openSelect ? 250 : 50 }}>
+                {industry && industry.length > 0 ? (
+                  <FormControl fullWidth>
+                    <Select
+                      labelId="industry-select-label"
+                      id="industry-select"
+                      multiple
+                      open={openSelect}
+                      onClose={handleClose}
+                      onOpen={handleOpen}
+                      value={Object.keys(checkedFiltersIndustries).filter(
+                        (key) => checkedFiltersIndustries[key]
+                      )}
+                      displayEmpty
+                      sx={{ maxHeight: '56px', pt: 1 }}
+                      renderValue={() => <Typography className='table-data' sx={{ fontSize: '14px !important' }}> Select an Industry</Typography>}
+                      MenuProps={{
+                        PaperProps: {
+                          style: {
+                            maxHeight: 200,
+                            maxWidth: 80,
+                            marginLeft: 8,
                           },
-                        }}
-                      />
-                    }
-                    label={<Typography className='table-data' sx={{ color: checkedFiltersTimeSpent.under_10 ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>under 10 secs</Typography>}
-                  />
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={checkedFiltersTimeSpent.over_10}
-                        onChange={handleCheckboxChangeTimeSpent}
-                        name="over_10"
-                        size='small'
-                        sx={{
-                          '&.Mui-checked': {
-                            color: "rgba(80, 82, 178, 1)",
-                          },
-                        }}
-                      />
-                    }
-                    label={<Typography className='table-data' sx={{ color: checkedFiltersTimeSpent.over_10 ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>10-30 secs</Typography>}
-                  />
-                </Box>
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={checkedFiltersTimeSpent.over_30}
-                        onChange={handleCheckboxChangeTimeSpent}
-                        name="over_30"
-                        size='small'
-                        sx={{
-                          '&.Mui-checked': {
-                            color: "rgba(80, 82, 178, 1)",
-                          },
-                        }}
-                      />
-                    }
-                    label={<Typography className='table-data' sx={{ color: checkedFiltersTimeSpent.over_30 ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>30-60 secs</Typography>}
-                  />
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={checkedFiltersTimeSpent.over_60}
-                        onChange={handleCheckboxChangeTimeSpent}
-                        name="over_60"
-                        size='small'
-                        sx={{
-                          '&.Mui-checked': {
-                            color: "rgba(80, 82, 178, 1)",
-                          },
-                        }}
-                      />
-                    }
-                    label={<Typography className='table-data' sx={{ color: checkedFiltersTimeSpent.over_60 ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>Over 60 secs</Typography>}
-                  />
-                </Box>
+                        },
+                      }}
+                    >
+                      {industry.map((item) => (
+                        <MenuItem
+                          key={item}
+                          value={item}
+                          sx={{ maxHeight: '40px', pl: 0, padding: 0, marginTop: 0, marginBottom: 0 }}
+                          onClick={() => handleMenuItemClick(item)}
+                        >
+                          <Checkbox
+                            checked={checkedFiltersIndustries[item] || false}
+                            onChange={handleIndustryChange}
+                            value={item}
+                            size='small'
+                            sx={{
+                              "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
+                            }}
+                          />
+                          <ListItemText sx={{}}>
+                            <Typography sx={{
+                              fontSize: "14px",
+                              fontFamily: "Nunito Sans",
+                              fontWeight: 500,
+                              lineHeight: "19.6px",
+                              color: checkedFiltersIndustries[item] ? "rgba(80, 82, 178, 1)" : "rgba(32, 33, 36, 1)"
+                            }}>
+                              {item}
+                            </Typography>
+                          </ListItemText>
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                ) : (
+                  <Typography className='second-sub-title'>No industry data</Typography>
+                )}
               </Box>
             </Collapse>
           </Box>
+
           {/* Location */}
           <Box
-            sx={filterStyles.main_filter_form}
+            sx={{...filterStyles.main_filter_form, mb: 15}}
           >
             <Box
               sx={filterStyles.filter_form}
@@ -1855,88 +1677,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
 
             </Collapse>
           </Box>
-          {/* Recurring Visits */}
-          <Box
-            sx={{
-              width: "100%",
-              mb: 15,
 
-              padding: "0.5em",
-            }}
-          >
-            <Box
-              sx={filterStyles.filter_form}
-              onClick={() => setIsRecurringVisits(!isRecurringVisits)}
-            >
-              <Box
-                sx={{
-                  ...filterStyles.active_filter_dote,
-                  visibility: isRecurringVisitsFilterActive() ? "visible" : "hidden"
-                }}
-              />
-              <Image
-                src="/repeate-one.svg"
-                alt="calendar"
-                width={18}
-                height={18}
-              />
-              <Typography
-                sx={{
-                  ...filterStyles.filter_name
-                }}
-              >
-                Recurring Visists
-              </Typography>
-              {selectedValues.length > 0 &&
-                selectedValues.map((value) => (
-                  <CustomChip
-                    key={value}
-                    label={value}
-                    onDelete={() => handleDeleteRecurringVisit(value)}
-                  />
-                ))
-              }
-
-              <IconButton
-                onClick={() => setIsRecurringVisits(!isRecurringVisits)}
-                aria-label="toggle-content"
-              >
-                {isRecurringVisits ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-              </IconButton>
-            </Box>
-            <Collapse in={isRecurringVisits}>
-              <Box sx={{ display: "flex", justifyContent: "start", gap: 2, pl: 2 }}>
-                {["1", "2", "3", "4", "4+"].map((label) => (
-                  <FormControlLabel
-                    key={label}
-                    control={
-                      <Checkbox
-                        checked={selectedValues.includes(label)}
-                        onChange={handleChangeRecurringVisits}
-                        value={label}
-                        size='small'
-                        sx={{
-                          '&.Mui-checked': {
-                            color: "rgba(80, 82, 178, 1)",
-                          },
-                        }}
-                      />
-                    }
-                    label={<Typography className='table-data' sx={{ color: selectedValues.includes(label) ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>{label}</Typography>}
-                    sx={{
-                      display: "flex",
-                      color: "rgba(74, 74, 74, 1)",
-                      alignItems: "center",
-                      fontFamily: "Nunito Sans",
-                      fontWeight: "600",
-                      fontSize: "16px",
-                      lineHeight: "25.2px",
-                    }}
-                  />
-                ))}
-              </Box>
-            </Collapse>
-          </Box>
 
           <Box
             sx={{
@@ -2005,4 +1746,4 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   );
 };
 
-export default FilterPopup;
+export default CompanyFilterPopup;

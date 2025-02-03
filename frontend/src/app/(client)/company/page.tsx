@@ -34,7 +34,6 @@ interface FetchDataParams {
     sortOrder?: 'asc' | 'desc';
     page: number;
     rowsPerPage: number;
-    activeFilter: string;
     appliedDates: { start: Date | null; end: Date | null };
 }
 
@@ -70,6 +69,8 @@ const Leads: React.FC = () => {
     const [openDrawer, setOpenDrawer] = React.useState(false);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [selectedIndustry, setSelectedIndustry] = React.useState<string | null>(null);
+    const [industry, setIndustry] = React.useState<string[]>([]);
+
 
     const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, industry: string) => {
         setSelectedIndustry(industry);
@@ -172,7 +173,7 @@ const Leads: React.FC = () => {
     };
 
 
-    const fetchData = async ({ sortBy, sortOrder, page, rowsPerPage, activeFilter, appliedDates }: FetchDataParams) => {
+    const fetchData = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
         try {
             setIsLoading(true);
             const accessToken = localStorage.getItem("token");
@@ -180,140 +181,60 @@ const Leads: React.FC = () => {
                 router.push('/signin');
                 return;
             }
-
-
-            // Processing "Date Calendly"
+    
             const timezoneOffsetInHours = -new Date().getTimezoneOffset() / 60;
-            const startEpoch = appliedDates.start
-                ? Math.floor(new Date(appliedDates.start.toISOString()).getTime() / 1000)
-                : null;
-
-            const normalDate = startEpoch
-                ? new Date(startEpoch * 1000).toLocaleString('en-US', { timeZone: 'UTC' })
-                : null;
-
-            const normalDateSmr = startEpoch
-                ? new Date(startEpoch * 1000).toLocaleString('ru-RU', { timeZone: 'Europe/Samara' })
-                : null;
-
-
-            const endEpoch = appliedDates.end
-                ? Math.floor(new Date(appliedDates.end.toISOString()).getTime() / 1000)
-                : null;
-
             let url = `/company?page=${page + 1}&per_page=${rowsPerPage}&timezone_offset=${timezoneOffsetInHours}`;
-            if (startEpoch !== null && endEpoch !== null) {
-                url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
+    
+            // Обработка дат (From Date / To Date)
+            const fromDate = selectedFilters.find(filter => filter.label === 'From Date')?.value;
+            const toDate = selectedFilters.find(filter => filter.label === 'To Date')?.value;
+    
+            if (fromDate) {
+                const fromDateEpoch = Math.floor(new Date(fromDate).setHours(0, 0, 0, 0) / 1000);
+                url += `&from_date=${fromDateEpoch}`;
             }
+            if (toDate) {
+                const toDateEpoch = Math.floor(new Date(toDate).setHours(23, 59, 59, 999) / 1000);
+                url += `&to_date=${toDateEpoch}`;
+            }
+
+            // employee visits
+            const employeeVisits = selectedFilters.find(filter => filter.label === 'Employee Visits')?.value;
+            if (employeeVisits) {
+                url += `&employee_visits=${encodeURIComponent(employeeVisits)}`;
+            }
+    
+            // filter with checkbox or radio button
+            const processMultiFilter = (label: string, paramName: string) => {
+                const filter = selectedFilters.find(filter => filter.label === label)?.value;
+                if (filter) {
+                    url += `&${paramName}=${encodeURIComponent(filter.split(', ').join(','))}`;
+                }
+            };
+    
+            processMultiFilter('Regions', 'regions');
+            processMultiFilter('Number of Employees', 'employees_range');
+            processMultiFilter('Revenue', 'revenue_range');
+            processMultiFilter('Industry', 'industry');
+    
+            // search
+            const searchQuery = selectedFilters.find(filter => filter.label === 'Search')?.value;
+            if (searchQuery) {
+                url += `&search_query=${encodeURIComponent(searchQuery)}`;
+            }
+    
+            // sort
             if (sortBy) {
                 url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
             }
-
-
-            // Processing "Visitor Type"
-            if (selectedFilters.some(filter => filter.label === 'Visitor Type')) {
-                const status = selectedFilters.find(filter => filter.label === 'Visitor Type')?.value.split(', ') || [];
-                if (status.length > 0) {
-                    const formattedStatus = status.map(status => status.toLowerCase().replace(/\s+/g, '_'));
-                    url += `&behavior_type=${encodeURIComponent(formattedStatus.join(','))}`;
-                }
-            }
-
-
-            // Processing "Regions"
-            if (selectedFilters.some(filter => filter.label === 'Regions')) {
-                const regions = selectedFilters.find(filter => filter.label === 'Regions')?.value.split(', ') || [];
-                if (regions.length > 0) {
-                    url += `&regions=${encodeURIComponent(regions.join(','))}`;
-                }
-            }
-
-            // Processing "From Date"
-            if (selectedFilters.some(filter => filter.label === 'From Date')) {
-                const fromDate = selectedFilters.find(filter => filter.label === 'From Date')?.value || '';
-                if (fromDate) {
-                    const fromDateUtc = new Date(fromDate);
-                    fromDateUtc.setHours(0, 0, 0, 0);
-                    const fromDateEpoch = Math.floor(fromDateUtc.getTime() / 1000);
-                    url += `&from_date=${fromDateEpoch}`;
-                }
-            }
-
-            // Processing "To Date"
-            if (selectedFilters.some(filter => filter.label === 'To Date')) {
-                const toDate = selectedFilters.find(filter => filter.label === 'To Date')?.value || '';
-                if (toDate) {
-                    const toDateUtc = new Date(toDate);
-                    toDateUtc.setHours(23, 59, 59, 999);
-                    const toDateEpoch = Math.floor(toDateUtc.getTime() / 1000);
-                    url += `&to_date=${toDateEpoch}`;
-                }
-            }
-
-
-            // Processing "Lead Status"
-            if (selectedFilters.some(filter => filter.label === 'Lead Status')) {
-                const funnels = selectedFilters.find(filter => filter.label === 'Lead Status')?.value.split(', ') || [];
-                if (funnels.length > 0) {
-                    const formattedFunnels = funnels.map(funnel => funnel.toLowerCase().replace(/\s+/g, '_'));
-                    url += `&status=${encodeURIComponent(formattedFunnels.join(','))}`;
-                }
-            }
-
-            // Search string processing
-            if (selectedFilters.some(filter => filter.label === 'Search')) {
-                const searchQuery = selectedFilters.find(filter => filter.label === 'Search')?.value || '';
-                if (searchQuery) {
-                    url += `&search_query=${encodeURIComponent(searchQuery)}`;
-                }
-            }
-
-            // Add time filters if provided
-            if (selectedFilters.some(filter => filter.label === 'From Time')) {
-                const fromTime = selectedFilters.find(filter => filter.label === 'From Time')?.value || '';
-                if (fromTime) {
-                    url += `&from_time=${encodeURIComponent(fromTime)}`;
-                }
-            }
-            if (selectedFilters.some(filter => filter.label === 'To Time')) {
-                const toTime = selectedFilters.find(filter => filter.label === 'To Time')?.value || '';
-                if (toTime) {
-                    url += `&to_time=${encodeURIComponent(toTime)}`;
-                }
-            }
-
-            // Processing "Time Spent"
-            if (selectedFilters.some(filter => filter.label === 'Time Spent')) {
-                const timeSpent = selectedFilters.find(filter => filter.label === 'Time Spent')?.value.split(', ') || [];
-                if (timeSpent.length > 0) {
-                    const formattedTimeSpent = timeSpent.map(value => value.replace(/\s+/g, '_'));
-                    url += `&average_time_sec=${encodeURIComponent(formattedTimeSpent.join(','))}`;
-                }
-            }
-
-            // Processing "Recurring Visits"
-            if (selectedFilters.some(filter => filter.label === 'Recurring Visits')) {
-                const recurringVisits = selectedFilters.find(filter => filter.label === 'Recurring Visits')?.value.split(', ') || [];
-                if (recurringVisits.length > 0) {
-                    const formattedRecurringVisits = recurringVisits.map(value => value.replace(/\s+/g, '_'));
-                    url += `&recurring_visits=${encodeURIComponent(formattedRecurringVisits.join(','))}`;
-                }
-            }
-
-            // Processing "Page Visits"
-            if (selectedFilters.some(filter => filter.label === 'Page Visits')) {
-                const pageVisits = selectedFilters.find(filter => filter.label === 'Page Visits')?.value.split(', ') || [];
-                if (pageVisits.length > 0) {
-                    const formattedPageVisits = pageVisits.map(value => value.replace(/\s+/g, '_'));
-                    url += `&page_visits=${encodeURIComponent(formattedPageVisits.join(','))}`;
-                }
-            }
-
+    
             const response = await axiosInstance.get(url);
             const [leads, count] = response.data;
+    
             setData(Array.isArray(leads) ? leads : []);
             setCount(count || 0);
             setStatus(response.data.status);
+    
             const options = [15, 30, 50, 100, 200, 500];
             let RowsPerPageOptions = options.filter(option => option <= count);
             if (RowsPerPageOptions.length < options.length) {
@@ -333,18 +254,18 @@ const Leads: React.FC = () => {
                     setShowSlider(false);
                 }
             }
-             else {
-            }
             setIsLoading(false);
         } finally {
             setIsLoading(false);
         }
     };
+    
 
     const handleIndustry = async () => {
         setLoading(true);
         try {
             const response = await axiosInstance.get('/company/industry')
+            setIndustry(Array.isArray(response.data) ? response.data : []);
         }
         catch{
         }
@@ -353,24 +274,69 @@ const Leads: React.FC = () => {
         }
     }
 
+    interface FilterParams {
+        from_date: number | null;
+        to_date: number | null;
+        regions: string[];
+        searchQuery: string | null;
+        selectedPageVisit: string | null;
+        checkedFiltersNumberOfEmployees: {
+            "1-10": boolean,
+            "11-20": boolean,
+            "21-50": boolean,
+            "51-100": boolean,
+            "101-200": boolean,
+            "201-500": boolean,
+            "501-1000": boolean,
+            "1001-2000": boolean,
+            "2001-5000": boolean,
+            "5001-10000": boolean,
+            "10001+": boolean,
+            "unknown": boolean,
+        };
+        checkedFiltersRevenue: {
+        "Below 10k": boolean,
+        "$10k - $50k": boolean,
+        "$50k - $100k": boolean,
+        "$100k - $500k": boolean,
+        "$500k - $1M": boolean,
+        "$1M - $5M": boolean,
+        "$5M - $10M": boolean,
+        "$10M - $50M": boolean,
+        "$50M - $100M": boolean,
+        "$100M - $500M": boolean,
+        "$500M - $1B": boolean,
+        "$1 Billion +": boolean,
+        "unknown": boolean,
+        }
+        checkedFilters: {
+            lastWeek: boolean;
+            last30Days: boolean;
+            last6Months: boolean;
+            allTime: boolean;
+        };
+        industry: Record<string, boolean>; 
+    }
+
     useEffect(() => {
-        handleIndustry()
+        handleIndustry();
+    }, [])
+
+    useEffect(() => {
         fetchData({
             sortBy: orderBy,
             sortOrder: order,
             page,
             rowsPerPage,
-            activeFilter,
             appliedDates: {
                 start: appliedDates.start,
                 end: appliedDates.end,
             }
         });
-    }, [appliedDates, orderBy, order, page, rowsPerPage, activeFilter]);
+    }, [appliedDates, orderBy, order, page, rowsPerPage, selectedFilters]);
 
     const handleDateLabelChange = (label: string) => {
     };
-
 
     if (isLoading) {
         return <CustomizedProgressBar />;
@@ -392,67 +358,6 @@ const Leads: React.FC = () => {
             width: 'auto',
             height: 'auto',
             maxWidth: '100%'
-        }
-    };
-
-    const getStatusStyle = (behavior_type: any) => {
-        switch (behavior_type) {
-            case false:
-                return {
-                    background: 'rgba(235, 243, 254, 1)',
-                    color: 'rgba(20, 110, 246, 1)',
-                };
-            case true:
-                return {
-                    background: 'rgba(244, 252, 238, 1)',
-                    color: 'rgba(43, 91, 0, 1)',
-                };
-            case "viewed_product":
-                return {
-                    background: 'rgba(254, 238, 236, 1)',
-                    color: 'rgba(244, 87, 69, 1)',
-                };
-            case 'visitor':
-                return {
-                    background: 'rgba(254, 243, 205, 1)',
-                    color: 'rgba(101, 79, 0, 1)',
-                };
-            case 'converted_sales':
-                return {
-                    background: 'rgba(235, 243, 254, 1)',
-                    color: 'rgba(20, 110, 246, 1)',
-                };
-            case 'product_added_to_cart':
-                return {
-                    background: 'rgba(241, 241, 249, 1)',
-                    color: 'rgba(80, 82, 178, 1)',
-                };
-            default:
-                return {
-                    background: 'transparent',
-                    color: 'inherit',
-                };
-        }
-    };
-
-    const formatFunnelText = (text: boolean) => {
-        if (text === false) {
-            return 'New';
-        }
-        if (text === true) {
-            return 'Returning';
-        }
-        if (text === 'visitor') {
-            return "Visitor"
-        }
-        if (text === 'viewed_product') {
-            return "View Product"
-        }
-        if (text === 'product_added_to_cart') {
-            return "Abandoned cart"
-        }
-        if (text === 'converted_sales') {
-            return "Converted sales"
         }
     };
 
@@ -589,91 +494,55 @@ const Leads: React.FC = () => {
         return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
     };
 
-    interface FilterParams {
-        from_date: number | null;
-        to_date: number | null;
-        selectedStatus: string[];
-        regions: string[];
-        emails: string[];
-        selectedFunnels: string[];
-        searchQuery: string | null;
-        checkedFilters: {
-            lastWeek: boolean;
-            last30Days: boolean;
-            last6Months: boolean;
-            allTime: boolean;
-        };
-        checkedFiltersPageVisits: {
-            page: boolean;
-            two_page: boolean;
-            three_page: boolean;
-            more_three: boolean;
-        };
-        recurringVisits: any[];
-    }
-    // const [filterParams, setFilterParams] = useState<FilterParams>({
-    //     from_date: null,
-    //     to_date: null,
-    //     from_time: '',
-    //     to_time: '',
-    //     selectedStatus: [],
-    //     regions: [],
-    //     emails: [],
-    //     selectedFunnels: [],
-    //     searchQuery: '',
-    //     checkedFilters: { lastWeek: false, last30Days: false, last6Months: false, allTime: false },
-    //     checkedFiltersPageVisits: { page: false, two_page: false, three_page: false, more_three: false },
-    //     checkedFiltersTime: { morning: false, evening: false, afternoon: false, all_day: false },
-    //     checkedFiltersTimeSpent: { under_10: false, over_10: false, over_30: false, over_60: false },
-    //     recurringVisits: [],
-    // });
-
 
 
     const handleApplyFilters = (filters: FilterParams) => {
         const newSelectedFilters: { label: string; value: string }[] = [];
+        console.log(filters)
 
         const dateFormat = 'YYYY-MM-DD';
+
+        const getSelectedValues = (obj: Record<string, boolean>): string => {
+            return Object.entries(obj)
+                .filter(([_, value]) => value)
+                .map(([key]) => key)
+                .join(', ');
+        };
 
         // Map of filter conditions to their labels
         const filterMappings: { condition: boolean | string | string[] | number | null, label: string, value: string | ((f: any) => string) }[] = [
             { condition: filters.from_date, label: 'From Date', value: () => dayjs.unix(filters.from_date!).format(dateFormat) },
             { condition: filters.to_date, label: 'To Date', value: () => dayjs.unix(filters.to_date!).format(dateFormat) },
-            { condition: filters.selectedStatus?.length, label: 'Visitor Type', value: () => filters.selectedStatus!.join(', ') },
-            { condition: filters.selectedFunnels?.length, label: 'Lead Status', value: () => filters.selectedFunnels!.join(', ') },
             { condition: filters.regions?.length, label: 'Regions', value: () => filters.regions!.join(', ') },
-            { condition: filters.recurringVisits?.length, label: 'Recurring Visits', value: () => filters.recurringVisits!.join(', ') },
             { condition: filters.searchQuery?.trim() !== '', label: 'Search', value: filters.searchQuery || '' },
+            { condition: filters.selectedPageVisit?.trim() !== '', label: 'Employee Visits', value: filters.selectedPageVisit || '' },
+            { 
+                condition: filters.checkedFiltersNumberOfEmployees && Object.values(filters.checkedFiltersNumberOfEmployees).some(Boolean), 
+                label: 'Number of Employees', 
+                value: () => getSelectedValues(filters.checkedFiltersNumberOfEmployees!) 
+            },
+            { 
+                condition: filters.checkedFiltersRevenue && Object.values(filters.checkedFiltersRevenue).some(Boolean), 
+                label: 'Revenue', 
+                value: () => getSelectedValues(filters.checkedFiltersRevenue!) 
+            },
+            { 
+                condition: filters.industry && Object.values(filters.industry).some(Boolean), 
+                label: 'Industry', 
+                value: () => getSelectedValues(filters.industry!) 
+            },
+
+
         ];
 
-        const pageVisitFilters = [
-            filters.checkedFiltersPageVisits.page && '1 page',
-            filters.checkedFiltersPageVisits.two_page && '2 pages',
-            filters.checkedFiltersPageVisits.three_page && '3 pages',
-            filters.checkedFiltersPageVisits.more_three && 'more than 3 pages',
-        ].filter(Boolean).join(', ');
 
-        if (pageVisitFilters) {
-            filterMappings.push({
-                condition: true,
-                label: 'Page Visits',
-                value: pageVisitFilters,
-            });
-        }
-
-
-
-
-        // Iterate over the mappings to populate newSelectedFilters
         filterMappings.forEach(({ condition, label, value }) => {
             if (condition) {
                 newSelectedFilters.push({ label, value: typeof value === 'function' ? value(filters) : value });
             }
         });
 
-
         setSelectedFilters(newSelectedFilters);
-        setActiveFilter(filters.selectedStatus?.[0] || '');
     };
 
     const capitalizeCity = (city: string) => {
@@ -717,7 +586,7 @@ const Leads: React.FC = () => {
                         }}>
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
                             <Typography className='first-sub-title'>
-                                Company list {count_companies ? `(${count_companies})` : ''}
+                                Company list {data.length === 0 ? '' : `(${count_companies})`}
                             </Typography>
                             <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
                         </Box>
@@ -1067,7 +936,7 @@ const Leads: React.FC = () => {
                                                                 e.stopPropagation();
                                                                 handleOpenPopup(row);
 
-                                                            }}>{row.name || '--'}</TableCell>
+                                                            }}>{row.name ? truncateText(row.name, 20) : '--'}</TableCell>
 
                                                         {/* Company phone Column */}
                                                         <TableCell sx={{ ...companyStyles.table_array, position: 'relative' }}>
@@ -1078,8 +947,8 @@ const Leads: React.FC = () => {
                                                         <TableCell sx={{ ...companyStyles.table_array, position: 'relative', color: row.linkedin_url ? 'rgba(80, 82, 178, 1)' : '', cursor: row.linkedin_url ? 'pointer' : 'default' }} onClick={() => { window.open(`https://${row.linkedin_url}`, '_blank') }}>
                                                             {row.linkedin_url ? (
                                                                 <>
-                                                                    <Image src="/linkedIn.svg" alt="linkedIn" width={16} height={16} style={{ marginRight: '2px' }} />/
-                                                                    {row.linkedin_url}
+                                                                    <Image src="/linkedIn.svg" alt="linkedIn" width={16} height={16} style={{ marginRight: '2px' }} />
+                                                                    /{truncateText(row.linkedin_url.replace('linkedin.com/company/', ''), 20)}
                                                                 </>
                                                             ) : (
                                                                 '--'
@@ -1202,7 +1071,7 @@ const Leads: React.FC = () => {
                     <PopupDetails open={openPopup}
                         onClose={handleClosePopup}
                         rowData={popupData} />
-                    <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose} onApply={handleApplyFilters} />
+                    <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose} onApply={handleApplyFilters} industry={industry || []} />
                     <CalendarPopup
                         anchorEl={calendarAnchorEl}
                         open={isCalendarOpen}
