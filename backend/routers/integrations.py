@@ -7,7 +7,7 @@ from fastapi.responses import RedirectResponse
 from enums import UserAuthorizationStatus
 from persistence.settings_persistence import SettingsPersistence
 from dependencies import get_integration_service, IntegrationService, IntegrationsPresistence, \
-            get_user_integrations_presistence, check_user_authorization, check_domain, \
+            get_user_integrations_presistence, check_user_authorization, check_domain, check_user_authorization_without_pixel, \
             check_pixel_install_domain, check_user_authentication, get_user_persistence_service, \
             UserPersistence, get_user_domain_persistence, UserDomainsPersistence, check_api_key, get_settings_persistence
 from schemas.integrations.integrations import *
@@ -64,7 +64,7 @@ async def get_credential_service(platform: str,
 @router.post('/', status_code=200)
 async def create_integration(credentials: IntegrationCredentials, service_name: str = Query(...),
                              integration_service: IntegrationService = Depends(get_integration_service),
-                             user=Depends(check_user_authentication), domain=Depends(check_domain)):
+                             user=Depends(check_user_authorization_without_pixel), domain=Depends(check_domain)):
     if user.get('team_member'):
         team_member = user.get('team_member')
         if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value,
@@ -73,8 +73,7 @@ async def create_integration(credentials: IntegrationCredentials, service_name: 
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins and standard only."
             )
-    if not credentials.pixel_install and not domain.is_pixel_installed:
-        raise HTTPException(status_code=403, detail={'status': UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED.value})
+
     with integration_service as service:
         service = getattr(service, service_name.lower())
         if not service:

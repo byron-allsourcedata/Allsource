@@ -70,6 +70,7 @@ const AccountSetup = () => {
   const [shopifyPopupOpen, setShopifyPopupOpen] = useState(false)
   const [mailChimpPopupOpen, setMailchimpPopupOpen] = useState(false)
   const [attentivePopupOpen, setAttentivePopupOpen] = useState(false)
+  const [slackPopupOpen, setSlackPopupOpen] = useState(false)
   const [klaviyoPopupOpen, setKlaviyoPopupOpen] = useState(false)
   const [zapierPopupOpen, setZapierPopupOpen] = useState(false)
   const [omnisendPopupOpen, setOmnisendPopupOpen] = useState(false)
@@ -564,7 +565,8 @@ const AccountSetup = () => {
     { label: "Meta", src: "meta-icon.svg", setState: setMetaPopupOpen },
     { label: "Omnisend", src: "omnisend_icon_black.svg", setState: setOmnisendPopupOpen },
     { label: "Sendlane", src: "sendlane-icon.svg", setState: setSendlanePopupOpen},
-    { label: "Zapier", src: "zapier-icon.svg", setState: setZapierPopupOpen}
+    { label: "Slack", src: "slack-icon.svg", setState: setSlackPopupOpen},
+    { label: "Zapier", src: "zapier-icon.svg", setState: setZapierPopupOpen},
   ];
   const roles = [
     { label: "Digital Marketer" },
@@ -662,6 +664,7 @@ const AccountSetup = () => {
         return [...prevIntegrations, newIntegration];
       }
     });
+    endSetup()
   };
 
   const handleInstallShopify = async () => {
@@ -742,7 +745,7 @@ const AccountSetup = () => {
 }
 
   return (
-    <Box sx={{ ...styles.pageContainer }}>
+    <Box sx={{ ...styles.pageContainer, overflowX: "hidden" }}>
       <Box sx={styles.headers}>
         <Box
           sx={{
@@ -1075,7 +1078,7 @@ const AccountSetup = () => {
           </MenuItem>
         </Menu>
       </Box>
-      <Box sx={{...styles.formContainer, overflowX: "hidden"}}>
+      <Box sx={{...styles.formContainer}}>
         <Box sx={styles.form}>
           <Box
             sx={{
@@ -2018,13 +2021,13 @@ const AccountSetup = () => {
                       onSave={handleSaveSettings}
                       boxShadow="rgba(0, 0, 0, 0.1)"
                     />
-                  {/* <KlaviyoIntegrationPopup
+                  <KlaviyoIntegrationPopup
                     open={klaviyoPopupOpen}
                     handleClose={() => setKlaviyoPopupOpen(false)}
                     onSave={handleSaveSettings}
                     boxShadow="rgba(0, 0, 0, 0.1)"
                     initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'klaviyo')?.access_token}
-                  /> */}
+                  />
                   <AttentiveIntegrationPopup
                     open={attentivePopupOpen}
                     handleClose={() => setAttentivePopupOpen(false)}
@@ -2056,18 +2059,10 @@ const AccountSetup = () => {
                     boxShadow="rgba(0, 0, 0, 0.1)"
                     initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'sendlane')?.access_token}
                     />
-                  <ShopifySettings
-                    open={shopifyPopupOpen}
-                    handleClose={() => setShopifyPopupOpen(false)}
-                    onSave={handleSaveSettings}
-                    initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'shopify')?.access_token}
-                    initShopDomain={integrationsCredentials?.find(integration => integration.service_name === 'shopify')?.shop_domain}
-                  />
-                    <BCommerceConnect
-                      open={bigcommercePopupOpen}
-                      onClose={() => setBigcommercePopupOpen(false)}
-                      initShopHash={integrationsCredentials?.find(integration => integration.service_name === 'big_commerce')?.shop_domain}
-                      error_message={integrationsCredentials?.find(integration => integration.service_name === 'big_commerce')?.error_message}
+                  <SlackConnectPopup 
+                    open={slackPopupOpen} 
+                    handlePopupClose={() => setSlackPopupOpen(false)} 
+                    boxShadow="rgba(0, 0, 0, 0.1)"
                     />
 
                   <Button
