@@ -70,6 +70,7 @@ const AccountSetup = () => {
   const [shopifyPopupOpen, setShopifyPopupOpen] = useState(false)
   const [mailChimpPopupOpen, setMailchimpPopupOpen] = useState(false)
   const [attentivePopupOpen, setAttentivePopupOpen] = useState(false)
+  const [slackPopupOpen, setSlackPopupOpen] = useState(false)
   const [klaviyoPopupOpen, setKlaviyoPopupOpen] = useState(false)
   const [zapierPopupOpen, setZapierPopupOpen] = useState(false)
   const [omnisendPopupOpen, setOmnisendPopupOpen] = useState(false)
@@ -559,12 +560,13 @@ const AccountSetup = () => {
     { label: "Bigcommerce", src: "bigcommerce-icon.svg", setState: setBigcommerceInstall, action: () => { } },
   ];
   const integrations = [
-    { label: "Attentive", src: "attentive.svg", setState: setAttentivePopupOpen },
+    // { label: "Attentive", src: "attentive.svg", setState: setAttentivePopupOpen },
     { label: "Klaviyo", src: "klaviyo.svg", setState: setKlaviyoPopupOpen },
     { label: "Mailchimp", src: "mailchimp-icon.svg", setState: setMailchimpPopupOpen },
     { label: "Meta", src: "meta-icon.svg", setState: setMetaPopupOpen },
     { label: "Omnisend", src: "omnisend_icon_black.svg", setState: setOmnisendPopupOpen },
     { label: "Sendlane", src: "sendlane-icon.svg", setState: setSendlanePopupOpen},
+    { label: "Slack", src: "slack-icon.svg", setState: setSlackPopupOpen},
     // { label: "Shopify", src: "install_cms1.svg", setState: setShopifyPopupOpen},
     { label: "Zapier", src: "zapier-icon.svg", setState: setZapierPopupOpen},
     // { label: "Bigcommerce", src: "bigcommerce-icon.svg", setState: setBigcommercePopupOpen},
@@ -2028,13 +2030,13 @@ const AccountSetup = () => {
                     boxShadow="rgba(0, 0, 0, 0.1)"
                     initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'klaviyo')?.access_token}
                   />
-                  <AttentiveIntegrationPopup
+                  {/* <AttentiveIntegrationPopup
                     open={attentivePopupOpen}
                     handleClose={() => setAttentivePopupOpen(false)}
                     onSave={handleSaveSettings}
                     boxShadow="rgba(0, 0, 0, 0.1)"
                     initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'attentive')?.access_token}
-                  />
+                  /> */}
                   <ZapierConnectPopup 
                     open={zapierPopupOpen} 
                     boxShadow="rgba(0, 0, 0, 0.1)"
@@ -2059,19 +2061,11 @@ const AccountSetup = () => {
                     boxShadow="rgba(0, 0, 0, 0.1)"
                     initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'sendlane')?.access_token}
                     />
-                  <ShopifySettings
-                    open={shopifyPopupOpen}
-                    handleClose={() => setShopifyPopupOpen(false)}
-                    onSave={handleSaveSettings}
-                    initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'shopify')?.access_token}
-                    initShopDomain={integrationsCredentials?.find(integration => integration.service_name === 'shopify')?.shop_domain}
+                  <SlackConnectPopup 
+                    open={slackPopupOpen} 
+                    handlePopupClose={() => setSlackPopupOpen(false)} 
+                    boxShadow="rgba(0, 0, 0, 0.1)" 
                   />
-                    <BCommerceConnect
-                      open={bigcommercePopupOpen}
-                      onClose={() => setBigcommercePopupOpen(false)}
-                      initShopHash={integrationsCredentials?.find(integration => integration.service_name === 'big_commerce')?.shop_domain}
-                      error_message={integrationsCredentials?.find(integration => integration.service_name === 'big_commerce')?.error_message}
-                    />
 
                   <Button
                     className='hyperlink-red'
