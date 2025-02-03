@@ -101,7 +101,7 @@ const AccountSetup = () => {
     service_name: string;
     shop_domain: string;
     ad_account_id: string;
-    is_with_suppresions: boolean;
+    is_with_suppresions?: boolean;
     error_message?: string
     is_failed: boolean
   }
@@ -563,9 +563,9 @@ const AccountSetup = () => {
     { label: "Meta", src: "meta-icon.svg", setState: setMetaPopupOpen },
     { label: "Omnisend", src: "omnisend_icon_black.svg", setState: setOmnisendPopupOpen },
     { label: "Sendlane", src: "sendlane-icon.svg", setState: setSendlanePopupOpen},
-    { label: "Shopify", src: "install_cms1.svg", setState: setShopifyPopupOpen},
+    // { label: "Shopify", src: "install_cms1.svg", setState: setShopifyPopupOpen},
     { label: "Zapier", src: "zapier-icon.svg", setState: setZapierPopupOpen},
-    { label: "Bigcommerce", src: "bigcommerce-icon.svg", setState: setBigcommercePopupOpen},
+    // { label: "Bigcommerce", src: "bigcommerce-icon.svg", setState: setBigcommercePopupOpen},
   ];
   const roles = [
     { label: "Digital Marketer" },
@@ -2019,13 +2019,13 @@ const AccountSetup = () => {
                       onSave={handleSaveSettings}
                       boxShadow="rgba(0, 0, 0, 0.1)"
                     />
-                  {/* <KlaviyoIntegrationPopup
+                  <KlaviyoIntegrationPopup
                     open={klaviyoPopupOpen}
                     handleClose={() => setKlaviyoPopupOpen(false)}
                     onSave={handleSaveSettings}
                     boxShadow="rgba(0, 0, 0, 0.1)"
                     initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'klaviyo')?.access_token}
-                  /> */}
+                  />
                   <AttentiveIntegrationPopup
                     open={attentivePopupOpen}
                     handleClose={() => setAttentivePopupOpen(false)}
