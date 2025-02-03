@@ -345,20 +345,13 @@ const Leads: React.FC = () => {
         setLoading(true);
         try {
             const response = await axiosInstance.get('/company/industry')
-            console.log(response) 
         }
         catch{
-
         }
         finally{ 
             setLoading(false)
         }
     }
-
-
-
-
-
 
     useEffect(() => {
         handleIndustry()
@@ -694,36 +687,7 @@ const Leads: React.FC = () => {
     return (
         <>
             {loading && (
-                <Box
-                    sx={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: 'rgba(255, 255, 255, 0.8)',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        zIndex: 1000,
-                        overflow: 'hidden'
-                    }}
-                >
-                    <Box
-                        sx={{
-                            border: '8px solid #f3f3f3',
-                            borderTop: '8px solid #3498db',
-                            borderRadius: '50%',
-                            width: '40px',
-                            height: '40px',
-                            animation: 'spin 1s linear infinite',
-                            '@keyframes spin': {
-                                '0%': { transform: 'rotate(0deg)' },
-                                '100%': { transform: 'rotate(360deg)' },
-                            },
-                        }}
-                    />
-                </Box>
+                <CustomizedProgressBar/>
             )}
             <Box sx={{
                 display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
@@ -1140,7 +1104,7 @@ const Leads: React.FC = () => {
 
                                                         {/* Company revenue  Column */}
                                                         <TableCell
-                                                            sx={{ ...companyStyles.table_column, position: 'relative' }}
+                                                            sx={{ ...companyStyles.table_array, position: 'relative' }}
                                                         >
                                                             {row.company_revenue || '--'}
                                                         </TableCell>
@@ -1148,7 +1112,7 @@ const Leads: React.FC = () => {
                                                         {/* Company employee count  Column */}
                                                         <TableCell
                                                             sx={{
-                                                                ...companyStyles.table_column, position: 'relative', color: row.company_employee_count ? 'rgba(80, 82, 178, 1)' : '',
+                                                                ...companyStyles.table_array, position: 'relative', color: row.company_employee_count ? 'rgba(80, 82, 178, 1)' : '',
                                                                 cursor: row.employee_count ? 'pointer' : 'default'
                                                             }}
                                                         >
@@ -1157,7 +1121,7 @@ const Leads: React.FC = () => {
 
                                                         {/* Company location  Column */}
                                                         <TableCell
-                                                            sx={{ ...companyStyles.table_column, position: 'relative' }}
+                                                            sx={{ ...companyStyles.table_array, position: 'relative' }}
                                                         >
                                                             {(row.city || row.state)
                                                                 ? [capitalizeCity(row.city), row.state].filter(Boolean).join(', ')
