@@ -62,7 +62,7 @@ const StatCard: React.FC<StatCardProps> = ({ value, title, icon, imageUrl, bgCol
 const TotalLeadsCard: React.FC<{ value: number }> = ({ value }) => (
   <StatCard
     value={value}
-    title="Total Contacts Collected"
+    title="Total Leads"
     icon={<MarkEmailReadOutlinedIcon sx={{ color: 'rgba(244, 87, 69, 1)', fontSize: '36px' }} />}
     textColor="rgba(74, 74, 74, 1)"
     borderColor="rgba(244, 87, 69, 0.2)"
@@ -72,18 +72,18 @@ const TotalLeadsCard: React.FC<{ value: number }> = ({ value }) => (
 const NewCustomersCard: React.FC<{ value: number }> = ({ value }) => (
   <StatCard
     value={value}
-    title="Total Visitors"
-    imageUrl='/PersonMarked.svg'
+    title="New Leads"
+    imageUrl='/new_leads.svg'
     textColor="rgba(74, 74, 74, 1)"
-    borderColor="rgba(80, 82, 178, 0.2)"
+    borderColor="rgba(80, 82, 178, 0.1)"
   />
 );
 
 const DemographicsCard: React.FC<{ value: number }> = ({ value }) => (
   <StatCard
     value={value}
-    title="View Products"
-    imageUrl='/PersonEdit.svg'
+    title="Returning Visitors"
+    imageUrl='/returning_visitors.svg'
     textColor="rgba(74, 74, 74, 1)"
     borderColor="rgba(252, 225, 130, 0.2)"
   />
@@ -92,40 +92,27 @@ const DemographicsCard: React.FC<{ value: number }> = ({ value }) => (
 const AbandonedCart: React.FC<{ value: number }> = ({ value }) => (
   <StatCard
     value={value}
-    title="Abandoned Cart"
-    imageUrl='/cart.svg'
+    title="Page Views"
+    imageUrl='/eye_svgrepo.com.svg'
     textColor="rgba(74, 74, 74, 1)"
     borderColor="rgba(202, 239, 169, 0.2)"
   />
 );
 
-const SalesOverTimeCard: React.FC<{ value: number }> = ({ value }) => (
-  <StatCard
-    value={value}
-    title="Converted Sale"
-    imageUrl='/converted-sales.svg'
-    textColor="rgba(74, 74, 74, 1)"
-    borderColor="rgba(234, 242, 251, 1)"
-  />
-);
-
-const Cards = ({ values }: { values: { totalContact: number, totalVisitors: number, viewProducts: number, totalAbandonedCart: number, totalConvertedSale: number } }) => {
+const Cards = ({ values }: { values: { total_contacts_collected: number, total_new_leads: number, total_returning_visitors: number, total_page_views: number } }) => {
     return (
         <Grid container spacing={{xs: 1, sm: 2, md: 2, lg: 2}}>
-          <Grid item xs={12} md={2.4}>
-            <TotalLeadsCard value={values.totalContact} />
+          <Grid item xs={12} md={3}>
+            <TotalLeadsCard value={values.total_contacts_collected} />
           </Grid>
-          <Grid item xs={12} md={2.4}>
-            <NewCustomersCard value={values.totalVisitors} />
+          <Grid item xs={12} md={3}>
+            <NewCustomersCard value={values.total_new_leads} />
           </Grid>
-          <Grid item xs={12} md={2.4}>
-            <DemographicsCard value={values.viewProducts} />
+          <Grid item xs={12} md={3}>
+            <DemographicsCard value={values.total_returning_visitors} />
           </Grid>
-          <Grid item xs={12} md={2.4}>
-            <AbandonedCart value={values.totalAbandonedCart} />
-          </Grid>
-          <Grid item xs={12} md={2.4}>
-            <SalesOverTimeCard value={values.totalConvertedSale} />
+          <Grid item xs={12} md={3}>
+            <AbandonedCart value={values.total_page_views} />
           </Grid>
         </Grid>
       );

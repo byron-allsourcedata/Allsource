@@ -4,19 +4,17 @@ from pydantic import BaseModel
 
 
 class DailyDataItem(BaseModel):
-    total_leads: int
-    visitors: int
-    view_products: int
-    abandoned_cart: int
-    converted_sale: int
+    contacts_collected: int
+    new_leads: int
+    returning_visitors: int
+    page_views: int
 
 
 class TotalCounts(BaseModel):
     total_contacts_collected: int
-    total_visitors: int
-    total_view_products: int
-    total_abandoned_cart: int
-    total_converted_sale: int
+    total_new_leads: int
+    total_returning_visitors: int
+    total_page_views: int
 
 
 class ContactResponse(BaseModel):

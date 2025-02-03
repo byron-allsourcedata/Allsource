@@ -16,7 +16,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
-from utils import normalize_url
+from utils import normalize_url, get_url_params_list
 from enums import NotificationTitles, PlanAlias
 from persistence.leads_persistence import LeadsPersistence
 from persistence.notification import NotificationPersistence
@@ -611,8 +611,8 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
                 new_record = LeadsUsersAddedToCart(lead_user_id=lead_user.id, added_at=requested_at)
                 session.add(new_record)
     lead_request = insert(LeadsRequests).values(
-        lead_id=lead_user.id,
-        page=page, requested_at=requested_at, visit_id=lead_visit_id
+        lead_id=lead_user.id, parameters = get_url_params_list(page),
+        page=normalize_url(page), requested_at=requested_at, visit_id=lead_visit_id
     ).on_conflict_do_nothing()
     session.execute(lead_request)
     session.flush()

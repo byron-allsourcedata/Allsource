@@ -3,7 +3,7 @@ import math
 from datetime import datetime, timedelta
 
 import pytz
-from sqlalchemy import and_, or_, desc, asc, Integer, distinct
+from sqlalchemy import and_, or_, desc, asc, Integer, distinct, select
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql import func
 from utils import format_phone_number
@@ -386,30 +386,40 @@ class LeadsPersistence:
         return leads, count, max_page, states
 
     def get_contact_data(self, domain_id, from_date, to_date):
+        start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
+        end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
+        
+        LeadUserAlias = aliased(LeadUser)
+        
+        returning_users_subquery = (
+            select(LeadsVisits.lead_id)
+            .join(LeadUserAlias, LeadUserAlias.id == LeadsVisits.lead_id)
+            .where(
+                LeadUserAlias.domain_id == domain_id,
+                LeadsVisits.start_date < start_date
+            )
+            .intersect(
+                select(LeadsVisits.lead_id)
+                .where(
+                    LeadsVisits.start_date.between(start_date, end_date)
+                )
+            )
+            .scalar_subquery()
+        )
+        
         query = (
             self.db.query(
                 LeadsVisits.start_date,
-                LeadUser.behavior_type,
-                LeadUser.is_converted_sales,
-                func.count(LeadUser.id).label('lead_count')
+                func.count().filter(LeadUser.created_at >= start_date).label('new_leads'),
+                func.count().filter(LeadUser.id.in_(returning_users_subquery)).label('returning_visitors'),
+                func.sum(LeadsVisits.pages_count).label('page_views')
             )
-            .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
-            .group_by(LeadsVisits.start_date, LeadUser.behavior_type, LeadUser.is_converted_sales)
-            .filter(LeadUser.domain_id == domain_id)
+            .join(LeadUser, LeadsVisits.lead_id == LeadUser.id)
+            .filter(LeadUser.domain_id == domain_id, LeadsVisits.start_date.between(start_date, end_date))
+            .group_by(LeadsVisits.start_date)
         )
-
-        if from_date and to_date:
-            start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
-            end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
-            query = query.filter(
-                and_(
-                    LeadsVisits.start_date >= start_date,
-                    LeadsVisits.start_date <= end_date
-                )
-            )
-
-        results = query.all()
-        return results
+        
+        return query.all()
 
     def get_lifetime_revenue(self, domain_id):
         total_revenue = (

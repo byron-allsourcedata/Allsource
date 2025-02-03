@@ -393,6 +393,7 @@ const Dashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showCharts, setShowCharts] = useState(false);
   const [hiddenrevenue, setHiddenRevenue] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
   const isCalendarOpen = Boolean(calendarAnchorEl);
   const [formattedDates, setFormattedDates] = useState<string>('');
@@ -427,14 +428,6 @@ const Dashboard: React.FC = () => {
   const handleCalendarClose = () => {
     setCalendarAnchorEl(null);
   };
-
-  const checkB2B = () => {
-    const storedMe = sessionStorage.getItem('me');
-    if (storedMe) {
-      const storedData = JSON.parse(storedMe);
-      setTypeBusiness(storedData.business_type)
-    }
-  }
 
   const handleDateChange = (dates: { start: Date | null; end: Date | null }) => {
     const { start, end } = dates;
@@ -508,16 +501,39 @@ const Dashboard: React.FC = () => {
   const [tabIndex, setTabIndex] = useState(0);
   useEffect(() => {
     const fetchData = async () => {
-      checkB2B()
-      if (typeBusiness == 'b2b') {
-        setTabIndex(0)
-      } else {
+      let business_type = 'b2b'
+      const storedMe = sessionStorage.getItem('me');
+      if (storedMe) {
+        const storedData = JSON.parse(storedMe);
+        business_type = storedData.business_type
+        setTypeBusiness(storedData.business_type)
+      }
+      if (business_type === 'b2b') {
         setTabIndex(1)
+      } else {
+        try {
+          setLoading(true)
+          const response = await axiosInstance.get('/dashboard/revenue');
+          if(!response.data) {
+            setHiddenRevenue(true)
+          }
+          if (!response?.data.total_counts || !response?.data.total_counts.total_revenue) {
+            setTabIndex(1)
+            return;
+          }
+        } catch (error) {}
+         finally {
+          setLoading(false)
+        }
       }
 
     };
     fetchData();
   }, []);
+
+  if (loading) {
+    return <CustomizedProgressBar />;
+}
 
   const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
     setTabIndex(newIndex);
@@ -610,84 +626,84 @@ const Dashboard: React.FC = () => {
                   </Button>
                 </Box>
               </Box>
-              {/* 
-              <Box sx={{
-                flexGrow: 1, display: 'flex', justifyContent: 'center', alignItems: 'start', '@media (max-width: 600px)': {
-                  width: '100%',
-                  mt: hasNotification ? 1 : 2
-                }
-              }}>
-                <Tabs
-                  value={tabIndex}
-                  onChange={handleTabChange}
-                  sx={{
-                    textTransform: 'none',
-                    minHeight: 0,
-                    alignItems: 'start',
-                    '& .MuiTabs-indicator': {
-                      backgroundColor: 'rgba(80, 82, 178, 1)',
-                      height: '1.4px',
-                    },
-                    "@media (max-width: 600px)": {
-                      border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px', width: '100%', '& .MuiTabs-indicator': {
-                        height: '0',
-                      },
-                    }
-                  }}
-                  aria-label="dashboard tabs"
-                >
-                  {!hiddenrevenue && 
-                  <Tab className="main-text"
+              {typeBusiness == 'd2c' && (
+                <Box sx={{
+                  flexGrow: 1, display: 'flex', justifyContent: 'center', alignItems: 'start', '@media (max-width: 600px)': {
+                    width: '100%',
+                    mt: hasNotification ? 1 : 2
+                  }
+                }}>
+                  <Tabs
+                    value={tabIndex}
+                    onChange={handleTabChange}
                     sx={{
                       textTransform: 'none',
-                      padding: '4px 10px',
-                      flexGrow: 1,
-                      marginRight: '3em',
-                      minHeight: 'auto',
-                      minWidth: 'auto',
-                      fontSize: '14px',
-                      fontWeight: 700,
-                      lineHeight: '19.1px',
-                      textAlign: 'left',
-                      mr: 2,
-                      '&.Mui-selected': {
-                        color: 'rgba(80, 82, 178, 1)'
+                      minHeight: 0,
+                      alignItems: 'start',
+                      '& .MuiTabs-indicator': {
+                        backgroundColor: 'rgba(80, 82, 178, 1)',
+                        height: '1.4px',
                       },
                       "@media (max-width: 600px)": {
-                        mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                          backgroundColor: 'rgba(249, 249, 253, 1)',
-                          border: '1px solid rgba(220, 220, 239, 1)'
+                        border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px', width: '100%', '& .MuiTabs-indicator': {
+                          height: '0',
                         },
                       }
                     }}
-                    label="Revenue"
-                  />}
-                  <Tab className="main-text"
-                    sx={{
-                      textTransform: 'none',
-                      padding: '4px 10px',
-                      minHeight: 'auto',
-                      flexGrow: 1,
-                      textAlign: 'center',
-                      fontSize: '14px',
-                      fontWeight: 700,
-                      lineHeight: '19.1px',
-                      minWidth: 'auto',
-                      '&.Mui-selected': {
-                        color: 'rgba(80, 82, 178, 1)'
-                      },
-                      "@media (max-width: 600px)": {
-                        mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                          backgroundColor: 'rgba(249, 249, 253, 1)',
-                          border: '1px solid rgba(220, 220, 239, 1)'
+                    aria-label="dashboard tabs"
+                  >
+                    {!hiddenrevenue && 
+                    <Tab className="main-text"
+                      sx={{
+                        textTransform: 'none',
+                        padding: '4px 10px',
+                        flexGrow: 1,
+                        marginRight: '3em',
+                        minHeight: 'auto',
+                        minWidth: 'auto',
+                        fontSize: '14px',
+                        fontWeight: 700,
+                        lineHeight: '19.1px',
+                        textAlign: 'left',
+                        mr: 2,
+                        '&.Mui-selected': {
+                          color: 'rgba(80, 82, 178, 1)'
                         },
-                      }
-                    }}
-                    label="Contacts"
-                  />
-                </Tabs>
-              </Box> */}
-
+                        "@media (max-width: 600px)": {
+                          mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                            backgroundColor: 'rgba(249, 249, 253, 1)',
+                            border: '1px solid rgba(220, 220, 239, 1)'
+                          },
+                        }
+                      }}
+                      label="Revenue"
+                    />}
+                    <Tab className="main-text"
+                      sx={{
+                        textTransform: 'none',
+                        padding: '4px 10px',
+                        minHeight: 'auto',
+                        flexGrow: 1,
+                        textAlign: 'center',
+                        fontSize: '14px',
+                        fontWeight: 700,
+                        lineHeight: '19.1px',
+                        minWidth: 'auto',
+                        '&.Mui-selected': {
+                          color: 'rgba(80, 82, 178, 1)'
+                        },
+                        "@media (max-width: 600px)": {
+                          mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                            backgroundColor: 'rgba(249, 249, 253, 1)',
+                            border: '1px solid rgba(220, 220, 239, 1)'
+                          },
+                        }
+                      }}
+                      label="Contacts"
+                    />
+                  </Tabs>
+                </Box>
+              )}
               <Box
                 sx={{
                   display: 'flex',
