@@ -14,7 +14,7 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface CreateKlaviyoProps {
     handleClose: () => void
-    onSave?: (integration: any) => void
+    onSave?: (integration: IntegrationsCredentials) => void
     open: boolean
     initApiKey?: string
     boxShadow?: string;

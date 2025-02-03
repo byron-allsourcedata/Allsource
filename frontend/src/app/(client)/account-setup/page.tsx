@@ -99,11 +99,13 @@ const AccountSetup = () => {
   interface IntegrationCredentials {
     access_token: string;
     service_name: string;
-    shop_domain: string;
-    ad_account_id: string;
     is_with_suppresions?: boolean;
     error_message?: string
-    is_failed: boolean
+    is_failed?: boolean
+    id?: number
+    ad_account_id?: string
+    shop_domain?: string
+    data_center?: string
   }
 
   useEffect(() => {
