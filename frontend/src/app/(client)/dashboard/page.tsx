@@ -408,7 +408,7 @@ const Dashboard: React.FC = () => {
         showToast('Connect to Bigcommerce Successfully. Pixel Installed');
         statusIntegrate = null
       } else {
-        showErrorToast(`Connect to Bigcommerce Failed ${statusIntegrate && statusIntegrate != 'Failed' ? statusIntegrate : ''}`)
+        showErrorToast('Failed to connect to BigCommerce. Your domain does not match the domain registered on BigCommerce.')
         statusIntegrate = null
       }
       const newSearchParams = new URLSearchParams(searchParams.toString());
