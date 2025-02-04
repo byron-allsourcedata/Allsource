@@ -23,7 +23,6 @@ import { useRouter } from "next/navigation";
 import { useUser } from "../../../context/UserContext";
 import axiosInterceptorInstance from "../../../axios/axiosInterceptorInstance";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import PersonIcon from '@mui/icons-material/Person';
@@ -35,8 +34,6 @@ import AttentiveIntegrationPopup from "@/components/AttentiveIntegrationPopup";
 import SendlaneConnect from "@/components/SendlaneConnect";
 import ZapierConnectPopup from "@/components/ZapierConnectPopup";
 import SlackConnectPopup from "@/components/SlackConnectPopup";
-import ShopifySettings from "@/components/ShopifySettings";
-import BCommerceConnect from "@/components/Bcommerce";
 import EditIcon from '@mui/icons-material/Edit';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
@@ -130,8 +127,8 @@ const AccountSetup = () => {
             router.push("/settings?section=subscription");
             break;
           case "DASHBOARD_ALLOWED":
-            router.push("/dashboard");
-            setActiveTab(2)
+            // router.push("/dashboard");
+            // setActiveTab(2)
             break;
           default:
             console.error("Unknown status:", status);
@@ -232,40 +229,6 @@ const AccountSetup = () => {
       setLoading(false)
     }
   }
-
-  // useEffect(() => {
-  //   const fetchCompanyInfo = async () => {
-  //     try {
-  //       const response = await axiosInterceptorInstance.get("/company-info");
-
-  //       const status = response.data.status;
-  //       const domain_url = response.data.domain_url
-  //       if (domain_url) {
-  //         setWebsiteLink(domain_url)
-  //         setDomainLink(domain_url)
-  //       }
-
-  //       switch (status) {
-  //         case "SUCCESS":
-  //           break;
-  //         case "NEED_EMAIL_VERIFIED":
-  //           router.push("/email-verificate");
-  //           break;
-  //         case "NEED_CHOOSE_PLAN":
-  //           router.push("/settings?section=subscription");
-  //           break;
-  //         case "DASHBOARD_ALLOWED":
-  //           router.push("/dashboard");
-  //           break;
-  //         default:
-  //           console.error("Unknown status:", status);
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching company info:", error);
-  //     }
-  //   };
-  //   fetchCompanyInfo();
-  // }, [router]);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -1049,7 +1012,7 @@ const AccountSetup = () => {
             width: "100%",
           }}>
             <Tab 
-              label="Create Account"
+              label={activeTab === 0 ? "Create Account" : " " }
               sx={{
                 textTransform: "none",
                 pointerEvents: "none",
@@ -1060,7 +1023,10 @@ const AccountSetup = () => {
                 color: "rgba(244, 87, 69, 1)",
                 justifyContent: "end",
                 alignItems: "start",  
-                width: "90px",
+                width: "97px",
+                fontSize: "16px",
+                fontFamily: "Open Sans",
+                fontWeight: 600,
                 textAlign: "left",
                 wordWrap: 'break-word',
                 whiteSpace: 'pre-wrap',
@@ -1075,22 +1041,22 @@ const AccountSetup = () => {
                   color: activeTab > 0 ? "#fff" : "rgba(32, 33, 36, 1)",
                   alignItems: "center",
                   justifyContent: "center",
-                  backgroundColor: activeTab === 0 ? "rgba(248, 70, 75, 1)" : "rgba(208, 213, 221, 1)", 
+                  backgroundColor: activeTab === 0 ? "rgba(208, 213, 221, 1)" : "rgba(248, 70, 75, 1)", 
                 },
                 '&::after': {
                   content: '""',
                   display: 'block',
                   position: 'absolute',
-                  left: 80,
+                  left: 38,
                   top: 15,
                   width: '51px',
                   height: '1px',
-                  backgroundColor: activeTab === 0 ? "rgba(248, 70, 75, 1)" : "rgba(32, 33, 36, 1)", 
+                  backgroundColor: activeTab > 0 ? "rgba(248, 70, 75, 1)" : "rgba(32, 33, 36, 1)", 
                 }
               }}
             />
             <Tab 
-              label="Business Info"
+              label={activeTab === 1 ? "Business Info" : " " }
               sx={{
                 textTransform: "none",
                 pointerEvents: "none",
@@ -1101,7 +1067,10 @@ const AccountSetup = () => {
                 color: "rgba(244, 87, 69, 1)",
                 justifyContent: "end",
                 alignItems: "start",
-                width: "90px",
+                width: "97px",
+                fontSize: "16px",
+                fontFamily: "Open Sans",
+                fontWeight: 600,
                 textAlign: "left",
                 wordWrap: 'break-word',
                 whiteSpace: 'pre-wrap',
@@ -1113,25 +1082,25 @@ const AccountSetup = () => {
                   top: 0,
                   width: '30px',
                   height: '30px',
-                  color: activeTab > 0 ? "#fff" : "rgba(32, 33, 36, 1)",
+                  color: activeTab > 1 ? "#fff" : "rgba(32, 33, 36, 1)",
                   alignItems: "center",
                   justifyContent: "center",
-                  backgroundColor: activeTab === 0 ? "rgba(248, 70, 75, 1)" : "rgba(208, 213, 221, 1)", 
+                  backgroundColor: activeTab === 1 ? "rgba(248, 70, 75, 1)" : "rgba(208, 213, 221, 1)", 
                 },
                 '&::after': {
                   content: '""',
                   display: 'block',
                   position: 'absolute',
-                  left: 80,
+                  left: 38,
                   top: 15,
                   width: '51px',
                   height: '1px',
-                  backgroundColor: activeTab === 0 ? "rgba(248, 70, 75, 1)" : "rgba(32, 33, 36, 1)", 
+                  backgroundColor: activeTab > 1 ? "rgba(248, 70, 75, 1)" : "rgba(32, 33, 36, 1)", 
                 }
               }}
             />
-            <Tab 
-              label="Pixel Installation"
+            <Tab
+              label={activeTab === 2 ? "Pixel Installation" : " " }
               sx={{
                 textTransform: "none",
                 pointerEvents: "none",
@@ -1142,7 +1111,10 @@ const AccountSetup = () => {
                 color: "rgba(244, 87, 69, 1)",
                 justifyContent: "end",
                 alignItems: "start",
-                width: "90px",
+                width: "97px",
+                fontSize: "16px",
+                fontFamily: "Open Sans",
+                fontWeight: 600,
                 textAlign: "left",
                 wordWrap: 'break-word',
                 whiteSpace: 'pre-wrap',
@@ -1154,25 +1126,25 @@ const AccountSetup = () => {
                   top: 0,
                   width: '30px',
                   height: '30px',
-                  color: activeTab > 0 ? "#fff" : "rgba(32, 33, 36, 1)",
+                  color: activeTab > 2 ? "#fff" : "rgba(32, 33, 36, 1)",
                   alignItems: "center",
                   justifyContent: "center",
-                  backgroundColor: activeTab === 0 ? "rgba(248, 70, 75, 1)" : "rgba(208, 213, 221, 1)", 
+                  backgroundColor: activeTab === 2 ? "rgba(248, 70, 75, 1)" : "rgba(208, 213, 221, 1)", 
                 },
                 '&::after': {
                   content: '""',
                   display: 'block',
                   position: 'absolute',
-                  left: 80,
+                  left: 38,
                   top: 15,
                   width: '51px',
                   height: '1px',
-                  backgroundColor: activeTab === 0 ? "rgba(248, 70, 75, 1)" : "rgba(32, 33, 36, 1)", 
+                  backgroundColor: activeTab > 2 ? "rgba(248, 70, 75, 1)" : "rgba(32, 33, 36, 1)", 
                 }
               }}
             />
-            <Tab 
-              label="Integrations"
+            <Tab
+              label={activeTab === 3 ? "Integrations" : " " }
               sx={{
                 textTransform: "none",
                 pointerEvents: "none",
@@ -1184,6 +1156,9 @@ const AccountSetup = () => {
                 justifyContent: "end",
                 alignItems: "start",
                 width: "90px",
+                fontSize: "16px",
+                fontFamily: "Open Sans",
+                fontWeight: 600,
                 textAlign: "left",
                 wordWrap: 'break-word',
                 whiteSpace: 'pre-wrap',
@@ -1195,10 +1170,10 @@ const AccountSetup = () => {
                   top: 0,
                   width: '30px',
                   height: '30px',
-                  color: activeTab > 0 ? "#fff" : "rgba(32, 33, 36, 1)",
+                  color: activeTab > 2 ? "rgba(32, 33, 36, 1)" : "#fff",
                   alignItems: "center",
                   justifyContent: "center",
-                  backgroundColor: activeTab === 0 ? "rgba(248, 70, 75, 1)" : "rgba(208, 213, 221, 1)", 
+                  backgroundColor: activeTab === 3 ? "rgba(248, 70, 75, 1)" : "rgba(208, 213, 221, 1)", 
                 }
               }}
             />
