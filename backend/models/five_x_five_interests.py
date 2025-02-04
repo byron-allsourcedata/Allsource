@@ -7,7 +7,7 @@ class FiveXFiveInterest(Base):
     __tablename__ = '5x5_interests'
 
     id = Column(Integer, primary_key=True)
-    topic_id = Column(VARCHAR(8), nullable=True)
+    topic_id = Column(VARCHAR(16), nullable=True)
     category = Column(VARCHAR(64), nullable=True)
     sub_category = Column(VARCHAR(64), nullable=True)
     topic = Column(VARCHAR(128), nullable=True)
