@@ -611,7 +611,7 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
                 new_record = LeadsUsersAddedToCart(lead_user_id=lead_user.id, added_at=requested_at)
                 session.add(new_record)
     lead_request = insert(LeadsRequests).values(
-        lead_id=lead_user.id, parameters = get_url_params_list(page),
+        lead_id=lead_user.id, page_parameters = get_url_params_list(page),
         page=normalize_url(page), requested_at=requested_at, visit_id=lead_visit_id
     ).on_conflict_do_nothing()
     session.execute(lead_request)
