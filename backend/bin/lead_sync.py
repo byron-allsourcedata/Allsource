@@ -506,12 +506,12 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
 
         is_first_request = True
         is_new_company = False
-        company = get_company(session, five_x_five_user)
-        if not company:
-            company = create_company(session, five_x_five_user, states_dict)
-            is_new_company = True
-            
-        if company:
+        company_id = None
+        if five_x_five_user.company_name:
+            company = get_company(session, five_x_five_user)
+            if not company:
+                company = create_company(session, five_x_five_user, states_dict)
+                is_new_company = True
             company_id = company.id
             
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type,
