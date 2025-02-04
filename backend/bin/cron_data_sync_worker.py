@@ -25,7 +25,7 @@ from services.integrations.base import IntegrationService
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from dependencies import (IntegrationsPresistence, LeadsPersistence, AudiencePersistence, 
                           LeadOrdersPersistence, IntegrationsUserSyncPersistence, 
-                          AWSService, UserDomainsPersistence, SuppressionPersistence, ExternalAppsInstallationsPersistence, UserPersistence)
+                          AWSService, UserDomainsPersistence, SuppressionPersistence, ExternalAppsInstallationsPersistence, UserPersistence, MillionVerifierPersistence)
 
 
 load_dotenv()
@@ -192,6 +192,7 @@ async def main():
         )
         Session = sessionmaker(bind=engine)
         session = Session()
+        million_verifier_persistence = MillionVerifierPersistence(session)
         integration_service = IntegrationService(
             db=session,
             integration_persistence=IntegrationsPresistence(session),
@@ -204,7 +205,7 @@ async def main():
             suppression_persistence=SuppressionPersistence(session),
             epi_persistence=ExternalAppsInstallationsPersistence(session),
             user_persistence=UserPersistence(session),
-            million_verifier_integrations=MillionVerifierIntegrationsService()
+            million_verifier_integrations=MillionVerifierIntegrationsService(million_verifier_persistence)
         )
         with integration_service as service:
             await queue.consume(

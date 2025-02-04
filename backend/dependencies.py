@@ -18,6 +18,7 @@ from persistence.referral_user import ReferralUserPersistence
 from persistence.referral_payouts import ReferralPayoutsPersistence
 from persistence.audience_persistence import AudiencePersistence
 from persistence.domains import UserDomainsPersistence, UserDomains
+from persistence.million_verifier import MillionVerifierPersistence
 from services.companies import CompanyService
 from services.payouts import PayoutsService
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
@@ -95,6 +96,8 @@ def get_referral_discount_codes_persistence(db: Session = Depends(get_db)) -> Re
 def get_plans_persistence(db: Session = Depends(get_db)):
     return PlansPersistence(db=db)
 
+def get_million_verifier_persistence(db: Session = Depends(get_db)):
+    return MillionVerifierPersistence(db=db)
 
 def get_referral_payouts_persistence(db: Session = Depends(get_db)):
     return ReferralPayoutsPersistence(db=db)
@@ -180,8 +183,8 @@ def get_slack_service(
 def get_stripe_service():
     return StripeService()
 
-def get_million_verifier_service():
-    return MillionVerifierIntegrationsService()
+def get_million_verifier_service(million_verifier_persistence: MillionVerifierPersistence = Depends(get_million_verifier_persistence)):
+    return MillionVerifierIntegrationsService(million_verifier_persistence=million_verifier_persistence)
 
 
 def get_referral_service(
