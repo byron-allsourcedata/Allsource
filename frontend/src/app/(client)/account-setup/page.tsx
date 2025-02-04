@@ -126,7 +126,9 @@ const AccountSetup = () => {
             router.push("/settings?section=subscription");
             break;
           case "DASHBOARD_ALLOWED":
-            setActiveTab(2)
+            router.push("/dashboard");
+            //b2b uncomment
+            // setActiveTab(2)
             break;
           default:
             console.error("Unknown status:", status);
@@ -418,28 +420,29 @@ const AccountSetup = () => {
 
 
   const handleSubmit = async () => {
-    const newErrors = {
-      websiteLink: validateField(websiteLink, "website"),
-      organizationName: validateField(organizationName, "organizationName"),
-      selectedEmployees: selectedEmployees ? "" : "Please select number of employees",
-      selectedVisits: selectedVisits ? "" : "Please select number of visits",
-      selectedRoles: selectedRoles ? "" : "Please select your`s role",
-      typeBusiness: typeBusiness ? "" : "Please select your`s type business",
-      selectedMethodInstall: selectedMethodInstall ? "" : "Please select method install pixel",
-      selectedIntegration: selectedIntegration ? "" : "Please choice integration"
-    };
-    setErrors(newErrors);
+    //b2b uncomment
+    // const newErrors = {
+    //   websiteLink: validateField(websiteLink, "website"),
+    //   organizationName: validateField(organizationName, "organizationName"),
+    //   selectedEmployees: selectedEmployees ? "" : "Please select number of employees",
+    //   selectedVisits: selectedVisits ? "" : "Please select number of visits",
+    //   selectedRoles: selectedRoles ? "" : "Please select your`s role",
+    //   typeBusiness: typeBusiness ? "" : "Please select your`s type business",
+    //   selectedMethodInstall: selectedMethodInstall ? "" : "Please select method install pixel",
+    //   selectedIntegration: selectedIntegration ? "" : "Please choice integration"
+    // };
+    // setErrors(newErrors);
 
-    if (
-      newErrors.websiteLink ||
-      newErrors.organizationName ||
-      newErrors.selectedEmployees ||
-      newErrors.selectedRoles ||
-      newErrors.selectedVisits ||
-      newErrors.typeBusiness
-    ) {
-      return;
-    }
+    // if (
+    //   newErrors.websiteLink ||
+    //   newErrors.organizationName ||
+    //   newErrors.selectedEmployees ||
+    //   newErrors.selectedRoles ||
+    //   newErrors.selectedVisits ||
+    //   newErrors.typeBusiness
+    // ) {
+    //   return;
+    // }
 
     try {
       const response = await axiosInterceptorInstance.post("/company-info", {
@@ -512,7 +515,10 @@ const AccountSetup = () => {
       websiteLink: validateField(websiteLink, "website"),
       organizationName: validateField(organizationName, "organizationName")
     };
-
+    console.log(errors.websiteLink)
+    //b2b uncomment
+    // console.log(errors.organizationName)
+    // console.log(selectedVisits)
     return (
       errors.websiteLink === "" && errors.organizationName === "" && selectedVisits !== ""
     );
@@ -520,7 +526,9 @@ const AccountSetup = () => {
 
   const isFormValidSecond = () => {
     return (
-      typeBusiness !== "" && selectedRoles !== "" && selectedEmployees !== ""
+      //b2b uncomment
+      // typeBusiness !== "" && selectedRoles !== "" && selectedEmployees !== ""
+      selectedRoles !== ""
     );
   };
 
@@ -602,29 +610,31 @@ const AccountSetup = () => {
   };
 
   const handleNextClick = () => {
-    if (activeTab === 1) {
+    if (activeTab === 0) {
       handleSubmit()
-    }
-    let isMatched = false;
-
-    method_installingPixel.forEach(({ label, setState, action }) => {
-      if (selectedMethodInstall === label) {
-        setState(true);
-        isMatched = true;
-        action()
-      } else {
-        setState(false);
-      }
-    });
-
-    if (activeTab === 3) {
       endSetup()
     }
-    else {
-      if (!isMatched) {
-        setActiveTab((prev) => prev + 1);
-      }
-    }
+    //b2b uncomment
+    // let isMatched = false;
+
+    // method_installingPixel.forEach(({ label, setState, action }) => {
+    //   if (selectedMethodInstall === label) {
+    //     setState(true);
+    //     isMatched = true;
+    //     action()
+    //   } else {
+    //     setState(false);
+    //   }
+    // });
+
+    // if (activeTab === 3) {
+    //   endSetup()
+    // }
+    // else {
+    //   if (!isMatched) {
+    //     setActiveTab((prev) => prev + 1);
+    //   }
+    // }
 
   };
 
@@ -865,7 +875,8 @@ const AccountSetup = () => {
             </MenuItem>
           </Menu>
         </Box>
-        <Box sx={{ ...styles.nav, position: "relative" }}>
+        
+        {/* <Box sx={{ ...styles.nav, position: "relative" }}>
           {selectedMethodInstall === "" && activeTab != 2 && <Button
             className="hyperlink-red"
             variant="outlined"
@@ -999,7 +1010,7 @@ const AccountSetup = () => {
               }}
             />
           </Tabs>
-        </Box>
+        </Box> */}
 
         <Button
           aria-controls={open ? "profile-menu" : undefined}
@@ -1166,11 +1177,11 @@ const AccountSetup = () => {
                   <Typography variant="body1" className="first-sub-title" sx={styles.text}>
                     How many monthly visits to your website?
                   </Typography>
-                  {errors.selectedEmployees && (
+                  {/* {errors.selectedEmployees && (
                     <Typography variant="body2" color="error">
                       {errors.selectedEmployees}
                     </Typography>
-                  )}
+                  )} */}
                   <Box className="form-input" sx={styles.visitsButtons}>
                     {ranges_visits.map((range, index) => (
                       <Button
@@ -1205,14 +1216,14 @@ const AccountSetup = () => {
                     onClick={handleNextClick}
                     disabled={!isFormValidFirst()}
                   >
-                    Next
+                    Nextt
                   </Button>
                 </>
               )}
               {activeTab === 1 && (
                 <>
                   {/* Business info */}
-                  <Typography variant="body1" className="first-sub-title" sx={styles.text}>
+                  {/* <Typography variant="body1" className="first-sub-title" sx={styles.text}>
                     Select the type of business you have
                   </Typography>
                   {errors.typeBusiness && (
@@ -1234,15 +1245,15 @@ const AccountSetup = () => {
                         <Typography className="form-input" sx={{ padding: '3px' }}> {range.label}</Typography>
                       </Button>
                     ))}
-                  </Box>
+                  </Box> */}
                   <Typography variant="body1" className="first-sub-title" sx={styles.text}>
                     How many employees work at your organization
                   </Typography>
-                  {errors.selectedEmployees && (
+                  {/* {errors.selectedEmployees && (
                     <Typography variant="body2" color="error">
                       {errors.selectedEmployees}
                     </Typography>
-                  )}
+                  )} */}
                   <Box sx={styles.employeeButtons}>
                     {ranges.map((range, index) => (
                       <Button
@@ -1261,11 +1272,11 @@ const AccountSetup = () => {
                   <Typography variant="body1" className="first-sub-title" sx={styles.text}>
                     Whats your role?
                   </Typography>
-                  {errors.selectedEmployees && (
+                  {/* {errors.selectedEmployees && (
                     <Typography variant="body2" color="error">
                       {errors.selectedEmployees}
                     </Typography>
-                  )}
+                  )} */}
                   <Box sx={styles.rolesButtons}>
                     {roles.map((range, index) => (
                       <Button
@@ -1899,11 +1910,11 @@ const AccountSetup = () => {
                       <Typography variant="body1" className="first-sub-title" sx={styles.text}>
                         Select how you would like to install the pixel
                       </Typography>
-                      {errors.selectedEmployees && (
+                      {/* {errors.selectedEmployees && (
                         <Typography variant="body2" color="error">
                           {errors.selectedEmployees}
                         </Typography>
-                      )}
+                      )} */}
                       <Box sx={{ ...styles.rolesButtons, display: "grid", gridTemplateColumns: "1fr 1fr" }}>
                         {method_installingPixel.map((range, index) => (
                           <Button
@@ -1999,11 +2010,11 @@ const AccountSetup = () => {
                   <Typography variant="body1" className="first-sub-title" sx={styles.text}>
                     These Will Be Available on Your Integration Page for quick Setup.
                   </Typography>
-                  {errors.selectedEmployees && (
+                  {/* {errors.selectedEmployees && (
                     <Typography variant="body2" color="error">
                       {errors.selectedEmployees}
                     </Typography>
-                  )}
+                  )} */}
                   <Box sx={{ ...styles.rolesButtons, display: "grid", gridTemplateColumns: "1fr 1fr 1fr" }}>
                     {integrations.map((range, index) => (
                       <Button
