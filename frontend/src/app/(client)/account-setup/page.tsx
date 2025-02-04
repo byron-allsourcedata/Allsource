@@ -130,6 +130,7 @@ const AccountSetup = () => {
             router.push("/settings?section=subscription");
             break;
           case "DASHBOARD_ALLOWED":
+            router.push("/dashboard");
             setActiveTab(2)
             break;
           default:
@@ -510,7 +511,6 @@ const AccountSetup = () => {
       websiteLink: validateField(websiteLink, "website"),
       organizationName: validateField(organizationName, "organizationName")
     };
-
     return (
       errors.websiteLink === "" && errors.organizationName === "" && selectedVisits !== ""
     );
@@ -731,6 +731,30 @@ const AccountSetup = () => {
     }
   };
 
+  const handleInstallWordPress = () => {
+    let url = domainName.trim();
+    if (url) {
+      if (!/^https?:\/\//i.test(url)) {
+        url = "http://" + url;
+      }
+
+      axiosInstance.post("/install-pixel/check-pixel-installed-parse", { url })
+        .then(response => {
+          const status = response.data.status;
+          if (status === "PIXEL_CODE_INSTALLED") {
+            showToast("Pixel code is installed successfully!");
+          }
+        })
+        .catch(error => {
+          showErrorToast("An error occurred while checking the pixel code.");
+        });
+
+      const hasQuery = url.includes("?");
+      const newUrl = url + (hasQuery ? "&" : "?") + "vge=true" + "&api=https://api-dev.maximiz.ai";
+      window.open(newUrl, "_blank");
+    }
+  }
+
   const handleVerifyPixel = () => {
     let url = domainName.trim();
 
@@ -883,6 +907,7 @@ const AccountSetup = () => {
             </MenuItem>
           </Menu>
         </Box>
+        
         <Box sx={{ ...styles.nav, position: "relative" }}>
           {selectedMethodInstall === "" && activeTab != 2 && <Button
             className="hyperlink-red"
@@ -1015,8 +1040,9 @@ const AccountSetup = () => {
                   color: "#F45745",
                 },
               }}
+
             />
-          </Tabs>}
+          </Tabs>
 
           {false && <Tabs sx={{
             width: "100%",
@@ -1175,7 +1201,7 @@ const AccountSetup = () => {
                 }
               }}
             />
-          </Tabs>}
+          </Tabs>
 
         </Box>
 
@@ -1386,7 +1412,7 @@ const AccountSetup = () => {
                   </Button>
                 </>
               )}
-              {activeTab === 1 && (
+{activeTab === 1 && (
                 <>
                   {/* Business info */}
                   <Typography variant="body1" className="first-sub-title" sx={styles.text}>
@@ -2112,8 +2138,11 @@ const AccountSetup = () => {
                         <Typography variant="body2" color="error">
                           {errors.selectedEmployees}
                         </Typography>
+
                       )}
                       <Box sx={{ ...styles.rolesButtons, display: "grid", gridTemplateColumns: "1fr 1fr", "@media (max-width: 450px)": { gridTemplateColumns: "1fr" }}}>
+
+
                         {method_installingPixel.map((range, index) => (
                           <Button
                             key={index}
@@ -2208,12 +2237,14 @@ const AccountSetup = () => {
                   <Typography variant="body1" className="first-sub-title" sx={styles.text}>
                     Choose the platform where you send your data
                   </Typography>
-                  {errors.selectedEmployees && (  
+                 {errors.selectedEmployees && (
                     <Typography variant="body2" color="error">
                       {errors.selectedEmployees}
                     </Typography>
+
                   )}
                   <Box sx={{ ...styles.rolesButtons, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", "@media (max-width: 450px)": { gridTemplateColumns: "1fr" } }}>
+
                     {integrations.map((range, index) => (
                       <Button
                         key={index}
