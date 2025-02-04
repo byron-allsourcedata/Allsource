@@ -260,39 +260,17 @@ def bigcommerce_auth(
 
             shop_data = shop_response.json()
             domain_url = shop_data.get("domain")
-
-            domain_entry = domain_persistence.get_domain_by_filter(domain=domain_url)
-            if domain_entry:
-                redirect_url = BigcommerceConfig.frontend_redirect
-                domain = domain_entry[0]
-                user = user_persistence.get_user_by_id(domain_entry[0].user_id)
-                if user:
-                    try:
-                        with integration_service as service:
-                            service.bigcommerce.add_integration_with_app(
-                                new_credentials=IntegrationCredentials(
-                                    bigcommerce=ShopifyOrBigcommerceCredentials(
-                                        shop_domain=shop_hash,
-                                        access_token=access_token
-                                    )
-                                ),
-                                domain=domain,
-                                user=user
-                            )
-                        return RedirectResponse(f'{redirect_url}?message=Successfully')
-                    except Exception:
-                        return RedirectResponse(f'{redirect_url}?message=Failed')
         
-    with integration_service as service:
-            service.bigcommerce.add_external_apps_install(
-            new_credentials=IntegrationCredentials(
-                bigcommerce=ShopifyOrBigcommerceCredentials(
-                    shop_domain=shop_hash,
-                    access_token=access_token
-                )
-            ),
-            domain_url=domain_url
-        )
+        with integration_service as service:
+                service.bigcommerce.add_external_apps_install(
+                new_credentials=IntegrationCredentials(
+                    bigcommerce=ShopifyOrBigcommerceCredentials(
+                        shop_domain=shop_hash,
+                        access_token=access_token
+                    )
+                ),
+                domain_url=domain_url
+            )
                  
     return RedirectResponse(f"{BigcommerceConfig.frontend_sign_up_redirect}?source_platform=big_commerce&shop_hash={shop_hash}")
     
