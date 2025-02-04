@@ -666,6 +666,7 @@ const AccountSetup = () => {
         return [...prevIntegrations, newIntegration];
       }
     });
+    endSetup()
   };
 
   const handleInstallShopify = async () => {
@@ -864,7 +865,7 @@ const AccountSetup = () => {
             </MenuItem>
           </Menu>
         </Box>
-        <Box sx={{ ...styles.nav }}>
+        <Box sx={{ ...styles.nav, position: "relative" }}>
           {selectedMethodInstall === "" && activeTab != 2 && <Button
             className="hyperlink-red"
             variant="outlined"
@@ -2032,13 +2033,13 @@ const AccountSetup = () => {
                     boxShadow="rgba(0, 0, 0, 0.1)"
                     initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'klaviyo')?.access_token}
                   />
-                  {/* <AttentiveIntegrationPopup
+                  <AttentiveIntegrationPopup
                     open={attentivePopupOpen}
                     handleClose={() => setAttentivePopupOpen(false)}
                     onSave={handleSaveSettings}
                     boxShadow="rgba(0, 0, 0, 0.1)"
                     initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'attentive')?.access_token}
-                  /> */}
+                  />
                   <ZapierConnectPopup 
                     open={zapierPopupOpen} 
                     boxShadow="rgba(0, 0, 0, 0.1)"
@@ -2066,8 +2067,8 @@ const AccountSetup = () => {
                   <SlackConnectPopup 
                     open={slackPopupOpen} 
                     handlePopupClose={() => setSlackPopupOpen(false)} 
-                    boxShadow="rgba(0, 0, 0, 0.1)" 
-                  />
+                    boxShadow="rgba(0, 0, 0, 0.1)"
+                    />
 
                   <Button
                     className='hyperlink-red'

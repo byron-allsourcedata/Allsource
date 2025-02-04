@@ -43,7 +43,7 @@ const Leads: React.FC = () => {
     const router = useRouter();
     const { hasNotification } = useNotification();
     const [data, setData] = useState<any[]>([]);
-    const [count_leads, setCount] = useState<number | null>(null);
+    const [count_companies, setCount] = useState<number | null>(null);
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
     const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
@@ -717,7 +717,7 @@ const Leads: React.FC = () => {
                         }}>
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
                             <Typography className='first-sub-title'>
-                                Company list
+                                Company list {count_companies ? `(${count_companies})` : ''}
                             </Typography>
                             <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
                         </Box>
@@ -1142,7 +1142,7 @@ const Leads: React.FC = () => {
                                     </TableContainer>
                                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0', "@media (max-width: 600px)": { padding: '12px 0 0' } }}>
                                         <CustomTablePagination
-                                            count={count_leads ?? 0}
+                                            count={count_companies ?? 0}
                                             page={page}
                                             rowsPerPage={rowsPerPage}
                                             onPageChange={handleChangePage}
