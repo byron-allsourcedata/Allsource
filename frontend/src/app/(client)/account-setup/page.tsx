@@ -58,6 +58,7 @@ const AccountSetup = () => {
   const [shopDomain, setShopDomain] = useState("");
   const [accessToken, setAccessToken] = useState("");
   const [bigcommerceHash, setBigcommerceHash] = useState("");
+  const [wordsPressId, setWordPressId] = useState("");
   const [integrationsCredentials, setIntegrationsCredentials] = useState<IntegrationCredentials[]>([]);
   const [editingName, setEditingName] = useState(true)
   const [manuallInstall, setManuallInstall] = useState(false)
@@ -66,8 +67,6 @@ const AccountSetup = () => {
   const [wordpressInstall, setWordpressInstall] = useState(false)
   const [googletagInstall, setGoogletagInstall] = useState(false)
   const [sendlanePopupOpen, setSendlanePopupOpen] = useState(false)
-  const [bigcommercePopupOpen, setBigcommercePopupOpen] = useState(false)
-  const [shopifyPopupOpen, setShopifyPopupOpen] = useState(false)
   const [mailChimpPopupOpen, setMailchimpPopupOpen] = useState(false)
   const [attentivePopupOpen, setAttentivePopupOpen] = useState(false)
   const [slackPopupOpen, setSlackPopupOpen] = useState(false)
@@ -533,7 +532,6 @@ const AccountSetup = () => {
   };
 
   const installManually = async () => {
-    setEmailDeveloper(email ?? "")
     try {
       const response = await axiosInterceptorInstance.get('/install-pixel/manually');
       setPixelCode(response.data.manual);
@@ -1321,7 +1319,8 @@ const AccountSetup = () => {
                         </Link>
                       </Box>
                       <Divider />
-                      <Box sx={{ mt: 4, display: "flex", alignItems: "center", gap: 8 }}>
+
+                      <Box sx={{ mt: 4, display: "flex", alignItems: "center", gap: 8, }}>
                         {editingName
                           ?
                           <>
@@ -1400,7 +1399,7 @@ const AccountSetup = () => {
                       
                       <Box sx={{ flex: 1, overflowY: "auto", paddingBottom: '10px', '@media (max-width: 600px)': { p: 2 } }}>
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', pt: 3, justifyContent: 'start' }}>
-                          <Image src='/1.svg' alt='1' width={28} height={28} />
+                          <Image src='/1.svg' alt='1' width={20} height={20} />
                           <Typography className='first-sub-title' sx={maintext}>Copy the pixel code</Typography>
                         </Box>
                         <Box
@@ -1431,12 +1430,12 @@ const AccountSetup = () => {
                           <code style={{ color: 'rgba(95, 99, 104, 1)', fontSize: '12px', margin: 0, fontWeight: 400, fontFamily: 'Nunito Sans', textWrap: 'nowrap' }}>{pixelCode?.trim()}</code>
                         </Box>
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '0.5em 0em 0em 0em', justifyContent: 'start' }}>
-                          <Image src='/2.svg' alt='2' width={28} height={28} />
+                          <Image src='/2.svg' alt='2' width={20} height={20} />
                           <Typography className='first-sub-title' sx={maintext}>Paste the pixel in your website</Typography>
                         </Box>
                         <Typography className='paragraph' sx={subtext}>Paste the above pixel in the header of your website. The header script starts with &lt;head&gt; and ends with &lt;/head&gt;.</Typography>
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1.25em 0em 0em 0em', justifyContent: 'start' }}>
-                          <Image src='/3.svg' alt='3' width={28} height={28} />
+                          <Image src='/3.svg' alt='3' width={20} height={20} />
                           <Typography className='first-sub-title' sx={maintext}>Verify Your Pixel</Typography>
                         </Box>
                         <Typography className='paragraph' sx={subtext}>Once the pixel is pasted in your website, wait for 10-15 mins and verify your pixel.</Typography>
@@ -1555,10 +1554,13 @@ const AccountSetup = () => {
                           </Link>
                       </Box>
                       <Divider />
-                      <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
-                          <Image src='/1.svg' alt='1' width={28} height={28} />
+                      
+                      <Box sx={{display: 'flex', flexDirection: "column", gap: 3, mt: 3}}> 
+
+                      <Box sx={{ display: 'grid', rowGap: 1, columnGap: 2, alignItems: 'center', padding: 0, gridTemplateColumns: "20px 1fr" }}>
+                          <Image src='/1.svg' alt='1' width={20} height={20} />
                           <Box sx={{display: 'flex', alignItems: "center"}}>
-                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Shopify shop domain in the designated field. This allows our system to identify your store.</Typography>
+                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: 0, fontWeight: '500' }}>Enter your Shopify shop domain in the designated field. This allows our system to identify your store.</Typography>
                           </Box>
                           <Box/>
                           <TextField
@@ -1581,11 +1583,9 @@ const AccountSetup = () => {
                               : (domainName ? `https://${domainName.replace(/^https?:\/\//, "")}` : "https://")
                             }
                             sx={{
-                              pl: 2,
+                              mt: 0,
+                              mb: 0,
                               "& .MuiOutlinedInput-root": {
-                                "& label": {
-                                  transformOrigin: "inherit"
-                                },
                                 "& fieldset": {
                                   borderColor: "rgba(80, 82, 178, 1)",
                                 },
@@ -1593,15 +1593,19 @@ const AccountSetup = () => {
                                   borderColor: "rgba(86, 153, 237, 1)",
                                 },
                                 "& .MuiInputLabel-root.Mui-focused": {
-                                    color: "rgba(17, 17, 19, 0.6)",
-                                },
-                                "&.MuiFormLabel-root-MuiInputLabel-root": {
-                                  transformOrigin: "inherit"
+                                  color: "rgba(17, 17, 19, 0.6)",
                                 }
                               },
                               "& .MuiInputLabel-shrink": {
-                                  transformOrigin: "center",
-                                },
+                                transformOrigin: "center",
+                                fontSize: "12px",
+                                left: "10px",
+                                top: "-1px"
+                              },
+                              "& .MuiInputLabel-root.Mui-focused": {
+                                left: "10px",
+                                top: "-1px"
+                              }
                             }}
                             onFocus={handleFocus}
                             onBlur={handleBlur}
@@ -1609,10 +1613,11 @@ const AccountSetup = () => {
                             InputLabelProps={{ sx: styles.inputLabel }}
                           />
                       </Box>
-                      <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
-                          <Image src='/2.svg' alt='2' width={28} height={28} />
+                      
+                      <Box sx={{ display: 'grid', rowGap: 1, columnGap: 2, alignItems: 'center', padding: 0, gridTemplateColumns: "20px 1fr" }}>
+                          <Image src='/2.svg' alt='2' width={20} height={20} />
                           <Box sx={{display: 'flex', alignItems: "center"}}>
-                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Shopify shop domain in the designated field. This allows our system to identify your store.</Typography>
+                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: 0, fontWeight: '500' }}>Enter your Shopify shop domain in the designated field. This allows our system to identify your store.</Typography>
                           </Box>
                           <Box/>
                           <TextField
@@ -1625,12 +1630,12 @@ const AccountSetup = () => {
                               },
                             }}
                             fullWidth
-                            label="Access Token"
                             variant="outlined"
                             placeholder='Enter your Access Token'
                             margin="normal"
                             sx={{
-                              pl: 2,
+                              mt: 0,
+                              mb: 0,
                               "& .MuiOutlinedInput-root": {
                                 "& fieldset": {
                                   borderColor: "rgba(80, 82, 178, 1)",
@@ -1656,12 +1661,16 @@ const AccountSetup = () => {
                             InputLabelProps={{ sx: styles.inputLabel }}
                           />
                       </Box>
-                      <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
-                          <Image src='/3.svg' alt='3' width={28} height={28} />
+                      
+                      <Box sx={{ display: 'grid', rowGap: 1, columnGap: 2, alignItems: 'center', padding: 0, gridTemplateColumns: "20px 1fr" }}>
+                          <Image src='/3.svg' alt='3' width={20} height={20} />
                           <Box sx={{display: 'flex', alignItems: "center"}}>
-                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Once you have submitted the required information, our system will automatically install the script on your Shopify store. You don’t need to take any further action.</Typography>
+                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: 0, fontWeight: '500' }}>Once you have submitted the required information, our system will automatically install the script on your Shopify store. You don’t need to take any further action.</Typography>
                           </Box>
                       </Box>
+
+                      </Box>
+                      
                       <Button
                         className='hyperlink-red'
                         fullWidth
@@ -1685,6 +1694,7 @@ const AccountSetup = () => {
                       >
                         Install Pixel
                       </Button>
+
                     </Box>
                   }
                   {bigcommerceInstall && 
@@ -1703,8 +1713,8 @@ const AccountSetup = () => {
                           </Link>
                       </Box>
                       <Divider />
-                      <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
-                          <Image src='/1.svg' alt='1' width={28} height={28} />
+                      <Box sx={{ display: 'grid', rowGap: 1, columnGap: 2, alignItems: 'center', padding: 0, gridTemplateColumns: "20px 1fr" }}>
+                          <Image src='/1.svg' alt='1' width={20} height={20} />
                           <Box sx={{display: 'flex', alignItems: "center"}}>
                             <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Bigcommerce store hash in the designated field. This allows our system to identify your store.</Typography>
                           </Box>
@@ -1719,7 +1729,6 @@ const AccountSetup = () => {
                               },
                             }}
                             fullWidth
-                            label="Store Hash"
                             variant="outlined"
                             placeholder='Enter your store hash'
                             margin="normal"
@@ -1750,8 +1759,8 @@ const AccountSetup = () => {
                             InputLabelProps={{ sx: styles.inputLabel }}
                           />
                       </Box>
-                      <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
-                          <Image src='/2.svg' alt='2' width={28} height={28} />
+                      <Box sx={{ display: 'grid', rowGap: 1, columnGap: 2, alignItems: 'center', padding: 0, gridTemplateColumns: "20px 1fr" }}>
+                          <Image src='/2.svg' alt='2' width={20} height={20} />
                           <Box sx={{display: 'flex', alignItems: "center"}}>
                             <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Once you have submitted the required information, our system will automatically install the script on your Bigcommerce store. You don’t need to take any further action.</Typography>
                           </Box>
@@ -1816,70 +1825,84 @@ const AccountSetup = () => {
                           </Link>
                       </Box>
                       <Divider />
-                      <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
-                          <Image src='/1.svg' alt='1' width={28} height={28} />
-                          <Box sx={{display: 'flex', alignItems: "center"}}>
-                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Bigcommerce store hash in the designated field. This allows our system to identify your store.</Typography>
-                          </Box>
-                          <Box/>
-                          <TextField
-                            InputProps={{
-                              style: {
-                                  color: 'rgba(17, 17, 19, 1)',
-                                  fontFamily: 'Nunito Sans',
-                                  fontWeight: 400,
-                                  fontSize: '14px',
-                              },
-                            }}
-                            fullWidth
-                            label="Store Hash"
-                            variant="outlined"
-                            placeholder='Enter your store hash'
-                            margin="normal"
-                            sx={{
-                              pl: 2,
-                              "& .MuiOutlinedInput-root": {
-                                "& fieldset": {
-                                  borderColor: "rgba(80, 82, 178, 1)",
+                      
+                      <Box sx={{display: 'flex', flexDirection: "column", gap: 3, mt: 3}}>
+                        <Box sx={{ display: 'grid', rowGap: 1, columnGap: 2, alignItems: 'center', padding: 0, gridTemplateColumns: "20px 1fr" }}>
+                            <Image src='/1.svg' alt='1' width={20} height={20} />
+                            <Box sx={{display: 'flex', alignItems: "center"}}>
+                              <Typography className='first-sub-title' sx={{ ...maintext, p: 0, fontWeight: '500' }}>Add our offical Maximiz pixel plugin to your Wordpress site.</Typography>
+                            </Box>
+                            <Box/>
+                            <Button component={Link} href="https://wordpress.org/plugins/maximiz/" target="_blank" variant="outlined" sx={{ backgroundColor: 'rgba(80, 82, 178, 1)', color: 'rgba(255, 255, 255, 1)', width: "110px", height: "40px", textTransform: 'none', padding: '1.2 3', border: '1px solid rgba(80, 82, 178, 1)', '&:hover': { backgroundColor: 'rgba(80, 82, 178, 1)' } }}>
+                              <Typography className='second-sub-title' sx={{ fontSize: '14px !important', color: '#fff !important', textWrap: 'wrap' }}>Get plugin</Typography>
+                          </Button>
+                        </Box>
+                        <Box sx={{ display: 'grid', rowGap: 1, columnGap: 2, alignItems: 'center', padding: 0, gridTemplateColumns: "20px 1fr" }}>
+                            <Image src='/2.svg' alt='2' width={20} height={20} />
+                            <Box sx={{display: 'flex', alignItems: "center"}}>
+                              <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', p: 0, fontWeight: '500' }}>Enter your site ID:</Typography>
+                            </Box>
+                            <Box />
+                            <TextField
+                              InputProps={{
+                                style: {
+                                    color: 'rgba(17, 17, 19, 1)',
+                                    fontFamily: 'Nunito Sans',
+                                    fontWeight: 400,
+                                    fontSize: '14px',
                                 },
-                                "&:hover fieldset": {
-                                  borderColor: "rgba(86, 153, 237, 1)",
+                              }}
+                              fullWidth
+                              variant="outlined"
+                              placeholder='Enter your site ID'
+                              margin="normal"
+                              sx={{
+                                "& .MuiOutlinedInput-root": {
+                                  "& fieldset": {
+                                    borderColor: "rgba(80, 82, 178, 1)",
+                                  },
+                                  "&:hover fieldset": {
+                                    borderColor: "rgba(86, 153, 237, 1)",
+                                  },
+                                  "& .MuiInputLabel-root.Mui-focused": {
+                                      color: "rgba(17, 17, 19, 0.6)",
+                                  }
                                 },
-                                "& .MuiInputLabel-root.Mui-focused": {
-                                    color: "rgba(17, 17, 19, 0.6)",
-                                }
-                              },
-                              "& .MuiInputLabel-shrink": {
-                                  transformOrigin: "center",
-                                  left: 10
-                                },
-                              "& .MuiInputLabel-root[data-shrink='false']": {
-                                    transform: "translate(16px, 15px) scale(1)",
-                                }, 
-                                
-                            }}
-                            value={bigcommerceHash}
-                            onChange={(e) => setBigcommerceHash(e.target.value)}
-                            InputLabelProps={{ sx: styles.inputLabel }}
-                          />
+                                "& .MuiInputLabel-shrink": {
+                                    transformOrigin: "center",
+                                    left: 10
+                                  },
+                                "& .MuiInputLabel-root[data-shrink='false']": {
+                                      transform: "translate(16px, 15px) scale(1)",
+                                  }, 
+                                  mt: 0,
+                                  mb: 0
+                                  
+                              }}
+                              value={wordsPressId}
+                              onChange={(e) => setWordPressId(e.target.value)}
+                              InputLabelProps={{ sx: styles.inputLabel}}
+                            />
+                        </Box>
+                        <Box sx={{ display: 'grid', rowGap: 1, columnGap: 2, alignItems: 'center', padding: 0, gridTemplateColumns: "20px 1fr" }}>
+                            <Image src='/3.svg' alt='3' width={20} height={20} />
+                            <Box sx={{display: 'flex', alignItems: "center"}}>
+                              <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', p: 0, fontWeight: '500' }}>Verify if Maximiz is receiving data from your site</Typography>
+                            </Box>
+                        </Box>
                       </Box>
-                      <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
-                          <Image src='/2.svg' alt='2' width={28} height={28} />
-                          <Box sx={{display: 'flex', alignItems: "center"}}>
-                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Once you have submitted the required information, our system will automatically install the script on your Bigcommerce store. You don’t need to take any further action.</Typography>
-                          </Box>
-                      </Box>
+
                       <Button
                         className='hyperlink-red'
                         fullWidth
                         variant="contained"
                         sx={{
                           ...styles.submitButton,
-                          opacity: bigcommerceHash.trim() !== "" ? 1 : 0.6,
-                          pointerEvents: bigcommerceHash.trim() !== "" ? "auto" : "none",
+                          opacity: wordsPressId.trim() !== "" ? 1 : 0.6,
+                          pointerEvents: wordsPressId.trim() !== "" ? "auto" : "none",
                           mb: 2,
                           mt: 2,
-                          backgroundColor: bigcommerceHash.trim() !== ""
+                          backgroundColor: wordsPressId.trim() !== ""
                             ? "rgba(244, 87, 69, 1)"
                             : "rgba(244, 87, 69, 0.4)",
                           "&.Mui-disabled": {
@@ -1887,8 +1910,8 @@ const AccountSetup = () => {
                             color: "#fff",
                           },
                         }}
-                        onClick={handleInstallBigCommerce}
-                        disabled={bigcommerceHash.trim() === ""}
+                        onClick={handleInstallWordPress}
+                        disabled={wordsPressId.trim() === ""}
                       >
                         Install Pixel
                       </Button>
@@ -1897,7 +1920,7 @@ const AccountSetup = () => {
                   {!shopifyInstall && !manuallInstall && !bigcommerceInstall && !googletagInstall && !wordpressInstall &&
                     <>
                       <Typography variant="body1" className="first-sub-title" sx={styles.text}>
-                        Select how you would like to install the pixel
+                        Install the pixel to start collecting data
                       </Typography>
                       {errors.selectedEmployees && (
                         <Typography variant="body2" color="error">
@@ -1997,9 +2020,9 @@ const AccountSetup = () => {
               {activeTab === 3 && (
                 <>
                   <Typography variant="body1" className="first-sub-title" sx={styles.text}>
-                    These Will Be Available on Your Integration Page for quick Setup.
+                    Choose the platform where you send your data
                   </Typography>
-                  {errors.selectedEmployees && (
+                  {errors.selectedEmployees && (  
                     <Typography variant="body2" color="error">
                       {errors.selectedEmployees}
                     </Typography>
