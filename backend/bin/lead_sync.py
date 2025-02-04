@@ -343,35 +343,41 @@ def get_five_x_five_location(session, company_city, company_state, states_dict):
     if not location:
         return None
     return location.id
-    
-def get_or_create_company(session: Session, five_x_five_user: FiveXFiveUser, states_dict: dict):
+
+def get_company(session: Session, five_x_five_user: FiveXFiveUser):
     if five_x_five_user.company_name:
         company_name = five_x_five_user.company_name.strip()
         alias = regex.sub(r'[\p{Z}\s]+', ' ', company_name)
         alias = company_name.replace(" ", "_")
         alias = alias.lower()
-        lead_company = session.query(LeadCompany).filter_by(alias=alias).first()
-        if not lead_company:
-            five_x_five_location_id = get_five_x_five_location(session, five_x_five_user.company_city, five_x_five_user.company_state, states_dict)
-            lead_company = LeadCompany(
-                                name=five_x_five_user.company_name,
-                                alias=alias,
-                                domain=five_x_five_user.company_domain,
-                                phone=five_x_five_user.company_phone,
-                                sic=five_x_five_user.company_sic,
-                                address=five_x_five_user.company_address,
-                                five_x_five_location_id=five_x_five_location_id,
-                                zip=five_x_five_user.company_zip,
-                                linkedin_url=five_x_five_user.company_linkedin_url,
-                                revenue=five_x_five_user.company_revenue,
-                                employee_count=five_x_five_user.company_employee_count,
-                                last_updated=five_x_five_user.company_last_updated,
-                                description=five_x_five_user.company_description,
-                                primary_industry=five_x_five_user.primary_industry
-                            )
-            session.add(lead_company)
-            session.flush()
-        return lead_company.id
+        return session.query(LeadCompany).filter_by(alias=alias).first()
+ 
+def create_company(session: Session, five_x_five_user: FiveXFiveUser, states_dict: dict):
+    if five_x_five_user.company_name:
+        company_name = five_x_five_user.company_name.strip()
+        alias = regex.sub(r'[\p{Z}\s]+', ' ', company_name)
+        alias = company_name.replace(" ", "_")
+        alias = alias.lower()
+        five_x_five_location_id = get_five_x_five_location(session, five_x_five_user.company_city, five_x_five_user.company_state, states_dict)
+        lead_company = LeadCompany(
+                            name=five_x_five_user.company_name,
+                            alias=alias,
+                            domain=five_x_five_user.company_domain,
+                            phone=five_x_five_user.company_phone,
+                            sic=five_x_five_user.company_sic,
+                            address=five_x_five_user.company_address,
+                            five_x_five_location_id=five_x_five_location_id,
+                            zip=five_x_five_user.company_zip,
+                            linkedin_url=five_x_five_user.company_linkedin_url,
+                            revenue=five_x_five_user.company_revenue,
+                            employee_count=five_x_five_user.company_employee_count,
+                            last_updated=five_x_five_user.company_last_updated,
+                            description=five_x_five_user.company_description,
+                            primary_industry=five_x_five_user.primary_industry
+                        )
+        session.add(lead_company)
+        session.flush()
+        return lead_company
     
     return None
 
@@ -499,10 +505,24 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
             return
 
         is_first_request = True
-        company_id = get_or_create_company(session, five_x_five_user, states_dict)
+        is_new_company = False
+        company = get_company(session, five_x_five_user)
+        if not company:
+            company = create_company(session, five_x_five_user, states_dict)
+            is_new_company = True
+            
+        if company:
+            company_id = company.id
+            
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type,
                              domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0, company_id=company_id)
-
+        
+        session.add(lead_user)
+        session.flush()
+        if is_new_company:
+            company.first_lead_id = lead_user.id
+            session.flush()
+            
         plan_contact_credits_id = None
 
         if root_user is None and not subscription_service.is_trial_subscription(user.id):
@@ -514,9 +534,6 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
             await process_payment_transaction(session, five_x_five_user.up_id, user_domain_id, user,
                                               lead_user, leads_persistence, notification_persistence,
                                               subscription_plan.leads_credits, subscription_plan.lead_credit_price)
-
-        session.add(lead_user)
-        session.flush()
 
         if not lead_user.is_active and user.is_leads_auto_charging:
             await dispatch_leads_to_rabbitmq(session=session, user=user, rabbitmq_connection=rabbitmq_connection,
