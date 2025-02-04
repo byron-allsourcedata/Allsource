@@ -44,12 +44,17 @@ class CompanyService:
             revenue_range=revenue_range,
             industry=industry,
             search_query=search_query,
-            timezone_offset=timezone_offset
         )
 
         company_list = []
         for company in companies:
             first_visited_date = company[5].strftime('%d.%m.%Y') if company[5] else None
+            first_visited_time = company[6].strftime('%H:%M')
+            combined_datetime = datetime.strptime(f"{first_visited_date} {first_visited_time}", '%d.%m.%Y %H:%M')
+            adjusted_datetime = combined_datetime + timedelta(hours=timezone_offset)
+            adjusted_date = adjusted_datetime.strftime('%d.%m.%Y')
+            adjusted_time = adjusted_datetime.strftime('%H:%M')
+
 
             company_list.append({
                 'id': company[0],
@@ -57,16 +62,16 @@ class CompanyService:
                 'phone': self.format_phone_number(company[2]) if company[2] else None,
                 'linkedin_url': company[3],
                 'employees_visited': company[4],
-                'visited_date': first_visited_date,
-                'company_revenue': company[6],
-                'employee_count': company[7],
-                'location': company[8],
-                'industry': company[9],
-                'domain': company[10],
-                'zipcode': company[11],
-                'description': company[12],
-                'city': company[13],
-                'state': company[14],
+                'visited_date': adjusted_date,
+                'company_revenue': company[7],
+                'employee_count': company[8],
+                'location': company[9],
+                'industry': company[10],
+                'domain': company[11],
+                'zipcode': company[12],
+                'description': company[13],
+                'city': company[14],
+                'state': company[15],
             })
 
         return company_list, count, max_page

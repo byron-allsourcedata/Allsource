@@ -182,26 +182,8 @@ class CompanyPersistence:
         return leads
 
     def filter_companies(self, domain_id, page, per_page, from_date, to_date, regions,  sort_by, sort_order,
-                         search_query, timezone_offset, employees_range, employee_visits, revenue_range, industry):
-
-        first_visit_subquery = (
-            self.db.query(
-                LeadUser.company_id,
-                func.min(LeadsVisits.start_date).label("visited_date")
-            )
-                .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
-        )
-
-        # Применяем фильтр по дате сразу при создании подзапроса
-        if from_date and to_date:
-            start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
-            end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
-            first_visit_subquery = first_visit_subquery.filter(
-                LeadsVisits.start_date.between(start_date, end_date)
-            )
-
-        # Завершаем формирование подзапроса
-        first_visit_subquery = first_visit_subquery.group_by(LeadUser.company_id).subquery()
+                         search_query, employees_range, employee_visits, revenue_range, industry):
+        FirstLeadUser = aliased(LeadUser)
 
         query = (
             self.db.query(
@@ -210,7 +192,8 @@ class CompanyPersistence:
                 LeadCompany.phone,
                 LeadCompany.linkedin_url,
                 func.count(LeadUser.id).label("number_of_employees"),
-                first_visit_subquery.c.visited_date,
+                LeadsVisits.start_date.label("visited_date"),
+                LeadsVisits.start_time.label("visited_time"),
                 LeadCompany.revenue,
                 LeadCompany.employee_count,
                 LeadCompany.address,
@@ -223,14 +206,20 @@ class CompanyPersistence:
                 LeadCompany.last_updated,
             )
                 .join(LeadUser, LeadUser.company_id == LeadCompany.id)
-                .outerjoin(first_visit_subquery, first_visit_subquery.c.company_id == LeadCompany.id)
+                .join(FirstLeadUser, FirstLeadUser.id == LeadCompany.first_lead_id)
+                .join(LeadsVisits, LeadsVisits.id == FirstLeadUser.first_visit_id)
                 .outerjoin(FiveXFiveLocations, FiveXFiveLocations.id == LeadCompany.five_x_five_location_id)
                 .outerjoin(States, States.id == FiveXFiveLocations.state_id)
                 .filter(LeadUser.domain_id == domain_id)
-                .group_by(LeadCompany.id, first_visit_subquery.c.visited_date, FiveXFiveLocations.city, States.state_name)
-                .order_by(asc(LeadCompany.name), desc(first_visit_subquery.c.visited_date))
+                .group_by(
+                LeadCompany.id,
+                LeadsVisits.start_date,
+                LeadsVisits.start_time,
+                FiveXFiveLocations.city,
+                States.state_name
+            )
+                .order_by(asc(LeadCompany.name), desc(LeadsVisits.start_date))
         )
-
         sort_options = {
             'company_name': FiveXFiveUser.first_name,
             'phone_name': FiveXFiveUser.business_email,
@@ -255,8 +244,22 @@ class CompanyPersistence:
             start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
             end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
             query = query.filter(
-                first_visit_subquery.c.visited_date >= start_date,
-                first_visit_subquery.c.visited_date <= end_date
+                and_(
+                    or_(
+                        and_(
+                            LeadsVisits.start_date == start_date.date(),
+                            LeadsVisits.start_time >= start_date.time()
+                        ),
+                        and_(
+                            LeadsVisits.start_date == end_date.date(),
+                            LeadsVisits.start_time <= end_date.time()
+                        ),
+                        and_(
+                            LeadsVisits.start_date > start_date.date(),
+                            LeadsVisits.start_date < end_date.date()
+                        )
+                    )
+                )
             )
 
         if industry:
