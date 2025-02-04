@@ -254,11 +254,11 @@ const SupportSection: React.FC = () => {
   const calendlyPopupUrl = () => {
     const baseUrl = "https://calendly.com/maximiz-support/30min";
     const searchParams = new URLSearchParams();
-  
+
     if (utmParams) {
       try {
         const parsedUtmParams = typeof utmParams === 'string' ? JSON.parse(utmParams) : utmParams;
-  
+
         if (typeof parsedUtmParams === 'object' && parsedUtmParams !== null) {
           Object.entries(parsedUtmParams).forEach(([key, value]) => {
             if (value !== null && value !== undefined) {
@@ -270,7 +270,7 @@ const SupportSection: React.FC = () => {
         console.error("Error parsing utmParams:", error);
       }
     }
-  
+
     const finalUrl = `${baseUrl}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
     return finalUrl;
   };
@@ -398,23 +398,23 @@ const Dashboard: React.FC = () => {
   const [formattedDates, setFormattedDates] = useState<string>('');
   const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
   const [selectedDateLabel, setSelectedDateLabel] = useState<string>('');
+  const [typeBusiness, setTypeBusiness] = useState("")
   const searchParams = useSearchParams();
   let statusIntegrate = searchParams.get('message');
-    useEffect(() => {
-      if(statusIntegrate) {
-        
-        if (statusIntegrate == 'Successfully') {
-          showToast('Connect to Bigcommerce Successfully. Pixel Installed');
-          statusIntegrate = null
-        } else {
-          showErrorToast(`Connect to Bigcommerce Failed ${statusIntegrate && statusIntegrate != 'Failed' ? statusIntegrate : ''}`)
-          statusIntegrate = null
-        }
-        const newSearchParams = new URLSearchParams(searchParams.toString());
-        newSearchParams.delete('message');
-        router.replace(`?${newSearchParams.toString()}`);
+  useEffect(() => {
+    if (statusIntegrate) {
+      if (statusIntegrate == 'Successfully') {
+        showToast('Connect to Bigcommerce Successfully. Pixel Installed');
+        statusIntegrate = null
+      } else {
+        showErrorToast(`Connect to Bigcommerce Failed ${statusIntegrate && statusIntegrate != 'Failed' ? statusIntegrate : ''}`)
+        statusIntegrate = null
       }
-    }, [statusIntegrate])
+      const newSearchParams = new URLSearchParams(searchParams.toString());
+      newSearchParams.delete('message');
+      router.replace(`?${newSearchParams.toString()}`);
+    }
+  }, [statusIntegrate])
   const handleDateLabelChange = (label: string) => {
     setSelectedDateLabel(label);
   };
@@ -427,6 +427,14 @@ const Dashboard: React.FC = () => {
   const handleCalendarClose = () => {
     setCalendarAnchorEl(null);
   };
+
+  const checkB2B = () => {
+    const storedMe = sessionStorage.getItem('me');
+    if (storedMe) {
+      const storedData = JSON.parse(storedMe);
+      setTypeBusiness(storedData.business_type)
+    }
+  }
 
   const handleDateChange = (dates: { start: Date | null; end: Date | null }) => {
     const { start, end } = dates;
@@ -500,22 +508,13 @@ const Dashboard: React.FC = () => {
   const [tabIndex, setTabIndex] = useState(0);
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        const response = await axiosInstance.get('/dashboard/revenue');
-        
-        if(!response.data) {
-          setHiddenRevenue(true)
-        }
-        
-        if (!response?.data.total_counts || !response?.data.total_counts.total_revenue) {
-          setTabIndex(1)
-          return; 
-        }
-        
-      } catch (error) {
-        
-      } finally {
+      checkB2B()
+      if (typeBusiness == 'b2b') {
+        setTabIndex(0)
+      } else {
+        setTabIndex(1)
       }
+
     };
     fetchData();
   }, []);
@@ -533,32 +532,33 @@ const Dashboard: React.FC = () => {
               flexDirection: "column",
             }}
           >
-            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'start',
-                pt: hasNotification ? 6.25 : 3.5,
-                pb: 0.75,
-                position: 'fixed',
-                top: hasNotification ? '3.95rem' : '3.75rem',
-                right: '16px',
-                left: '170px',
-                background: '#fff',
-                zIndex: '1',
+            <Box sx={{
+              display: 'flex', flexDirection: 'row', alignItems: 'start',
+              pt: hasNotification ? 6.25 : 3.5,
+              pb: 0.75,
+              position: 'fixed',
+              top: hasNotification ? '3.95rem' : '3.75rem',
+              right: '16px',
+              left: '170px',
+              background: '#fff',
+              zIndex: '1',
+              paddingLeft: '30px',
+              paddingRight: '65px',
+              '@media (min-width: 1600px)': {
                 paddingLeft: '30px',
-                paddingRight: '65px',
-                '@media (min-width: 1600px)': {
-                  paddingLeft: '30px',
-                  paddingRight: '90px',
-                },
-                mx: '-24px',
-                "@media (max-width: 900px)": { 
-                  left: '10px',
-                  paddingRight: '90px',
-                },
-                "@media (max-width: 600px)": { 
-                  flexDirection: 'column',
-                  alignItems: 'start', 
-                  paddingRight: 3,
-                  } 
-                }}>
+                paddingRight: '90px',
+              },
+              mx: '-24px',
+              "@media (max-width: 900px)": {
+                left: '10px',
+                paddingRight: '90px',
+              },
+              "@media (max-width: 600px)": {
+                flexDirection: 'column',
+                alignItems: 'start',
+                paddingRight: 3,
+              }
+            }}>
               <Typography
                 variant="h4"
                 component="h1"
@@ -610,7 +610,7 @@ const Dashboard: React.FC = () => {
                   </Button>
                 </Box>
               </Box>
-
+              {/* 
               <Box sx={{
                 flexGrow: 1, display: 'flex', justifyContent: 'center', alignItems: 'start', '@media (max-width: 600px)': {
                   width: '100%',
@@ -686,13 +686,20 @@ const Dashboard: React.FC = () => {
                     label="Contacts"
                   />
                 </Tabs>
-              </Box>
+              </Box> */}
 
-              <Box sx={{
-                display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2, '@media (max-width: 600px)': {
-                  display: 'none',
-                }
-              }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  alignItems: 'center',
+                  gap: 2,
+                  width: '100%',
+                  '@media (max-width: 600px)': {
+                    display: 'none',
+                  }
+                }}
+              >
                 {/* Calendary picker*/}
                 <Typography className="second-sub-title">{selectedDateLabel ? selectedDateLabel : ''}</Typography>
                 <Button
@@ -719,8 +726,8 @@ const Dashboard: React.FC = () => {
                     }
                   }}
                 >
-                  <DateRangeIcon 
-                    fontSize="medium" 
+                  <DateRangeIcon
+                    fontSize="medium"
                     sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }}
                   />
                   <Typography variant="body1" sx={{
@@ -741,14 +748,15 @@ const Dashboard: React.FC = () => {
                 </Button>
               </Box>
             </Box>
-            <Box sx={{ width: '100%', marginTop: '68px',
-              "@media (max-width: 900px)": { 
-                  marginTop: '40px'
-                },
-                "@media (max-width: 600px)": { 
-                  marginTop: '100px'
-                }
-             }}>
+            <Box sx={{
+              width: '100%', marginTop: '68px',
+              "@media (max-width: 900px)": {
+                marginTop: '40px'
+              },
+              "@media (max-width: 600px)": {
+                marginTop: '100px'
+              }
+            }}>
               <TabPanel value={tabIndex} index={0}>
                 <DashboardRevenue appliedDates={appliedDates} />
               </TabPanel>
