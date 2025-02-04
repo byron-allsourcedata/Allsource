@@ -74,7 +74,7 @@ class LeadsPersistence:
         self.db = db
 
     def filter_leads(self, domain_id, page, per_page, from_date, to_date, from_time, to_time, regions, page_visits,
-                     average_time_sec, behavior_type, recurring_visits, sort_by, sort_order, search_query, status, timezone_offset):
+                     average_time_sec, behavior_type, recurring_visits, sort_by, sort_order, search_query, status):
         
         FirstNameAlias = aliased(FiveXFiveNames)
         LastNameAlias = aliased(FiveXFiveNames)

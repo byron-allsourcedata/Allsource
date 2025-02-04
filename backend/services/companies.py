@@ -29,7 +29,7 @@ class CompanyService:
         return None
 
     def get_companies(self, page, per_page, from_date, to_date, regions, sort_by, sort_order,
-                      search_query, timezone_offset):
+                      search_query, timezone_offset, employees_range, employee_visits, revenue_range, industry):
         companies, count, max_page = self.company_persistence_service.filter_companies(
             domain_id=self.domain.id,
             page=page,
@@ -39,6 +39,10 @@ class CompanyService:
             regions=regions,
             sort_by=sort_by,
             sort_order=sort_order,
+            employees_range=employees_range,
+            employee_visits=employee_visits,
+            revenue_range=revenue_range,
+            industry=industry,
             search_query=search_query,
             timezone_offset=timezone_offset
         )
@@ -67,26 +71,30 @@ class CompanyService:
 
         return company_list, count, max_page
 
-    def search_contact(self, start_letter):
+    def search_company(self, start_letter):
         start_letter = start_letter.replace('+', '').strip().lower()
-        if start_letter.split()[0].isdecimal():
+
+        if start_letter.isdecimal():
             start_letter = start_letter.replace(' ', '')
-        leads_data = self.company_persistence_service.search_contact(start_letter=start_letter, domain_id=self.domain.id)
+
+        companies_data = self.company_persistence_service.search_company(
+            start_letter=start_letter,
+            domain_id=self.domain.id
+        )
+
         results = set()
-        for lead in leads_data:
+        for company in companies_data:
             if start_letter.isdecimal():
-                results.add(lead.number)
+                results.add(company.phone)
             else:
-                if start_letter in (f"{lead.first_name} {lead.last_name}").lower():
-                    results.add(f"{lead.first_name} {lead.last_name}")
-                if lead.email and start_letter in (lead.email).lower():
-                    results.add(lead.email)
-        limited_results = list(results)[:10]
-        return limited_results
+                if start_letter in company.name.lower():
+                    results.add(company.name)
+
+        return list(results)[:10]
 
     def search_location(self, start_letter):
         location_data = self.company_persistence_service.search_location(start_letter=start_letter,
-                                                                       dommain_id=self.domain.id)
+                                                                       domain_id=self.domain.id)
         results_set = set()
 
         for location in location_data:

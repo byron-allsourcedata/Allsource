@@ -5,6 +5,7 @@ from dependencies import get_companies_service, check_user_company
 from enums import BaseEnum
 from schemas.companies import CompaniesRequest
 from services.companies import CompanyService
+from typing import List
 
 router = APIRouter(dependencies=[Depends(check_user_company)])
 
@@ -20,6 +21,10 @@ async def get_companies(
         sort_order: str = Query(None, description="Field to sort by: 'asc' or 'desc'"),
         search_query: str = Query(None, description="Search for email, first name, lastname and phone number"),
         timezone_offset: float = Query(0, description="timezone offset in integer format"),
+        employees_range: str = Query(None, description="Number of employees in the company"),
+        revenue_range: str = Query(None, description="Company income range"),
+        employee_visits: str = Query(None, description="Number of employees who visited the site"),
+        industry: str = Query(None, description="Company industry "),
         company_service: CompanyService = Depends(get_companies_service)
 ):
     return company_service.get_companies(
@@ -30,6 +35,10 @@ async def get_companies(
         from_date=from_date,
         to_date=to_date,
         regions=regions,
+        employees_range=employees_range,
+        employee_visits=employee_visits,
+        revenue_range=revenue_range,
+        industry=industry,
         search_query=search_query,
         timezone_offset=timezone_offset
     )
@@ -64,16 +73,16 @@ async def download_companies(
     return BaseEnum.FAILURE
 
 
-# @router.get("/search-location")
-# async def search_location(start_letter: str = Query(..., min_length=3),
-#                           leads_service: LeadsService = Depends(get_leads_service)):
-#     return leads_service.search_location(start_letter)
-#
-#
-# @router.get("/search-contact")
-# async def search_contact(start_letter: str = Query(..., min_length=3),
-#                          leads_service: LeadsService = Depends(get_leads_service)):
-#     return leads_service.search_contact(start_letter)
+@router.get("/search-location")
+async def search_location(start_letter: str = Query(..., min_length=3),
+                          company_service: CompanyService = Depends(get_companies_service)):
+    return company_service.search_location(start_letter)
+
+
+@router.get("/search-contact")
+async def search_contact(start_letter: str = Query(..., min_length=3),
+                         company_service: CompanyService = Depends(get_companies_service)):
+    return company_service.search_company(start_letter)
 
 
 

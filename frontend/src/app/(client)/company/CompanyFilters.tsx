@@ -130,7 +130,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
         "2": "2",
         "3": "3",
         "4": "4",
-        "4+": "4+"
+        "5+": "5+"
       };
 
       const filterName = tagMap[valueToDelete];
@@ -326,16 +326,14 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
   // Revenue
 
   const [checkedFiltersRevenue, setCheckedFiltersRevenue] = useState({
-    "Below 10k": false,
-    "$10k - $50k": false,
-    "$50k - $100k": false,
-    "$100k - $500k": false,
-    "$500k - $1M": false,
+    "Under 1M": false,
     "$1M - $5M": false,
     "$5M - $10M": false,
-    "$10M - $50M": false,
+    "$10M - $25M": false,
+    "$25M - $50M": false,
     "$50M - $100M": false,
-    "$100M - $500M": false,
+    "$100M - $250M": false,
+    "$250M - $500M": false,
     "$500M - $1B": false,
     "$1 Billion +": false,
     "unknown": false,
@@ -364,17 +362,17 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
 
   ////Number of Employees
   const [checkedFiltersNumberOfEmployees, setCheckedFiltersNumberOfEmployees] = useState({
-    "1-10": false,
-    "11-20": false,
-    "21-50": false,
-    "51-100": false,
-    "101-200": false,
-    "201-500": false,
-    "501-1000": false,
-    "1001-2000": false,
-    "2001-5000": false,
-    "5001-10000": false,
-    "10001+": false,
+    '1-10': false,
+    '11-25': false,
+    '26-50': false,
+    '51-100': false,
+    '101-250': false,
+    '251-500': false,
+    '501-1000': false,
+    '1001-5000': false,
+    '2001-5000': false,
+    '5001-10000': false,
+    '10001+': false,
     "unknown": false,
   });
 
@@ -411,7 +409,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
       "2": "2",
       "3": "3",
       "4": "4",
-      "4+": "4+"
+      "5+": "5+"
     };
 
     if (selectedPageVisit) {
@@ -503,29 +501,27 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
     from_date: number | null;
     to_date: number | null;
     checkedFiltersRevenue: {
-      "Below 10k": boolean,
-      "$10k - $50k": boolean,
-      "$50k - $100k": boolean,
-      "$100k - $500k": boolean,
-      "$500k - $1M": boolean,
+      "Under 1M": boolean,
       "$1M - $5M": boolean,
       "$5M - $10M": boolean,
-      "$10M - $50M": boolean,
+      "$10M - $25M": boolean,
+      "$25M - $50M": boolean,
       "$50M - $100M": boolean,
-      "$100M - $500M": boolean,
+      "$100M - $250M": boolean,
+      "$250M - $500M": boolean,
       "$500M - $1B": boolean,
       "$1 Billion +": boolean,
       "unknown": boolean,
     };
     checkedFiltersNumberOfEmployees: {
       "1-10": boolean,
-      "11-20": boolean,
-      "21-50": boolean,
+      "11-25": boolean,
+      "26-50": boolean,
       "51-100": boolean,
-      "101-200": boolean,
-      "201-500": boolean,
+      "101-250": boolean,
+      "251-500": boolean,
       "501-1000": boolean,
-      "1001-2000": boolean,
+      "1001-5000": boolean,
       "2001-5000": boolean,
       "5001-10000": boolean,
       "10001+": boolean,
@@ -556,14 +552,13 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
 
       setCheckedFiltersNumberOfEmployees(savedFilters.checkedFiltersNumberOfEmployees || {
         "1-10": false,
-        "11-20": false,
-        "21-50": false,
+        "11-25": false,
+        "26-50": false,
         "51-100": false,
-        "101-200": false,
-        "201-500": false,
+        "101-250": false,
+        "251-500": false,
         "501-1000": false,
-        "1001-2000": false,
-        "2001-5000": false,
+        "1001-5000": false,
         "5001-10000": false,
         "10001+": false,
         "unknown": false,
@@ -575,14 +570,13 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
       if (isNumberOfEmployeesFilterActive) {
         const NumberOfEmployeesTagMap: { [key: string]: string } = {
           "1-10": "1-10",
-          "11-20": "11-20",
-          "21-50": "21-50",
+          "11-25": "11-25",
+          "26-50": "26-50",
           "51-100": "51-100",
-          "101-200": "101-200",
-          "201-500": "201-500",
+          "101-250": "101-250",
+          "251-500": "251-500",
           "501-1000": "501-1000",
-          "1001-2000": "1001-2000",
-          "2001-5000": "2001-5000",
+          "1001-5000": "1001-5000",
           "5001-10000": "5001-10000",
           "10001+": "10001+",
           "unknown": "unknown",
@@ -628,16 +622,14 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
 
       if (isRevenueFilterActive) {
         const pageVisitsTagMap: { [key: string]: string } = {
-          "Below 10k": "Below 10k",
-          "$10k - $50k": "$10k - $50k",
-          "$50k - $100k": "$50k - $100k",
-          "$100k - $500k":  "$100k - $500k",
-          "$500k - $1M": "$500k - $1M",
+          "Under 1M": "Under 1M",
           "$1M - $5M": "$1M - $5M",
           "$5M - $10M": "$5M - $10M",
-          "$10M - $50M": "$10M - $50M",
+          "$10M - $25M": "$10M - $25M",
+          "$25M - $50M": "$25M - $50M",
           "$50M - $100M": "$50M - $100M",
-          "$100M - $500M": "$100M - $500M",
+          "$100M - $250M": "$100M - $250M",
+          "$250M - $500M": "$250M - $500M",
           "$500M - $1B": "$500M - $1B",
           "$1 Billion +": "$1 Billion +",
           "unknown": "unknown",
@@ -718,7 +710,6 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
 
   const handleApply = () => {
     const filters = handleFilters();
-    console.log(checkedFiltersIndustries)
     onApply(filters);
     onClose();
   };
@@ -788,38 +779,36 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
     setIsVisitedDateOpen(false);
     setIsVisitedPageOpen(false);
     setIsNumberOfEmployeeOpen(false),
-    setIsRegionOpen(false);
+      setIsRegionOpen(false);
     setIsRevenueOpen(false)
     setIsIndustryOpen(false);
     setCheckedFiltersIndustries({})
     setSelectedPageVisit('')
 
     setCheckedFiltersNumberOfEmployees({
-      "1-10": false,
-      "11-20": false,
-      "21-50": false,
-      "51-100": false,
-      "101-200": false,
-      "201-500": false,
-      "501-1000": false,
-      "1001-2000": false,
-      "2001-5000": false,
-      "5001-10000": false,
-      "10001+": false,
+      '1-10': false,
+      '11-25': false,
+      '26-50': false,
+      '51-100': false,
+      '101-250': false,
+      '251-500': false,
+      '501-1000': false,
+      '1001-5000': false,
+      '2001-5000': false,
+      '5001-10000': false,
+      '10001+': false,
       "unknown": false,
     });
 
     setCheckedFiltersRevenue({
-      "Below 10k": false,
-      "$10k - $50k": false,
-      "$50k - $100k": false,
-      "$100k - $500k": false,
-      "$500k - $1M": false,
+      "Under 1M": false,
       "$1M - $5M": false,
       "$5M - $10M": false,
-      "$10M - $50M": false,
+      "$10M - $25M": false,
+      "$25M - $50M": false,
       "$50M - $100M": false,
-      "$100M - $500M": false,
+      "$100M - $250M": false,
+      "$250M - $500M": false,
       "$500M - $1B": false,
       "$1 Billion +": false,
       "unknown": false,
@@ -859,7 +848,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
   const fetchCities = debounce(async (searchValue: string) => {
     if (searchValue.length >= 3) {
       try {
-        const response = await axiosInstance.get('leads/search-location', {
+        const response = await axiosInstance.get('company/search-location', {
           params: { start_letter: searchValue },
         });
         setCities(response.data);
@@ -887,7 +876,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
   const fetchContacts = debounce(async (query: string) => {
     if (query.length >= 3) {
       try {
-        const response = await axiosInstance.get('/leads/search-contact', {
+        const response = await axiosInstance.get('/company/search-contact', {
           params: { start_letter: query },
         });
         const formattedContacts = response.data.map((contact: string) => ({ name: contact }));
@@ -1084,7 +1073,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                     { name: "2", label: "2" },
                     { name: "3", label: "3" },
                     { name: "4", label: "4" },
-                    { name: "4+", label: "4+" }
+                    { name: "5+", label: "5+" }
                   ].map(({ name, label }) => (
                     <FormControlLabel
                       key={name}
@@ -1350,16 +1339,14 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
               <Box sx={filterStyles.filter_dropdown}>
                 <Grid container spacing={0}>
                   {[
-                    "Below 10k",
-                    "$10k - $50k",
-                    "$50k - $100k",
-                    "$100k - $500k",
-                    "$500k - $1M",
+                    "Under 1M",
                     "$1M - $5M",
                     "$5M - $10M",
-                    "$10M - $50M",
+                    "$10M - $25M",
+                    "$25M - $50M",
                     "$50M - $100M",
-                    "$100M - $500M",
+                    "$100M - $250M",
+                    "$250M - $500M",
                     "$500M - $1B",
                     "$1 Billion +",
                     "unknown"
@@ -1432,17 +1419,16 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
               <Box sx={filterStyles.filter_dropdown}>
                 <Grid container spacing={0}>
                   {[
-                    "1-10",
-                    "11-20",
-                    "21-50",
-                    "51-100",
-                    "101-200",
-                    "201-500",
-                    "501-1000",
-                    "1001-2000",
-                    "2001-5000",
-                    "5001-10000",
-                    "10001+",
+                    '1-10',
+                    '11-25',
+                    '26-50',
+                    '51-100',
+                    '101-250',
+                    '251-500',
+                    '501-1000',
+                    '1001-5000',
+                    '5001-10000',
+                    '10001+',
                     "unknown",
                   ].map((range, index) => (
                     <Grid item xs={6} key={range}> {/* xs=3 означает 1/4 ширины контейнера (12 колонок / 4 = 3) */}
@@ -1584,7 +1570,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
 
           {/* Location */}
           <Box
-            sx={{...filterStyles.main_filter_form, mb: 15}}
+            sx={{ ...filterStyles.main_filter_form, mb: 15 }}
           >
             <Box
               sx={filterStyles.filter_form}

@@ -3,6 +3,7 @@ import math
 from datetime import datetime, timedelta
 
 import pytz
+from urllib.parse import unquote
 from sqlalchemy import and_, or_, desc, asc, Integer, cast, VARCHAR
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql import func
@@ -181,7 +182,7 @@ class CompanyPersistence:
         return leads
 
     def filter_companies(self, domain_id, page, per_page, from_date, to_date, regions,  sort_by, sort_order,
-                         search_query, timezone_offset):
+                         search_query, timezone_offset, employees_range, employee_visits, revenue_range, industry):
 
         first_visit_subquery = (
             self.db.query(
@@ -189,9 +190,18 @@ class CompanyPersistence:
                 func.min(LeadsVisits.start_date).label("visited_date")
             )
                 .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
-                .group_by(LeadUser.company_id)
-                .subquery()
         )
+
+        # Применяем фильтр по дате сразу при создании подзапроса
+        if from_date and to_date:
+            start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
+            end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
+            first_visit_subquery = first_visit_subquery.filter(
+                LeadsVisits.start_date.between(start_date, end_date)
+            )
+
+        # Завершаем формирование подзапроса
+        first_visit_subquery = first_visit_subquery.group_by(LeadUser.company_id).subquery()
 
         query = (
             self.db.query(
@@ -245,23 +255,78 @@ class CompanyPersistence:
             start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
             end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
             query = query.filter(
-                and_(
-                    or_(
-                        and_(
-                            LeadsVisits.start_date == start_date.date(),
-                            LeadsVisits.start_time >= start_date.time()
-                        ),
-                        and_(
-                            LeadsVisits.start_date == end_date.date(),
-                            LeadsVisits.start_time <= end_date.time()
-                        ),
-                        and_(
-                            LeadsVisits.start_date > start_date.date(),
-                            LeadsVisits.start_date < end_date.date()
-                        )
-                    )
-                )
+                first_visit_subquery.c.visited_date >= start_date,
+                first_visit_subquery.c.visited_date <= end_date
             )
+
+        if industry:
+            industries = [unquote(i.strip()) for i in industry.split(',')]
+            query = query.filter(LeadCompany.primary_industry.in_(industries))
+
+        if employees_range:
+            employees_map = {
+                "1-10": "1 to 10",
+                "11-25": "11 to 25",
+                "26-50": "26 to 50",
+                "51-100": "51 to 100",
+                "101-250": "101 to 250",
+                "251-500": "251 to 500",
+                "501-1000": "501 to 1000",
+                "1001-5000": "1001 to 5000",
+                "2001-5000": "2001 to 5000",
+                "5001-10000": "5001 to 10000",
+                "10001+": "10001+",
+            }
+
+            employees = [employees_map.get(unquote(i.strip()), None) for i in employees_range.split(',')]
+            employees_list = [e for e in employees if e]
+
+            filters = []
+
+            if employees_list:
+                filters.append(LeadCompany.employee_count.in_(employees_list))
+
+            if "unknown" in employees_range:
+                filters.append(LeadCompany.employee_count.is_(None))
+
+            if filters:
+                query = query.filter(or_(*filters))
+
+        if revenue_range:
+            revenue_map = {
+                "Under 1M": "Under 1 Million",
+                "$1M - $5M": "1 Million to 5 Million",
+                "$5M - $10M": "5 Million to 10 Million",
+                "$10M - $25M": "10 Million to 25 Million",
+                "$25M - $50M": "25 Million to 50 Million",
+                "$50M - $100M": "50 Million to 100 Million",
+                "$100M - $250M": "100 Million to 250 Million",
+                "$250M - $500M": "250 Million to 500 Million",
+                "$500M - $1B": "500 Million to 1 Billion",
+                "$1 Billion +": "1 Billion and Over",
+            }
+
+            revenue = [revenue_map.get(unquote(i.strip()), None) for i in revenue_range.split(',')]
+
+            revenue_list = [e for e in revenue if e]
+
+            filters = []
+
+            if revenue_list:
+                filters.append(LeadCompany.revenue.in_(revenue_list))
+
+            if "unknown" in revenue_range:
+                filters.append(LeadCompany.revenue.is_(None))
+
+            if filters:
+                query = query.filter(or_(*filters))
+
+        if employee_visits:
+            min_visits = int(employee_visits.rstrip('+'))
+            if employee_visits == '+5':
+                query = query.having(func.count(LeadUser.id) >= min_visits)
+            else:
+                query = query.having(func.count(LeadUser.id) == min_visits)
 
         if regions:
             filters = []
@@ -276,20 +341,10 @@ class CompanyPersistence:
             query = query.filter(or_(*filters))
 
         if search_query:
-            query = (
-                query
-                    .outerjoin(FiveXFiveUsersEmails, FiveXFiveUsersEmails.user_id == FiveXFiveUser.id)
-                    .outerjoin(FiveXFiveEmails, FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id)
-                    .outerjoin(FiveXFiveUsersPhones, FiveXFiveUsersPhones.user_id == FiveXFiveUser.id)
-                    .outerjoin(FiveXFivePhones, FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id)
-            )
-
             filters = [
-                FiveXFiveEmails.email.ilike(f'{search_query}%'),
-                FiveXFiveEmails.email_host.ilike(f'{search_query}%'),
-                FiveXFivePhones.number.ilike(f'{search_query}%')
+                LeadCompany.name.ilike(f'{search_query}%'),
+                LeadCompany.phone.ilike(f'{search_query}%'),
             ]
-            search_query = search_query.split()
 
             query = query.filter(or_(*filters))
 
@@ -299,67 +354,39 @@ class CompanyPersistence:
         max_page = math.ceil(count / per_page)
         return leads, count, max_page
 
-    def search_contact(self, start_letter, domain_id):
-        letters = start_letter.split()
-        FirstNameAlias = aliased(FiveXFiveNames)
-        LastNameAlias = aliased(FiveXFiveNames)
-
+    def search_company(self, start_letter, domain_id):
         query = (
             self.db.query(
-                FiveXFiveUser.first_name,
-                FiveXFiveUser.last_name,
-                FiveXFiveEmails.email,
-                FiveXFivePhones.number
+                LeadCompany.name,
+                LeadCompany.phone
             )
-                .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
-                .join(FirstNameAlias, FirstNameAlias.id == FiveXFiveUser.first_name_id)
-                .join(LastNameAlias, LastNameAlias.id == FiveXFiveUser.last_name_id)
-                .outerjoin(FiveXFiveUsersEmails, FiveXFiveUsersEmails.user_id == FiveXFiveUser.id)
-                .outerjoin(FiveXFiveEmails, FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id)
-                .outerjoin(FiveXFiveUsersPhones, FiveXFiveUsersPhones.user_id == FiveXFiveUser.id)
-                .outerjoin(FiveXFivePhones, FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id)
+                .join(LeadUser, LeadUser.company_id == LeadCompany.id)
                 .filter(
                 LeadUser.domain_id == domain_id,
-            ).group_by(FiveXFiveUser.first_name, FiveXFiveUser.last_name, FiveXFiveEmails.email, FiveXFivePhones.number,
-                       LeadUser.five_x_five_user_id)
-        )
-        email_host = start_letter.split('@')
-        if len(email_host) == 2:
-            email_host = email_host[1]
-        filters = [
-            FiveXFiveEmails.email.ilike(f'{start_letter}%'),
-            FiveXFiveEmails.email_host.ilike(f'{email_host}%'),
-            FiveXFivePhones.number.ilike(f'{start_letter}%')
-        ]
-        if len(letters) == 1:
-            filters.extend([
-                FirstNameAlias.name.ilike(f'{letters[0].strip()}%'),
-                LastNameAlias.name.ilike(f'{letters[0].strip()}%')
-            ])
-        elif len(letters) == 2:
-            name_filter = and_(
-                FirstNameAlias.name.ilike(f'{letters[0].strip()}%'),
-                LastNameAlias.name.ilike(f'{letters[1].strip()}%')
+                or_(
+                    LeadCompany.name.ilike(f'{start_letter}%'),
+                    LeadCompany.phone.ilike(f'{start_letter}%')
+                )
             )
-            filters.append(name_filter)
-        query = query.filter(or_(*filters))
-        leads = query.all()
-        return leads
+                .limit(10)
+        )
 
-    def search_location(self, start_letter, dommain_id):
+        companies = query.all()
+        return companies
+
+    def search_location(self, start_letter, domain_id):
         query = (
             self.db.query(
                 FiveXFiveLocations.city,
                 States.state_name
             )
-                .join(FiveXFiveUsersLocations, FiveXFiveUsersLocations.location_id == FiveXFiveLocations.id)
-                .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUsersLocations.five_x_five_user_id)
+                .join(LeadCompany,LeadCompany.five_x_five_location_id == FiveXFiveLocations.id)
+                .join(LeadUser, LeadUser.company_id == LeadCompany.id)
                 .outerjoin(States, States.id == FiveXFiveLocations.state_id)
-                .filter(
-                LeadUser.domain_id == dommain_id,
+                .filter(LeadUser.domain_id == domain_id,
                 or_(
                     FiveXFiveLocations.city.ilike(f'{start_letter}%'),
-                    States.state_name.ilike(f'{start_letter}%')
+                    States.state_name.ilike(f'{start_letter}%'),
                 )
             )
                 .group_by(FiveXFiveLocations.id, States.state_name)

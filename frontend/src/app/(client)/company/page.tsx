@@ -184,18 +184,39 @@ const Leads: React.FC = () => {
     
             const timezoneOffsetInHours = -new Date().getTimezoneOffset() / 60;
             let url = `/company?page=${page + 1}&per_page=${rowsPerPage}&timezone_offset=${timezoneOffsetInHours}`;
-    
-            // Обработка дат (From Date / To Date)
-            const fromDate = selectedFilters.find(filter => filter.label === 'From Date')?.value;
-            const toDate = selectedFilters.find(filter => filter.label === 'To Date')?.value;
-    
-            if (fromDate) {
-                const fromDateEpoch = Math.floor(new Date(fromDate).setHours(0, 0, 0, 0) / 1000);
-                url += `&from_date=${fromDateEpoch}`;
+
+            const startEpoch = appliedDates.start
+                ? Math.floor(new Date(appliedDates.start.toISOString()).getTime() / 1000)
+                : null;
+
+            const endEpoch = appliedDates.end
+                ? Math.floor(new Date(appliedDates.end.toISOString()).getTime() / 1000)
+                : null;
+
+            if (startEpoch !== null && endEpoch !== null) {
+                url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
             }
-            if (toDate) {
-                const toDateEpoch = Math.floor(new Date(toDate).setHours(23, 59, 59, 999) / 1000);
-                url += `&to_date=${toDateEpoch}`;
+    
+            // Processing "From Date"
+            if (selectedFilters.some(filter => filter.label === 'From Date')) {
+                const fromDate = selectedFilters.find(filter => filter.label === 'From Date')?.value || '';
+                if (fromDate) {
+                    const fromDateUtc = new Date(fromDate);
+                    fromDateUtc.setHours(0, 0, 0, 0);
+                    const fromDateEpoch = Math.floor(fromDateUtc.getTime() / 1000);
+                    url += `&from_date=${fromDateEpoch}`;
+                }
+            }
+
+            // Processing "To Date"
+            if (selectedFilters.some(filter => filter.label === 'To Date')) {
+                const toDate = selectedFilters.find(filter => filter.label === 'To Date')?.value || '';
+                if (toDate) {
+                    const toDateUtc = new Date(toDate);
+                    toDateUtc.setHours(23, 59, 59, 999);
+                    const toDateEpoch = Math.floor(toDateUtc.getTime() / 1000);
+                    url += `&to_date=${toDateEpoch}`;
+                }
             }
 
             // employee visits
@@ -281,17 +302,17 @@ const Leads: React.FC = () => {
         searchQuery: string | null;
         selectedPageVisit: string | null;
         checkedFiltersNumberOfEmployees: {
-            "1-10": boolean,
-            "11-20": boolean,
-            "21-50": boolean,
-            "51-100": boolean,
-            "101-200": boolean,
-            "201-500": boolean,
-            "501-1000": boolean,
-            "1001-2000": boolean,
-            "2001-5000": boolean,
-            "5001-10000": boolean,
-            "10001+": boolean,
+            '1-10': boolean,
+            '11-25': boolean,
+            '26-50': boolean,
+            '51-100': boolean,
+            '101-250': boolean,
+            '251-500': boolean,
+            '501-1000': boolean,
+            '1001-5000': boolean,
+            '2001-5000': boolean,
+            '5001-10000': boolean,
+            '10001+': boolean,
             "unknown": boolean,
         };
         checkedFiltersRevenue: {
@@ -498,7 +519,6 @@ const Leads: React.FC = () => {
 
     const handleApplyFilters = (filters: FilterParams) => {
         const newSelectedFilters: { label: string; value: string }[] = [];
-        console.log(filters)
 
         const dateFormat = 'YYYY-MM-DD';
 
@@ -531,8 +551,6 @@ const Leads: React.FC = () => {
                 label: 'Industry', 
                 value: () => getSelectedValues(filters.industry!) 
             },
-
-
         ];
 
 
@@ -551,6 +569,151 @@ const Leads: React.FC = () => {
             .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
             .join(' ');
     }
+
+    const handleResetFilters = async () => {
+        const url = `/company`;
+
+        try {
+            setIsLoading(true)
+            setAppliedDates({ start: null, end: null })
+            setFormattedDates('')
+            sessionStorage.removeItem('filters')
+            const response = await axiosInstance.get(url);
+            const [leads, count] = response.data;
+
+            setData(Array.isArray(leads) ? leads : []);
+            setCount(count || 0);
+            setStatus(response.data.status);
+            setSelectedDates({start: null, end: null})
+            setSelectedFilters([]);
+        } catch (error) {
+            console.error('Error fetching leads:', error);
+        }
+        finally {
+            setIsLoading(false)
+        }
+    };
+
+    const handleDeleteFilter = (filterToDelete: { label: string; value: string }) => {
+        const updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
+        setSelectedFilters(updatedFilters);
+        
+        const filters = JSON.parse(sessionStorage.getItem('filters') || '{}');
+    
+        switch (filterToDelete.label) {
+            case 'From Date':
+                filters.from_date = null;
+                setSelectedDates({ start: null, end: null });
+                break;
+            case 'To Date':
+                filters.to_date = null;
+                setSelectedDates({ start: null, end: null });
+                break;
+            case 'Regions':
+                filters.regions = [];
+                break;
+            case 'Search':
+                filters.searchQuery = '';
+                break;
+            case 'Employee Visits':
+                filters.selectedPageVisit = '';
+                break;
+            case 'Number of Employees':
+                Object.keys(filters.checkedFiltersNumberOfEmployees).forEach(key => {
+                    filters.checkedFiltersNumberOfEmployees[key] = false;
+                });
+                break;
+            case 'Revenue':
+                Object.keys(filters.checkedFiltersRevenue).forEach(key => {
+                    filters.checkedFiltersRevenue[key] = false;
+                });
+                break;
+            case 'Industry':
+                Object.keys(filters.industry).forEach(key => {
+                    filters.industry[key] = false;
+                });
+                break;
+            default:
+                break;
+        }
+        
+        if (!filters.from_date && !filters.to_date) {
+            filters.checkedFilters = {
+                lastWeek: false,
+                last30Days: false,
+                last6Months: false,
+                allTime: false,
+            };
+        }
+    
+        sessionStorage.setItem('filters', JSON.stringify(filters));
+    
+        if (filterToDelete.label === 'Dates') {
+            setAppliedDates({ start: null, end: null });
+            setFormattedDates('');
+            setSelectedDates({ start: null, end: null });
+        }
+    
+        // Обновляем фильтры для применения
+        const newFilters: FilterParams = {
+            from_date: updatedFilters.find(f => f.label === 'From Date') ? dayjs(updatedFilters.find(f => f.label === 'From Date')!.value).unix() : null,
+            to_date: updatedFilters.find(f => f.label === 'To Date') ? dayjs(updatedFilters.find(f => f.label === 'To Date')!.value).unix() : null,
+            regions: updatedFilters.find(f => f.label === 'Regions') ? updatedFilters.find(f => f.label === 'Regions')!.value.split(', ') : [],
+            searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',
+            selectedPageVisit: updatedFilters.find(f => f.label === 'Employee Visits') ? updatedFilters.find(f => f.label === 'Employee Visits')!.value : '',
+            checkedFiltersNumberOfEmployees: {
+                ...Object.keys(filters.checkedFiltersNumberOfEmployees).reduce((acc, key) => {
+                    acc[key as keyof typeof filters.checkedFiltersNumberOfEmployees] = updatedFilters.some(
+                        f => f.label === 'Number of Employees' && f.value.includes(key)
+                    );
+                    return acc;
+                }, {} as Record<keyof typeof filters.checkedFiltersNumberOfEmployees, boolean>),
+                '1-10': false,
+                '11-25': false,
+                '26-50': false,
+                '51-100': false,
+                '101-250': false,
+                '251-500': false,
+                '501-1000': false,
+                '1001-5000': false,
+                '2001-5000': false,
+                '5001-10000': false,
+                '10001+': false,
+                unknown: false
+            },
+            checkedFiltersRevenue: {
+                ...Object.keys(filters.checkedFiltersRevenue).reduce((acc, key) => {
+                    acc[key as keyof typeof filters.checkedFiltersRevenue] = updatedFilters.some(
+                        f => f.label === 'Revenue' && f.value.includes(key)
+                    );
+                    return acc;
+                }, {} as Record<keyof typeof filters.checkedFiltersRevenue, boolean>),
+                'Below 10k': false,
+                '$10k - $50k': false,
+                '$50k - $100k': false,
+                '$100k - $500k': false,
+                '$500k - $1M': false,
+                '$1M - $5M': false,
+                '$5M - $10M': false,
+                '$10M - $50M': false,
+                '$50M - $100M': false,
+                '$100M - $500M': false,
+                '$500M - $1B': false,
+                '$1 Billion +': false,
+                unknown: false
+            },
+            checkedFilters: {
+                lastWeek: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'lastWeek'),
+                last30Days: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'last30Days'),
+                last6Months: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'last6Months'),
+                allTime: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'allTime')
+            },
+            industry: Object.fromEntries(Object.keys(filters.industry).map(key => [key, updatedFilters.some(f => f.label === 'Industry' && f.value.includes(key))]))
+        };
+    
+        // Применяем обновленные фильтры
+        handleApplyFilters(newFilters);
+    };
 
 
     return (
@@ -721,7 +884,7 @@ const Leads: React.FC = () => {
                             </Button>
                         </Box>
                     </Box>
-                    {/* <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, overflowX: 'auto', "@media (max-width: 600px)": { mb: 1 } }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, overflowX: 'auto', "@media (max-width: 600px)": { mb: 1 } }}>
                         {selectedFilters.length > 0 && (
                             <Chip
                                 className='second-sub-title'
@@ -765,7 +928,7 @@ const Leads: React.FC = () => {
                                 />
                             );
                         })}
-                    </Box> */}
+                    </Box>
                     <Box sx={{
                         flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px', pb: '20px',
                         '@media (max-width: 900px)': {
