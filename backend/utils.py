@@ -3,6 +3,7 @@ import re
 import os
 import hashlib
 import json
+from urllib.parse import urlparse, parse_qs
 
 def get_utc_aware_date():
     return datetime.now(timezone.utc).replace(microsecond=0)
@@ -62,6 +63,13 @@ def validate_and_format_phone(phone_numbers: str) -> str:
 
     unique_numbers = sorted(formatted_numbers)
     return ', '.join(unique_numbers) if unique_numbers else None
+
+def get_url_params_list(url: str) -> str:
+    parsed_url = urlparse(url)
+    params = parse_qs(parsed_url.query)
+    param_list = [f"{key}={','.join(value)}" for key, value in params.items()]
+    
+    return ", ".join(param_list)
 
 def normalize_url(url):
     """
