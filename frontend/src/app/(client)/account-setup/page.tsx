@@ -58,6 +58,7 @@ const AccountSetup = () => {
   const [shopDomain, setShopDomain] = useState("");
   const [accessToken, setAccessToken] = useState("");
   const [bigcommerceHash, setBigcommerceHash] = useState("");
+  const [wordPressId, setWordPressId] = useState("");
   const [integrationsCredentials, setIntegrationsCredentials] = useState<IntegrationCredentials[]>([]);
   const [editingName, setEditingName] = useState(true)
   const [manuallInstall, setManuallInstall] = useState(false)
@@ -66,8 +67,6 @@ const AccountSetup = () => {
   const [wordpressInstall, setWordpressInstall] = useState(false)
   const [googletagInstall, setGoogletagInstall] = useState(false)
   const [sendlanePopupOpen, setSendlanePopupOpen] = useState(false)
-  const [bigcommercePopupOpen, setBigcommercePopupOpen] = useState(false)
-  const [shopifyPopupOpen, setShopifyPopupOpen] = useState(false)
   const [mailChimpPopupOpen, setMailchimpPopupOpen] = useState(false)
   const [attentivePopupOpen, setAttentivePopupOpen] = useState(false)
   const [slackPopupOpen, setSlackPopupOpen] = useState(false)
@@ -76,8 +75,8 @@ const AccountSetup = () => {
   const [omnisendPopupOpen, setOmnisendPopupOpen] = useState(false)
   const [metaPopupOpen, setMetaPopupOpen] = useState(false)
   const [opengoogle, setGoogleOpen] = useState(false);
-  const handleGoogleClose = () => setGoogleOpen(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [cmsData, setCmsData] = useState<CmsData>({});
   const { setBackButton, backButton } = useUser()
   const [errors, setErrors] = useState({
     websiteLink: "",
@@ -97,6 +96,11 @@ const AccountSetup = () => {
   const [emailDeveloper, setEmailDeveloper] = useState<string>();
   const [activeTab, setActiveTab] = useState(0);
   const { full_name: userFullName, email: userEmail, partner } = useUser();
+
+  interface CmsData {
+    manual?: string;
+    pixel_client_id?: string;
+  }
 
   interface IntegrationCredentials {
     access_token: string;
@@ -126,6 +130,7 @@ const AccountSetup = () => {
             router.push("/settings?section=subscription");
             break;
           case "DASHBOARD_ALLOWED":
+            router.push("/dashboard");
             setActiveTab(2)
             break;
           default:
@@ -152,10 +157,6 @@ const AccountSetup = () => {
 
     handleRedirect();
     fetchCompanyInfo();
-    // document.body.style.overflow = 'hidden';
-    // return () => {
-    //   document.body.style.overflow = 'auto';
-    // };
   }, []);
 
   const getUserDataFromStorage = () => {
@@ -335,8 +336,6 @@ const AccountSetup = () => {
     lineHeight: '16.8px',
     textAlign: 'left',
     color: 'rgba(0, 0, 0, 1)',
-    paddingTop: '0.25em',
-    paddingLeft: '3.7em',
   };
 
   const handleEmployeeRangeChange = (label: string) => {
@@ -512,7 +511,6 @@ const AccountSetup = () => {
       websiteLink: validateField(websiteLink, "website"),
       organizationName: validateField(organizationName, "organizationName")
     };
-
     return (
       errors.websiteLink === "" && errors.organizationName === "" && selectedVisits !== ""
     );
@@ -533,12 +531,31 @@ const AccountSetup = () => {
   };
 
   const installManually = async () => {
-    setEmailDeveloper(email ?? "")
     try {
       const response = await axiosInterceptorInstance.get('/install-pixel/manually');
       setPixelCode(response.data.manual);
     } catch (error) {
       console.error('Error fetching data:', error);
+    }
+  };
+
+  const installCMS = async () => {
+    try {
+      setIsLoading(true)
+      const response = await axiosInterceptorInstance.get('/install-pixel/cms');
+      setCmsData(response.data);
+      setWordPressId(response.data.pixel_client_id)
+    } catch (error) {
+      if (error instanceof AxiosError && error.response?.status === 403) {
+        if (error.response.data.status === 'NEED_BOOK_CALL') {
+          sessionStorage.setItem('is_slider_opened', 'true');
+        } else {
+          sessionStorage.setItem('is_slider_opened', 'false');
+        }
+      }
+    }
+    finally {
+      setIsLoading(false)
     }
   };
 
@@ -557,9 +574,9 @@ const AccountSetup = () => {
   const method_installingPixel = [
     { label: "Manually", src: "install_manually.svg", setState: setManuallInstall, action: installManually },
     { label: "Google Tag Manager", src: "install_gtm.svg", setState: setGoogletagInstall, action: () => { setGoogleOpen(true) } },
-    { label: "Shopify", src: "install_cms1.svg", setState: setShopifyInstall, action: () => { } },
-    { label: "WordPress", src: "install_cms2.svg", setState: setWordpressInstall, action: () => { } },
-    { label: "Bigcommerce", src: "bigcommerce-icon.svg", setState: setBigcommerceInstall, action: () => { } },
+    { label: "Shopify", src: "install_cms1.svg", setState: setShopifyInstall, action: installCMS },
+    { label: "WordPress", src: "install_cms2.svg", setState: setWordpressInstall, action: installCMS },
+    { label: "Bigcommerce", src: "bigcommerce-icon.svg", setState: setBigcommerceInstall, action: installCMS },
   ];
   const integrations = [
     { label: "Klaviyo", src: "klaviyo.svg", setState: setKlaviyoPopupOpen },
@@ -608,6 +625,7 @@ const AccountSetup = () => {
     let isMatched = false;
 
     method_installingPixel.forEach(({ label, setState, action }) => {
+      console.log(selectedMethodInstall, label)
       if (selectedMethodInstall === label) {
         setState(true);
         isMatched = true;
@@ -706,8 +724,35 @@ const AccountSetup = () => {
     }
   }
 
+  const handleCopyToClipboard = () => {
+    if (cmsData.pixel_client_id){
+      navigator.clipboard.writeText(cmsData.pixel_client_id);
+      showToast('Site ID copied to clipboard!');
+    }
+  };
+
   const handleInstallWordPress = () => {
-    
+    let url = domainName.trim();
+    if (url) {
+      if (!/^https?:\/\//i.test(url)) {
+        url = "http://" + url;
+      }
+
+      axiosInstance.post("/install-pixel/check-pixel-installed-parse", { url })
+        .then(response => {
+          const status = response.data.status;
+          if (status === "PIXEL_CODE_INSTALLED") {
+            showToast("Pixel code is installed successfully!");
+          }
+        })
+        .catch(error => {
+          showErrorToast("An error occurred while checking the pixel code.");
+        });
+
+      const hasQuery = url.includes("?");
+      const newUrl = url + (hasQuery ? "&" : "?") + "vge=true" + "&api=https://api-dev.maximiz.ai";
+      window.open(newUrl, "_blank");
+    }
   }
 
   const handleVerifyPixel = () => {
@@ -723,7 +768,6 @@ const AccountSetup = () => {
         .then(response => {
           const status = response.data.status;
           if (status === "PIXEL_CODE_INSTALLED") {
-            showToast('Pixel code is installed successfully!');
             setActiveTab((prev) => prev + 1);
           }
         })
@@ -793,8 +837,6 @@ const AccountSetup = () => {
               display: 'none',
               minWidth: '32px',
               padding: '6px',
-              mr: 3,
-              mb: '1.125rem',
               color: 'rgba(128, 128, 128, 1)',
               border: '1px solid rgba(184, 184, 184, 1)',
               borderRadius: '3.27px',
@@ -865,6 +907,7 @@ const AccountSetup = () => {
             </MenuItem>
           </Menu>
         </Box>
+        
         <Box sx={{ ...styles.nav, position: "relative" }}>
           {selectedMethodInstall === "" && activeTab != 2 && <Button
             className="hyperlink-red"
@@ -911,7 +954,7 @@ const AccountSetup = () => {
             />
             Back
           </Button>}
-          <Tabs
+          {true && <Tabs
             value={activeTab}
             sx={{
               "& .MuiTabs-indicator": {
@@ -997,8 +1040,170 @@ const AccountSetup = () => {
                   color: "#F45745",
                 },
               }}
+
             />
-          </Tabs>
+          </Tabs>}
+
+          {false && 
+          <Tabs sx={{
+            width: "100%",
+          }}>
+            <Tab 
+              label="Create Account"
+              sx={{
+                textTransform: "none",
+                pointerEvents: "none",
+                lineHeight: "normal !important",
+                padding: 0,
+                pt: "38px",
+                position: "relative",
+                color: "rgba(244, 87, 69, 1)",
+                justifyContent: "end",
+                alignItems: "start",  
+                width: "90px",
+                textAlign: "left",
+                wordWrap: 'break-word',
+                whiteSpace: 'pre-wrap',
+                '&::before': {
+                  content: '"1"',
+                  display: 'flex',
+                  position: 'absolute',
+                  borderRadius: "50%",
+                  top: '0px',
+                  width: '30px',
+                  height: '30px',
+                  color: activeTab > 0 ? "#fff" : "rgba(32, 33, 36, 1)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: activeTab === 0 ? "rgba(248, 70, 75, 1)" : "rgba(208, 213, 221, 1)", 
+                },
+                '&::after': {
+                  content: '""',
+                  display: 'block',
+                  position: 'absolute',
+                  left: 80,
+                  top: 15,
+                  width: '51px',
+                  height: '1px',
+                  backgroundColor: activeTab === 0 ? "rgba(248, 70, 75, 1)" : "rgba(32, 33, 36, 1)", 
+                }
+              }}
+            />
+            <Tab 
+              label="Business Info"
+              sx={{
+                textTransform: "none",
+                pointerEvents: "none",
+                lineHeight: "normal !important",
+                padding: 0,
+                pt: "38px",
+                position: "relative",
+                color: "rgba(244, 87, 69, 1)",
+                justifyContent: "end",
+                alignItems: "start",
+                width: "90px",
+                textAlign: "left",
+                wordWrap: 'break-word',
+                whiteSpace: 'pre-wrap',
+                '&::before': {
+                  content: '"2"',
+                  display: 'flex',
+                  position: 'absolute',
+                  borderRadius: "50%",
+                  top: 0,
+                  width: '30px',
+                  height: '30px',
+                  color: activeTab > 0 ? "#fff" : "rgba(32, 33, 36, 1)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: activeTab === 0 ? "rgba(248, 70, 75, 1)" : "rgba(208, 213, 221, 1)", 
+                },
+                '&::after': {
+                  content: '""',
+                  display: 'block',
+                  position: 'absolute',
+                  left: 80,
+                  top: 15,
+                  width: '51px',
+                  height: '1px',
+                  backgroundColor: activeTab === 0 ? "rgba(248, 70, 75, 1)" : "rgba(32, 33, 36, 1)", 
+                }
+              }}
+            />
+            <Tab 
+              label="Pixel Installation"
+              sx={{
+                textTransform: "none",
+                pointerEvents: "none",
+                lineHeight: "normal !important",
+                padding: 0,
+                pt: "38px",
+                position: "relative",
+                color: "rgba(244, 87, 69, 1)",
+                justifyContent: "end",
+                alignItems: "start",
+                width: "90px",
+                textAlign: "left",
+                wordWrap: 'break-word',
+                whiteSpace: 'pre-wrap',
+                '&::before': {
+                  content: '"3"',
+                  display: 'flex',
+                  position: 'absolute',
+                  borderRadius: "50%",
+                  top: 0,
+                  width: '30px',
+                  height: '30px',
+                  color: activeTab > 0 ? "#fff" : "rgba(32, 33, 36, 1)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: activeTab === 0 ? "rgba(248, 70, 75, 1)" : "rgba(208, 213, 221, 1)", 
+                },
+                '&::after': {
+                  content: '""',
+                  display: 'block',
+                  position: 'absolute',
+                  left: 80,
+                  top: 15,
+                  width: '51px',
+                  height: '1px',
+                  backgroundColor: activeTab === 0 ? "rgba(248, 70, 75, 1)" : "rgba(32, 33, 36, 1)", 
+                }
+              }}
+            />
+            <Tab 
+              label="Integrations"
+              sx={{
+                textTransform: "none",
+                pointerEvents: "none",
+                lineHeight: "normal !important",
+                padding: 0,
+                pt: "38px",
+                position: "relative",
+                color: "rgba(244, 87, 69, 1)",
+                justifyContent: "end",
+                alignItems: "start",
+                width: "90px",
+                textAlign: "left",
+                wordWrap: 'break-word',
+                whiteSpace: 'pre-wrap',
+                '&::before': {
+                  content: '"4"',
+                  display: 'flex',
+                  position: 'absolute',
+                  borderRadius: "50%",
+                  top: 0,
+                  width: '30px',
+                  height: '30px',
+                  color: activeTab > 0 ? "#fff" : "rgba(32, 33, 36, 1)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: activeTab === 0 ? "rgba(248, 70, 75, 1)" : "rgba(208, 213, 221, 1)", 
+                }
+              }}
+            />
+          </Tabs>}
+
         </Box>
 
         <Button
@@ -1010,7 +1215,7 @@ const AccountSetup = () => {
             minWidth: '32px',
             padding: '6px',
             // mr: '1.5rem',
-            // mb: '1.125rem',
+            // mb: '1.125rem',  
             color: 'rgba(128, 128, 128, 1)',
             border: '1px solid rgba(184, 184, 184, 1)',
             borderRadius: '3.27px',
@@ -1021,7 +1226,7 @@ const AccountSetup = () => {
               }
             },
             "@media (max-width: 600px)": {
-              display: 'none'
+              display: 'none',
             },
           }}
         >
@@ -1084,13 +1289,12 @@ const AccountSetup = () => {
 
       <Box sx={{display: "flex", justifyContent: "center", width: "100%"}}>
         <Box sx={{...styles.formContainer, overflow: "hidden"}}>
-            <Box sx={{...styles.form, overflow: "auto", marginTop: "1px"}}>
+            <Box sx={{...styles.form, overflow: "auto", marginTop: 3, "&::-webkit-scrollbar": {display: "none"}, "-ms-overflow-style": "none", "scrollbar-width": "none" }}>
               <Box
                 sx={{
                   "@media (max-width: 600px)": {
                     display: "flex",
                     flexDirection: "column",
-                    alignItems: "center",
                     justifyContent: "center",
                     pb: 1
                   },
@@ -1209,7 +1413,7 @@ const AccountSetup = () => {
                   </Button>
                 </>
               )}
-              {activeTab === 1 && (
+{activeTab === 1 && (
                 <>
                   {/* Business info */}
                   <Typography variant="body1" className="first-sub-title" sx={styles.text}>
@@ -1306,8 +1510,9 @@ const AccountSetup = () => {
               {activeTab === 2 &&
                 <>
                   {manuallInstall &&
-                    <Box>
-                      <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ width: '100%', alignItems: 'center', paddingBottom: '1rem' }}>
+                    <Box sx={{display: 'flex', flexDirection: "column", gap: 3}}> 
+                    
+                      <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ width: '100%', alignItems: 'center'}}>
                         <Box sx={{display: "flex", gap:"16px", alignItems: "center"}}>
                           <Image src="install_manually.svg" alt="Manually install pixel" width={24} height={24} />
                           <Typography className='first-sub-title'>
@@ -1316,12 +1521,13 @@ const AccountSetup = () => {
                         </Box>
                         <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-insta"
                           target="_blank" className='first-sub-title' style={{ fontSize: "14px", color: "rgba(80, 82, 178, 1)" }}
-                          sx={{ textDecoration: "underline", cursor: "pointer", '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
+                          sx={{ textDecoration: "underline", cursor: "pointer" }}>
                           Tutorial
                         </Link>
                       </Box>
                       <Divider />
-                      <Box sx={{ mt: 4, display: "flex", alignItems: "center", gap: 8 }}>
+
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 8 }}>
                         {editingName
                           ?
                           <>
@@ -1367,15 +1573,14 @@ const AccountSetup = () => {
                                 fetchEditDomain()
                               }}
                               sx={{
-                                ml: 2,
+                                m: 0,
                                 border: '1px solid rgba(80, 82, 178, 1)',
                                 textTransform: 'none',
                                 background: '#fff',
                                 color: 'rgba(80, 82, 178, 1)',
                                 fontFamily: 'Nunito Sans',
                                 padding: '0.65em 2em',
-                                mr: 1,
-                                '@media (max-width: 600px)': { padding: '0.5em 1.5em', mr: 0, ml: 0, left: 0 }
+                                '@media (max-width: 600px)': { padding: '0.5em 1.5em', left: 0 }
                               }}
                             >
                               <Typography className='second-sub-title' sx={{
@@ -1387,7 +1592,7 @@ const AccountSetup = () => {
                           </>
                           :
                           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                            <Typography className='first-sub-title' sx={{ textAlign: 'left', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
+                            <Typography className='first-sub-title' sx={{ textAlign: 'left' }}>
                               {domainName}
                             </Typography>
                             <IconButton onClick={() => setEditingName(true)} sx={{ p: "4px", ':hover': { backgroundColor: 'transparent', } }} >
@@ -1397,59 +1602,62 @@ const AccountSetup = () => {
 
                         }
                       </Box>
-                      
-                      <Box sx={{ flex: 1, overflowY: "auto", paddingBottom: '10px', '@media (max-width: 600px)': { p: 2 } }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', pt: 3, justifyContent: 'start' }}>
-                          <Image src='/1.svg' alt='1' width={28} height={28} />
-                          <Typography className='first-sub-title' sx={maintext}>Copy the pixel code</Typography>
-                        </Box>
-                        <Box
-                          component="pre"
-                          sx={{
-                            backgroundColor: '#ffffff',
-                            gap: 2,
-                            position: 'relative',
-                            wordWrap: 'break-word',
-                            whiteSpace: 'pre-wrap',
-                            border: '1px solid rgba(228, 228, 228, 1)',
-                            borderRadius: '10px',
-                            marginLeft: '3em',
-                            maxHeight: '14em',
-                            overflowY: 'auto',
-                            overflowX: 'hidden',
-                            '@media (max-width: 600px)': {
+                        
+                        <Box sx={{ display: 'grid', rowGap: 1, columnGap: 2, alignItems: 'center', padding: 0, gridTemplateColumns: "20px 1fr" }}>
+                          <Image src='/1.svg' alt='1' width={20} height={20} />
+                          <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: 0, fontWeight: '500' }}>Copy the pixel code</Typography>
+                          <Box/>
+                          <Box
+                            component="pre"
+                            sx={{
+                              m: 0,
+                              backgroundColor: '#ffffff',
+                              gap: 2,
+                              position: 'relative',
+                              wordWrap: 'break-word',
+                              whiteSpace: 'pre-wrap',
+                              border: '1px solid rgba(228, 228, 228, 1)',
+                              borderRadius: '10px',
                               maxHeight: '14em',
-                            },
-                          }}
-                        >
-                          <IconButton
-                            onClick={handleCopy}
-                            sx={{ position: 'absolute', right: '10px', top: '10px' }}
+                              overflowY: 'auto',
+                              overflowX: 'hidden',
+                              '@media (max-width: 600px)': {
+                                maxHeight: '14em',
+                              },
+                            }}
                           >
-                            <ContentCopyIcon />
-                          </IconButton>
-                          <code style={{ color: 'rgba(95, 99, 104, 1)', fontSize: '12px', margin: 0, fontWeight: 400, fontFamily: 'Nunito Sans', textWrap: 'nowrap' }}>{pixelCode?.trim()}</code>
+                            <IconButton onClick={handleCopy} sx={{ position: 'absolute', right: '10px', top: '10px' }}>
+                              <ContentCopyIcon />
+                            </IconButton>
+                            <code style={{ color: 'rgba(95, 99, 104, 1)', fontSize: '12px', margin: 0, fontWeight: 400, fontFamily: 'Nunito Sans', textWrap: 'nowrap' }}>
+                              {pixelCode?.trim()}
+                            </code>
+                          </Box>
                         </Box>
-                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '0.5em 0em 0em 0em', justifyContent: 'start' }}>
-                          <Image src='/2.svg' alt='2' width={28} height={28} />
-                          <Typography className='first-sub-title' sx={maintext}>Paste the pixel in your website</Typography>
+                        
+                        <Box sx={{ display: 'grid', rowGap: 1, columnGap: 2, alignItems: 'center', padding: 0, gridTemplateColumns: "20px 1fr" }}>
+                          <Image src='/2.svg' alt='2' width={20} height={20} />
+                          <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: 0, fontWeight: '500' }}>Paste the pixel in your website</Typography>
+                          <Box />
+                          <Typography className='paragraph' sx={subtext}>Paste the above pixel in the header of your website. The header script starts with &lt;head&gt; and ends with &lt;/head&gt;.</Typography>
                         </Box>
-                        <Typography className='paragraph' sx={subtext}>Paste the above pixel in the header of your website. The header script starts with &lt;head&gt; and ends with &lt;/head&gt;.</Typography>
-                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1.25em 0em 0em 0em', justifyContent: 'start' }}>
-                          <Image src='/3.svg' alt='3' width={28} height={28} />
-                          <Typography className='first-sub-title' sx={maintext}>Verify Your Pixel</Typography>
+                        
+                        
+                        <Box sx={{ display: 'grid', rowGap: 1, columnGap: 2, alignItems: 'center', padding: 0, gridTemplateColumns: "20px 1fr" }}>
+                          <Image src='/3.svg' alt='3' width={20} height={20} />
+                          <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: 0, fontWeight: '500' }}>Verify Your Pixel</Typography>
+                          <Box />
+                          <Typography className='paragraph' sx={subtext}>Once the pixel is pasted in your website, wait for 10-15 mins and verify your pixel.</Typography>
                         </Box>
-                        <Typography className='paragraph' sx={subtext}>Once the pixel is pasted in your website, wait for 10-15 mins and verify your pixel.</Typography>
-                        <Box sx={{ position: 'relative', width: '100%', pt: 5, '@media (max-width: 600px)': { pt: 2 } }}>
+                        
+                        <Box sx={{ position: 'relative', width: '100%' }}>
                           <Box
                             sx={{
                               padding: '1.1em',
                               border: '1px solid #e4e4e4',
                               borderRadius: '8px',
                               backgroundColor: 'rgba(247, 247, 247, 1)',
-                              boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-                              marginBottom: '1.9em',
-                              '@media (max-width: 600px)': { m: 2 }
+                              boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)'
                             }}
                           >
                             <Typography
@@ -1514,6 +1722,7 @@ const AccountSetup = () => {
                             </Box>
                           </Box>
                         </Box>
+
                         <Button
                           className='hyperlink-red'
                           fullWidth
@@ -1536,29 +1745,31 @@ const AccountSetup = () => {
                         >
                           Verify Your Pixel
                         </Button>
-                      </Box>
                     </Box>
                   }
                   {shopifyInstall && 
-                    <Box>
-                      <Box display="flex" justifyContent="space-between" sx={{ width: '100%', alignItems: 'center', paddingBottom: '1rem' }}>
-                          <Box display="flex" gap="16px">
-                          <Image src="install_cms1.svg" alt="Shopify install pixel" width={24} height={24}/>
-                            <Typography className='first-sub-title' sx={{  textAlign: 'left', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
-                              Install with Shopify
-                            </Typography>
-                          </Box>    
-                          <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store" 
-                                target="_blank" className='first-sub-title' style={{fontSize: "14px", color: "rgba(80, 82, 178, 1)"}} 
-                                sx={{ textDecoration: "underline", cursor: "pointer",'@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
-                            Tutorial
-                          </Link>
+                    <Box sx={{display: 'flex', flexDirection: "column", gap: 3}}> 
+                      
+                      <Box display="flex" justifyContent="space-between" sx={{ width: '100%', alignItems: 'center'}}>
+                        <Box display="flex" gap="16px">
+                        <Image src="install_cms1.svg" alt="Shopify install pixel" width={24} height={24}/>
+                          <Typography className='first-sub-title' sx={{  textAlign: 'left'}}>
+                            Install with Shopify
+                          </Typography>
+                        </Box>    
+                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store" 
+                              target="_blank" className='first-sub-title' style={{fontSize: "14px", color: "rgba(80, 82, 178, 1)"}} 
+                              sx={{ textDecoration: "underline", cursor: "pointer"}}>
+                          Tutorial
+                        </Link>
                       </Box>
+
                       <Divider />
-                      <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
-                          <Image src='/1.svg' alt='1' width={28} height={28} />
+                      
+                      <Box sx={{ display: 'grid', rowGap: 1, columnGap: 2, alignItems: 'center', padding: 0, gridTemplateColumns: "20px 1fr" }}>
+                          <Image src='/1.svg' alt='1' width={20} height={20} />
                           <Box sx={{display: 'flex', alignItems: "center"}}>
-                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Shopify shop domain in the designated field. This allows our system to identify your store.</Typography>
+                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: 0, fontWeight: '500' }}>Enter your Shopify shop domain in the designated field. This allows our system to identify your store.</Typography>
                           </Box>
                           <Box/>
                           <TextField
@@ -1581,11 +1792,9 @@ const AccountSetup = () => {
                               : (domainName ? `https://${domainName.replace(/^https?:\/\//, "")}` : "https://")
                             }
                             sx={{
-                              pl: 2,
+                              mt: 0,
+                              mb: 0,
                               "& .MuiOutlinedInput-root": {
-                                "& label": {
-                                  transformOrigin: "inherit"
-                                },
                                 "& fieldset": {
                                   borderColor: "rgba(80, 82, 178, 1)",
                                 },
@@ -1593,15 +1802,18 @@ const AccountSetup = () => {
                                   borderColor: "rgba(86, 153, 237, 1)",
                                 },
                                 "& .MuiInputLabel-root.Mui-focused": {
-                                    color: "rgba(17, 17, 19, 0.6)",
-                                },
-                                "&.MuiFormLabel-root-MuiInputLabel-root": {
-                                  transformOrigin: "inherit"
+                                  color: "rgba(17, 17, 19, 0.6)",
                                 }
                               },
                               "& .MuiInputLabel-shrink": {
-                                  transformOrigin: "center",
-                                },
+                                transformOrigin: "center",
+                                fontSize: "12px",
+                                left: "-5px",
+                                top: "-1px"
+                              },
+                              "& .MuiInputLabel-root.Mui-focused": {
+                                top: "-1px"
+                              }
                             }}
                             onFocus={handleFocus}
                             onBlur={handleBlur}
@@ -1609,10 +1821,11 @@ const AccountSetup = () => {
                             InputLabelProps={{ sx: styles.inputLabel }}
                           />
                       </Box>
-                      <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
-                          <Image src='/2.svg' alt='2' width={28} height={28} />
+                      
+                      <Box sx={{ display: 'grid', rowGap: 1, columnGap: 2, alignItems: 'center', padding: 0, gridTemplateColumns: "20px 1fr" }}>
+                          <Image src='/2.svg' alt='2' width={20} height={20} />
                           <Box sx={{display: 'flex', alignItems: "center"}}>
-                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Shopify shop domain in the designated field. This allows our system to identify your store.</Typography>
+                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: 0, fontWeight: '500' }}>Enter your Shopify shop domain in the designated field. This allows our system to identify your store.</Typography>
                           </Box>
                           <Box/>
                           <TextField
@@ -1625,12 +1838,12 @@ const AccountSetup = () => {
                               },
                             }}
                             fullWidth
-                            label="Access Token"
                             variant="outlined"
                             placeholder='Enter your Access Token'
                             margin="normal"
                             sx={{
-                              pl: 2,
+                              mt: 0,
+                              mb: 0,
                               "& .MuiOutlinedInput-root": {
                                 "& fieldset": {
                                   borderColor: "rgba(80, 82, 178, 1)",
@@ -1656,12 +1869,14 @@ const AccountSetup = () => {
                             InputLabelProps={{ sx: styles.inputLabel }}
                           />
                       </Box>
-                      <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
-                          <Image src='/3.svg' alt='3' width={28} height={28} />
+                      
+                      <Box sx={{ display: 'grid', rowGap: 1, columnGap: 2, alignItems: 'center', padding: 0, gridTemplateColumns: "20px 1fr" }}>
+                          <Image src='/3.svg' alt='3' width={20} height={20} />
                           <Box sx={{display: 'flex', alignItems: "center"}}>
-                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Once you have submitted the required information, our system will automatically install the script on your Shopify store. You don’t need to take any further action.</Typography>
+                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: 0, fontWeight: '500' }}>Once you have submitted the required information, our system will automatically install the script on your Shopify store. You don’t need to take any further action.</Typography>
                           </Box>
                       </Box>
+                      
                       <Button
                         className='hyperlink-red'
                         fullWidth
@@ -1671,7 +1886,7 @@ const AccountSetup = () => {
                           opacity: accessToken.trim() !== "" || domainName.trim() !== "" ? 1 : 0.6,
                           pointerEvents: accessToken.trim() !== "" || domainName.trim() !== "" ? "auto" : "none",
                           mb: 2,
-                          mt: 2,
+                          mt: 0,
                           backgroundColor: accessToken.trim() !== "" || domainName.trim() !== ""
                             ? "rgba(244, 87, 69, 1)"
                             : "rgba(244, 87, 69, 0.4)",
@@ -1685,28 +1900,32 @@ const AccountSetup = () => {
                       >
                         Install Pixel
                       </Button>
+
                     </Box>
                   }
                   {bigcommerceInstall && 
-                    <Box>
-                      <Box display="flex" justifyContent="space-between" sx={{ width: '100%', alignItems: 'center', paddingBottom: '1rem' }}>
-                          <Box display="flex" gap="16px">
-                          <Image src="bigcommerce-icon.svg" alt="Bigcommerce install pixel" width={24} height={24}/>
-                            <Typography className='first-sub-title' sx={{  textAlign: 'left', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
-                              Install with Bigcommerce
-                            </Typography>
-                          </Box>    
-                          <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store" 
-                                target="_blank" className='first-sub-title' style={{fontSize: "14px", color: "rgba(80, 82, 178, 1)"}} 
-                                sx={{ textDecoration: "underline", cursor: "pointer",'@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
-                            Tutorial
-                          </Link>
+                    <Box sx={{display: 'flex', flexDirection: "column", gap: 3}}> 
+                      
+                      <Box display="flex" justifyContent="space-between" sx={{ width: '100%', alignItems: 'center'}}>
+                        <Box display="flex" gap="16px">
+                        <Image src="bigcommerce-icon.svg" alt="Bigcommerce install pixel" width={24} height={24}/>
+                          <Typography className='first-sub-title' sx={{  textAlign: 'left' }}>
+                            Install with Bigcommerce
+                          </Typography>
+                        </Box>    
+                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store" 
+                              target="_blank" className='first-sub-title' style={{fontSize: "14px", color: "rgba(80, 82, 178, 1)"}} 
+                              sx={{ textDecoration: "underline", cursor: "pointer"}}>
+                          Tutorial
+                        </Link>
                       </Box>
+
                       <Divider />
-                      <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
-                          <Image src='/1.svg' alt='1' width={28} height={28} />
+                      
+                      <Box sx={{ display: 'grid', rowGap: 1, columnGap: 2, alignItems: 'center', padding: 0, gridTemplateColumns: "20px 1fr" }}>
+                          <Image src='/1.svg' alt='1' width={20} height={20} />
                           <Box sx={{display: 'flex', alignItems: "center"}}>
-                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Bigcommerce store hash in the designated field. This allows our system to identify your store.</Typography>
+                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: 0, fontWeight: '500' }}>Enter your Bigcommerce store hash in the designated field. This allows our system to identify your store.</Typography>
                           </Box>
                           <Box/>
                           <TextField
@@ -1719,12 +1938,11 @@ const AccountSetup = () => {
                               },
                             }}
                             fullWidth
-                            label="Store Hash"
                             variant="outlined"
                             placeholder='Enter your store hash'
                             margin="normal"
                             sx={{
-                              pl: 2,
+                              m: 0,
                               "& .MuiOutlinedInput-root": {
                                 "& fieldset": {
                                   borderColor: "rgba(80, 82, 178, 1)",
@@ -1750,12 +1968,14 @@ const AccountSetup = () => {
                             InputLabelProps={{ sx: styles.inputLabel }}
                           />
                       </Box>
-                      <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
-                          <Image src='/2.svg' alt='2' width={28} height={28} />
+                      
+                      <Box sx={{ display: 'grid', rowGap: 1, columnGap: 2, alignItems: 'center', padding: 0, gridTemplateColumns: "20px 1fr" }}>
+                          <Image src='/2.svg' alt='2' width={20} height={20} />
                           <Box sx={{display: 'flex', alignItems: "center"}}>
-                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Once you have submitted the required information, our system will automatically install the script on your Bigcommerce store. You don’t need to take any further action.</Typography>
+                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: 0, fontWeight: '500' }}>Once you have submitted the required information, our system will automatically install the script on your Bigcommerce store. You don’t need to take any further action.</Typography>
                           </Box>
                       </Box>
+                      
                       <Button
                         className='hyperlink-red'
                         fullWidth
@@ -1765,7 +1985,7 @@ const AccountSetup = () => {
                           opacity: bigcommerceHash.trim() !== "" ? 1 : 0.6,
                           pointerEvents: bigcommerceHash.trim() !== "" ? "auto" : "none",
                           mb: 2,
-                          mt: 2,
+                          mt: 0,
                           backgroundColor: bigcommerceHash.trim() !== ""
                             ? "rgba(244, 87, 69, 1)"
                             : "rgba(244, 87, 69, 0.4)",
@@ -1797,89 +2017,105 @@ const AccountSetup = () => {
                         </Link>
                       </Box>
                       <Divider />
-                      <GoogleTagPopup open={opengoogle} handleClose={handleGoogleClose} />
+                      <GoogleTagPopup open={opengoogle} handleClose={() => setGoogleOpen(false)} />
                     </Box>
                   }
                   {wordpressInstall && 
-                    <Box>
-                      <Box display="flex" justifyContent="space-between" sx={{ width: '100%', alignItems: 'center', paddingBottom: '1rem' }}>
-                          <Box display="flex" gap="16px">
-                          <Image src="install_cms2.svg" alt="WordPress install pixel" width={24} height={24}/>
-                            <Typography className='first-sub-title' sx={{  textAlign: 'left', '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
-                              Install with WordPress
-                            </Typography>
-                          </Box>    
-                          <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store" 
-                                target="_blank" className='first-sub-title' style={{fontSize: "14px", color: "rgba(80, 82, 178, 1)"}} 
-                                sx={{ textDecoration: "underline", cursor: "pointer",'@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
-                            Tutorial
-                          </Link>
+                    <Box sx={{display: 'flex', flexDirection: "column", gap: 3}}> 
+                      
+                      <Box display="flex" justifyContent="space-between" sx={{ width: '100%', alignItems: 'center'}}>
+                        <Box display="flex" gap="16px">
+                        <Image src="install_cms2.svg" alt="WordPress install pixel" width={24} height={24}/>
+                          <Typography className='first-sub-title' sx={{  textAlign: 'left'}}>
+                            Install with WordPress
+                          </Typography>
+                        </Box>    
+                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store" 
+                              target="_blank" className='first-sub-title' style={{fontSize: "14px", color: "rgba(80, 82, 178, 1)"}} 
+                              sx={{ textDecoration: "underline", cursor: "pointer"}}>
+                          Tutorial
+                        </Link>
                       </Box>
+
                       <Divider />
-                      <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
-                          <Image src='/1.svg' alt='1' width={28} height={28} />
+                      
+                      <Box sx={{ display: 'grid', rowGap: 1, columnGap: 2, alignItems: 'center', padding: 0, gridTemplateColumns: "20px 1fr" }}>
+                          <Image src='/1.svg' alt='1' width={20} height={20} />
                           <Box sx={{display: 'flex', alignItems: "center"}}>
-                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Enter your Bigcommerce store hash in the designated field. This allows our system to identify your store.</Typography>
+                            <Typography className='first-sub-title' sx={{ ...maintext, p: 0, fontWeight: '500' }}>Add our offical Maximiz pixel plugin to your Wordpress site.</Typography>
                           </Box>
                           <Box/>
-                          <TextField
-                            InputProps={{
-                              style: {
-                                  color: 'rgba(17, 17, 19, 1)',
-                                  fontFamily: 'Nunito Sans',
-                                  fontWeight: 400,
-                                  fontSize: '14px',
-                              },
-                            }}
-                            fullWidth
-                            label="Store Hash"
-                            variant="outlined"
-                            placeholder='Enter your store hash'
-                            margin="normal"
-                            sx={{
-                              pl: 2,
-                              "& .MuiOutlinedInput-root": {
-                                "& fieldset": {
-                                  borderColor: "rgba(80, 82, 178, 1)",
-                                },
-                                "&:hover fieldset": {
-                                  borderColor: "rgba(86, 153, 237, 1)",
-                                },
-                                "& .MuiInputLabel-root.Mui-focused": {
-                                    color: "rgba(17, 17, 19, 0.6)",
-                                }
-                              },
-                              "& .MuiInputLabel-shrink": {
-                                  transformOrigin: "center",
-                                  left: 10
-                                },
-                              "& .MuiInputLabel-root[data-shrink='false']": {
-                                    transform: "translate(16px, 15px) scale(1)",
-                                }, 
-                                
-                            }}
-                            value={bigcommerceHash}
-                            onChange={(e) => setBigcommerceHash(e.target.value)}
-                            InputLabelProps={{ sx: styles.inputLabel }}
-                          />
+                          <Button component={Link} href="https://wordpress.org/plugins/maximiz/" target="_blank" variant="outlined" sx={{ backgroundColor: 'rgba(80, 82, 178, 1)', color: 'rgba(255, 255, 255, 1)', width: "110px", height: "40px", textTransform: 'none', padding: '1.2 3', border: '1px solid rgba(80, 82, 178, 1)', '&:hover': { backgroundColor: 'rgba(80, 82, 178, 1)' } }}>
+                            <Typography className='second-sub-title' sx={{ fontSize: '14px !important', color: '#fff !important', textWrap: 'wrap' }}>Get plugin</Typography>
+                        </Button>
                       </Box>
-                      <Box sx={{ display: 'grid', gap: 1, alignItems: 'center', padding: 0, gridTemplateColumns: "36px 1fr" }}>
-                          <Image src='/2.svg' alt='2' width={28} height={28} />
+                      
+                      <Box sx={{ display: 'grid', rowGap: 1, columnGap: 2, alignItems: 'center', padding: 0, gridTemplateColumns: "20px 1fr" }}>
+                          <Image src='/2.svg' alt='2' width={20} height={20} />
                           <Box sx={{display: 'flex', alignItems: "center"}}>
-                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em 0em 1em 1em', fontWeight: '500' }}>Once you have submitted the required information, our system will automatically install the script on your Bigcommerce store. You don’t need to take any further action.</Typography>
+                            <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', p: 0, fontWeight: '500' }}>Enter your site ID:</Typography>
                           </Box>
+                          <Box />
+                          <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                          <Box
+                            component="pre"
+                            sx={{ 
+                              m: 0,
+                              border: '1px solid rgba(228, 228, 228, 1)',
+                              borderRadius: '10px',
+                              maxHeight: '10em',
+                              overflowY: 'auto',
+                              position: 'relative',
+                              padding: '0.75em',
+                              maxWidth: '100%',
+                              '@media (max-width: 600px)': {
+                                maxHeight: '14em',
+                              },
+                            }}
+                          >
+                            <code
+                              style={{
+                                color: '#000000',
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                fontFamily: 'Nunito Sans',
+                                textWrap: 'nowrap',
+                              }}
+                            >
+                              {cmsData.pixel_client_id}
+                            </code>
+
+                          </Box>
+                          <Box sx={{ display: 'flex', padding: '0px' }}>
+                            <IconButton onClick={handleCopyToClipboard}>
+                              <ContentCopyIcon />
+                            </IconButton>
+                          </Box>
+                        </Box>
                       </Box>
+                      
+                      <Box sx={{ display: 'grid', rowGap: 1, columnGap: 2, alignItems: 'center', padding: 0, gridTemplateColumns: "20px 1fr" }}>
+                          <Image src='/3.svg' alt='3' width={20} height={20} />
+                          <Box sx={{display: 'flex', alignItems: "center"}}>
+                            <Typography className='first-sub-title' sx={{ ...maintext, p: 0, fontWeight: '500' }}>Verify if Maximiz is receiving data from your site</Typography>
+                          </Box>
+                          <Box />
+                          <Button variant="outlined" sx={{ backgroundColor: 'rgba(255, 255, 255, 1)', width: "156px", textTransform: 'none', padding: '10px 24px', border: '1px solid rgba(80, 82, 178, 1)' }}>
+                            <Typography sx={{ fontSize: '14px !important', fontWeight: "400", color: 'rgba(80, 82, 178, 1) !important', lineHeight: '22.4px', textAlign: 'left', textWrap: 'wrap' }}>View installation</Typography>
+                          </Button>
+                      </Box>
+
                       <Button
                         className='hyperlink-red'
                         fullWidth
                         variant="contained"
                         sx={{
                           ...styles.submitButton,
-                          opacity: bigcommerceHash.trim() !== "" ? 1 : 0.6,
-                          pointerEvents: bigcommerceHash.trim() !== "" ? "auto" : "none",
+                          opacity: wordPressId.trim() !== "" ? 1 : 0.6,
+                          pointerEvents: wordPressId.trim() !== "" ? "auto" : "none",
                           mb: 2,
-                          mt: 2,
-                          backgroundColor: bigcommerceHash.trim() !== ""
+                          mt: 0,
+                          backgroundColor: wordPressId.trim() !== ""
                             ? "rgba(244, 87, 69, 1)"
                             : "rgba(244, 87, 69, 0.4)",
                           "&.Mui-disabled": {
@@ -1887,24 +2123,27 @@ const AccountSetup = () => {
                             color: "#fff",
                           },
                         }}
-                        onClick={handleInstallBigCommerce}
-                        disabled={bigcommerceHash.trim() === ""}
+                        onClick={() => setActiveTab((prev) => prev + 1)}
+                        disabled={wordPressId.trim() === ""}
                       >
-                        Install Pixel
+                        Next
                       </Button>
                     </Box>
                   }
                   {!shopifyInstall && !manuallInstall && !bigcommerceInstall && !googletagInstall && !wordpressInstall &&
                     <>
                       <Typography variant="body1" className="first-sub-title" sx={styles.text}>
-                        Select how you would like to install the pixel
+                        Install the pixel to start collecting data
                       </Typography>
                       {errors.selectedEmployees && (
                         <Typography variant="body2" color="error">
                           {errors.selectedEmployees}
                         </Typography>
+
                       )}
-                      <Box sx={{ ...styles.rolesButtons, display: "grid", gridTemplateColumns: "1fr 1fr" }}>
+                      <Box sx={{ ...styles.rolesButtons, display: "grid", gridTemplateColumns: "1fr 1fr", "@media (max-width: 450px)": { gridTemplateColumns: "1fr" }}}>
+
+
                         {method_installingPixel.map((range, index) => (
                           <Button
                             key={index}
@@ -1997,14 +2236,16 @@ const AccountSetup = () => {
               {activeTab === 3 && (
                 <>
                   <Typography variant="body1" className="first-sub-title" sx={styles.text}>
-                    These Will Be Available on Your Integration Page for quick Setup.
+                    Choose the platform where you send your data
                   </Typography>
-                  {errors.selectedEmployees && (
+                 {errors.selectedEmployees && (
                     <Typography variant="body2" color="error">
                       {errors.selectedEmployees}
                     </Typography>
+
                   )}
-                  <Box sx={{ ...styles.rolesButtons, display: "grid", gridTemplateColumns: "1fr 1fr 1fr" }}>
+                  <Box sx={{ ...styles.rolesButtons, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", "@media (max-width: 450px)": { gridTemplateColumns: "1fr" } }}>
+
                     {integrations.map((range, index) => (
                       <Button
                         key={index}
