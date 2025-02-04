@@ -610,6 +610,8 @@ const AccountSetup = () => {
   const handleNextClick = () => {
     if (activeTab === 0) {
       handleSubmit()
+      setActiveTab(1)
+    }else{
       endSetup()
     }
     //b2b uncomment
@@ -874,7 +876,7 @@ const AccountSetup = () => {
           </Menu>
         </Box>
         
-        {/* <Box sx={{ ...styles.nav, position: "relative" }}>
+        <Box sx={{ ...styles.nav, position: "relative" }}>
           {selectedMethodInstall === "" && activeTab != 2 && <Button
             className="hyperlink-red"
             variant="outlined"
@@ -970,7 +972,7 @@ const AccountSetup = () => {
                 },
               }}
             />
-            <Tab
+            {/* <Tab
               className="tab-heading"
               label="Pixel Installation"
               sx={{
@@ -988,8 +990,8 @@ const AccountSetup = () => {
                   color: "#F45745",
                 },
               }}
-            />
-            <Tab
+            /> */}
+            {/* <Tab
               className="tab-heading"
               label="Integrations"
               sx={{
@@ -1006,9 +1008,9 @@ const AccountSetup = () => {
                   color: "#F45745",
                 },
               }}
-            />
+            /> */}
           </Tabs>
-        </Box> */}
+        </Box>
 
         <Button
           aria-controls={open ? "profile-menu" : undefined}
@@ -1214,7 +1216,7 @@ const AccountSetup = () => {
                     onClick={handleNextClick}
                     disabled={!isFormValidFirst()}
                   >
-                    Nextt
+                    Next
                   </Button>
                 </>
               )}
