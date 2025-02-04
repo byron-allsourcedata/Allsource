@@ -25,8 +25,14 @@ class MillionVerifierIntegrationsService:
             return response.json()
         except requests.exceptions.RequestException as e:
             return {'error': str(e)}
+    
+    def find_checked_email(self, email: str):
+        return True
 
     def is_email_verify(self, email: str):
+        checked_email = self.find_checked_email()
+        if checked_email:
+            return checked_email.verify
         result = self.check_verify_email(email)
         if result.get('resultcode') in (3, 4, 5, 6):
             error_text = result.get('error')
