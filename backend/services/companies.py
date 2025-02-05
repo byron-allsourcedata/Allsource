@@ -29,7 +29,7 @@ class CompanyService:
         return None
 
     def get_companies(self, page, per_page, from_date, to_date, regions, sort_by, sort_order,
-                      search_query, timezone_offset):
+                      search_query, timezone_offset, employees_range, employee_visits, revenue_range, industry):
         companies, count, max_page = self.company_persistence_service.filter_companies(
             domain_id=self.domain.id,
             page=page,
@@ -39,13 +39,22 @@ class CompanyService:
             regions=regions,
             sort_by=sort_by,
             sort_order=sort_order,
+            employees_range=employees_range,
+            employee_visits=employee_visits,
+            revenue_range=revenue_range,
+            industry=industry,
             search_query=search_query,
-            timezone_offset=timezone_offset
         )
 
         company_list = []
         for company in companies:
             first_visited_date = company[5].strftime('%d.%m.%Y') if company[5] else None
+            first_visited_time = company[6].strftime('%H:%M')
+            combined_datetime = datetime.strptime(f"{first_visited_date} {first_visited_time}", '%d.%m.%Y %H:%M')
+            adjusted_datetime = combined_datetime + timedelta(hours=timezone_offset)
+            adjusted_date = adjusted_datetime.strftime('%d.%m.%Y')
+            adjusted_time = adjusted_datetime.strftime('%H:%M')
+
 
             company_list.append({
                 'id': company[0],
@@ -53,40 +62,44 @@ class CompanyService:
                 'phone': self.format_phone_number(company[2]) if company[2] else None,
                 'linkedin_url': company[3],
                 'employees_visited': company[4],
-                'visited_date': first_visited_date,
-                'company_revenue': company[6],
-                'employee_count': company[7],
-                'location': company[8],
-                'industry': company[9],
-                'domain': company[10],
-                'zipcode': company[11],
-                'description': company[12],
-                'city': company[13],
-                'state': company[14],
+                'visited_date': adjusted_date,
+                'company_revenue': company[7],
+                'employee_count': company[8],
+                'location': company[9],
+                'industry': company[10],
+                'domain': company[11],
+                'zipcode': company[12],
+                'description': company[13],
+                'city': company[14],
+                'state': company[15],
             })
 
         return company_list, count, max_page
 
-    def search_contact(self, start_letter):
+    def search_company(self, start_letter):
         start_letter = start_letter.replace('+', '').strip().lower()
-        if start_letter.split()[0].isdecimal():
+
+        if start_letter.isdecimal():
             start_letter = start_letter.replace(' ', '')
-        leads_data = self.company_persistence_service.search_contact(start_letter=start_letter, domain_id=self.domain.id)
+
+        companies_data = self.company_persistence_service.search_company(
+            start_letter=start_letter,
+            domain_id=self.domain.id
+        )
+
         results = set()
-        for lead in leads_data:
+        for company in companies_data:
             if start_letter.isdecimal():
-                results.add(lead.number)
+                results.add(company.phone)
             else:
-                if start_letter in (f"{lead.first_name} {lead.last_name}").lower():
-                    results.add(f"{lead.first_name} {lead.last_name}")
-                if lead.email and start_letter in (lead.email).lower():
-                    results.add(lead.email)
-        limited_results = list(results)[:10]
-        return limited_results
+                if start_letter in company.name.lower():
+                    results.add(company.name)
+
+        return list(results)[:10]
 
     def search_location(self, start_letter):
         location_data = self.company_persistence_service.search_location(start_letter=start_letter,
-                                                                       dommain_id=self.domain.id)
+                                                                       domain_id=self.domain.id)
         results_set = set()
 
         for location in location_data:
