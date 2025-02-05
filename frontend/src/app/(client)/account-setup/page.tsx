@@ -871,7 +871,7 @@ const AccountSetup = () => {
           </Menu>
         </Box>
         
-        <Box sx={{ ...styles.nav, position: "relative" }}>
+        <Box sx={{ ...styles.nav, position: "relative"}}>
           {selectedMethodInstall === "" && activeTab != 2 && <Button
             className="hyperlink-red"
             variant="outlined"
@@ -893,14 +893,14 @@ const AccountSetup = () => {
                 },
               },
               "@media (max-width: 600px)": {
-                display: "flex",
+                display: "none",
                 mr: 0,
                 position: "inherit",
                 left: 0,
                 top: 0,
               },
               "@media (max-width: 400px)": {
-                display: "flex",
+                display: "none",
                 mr: 0,
                 position: "inherit",
                 left: 0,
@@ -917,9 +917,13 @@ const AccountSetup = () => {
             />
             Back
           </Button>}
-          {true && <Tabs
+          <Tabs
             value={activeTab}
             sx={{
+              display: "flex",
+              "@media (max-width: 600px)": {
+                display: 'none',
+              },
               "& .MuiTabs-indicator": {
                 backgroundColor: "rgba(244, 87, 69, 1)",
               },
@@ -1005,11 +1009,21 @@ const AccountSetup = () => {
               }}
 
             />
-          </Tabs>}
+          </Tabs>
 
-          {false && 
-          <Tabs sx={{
+          
+          <Tabs
+            centered sx={{
             width: "100%",
+            ml: "30px",
+            display: "none",
+            "@media (max-width: 600px)": {
+              display: 'flex',
+            },
+            "& .MuiTab-root": {
+              width: "25%",
+              minWidth: 0,
+            },
           }}>
             <Tab 
               label={activeTab === 0 ? "Create Account" : " " }
@@ -1023,7 +1037,7 @@ const AccountSetup = () => {
                 color: "rgba(244, 87, 69, 1)",
                 justifyContent: "end",
                 alignItems: "start",  
-                width: "97px",
+                width: "25%",
                 fontSize: "16px",
                 fontFamily: "Open Sans",
                 fontWeight: 600,
@@ -1049,7 +1063,7 @@ const AccountSetup = () => {
                   position: 'absolute',
                   left: 38,
                   top: 15,
-                  width: '51px',
+                  width: "calc(100% - 46px)",
                   height: '1px',
                   backgroundColor: activeTab > 0 ? "rgba(248, 70, 75, 1)" : "rgba(32, 33, 36, 1)", 
                 }
@@ -1067,7 +1081,7 @@ const AccountSetup = () => {
                 color: "rgba(244, 87, 69, 1)",
                 justifyContent: "end",
                 alignItems: "start",
-                width: "97px",
+                width: "25%",
                 fontSize: "16px",
                 fontFamily: "Open Sans",
                 fontWeight: 600,
@@ -1093,7 +1107,7 @@ const AccountSetup = () => {
                   position: 'absolute',
                   left: 38,
                   top: 15,
-                  width: '51px',
+                  width: "calc(100% - 46px)",
                   height: '1px',
                   backgroundColor: activeTab > 1 ? "rgba(248, 70, 75, 1)" : "rgba(32, 33, 36, 1)", 
                 }
@@ -1111,7 +1125,7 @@ const AccountSetup = () => {
                 color: "rgba(244, 87, 69, 1)",
                 justifyContent: "end",
                 alignItems: "start",
-                width: "97px",
+                width: "25%",
                 fontSize: "16px",
                 fontFamily: "Open Sans",
                 fontWeight: 600,
@@ -1137,7 +1151,7 @@ const AccountSetup = () => {
                   position: 'absolute',
                   left: 38,
                   top: 15,
-                  width: '51px',
+                  width: "calc(100% - 46px)",
                   height: '1px',
                   backgroundColor: activeTab > 2 ? "rgba(248, 70, 75, 1)" : "rgba(32, 33, 36, 1)", 
                 }
@@ -1155,7 +1169,7 @@ const AccountSetup = () => {
                 color: "rgba(244, 87, 69, 1)",
                 justifyContent: "end",
                 alignItems: "start",
-                width: "90px",
+                width: "25%",
                 fontSize: "16px",
                 fontFamily: "Open Sans",
                 fontWeight: 600,
@@ -1177,7 +1191,7 @@ const AccountSetup = () => {
                 }
               }}
             />
-          </Tabs>}
+          </Tabs>
 
         </Box>
 
