@@ -16,7 +16,7 @@ interface RewardData {
     total_rewards: number;
     rewards_approved: number;
     rewards_paid: number;
-    count_accounts: number;
+    count_invites: number;
     payout_date: Date;
   }
 
@@ -48,7 +48,7 @@ const PartnersRewards: React.FC<RewardProps> = ({ isMaster, partnerId, loading, 
     const fetchRewards = async (selectedYear: string) => {
         setLoading(true);
         try {
-            const response = await axiosInstance.get("/partners/rewards", {
+            const response = await axiosInstance.get("/partners/rewards-history", {
                 params: {
                     year: selectedYear,
                     partner_id: partnerId,
@@ -285,7 +285,7 @@ const PartnersRewards: React.FC<RewardProps> = ({ isMaster, partnerId, loading, 
                           No. of invites
                         </Typography>
                         <Typography variant="subtitle1" className="table-data">
-                          {data.count_accounts}
+                          {data.count_invites}
                         </Typography>
                       </Box>
                       <Box>

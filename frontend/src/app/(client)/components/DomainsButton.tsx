@@ -11,6 +11,7 @@ import Slider from '../../../components/Slider';
 import Image from 'next/image';
 import ConfirmDeleteDomain from './DeleteDomain';
 import CustomizedProgressBar from '../../../components/FirstLevelLoader';
+import { fetchUserData } from '@/services/meService';
 
 interface Domain {
   id: number;
@@ -256,10 +257,12 @@ const DomainButton: React.FC = () => {
   };
 
 
-  const handleSetDomain = (domain: string) => {
+  const handleSetDomain = async (domain: string) => {
     sessionStorage.setItem('current_domain', domain);
     setCurrentDomain(domain.replace('https://', ''));
     sessionStorage.removeItem('me')
+    setDropdownEl(null);
+    await fetchUserData()
     window.location.reload();
   };
 
