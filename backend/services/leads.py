@@ -56,7 +56,6 @@ class LeadsService:
             adjusted_datetime = combined_datetime + timedelta(hours=timezone_offset)
             adjusted_date = adjusted_datetime.strftime('%d.%m.%Y')
             adjusted_time = adjusted_datetime.strftime('%H:%M')
-            
             if not lead[66]:
                 leads_list.append({
                     'id': lead[0],
@@ -142,7 +141,7 @@ class LeadsService:
                     'visitor_type': lead[63],
                     'average_time_sec': lead[64],
                     'is_active': lead[66],
-                    'url_visited': lead[67]
+                    'page_visits': lead[67]
                 })
 
         return leads_list, count, max_page

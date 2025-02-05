@@ -252,37 +252,49 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             <Image src={'/website-icon.svg'} width={18} height={18} alt='iphone icon' />
                             Website Pages Visited
                         </Typography>
-                        {lead.url_visited?.map((page: string, index: number) => {
-                            const trimmedPage = page.split('?')[0];
+
+                        {lead.page_visits?.map((page_visit: any, index: number) => {
+                            const trimmedPage = page_visit.page.startsWith("http") ? page_visit.page : `https://${page_visit.page}`;
 
                             return (
                                 <Box
                                     key={index}
                                     sx={{
                                         ...accountStyles.rows_pam,
-                                        display: 'flex',
-                                        borderBottom: index === lead.url_visited.length - 1 ? 'none' : '1px solid rgba(240, 240, 240, 1)',
+                                        display: "flex",
+                                        borderBottom: index === lead.page_visits.length - 1 ? "none" : "1px solid rgba(240, 240, 240, 1)",
                                     }}
                                 >
-                                    <Box sx={{ display: 'flex', width: '30%' }}>
-                                        <Typography sx={{ ...accountStyles.title_text, }}>
-                                            Page {index + 1}:
-                                        </Typography>
+                                    <Box sx={{ display: "flex", width: "30%" }}>
+                                        <Typography sx={{ ...accountStyles.title_text }}>Page {index + 1}:</Typography>
                                     </Box>
-                                    <Box sx={{ display: 'flex', width: '70%' }}>
+                                    <Box sx={{ display: "flex", width: "50%" }}>
                                         {trimmedPage ? (
                                             <Link
                                                 href={trimmedPage}
                                                 underline="none"
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                sx={{ ...accountStyles.text, textDecoration: 'none', color: 'rgba(80, 82, 178, 1)', }}
+                                                sx={{
+                                                    ...accountStyles.text,
+                                                    textDecoration: "none",
+                                                    color: "rgba(80, 82, 178, 1)",
+                                                }}
                                             >
                                                 {trimmedPage}
                                             </Link>
                                         ) : (
                                             <Typography sx={accountStyles.text}> --</Typography>
                                         )}
+                                    </Box>
+                                    <Box sx={{ display: "flex", width: "20%", justifyContent: "flex-end" }}>
+                                        <Typography>
+                                            {page_visit.spent_time_sec
+                                                ? page_visit.spent_time_sec > 60
+                                                    ? `${Math.floor(page_visit.spent_time_sec / 60)} min ${page_visit.spent_time_sec % 60} sec`
+                                                    : `${page_visit.spent_time_sec} sec`
+                                                : "--"}
+                                        </Typography>
                                     </Box>
                                 </Box>
                             );

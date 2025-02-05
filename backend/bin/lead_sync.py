@@ -36,7 +36,7 @@ from models.five_x_five_hems import FiveXFiveHems
 from models.suppressions_list import SuppressionList
 from models.users_payments_transactions import UsersPaymentsTransactions
 from models.integrations.suppressed_contact import SuppressedContact
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, desc
 from sqlalchemy.orm import sessionmaker, Session
 from models.five_x_five_users import FiveXFiveUser
 from models.leads_users import LeadUser
@@ -627,9 +627,23 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
             else:
                 new_record = LeadsUsersAddedToCart(lead_user_id=lead_user.id, added_at=requested_at)
                 session.add(new_record)
+    
+    prev_leads_requests = (
+        session.query(LeadsRequests)
+        .filter_by(visit_id=lead_visit_id, page=normalize_url(page))
+        .order_by(desc(LeadsRequests.id))
+        .first()
+    )
+    spent_time_sec = 10
+    if prev_leads_requests:
+        spent_time_sec = prev_leads_requests.spent_time_sec
+        total_sec = (requested_at - prev_leads_requests.requested_at).total_seconds()
+        if total_sec > 0:
+            spent_time_sec += total_sec
+
     lead_request = insert(LeadsRequests).values(
         lead_id=lead_user.id, page_parameters = get_url_params_list(page),
-        page=normalize_url(page), requested_at=requested_at, visit_id=lead_visit_id
+        page=normalize_url(page), requested_at=requested_at, visit_id=lead_visit_id, spent_time_sec=spent_time_sec
     ).on_conflict_do_nothing()
     session.execute(lead_request)
     session.flush()
