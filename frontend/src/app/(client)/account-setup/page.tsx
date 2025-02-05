@@ -365,7 +365,6 @@ const AccountSetup = () => {
 
   const handleSkip = () => {
     if (activeTab === 3) {
-      // endSetup()
       setBookADemoPopupOpen(true)
     }
     else {
@@ -593,7 +592,6 @@ const AccountSetup = () => {
     let isMatched = false;
 
     method_installingPixel.forEach(({ label, setState, action }) => {
-      console.log(selectedMethodInstall, label)
       if (selectedMethodInstall === label) {
         setState(true);
         isMatched = true;
