@@ -246,68 +246,6 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             </Box>
                         </Box>
                     </Box>
-                    {/* Web Details */}
-                    <Box sx={accountStyles.box_param}>
-                        <Typography sx={{ ...accountStyles.title }}>
-                            <Image src={'/website-icon.svg'} width={18} height={18} alt='iphone icon' />
-                            Website Pages Visited
-                        </Typography>
-
-                        {lead.page_visits?.map((page_visit: any, index: number) => {
-                            const trimmedPage = page_visit.page.startsWith("http") ? page_visit.page : `https://${page_visit.page}`;
-
-                            return (
-                                <Box
-                                    key={index}
-                                    sx={{
-                                        ...accountStyles.rows_pam,
-                                        display: "flex",
-                                        borderBottom: index === lead.page_visits.length - 1 ? "none" : "1px solid rgba(240, 240, 240, 1)",
-                                    }}
-                                >
-                                    <Box sx={{ display: "flex", width: "30%" }}>
-                                        <Typography sx={{ ...accountStyles.title_text }}>Page {index + 1}:</Typography>
-                                    </Box>
-                                    <Box sx={{ display: "flex", width: "50%" }}>
-                                        {trimmedPage ? (
-                                            <Link
-                                                href={`https://${trimmedPage}`}
-                                                underline="none"
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                sx={{
-                                                    ...accountStyles.text,
-                                                    textDecoration: "none",
-                                                    color: "rgba(80, 82, 178, 1)",
-                                                }}
-                                            >
-                                                {trimmedPage}
-                                            </Link>
-                                        ) : (
-                                            <Typography sx={accountStyles.text}> --</Typography>
-                                        )}
-                                    </Box>
-                                    <Box sx={{ display: "flex", width: "20%", justifyContent: "flex-end" }}>
-                                        <Typography
-                                            sx={{
-                                                fontFamily: "Roboto",
-                                                fontWeight: 400,
-                                                fontSize: "12px",
-                                                lineHeight: "16.8px",
-                                            }}
-                                        >
-                                            {page_visit.spent_time_sec
-                                                ? page_visit.spent_time_sec > 60
-                                                    ? `${Math.floor(page_visit.spent_time_sec / 60)} min ${page_visit.spent_time_sec % 60} sec`
-                                                    : `${page_visit.spent_time_sec} sec`
-                                                : "--"}
-                                        </Typography>
-                                    </Box>
-
-                                </Box>
-                            );
-                        })}
-                    </Box>
                     {/* Basic Details */}
                     <Box sx={accountStyles.box_param}>
                         <Typography sx={{ ...accountStyles.title }}>
@@ -446,6 +384,68 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             )}
                         </Box>
 
+                    </Box>
+                    {/* Web Details */}
+                    <Box sx={accountStyles.box_param}>
+                        <Typography sx={{ ...accountStyles.title }}>
+                            <Image src={'/website-icon.svg'} width={18} height={18} alt='iphone icon' />
+                            Website Pages Visited
+                        </Typography>
+
+                        {lead.page_visits?.map((page_visit: any, index: number) => {
+                            const trimmedPage = page_visit.page.startsWith("http") ? page_visit.page : `https://${page_visit.page}`;
+
+                            return (
+                                <Box
+                                    key={index}
+                                    sx={{
+                                        ...accountStyles.rows_pam,
+                                        display: "flex",
+                                        borderBottom: index === lead.page_visits.length - 1 ? "none" : "1px solid rgba(240, 240, 240, 1)",
+                                    }}
+                                >
+                                    <Box sx={{ display: "flex", width: "30%" }}>
+                                        <Typography sx={{ ...accountStyles.title_text }}>Page {index + 1}:</Typography>
+                                    </Box>
+                                    <Box sx={{ display: "flex", width: "50%" }}>
+                                        {trimmedPage ? (
+                                            <Link
+                                                href={`https://${trimmedPage}`}
+                                                underline="none"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                sx={{
+                                                    ...accountStyles.text,
+                                                    textDecoration: "none",
+                                                    color: "rgba(80, 82, 178, 1)",
+                                                }}
+                                            >
+                                                {trimmedPage}
+                                            </Link>
+                                        ) : (
+                                            <Typography sx={accountStyles.text}> --</Typography>
+                                        )}
+                                    </Box>
+                                    <Box sx={{ display: "flex", width: "20%", justifyContent: "flex-end" }}>
+                                        <Typography
+                                            sx={{
+                                                fontFamily: "Roboto",
+                                                fontWeight: 400,
+                                                fontSize: "12px",
+                                                lineHeight: "16.8px",
+                                            }}
+                                        >
+                                            {page_visit.spent_time_sec
+                                                ? page_visit.spent_time_sec > 60
+                                                    ? `${Math.floor(page_visit.spent_time_sec / 60)} min ${page_visit.spent_time_sec % 60} sec`
+                                                    : `${page_visit.spent_time_sec} sec`
+                                                : "--"}
+                                        </Typography>
+                                    </Box>
+
+                                </Box>
+                            );
+                        })}
                     </Box>
                     {/* Demographics */}
                     <Box sx={accountStyles.box_param}>
