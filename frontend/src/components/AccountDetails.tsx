@@ -288,7 +288,14 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                         )}
                                     </Box>
                                     <Box sx={{ display: "flex", width: "20%", justifyContent: "flex-end" }}>
-                                        <Typography>
+                                        <Typography
+                                            sx={{
+                                                fontFamily: "Roboto",
+                                                fontWeight: 400,
+                                                fontSize: "12px",
+                                                lineHeight: "16.8px",
+                                            }}
+                                        >
                                             {page_visit.spent_time_sec
                                                 ? page_visit.spent_time_sec > 60
                                                     ? `${Math.floor(page_visit.spent_time_sec / 60)} min ${page_visit.spent_time_sec % 60} sec`
@@ -296,6 +303,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                                 : "--"}
                                         </Typography>
                                     </Box>
+
                                 </Box>
                             );
                         })}
