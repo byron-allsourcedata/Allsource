@@ -46,7 +46,6 @@ class LeadsService:
             from_time=from_time,
             to_time=to_time,
             status=status,
-            timezone_offset=timezone_offset
         )
         state_dict = {state.state_code: state.state_name for state in states} if states else {}
         leads_list = []

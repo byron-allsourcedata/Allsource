@@ -234,15 +234,6 @@ const Leads: React.FC = () => {
                 ? Math.floor(new Date(appliedDates.start.toISOString()).getTime() / 1000)
                 : null;
 
-            const normalDate = startEpoch
-                ? new Date(startEpoch * 1000).toLocaleString('en-US', { timeZone: 'UTC' })
-                : null;
-
-            const normalDateSmr = startEpoch
-                ? new Date(startEpoch * 1000).toLocaleString('ru-RU', { timeZone: 'Europe/Samara' })
-                : null;
-
-
             const endEpoch = appliedDates.end
                 ? Math.floor(new Date(appliedDates.end.toISOString()).getTime() / 1000)
                 : null;
