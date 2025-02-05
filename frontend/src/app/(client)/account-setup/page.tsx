@@ -813,8 +813,6 @@ const AccountSetup = () => {
               display: 'none',
               minWidth: '32px',
               padding: '6px',
-              mr: 3,
-              mb: '1.125rem',
               color: 'rgba(128, 128, 128, 1)',
               border: '1px solid rgba(184, 184, 184, 1)',
               borderRadius: '3.27px',
@@ -931,7 +929,7 @@ const AccountSetup = () => {
             />
             Back
           </Button>}
-          <Tabs
+          {true && <Tabs
             value={activeTab}
             sx={{
               "& .MuiTabs-indicator": {
@@ -1018,7 +1016,167 @@ const AccountSetup = () => {
                 },
               }}
             />
-          </Tabs>
+          </Tabs>}
+
+          {false && <Tabs sx={{
+            width: "100%",
+          }}>
+            <Tab 
+              label="Create Account"
+              sx={{
+                textTransform: "none",
+                pointerEvents: "none",
+                lineHeight: "normal !important",
+                padding: 0,
+                pt: "38px",
+                position: "relative",
+                color: "rgba(244, 87, 69, 1)",
+                justifyContent: "end",
+                alignItems: "start",  
+                width: "90px",
+                textAlign: "left",
+                wordWrap: 'break-word',
+                whiteSpace: 'pre-wrap',
+                '&::before': {
+                  content: '"1"',
+                  display: 'flex',
+                  position: 'absolute',
+                  borderRadius: "50%",
+                  top: '0px',
+                  width: '30px',
+                  height: '30px',
+                  color: activeTab > 0 ? "#fff" : "rgba(32, 33, 36, 1)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: activeTab === 0 ? "rgba(248, 70, 75, 1)" : "rgba(208, 213, 221, 1)", 
+                },
+                '&::after': {
+                  content: '""',
+                  display: 'block',
+                  position: 'absolute',
+                  left: 80,
+                  top: 15,
+                  width: '51px',
+                  height: '1px',
+                  backgroundColor: activeTab === 0 ? "rgba(248, 70, 75, 1)" : "rgba(32, 33, 36, 1)", 
+                }
+              }}
+            />
+            <Tab 
+              label="Business Info"
+              sx={{
+                textTransform: "none",
+                pointerEvents: "none",
+                lineHeight: "normal !important",
+                padding: 0,
+                pt: "38px",
+                position: "relative",
+                color: "rgba(244, 87, 69, 1)",
+                justifyContent: "end",
+                alignItems: "start",
+                width: "90px",
+                textAlign: "left",
+                wordWrap: 'break-word',
+                whiteSpace: 'pre-wrap',
+                '&::before': {
+                  content: '"2"',
+                  display: 'flex',
+                  position: 'absolute',
+                  borderRadius: "50%",
+                  top: 0,
+                  width: '30px',
+                  height: '30px',
+                  color: activeTab > 0 ? "#fff" : "rgba(32, 33, 36, 1)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: activeTab === 0 ? "rgba(248, 70, 75, 1)" : "rgba(208, 213, 221, 1)", 
+                },
+                '&::after': {
+                  content: '""',
+                  display: 'block',
+                  position: 'absolute',
+                  left: 80,
+                  top: 15,
+                  width: '51px',
+                  height: '1px',
+                  backgroundColor: activeTab === 0 ? "rgba(248, 70, 75, 1)" : "rgba(32, 33, 36, 1)", 
+                }
+              }}
+            />
+            <Tab 
+              label="Pixel Installation"
+              sx={{
+                textTransform: "none",
+                pointerEvents: "none",
+                lineHeight: "normal !important",
+                padding: 0,
+                pt: "38px",
+                position: "relative",
+                color: "rgba(244, 87, 69, 1)",
+                justifyContent: "end",
+                alignItems: "start",
+                width: "90px",
+                textAlign: "left",
+                wordWrap: 'break-word',
+                whiteSpace: 'pre-wrap',
+                '&::before': {
+                  content: '"3"',
+                  display: 'flex',
+                  position: 'absolute',
+                  borderRadius: "50%",
+                  top: 0,
+                  width: '30px',
+                  height: '30px',
+                  color: activeTab > 0 ? "#fff" : "rgba(32, 33, 36, 1)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: activeTab === 0 ? "rgba(248, 70, 75, 1)" : "rgba(208, 213, 221, 1)", 
+                },
+                '&::after': {
+                  content: '""',
+                  display: 'block',
+                  position: 'absolute',
+                  left: 80,
+                  top: 15,
+                  width: '51px',
+                  height: '1px',
+                  backgroundColor: activeTab === 0 ? "rgba(248, 70, 75, 1)" : "rgba(32, 33, 36, 1)", 
+                }
+              }}
+            />
+            <Tab 
+              label="Integrations"
+              sx={{
+                textTransform: "none",
+                pointerEvents: "none",
+                lineHeight: "normal !important",
+                padding: 0,
+                pt: "38px",
+                position: "relative",
+                color: "rgba(244, 87, 69, 1)",
+                justifyContent: "end",
+                alignItems: "start",
+                width: "90px",
+                textAlign: "left",
+                wordWrap: 'break-word',
+                whiteSpace: 'pre-wrap',
+                '&::before': {
+                  content: '"4"',
+                  display: 'flex',
+                  position: 'absolute',
+                  borderRadius: "50%",
+                  top: 0,
+                  width: '30px',
+                  height: '30px',
+                  color: activeTab > 0 ? "#fff" : "rgba(32, 33, 36, 1)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: activeTab === 0 ? "rgba(248, 70, 75, 1)" : "rgba(208, 213, 221, 1)", 
+                }
+              }}
+            />
+          </Tabs>}
+
         </Box>
 
         <Button
@@ -1030,7 +1188,7 @@ const AccountSetup = () => {
             minWidth: '32px',
             padding: '6px',
             // mr: '1.5rem',
-            // mb: '1.125rem',
+            // mb: '1.125rem',  
             color: 'rgba(128, 128, 128, 1)',
             border: '1px solid rgba(184, 184, 184, 1)',
             borderRadius: '3.27px',
@@ -1041,7 +1199,7 @@ const AccountSetup = () => {
               }
             },
             "@media (max-width: 600px)": {
-              display: 'none'
+              display: 'none',
             },
           }}
         >
@@ -1110,7 +1268,6 @@ const AccountSetup = () => {
                   "@media (max-width: 600px)": {
                     display: "flex",
                     flexDirection: "column",
-                    alignItems: "center",
                     justifyContent: "center",
                     pb: 1
                   },
@@ -1702,6 +1859,7 @@ const AccountSetup = () => {
                           opacity: accessToken.trim() !== "" || domainName.trim() !== "" ? 1 : 0.6,
                           pointerEvents: accessToken.trim() !== "" || domainName.trim() !== "" ? "auto" : "none",
                           mb: 2,
+                          mt: 0,
                           backgroundColor: accessToken.trim() !== "" || domainName.trim() !== ""
                             ? "rgba(244, 87, 69, 1)"
                             : "rgba(244, 87, 69, 0.4)",
@@ -1719,7 +1877,6 @@ const AccountSetup = () => {
                     </Box>
                   }
                   {bigcommerceInstall && 
-
                     <Box sx={{display: 'flex', flexDirection: "column", gap: 3}}> 
                       
                       <Box display="flex" justifyContent="space-between" sx={{ width: '100%', alignItems: 'center'}}>
@@ -1801,7 +1958,7 @@ const AccountSetup = () => {
                           opacity: bigcommerceHash.trim() !== "" ? 1 : 0.6,
                           pointerEvents: bigcommerceHash.trim() !== "" ? "auto" : "none",
                           mb: 2,
-                          mt: 2,
+                          mt: 0,
                           backgroundColor: bigcommerceHash.trim() !== ""
                             ? "rgba(244, 87, 69, 1)"
                             : "rgba(244, 87, 69, 0.4)",
@@ -1816,7 +1973,6 @@ const AccountSetup = () => {
                         Install Pixel
                       </Button>
                     </Box>
-
                   }
                   {googletagInstall &&
                     <Box>
@@ -1931,7 +2087,7 @@ const AccountSetup = () => {
                           opacity: wordPressId.trim() !== "" ? 1 : 0.6,
                           pointerEvents: wordPressId.trim() !== "" ? "auto" : "none",
                           mb: 2,
-                          mt: 2,
+                          mt: 0,
                           backgroundColor: wordPressId.trim() !== ""
                             ? "rgba(244, 87, 69, 1)"
                             : "rgba(244, 87, 69, 0.4)",
@@ -1957,7 +2113,7 @@ const AccountSetup = () => {
                           {errors.selectedEmployees}
                         </Typography>
                       )}
-                      <Box sx={{ ...styles.rolesButtons, display: "grid", gridTemplateColumns: "1fr 1fr" }}>
+                      <Box sx={{ ...styles.rolesButtons, display: "grid", gridTemplateColumns: "1fr 1fr", "@media (max-width: 450px)": { gridTemplateColumns: "1fr" }}}>
                         {method_installingPixel.map((range, index) => (
                           <Button
                             key={index}
@@ -2057,7 +2213,7 @@ const AccountSetup = () => {
                       {errors.selectedEmployees}
                     </Typography>
                   )}
-                  <Box sx={{ ...styles.rolesButtons, display: "grid", gridTemplateColumns: "1fr 1fr 1fr" }}>
+                  <Box sx={{ ...styles.rolesButtons, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", "@media (max-width: 450px)": { gridTemplateColumns: "1fr" } }}>
                     {integrations.map((range, index) => (
                       <Button
                         key={index}

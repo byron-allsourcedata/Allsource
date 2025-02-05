@@ -138,8 +138,8 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     alignItems: 'center',
     justifyContent: 'center',
     '@media (max-height: 670px)': { pl: 0, gap: 0 },
-    '@media (max-width: 600px)': { height: '77vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' },
-    '@media (max-width: 400px)': { pl: 0, pt: 0, height: '77vh', },
+    '@media (max-width: 600px)': { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' },
+    '@media (max-width: 400px)': { pl: 0, pt: 0, },
 
 
   },
