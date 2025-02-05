@@ -3,7 +3,7 @@ import math
 from datetime import datetime, timedelta
 
 import pytz
-from sqlalchemy import and_, or_, desc, asc, Integer, distinct
+from sqlalchemy import and_, or_, desc, asc, Integer, distinct, select
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql import func
 from utils import format_phone_number
@@ -384,32 +384,82 @@ class LeadsPersistence:
         if leads:
             states = self.db.query(States).all()
         return leads, count, max_page, states
-
-    def get_contact_data(self, domain_id, from_date, to_date):
+    
+    def get_new_leads_per_day(self, domain_id, start_date, end_date):
         query = (
             self.db.query(
-                LeadsVisits.start_date,
-                LeadUser.behavior_type,
-                LeadUser.is_converted_sales,
-                func.count(LeadUser.id).label('lead_count')
+                func.date(LeadsVisits.start_date).label("start_date"),
+                func.count(LeadUser.id.distinct()).label("new_leads")
             )
             .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
-            .group_by(LeadsVisits.start_date, LeadUser.behavior_type, LeadUser.is_converted_sales)
-            .filter(LeadUser.domain_id == domain_id)
-        )
-
-        if from_date and to_date:
-            start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
-            end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
-            query = query.filter(
-                and_(
-                    LeadsVisits.start_date >= start_date,
-                    LeadsVisits.start_date <= end_date
+            .where(
+                LeadUser.domain_id == domain_id,
+                LeadsVisits.start_date >= start_date,
+                LeadsVisits.end_date <= end_date
+            )
+            .where(
+                LeadUser.id.notin_(
+                    select(LeadUser.id)
+                    .join(LeadsVisits, LeadsVisits.lead_id == LeadUser.id)
+                    .where(LeadsVisits.start_date < start_date)
                 )
             )
+            .group_by(func.date(LeadsVisits.start_date))
+        )
+        return query.all()
+    
+    def get_returning_visitors_per_day(self, domain_id, start_date, end_date):
+        active_users_subquery = (
+            select(LeadsVisits.lead_id)
+            .join(LeadUser, LeadUser.id == LeadsVisits.lead_id)
+            .where(
+                LeadUser.domain_id == domain_id,
+                LeadsVisits.start_date <= start_date,
+            )
+            .distinct()
+            .subquery()
+        )
+        query = (
+            self.db.query(
+                func.date(LeadsVisits.start_date).label("start_date"),
+                func.count(LeadsVisits.lead_id.distinct()).label("returning_visitors")
+            )
+            .join(LeadUser, LeadUser.id == LeadsVisits.lead_id)
+            .join(active_users_subquery, active_users_subquery.c.lead_id == LeadsVisits.lead_id)
+            .where(
+                LeadUser.domain_id == domain_id,
+                LeadsVisits.start_date >= start_date,
+                LeadsVisits.end_date <= end_date
+            )
+            .group_by(func.date(LeadsVisits.start_date))
+        )
+        
+        return query.all()
 
-        results = query.all()
-        return results
+    
+    def get_page_views_per_day(self, domain_id, start_date, end_date):
+        query = (
+            self.db.query(
+                func.date(LeadsVisits.start_date).label("start_date"),
+                func.sum(LeadsVisits.pages_count).label("page_views")
+            )
+            .join(LeadUser, LeadsVisits.lead_id == LeadUser.id)
+            .where(
+                LeadUser.domain_id == domain_id,
+                LeadsVisits.start_date >= start_date,
+                LeadsVisits.end_date <= end_date
+            )
+            .group_by(func.date(LeadsVisits.start_date))
+        )
+        return query.all()
+
+    def get_contact_data(self, domain_id, from_date, to_date):
+        start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
+        end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
+        new_leads_data = self.get_new_leads_per_day(domain_id, start_date, end_date)
+        returning_visitors_data = self.get_returning_visitors_per_day(domain_id, start_date, end_date)
+        page_views_data = self.get_page_views_per_day(domain_id, start_date, end_date)
+        return new_leads_data, returning_visitors_data, page_views_data
 
     def get_lifetime_revenue(self, domain_id):
         total_revenue = (
