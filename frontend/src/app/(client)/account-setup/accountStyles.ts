@@ -122,7 +122,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
   nav: {
     display: 'flex',
     gap: '1em',
-    '@media (max-width: 600px)': { gap: 0.5 }
+    '@media (max-width: 600px)': { gap: 0.5, width: "100%" }
   },
   logo: {
     display: 'flex',
@@ -138,7 +138,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     alignItems: 'center',
     justifyContent: 'center',
     '@media (max-height: 670px)': { pl: 0, gap: 0 },
-    '@media (max-width: 600px)': { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' },
+    '@media (max-width: 600px)': { marginTop: "147px", maxHeight: "calc(100vh - 147px)" },
     '@media (max-width: 400px)': { pl: 0, pt: 0, },
 
 
@@ -153,7 +153,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     marginBottom: '2em',
     color: '#707071 !important',
     textAlign: 'start',
-    '@media (max-width: 600px)': { marginBottom: 0.15 }
+    '@media (max-width: 600px)': { marginBottom: 3 }
   },
   text: {
     fontWeight: '500',

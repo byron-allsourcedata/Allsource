@@ -271,7 +271,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                     <Box sx={{ display: "flex", width: "50%" }}>
                                         {trimmedPage ? (
                                             <Link
-                                                href={trimmedPage}
+                                                href={`https://${trimmedPage}`}
                                                 underline="none"
                                                 target="_blank"
                                                 rel="noopener noreferrer"

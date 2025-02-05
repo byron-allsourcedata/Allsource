@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 import pytz
 from urllib.parse import unquote
-from sqlalchemy import and_, or_, desc, asc, Integer, cast, VARCHAR
+from sqlalchemy import and_, or_, desc, asc, Integer, cast, VARCHAR, case
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql import func
 from models.five_x_five_emails import FiveXFiveEmails
@@ -220,25 +220,53 @@ class CompanyPersistence:
             )
                 .order_by(asc(LeadCompany.name), desc(LeadsVisits.start_date))
         )
+
+        employees_case = case(
+            (LeadCompany.employee_count == "1 to 10", 1),
+            (LeadCompany.employee_count == "11 to 25", 11),
+            (LeadCompany.employee_count == "26 to 50", 26),
+            (LeadCompany.employee_count == "51 to 100", 51),
+            (LeadCompany.employee_count == "101 to 250", 101),
+            (LeadCompany.employee_count == "251 to 500", 251),
+            (LeadCompany.employee_count == "501 to 1000", 501),
+            (LeadCompany.employee_count == "1001 to 5000", 1001),
+            (LeadCompany.employee_count == "5001 to 10000", 5001),
+            (LeadCompany.employee_count == "10000+", 10000),
+            else_=None
+        )
+
+        revenue_case = case(
+            (LeadCompany.revenue == "Under 1 Million", 0),
+            (LeadCompany.revenue == "1 Million to 5 Million", 1000000),
+            (LeadCompany.revenue == "5 Million to 10 Million", 5000000),
+            (LeadCompany.revenue == "10 Million to 25 Million", 10000000),
+            (LeadCompany.revenue == "25 Million to 50 Million", 25000000),
+            (LeadCompany.revenue == "50 Million to 100 Million", 50000000),
+            (LeadCompany.revenue == "100 Million to 250 Million", 100000000),
+            (LeadCompany.revenue == "250 Million to 500 Million", 250000000),
+            (LeadCompany.revenue == "500 Million to 1 Billion", 500000000),
+            (LeadCompany.revenue == "1 Billion and Over", 1000000000),
+            else_=None
+        )
+
         sort_options = {
-            'company_name': FiveXFiveUser.first_name,
-            'phone_name': FiveXFiveUser.business_email,
-            'linkedln': FiveXFiveUser.personal_emails,
-            'empl': FiveXFiveUser.mobile_phone,
-            'gender': FiveXFiveUser.gender,
-            'state': FiveXFiveLocations.state_id,
-            'city': FiveXFiveLocations.city,
-            'age': FiveXFiveUser.age_min,
-            'average_time_sec': LeadUser.avarage_visit_time,
-            'status': LeadUser.is_returning_visitor,
-            'funnel': LeadUser.behavior_type,
+            'company_name': LeadCompany.name,
+            'employees_visited': func.count(LeadUser.id).label("number_of_employees"),
+            'visited_date': LeadsVisits.start_date,
+            'revenue': revenue_case,
+            'number_of_employees': employees_case,
         }
-        if sort_by:
+
+        if sort_by in sort_options:
             sort_column = sort_options[sort_by]
+
+            query = query.order_by(None)
+
             if sort_order == 'asc':
                 query = query.order_by(asc(sort_column))
-            elif sort_order == 'desc':
+            else:
                 query = query.order_by(desc(sort_column))
+
 
         if from_date and to_date:
             start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
@@ -278,7 +306,7 @@ class CompanyPersistence:
                 "1001-5000": "1001 to 5000",
                 "2001-5000": "2001 to 5000",
                 "5001-10000": "5001 to 10000",
-                "10001+": "10001+",
+                "10000+": "10000+",
             }
 
             employees = [employees_map.get(unquote(i.strip()), None) for i in employees_range.split(',')]

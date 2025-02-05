@@ -14,9 +14,11 @@ import {
   IconButton,
   InputBase,
   Typography,
+  LinearProgress
 } from "@mui/material";
 import Image from "next/image";
 import { styles } from "./accountStyles";
+import { styled } from '@mui/material/styles';
 import GoogleTagPopup from '../dashboard/components/GoogleTagPopup';
 import { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
@@ -38,6 +40,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
 import { fetchUserData } from '@/services/meService';
+import BookADemoPopup from "./components/BookADemoPopup"
 
 const AccountSetup = () => {
   const [organizationName, setOrganizationName] = useState("");
@@ -72,6 +75,7 @@ const AccountSetup = () => {
   const [omnisendPopupOpen, setOmnisendPopupOpen] = useState(false)
   const [metaPopupOpen, setMetaPopupOpen] = useState(false)
   const [opengoogle, setGoogleOpen] = useState(false);
+  const [bookADemoPopupOpen, setBookADemoPopupOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [cmsData, setCmsData] = useState<CmsData>({});
   const { setBackButton, backButton } = useUser()
@@ -128,7 +132,7 @@ const AccountSetup = () => {
             break;
           case "DASHBOARD_ALLOWED":
             // router.push("/dashboard");
-            // setActiveTab(2)
+            setActiveTab(2)
             break;
           default:
             console.error("Unknown status:", status);
@@ -361,7 +365,7 @@ const AccountSetup = () => {
 
   const handleSkip = () => {
     if (activeTab === 3) {
-      endSetup()
+      setBookADemoPopupOpen(true)
     }
     else {
       setActiveTab((prev) => prev + 1);
@@ -588,7 +592,6 @@ const AccountSetup = () => {
     let isMatched = false;
 
     method_installingPixel.forEach(({ label, setState, action }) => {
-      console.log(selectedMethodInstall, label)
       if (selectedMethodInstall === label) {
         setState(true);
         isMatched = true;
@@ -647,7 +650,7 @@ const AccountSetup = () => {
         return [...prevIntegrations, newIntegration];
       }
     });
-    endSetup()
+    setBookADemoPopupOpen(true)
   };
 
   const handleInstallShopify = async () => {
@@ -749,13 +752,34 @@ const AccountSetup = () => {
     alert('Copied to clipboard');
   };
 
-  if (loading) {
-    return <CustomizedProgressBar />;
-}
+  const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
+    height: 4,
+    borderRadius: 0,
+    backgroundColor: '#c6dafc',
+    '& .MuiLinearProgress-bar': {
+      borderRadius: 5,
+      backgroundColor: '#4285f4',
+    },
+  }));
 
   return (
     <Box sx={{ ...styles.pageContainer, 
     }}>
+      {loading && 
+        <Box
+          sx={{
+          width: '100%',
+          position: 'fixed',
+          top: '5rem',
+          zIndex: 1200,   
+          "@media (max-width: 600px)": {
+              top: '9rem',
+            },
+          }}
+        >
+          <BorderLinearProgress variant="indeterminate" />
+        </Box>
+      }
       <Box sx={{...styles.headers, overflow: "hidden"}}>
         <Box
           sx={{
@@ -871,7 +895,7 @@ const AccountSetup = () => {
           </Menu>
         </Box>
         
-        <Box sx={{ ...styles.nav, position: "relative" }}>
+        <Box sx={{ ...styles.nav, position: "relative"}}>
           {selectedMethodInstall === "" && activeTab != 2 && <Button
             className="hyperlink-red"
             variant="outlined"
@@ -893,14 +917,14 @@ const AccountSetup = () => {
                 },
               },
               "@media (max-width: 600px)": {
-                display: "flex",
+                display: "none",
                 mr: 0,
                 position: "inherit",
                 left: 0,
                 top: 0,
               },
               "@media (max-width: 400px)": {
-                display: "flex",
+                display: "none",
                 mr: 0,
                 position: "inherit",
                 left: 0,
@@ -917,9 +941,13 @@ const AccountSetup = () => {
             />
             Back
           </Button>}
-          {true && <Tabs
+          <Tabs
             value={activeTab}
             sx={{
+              display: "flex",
+              "@media (max-width: 600px)": {
+                display: 'none',
+              },
               "& .MuiTabs-indicator": {
                 backgroundColor: "rgba(244, 87, 69, 1)",
               },
@@ -1005,11 +1033,21 @@ const AccountSetup = () => {
               }}
 
             />
-          </Tabs>}
+          </Tabs>
 
-          {false && 
-          <Tabs sx={{
+          
+          <Tabs
+            centered sx={{
             width: "100%",
+            ml: "30px",
+            display: "none",
+            "@media (max-width: 600px)": {
+              display: 'flex',
+            },
+            "& .MuiTab-root": {
+              width: "25%",
+              minWidth: 0,
+            },
           }}>
             <Tab 
               label={activeTab === 0 ? "Create Account" : " " }
@@ -1023,7 +1061,7 @@ const AccountSetup = () => {
                 color: "rgba(244, 87, 69, 1)",
                 justifyContent: "end",
                 alignItems: "start",  
-                width: "97px",
+                width: "25%",
                 fontSize: "16px",
                 fontFamily: "Open Sans",
                 fontWeight: 600,
@@ -1049,7 +1087,7 @@ const AccountSetup = () => {
                   position: 'absolute',
                   left: 38,
                   top: 15,
-                  width: '51px',
+                  width: "calc(100% - 46px)",
                   height: '1px',
                   backgroundColor: activeTab > 0 ? "rgba(248, 70, 75, 1)" : "rgba(32, 33, 36, 1)", 
                 }
@@ -1067,7 +1105,7 @@ const AccountSetup = () => {
                 color: "rgba(244, 87, 69, 1)",
                 justifyContent: "end",
                 alignItems: "start",
-                width: "97px",
+                width: "25%",
                 fontSize: "16px",
                 fontFamily: "Open Sans",
                 fontWeight: 600,
@@ -1093,7 +1131,7 @@ const AccountSetup = () => {
                   position: 'absolute',
                   left: 38,
                   top: 15,
-                  width: '51px',
+                  width: "calc(100% - 46px)",
                   height: '1px',
                   backgroundColor: activeTab > 1 ? "rgba(248, 70, 75, 1)" : "rgba(32, 33, 36, 1)", 
                 }
@@ -1111,7 +1149,7 @@ const AccountSetup = () => {
                 color: "rgba(244, 87, 69, 1)",
                 justifyContent: "end",
                 alignItems: "start",
-                width: "97px",
+                width: "25%",
                 fontSize: "16px",
                 fontFamily: "Open Sans",
                 fontWeight: 600,
@@ -1137,7 +1175,7 @@ const AccountSetup = () => {
                   position: 'absolute',
                   left: 38,
                   top: 15,
-                  width: '51px',
+                  width: "calc(100% - 46px)",
                   height: '1px',
                   backgroundColor: activeTab > 2 ? "rgba(248, 70, 75, 1)" : "rgba(32, 33, 36, 1)", 
                 }
@@ -1155,7 +1193,7 @@ const AccountSetup = () => {
                 color: "rgba(244, 87, 69, 1)",
                 justifyContent: "end",
                 alignItems: "start",
-                width: "90px",
+                width: "25%",
                 fontSize: "16px",
                 fontFamily: "Open Sans",
                 fontWeight: 600,
@@ -1177,7 +1215,7 @@ const AccountSetup = () => {
                 }
               }}
             />
-          </Tabs>}
+          </Tabs>
 
         </Box>
 
@@ -1388,7 +1426,7 @@ const AccountSetup = () => {
                   </Button>
                 </>
               )}
-{activeTab === 1 && (
+              {activeTab === 1 && (
                 <>
                   {/* Business info */}
                   <Typography variant="body1" className="first-sub-title" sx={styles.text}>
@@ -1888,7 +1926,7 @@ const AccountSetup = () => {
                             Install with Bigcommerce
                           </Typography>
                         </Box>    
-                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store" 
+                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-bigcommerce-to-maximiz" 
                               target="_blank" className='first-sub-title' style={{fontSize: "14px", color: "rgba(80, 82, 178, 1)"}} 
                               sx={{ textDecoration: "underline", cursor: "pointer"}}>
                           Tutorial
@@ -1985,7 +2023,7 @@ const AccountSetup = () => {
                             Install with GoogleTag
                           </Typography>
                         </Box>
-                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store"
+                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-to-i-install-maximiz-pixel-on-google-tag-manager"
                           target="_blank" className='first-sub-title' style={{ fontSize: "14px", color: "rgba(80, 82, 178, 1)" }}
                           sx={{ textDecoration: "underline", cursor: "pointer", '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
                           Tutorial
@@ -2163,6 +2201,7 @@ const AccountSetup = () => {
                           ...styles.submitButton,
                           color: "rgba(244, 87, 69, 1)",
                           backgroundColor: "#fff",
+                          boxShadow: "unset",
                           "&:hover": {
                             backgroundColor: "#fff",
                             color: "rgba(244, 87, 69, 0.6)"
@@ -2208,7 +2247,7 @@ const AccountSetup = () => {
                   }
                 </>
               }
-              {activeTab === 3 && (
+              {activeTab === 3 && !bookADemoPopupOpen && (
                 <>
                   <Typography variant="body1" className="first-sub-title" sx={styles.text}>
                     Choose the platform where you send your data
@@ -2316,6 +2355,7 @@ const AccountSetup = () => {
                       ...styles.submitButton,
                       color: "rgba(244, 87, 69, 1)",
                       backgroundColor: "#fff",
+                      boxShadow: "unset",
                       "&:hover": {
                         backgroundColor: "#fff",
                         color: "rgba(244, 87, 69, 0.6)"
@@ -2327,6 +2367,10 @@ const AccountSetup = () => {
                   </Button>
                 </>
               )}
+
+              {bookADemoPopupOpen && 
+                <BookADemoPopup endSetup={endSetup}/>
+              }
             </Box>
         </Box>
       </Box>

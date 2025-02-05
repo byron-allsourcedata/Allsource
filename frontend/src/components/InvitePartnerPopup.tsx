@@ -31,7 +31,7 @@ interface FormUploadPopupProps {
     open: boolean;
     fileData?: {id: number, email: string, fullName: string, companyName: string, commission: string}
     onClose: () => void;
-    updateOrAddAsset: (partner: PartnerData) => void
+    updateOrAddPartner: (partner: PartnerData) => void
 }
 
 interface RequestData {
@@ -43,7 +43,7 @@ interface RequestData {
     master_id?: number;
 }
 
-const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, masterId, isMaster, open, fileData, onClose, updateOrAddAsset }) => {
+const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, masterId, isMaster, open, fileData, onClose, updateOrAddPartner }) => {
     const [action, setAction] = useState("Add");
     const [buttonContain, setButtonContain] = useState(false);
     const [fullName, setFullName] = useState(""); 
@@ -132,7 +132,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
             }
             if (response.status === 200) {
                 if (response.data.data) {
-                    updateOrAddAsset(response.data.data);
+                    updateOrAddPartner(response.data.data);
                     showToast("Partner successfully submitted!");
                 }
                 if (response.data.message) {
