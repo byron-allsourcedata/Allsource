@@ -917,7 +917,7 @@ class LeadsPersistence:
         filters = [
             FiveXFiveEmails.email.ilike(f'{start_letter}%'),
             FiveXFiveEmails.email_host.ilike(f'{email_host}%'),
-            FiveXFivePhones.number.ilike(f'{start_letter.replace('+', '')}%')
+            FiveXFivePhones.number.ilike(f"{start_letter.replace('+', '')}%")
         ]
         if len(letters) == 1:
             filters.extend([
