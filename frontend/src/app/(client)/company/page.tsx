@@ -1031,13 +1031,13 @@ const Leads: React.FC = () => {
                                             <TableHead>
                                                 <TableRow>
                                                     {[
-                                                        { key: 'company_name', label: 'Company' },
+                                                        { key: 'company_name', label: 'Company', sortable: true },
                                                         { key: 'phone_number', label: 'Phone Number' },
                                                         { key: 'linkedin', label: 'LinkedIn' },
-                                                        { key: 'employess_visited', label: 'Employees Visited' },
+                                                        { key: 'employees_visited', label: 'Employees Visited', sortable: true },
                                                         { key: 'visited_date', label: 'Visited date', sortable: true },
-                                                        { key: 'revenue', label: 'Revenue' },
-                                                        { key: 'number_of_employees', label: 'No. of Employees' },
+                                                        { key: 'revenue', label: 'Revenue', sortable: true },
+                                                        { key: 'number_of_employees', label: 'No. of Employees', sortable: true },
                                                         { key: 'location', label: 'Location', },
                                                         { key: 'average_time_sec', label: 'Industry', },
                                                     ].map(({ key, label, sortable = false }) => (
@@ -1048,7 +1048,7 @@ const Leads: React.FC = () => {
                                                                 ...(key === 'company_name' && {
                                                                     position: 'sticky',
                                                                     left: 0,
-                                                                    zIndex: 99
+                                                                    zIndex: 10
                                                                 }),
                                                                 ...(key === 'average_time_sec' && {
                                                                     "::after": { content: 'none' }
@@ -1119,7 +1119,8 @@ const Leads: React.FC = () => {
                                                         </TableCell>
 
                                                         {/* Employess Visited  Column */}
-                                                        <TableCell sx={companyStyles.table_array_phone}>
+                                                        <TableCell sx={{...companyStyles.table_array, position: 'relative',  color: row.employees_visited ? 'rgba(80, 82, 178, 1) !important' : '',
+                                                                cursor: row.employees_visited ? 'pointer' : 'default'}}>
                                                             {row.employees_visited || '--'}
                                                         </TableCell>
 
@@ -1144,9 +1145,7 @@ const Leads: React.FC = () => {
                                                         {/* Company employee count  Column */}
                                                         <TableCell
                                                             sx={{
-                                                                ...companyStyles.table_array, position: 'relative', color: row.company_employee_count ? 'rgba(80, 82, 178, 1)' : '',
-                                                                cursor: row.employee_count ? 'pointer' : 'default'
-                                                            }}
+                                                                ...companyStyles.table_array, position: 'relative',}}
                                                         >
                                                             {row.employee_count || '--'}
                                                         </TableCell>
@@ -1161,7 +1160,7 @@ const Leads: React.FC = () => {
                                                         </TableCell>
 
                                                         {/* Company industry  Column */}
-                                                        <TableCell sx={{ ...companyStyles.table_array, "::after": { content: 'none' }, cursor: row.primary_industry ? "pointer" : "default", }} onClick={(e) => row.industry ? handleOpenPopover(e, row.industry || "--") : ''}>
+                                                        <TableCell sx={{ ...companyStyles.table_array, "::after": { content: 'none' }, cursor: row.industry ? "pointer" : "default", }} onClick={(e) => row.industry ? handleOpenPopover(e, row.industry || "--") : ''}>
                                                             {row.industry && row.industry.length > 30
                                                                 ? `${row.industry.slice(0, 20)}...`
                                                                 : row.industry || "--"}
