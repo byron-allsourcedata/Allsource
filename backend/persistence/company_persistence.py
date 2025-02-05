@@ -374,7 +374,7 @@ class CompanyPersistence:
         if search_query:
             filters = [
                 LeadCompany.name.ilike(f'{search_query}%'),
-                LeadCompany.phone.ilike(f'{search_query.replace('+', '')}%'),
+                LeadCompany.phone.ilike(f"{search_query.replace('+', '')}%"),
             ]
 
             query = query.filter(or_(*filters))

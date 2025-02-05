@@ -400,7 +400,7 @@ class LeadsPersistence:
             filters = [
                 FiveXFiveEmails.email.ilike(f'{search_query}%'),
                 FiveXFiveEmails.email_host.ilike(f'{search_query}%'),
-                FiveXFivePhones.number.ilike(f'{search_query.replace('+', '')}%')
+                FiveXFivePhones.number.ilike(f"{search_query.replace('+', '')}%")
             ]
             search_query = search_query.split()
             if len(search_query) == 1:
