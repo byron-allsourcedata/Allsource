@@ -1042,9 +1042,10 @@ const AccountSetup = () => {
               }}
 
             />
-          </Tabs>
+          </Tabs>}
 
-          {false && <Tabs sx={{
+          {false && 
+          <Tabs sx={{
             width: "100%",
           }}>
             <Tab 
@@ -1201,7 +1202,7 @@ const AccountSetup = () => {
                 }
               }}
             />
-          </Tabs>
+          </Tabs>}
 
         </Box>
 
