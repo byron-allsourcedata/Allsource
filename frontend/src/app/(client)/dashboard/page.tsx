@@ -629,7 +629,7 @@ const Dashboard: React.FC = () => {
               </Box>
               {typeBusiness == 'd2c' && (
                 <Box sx={{
-                  flexGrow: 1, display: 'flex', justifyContent: 'center', alignItems: 'start', '@media (max-width: 600px)': {
+                  flexGrow: 1, display: 'flex', width: '100%', justifyContent: 'center', alignItems: 'start',  '@media (max-width: 600px)': {
                     width: '100%',
                     mt: hasNotification ? 1 : 2
                   }
@@ -711,7 +711,6 @@ const Dashboard: React.FC = () => {
                   justifyContent: 'flex-end',
                   alignItems: 'center',
                   gap: 2,
-                  width: '100%',
                   '@media (max-width: 600px)': {
                     display: 'none',
                   }
