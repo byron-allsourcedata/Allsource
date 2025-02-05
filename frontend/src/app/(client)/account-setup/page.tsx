@@ -14,9 +14,11 @@ import {
   IconButton,
   InputBase,
   Typography,
+  LinearProgress
 } from "@mui/material";
 import Image from "next/image";
 import { styles } from "./accountStyles";
+import { styled } from '@mui/material/styles';
 import GoogleTagPopup from '../dashboard/components/GoogleTagPopup';
 import { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
@@ -749,13 +751,34 @@ const AccountSetup = () => {
     alert('Copied to clipboard');
   };
 
-  if (loading) {
-    return <CustomizedProgressBar />;
-}
+  const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
+    height: 4,
+    borderRadius: 0,
+    backgroundColor: '#c6dafc',
+    '& .MuiLinearProgress-bar': {
+      borderRadius: 5,
+      backgroundColor: '#4285f4',
+    },
+  }));
 
   return (
     <Box sx={{ ...styles.pageContainer, 
     }}>
+      {loading && 
+        <Box
+          sx={{
+          width: '100%',
+          position: 'fixed',
+          top: '5rem',
+          zIndex: 1200,   
+          "@media (max-width: 600px)": {
+              top: '9rem',
+            },
+          }}
+        >
+          <BorderLinearProgress variant="indeterminate" />
+        </Box>
+      }
       <Box sx={{...styles.headers, overflow: "hidden"}}>
         <Box
           sx={{
