@@ -2043,7 +2043,7 @@ const AccountSetup = () => {
                             Install with WordPress
                           </Typography>
                         </Box>    
-                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store" 
+                        <Link href="https://wordpress.org/plugins/maximiz/" 
                               target="_blank" className='first-sub-title' style={{fontSize: "14px", color: "rgba(80, 82, 178, 1)"}} 
                               sx={{ textDecoration: "underline", cursor: "pointer"}}>
                           Tutorial
