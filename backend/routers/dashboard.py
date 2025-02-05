@@ -11,7 +11,7 @@ router = APIRouter()
 @router.get("/contact", response_model=ContactResponse)
 def get_contact(
         from_date: int = Query(
-            int(datetime(datetime.now(timezone.utc).year, 1, 1, tzinfo=timezone.utc).timestamp()), 
+            int(datetime(2024, 1, 1, tzinfo=timezone.utc).timestamp()), 
             description="Start date in integer format"
         ),
         to_date: int = Query(
