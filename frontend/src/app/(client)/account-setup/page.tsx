@@ -40,6 +40,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
 import { fetchUserData } from '@/services/meService';
+import BookADemoPopup from "./components/BookADemoPopup"
 
 const AccountSetup = () => {
   const [organizationName, setOrganizationName] = useState("");
@@ -74,6 +75,7 @@ const AccountSetup = () => {
   const [omnisendPopupOpen, setOmnisendPopupOpen] = useState(false)
   const [metaPopupOpen, setMetaPopupOpen] = useState(false)
   const [opengoogle, setGoogleOpen] = useState(false);
+  const [bookADemoPopupOpen, setBookADemoPopupOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [cmsData, setCmsData] = useState<CmsData>({});
   const { setBackButton, backButton } = useUser()
@@ -130,7 +132,7 @@ const AccountSetup = () => {
             break;
           case "DASHBOARD_ALLOWED":
             // router.push("/dashboard");
-            // setActiveTab(2)
+            setActiveTab(2)
             break;
           default:
             console.error("Unknown status:", status);
@@ -363,7 +365,8 @@ const AccountSetup = () => {
 
   const handleSkip = () => {
     if (activeTab === 3) {
-      endSetup()
+      // endSetup()
+      setBookADemoPopupOpen(true)
     }
     else {
       setActiveTab((prev) => prev + 1);
@@ -649,7 +652,8 @@ const AccountSetup = () => {
         return [...prevIntegrations, newIntegration];
       }
     });
-    endSetup()
+    setBookADemoPopupOpen(true)
+    // endSetup()
   };
 
   const handleInstallShopify = async () => {
@@ -1425,7 +1429,7 @@ const AccountSetup = () => {
                   </Button>
                 </>
               )}
-{activeTab === 1 && (
+              {activeTab === 1 && (
                 <>
                   {/* Business info */}
                   <Typography variant="body1" className="first-sub-title" sx={styles.text}>
@@ -2245,7 +2249,7 @@ const AccountSetup = () => {
                   }
                 </>
               }
-              {activeTab === 3 && (
+              {activeTab === 3 && !bookADemoPopupOpen && (
                 <>
                   <Typography variant="body1" className="first-sub-title" sx={styles.text}>
                     Choose the platform where you send your data
@@ -2364,6 +2368,10 @@ const AccountSetup = () => {
                   </Button>
                 </>
               )}
+
+              {bookADemoPopupOpen && 
+                <BookADemoPopup endSetup={endSetup}/>
+              }
             </Box>
         </Box>
       </Box>
