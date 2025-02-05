@@ -372,7 +372,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
     '1001-5000': false,
     '2001-5000': false,
     '5001-10000': false,
-    '10001+': false,
+    '10000+': false,
     "unknown": false,
   });
 
@@ -524,7 +524,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
       "1001-5000": boolean,
       "2001-5000": boolean,
       "5001-10000": boolean,
-      "10001+": boolean,
+      "10000+": boolean,
       "unknown": boolean,
     };
     regions: string[];
@@ -560,7 +560,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
         "501-1000": false,
         "1001-5000": false,
         "5001-10000": false,
-        "10001+": false,
+        "10000+": false,
         "unknown": false,
       });
 
@@ -578,7 +578,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
           "501-1000": "501-1000",
           "1001-5000": "1001-5000",
           "5001-10000": "5001-10000",
-          "10001+": "10001+",
+          "10000+": "10000+",
           "unknown": "unknown",
         };
 
@@ -613,7 +613,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
         "1001-2000": false,
         "2001-5000": false,
         "5001-10000": false,
-        "10001+": false,
+        "10000+": false,
         "unknown": false,
       });
 
@@ -796,7 +796,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
       '1001-5000': false,
       '2001-5000': false,
       '5001-10000': false,
-      '10001+': false,
+      '10000+': false,
       "unknown": false,
     });
 
@@ -1428,7 +1428,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                     '501-1000',
                     '1001-5000',
                     '5001-10000',
-                    '10001+',
+                    '10000+',
                     "unknown",
                   ].map((range, index) => (
                     <Grid item xs={6} key={range}> {/* xs=3 означает 1/4 ширины контейнера (12 колонок / 4 = 3) */}
