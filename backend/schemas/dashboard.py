@@ -3,25 +3,6 @@ from typing import Dict
 from pydantic import BaseModel
 
 
-class DailyDataItem(BaseModel):
-    contacts_collected: int
-    new_leads: int
-    returning_visitors: int
-    page_views: int
-
-
-class TotalCounts(BaseModel):
-    total_contacts_collected: int
-    total_new_leads: int
-    total_returning_visitors: int
-    total_page_views: int
-
-
-class ContactResponse(BaseModel):
-    daily_data: Dict[str, DailyDataItem]
-    total_counts: TotalCounts
-
-
 class DailyRevenueData(BaseModel):
     total_price: float
     visitor: float

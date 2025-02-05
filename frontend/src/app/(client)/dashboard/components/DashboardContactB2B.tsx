@@ -22,9 +22,10 @@ interface AppliedDates {
 
 interface DashboardContactProps {
     appliedDates: AppliedDates;
+    typeBusiness: string
 }
 
-const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => {
+const DashboardContactB2B: React.FC<DashboardContactProps> = ({ appliedDates, typeBusiness }) => {
     const [chartType, setChartType] = useState<'line' | 'bar'>('line');
     const [loading, setLoading] = useState(true)
     const [values, setValues] = useState({
@@ -121,9 +122,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
 
         fetchData();
     }, [appliedDates]);
-
-
-
+    
     const toggleChartType = (type: 'line' | 'bar') => {
         setChartType(type);
     };
@@ -345,7 +344,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
     return (
         <>
             <Box sx={{ width: '100%', mt: 1, mb: 1, '@media (max-width: 900px)': { mt: 0, mb: 0, } }}>
-                <StatsCard values={values} />
+                <StatsCard values={values} typeBusiness={typeBusiness} />
             </Box>
             <Card variant="outlined" sx={{ width: '100%', }}>
                 <CardContent sx={{paddingLeft: 0,}}>
@@ -602,4 +601,4 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates }) => 
 }
 
 
-export default DashboardContact;
+export default DashboardContactB2B;

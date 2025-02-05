@@ -16,7 +16,8 @@ import { showErrorToast, showToast } from '@/components/ToastNotification';
 import axiosInterceptorInstance from "../../../axios/axiosInterceptorInstance";
 import ManualPopup from "./components/ManualPopup";
 import DashboardRevenue from "./components/DashboardRevenue";
-import DashboardContact from "./components/DashboardContact";
+import DashboardContactB2B from "./components/DashboardContactB2B";
+import DashboardContactD2C from "./components/DashboardContactD2C";
 import CustomTooltip from "@/components/customToolTip";
 import { DateRangeIcon } from "@mui/x-date-pickers/icons";
 import CalendarPopup from "@/components/CustomCalendar";
@@ -514,15 +515,15 @@ const Dashboard: React.FC = () => {
         try {
           setLoading(true)
           const response = await axiosInstance.get('/dashboard/revenue');
-          if(!response.data) {
+          if (!response.data) {
             setHiddenRevenue(true)
           }
           if (!response?.data.total_counts || !response?.data.total_counts.total_revenue) {
             setTabIndex(1)
             return;
           }
-        } catch (error) {}
-         finally {
+        } catch (error) { }
+        finally {
           setLoading(false)
         }
       }
@@ -533,7 +534,7 @@ const Dashboard: React.FC = () => {
 
   if (loading) {
     return <CustomizedProgressBar />;
-}
+  }
 
   const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
     setTabIndex(newIndex);
@@ -652,32 +653,32 @@ const Dashboard: React.FC = () => {
                     }}
                     aria-label="dashboard tabs"
                   >
-                    {!hiddenrevenue && 
-                    <Tab className="main-text"
-                      sx={{
-                        textTransform: 'none',
-                        padding: '4px 10px',
-                        flexGrow: 1,
-                        marginRight: '3em',
-                        minHeight: 'auto',
-                        minWidth: 'auto',
-                        fontSize: '14px',
-                        fontWeight: 700,
-                        lineHeight: '19.1px',
-                        textAlign: 'left',
-                        mr: 2,
-                        '&.Mui-selected': {
-                          color: 'rgba(80, 82, 178, 1)'
-                        },
-                        "@media (max-width: 600px)": {
-                          mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                            backgroundColor: 'rgba(249, 249, 253, 1)',
-                            border: '1px solid rgba(220, 220, 239, 1)'
+                    {!hiddenrevenue &&
+                      <Tab className="main-text"
+                        sx={{
+                          textTransform: 'none',
+                          padding: '4px 10px',
+                          flexGrow: 1,
+                          marginRight: '3em',
+                          minHeight: 'auto',
+                          minWidth: 'auto',
+                          fontSize: '14px',
+                          fontWeight: 700,
+                          lineHeight: '19.1px',
+                          textAlign: 'left',
+                          mr: 2,
+                          '&.Mui-selected': {
+                            color: 'rgba(80, 82, 178, 1)'
                           },
-                        }
-                      }}
-                      label="Revenue"
-                    />}
+                          "@media (max-width: 600px)": {
+                            mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                              backgroundColor: 'rgba(249, 249, 253, 1)',
+                              border: '1px solid rgba(220, 220, 239, 1)'
+                            },
+                          }
+                        }}
+                        label="Revenue"
+                      />}
                     <Tab className="main-text"
                       sx={{
                         textTransform: 'none',
@@ -779,7 +780,13 @@ const Dashboard: React.FC = () => {
             </Box>
             <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
               <TabPanel value={tabIndex} index={1}>
-                <DashboardContact appliedDates={appliedDates} />
+                {typeBusiness === 'd2c' ? (
+                  <DashboardContactD2C appliedDates={appliedDates} typeBusiness={typeBusiness} />
+                ) : (
+                  <DashboardContactB2B appliedDates={appliedDates} typeBusiness={typeBusiness} />
+                )}
+
+
               </TabPanel>
             </Box>
 

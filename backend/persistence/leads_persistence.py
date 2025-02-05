@@ -493,8 +493,34 @@ class LeadsPersistence:
             .group_by(func.date(LeadsVisits.start_date))
         )
         return query.all()
+    
+    def get_contact_data_for_d2c(self, domain_id, from_date, to_date):
+        query = (
+            self.db.query(
+                LeadsVisits.start_date,
+                LeadUser.behavior_type,
+                LeadUser.is_converted_sales,
+                func.count(LeadUser.id).label('lead_count')
+            )
+            .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
+            .group_by(LeadsVisits.start_date, LeadUser.behavior_type, LeadUser.is_converted_sales)
+            .filter(LeadUser.domain_id == domain_id)
+        )
 
-    def get_contact_data(self, domain_id, from_date, to_date):
+        if from_date and to_date:
+            start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
+            end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
+            query = query.filter(
+                and_(
+                    LeadsVisits.start_date >= start_date,
+                    LeadsVisits.start_date <= end_date
+                )
+            )
+
+        results = query.all()
+        return results
+
+    def get_contact_data_for_b2b(self, domain_id, from_date, to_date):
         start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
         end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
         new_leads_data = self.get_new_leads_per_day(domain_id, start_date, end_date)
