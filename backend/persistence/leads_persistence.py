@@ -199,7 +199,6 @@ class LeadsPersistence:
             )
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
             .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
-            .join(LeadsRequests, LeadsRequests.lead_id == LeadUser.id)
             .outerjoin(FirstNameAlias, FirstNameAlias.id == FiveXFiveUser.first_name_id)
             .outerjoin(LastNameAlias, LastNameAlias.id == FiveXFiveUser.last_name_id)
             .outerjoin(FiveXFiveUsersLocations, FiveXFiveUsersLocations.five_x_five_user_id == FiveXFiveUser.id)
