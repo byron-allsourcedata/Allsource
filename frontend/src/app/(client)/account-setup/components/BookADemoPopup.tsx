@@ -48,7 +48,7 @@ const DemoPopup: React.FC<PopupProps> = ({ endSetup }) => {
       const meData = JSON.parse(meItem);
       setPrefillData({email: meData.email, name: meData.full_name})
     }
-  },); 
+  }, []); 
 
   const [utmParams, setUtmParams] = useState<string | null>(null);
 

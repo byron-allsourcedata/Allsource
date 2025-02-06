@@ -651,7 +651,6 @@ const AccountSetup = () => {
       }
     });
     setBookADemoPopupOpen(true)
-    // endSetup()
   };
 
   const handleInstallShopify = async () => {
@@ -1927,7 +1926,7 @@ const AccountSetup = () => {
                             Install with Bigcommerce
                           </Typography>
                         </Box>    
-                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store" 
+                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-bigcommerce-to-maximiz" 
                               target="_blank" className='first-sub-title' style={{fontSize: "14px", color: "rgba(80, 82, 178, 1)"}} 
                               sx={{ textDecoration: "underline", cursor: "pointer"}}>
                           Tutorial
@@ -2024,7 +2023,7 @@ const AccountSetup = () => {
                             Install with GoogleTag
                           </Typography>
                         </Box>
-                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store"
+                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-to-i-install-maximiz-pixel-on-google-tag-manager"
                           target="_blank" className='first-sub-title' style={{ fontSize: "14px", color: "rgba(80, 82, 178, 1)" }}
                           sx={{ textDecoration: "underline", cursor: "pointer", '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
                           Tutorial
@@ -2202,6 +2201,7 @@ const AccountSetup = () => {
                           ...styles.submitButton,
                           color: "rgba(244, 87, 69, 1)",
                           backgroundColor: "#fff",
+                          boxShadow: "unset",
                           "&:hover": {
                             backgroundColor: "#fff",
                             color: "rgba(244, 87, 69, 0.6)"
@@ -2355,6 +2355,7 @@ const AccountSetup = () => {
                       ...styles.submitButton,
                       color: "rgba(244, 87, 69, 1)",
                       backgroundColor: "#fff",
+                      boxShadow: "unset",
                       "&:hover": {
                         backgroundColor: "#fff",
                         color: "rgba(244, 87, 69, 0.6)"
