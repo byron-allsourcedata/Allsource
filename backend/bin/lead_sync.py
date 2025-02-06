@@ -27,6 +27,7 @@ from models.leads_requests import LeadsRequests
 from models.users_domains import UserDomains
 from models.suppression_rule import SuppressionRule
 from models.lead_company import LeadCompany
+from models.leads_users_companies import LeadUserCompany
 from models.state import States
 from models.five_x_five_locations import FiveXFiveLocations
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
@@ -351,6 +352,14 @@ def get_company(session: Session, five_x_five_user: FiveXFiveUser):
         alias = company_name.replace(" ", "_")
         alias = alias.lower()
         return session.query(LeadCompany).filter_by(alias=alias).first()
+
+def create_lead_user_company(session, company_id, lead_user_id):
+    lead_company = LeadUserCompany(
+                            lead_company_id=company_id,
+                            lead_user_id=lead_user_id,
+                        )
+    session.add(lead_company)
+    session.flush()
  
 def create_company(session: Session, five_x_five_user: FiveXFiveUser, states_dict: dict):
     if five_x_five_user.company_name:
@@ -505,23 +514,25 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
             return
 
         is_first_request = True
-        is_new_company = False
         company_id = None
         if five_x_five_user.company_name:
+            company_name = five_x_five_user.company_name.strip()
+            alias = regex.sub(r'[\p{Z}\s]+', ' ', company_name)
+            alias = company_name.replace(" ", "_")
+            alias = alias.lower()
+            five_x_five_user.company_alias = alias
             company = get_company(session, five_x_five_user)
             if not company:
                 company = create_company(session, five_x_five_user, states_dict)
-                is_new_company = True
             company_id = company.id
             
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type,
-                             domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0, company_id=company_id)
+                             domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0)
         
         session.add(lead_user)
         session.flush()
-        if is_new_company:
-            company.first_lead_id = lead_user.id
-            session.flush()
+        if company_id:
+            create_lead_user_company(session, company_id, lead_user.id)
             
         plan_contact_credits_id = None
 
@@ -630,20 +641,18 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
     
     prev_leads_requests = (
         session.query(LeadsRequests)
-        .filter_by(visit_id=lead_visit_id, page=normalize_url(page))
+        .filter_by(visit_id=lead_visit_id)
         .order_by(desc(LeadsRequests.id))
         .first()
     )
-    spent_time_sec = 10
     if prev_leads_requests:
-        spent_time_sec = prev_leads_requests.spent_time_sec
         total_sec = (requested_at - prev_leads_requests.requested_at).total_seconds()
         if total_sec > 0:
-            spent_time_sec += total_sec
+            prev_leads_requests.spent_time_sec = total_sec
 
     lead_request = insert(LeadsRequests).values(
         lead_id=lead_user.id, page_parameters = get_url_params_list(page),
-        page=normalize_url(page), requested_at=requested_at, visit_id=lead_visit_id, spent_time_sec=spent_time_sec
+        page=normalize_url(page), requested_at=requested_at, visit_id=lead_visit_id, spent_time_sec=10
     ).on_conflict_do_nothing()
     session.execute(lead_request)
     session.flush()

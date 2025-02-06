@@ -69,3 +69,4 @@ class FiveXFiveUser(Base):
     related_domains = Column(VARCHAR(128), nullable=True)
     social_connections = Column(VARCHAR(32), nullable=True)
     dpv_code = Column(VARCHAR(2), nullable=True)
+    company_alias = Column(VARCHAR(256), nullable=True)
