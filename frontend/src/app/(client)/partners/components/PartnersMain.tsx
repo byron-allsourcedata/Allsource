@@ -270,7 +270,7 @@ const PartnersMain: React.FC<PartnersProps> = ({ setLoading, loading, masterId, 
     }
 
 
-    const updateOrAddAsset = (updatedPartner: PartnerData) => {
+    const updateOrAddPartner = (updatedPartner: PartnerData) => {
         setPartners((prevAccounts) => {
             const index = prevAccounts.findIndex((account) => account.id === updatedPartner.id);
             if (index !== -1) {
@@ -638,7 +638,7 @@ const PartnersMain: React.FC<PartnersProps> = ({ setLoading, loading, masterId, 
                         </Box>
                         <InvitePartnerPopup
                             masterId={masterId}
-                            updateOrAddAsset={updateOrAddAsset}
+                            updateOrAddPartner={updateOrAddPartner}
                             fileData={fileData}
                             open={formPopupOpen}
                             onClose={handleFormClosePopup} />
