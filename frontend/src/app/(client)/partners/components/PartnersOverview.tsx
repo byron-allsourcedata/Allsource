@@ -94,7 +94,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                 4. Share the Link: Send the referral link to users to invite them to sign up.` },
             {
                 question: '4. How do I see my sign-ups?', answer: `To view the users who signed up using your referral link, follow these steps:
-                1. Go to Account: Select the "Account" heading at the top of the page.
+                1. Go to Account: Select the "Accounts" heading at the top of the page.
                 2. View Referral Details: In the account section, you will find the details of users who signed up through your referral link.` },
             {
                 question: '5. How do I see my commission?', answer: `To view your commission, follow these steps:
@@ -127,12 +127,12 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                 4. Share the Link: Send the referral link to users to invite them to sign up.` },
             {
                 question: '4. How do I see my sign-ups?', answer: `To view the users who signed up using your referral link, follow these steps:
-                1. Go to Account: Select the "Account" heading at the top of the page.
+                1. Go to Account: Select the "Accounts" heading at the top of the page.
                 2. View Referral Details: In the account section, you will find the details of users who signed up through your referral link.` },
             {
-                question: '5. How do I see my sign-ups?', answer: `To view the users who signed up using your referral link, follow these steps:
-                1. Go to Account: Select the "Account" heading at the top of the page.
-                2. View Referral Details: In the account section, you will find the details of users who signed up through your referral link.` },
+                question: '5. How do I see my commission?', answer: `To view your commission, follow these steps:
+                1. Go to Payout: Select the "Payout" heading at the top of the page.
+                2. View Commission Details: In the payout section, you will find the details of your commission.` },
             {
                 question: '6. How do I invite a partner?', answer: `To invite a partner, follow these steps:
                 1. Click "Add Partner": Begin by clicking the "Add Partner" button.
