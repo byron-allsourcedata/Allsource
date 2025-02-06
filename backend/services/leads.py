@@ -29,7 +29,7 @@ class LeadsService:
 
     def get_leads(self, page, per_page, from_date, to_date, regions, page_visits, average_time_sec,
                   recurring_visits, sort_by, sort_order, search_query, from_time, to_time, behavior_type, status, timezone_offset):
-        leads, count, max_page, states = self.leads_persistence_service.filter_leads(
+        leads, count, max_page, states, leads_requests = self.leads_persistence_service.filter_leads(
             domain_id=self.domain.id,
             page=page,
             per_page=per_page,
@@ -141,7 +141,7 @@ class LeadsService:
                     'visitor_type': lead[63],
                     'average_time_sec': lead[64],
                     'is_active': lead[66],
-                    'page_visits': lead[67]
+                    'page_visits': leads_requests.get(lead[67])
                 })
 
         return leads_list, count, max_page
