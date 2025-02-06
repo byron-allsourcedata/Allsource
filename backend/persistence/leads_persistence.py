@@ -384,26 +384,20 @@ class LeadsPersistence:
             self.db.query(
                 LeadsRequests.lead_id,
                 LeadsRequests.page,
-                func.max(LeadsRequests.requested_at).label("last_requested_at")
+                func.sum(LeadsRequests.spent_time_sec).label("total_spent_time")
             )
-                .filter(LeadsRequests.lead_id.in_(lead_ids))
-                .group_by(LeadsRequests.lead_id, LeadsRequests.page)
-                .subquery()
+            .filter(LeadsRequests.lead_id.in_(lead_ids))
+            .group_by(LeadsRequests.lead_id, LeadsRequests.page)
+            .subquery()
         )
 
         filtered_page_time_query = (
             self.db.query(
-                LeadsRequests.lead_id,
-                LeadsRequests.page,
-                LeadsRequests.spent_time_sec
+                latest_page_time_subquery.c.lead_id,
+                latest_page_time_subquery.c.page,
+                latest_page_time_subquery.c.total_spent_time
             )
-                .join(
-                latest_page_time_subquery,
-                (LeadsRequests.lead_id == latest_page_time_subquery.c.lead_id) &
-                (LeadsRequests.page == latest_page_time_subquery.c.page) &
-                (LeadsRequests.requested_at == latest_page_time_subquery.c.last_requested_at)
-            )
-                .all()
+            .all()
         )
 
         leads_requests = {}
@@ -414,7 +408,7 @@ class LeadsPersistence:
                 leads_requests[lead_id] = []
             leads_requests[lead_id].append({
                 "page": row.page,
-                "spent_time_sec": row.spent_time_sec
+                "spent_time_sec": row.total_spent_time
             })
 
         count = query.count()
