@@ -514,7 +514,11 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
             return
 
         is_first_request = True
-        company_id = None
+        lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type,
+                             domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0)
+        
+        session.add(lead_user)
+        session.flush()
         if five_x_five_user.company_name:
             company_name = five_x_five_user.company_name.strip()
             alias = regex.sub(r'[\p{Z}\s]+', ' ', company_name)
@@ -525,13 +529,6 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
             if not company:
                 company = create_company(session, five_x_five_user, states_dict)
             company_id = company.id
-            
-        lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type,
-                             domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0)
-        
-        session.add(lead_user)
-        session.flush()
-        if company_id:
             create_lead_user_company(session, company_id, lead_user.id)
             
         plan_contact_credits_id = None
