@@ -276,7 +276,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                                 underline="none"
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                sx={{ ...accountStyles.text, textDecoration: 'none', color: 'rgba(80, 82, 178, 1)', }}
+                                                sx={{ ...accountStyles.text, textDecoration: 'none', color: 'rgba(80, 82, 178, 1)', display: 'inline-block', maxWidth: 'max-content' }}
                                             >
                                                 {trimmedPage}
                                             </Link>
