@@ -44,7 +44,7 @@ async def get_integrations_service(type: str | None = Query(None), data_sync: bo
 @router.get('/credentials/')
 async def get_integrations_credentials(integration_serivce: IntegrationService = Depends(get_integration_service),
                                        user=Depends(check_user_authorization),
-                                       domain=Depends(check_pixel_install_domain)):
+                                       domain=Depends(check_domain)):
     filters = []
     source_platform = user.get('source_platform')
     if source_platform in ['big_commerce', 'shopify']:
@@ -125,7 +125,7 @@ async def delete_integration(service_name: str = Query(...),
 async def get_list(ad_account_id: str = Query(None),
                    service_name: str = Query(...),
                    integration_service: IntegrationService = Depends(get_integration_service),
-                   user=Depends(check_user_authorization), domain=Depends(check_pixel_install_domain)):
+                   user=Depends(check_user_authorization), domain=Depends(check_domain)):
     with integration_service as service:
         service = getattr(service, service_name.lower())
         _ = {'domain_id': domain.id}
@@ -138,20 +138,20 @@ async def get_list(ad_account_id: str = Query(None),
 async def create_list(list_data: CreateListOrTags,
                       service_name: str = Query(...),
                       integrations_service: IntegrationService = Depends(get_integration_service),
-                      user=Depends(check_user_authorization), domain=Depends(check_pixel_install_domain)):
+                      user=Depends(check_user_authorization), domain=Depends(check_domain)):
     with integrations_service as service:
         service = getattr(service, service_name)
         return service.create_list(list_data, domain.id)
     
 @router.get('/sync/sender', status_code=200)
-async def get_sender(integrations_service: IntegrationService = Depends(get_integration_service), user = Depends(check_user_authorization), domain = Depends(check_pixel_install_domain)):
+async def get_sender(integrations_service: IntegrationService = Depends(get_integration_service), user = Depends(check_user_authorization), domain = Depends(check_domain)):
     with integrations_service as service:
         return service.sendlane.get_sender(domain.id)
 
 
 @router.get('/sync/ad_accounts')
 async def get_ad_accounts(integration_service: IntegrationService = Depends(get_integration_service),
-                          user = Depends(check_user_authorization), domain = Depends(check_pixel_install_domain)):
+                          user = Depends(check_user_authorization), domain = Depends(check_domain)):
     with integration_service as serivce:
         return serivce.meta.get_ad_accounts(domain.id)
 
