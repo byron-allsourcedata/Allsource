@@ -206,8 +206,7 @@ class CompanyPersistence:
                 LeadCompany.last_updated,
             )
                 .join(LeadUser, LeadUser.company_id == LeadCompany.id)
-                .join(FirstLeadUser, FirstLeadUser.id == LeadCompany.first_lead_id)
-                .join(LeadsVisits, LeadsVisits.id == FirstLeadUser.first_visit_id)
+                .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
                 .outerjoin(FiveXFiveLocations, FiveXFiveLocations.id == LeadCompany.five_x_five_location_id)
                 .outerjoin(States, States.id == FiveXFiveLocations.state_id)
                 .filter(LeadUser.domain_id == domain_id)

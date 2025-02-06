@@ -356,7 +356,7 @@ def get_company(session: Session, five_x_five_user: FiveXFiveUser):
 def create_lead_user_company(session, company_id, lead_user_id):
     lead_company = LeadUserCompany(
                             lead_company_id=company_id,
-                            lead_user_id=lead_user_id,
+                            first_lead_user_id=lead_user_id
                         )
     session.add(lead_company)
     session.flush()
@@ -389,6 +389,9 @@ def create_company(session: Session, five_x_five_user: FiveXFiveUser, states_dic
         return lead_company
     
     return None
+
+def get_first_lead_user_by_company_and_domain(session, company_id, domain_id):
+    return session.query(LeadUser).filter(LeadUser.domain_id==domain_id, LeadUser.company_id==company_id).first()
 
 async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXFiveUser, session: Session, rabbitmq_connection,
                             subscription_service: SubscriptionService, leads_persistence: LeadsPersistence,
@@ -526,10 +529,14 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
             alias = alias.lower()
             five_x_five_user.company_alias = alias
             company = get_company(session, five_x_five_user)
-            if not company:
+            if company:
+                if not get_first_lead_user_by_company_and_domain(session, company.id, lead_user.domain_id):
+                    create_lead_user_company(session, company.id, lead_user.id)
+            else:
                 company = create_company(session, five_x_five_user, states_dict)
-            company_id = company.id
-            create_lead_user_company(session, company_id, lead_user.id)
+                create_lead_user_company(session, company.id, lead_user.id)
+            lead_user.company_id = company.id
+            
             
         plan_contact_credits_id = None
 

@@ -21,6 +21,7 @@ class LeadUser(Base):
     avarage_visit_time = Column(Integer, nullable=True)
     total_visit_time = Column(Integer, nullable=True)
     is_active = Column(Boolean, nullable=False, default=True)
+    company_id = Column(Integer, ForeignKey('leads_companies.id'), nullable=False)
     
     __table_args__ = (
         Index('leads_users_is_active_idx', 'is_active'),
