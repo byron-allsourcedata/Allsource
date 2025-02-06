@@ -481,7 +481,7 @@ const Partners: React.FC = () => {
                         masterId={id}
                         isMaster={false}
                         open={formPopupOpen} 
-                        updateOrAddAsset={updateOrAddPartner}
+                        updateOrAddPartner={updateOrAddPartner}
                         onClose={handleFormClosePopup}  />
                         
 
