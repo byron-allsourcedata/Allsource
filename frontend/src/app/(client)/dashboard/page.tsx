@@ -711,6 +711,7 @@ const Dashboard: React.FC = () => {
                   justifyContent: 'flex-end',
                   alignItems: 'center',
                   gap: 2,
+                  width: typeBusiness == 'b2b' ? '100%' : '',
                   '@media (max-width: 600px)': {
                     display: 'none',
                   }
