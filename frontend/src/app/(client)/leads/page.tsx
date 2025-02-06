@@ -1435,7 +1435,7 @@ const Leads: React.FC = () => {
                                                                 e.stopPropagation();
                                                                 handleOpenPopup(row)
                                                          }} sx={{ ...leadsStyles.table_array, position: 'relative', cursor: 'pointer', color: 'rgba(80, 82, 178, 1)' }}>
-                                                        {Array.isArray(row.url_visited) ? row.url_visited.length : '--'}
+                                                        {Array.isArray(row.page_visits) ? row.page_visits.length : '--'}
                                                         </TableCell>
 
                                                         <TableCell sx={{ ...leadsStyles.table_array, "::after": { content: 'none' } }}>

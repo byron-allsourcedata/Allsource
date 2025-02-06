@@ -87,6 +87,45 @@ class LeadsPersistence:
             .group_by(LeadsVisits.lead_id)
             .subquery()
         )
+        latest_page_time_subquery = (
+            self.db.query(
+                LeadsRequests.lead_id,
+                LeadsRequests.page,
+                func.max(LeadsRequests.requested_at).label("last_requested_at")
+            )
+            .group_by(LeadsRequests.lead_id, LeadsRequests.page)
+            .subquery()
+        )
+
+        filtered_page_time_subquery = (
+            self.db.query(
+                LeadsRequests.lead_id,
+                LeadsRequests.page,
+                LeadsRequests.spent_time_sec
+            )
+            .join(
+                latest_page_time_subquery,
+                (LeadsRequests.lead_id == latest_page_time_subquery.c.lead_id) &
+                (LeadsRequests.page == latest_page_time_subquery.c.page) &
+                (LeadsRequests.requested_at == latest_page_time_subquery.c.last_requested_at)
+            )
+            .subquery()
+        )
+
+        page_time_data_subquery = (
+            self.db.query(
+                filtered_page_time_subquery.c.lead_id,
+                func.array_agg(
+                    func.jsonb_build_object(
+                        "page", filtered_page_time_subquery.c.page,
+                        "spent_time_sec", filtered_page_time_subquery.c.spent_time_sec
+                    )
+                ).label("page_time_data")
+            )
+            .group_by(filtered_page_time_subquery.c.lead_id)
+            .subquery()
+        )
+
         query = (
             self.db.query(
                 FiveXFiveUser.id,
@@ -156,7 +195,7 @@ class LeadsPersistence:
                 LeadUser.avarage_visit_time,
                 LeadUser.is_converted_sales,
                 LeadUser.is_active,
-                func.array_agg(distinct(LeadsRequests.page)).label('unique_pages')
+                page_time_data_subquery.c.page_time_data
             )
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
             .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
@@ -167,6 +206,7 @@ class LeadsPersistence:
             .outerjoin(FiveXFiveLocations, FiveXFiveLocations.id == FiveXFiveUsersLocations.location_id)
             .outerjoin(States, States.id == FiveXFiveLocations.state_id)
             .outerjoin(recurring_visits_subquery, recurring_visits_subquery.c.lead_id == LeadUser.id)
+            .outerjoin(page_time_data_subquery, page_time_data_subquery.c.lead_id == LeadUser.id)
             .filter(LeadUser.domain_id == domain_id)
             .group_by(
                 FiveXFiveUser.id,
@@ -176,6 +216,7 @@ class LeadsPersistence:
                 LeadsVisits.start_time,
                 LeadsVisits.full_time_sec,
                 recurring_visits_subquery.c.recurring_visits,
+                page_time_data_subquery.c.page_time_data,
                 LeadUser.avarage_visit_time,
                 LeadUser.is_converted_sales,
                 LeadUser.is_active
@@ -359,7 +400,7 @@ class LeadsPersistence:
             filters = [
                 FiveXFiveEmails.email.ilike(f'{search_query}%'),
                 FiveXFiveEmails.email_host.ilike(f'{search_query}%'),
-                FiveXFivePhones.number.ilike(f'{search_query}%')
+                FiveXFivePhones.number.ilike(f"{search_query.replace('+', '')}%")
             ]
             search_query = search_query.split()
             if len(search_query) == 1:
@@ -876,7 +917,7 @@ class LeadsPersistence:
         filters = [
             FiveXFiveEmails.email.ilike(f'{start_letter}%'),
             FiveXFiveEmails.email_host.ilike(f'{email_host}%'),
-            FiveXFivePhones.number.ilike(f'{start_letter}%')
+            FiveXFivePhones.number.ilike(f'{start_letter.replace('+', '')}%')
         ]
         if len(letters) == 1:
             filters.extend([
