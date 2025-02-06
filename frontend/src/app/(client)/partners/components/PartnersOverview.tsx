@@ -94,11 +94,11 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                 4. Share the Link: Send the referral link to users to invite them to sign up.` },
             {
                 question: '4. How do I see my sign-ups?', answer: `To view the users who signed up using your referral link, follow these steps:
-                1. Go to Account: Select the "Accounts" heading at the top of the page.
+                1. Go to Account: Select the "Account" heading at the top of the page.
                 2. View Referral Details: In the account section, you will find the details of users who signed up through your referral link.` },
             {
                 question: '5. How do I see my commission?', answer: `To view your commission, follow these steps:
-                1. Go to Payout: Select the "Payout" heading at the top of the page.
+                1. Go to Payout: Select the "Payouts" heading at the top of the page.
                 2. View Commission Details: In the payout section, you will find the details of your commission.` },
             {
                 question: '6. When do I get paid?', answer: `Referral rewards are distributed in the first week of the following month.` },
@@ -131,7 +131,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                 2. View Referral Details: In the account section, you will find the details of users who signed up through your referral link.` },
             {
                 question: '5. How do I see my commission?', answer: `To view your commission, follow these steps:
-                1. Go to Payout: Select the "Payout" heading at the top of the page.
+                1. Go to Payout: Select the "Payouts" heading at the top of the page.
                 2. View Commission Details: In the payout section, you will find the details of your commission.` },
             {
                 question: '6. How do I invite a partner?', answer: `To invite a partner, follow these steps:
@@ -142,7 +142,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
             {
                 question: "7. How do I set up the partner's commission?", answer: `There are two ways to set up a partner's commission:
                 1. During Invitation: When you invite the partner by clicking on the "Add Partner" button, you can assign the commission at that time.
-                2. Edit Existing Partner: Select the "Partner" heading at the top of the page. In the partner table, find the action column and click on "Edit" to change the partner's commission.` },
+                2. Edit Existing Partner: Select the "Partners" heading at the top of the page. In the partner table, find the action column and click on "Edit" to change the partner's commission.` },
             {
                 question: '8. When do I get paid?', answer: `Referral rewards are distributed in the first week of the following month.` },
         ]
