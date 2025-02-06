@@ -28,7 +28,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useNotification } from '@/context/NotificationContext';
 import { showErrorToast } from '@/components/ToastNotification';
 import CompanyFilterPopup from './CompanyFilters';
-import CompanyEmployees from './CompanyEmployees';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 
 interface FetchDataParams {
@@ -36,11 +36,16 @@ interface FetchDataParams {
     sortOrder?: 'asc' | 'desc';
     page: number;
     rowsPerPage: number;
-    appliedDates: { start: Date | null; end: Date | null };
+}
+
+interface CompanyEmployeesProps {
+    onBack: () => void
+    companyName: string
+    companyId: number | null
 }
 
 
-const Leads: React.FC = () => {
+const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName, companyId: id }) => {
     const router = useRouter();
     const { hasNotification } = useNotification();
     const [data, setData] = useState<any[]>([]);
@@ -61,8 +66,6 @@ const Leads: React.FC = () => {
     const [selectedDates, setSelectedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
     const isCalendarOpen = Boolean(calendarAnchorEl);
     const [formattedDates, setFormattedDates] = useState<string>('');
-    const [companyName, setCompanyName] = useState<string>('');
-    const [companyId, setCompanyId] = useState<number | null>(null);
     const [filterPopupOpen, setFilterPopupOpen] = useState(false);
     const [audiencePopupOpen, setAudiencePopupOpen] = useState(false);
     const [companyEmployeesOpen, setCompanyEmployeesOpen] = useState(false);
@@ -176,6 +179,53 @@ const Leads: React.FC = () => {
         setRowsPerPage(parseInt(event.target.value as string, 10));
         setPage(0);
     };
+
+    
+    const fetchEmployeesCompany = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
+        try {
+            const timezoneOffsetInHours = -new Date().getTimezoneOffset() / 60;
+            let url = `/company/employess?page=${page + 1}&per_page=${rowsPerPage}&timezone_offset=${timezoneOffsetInHours}`;
+            
+            const searchQuery = selectedFilters.find(filter => filter.label === 'Search')?.value;
+            if (searchQuery) {
+                url += `&search_query=${encodeURIComponent(searchQuery)}`;
+            }
+
+            if (sortBy) {
+                url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
+            }
+    
+            const response = await axiosInstance.get(url);
+            const [employees, count] = response.data;
+    
+            setData(Array.isArray(employees) ? employees : []);
+            setCount(count || 0);
+            setStatus(response.data.status);
+    
+            const options = [15, 30, 50, 100, 200, 500];
+            let RowsPerPageOptions = options.filter(option => option <= count);
+            if (RowsPerPageOptions.length < options.length) {
+                RowsPerPageOptions = [...RowsPerPageOptions, options[RowsPerPageOptions.length]];
+            }
+            setRowsPerPageOptions(RowsPerPageOptions);
+            const selectedValue = RowsPerPageOptions.includes(rowsPerPage) ? rowsPerPage : 15;
+            setRowsPerPage(selectedValue);
+
+        } catch (error) {
+            if (error instanceof AxiosError && error.response?.status === 403) {
+                if (error.response.data.status === 'NEED_BOOK_CALL') {
+                    sessionStorage.setItem('is_slider_opened', 'true');
+                    setShowSlider(true);
+                } else if (error.response.data.status === 'PIXEL_INSTALLATION_NEEDED') {
+                    setStatus(error.response.data.status);
+                } else {
+                    setShowSlider(false);
+                }
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    }
 
 
     const fetchData = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
@@ -349,17 +399,26 @@ const Leads: React.FC = () => {
     }, [])
 
     useEffect(() => {
-        fetchData({
+        fetchEmployeesCompany({
             sortBy: orderBy,
             sortOrder: order,
             page,
             rowsPerPage,
-            appliedDates: {
-                start: appliedDates.start,
-                end: appliedDates.end,
-            }
         });
-    }, [appliedDates, orderBy, order, page, rowsPerPage, selectedFilters]);
+    }, [orderBy, order, page, rowsPerPage, selectedFilters]);
+
+    // useEffect(() => {
+    //     fetchData({
+    //         sortBy: orderBy,
+    //         sortOrder: order,
+    //         page,
+    //         rowsPerPage,
+    //         appliedDates: {
+    //             start: appliedDates.start,
+    //             end: appliedDates.end,
+    //         }
+    //     });
+    // }, [appliedDates, orderBy, order, page, rowsPerPage, selectedFilters]);
 
     const handleDateLabelChange = (label: string) => {
     };
@@ -726,8 +785,6 @@ const Leads: React.FC = () => {
             {loading && (
                 <CustomizedProgressBar/>
             )}
-            {companyEmployeesOpen && <CompanyEmployees companyId={companyId} companyName={companyName} onBack={() => setCompanyEmployeesOpen(false)}/>}
-            {!companyEmployeesOpen && 
             <Box sx={{
                 display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
                 '@media (max-width: 900px)': {
@@ -755,8 +812,11 @@ const Leads: React.FC = () => {
                             },
                         }}>
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                            <IconButton onClick={onBack}>
+                                <ArrowBackIcon sx={{color: 'rgba(80, 82, 178, 1)'}}/>
+                            </IconButton>
                             <Typography className='first-sub-title'>
-                                Company list {data.length === 0 ? '' : `(${count_companies})`}
+                                Employees  {`(${companyName})`}
                             </Typography>
                             <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
                         </Box>
@@ -1038,15 +1098,12 @@ const Leads: React.FC = () => {
                                             <TableHead>
                                                 <TableRow>
                                                     {[
-                                                        { key: 'company_name', label: 'Company', sortable: true },
-                                                        { key: 'phone_number', label: 'Phone Number' },
-                                                        { key: 'linkedin', label: 'LinkedIn' },
-                                                        { key: 'employees_visited', label: 'Employees Visited', sortable: true },
-                                                        { key: 'visited_date', label: 'Visited date', sortable: true },
-                                                        { key: 'revenue', label: 'Revenue', sortable: true },
-                                                        { key: 'number_of_employees', label: 'No. of Employees', sortable: true },
-                                                        { key: 'location', label: 'Location', },
-                                                        { key: 'average_time_sec', label: 'Industry', },
+                                                        { key: 'company_name', label: 'Name', sortable: true },
+                                                        { key: 'phone_number', label: 'Personal Email', sortable: true },
+                                                        { key: 'phone_number', label: 'Business Email', sortable: true },
+                                                        { key: 'phone_number', label: 'Mobile Number'},
+                                                        { key: 'phone_number', label: 'Job Title'},
+                                                        { key: 'phone_number', label: 'Department'}
                                                     ].map(({ key, label, sortable = false }) => (
                                                         <TableCell
                                                             key={key}
@@ -1149,37 +1206,6 @@ const Leads: React.FC = () => {
                                                             {row.company_revenue || '--'}
                                                         </TableCell>
 
-                                                        {/* Company employee count  Column */}
-                                                        <TableCell
-                                                            onClick={() => {
-                                                                setCompanyEmployeesOpen(true)
-                                                                setCompanyName(row.name)
-                                                                setCompanyId(row.id)
-
-                                                            }}
-                                                            
-                                                            sx={{
-                                                                ...companyStyles.table_array, position: 'relative', cursor: "pointer"}}
-                                                        >
-                                                            {row.employee_count || '--'}
-                                                        </TableCell>
-
-                                                        {/* Company location  Column */}
-                                                        <TableCell
-                                                            sx={{ ...companyStyles.table_array, position: 'relative' }}
-                                                        >
-                                                            {(row.city || row.state)
-                                                                ? [capitalizeCity(row.city), row.state].filter(Boolean).join(', ')
-                                                                : '--'}
-                                                        </TableCell>
-
-                                                        {/* Company industry  Column */}
-                                                        <TableCell sx={{ ...companyStyles.table_array, "::after": { content: 'none' }, cursor: row.industry ? "pointer" : "default", }} onClick={(e) => row.industry ? handleOpenPopover(e, row.industry || "--") : ''}>
-                                                            {row.industry && row.industry.length > 30
-                                                                ? `${row.industry.slice(0, 20)}...`
-                                                                : row.industry || "--"}
-                                                        </TableCell>
-
                                                     </TableRow>
                                                 ))}
                                             </TableBody>
@@ -1258,19 +1284,9 @@ const Leads: React.FC = () => {
                         selectedDates={selectedDates}
                     />
                 </Box>
-            </Box>}
+            </Box>
         </>
     );
 };
 
-const LeadsPage: React.FC = () => {
-    return (
-        <Suspense fallback={<CustomizedProgressBar />}>
-            <SliderProvider>
-                <Leads />
-            </SliderProvider>
-        </Suspense>
-    );
-};
-
-export default LeadsPage;
+export default CompanyEmployees;

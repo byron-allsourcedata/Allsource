@@ -43,6 +43,34 @@ async def get_companies(
     )
 
 
+@router.get("/employess")
+async def get_employees(
+        page: int = Query(1, alias="page", ge=1, description="Page number"),
+        per_page: int = Query(15, alias="per_page", ge=1, le=500, description="Items per page"),
+        sort_by: str = Query(None, description="Field"),
+        sort_order: str = Query(None, description="Field to sort by: 'asc' or 'desc'"),
+        search_query: str = Query(None, description="Search for email, first name, lastname and phone number"),
+        timezone_offset: float = Query(0, description="timezone offset in integer format"),
+        job_title: str = Query(None),
+        department: str = Query(None),
+        seniority: str = Query(None),
+        location: str = Query(None),
+        company_service: CompanyService = Depends(get_companies_service)
+):
+    return company_service.get_employees(
+        sort_by=sort_by,
+        sort_order=sort_order,
+        page=page,
+        per_page=per_page,
+        department=department,
+        job_title=job_title,
+        seniority=seniority,
+        location=location,
+        search_query=search_query,
+        timezone_offset=timezone_offset
+    )
+
+
 @router.get("/industry")
 async def get_industry(company_service: CompanyService = Depends(get_companies_service)):
     return company_service.get_uniq_primary_industry()
