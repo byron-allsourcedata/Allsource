@@ -102,6 +102,7 @@ class ReferralPayoutsPersistence:
             ReferralPayouts.status,
             ReferralPayouts.comment,
             Users.company_name,
+            Users.full_name,
             Users.email,
             Users.id.label('user_id'),
             Users.created_at,
