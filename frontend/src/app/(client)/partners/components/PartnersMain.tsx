@@ -631,7 +631,7 @@ const PartnersMain: React.FC<PartnersProps> = ({ setLoading, loading, masterId, 
                                             fontWeight: "600",
                                             lineHeight: "20px"
                                         }}>
-                                        No Invitee joined from the referreal link.
+                                        No partners found.
                                     </Typography>
                                 </Box>
                             )}

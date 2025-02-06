@@ -1024,7 +1024,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                             fontWeight: "600",
                                                             lineHeight: "20px"
                                                         }}>
-                                                        No Invitee joined from the referreal link.
+                                                        No {isMaster ? "master" : ""} partners found.
                                                     </Typography>
                                                 </Box>
                                                 )}

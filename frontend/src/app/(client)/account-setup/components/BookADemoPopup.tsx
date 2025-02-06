@@ -125,7 +125,6 @@ const fetchPrefillData = async () => {
 
   return (
     <>
-        <div id='calendly-popup-wrapper' className="book-call-button__wrapper" style={{ zIndex: 2000 }}> </div>
         <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
         <DialogTitle>
             <Typography sx={{

@@ -780,6 +780,9 @@ const AccountSetup = () => {
           <BorderLinearProgress variant="indeterminate" />
         </Box>
       }
+
+      <div id='calendly-popup-wrapper' className="book-call-button__wrapper" style={{ zIndex: 2000 }}> </div>
+      
       <Box sx={{...styles.headers, overflow: "hidden"}}>
         <Box
           sx={{
@@ -2369,7 +2372,7 @@ const AccountSetup = () => {
               )}
 
               {bookADemoPopupOpen && 
-                <BookADemoPopup endSetup={endSetup}/>
+                  <BookADemoPopup endSetup={endSetup}/>
               }
             </Box>
         </Box>
