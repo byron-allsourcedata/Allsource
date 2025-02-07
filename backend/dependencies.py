@@ -374,18 +374,6 @@ def check_user_setting_access(Authorization: Annotated[str, Header()],
         )
     return user
 
-def check_user_company(Authorization: Annotated[str, Header()],
-                       user_persistence_service: UserPersistence = Depends(
-                           get_user_persistence_service)) -> Token:
-    user = check_user_authentication(Authorization, user_persistence_service)
-    if user['business_type'] == 'd2c':
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={'status': 'Not found'}
-        )
-    return user
-
-
 def check_user_partner(Authorization: Annotated[str, Header()],
                        user_persistence_service: UserPersistence = Depends(
                            get_user_persistence_service)) -> Token:
