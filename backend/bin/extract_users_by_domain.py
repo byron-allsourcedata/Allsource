@@ -99,8 +99,8 @@ async def fetch_users_by_domain(db_session, company_domains, job_titles, mail_do
                 if email:
                     results.append({
                         "domain": domain,
-                        "personal_city": user.personal_city,
-                        "personal_state": user.personal_state,
+                        "personal city": user.personal_city,
+                        "personal state": user.personal_state,
                         "gender": user.gender,
                         "job title": user.job_title,
                         "first name": user.first_name,
