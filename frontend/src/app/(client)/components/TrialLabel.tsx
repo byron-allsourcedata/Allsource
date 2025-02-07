@@ -11,12 +11,10 @@ const TrialStatus: React.FC = () => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [currentDomain, setCurrentDomain] = useState<string | null>(null);
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem("token");
-      const currentDomain = sessionStorage.getItem('current_domain');
-      setAccessToken(token);
-      setCurrentDomain(currentDomain)
-    } 
+    const token = localStorage.getItem("token");
+    const currentDomain = sessionStorage.getItem('current_domain');
+    setAccessToken(token);
+    setCurrentDomain(currentDomain)
   }, []);
 
   const [{ data, loading }, refetch] = useAxios(
