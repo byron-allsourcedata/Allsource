@@ -430,7 +430,7 @@ const Dashboard: React.FC = () => {
             setShowSlider(false);
           }
         let business_type = 'd2c'
-        const storedMe = sessionStorage.getItem('me');
+        const storedMe = localStorage.getItem('account_info');
         if (storedMe) {
           const storedData = JSON.parse(storedMe);
           business_type = storedData.business_type
@@ -462,7 +462,7 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       let business_type = 'b2b'
-      const storedMe = sessionStorage.getItem('me');
+      const storedMe = localStorage.getItem('account_info');
       if (storedMe) {
         const storedData = JSON.parse(storedMe);
         business_type = storedData.business_type
@@ -474,9 +474,6 @@ const Dashboard: React.FC = () => {
         try {
           setLoading(true)
           const response = await axiosInstance.get('/dashboard/revenue');
-          if (!response.data) {
-            setHiddenRevenue(true)
-          }
           if (!response?.data.total_counts || !response?.data.total_counts.total_revenue) {
             setTabIndex(1)
             return;
@@ -612,7 +609,6 @@ const Dashboard: React.FC = () => {
                     }}
                     aria-label="dashboard tabs"
                   >
-                    {!hiddenrevenue &&
                       <Tab className="main-text"
                         sx={{
                           textTransform: 'none',
@@ -637,7 +633,7 @@ const Dashboard: React.FC = () => {
                           }
                         }}
                         label="Revenue"
-                      />}
+                      />
                     <Tab className="main-text"
                       sx={{
                         textTransform: 'none',
