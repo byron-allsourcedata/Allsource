@@ -147,11 +147,32 @@ class KlaviyoIntegrationsService:
             self.integrations_persisntece.db.commit()
             raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
         return self.__mapped_list(response.json().get('data'))
-
+    
+    def create_and_delete_contact(self, access_token: str):
+        json_data = {
+            'data': {
+                'type': 'profile',
+                'attributes': {
+                    'email': 'test',
+                    'first_name': 'Test',
+                    'last_name': 'Test',
+                }
+            }
+        }
+        response = self.__handle_request(
+            method='POST',
+            url='https://a.klaviyo.com/api/profiles/',
+            api_key=access_token,
+            json=json_data
+        )
+        if response.status_code == 400:
+            return True
+        return False
 
     def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
         try:
-            self.__get_list(credentials.klaviyo.api_key)
+            if self.create_and_delete_contact(credentials.klaviyo.api_key) == False:
+                raise HTTPException(status_code=400, detail=IntegrationsStatus.CREDENTAILS_INVALID.value)
         except:
             raise HTTPException(status_code=400, detail=IntegrationsStatus.CREDENTAILS_INVALID.value)
         integartions = self.__save_integrations(credentials.klaviyo.api_key, domain.id, user)
@@ -274,7 +295,6 @@ class KlaviyoIntegrationsService:
                 return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
         if response.status_code == 409:
             return {'id': response.json().get('errors')[0].get('meta').get('duplicate_profile_id')}
-        
         
 
     def __add_profile_to_list(self, list_id: str, profile_id: str, api_key: str):

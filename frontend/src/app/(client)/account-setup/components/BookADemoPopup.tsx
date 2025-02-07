@@ -143,7 +143,7 @@ const fetchPrefillData = async () => {
             </Typography>
             <List>
             {[
-                "Get a personalised demo of lolly.",
+                "Get a personalised demo of Maximiz.",
                 "Experience the AI powered Influencer search tool.",
                 "Explore how we help you discover top influencers, nurture relationships, handle campaigns from start to finish, and more.",
                 "Get the answers you have been waiting for..!",
