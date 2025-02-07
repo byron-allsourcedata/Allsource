@@ -75,6 +75,53 @@ class CompanyService:
             })
 
         return company_list, count, max_page
+    
+
+    def get_employees(self, page, per_page, sort_by, sort_order,
+                      search_query, timezone_offset, job_title, seniority, location, department):
+        employees, count, max_page = self.company_persistence_service.filter_employees(
+            domain_id=self.domain.id,
+            page=page,
+            per_page=per_page,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            department=department,
+            job_title=job_title,
+            seniority=seniority,
+            location=location,
+            search_query=search_query,
+        )
+
+        employees_list = []
+        for employee in employees:
+            first_visited_date = employee[5].strftime('%d.%m.%Y') if employee[5] else None
+            first_visited_time = employee[6].strftime('%H:%M')
+            combined_datetime = datetime.strptime(f"{first_visited_date} {first_visited_time}", '%d.%m.%Y %H:%M')
+            adjusted_datetime = combined_datetime + timedelta(hours=timezone_offset)
+            adjusted_date = adjusted_datetime.strftime('%d.%m.%Y')
+            adjusted_time = adjusted_datetime.strftime('%H:%M')
+
+
+            employees_list.append({
+                'id': employee[0],
+                'name': employee[1],
+                'phone': self.format_phone_number(employee[2]) if employee[2] else None,
+                'linkedin_url': employee[3],
+                'employees_visited': employee[4],
+                'visited_date': employee,
+                'company_revenue': employee[7],
+                'employee_count': employee[8],
+                'location': employee[9],
+                'industry': employee[10],
+                'domain': employee[11],
+                'zipcode': employee[12],
+                'description': employee[13],
+                'city': employee[14],
+                'state': employee[15],
+            })
+
+        return employees_list, count, max_page
+    
 
     def search_company(self, start_letter):
         start_letter = start_letter.replace('+', '').strip().lower()
