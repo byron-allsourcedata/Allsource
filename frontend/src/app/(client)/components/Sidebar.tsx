@@ -15,7 +15,6 @@ import Image from 'next/image';
 import { AxiosError } from 'axios';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { useUser } from '@/context/UserContext';
-import { useSessionStorage } from 'usehooks-ts';
 
 const sidebarStyles = {
     container: {
@@ -204,9 +203,13 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
     }, []);
 
     const checkPartner = () => {
-        const storedMe = localStorage.getItem('partner');
+        
+        const storedMe = localStorage.getItem('account_info');
+        let partner = false
         if (storedMe) {
-            setIsPartnerAvailable(storedMe === 'true')
+            const storedData = JSON.parse(storedMe);
+            partner = storedData.partner
+            setIsPartnerAvailable(partner)
         }
         else {
             setIsPartnerAvailable(false)
