@@ -199,16 +199,6 @@ const VerifyPixelIntegration: React.FC = () => {
 };
 
 const SupportSection: React.FC = () => {
-  const calendlyPopupRef = useRef<HTMLDivElement | null>(null);
-  const [rootElement, setRootElement] = useState<HTMLElement | null>(null);
-
-  useEffect(() => {
-    if (calendlyPopupRef.current) {
-      fetchPrefillData();
-      setRootElement(calendlyPopupRef.current);
-    }
-  }, []);
-  const [utmParams, setUtmParams] = useState<string | null>(null);
   const [openmanually, setOpen] = useState(false);
   const [pixelCode, setPixelCode] = useState('');
   const { setShowSlider } = useSlider();
@@ -236,44 +226,6 @@ const SupportSection: React.FC = () => {
     finally {
       setIsLoading(false)
     }
-  };
-
-  const fetchPrefillData = async () => {
-    try {
-      const response = await axiosInstance.get('/calendly');
-      const user = response.data.user;
-
-      if (user) {
-        const { full_name, email, utm_params } = user;
-        setUtmParams(utm_params)
-      }
-    } catch (error) {
-      setUtmParams(null);
-    }
-  };
-
-  const calendlyPopupUrl = () => {
-    const baseUrl = "https://calendly.com/maximiz-support/30min";
-    const searchParams = new URLSearchParams();
-
-    if (utmParams) {
-      try {
-        const parsedUtmParams = typeof utmParams === 'string' ? JSON.parse(utmParams) : utmParams;
-
-        if (typeof parsedUtmParams === 'object' && parsedUtmParams !== null) {
-          Object.entries(parsedUtmParams).forEach(([key, value]) => {
-            if (value !== null && value !== undefined) {
-              searchParams.append(key, value as string);
-            }
-          });
-        }
-      } catch (error) {
-        console.error("Error parsing utmParams:", error);
-      }
-    }
-
-    const finalUrl = `${baseUrl}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
-    return finalUrl;
   };
 
 
@@ -477,6 +429,13 @@ const Dashboard: React.FC = () => {
           } else {
             setShowSlider(false);
           }
+        let business_type = 'd2c'
+        const storedMe = sessionStorage.getItem('me');
+        if (storedMe) {
+          const storedData = JSON.parse(storedMe);
+          business_type = storedData.business_type
+          setTypeBusiness(storedData.business_type)
+      }
         } catch (error) {
           if (error instanceof AxiosError && error.response?.status === 403) {
             if (error.response.data.status === "NEED_BOOK_CALL") {
@@ -532,7 +491,7 @@ const Dashboard: React.FC = () => {
     fetchData();
   }, []);
 
-  if (loading) {
+  if (isLoading) {
     return <CustomizedProgressBar />;
   }
 
@@ -540,7 +499,7 @@ const Dashboard: React.FC = () => {
     setTabIndex(newIndex);
   };
   return (
-    <>
+    <Box>
       {showCharts ? (
         <>
           <Grid
@@ -711,7 +670,7 @@ const Dashboard: React.FC = () => {
                   justifyContent: 'flex-end',
                   alignItems: 'center',
                   gap: 2,
-                  width: typeBusiness == 'b2b' ? '100%' : '',
+                  width: typeBusiness == 'd2c' ? '' : '100%',
                   '@media (max-width: 600px)': {
                     display: 'none',
                   }
@@ -853,7 +812,7 @@ const Dashboard: React.FC = () => {
 
       )}
       {showSlider && <Slider />}
-    </>
+    </Box>
   );
 };
 
