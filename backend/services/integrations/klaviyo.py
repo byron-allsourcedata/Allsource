@@ -201,7 +201,7 @@ class KlaviyoIntegrationsService:
     async def process_data_sync(self, five_x_five_user, user_integration, data_sync, lead_user):
         data_map = data_sync.data_map if data_sync.data_map else None
         profile = self.__create_profile(five_x_five_user, user_integration.access_token, data_map)
-        
+
         if profile == ProccessDataSyncResult.AUTHENTICATION_FAILED.value or profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
             return profile
 
@@ -210,7 +210,6 @@ class KlaviyoIntegrationsService:
             return ProccessDataSyncResult.LIST_NOT_EXISTS.value
             
         return ProccessDataSyncResult.SUCCESS.value
-
     
     def get_count_profiles(self, list_id: str, api_key: str):
         url = f'https://a.klaviyo.com/api/lists/{list_id}?additional-fields[list]=profile_count'
