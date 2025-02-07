@@ -147,26 +147,28 @@ class LeadsService:
         return leads_list, count, max_page
 
     def download_leads(self, from_date=None, to_date=None, regions=None, page_visits=None, average_time_spent=None,
-                       behavior_type=None, status=None, recurring_visits=None, sort_by=None,
-                       sort_order=None, search_query=None, from_time=None, to_time=None, leads_ids=0):
+                   behavior_type=None, status=None, recurring_visits=None, sort_by=None,
+                   sort_order=None, search_query=None, from_time=None, to_time=None, leads_ids=0):
         if leads_ids == 0:
-            leads, states = self.leads_persistence_service.get_full_user_leads_by_filters(domain_id=self.domain.id,
-                                                                                    from_date=from_date,
-                                                                                    to_date=to_date, regions=regions,
-                                                                                    page_visits=page_visits,
-                                                                                    average_time_spent=average_time_spent,
-                                                                                    behavior_type=behavior_type,
-                                                                                    status=status,
-                                                                                    recurring_visits=recurring_visits,
-                                                                                    sort_by=sort_by,
-                                                                                    sort_order=sort_order,
-                                                                                    search_query=search_query,
-                                                                                    from_time=from_time, to_time=to_time
-                                                                                    )
+            result_five_x_five_users, states, leads_requests = self.leads_persistence_service.get_full_user_leads_by_filters(domain_id=self.domain.id,
+                                                                                                        from_date=from_date,
+                                                                                                        to_date=to_date, regions=regions,
+                                                                                                        page_visits=page_visits,
+                                                                                                        average_time_spent=average_time_spent,
+                                                                                                        behavior_type=behavior_type,
+                                                                                                        status=status,
+                                                                                                        recurring_visits=recurring_visits,
+                                                                                                        sort_by=sort_by,
+                                                                                                        sort_order=sort_order,
+                                                                                                        search_query=search_query,
+                                                                                                        from_time=from_time, to_time=to_time
+                                                                                                        )
         else:
-            leads, states = self.leads_persistence_service.get_full_user_leads_by_ids(self.domain.id, leads_ids)
-        if len(leads) == 0:
+            result_five_x_five_users, states, leads_requests = self.leads_persistence_service.get_full_user_leads_by_ids(self.domain.id, leads_ids)
+            
+        if len(result_five_x_five_users) == 0:
             return None
+
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow(
@@ -174,49 +176,61 @@ class LeadsService:
             'Personal email', 'Personal email last seen', 'Business email', 'Business email last seen', 'Personal LinkedIn url', 
             'Gender', 'Age range', 'Marital status', 'Children', 'Job title', 'Seniority level', 'Department', 'Company name', 'Company domain', 'Company phone', 'Company description', 
             'Business email', 'Business email last seen', 'Company last updated', 'Company address', 'Company city', 'Company state', 'Company zipcode', 'Income range', 'Net worth', 'Company revenue',
-            'Company employee count', 'Primary industry', 'Followers', 'Company LinkedIn url'])
+            'Company employee count', 'Primary industry', 'Followers', 'Company LinkedIn url', 'Page Visits'])
+        
         state_dict = {state.state_code: state.state_name for state in states} if states else {}
-        for lead in leads:
+
+        for five_x_five_user in result_five_x_five_users:
+            lead_user_id = five_x_five_user[0]
+            five_x_five_user = five_x_five_user[1]
+            page_visits_info = []
+            for visit in leads_requests[lead_user_id]:
+                spent_time_sec = str(visit['spent_time_sec'])
+                page_visits_info.append(f"{visit['page']} {spent_time_sec}")
+
+            page_visits_str = "\n".join(page_visits_info) if page_visits_info else 'None'
+            
             relevant_data = [
-                lead.first_name or 'None',
-                lead.last_name or 'None',
-                format_phone_number(lead.mobile_phone) or 'None',
-                format_phone_number(lead.personal_phone) or 'None',
-                lead.direct_number or 'None',
-                lead.personal_address or 'None',
-                lead.personal_city or 'None',
-                self.convert_state_code_to_name(lead.personal_state, state_dict) or 'None',
-                lead.personal_zip or 'None',
-                lead.personal_emails or 'None',
-                lead.personal_emails_last_seen or 'None',
-                lead.business_email or 'None',
-                lead.business_email_last_seen or 'None',
-                lead.linkedin_url or 'None',
-                lead.gender or 'None',
-                f"{lead.age_min} - {lead.age_max}" if lead.age_min is not None and lead.age_max is not None else 'None',
-                lead.married or 'None',
-                lead.children or 'None',
-                lead.job_title or 'None',
-                lead.seniority_level or 'None',
-                lead.department or 'None',
-                lead.company_name or 'None',
-                lead.company_domain or 'None',
-                format_phone_number(lead.company_phone) or 'None',
-                lead.company_description or 'None',
-                lead.business_email or 'None',
-                lead.business_email_last_seen or 'None',
-                lead.company_last_updated or 'None',
-                lead.company_address or 'None',
-                lead.company_city or 'None',
-                self.convert_state_code_to_name(lead.company_state, state_dict) or 'None',
-                lead.company_zip or 'None',
-                lead.income_range or 'None',
-                lead.net_worth or 'None',
-                lead.company_revenue or 'None',
-                lead.company_employee_count or 'None',
-                lead.primary_industry or 'None',
-                lead.social_connections or 'None',
-                lead.company_linkedin_url or 'None'
+                five_x_five_user.first_name or 'None',
+                five_x_five_user.last_name or 'None',
+                format_phone_number(five_x_five_user.mobile_phone) or 'None',
+                format_phone_number(five_x_five_user.personal_phone) or 'None',
+                five_x_five_user.direct_number or 'None',
+                five_x_five_user.personal_address or 'None',
+                five_x_five_user.personal_city or 'None',
+                self.convert_state_code_to_name(five_x_five_user.personal_state, state_dict) or 'None',
+                five_x_five_user.personal_zip or 'None',
+                five_x_five_user.personal_emails or 'None',
+                five_x_five_user.personal_emails_last_seen or 'None',
+                five_x_five_user.business_email or 'None',
+                five_x_five_user.business_email_last_seen or 'None',
+                five_x_five_user.linkedin_url or 'None',
+                five_x_five_user.gender or 'None',
+                f"{five_x_five_user.age_min} - {five_x_five_user.age_max}" if five_x_five_user.age_min is not None and five_x_five_user.age_max is not None else 'None',
+                five_x_five_user.married or 'None',
+                five_x_five_user.children or 'None',
+                five_x_five_user.job_title or 'None',
+                five_x_five_user.seniority_level or 'None',
+                five_x_five_user.department or 'None',
+                five_x_five_user.company_name or 'None',
+                five_x_five_user.company_domain or 'None',
+                format_phone_number(five_x_five_user.company_phone) or 'None',
+                five_x_five_user.company_description or 'None',
+                five_x_five_user.business_email or 'None',
+                five_x_five_user.business_email_last_seen or 'None',
+                five_x_five_user.company_last_updated or 'None',
+                five_x_five_user.company_address or 'None',
+                five_x_five_user.company_city or 'None',
+                self.convert_state_code_to_name(five_x_five_user.company_state, state_dict) or 'None',
+                five_x_five_user.company_zip or 'None',
+                five_x_five_user.income_range or 'None',
+                five_x_five_user.net_worth or 'None',
+                five_x_five_user.company_revenue or 'None',
+                five_x_five_user.company_employee_count or 'None',
+                five_x_five_user.primary_industry or 'None',
+                five_x_five_user.social_connections or 'None',
+                five_x_five_user.company_linkedin_url or 'None',
+                page_visits_str
             ]
             writer.writerow(relevant_data)
 
