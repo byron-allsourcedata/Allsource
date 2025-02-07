@@ -29,7 +29,6 @@ from dotenv import load_dotenv
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
-BUCKET_NAME = 'trovo-coop-shakespeare'
 QUEUE_USERS_USERS_ROWS = '5x5_users_rows'
 
 
@@ -330,10 +329,9 @@ async def on_message_received(message, session):
             existing_user.dpv_code = five_x_five_user.dpv_code
             existing_user.personal_zip4 = five_x_five_user.personal_zip4
             five_x_five_user_id = existing_user.id
-            session.commit()
         else:
             session.add(five_x_five_user)
-            session.commit()
+            session.flush()
             five_x_five_user_id = five_x_five_user.id
 
         emails = str(user_json.get('BUSINESS_EMAIL', '')).split(', ')
@@ -361,6 +359,7 @@ async def on_message_received(message, session):
 
     except Exception as e:
         logging.error("excepted message. error", exc_info=True)
+        session.rollback()
         await asyncio.sleep(5)
         await message.reject(requeue=True)
 
@@ -383,8 +382,9 @@ async def main():
         )
 
         engine = create_engine(
-            f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
-        )
+			f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}",
+			pool_pre_ping=True
+		)
         Session = sessionmaker(bind=engine)
         db_session = Session()
         await queue.consume(
