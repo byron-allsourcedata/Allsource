@@ -131,44 +131,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
         setCalendarAnchorEl(null);
     };
 
-    const handleDateChange = (dates: { start: Date | null; end: Date | null }) => {
-        setSelectedDates(dates);
-        const { start, end } = dates;
-        if (start && end) {
-            setFormattedDates(`${start.toLocaleDateString()} - ${end.toLocaleDateString()}`);
-        } else if (start) {
-            setFormattedDates(`${start.toLocaleDateString()}`);
-        } else {
-            setFormattedDates('');
-        }
-    };
-
-    const handleApply = (dates: { start: Date | null; end: Date | null }) => {
-        if (dates.start && dates.end) {
-            const formattedStart = dates.start.toLocaleDateString();
-            const formattedEnd = dates.end.toLocaleDateString();
-
-            const dateRange = `${formattedStart} - ${formattedEnd}`;
-
-            setAppliedDates(dates);
-            setCalendarAnchorEl(null);
-
-            setSelectedFilters(prevFilters => {
-                const existingIndex = prevFilters.findIndex(filter => filter.label === 'Dates');
-                const newFilter = { label: 'Dates', value: dateRange };
-
-                if (existingIndex !== -1) {
-                    const updatedFilters = [...prevFilters];
-                    updatedFilters[existingIndex] = newFilter;
-                    return updatedFilters;
-                } else {
-                    return [...prevFilters, newFilter];
-                }
-            });
-            handleCalendarClose();
-        }
-    };
-
 
     const installPixel = () => {
         router.push('/dashboard');
@@ -183,6 +145,13 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     
     const fetchEmployeesCompany = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
         try {
+            setIsLoading(true);
+            const accessToken = localStorage.getItem("token");
+            if (!accessToken) {
+                router.push('/signin');
+                return;
+            }
+
             const timezoneOffsetInHours = -new Date().getTimezoneOffset() / 60;
             let url = `/company/employess?company_alias=${companyAlias}&page=${page + 1}&per_page=${rowsPerPage}&timezone_offset=${timezoneOffsetInHours}`;
             
@@ -228,116 +197,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
             setIsLoading(false);
         }
     }
-
-
-    const fetchData = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
-        try {
-            setIsLoading(true);
-            const accessToken = localStorage.getItem("token");
-            if (!accessToken) {
-                router.push('/signin');
-                return;
-            }
-    
-            const timezoneOffsetInHours = -new Date().getTimezoneOffset() / 60;
-            let url = `/company?page=${page + 1}&per_page=${rowsPerPage}&timezone_offset=${timezoneOffsetInHours}`;
-
-            const startEpoch = appliedDates.start
-                ? Math.floor(new Date(appliedDates.start.toISOString()).getTime() / 1000)
-                : null;
-
-            const endEpoch = appliedDates.end
-                ? Math.floor(new Date(appliedDates.end.toISOString()).getTime() / 1000)
-                : null;
-
-            if (startEpoch !== null && endEpoch !== null) {
-                url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
-            }
-    
-            // Processing "From Date"
-            if (selectedFilters.some(filter => filter.label === 'From Date')) {
-                const fromDate = selectedFilters.find(filter => filter.label === 'From Date')?.value || '';
-                if (fromDate) {
-                    const fromDateUtc = new Date(fromDate);
-                    fromDateUtc.setHours(0, 0, 0, 0);
-                    const fromDateEpoch = Math.floor(fromDateUtc.getTime() / 1000);
-                    url += `&from_date=${fromDateEpoch}`;
-                }
-            }
-
-            // Processing "To Date"
-            if (selectedFilters.some(filter => filter.label === 'To Date')) {
-                const toDate = selectedFilters.find(filter => filter.label === 'To Date')?.value || '';
-                if (toDate) {
-                    const toDateUtc = new Date(toDate);
-                    toDateUtc.setHours(23, 59, 59, 999);
-                    const toDateEpoch = Math.floor(toDateUtc.getTime() / 1000);
-                    url += `&to_date=${toDateEpoch}`;
-                }
-            }
-
-            // employee visits
-            const employeeVisits = selectedFilters.find(filter => filter.label === 'Employee Visits')?.value;
-            if (employeeVisits) {
-                url += `&employee_visits=${encodeURIComponent(employeeVisits)}`;
-            }
-    
-            // filter with checkbox or radio button
-            const processMultiFilter = (label: string, paramName: string) => {
-                const filter = selectedFilters.find(filter => filter.label === label)?.value;
-                if (filter) {
-                    url += `&${paramName}=${encodeURIComponent(filter.split(', ').join(','))}`;
-                }
-            };
-    
-            processMultiFilter('Regions', 'regions');
-            processMultiFilter('Number of Employees', 'employees_range');
-            processMultiFilter('Revenue', 'revenue_range');
-            processMultiFilter('Industry', 'industry');
-    
-            // search
-            const searchQuery = selectedFilters.find(filter => filter.label === 'Search')?.value;
-            if (searchQuery) {
-                url += `&search_query=${encodeURIComponent(searchQuery)}`;
-            }
-    
-            // sort
-            if (sortBy) {
-                url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
-            }
-    
-            const response = await axiosInstance.get(url);
-            const [leads, count] = response.data;
-    
-            setData(Array.isArray(leads) ? leads : []);
-            setCount(count || 0);
-            setStatus(response.data.status);
-    
-            const options = [15, 30, 50, 100, 200, 500];
-            let RowsPerPageOptions = options.filter(option => option <= count);
-            if (RowsPerPageOptions.length < options.length) {
-                RowsPerPageOptions = [...RowsPerPageOptions, options[RowsPerPageOptions.length]];
-            }
-            setRowsPerPageOptions(RowsPerPageOptions);
-            const selectedValue = RowsPerPageOptions.includes(rowsPerPage) ? rowsPerPage : 15;
-            setRowsPerPage(selectedValue);
-        } catch (error) {
-            if (error instanceof AxiosError && error.response?.status === 403) {
-                if (error.response.data.status === 'NEED_BOOK_CALL') {
-                    sessionStorage.setItem('is_slider_opened', 'true');
-                    setShowSlider(true);
-                } else if (error.response.data.status === 'PIXEL_INSTALLATION_NEEDED') {
-                    setStatus(error.response.data.status);
-                } else {
-                    setShowSlider(false);
-                }
-            }
-            setIsLoading(false);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-    
 
     const handleIndustry = async () => {
         setLoading(true);
@@ -401,6 +260,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     }, [])
 
     useEffect(() => {
+        console.log({orderBy, order})
         fetchEmployeesCompany({
             sortBy: orderBy,
             sortOrder: order,
@@ -408,22 +268,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
             rowsPerPage,
         });
     }, [orderBy, order, page, rowsPerPage, selectedFilters]);
-
-    // useEffect(() => {
-    //     fetchData({
-    //         sortBy: orderBy,
-    //         sortOrder: order,
-    //         page,
-    //         rowsPerPage,
-    //         appliedDates: {
-    //             start: appliedDates.start,
-    //             end: appliedDates.end,
-    //         }
-    //     });
-    // }, [appliedDates, orderBy, order, page, rowsPerPage, selectedFilters]);
-
-    const handleDateLabelChange = (label: string) => {
-    };
 
     if (isLoading) {
         return <CustomizedProgressBar />;
@@ -908,49 +752,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                 )}
                             </Button>
 
-                            <Button
-                                aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
-                                aria-haspopup="true"
-                                disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
-                                aria-expanded={isCalendarOpen ? 'true' : undefined}
-                                onClick={handleCalendarClick}
-                                sx={{
-                                    textTransform: 'none',
-                                    color: 'rgba(128, 128, 128, 1)',
-                                    border: formattedDates ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
-                                    borderRadius: '4px',
-                                    opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
-                                    padding: '8px',
-                                    minWidth: 'auto',
-                                    '@media (max-width: 900px)': {
-                                        border: 'none',
-                                        padding: 0
-                                    },
-                                    '&:hover': {
-                                        backgroundColor: 'transparent',
-                                        border: '1px solid rgba(80, 82, 178, 1)',
-                                        color: 'rgba(80, 82, 178, 1)',
-                                        '& .MuiSvgIcon-root': {
-                                            color: 'rgba(80, 82, 178, 1)'
-                                        }
-                                    }
-                                }}
-                            >
-                                <DateRangeIcon fontSize='medium' sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)', }} />
-                                <Typography variant="body1" sx={{
-                                    fontFamily: 'Nunito Sans',
-                                    fontSize: '14px',
-                                    fontWeight: '600',
-                                    lineHeight: '19.6px',
-                                    textAlign: 'left',
-
-                                    "@media (max-width: 600px)": {
-                                        display: 'none'
-                                    },
-                                }}>
-                                    {formattedDates}
-                                </Typography>
-                            </Button>
                         </Box>
                     </Box>
                     <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, overflowX: 'auto', "@media (max-width: 600px)": { mb: 1 } }}>
@@ -1175,7 +976,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                         <TableCell
                                                             sx={{ ...companyStyles.table_array, position: 'relative' }}
                                                         >
-                                                            {row.personal_email || '--'}
+                                                            {row.personal_email?.split(',')[0] || '--'}
                                                         </TableCell>
 
                                                         {/* Business Email Column */}
@@ -1298,15 +1099,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                         onClose={handleClosePopup}
                         rowData={popupData} />
                     <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose} onApply={handleApplyFilters} industry={industry || []} />
-                    <CalendarPopup
-                        anchorEl={calendarAnchorEl}
-                        open={isCalendarOpen}
-                        onClose={handleCalendarClose}
-                        onDateChange={handleDateChange}
-                        onApply={handleApply}
-                        onDateLabelChange={handleDateLabelChange}
-                        selectedDates={selectedDates}
-                    />
                 </Box>
             </Box>
         </>

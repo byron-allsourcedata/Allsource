@@ -415,7 +415,7 @@ class CompanyPersistence:
         )
 
         sort_options = {
-            'personal_emails': FiveXFiveUser.personal_emails,
+            'personal_email': FiveXFiveUser.personal_emails,
             'business_email': FiveXFiveUser.business_email,
         }
 
