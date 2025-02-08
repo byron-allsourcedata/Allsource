@@ -51,13 +51,15 @@ async def get_employees(
         sort_order: str = Query(None, description="Field to sort by: 'asc' or 'desc'"),
         search_query: str = Query(None, description="Search for email, first name, lastname and phone number"),
         timezone_offset: float = Query(0, description="timezone offset in integer format"),
+        company_alias: str = Query(None),
         job_title: str = Query(None),
         department: str = Query(None),
         seniority: str = Query(None),
-        location: str = Query(None),
+        regions: str = Query(None, description="Company regions "),
         company_service: CompanyService = Depends(get_companies_service)
 ):
     return company_service.get_employees(
+        company_alias=company_alias,
         sort_by=sort_by,
         sort_order=sort_order,
         page=page,
@@ -65,7 +67,7 @@ async def get_employees(
         department=department,
         job_title=job_title,
         seniority=seniority,
-        location=location,
+        regions=regions,
         search_query=search_query,
         timezone_offset=timezone_offset
     )

@@ -41,11 +41,11 @@ interface FetchDataParams {
 interface CompanyEmployeesProps {
     onBack: () => void
     companyName: string
-    companyId: number | null
+    companyAlias: string
 }
 
 
-const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName, companyId: id }) => {
+const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName, companyAlias }) => {
     const router = useRouter();
     const { hasNotification } = useNotification();
     const [data, setData] = useState<any[]>([]);
@@ -184,7 +184,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     const fetchEmployeesCompany = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
         try {
             const timezoneOffsetInHours = -new Date().getTimezoneOffset() / 60;
-            let url = `/company/employess?page=${page + 1}&per_page=${rowsPerPage}&timezone_offset=${timezoneOffsetInHours}`;
+            let url = `/company/employess?company_alias=${companyAlias}&page=${page + 1}&per_page=${rowsPerPage}&timezone_offset=${timezoneOffsetInHours}`;
             
             const searchQuery = selectedFilters.find(filter => filter.label === 'Search')?.value;
             if (searchQuery) {
@@ -197,6 +197,8 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     
             const response = await axiosInstance.get(url);
             const [employees, count] = response.data;
+
+            console.log({employees})
     
             setData(Array.isArray(employees) ? employees : []);
             setCount(count || 0);
@@ -627,7 +629,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
         setSelectedFilters(newSelectedFilters);
     };
 
-    const capitalizeCity = (city: string) => {
+    const capitalizeTableCell  = (city: string) => {
         return city
             .split(' ')
             .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -1098,12 +1100,15 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                             <TableHead>
                                                 <TableRow>
                                                     {[
-                                                        { key: 'company_name', label: 'Name', sortable: true },
-                                                        { key: 'phone_number', label: 'Personal Email', sortable: true },
-                                                        { key: 'phone_number', label: 'Business Email', sortable: true },
-                                                        { key: 'phone_number', label: 'Mobile Number'},
-                                                        { key: 'phone_number', label: 'Job Title'},
-                                                        { key: 'phone_number', label: 'Department'}
+                                                        { key: 'company_name', label: 'Name' },
+                                                        { key: 'personal_email', label: 'Personal Email', sortable: true },
+                                                        { key: 'business_email', label: 'Business Email', sortable: true },
+                                                        { key: 'linkedin', label: 'LinkedIn' },
+                                                        { key: 'mobile_number', label: 'Mobile Number'},
+                                                        { key: 'job_title', label: 'Job Title'},
+                                                        { key: 'seniority', label: 'Seniority'},
+                                                        { key: 'department', label: 'Department'},
+                                                        { key: 'location', label: 'Location'}
                                                     ].map(({ key, label, sortable = false }) => (
                                                         <TableCell
                                                             key={key}
@@ -1154,7 +1159,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                             }
                                                         }}
                                                     >
-                                                        {/* Company name Column */}
+                                                        {/* Full name Column */}
                                                         <TableCell className="sticky-cell"
                                                             sx={{
                                                                 ...companyStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, color: 'rgba(80, 82, 178, 1)', backgroundColor: '#fff'
@@ -1163,11 +1168,21 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                                 e.stopPropagation();
                                                                 handleOpenPopup(row);
 
-                                                            }}>{row.name ? truncateText(row.name, 20) : '--'}</TableCell>
+                                                            }}>{row.full_name ? truncateText(capitalizeTableCell(row.full_name), 20) : '--'}
+                                                        </TableCell>
 
-                                                        {/* Company phone Column */}
-                                                        <TableCell sx={{ ...companyStyles.table_array, position: 'relative' }}>
-                                                            {row.phone?.split(',')[0] || '--'}
+                                                        {/* Personal Email Column */}
+                                                        <TableCell
+                                                            sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                        >
+                                                            {row.personal_email || '--'}
+                                                        </TableCell>
+
+                                                        {/* Business Email Column */}
+                                                        <TableCell
+                                                            sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                        >
+                                                            {row.business_email || '--'}
                                                         </TableCell>
 
                                                         {/* Company linkedIn Column */}
@@ -1182,28 +1197,37 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                             )}
                                                         </TableCell>
 
-                                                        {/* Employess Visited  Column */}
-                                                        <TableCell sx={{...companyStyles.table_array, position: 'relative',  color: row.employees_visited ? 'rgba(80, 82, 178, 1) !important' : '',
-                                                                cursor: row.employees_visited ? 'pointer' : 'default'}}>
-                                                            {row.employees_visited || '--'}
+                                                        {/* Mobile phone Column */}
+                                                        <TableCell sx={{ ...companyStyles.table_array, position: 'relative' }}>
+                                                            {row.mobile_phone?.split(',')[0] || '--'}
                                                         </TableCell>
 
-                                                        {/* Employess Visited date  Column */}
-                                                        <TableCell
-                                                            sx={{ ...companyStyles.table_array, position: 'relative' }}>
-                                                            {row.visited_date
-                                                                ? (() => {
-                                                                    const [day, month, year] = row.visited_date.split('.');
-                                                                    return `${month}/${day}/${year}`;
-                                                                })()
-                                                                : '--'}
+                                                        {/* Job Title Column */}
+                                                        <TableCell sx={{...companyStyles.table_array, position: 'relative'}}>
+                                                            {row.job_title ? truncateText(row.job_title, 20) : '--'}
                                                         </TableCell>
 
-                                                        {/* Company revenue  Column */}
+                                                        {/* Seniority Column */}
                                                         <TableCell
                                                             sx={{ ...companyStyles.table_array, position: 'relative' }}
                                                         >
-                                                            {row.company_revenue || '--'}
+                                                            {row.seniority || '--'}
+                                                        </TableCell>
+
+                                                        {/* Department Column */}
+                                                        <TableCell
+                                                            sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                        >
+                                                            {row.department || '--'}
+                                                        </TableCell>
+
+                                                        {/* Company location  Column */}
+                                                        <TableCell
+                                                            sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                        >
+                                                            {(row.city || row.state)
+                                                                ? [capitalizeTableCell(row.city), row.state].filter(Boolean).join(', ')
+                                                                : '--'}
                                                         </TableCell>
 
                                                     </TableRow>

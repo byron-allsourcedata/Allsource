@@ -62,7 +62,7 @@ const Leads: React.FC = () => {
     const isCalendarOpen = Boolean(calendarAnchorEl);
     const [formattedDates, setFormattedDates] = useState<string>('');
     const [companyName, setCompanyName] = useState<string>('');
-    const [companyId, setCompanyId] = useState<number | null>(null);
+    const [companyAlias, setCompanyAlias] = useState<string>('');
     const [filterPopupOpen, setFilterPopupOpen] = useState(false);
     const [audiencePopupOpen, setAudiencePopupOpen] = useState(false);
     const [companyEmployeesOpen, setCompanyEmployeesOpen] = useState(false);
@@ -726,7 +726,7 @@ const Leads: React.FC = () => {
             {loading && (
                 <CustomizedProgressBar/>
             )}
-            {companyEmployeesOpen && <CompanyEmployees companyId={companyId} companyName={companyName} onBack={() => setCompanyEmployeesOpen(false)}/>}
+            {companyEmployeesOpen && <CompanyEmployees companyAlias={companyAlias} companyName={companyName} onBack={() => setCompanyEmployeesOpen(false)}/>}
             {!companyEmployeesOpen && 
             <Box sx={{
                 display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
@@ -1154,8 +1154,8 @@ const Leads: React.FC = () => {
                                                             onClick={() => {
                                                                 setCompanyEmployeesOpen(true)
                                                                 setCompanyName(row.name)
-                                                                setCompanyId(row.id)
-
+                                                                setCompanyAlias(row.alias)
+                                                                console.log({row})
                                                             }}
                                                             
                                                             sx={{
