@@ -164,7 +164,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
             const response = await axiosInstance.get(url);
             const [employees, count] = response.data;
 
-            console.log({employees})
     
             setData(Array.isArray(employees) ? employees : []);
             setCount(count || 0);
@@ -257,7 +256,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     }, [])
 
     useEffect(() => {
-        console.log({orderBy, order})
         fetchEmployeesCompany({
             sortBy: orderBy,
             sortOrder: order,
