@@ -896,7 +896,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                             <TableHead>
                                                 <TableRow>
                                                     {[
-                                                        { key: 'company_name', label: 'Name' },
+                                                        { key: 'employee_name', label: 'Name' },
                                                         { key: 'personal_email', label: 'Personal Email', sortable: true },
                                                         { key: 'business_email', label: 'Business Email', sortable: true },
                                                         { key: 'linkedin', label: 'LinkedIn' },
@@ -910,7 +910,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                             key={key}
                                                             sx={{
                                                                 ...companyStyles.table_column,
-                                                                ...(key === 'company_name' && {
+                                                                ...(key === 'employee_name' && {
                                                                     position: 'sticky',
                                                                     left: 0,
                                                                     zIndex: 10
@@ -964,7 +964,15 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                                 e.stopPropagation();
                                                                 handleOpenPopup(row);
 
-                                                            }}>{row.full_name ? truncateText(capitalizeTableCell(row.full_name), 20) : '--'}
+                                                            }}>
+                                                            {(row.first_name || row.last_name)
+                                                                ? truncateText(
+                                                                    [capitalizeTableCell(row.first_name), capitalizeTableCell(row.last_name)]
+                                                                      .filter(Boolean)
+                                                                      .join(' '),
+                                                                    20
+                                                                  )
+                                                                : '--'}
                                                         </TableCell>
 
                                                         {/* Personal Email Column */}

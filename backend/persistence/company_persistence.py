@@ -395,7 +395,8 @@ class CompanyPersistence:
         query = (
             self.db.query(
                 FiveXFiveUser.id,
-                func.concat(FiveXFiveNamesFirst.name, ' ', FiveXFiveNamesLast.name).label('full_name'),
+                FiveXFiveNamesFirst.name,
+                FiveXFiveNamesLast.name,
                 FiveXFiveUser.mobile_phone,
                 FiveXFiveUser.linkedin_url,
                 FiveXFiveUser.personal_emails,

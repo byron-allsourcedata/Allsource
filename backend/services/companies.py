@@ -98,16 +98,17 @@ class CompanyService:
 
             employees_list.append({
                 'id': employee[0],
-                'full_name': employee[1],
-                'mobile_phone': self.format_phone_number(employee[2]) if employee[2] else None,
-                'linkedin_url': employee[3],
-                'personal_email': employee[4],
-                'business_email': employee[5],
-                'seniority': employee[6],
-                'department': employee[7],
-                'job_title': employee[8],
-                'city': employee[9],
-                'state': employee[10]
+                'first_name': employee[1],
+                'last_name': employee[2],
+                'mobile_phone': self.format_phone_number(employee[3]) if employee[3] else None,
+                'linkedin_url': employee[4],
+                'personal_email': employee[5],
+                'business_email': employee[6],
+                'seniority': employee[7],
+                'department': employee[8],
+                'job_title': employee[9],
+                'city': employee[10],
+                'state': employee[11]
             })
 
         return employees_list, count, max_page
