@@ -83,17 +83,6 @@ const VerifyPixelIntegration: React.FC = () => {
         url = "http://" + url;
       }
 
-      axiosInstance.post("/install-pixel/check-pixel-installed-parse", { url })
-        .then(response => {
-          const status = response.data.status;
-          if (status === "PIXEL_CODE_INSTALLED") {
-            showToast("Pixel code is installed successfully!");
-          }
-        })
-        .catch(error => {
-          showErrorToast("An error occurred while checking the pixel code.");
-        });
-
       const hasQuery = url.includes("?");
       const newUrl = url + (hasQuery ? "&" : "?") + "vge=true" + `&api=${apiUrl}`;
       window.open(newUrl, "_blank");

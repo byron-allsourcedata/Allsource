@@ -704,17 +704,6 @@ const AccountSetup = () => {
         url = "http://" + url;
       }
 
-      axiosInstance.post("/install-pixel/check-pixel-installed-parse", { url })
-        .then(response => {
-          const status = response.data.status;
-          if (status === "PIXEL_CODE_INSTALLED") {
-            showToast("Pixel code is installed successfully!");
-          }
-        })
-        .catch(error => {
-          showErrorToast("An error occurred while checking the pixel code.");
-        });
-
       const hasQuery = url.includes("?");
       const newUrl = url + (hasQuery ? "&" : "?") + "vge=true" + "&api=https://api-dev.maximiz.ai";
       window.open(newUrl, "_blank");
@@ -728,18 +717,6 @@ const AccountSetup = () => {
       if (!/^https?:\/\//i.test(url)) {
         url = "http://" + url;
       }
-
-
-      axiosInstance.post("/install-pixel/check-pixel-installed-parse", { url, need_reload_page: true })
-        .then(response => {
-          const status = response.data.status;
-          if (status === "PIXEL_CODE_INSTALLED") {
-            setActiveTab((prev) => prev + 1);
-          }
-        })
-        .catch(error => {
-          showErrorToast("An error occurred while checking the pixel code.");
-        });
 
       const hasQuery = url.includes("?");
       const newUrl = url + (hasQuery ? "&" : "?") + "vge=true" + "&api=https://api-dev.maximiz.ai";

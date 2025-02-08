@@ -38,19 +38,6 @@ def update_domain(request: UpdateDomain,
     domain_service.update_domain(user.get('id'), request)
     return True
 
-
-@router.post("/check-pixel-installed-parse", response_model=PixelFormResponse)
-async def manual(pixel_installation_request: PixelInstallationRequest,
-                 pixel_installation_service: PixelInstallationService = Depends(get_pixel_installation_service),
-                 user: User = Depends(check_user_authentication), domain=Depends(check_domain)):
-    result = pixel_installation_service.check_pixel_installed_via_parse(pixel_installation_request.url, user, domain)
-    if result['success']:
-        status = PixelStatus.PIXEL_CODE_INSTALLED
-    else:
-        status = PixelStatus.PIXEL_CODE_PARSE_FAILED
-    return PixelFormResponse(status=status, need_reload_page=pixel_installation_request.need_reload_page)
-
-
 @router.get("/google-tag")
 async def google_tag(user: User = Depends(check_user_authorization_without_pixel), domain=Depends(check_domain)):
     return BaseEnum.SUCCESS
