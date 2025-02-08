@@ -50,7 +50,6 @@ async def get_employees(
         sort_by: str = Query(None, description="Field"),
         sort_order: str = Query(None, description="Field to sort by: 'asc' or 'desc'"),
         search_query: str = Query(None, description="Search for email, first name, lastname and phone number"),
-        timezone_offset: float = Query(0, description="timezone offset in integer format"),
         company_alias: str = Query(None),
         job_title: str = Query(None),
         department: str = Query(None),
@@ -68,8 +67,7 @@ async def get_employees(
         job_title=job_title,
         seniority=seniority,
         regions=regions,
-        search_query=search_query,
-        timezone_offset=timezone_offset
+        search_query=search_query
     )
 
 

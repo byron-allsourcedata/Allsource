@@ -79,10 +79,9 @@ class CompanyService:
     
 
     def get_employees(self, company_alias, page, per_page, sort_by, sort_order,
-                      search_query, timezone_offset, job_title, seniority, regions, department):
+                      search_query, job_title, seniority, regions, department):
         employees, count, max_page = self.company_persistence_service.filter_employees(
             company_alias=company_alias,
-            domain_id=self.domain.id,
             page=page,
             per_page=per_page,
             sort_by=sort_by,
@@ -96,13 +95,6 @@ class CompanyService:
 
         employees_list = []
         for employee in employees:
-            # first_visited_date = employee[5].strftime('%d.%m.%Y') if employee[5] else None
-            # first_visited_time = employee[6].strftime('%H:%M')
-            # combined_datetime = datetime.strptime(f"{first_visited_date} {first_visited_time}", '%d.%m.%Y %H:%M')
-            # adjusted_datetime = combined_datetime + timedelta(hours=timezone_offset)
-            # adjusted_date = adjusted_datetime.strftime('%d.%m.%Y')
-            # adjusted_time = adjusted_datetime.strftime('%H:%M')
-
 
             employees_list.append({
                 'id': employee[0],
