@@ -21,11 +21,6 @@ interface FilterPopupProps {
 }
 
 const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, industry }) => {
-  const [isVisitedDateOpen, setIsVisitedDateOpen] = useState(false);
-  const [isVisitedPageOpen, setIsVisitedPageOpen] = useState(false);
-  const [isNumberOfEmployeeOpen, setIsNumberOfEmployeeOpen] = useState(false);
-  const [isRevenueOpen, setIsRevenueOpen] = useState(false);
-  const [isIndustryOpen, setIsIndustryOpen] = useState(false);
   const [isRegionOpen, setIsRegionOpen] = useState(false);
   const [isJobTitleOpen, setIsJobTitleOpen] = useState(false);
   const [isSeniorityOpen, setIsSeniorityOpen] = useState(false);
@@ -779,12 +774,9 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
   };
 
   const handleClearFilters = () => {
-    setIsVisitedDateOpen(false);
-    setIsVisitedPageOpen(false);
-    setIsNumberOfEmployeeOpen(false),
-      setIsRegionOpen(false);
-    setIsRevenueOpen(false)
-    setIsIndustryOpen(false);
+    setIsDepartmentOpen(false)
+    setIsRegionOpen(false);
+    setIsSeniorityOpen(false)
     setCheckedFiltersIndustries({})
     setSelectedPageVisit('')
 

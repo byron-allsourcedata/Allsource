@@ -390,6 +390,10 @@ class CompanyPersistence:
        
         FiveXFiveNamesFirst = aliased(FiveXFiveNames)
         FiveXFiveNamesLast = aliased(FiveXFiveNames)
+        uep = aliased(FiveXFiveUsersEmails)
+        ueb = aliased(FiveXFiveUsersEmails)
+        ep = aliased(FiveXFiveEmails)
+        eb = aliased(FiveXFiveEmails)
 
         query = (
             self.db.query(
@@ -413,7 +417,11 @@ class CompanyPersistence:
                 .join(States, States.id == FiveXFiveLocations.state_id)
                 .join(FiveXFiveNamesFirst, FiveXFiveNamesFirst.id == FiveXFiveUser.first_name_id)
                 .join(FiveXFiveNamesLast, FiveXFiveNamesLast.id == FiveXFiveUser.last_name_id)
-                .filter(LeadCompany.id == company_id)
+                .outerjoin(uep, (uep.user_id == FiveXFiveUser.id) & (uep.type == "personal"))
+                .outerjoin(ueb, (ueb.user_id == FiveXFiveUser.id) & (ueb.type == "business"))
+                .outerjoin(ep, uep.email_id == ep.id)
+                .outerjoin(eb, ueb.email_id == eb.id)
+                .filter(LeadCompany.id  == company_id)
                 .group_by(
                     FiveXFiveUser.id,
                     FiveXFiveNamesFirst.name,
@@ -431,8 +439,8 @@ class CompanyPersistence:
         )
 
         sort_options = {
-            'personal_email': FiveXFiveUser.personal_emails,
-            'business_email': FiveXFiveUser.business_email,
+            'personal_email': ep,
+            'business_email': eb,
         }
 
         if sort_by in sort_options:
@@ -446,8 +454,12 @@ class CompanyPersistence:
                 query = query.order_by(desc(sort_column))
         
         if job_title:
-            job_titles = [unquote(i.strip()) for i in job_title.split(',')]
-            query = query.filter(FiveXFiveUser.job_title.in_(job_titles))
+            filters = []
+            job_titles = job_title.split(' ')
+            for title in job_titles:
+                filters.append(FiveXFiveUser.job_title.ilike(f'{title}%'))
+
+            query = query.filter(or_(*filters))
 
         if department:
             departments = [unquote(i.strip()) for i in department.split(',')]
