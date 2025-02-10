@@ -204,7 +204,6 @@ class CompanyPersistence:
                 FiveXFiveLocations.city,
                 States.state_name,
                 LeadCompany.last_updated,
-                LeadCompany.alias,
             )
                 .join(LeadUser, LeadUser.company_id == LeadCompany.id)
                 .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
@@ -386,7 +385,7 @@ class CompanyPersistence:
         return leads, count, max_page
 
 
-    def filter_employees(self, company_alias, page, per_page, sort_by, sort_order,
+    def filter_employees(self, company_id, page, per_page, sort_by, sort_order,
                          search_query, job_title, department, seniority, regions):
        
         FiveXFiveNamesFirst = aliased(FiveXFiveNames)
@@ -407,12 +406,28 @@ class CompanyPersistence:
                 FiveXFiveLocations.city,
                 States.state_name,
             )
-                .outerjoin(FiveXFiveUsersLocations, FiveXFiveUsersLocations.five_x_five_user_id == FiveXFiveUser.id)
-                .outerjoin(FiveXFiveLocations, FiveXFiveLocations.id == FiveXFiveUsersLocations.location_id)
-                .outerjoin(States, States.id == FiveXFiveLocations.state_id)
-                .outerjoin(FiveXFiveNamesFirst, FiveXFiveNamesFirst.id == FiveXFiveUser.first_name_id)
-                .outerjoin(FiveXFiveNamesLast, FiveXFiveNamesLast.id == FiveXFiveUser.last_name_id)
-                .filter(FiveXFiveUser.company_alias == company_alias)
+                .select_from(LeadCompany)
+                .join(FiveXFiveUser, FiveXFiveUser.company_alias == LeadCompany.alias)    
+                .join(FiveXFiveUsersLocations, FiveXFiveUsersLocations.five_x_five_user_id == FiveXFiveUser.id)
+                .join(FiveXFiveLocations, FiveXFiveLocations.id == FiveXFiveUsersLocations.location_id)
+                .join(States, States.id == FiveXFiveLocations.state_id)
+                .join(FiveXFiveNamesFirst, FiveXFiveNamesFirst.id == FiveXFiveUser.first_name_id)
+                .join(FiveXFiveNamesLast, FiveXFiveNamesLast.id == FiveXFiveUser.last_name_id)
+                .filter(LeadCompany.id == company_id)
+                .group_by(
+                    FiveXFiveUser.id,
+                    FiveXFiveNamesFirst.name,
+                    FiveXFiveNamesLast.name,
+                    FiveXFiveUser.mobile_phone,
+                    FiveXFiveUser.linkedin_url,
+                    FiveXFiveUser.personal_emails,
+                    FiveXFiveUser.business_email,
+                    FiveXFiveUser.seniority_level,
+                    FiveXFiveUser.department,
+                    FiveXFiveUser.job_title,
+                    FiveXFiveLocations.city,
+                    States.state_name,
+                )
         )
 
         sort_options = {

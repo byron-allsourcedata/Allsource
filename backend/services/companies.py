@@ -71,17 +71,16 @@ class CompanyService:
                 'zipcode': company[12],
                 'description': company[13],
                 'city': company[14],
-                'state': company[15],
-                'alias': company[17]
+                'state': company[15]
             })
 
         return company_list, count, max_page
     
 
-    def get_employees(self, company_alias, page, per_page, sort_by, sort_order,
+    def get_employees(self, company_id, page, per_page, sort_by, sort_order,
                       search_query, job_title, seniority, regions, department):
         employees, count, max_page = self.company_persistence_service.filter_employees(
-            company_alias=company_alias,
+            company_id=company_id,
             page=page,
             per_page=per_page,
             sort_by=sort_by,

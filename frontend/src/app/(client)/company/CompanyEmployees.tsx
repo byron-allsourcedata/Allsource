@@ -39,11 +39,11 @@ interface FetchDataParams {
 interface CompanyEmployeesProps {
     onBack: () => void
     companyName: string
-    companyAlias: string
+    companyId: number
 }
 
 
-const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName, companyAlias }) => {
+const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName, companyId }) => {
     const router = useRouter();
     const { hasNotification } = useNotification();
     const [data, setData] = useState<any[]>([]);
@@ -150,7 +150,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                 return;
             }
 
-            let url = `/company/employess?company_alias=${companyAlias}&page=${page + 1}&per_page=${rowsPerPage}`;
+            let url = `/company/employess?company_id=${companyId}&page=${page + 1}&per_page=${rowsPerPage}`;
             
             const searchQuery = selectedFilters.find(filter => filter.label === 'Search')?.value;
             if (searchQuery) {
