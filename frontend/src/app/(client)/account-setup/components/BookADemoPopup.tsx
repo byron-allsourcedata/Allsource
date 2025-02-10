@@ -145,7 +145,7 @@ const fetchPrefillData = async () => {
             {[
                 "Get a personalised demo of Maximiz.",
                 "Experience the AI powered Influencer search tool.",
-                "Explore how we help you discover top influencers, nurture relationships, handle campaigns from start to finish, and more.",
+                "Let Our Expert Walk You Through Every Functionality of Our Platform.",
                 "Get the answers you have been waiting for..!",
             ].map((text, index) => (
                 <ListItem key={index}>
