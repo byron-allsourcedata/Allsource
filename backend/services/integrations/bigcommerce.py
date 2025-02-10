@@ -69,7 +69,7 @@ class BigcommerceIntegrationsService:
         'context': f'stores/{store_hash}',
         "redirect_uri": BigcommerceConfig.redirect_uri,
         "response_type": "code",
-        "scope": "store_content_checkout store_v2_content store_v2_default store_v2_information_read_only store_v2_orders_read_only store_v2_customers_read",
+        "scope": "store_content_checkout store_v2_content store_v2_default store_v2_information_read_only store_v2_orders_read_only store_v2_customers_read store_v2_customers_write",
         'state': f'{user.get("id")}:{domain.id}:{is_pixel_install}'
         }
         query_string = urlencode(params, safe=':/')
@@ -295,3 +295,6 @@ class BigcommerceIntegrationsService:
             platform_created_at=json.get('date_created'),
             currency_code=json.get('currency_code')
         )
+    
+    def filter_customers_based_on_criteria(self,):
+        pass
