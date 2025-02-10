@@ -4,6 +4,10 @@ import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import LineWeightIcon from '@mui/icons-material/LineWeight';
+import TimelineIcon from '@mui/icons-material/Timeline';
+import WorkOutlineOutlinedIcon from '@mui/icons-material/WorkOutlineOutlined';
+import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider, DatePicker, TimePicker } from '@mui/x-date-pickers';
 import dayjs, { Dayjs } from 'dayjs';
@@ -17,10 +21,10 @@ interface FilterPopupProps {
   open: boolean;
   onClose: () => void;
   onApply: (filters: any) => void;
-  industry: string[];
+  department: string[];
 }
 
-const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, industry }) => {
+const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, department }) => {
   const [isRegionOpen, setIsRegionOpen] = useState(false);
   const [isJobTitleOpen, setIsJobTitleOpen] = useState(false);
   const [isSeniorityOpen, setIsSeniorityOpen] = useState(false);
@@ -692,8 +696,8 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
 
   useEffect(() => {
     if (open) {
-      if (industry) {
-        const initialState = industry.reduce((acc, item) => {
+      if (department) {
+        const initialState = department.reduce((acc, item) => {
           acc[item] = false;
           return acc;
         }, {} as Record<string, boolean>);
@@ -701,7 +705,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
       }
       initializeFilters();
     }
-  }, [open, industry]);
+  }, [open, department]);
 
 
 
@@ -1039,12 +1043,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                     visibility: regions.length > 0 ? 'visible' : "hidden",
                     }}
                 />
-                <Image
-                    src="/location.svg"
-                    alt="calendar"
-                    width={18}
-                    height={18}
-                />
+                <WorkOutlineOutlinedIcon width={18} height={18}/>
                 <Typography
                     sx={{
                     ...filterStyles.filter_name
@@ -1135,12 +1134,8 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                     visibility: regions.length > 0 ? 'visible' : "hidden",
                     }}
                 />
-                <Image
-                    src="/location.svg"
-                    alt="calendar"
-                    width={18}
-                    height={18}
-                />
+                
+                <LineWeightIcon  width={18} height={18}/>
                 <Typography
                     sx={{
                     ...filterStyles.filter_name
@@ -1229,7 +1224,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                     visibility: isIndustryFilterActive() ? "visible" : "hidden",
                 }}
                 />
-                <Image src="/industry-icon.svg" alt="industry" width={18} height={18} />
+                <TimelineIcon  width={18} height={18}/>
                 <Typography sx={filterStyles.filter_name}>
                 Department
                 </Typography>
@@ -1258,7 +1253,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
 
             <Collapse in={isDepartmentOpen}>
                 <Box sx={{ ...filterStyles.filter_dropdown, height: openSelect ? 250 : 50 }}>
-                {industry && industry.length > 0 ? (
+                {department && department.length > 0 ? (
                     <FormControl fullWidth>
                     <Select
                         labelId="industry-select-label"
@@ -1283,7 +1278,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                         },
                         }}
                     >
-                        {industry.map((item) => (
+                        {department.map((item) => (
                         <MenuItem
                             key={item}
                             value={item}
@@ -1335,12 +1330,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                     visibility: regions.length > 0 ? 'visible' : "hidden",
                 }}
                 />
-                <Image
-                src="/location.svg"
-                alt="calendar"
-                width={18}
-                height={18}
-                />
+                <PlaceOutlinedIcon width={18} height={18}/>
                 <Typography
                 sx={{
                     ...filterStyles.filter_name

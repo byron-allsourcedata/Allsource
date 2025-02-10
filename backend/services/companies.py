@@ -154,6 +154,10 @@ class CompanyService:
         industry = self.company_persistence_service.get_unique_primary_industries(domain_id=self.domain.id)
         return industry
     
+    def get_uniq_primary_department(self):
+        department = self.company_persistence_service.get_unique_primary_department()
+        return department
+    
     def download_companies(self, from_date=None, to_date=None, regions=None, search_query=None, companies_ids=0, timezone_offset=None):
         if companies_ids == 0:
             leads = self.company_persistence_service.get_full_information_companies_by_filters(domain_id=self.domain.id,

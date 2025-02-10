@@ -75,6 +75,10 @@ async def get_employees(
 async def get_industry(company_service: CompanyService = Depends(get_companies_service)):
     return company_service.get_uniq_primary_industry()
 
+@router.get("/department")
+async def get_department(company_service: CompanyService = Depends(get_companies_service)):
+    return company_service.get_uniq_primary_department()
+
 @router.post("/download-company")
 async def download_company(companies_request: CompaniesRequest,
                          company_service: CompanyService = Depends(get_companies_service)):

@@ -75,7 +75,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     const [openDrawer, setOpenDrawer] = React.useState(false);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [selectedIndustry, setSelectedIndustry] = React.useState<string | null>(null);
-    const [industry, setIndustry] = React.useState<string[]>([]);
+    const [department, setDepartment] = React.useState<string[]>([]);
 
 
     const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, industry: string) => {
@@ -194,11 +194,11 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
         }
     }
 
-    const handleIndustry = async () => {
+    const handleDepartment = async () => {
         setLoading(true);
         try {
-            const response = await axiosInstance.get('/company/industry')
-            setIndustry(Array.isArray(response.data) ? response.data : []);
+            const response = await axiosInstance.get('/company/department')
+            setDepartment(Array.isArray(response.data) ? response.data : []);
         }
         catch{
         }
@@ -252,7 +252,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     }
 
     useEffect(() => {
-        handleIndustry();
+        handleDepartment();
     }, [])
 
     useEffect(() => {
@@ -1101,7 +1101,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                     <PopupDetails open={openPopup}
                         onClose={handleClosePopup}
                         rowData={popupData} />
-                    <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose} onApply={handleApplyFilters} industry={industry || []} />
+                    <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose} onApply={handleApplyFilters} department={department || []} />
                 </Box>
             </Box>
         </>

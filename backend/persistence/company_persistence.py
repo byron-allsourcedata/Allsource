@@ -541,6 +541,16 @@ class CompanyPersistence:
         locations = query.all()
         return locations
 
+    def get_unique_primary_department(self):
+        query = (
+            self.db.query(FiveXFiveUser.department)
+                .filter(FiveXFiveUser.department != None)
+                .distinct()
+                .order_by(FiveXFiveUser.department)
+        )
+        departments = [row.department for row in query.all()]
+        return departments
+    
     def get_unique_primary_industries(self, domain_id):
         query = (
             self.db.query(LeadCompany.primary_industry)
