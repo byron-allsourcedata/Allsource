@@ -123,6 +123,8 @@ const AccountSetup = () => {
         const status = response.data.status;
         switch (status) {
           case "SUCCESS":
+            setDomainLink(response.data.domain_url)
+            setWebsiteLink(response.data.domain_url)
             break;
           case "NEED_EMAIL_VERIFIED":
             router.push("/email-verificate");

@@ -7,6 +7,7 @@ from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.integrations.suppression import IntegrationsSuppressionPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
+from persistence.domains import UserDomainsPersistence
 from persistence.audience_persistence import AudiencePersistence
 from persistence.integrations.external_apps_installations  import ExternalAppsInstallationsPersistence
 from .attentive import AttentiveIntegrationsService
@@ -26,7 +27,7 @@ class IntegrationService:
     def __init__(self, db: Session, integration_persistence: IntegrationsPresistence, 
                  lead_persistence: LeadsPersistence, audience_persistence: AudiencePersistence, 
                  lead_orders_persistence: LeadOrdersPersistence, user_persistence: UserPersistence,
-                 integrations_user_sync_persistence: IntegrationsUserSyncPersistence,
+                 integrations_user_sync_persistence: IntegrationsUserSyncPersistence, user_domains_persistence: UserDomainsPersistence,
                  aws_service: AWSService, domain_persistence, suppression_persistence: IntegrationsSuppressionPersistence, epi_persistence: ExternalAppsInstallationsPersistence):
         self.db = db
         self.client = httpx.Client()
@@ -40,6 +41,7 @@ class IntegrationService:
         self.domain_persistence = domain_persistence
         self.suppression_persistence = suppression_persistence
         self.eai_persistence = epi_persistence
+        self.user_domains_persistence = user_domains_persistence
 
     def get_user_service_credentials(self, domain_id, filters):
         return self.integration_persistence.get_integration_by_user(domain_id, filters)
@@ -89,7 +91,7 @@ class IntegrationService:
                                                           self.lead_persistence, 
                                                           self.lead_orders_persistence,
                                                           self.aws_service, self.client,
-                                                          self.eai_persistence
+                                                          self.eai_persistence, self.user_domains_persistence
                                                           )
         self.klaviyo = KlaviyoIntegrationsService(self.domain_persistence, 
                                                 self.integration_persistence,  

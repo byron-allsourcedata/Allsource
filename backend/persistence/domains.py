@@ -53,3 +53,9 @@ class UserDomainsPersistence:
             raise HTTPException(status_code=404, detail={'status': 'NOT_FOUND'})
         self.db.delete(domain)
         self.db.commit()
+    
+    def update_pixel_installation(self, domain_id: int, is_pixel_install):
+        self.db.query(UserDomains).filter(
+            UserDomains.id == domain_id
+        ).update({UserDomains.is_pixel_installed: is_pixel_install})
+        self.db.commit()
