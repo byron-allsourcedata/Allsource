@@ -224,7 +224,7 @@ class CompanyPersistence:
                 LeadsVisits.start_time,
                 States.state_name
             )
-            .order_by(asc(LeadCompany.name), desc(func.max(LeadsVisits.start_date)))
+            .order_by(desc(func.max(LeadsVisits.start_date)))
         )
 
         employees_case = case(
