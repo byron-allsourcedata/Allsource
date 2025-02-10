@@ -35,26 +35,20 @@ class PixelInstallationService:
                 {UserDomains.data_provider_id: client_id},
                 synchronize_session=False
             )
-            self.db.commit() 
+            self.db.commit()
 
         script = f'''
             <script type="text/javascript">
-                (function(s, p, i, c, e) {{
-                    s[e] = s[e] || function() {{ (s[e].a = s[e].a || []).push(arguments); }};
-                    s[e].l = 1 * new Date();
-                
-                    var scriptElement = document.createElement("script"),
-                        f = document.getElementsByTagName("script")[0];
-                
-                    scriptElement.async = 1;
-                    scriptElement.src = p;
-                    f.parentNode.insertBefore(scriptElement, f);
-                
-                    s.pixelClientId = i;
-                }})(window, "https://maximiz-data.s3.us-east-2.amazonaws.com/pixel.js", "{client_id}", document, "script");
+            (function(s, p, i, c, e) {{
+                s[e] = s[e] || function() {{ (s[e].a = s[e].a || []).push(arguments); }};
+                s[e].l = 1 * new Date();
+                var k = c.createElement("script"), a = c.getElementsByTagName("script")[0];
+                k.async = 1, k.src = p, a.parentNode.insertBefore(k, a);
+                s.pixelClientId = i;
+            }})(window, "https://maximiz-data.s3.us-east-2.amazonaws.com/pixel.js", "{client_id}", document, "script");
             </script>
         '''
-        
+
         return script, client_id
 
     def send_pixel_code_in_email(self, email, user, domain):
