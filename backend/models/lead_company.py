@@ -24,4 +24,3 @@ class LeadCompany(Base):
     __table_args__ = (
         Index('leads_companies_alias_idx', 'alias'),
     )
-
