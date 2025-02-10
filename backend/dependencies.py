@@ -232,7 +232,7 @@ def get_integration_service(db: Session = Depends(get_db),
                             suppression_persitence: IntegrationsSuppressionPersistence = Depends(
                                 get_suppression_persistence),
                             user_persistence: UserPersistence = Depends(get_user_persistence_service),
-                            epi_persistence: ExternalAppsInstallationsPersistence = Depends(get_epi_persistence)
+                            epi_persistence: ExternalAppsInstallationsPersistence = Depends(get_epi_persistence),
                             ):
     return IntegrationService(db=db,
                               integration_persistence=integration_presistence,

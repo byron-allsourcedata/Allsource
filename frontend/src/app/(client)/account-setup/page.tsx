@@ -123,8 +123,11 @@ const AccountSetup = () => {
         const status = response.data.status;
         switch (status) {
           case "SUCCESS":
-            setDomainLink(response.data.domain_url)
-            setWebsiteLink(response.data.domain_url)
+            const domain_url = response.data.domain_url
+            if (domain_url){
+              setDomainLink(response.data.domain_url)
+              setWebsiteLink(response.data.domain_url)
+            }
             break;
           case "NEED_EMAIL_VERIFIED":
             router.push("/email-verificate");
@@ -345,7 +348,7 @@ const AccountSetup = () => {
         const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRe.test(value) ? "" : "Invalid email address";
       case "website":
-        const sanitizedValue = value.replace(/^www\./, '');
+        const sanitizedValue = value?.replace(/^www\./, '');
         const websiteRe = /^(https?:\/\/)?([\da-z.-]+)\.([a-z]{2,20})([/\w .-]*)*\/?$/i;
         return websiteRe.test(sanitizedValue) ? "" : "Invalid website URL";
       case "organizationName":
