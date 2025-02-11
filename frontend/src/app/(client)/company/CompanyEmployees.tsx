@@ -75,7 +75,9 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     const [openDrawer, setOpenDrawer] = React.useState(false);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [selectedIndustry, setSelectedIndustry] = React.useState<string | null>(null);
-    const [department, setDepartment] = React.useState<string[]>([]);
+    const [departments, setDepartments] = React.useState<string[]>([]);
+    const [seniorities, setSeniorities] = React.useState<string[]>([]);
+    const [jobTitles, setJobTitles] = React.useState<string[]>([]);
 
 
     const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, industry: string) => {
@@ -119,14 +121,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
         const isAsc = orderBy === property && order === 'asc';
         setOrder(isAsc ? 'desc' : 'asc');
         setOrderBy(property);
-    };
-
-    const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-        setCalendarAnchorEl(event.currentTarget);
-    };
-
-    const handleCalendarClose = () => {
-        setCalendarAnchorEl(null);
     };
 
 
@@ -197,8 +191,33 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     const handleDepartment = async () => {
         setLoading(true);
         try {
-            const response = await axiosInstance.get('/company/department')
-            setDepartment(Array.isArray(response.data) ? response.data : []);
+            const response = await axiosInstance.get('/company/departments')
+            setDepartments(Array.isArray(response.data) ? response.data : []);
+        }
+        catch{
+        }
+        finally{ 
+            setLoading(false)
+        }
+    }
+    
+    const handleJobTitles = async () => {
+        setLoading(true);
+        try {
+            const response = await axiosInstance.get('/company/job-titles')
+            setJobTitles(Array.isArray(response.data) ? response.data : []);
+        }
+        catch{
+        }
+        finally{ 
+            setLoading(false)
+        }
+    }
+    const handleSeniorities = async () => {
+        setLoading(true);
+        try {
+            const response = await axiosInstance.get('/company/seniorities')
+            setSeniorities(Array.isArray(response.data) ? response.data : []);
         }
         catch{
         }
@@ -208,51 +227,17 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     }
 
     interface FilterParams {
-        from_date: number | null;
-        to_date: number | null;
         regions: string[];
         searchQuery: string | null;
-        selectedPageVisit: string | null;
-        checkedFiltersNumberOfEmployees: {
-            '1-10': boolean,
-            '11-25': boolean,
-            '26-50': boolean,
-            '51-100': boolean,
-            '101-250': boolean,
-            '251-500': boolean,
-            '501-1000': boolean,
-            '1001-5000': boolean,
-            '2001-5000': boolean,
-            '5001-10000': boolean,
-            '10001+': boolean,
-            "unknown": boolean,
-        };
-        checkedFiltersRevenue: {
-        "Below 10k": boolean,
-        "$10k - $50k": boolean,
-        "$50k - $100k": boolean,
-        "$100k - $500k": boolean,
-        "$500k - $1M": boolean,
-        "$1M - $5M": boolean,
-        "$5M - $10M": boolean,
-        "$10M - $50M": boolean,
-        "$50M - $100M": boolean,
-        "$100M - $500M": boolean,
-        "$500M - $1B": boolean,
-        "$1 Billion +": boolean,
-        "unknown": boolean,
-        }
-        checkedFilters: {
-            lastWeek: boolean;
-            last30Days: boolean;
-            last6Months: boolean;
-            allTime: boolean;
-        };
-        industry: Record<string, boolean>; 
+        department: Record<string, boolean>; 
+        seniority: Record<string, boolean>; 
+        jobTitle: Record<string, boolean>; 
     }
 
     useEffect(() => {
         handleDepartment();
+        handleSeniorities()
+        handleJobTitles()
     }, [])
 
     useEffect(() => {
@@ -425,8 +410,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     const handleApplyFilters = (filters: FilterParams) => {
         const newSelectedFilters: { label: string; value: string }[] = [];
 
-        const dateFormat = 'YYYY-MM-DD';
-
         const getSelectedValues = (obj: Record<string, boolean>): string => {
             return Object.entries(obj)
                 .filter(([_, value]) => value)
@@ -436,25 +419,22 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
 
         // Map of filter conditions to their labels
         const filterMappings: { condition: boolean | string | string[] | number | null, label: string, value: string | ((f: any) => string) }[] = [
-            { condition: filters.from_date, label: 'From Date', value: () => dayjs.unix(filters.from_date!).format(dateFormat) },
-            { condition: filters.to_date, label: 'To Date', value: () => dayjs.unix(filters.to_date!).format(dateFormat) },
             { condition: filters.regions?.length, label: 'Regions', value: () => filters.regions!.join(', ') },
             { condition: filters.searchQuery?.trim() !== '', label: 'Search', value: filters.searchQuery || '' },
-            { condition: filters.selectedPageVisit?.trim() !== '', label: 'Employee Visits', value: filters.selectedPageVisit || '' },
             { 
-                condition: filters.checkedFiltersNumberOfEmployees && Object.values(filters.checkedFiltersNumberOfEmployees).some(Boolean), 
-                label: 'Number of Employees', 
-                value: () => getSelectedValues(filters.checkedFiltersNumberOfEmployees!) 
+                condition: filters.seniority && Object.values(filters.seniority).some(Boolean), 
+                label: 'Seniority', 
+                value: () => getSelectedValues(filters.seniority!) 
             },
             { 
-                condition: filters.checkedFiltersRevenue && Object.values(filters.checkedFiltersRevenue).some(Boolean), 
-                label: 'Revenue', 
-                value: () => getSelectedValues(filters.checkedFiltersRevenue!) 
+                condition: filters.jobTitle && Object.values(filters.jobTitle).some(Boolean), 
+                label: 'Job Title', 
+                value: () => getSelectedValues(filters.jobTitle!) 
             },
             { 
-                condition: filters.industry && Object.values(filters.industry).some(Boolean), 
-                label: 'Industry', 
-                value: () => getSelectedValues(filters.industry!) 
+                condition: filters.department && Object.values(filters.department).some(Boolean), 
+                label: 'Department', 
+                value: () => getSelectedValues(filters.department!) 
             },
         ];
 
@@ -464,6 +444,8 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                 newSelectedFilters.push({ label, value: typeof value === 'function' ? value(filters) : value });
             }
         });
+
+        console.log({newSelectedFilters})
 
         setSelectedFilters(newSelectedFilters);
     };
@@ -506,34 +488,23 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
         const filters = JSON.parse(sessionStorage.getItem('filters') || '{}');
     
         switch (filterToDelete.label) {
-            case 'From Date':
-                filters.from_date = null;
-                setSelectedDates({ start: null, end: null });
-                break;
-            case 'To Date':
-                filters.to_date = null;
-                setSelectedDates({ start: null, end: null });
-                break;
             case 'Regions':
                 filters.regions = [];
                 break;
             case 'Search':
                 filters.searchQuery = '';
                 break;
-            case 'Employee Visits':
-                filters.selectedPageVisit = '';
-                break;
-            case 'Number of Employees':
-                Object.keys(filters.checkedFiltersNumberOfEmployees).forEach(key => {
-                    filters.checkedFiltersNumberOfEmployees[key] = false;
+            case 'JobTitle':
+                Object.keys(filters.industry).forEach(key => {
+                    filters.industry[key] = false;
                 });
                 break;
-            case 'Revenue':
-                Object.keys(filters.checkedFiltersRevenue).forEach(key => {
-                    filters.checkedFiltersRevenue[key] = false;
+            case 'Department':
+                Object.keys(filters.industry).forEach(key => {
+                    filters.industry[key] = false;
                 });
                 break;
-            case 'Industry':
+            case 'Seniority':
                 Object.keys(filters.industry).forEach(key => {
                     filters.industry[key] = false;
                 });
@@ -542,78 +513,15 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                 break;
         }
         
-        if (!filters.from_date && !filters.to_date) {
-            filters.checkedFilters = {
-                lastWeek: false,
-                last30Days: false,
-                last6Months: false,
-                allTime: false,
-            };
-        }
-    
         sessionStorage.setItem('filters', JSON.stringify(filters));
-    
-        if (filterToDelete.label === 'Dates') {
-            setAppliedDates({ start: null, end: null });
-            setFormattedDates('');
-            setSelectedDates({ start: null, end: null });
-        }
     
         // Обновляем фильтры для применения
         const newFilters: FilterParams = {
-            from_date: updatedFilters.find(f => f.label === 'From Date') ? dayjs(updatedFilters.find(f => f.label === 'From Date')!.value).unix() : null,
-            to_date: updatedFilters.find(f => f.label === 'To Date') ? dayjs(updatedFilters.find(f => f.label === 'To Date')!.value).unix() : null,
             regions: updatedFilters.find(f => f.label === 'Regions') ? updatedFilters.find(f => f.label === 'Regions')!.value.split(', ') : [],
             searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',
-            selectedPageVisit: updatedFilters.find(f => f.label === 'Employee Visits') ? updatedFilters.find(f => f.label === 'Employee Visits')!.value : '',
-            checkedFiltersNumberOfEmployees: {
-                ...Object.keys(filters.checkedFiltersNumberOfEmployees).reduce((acc, key) => {
-                    acc[key as keyof typeof filters.checkedFiltersNumberOfEmployees] = updatedFilters.some(
-                        f => f.label === 'Number of Employees' && f.value.includes(key)
-                    );
-                    return acc;
-                }, {} as Record<keyof typeof filters.checkedFiltersNumberOfEmployees, boolean>),
-                '1-10': false,
-                '11-25': false,
-                '26-50': false,
-                '51-100': false,
-                '101-250': false,
-                '251-500': false,
-                '501-1000': false,
-                '1001-5000': false,
-                '2001-5000': false,
-                '5001-10000': false,
-                '10001+': false,
-                unknown: false
-            },
-            checkedFiltersRevenue: {
-                ...Object.keys(filters.checkedFiltersRevenue).reduce((acc, key) => {
-                    acc[key as keyof typeof filters.checkedFiltersRevenue] = updatedFilters.some(
-                        f => f.label === 'Revenue' && f.value.includes(key)
-                    );
-                    return acc;
-                }, {} as Record<keyof typeof filters.checkedFiltersRevenue, boolean>),
-                'Below 10k': false,
-                '$10k - $50k': false,
-                '$50k - $100k': false,
-                '$100k - $500k': false,
-                '$500k - $1M': false,
-                '$1M - $5M': false,
-                '$5M - $10M': false,
-                '$10M - $50M': false,
-                '$50M - $100M': false,
-                '$100M - $500M': false,
-                '$500M - $1B': false,
-                '$1 Billion +': false,
-                unknown: false
-            },
-            checkedFilters: {
-                lastWeek: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'lastWeek'),
-                last30Days: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'last30Days'),
-                last6Months: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'last6Months'),
-                allTime: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'allTime')
-            },
-            industry: Object.fromEntries(Object.keys(filters.industry).map(key => [key, updatedFilters.some(f => f.label === 'Industry' && f.value.includes(key))]))
+            department: Object.fromEntries(Object.keys(filters.industry).map(key => [key, updatedFilters.some(f => f.label === 'Industry' && f.value.includes(key))])),
+            jobTitle: Object.fromEntries(Object.keys(filters.jobTitle).map(key => [key, updatedFilters.some(f => f.label === 'JobTitle' && f.value.includes(key))])),
+            seniority: Object.fromEntries(Object.keys(filters.seniority).map(key => [key, updatedFilters.some(f => f.label === 'Seniority' && f.value.includes(key))]))
         };
     
         // Применяем обновленные фильтры
@@ -657,7 +565,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                 <ArrowBackIcon sx={{color: 'rgba(80, 82, 178, 1)'}}/>
                             </IconButton>
                             <Typography className='first-sub-title'>
-                                Employees  {`(${companyName})`}
+                                Employee  {`(${companyName})`}
                             </Typography>
                             <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
                         </Box>
@@ -1101,7 +1009,12 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                     <PopupDetails open={openPopup}
                         onClose={handleClosePopup}
                         rowData={popupData} />
-                    <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose} onApply={handleApplyFilters} department={department || []} />
+                    <FilterPopup open={filterPopupOpen} 
+                        onClose={handleFilterPopupClose} 
+                        onApply={handleApplyFilters} 
+                        jobTitles={jobTitles || []} 
+                        seniorities={seniorities || []} 
+                        departments={departments || []} />
                 </Box>
             </Box>
         </>
