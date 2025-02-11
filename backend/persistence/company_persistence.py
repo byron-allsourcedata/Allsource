@@ -191,7 +191,6 @@ class CompanyPersistence:
         LeadUserCompanyAlias = aliased(LeadUserCompany)
         FirstLeadUserAlias = aliased(LeadUser)
         LeadUserAlias = aliased(LeadUser)
-
         query = (
             self.db.query(
                 LeadCompany.id,
@@ -219,7 +218,7 @@ class CompanyPersistence:
             .outerjoin(LeadsVisits, LeadsVisits.id == FirstLeadUserAlias.first_visit_id)
             .outerjoin(FiveXFiveLocations, FiveXFiveLocations.id == LeadCompany.five_x_five_location_id)
             .outerjoin(States, States.id == FiveXFiveLocations.state_id)
-            .filter(FirstLeadUserAlias.domain_id == domain_id)
+            .filter(FirstLeadUserAlias.domain_id == domain_id, LeadUserAlias.domain_id == domain_id)
             .group_by(
                 LeadCompany.id,
                 FiveXFiveLocations.city,
