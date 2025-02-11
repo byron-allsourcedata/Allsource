@@ -80,6 +80,7 @@ class CompanyService:
     def get_employees(self, company_id, page, per_page, sort_by, sort_order,
                       search_query, job_title, seniority, regions, department):
         employees, count, max_page = self.company_persistence_service.filter_employees(
+            domain_id=self.domain.id,
             company_id=company_id,
             page=page,
             per_page=per_page,
