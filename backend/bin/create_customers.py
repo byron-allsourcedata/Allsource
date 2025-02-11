@@ -4,79 +4,75 @@ import random
 from faker import Faker
 
 STORE_HASH = "23k6mb4fr5"
-ACCESS_TOKEN = "mge35t14mqrh1cy44l34d2hu0ea4s3t"
+ACCESS_TOKEN = "rsv2hj5p5cei9q6pie4epwnmhmj4ixo"
 CLIENT_ID = "bues9uk2dxgeeh86123472ux2y4tl40"
-
-# BigCommerce API base URL
-BASE_URL = f'https://api.bigcommerce.com/stores/{STORE_HASH}/v3/'
 
 # Initialize Faker for generating random data
 fake = Faker()
+
 
 # Example category IDs (replace these with your actual category IDs)
 CATEGORY_IDS = [1, 2, 3, 4, 5]
 
 # Create customer function
 def create_customer(first_name, last_name, email, phone, street_1, street_2, city, state, zip, country, password):
-    url = f'{BASE_URL}customers'
+    url = f'https://api.bigcommerce.com/stores/{STORE_HASH}/v3/customers'
     
-    payload = {
+    payload = [{
         "first_name": first_name,
         "last_name": last_name,
         "email": email,
         "company": fake.company(),
         "phone": phone,
-        "billing_address": {
+        "billing_addresses": [{
             "street_1": street_1,
             "street_2": street_2,
             "city": city,
             "state": state,
             "zip": zip,
             "country": country
-        },
-        "shipping_address": {
-            "street_1": street_1,
-            "street_2": street_2,
-            "city": city,
-            "state": state,
-            "zip": zip,
-            "country": country
-        },
+        }],
         "password": password
-    }
+    }]
 
     headers = {
         'X-Auth-Client': CLIENT_ID,
         'X-Auth-Token': ACCESS_TOKEN,
         'Content-Type': 'application/json'
     }
-
     response = requests.post(url, headers=headers, data=json.dumps(payload))
     
-    if response.status_code == 201:
+    if response.status_code in [200, 201]:
         print(f'Customer {first_name} {last_name} created successfully!')
-        return response.json()
+        return response.json().get('data')[0].get('id')
     else:
         print(f'Error creating customer: {response.status_code} - {response.text}')
         return None
 
 # Create an order function
-def create_order(customer_id, has_purchased=True):
-    if not has_purchased:
-        return None  # If customer hasn't made a purchase, return nothing
+def create_order(customer_id):
+    valid_product_ids = [80, 81, 86, 88, 94, 97, 98, 103, 104, 107, 111]
+    product_id = random.choice(valid_product_ids)
     
-    # Create a random order with a random category
-    category_id = random.choice(CATEGORY_IDS)
-    product_id = random.randint(1, 100)  # Replace with actual product IDs from your store
-    
-    url = f'{BASE_URL}orders'
+    url = f'https://api.bigcommerce.com/stores/{STORE_HASH}/v2/orders'
     
     payload = {
         "customer_id": customer_id,
-        "status_id": 11,  # Status "Completed" (change if needed)
+        "status_id": 11,
+        "billing_address": {
+            "first_name": "John",
+            "last_name": "Doe",
+            "street_1": "123 Main St",
+            "city": "New York",
+            "state": "NY",
+            "zip": "10001",
+            "country": "United States",
+            "email": "john.doe@example.com",
+            "phone": "1234567890"
+        },
         "products": [{
             "product_id": product_id,
-            "quantity": 1
+            "quantity": random.randint(1, 3)
         }]
     }
     
@@ -85,22 +81,48 @@ def create_order(customer_id, has_purchased=True):
         'X-Auth-Token': ACCESS_TOKEN,
         'Content-Type': 'application/json'
     }
+    
 
     response = requests.post(url, headers=headers, data=json.dumps(payload))
     
-    if response.status_code == 201:
+    if response.status_code == 201 or response.status_code == 200:
         print(f'Order for customer {customer_id} created successfully!')
-        return response.json()
+        return response.text
     else:
         print(f'Error creating order: {response.status_code} - {response.text}')
         return None
 
-# Function to generate multiple customers with orders
-def generate_customers(num_customers=10):
-    customers = []
+# Simulate adding items to cart
+def add_to_cart(customer_id):
+    product_id = random.randint(1, 100)
+    url = f'https://api.bigcommerce.com/stores/{STORE_HASH}/v3/carts'
     
+    payload = {
+        "customer_id": customer_id,
+        "line_items": [{
+            "product_id": product_id,
+            "quantity": random.randint(1, 3)
+        }]
+    }
+
+    headers = {
+        'X-Auth-Client': CLIENT_ID,
+        'X-Auth-Token': ACCESS_TOKEN,
+        'Content-Type': 'application/json'
+    }
+
+    response = requests.post(url, headers=headers, data=json.dumps(payload))
+    
+    if response.status_code == 200 or response.status_code == 201:
+        print(f'Cart item added for customer {customer_id}')
+        return response.json()
+    else:
+        print(f'Error adding to cart: {response.status_code} - {response.text}')
+        return None
+
+# Function to generate multiple customers with orders and cart activity
+def generate_customers(num_customers=10):
     for _ in range(num_customers):
-        # Generate fake customer data
         first_name = fake.first_name()
         last_name = fake.last_name()
         email = fake.email()
@@ -113,19 +135,10 @@ def generate_customers(num_customers=10):
         country = fake.country_code()
         password = fake.password()
 
-        # Create customer
-        customer = create_customer(first_name, last_name, email, phone, street_1, street_2, city, state, zip, country, password)
+        customer_id = create_customer(first_name, last_name, email, phone, street_1, street_2, city, state, zip, country, password)
         
-        if customer:
-            customers.append(customer)
-            
-            # Randomly decide if the customer has purchased something
-            has_purchased = random.choice([True, False])
-            
-            # Create order if the customer has purchased something
-            create_order(customer['id'], has_purchased)
-    
-    return customers
+        if customer_id:
+                create_order(customer_id)
 
-# Generate 10 customers as an example
-generate_customers(10)
+# Generate 200 customers
+generate_customers(1000)

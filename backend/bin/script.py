@@ -1,8 +1,9 @@
 from bigcommerce.api import BigcommerceApi
-import datetime
+from datetime import datetime
+import requests
 
 STORE_HASH = "23k6mb4fr5"
-ACCESS_TOKEN = "mge35t14mqrh1cy44l34d2hu0ea4s3t"
+ACCESS_TOKEN = "rsv2hj5p5cei9q6pie4epwnmhmj4ixo"
 CLIENT_ID = "bues9uk2dxgeeh86123472ux2y4tl40"
 
 api = BigcommerceApi(
@@ -24,8 +25,8 @@ LOOKALIKE_AUDIENCE_THRESHOLDS = {
     "Quite similar": (0, 15),
     "Broad": (0, 20)
 }
-
-current_date = datetime.datetime.now()
+        
+current_date = datetime.now()
 
 def filter_loyal_category_customer(categories_purchased):
     return any(count >= LOYAL_CATEGORY_THRESHOLD for category, count in categories_purchased.items())
@@ -55,47 +56,102 @@ filters = {
     "High AOV Customer": filter_high_aov_customer,
     "Lookalike Audience": filter_lookalike_size
 }
+current_year = datetime.now().year
+start_of_year = f"{current_year}-01-01T00:00:00Z"
 
 orders = api.Orders.all(limit=250)
-
 product_customer_details = []
-
 for order in orders:
+    
     customer_id = order["customer_id"]
-    customer_info = api.Customers.get(customer_id)
-
+    if not customer_id or customer_id == 0:
+        continue
+    
+    try:
+        customer_info = api.Customers.get(customer_id)  # Получение информации о клиенте
+    except Exception as e:
+        print(f"Error fetching customer info for customer_id {customer_id}: {e}")
+        continue
+    
+    if not customer_info:
+        continue  # Пропустить, если информация о клиенте отсутствует
+    
     total_spend = 0
     purchase_count = 0
     last_purchase_date = None
     categories_purchased = {}
-    customer_similarity_score = 5 
-
-    for item in order["products"]:
-        product_id = item["product_id"]
-        product_info = api.Products.get(product_id)
-
-        total_spend += item["price"]
-
-        category_id = product_info["categories"][0]
-        if category_id not in categories_purchased:
-            categories_purchased[category_id] = 0
-        categories_purchased[category_id] += 1
-
-        order_date = datetime.datetime.strptime(order["date_created"], '%Y-%m-%dT%H:%M:%S')
-        if not last_purchase_date or order_date > last_purchase_date:
-            last_purchase_date = order_date
-
-    filter_loyal_category_customer(categories_purchased)
-    # filter_high_ltv_customer(total_spend)
-    # filter_frequent_customer(purchase_count)
-    # filter_recent_customer(last_purchase_date)
-    # filter_high_aov_customer(total_spend, purchase_count)
-    # filter_lookalike_size(customer_similarity_score, 'Almost identical')
+    customer_similarity_score = 5
+    if order["custom_status"] in ('Pending', 'Awaiting Payment', 'Declined', 'Cancelled', 'Refunded', 'Incomplete', 
+                                  'Awaiting Fulfillment', 'Disputed', 'Partially Refunded'):
+        continue
+    
+    consignments_url = order["consignments"]["url"]
+    try:
+        response = requests.get(
+            consignments_url,
+            headers={
+                "X-Auth-Token": ACCESS_TOKEN,
+                "Accept": "application/json"
+            }
+        )
+        response.raise_for_status()
+        consignments_data = response.json()
+    except Exception as e:
+        print(f"Error fetching consignments data for order {order['id']}: {e}")
+        continue
+    
+    for consignment in consignments_data.get("shipping", []):
+        for item in consignment.get("line_items", []):
+            item_url = item.get("url")
+            if not item_url:
+                continue
+            
+            try:
+                item_response = requests.get(
+                    item_url,
+                    headers={
+                        "X-Auth-Token": ACCESS_TOKEN,
+                        "Accept": "application/json"
+                    }
+                )
+                item_response.raise_for_status()
+                item_data = item_response.json()
+            except Exception as e:
+                print(f"Error fetching item data for URL {item_url}: {e}")
+                continue
+            
+            product_id = item_data.get("product_id")
+            if not product_id:
+                continue 
+            
+            try:
+                product_info = api.Products.get(product_id)
+            except Exception as e:
+                print(f"Error fetching product info for product_id {product_id}: {e}")
+                continue
+            total_spend += float(product_info["price"])
+            purchase_count += 1 
+            
+            # Обработка категорий товара
+            if product_info["categories"]:
+                for category_id in product_info["categories"]:
+                    categories_purchased[category_id] = categories_purchased.get(category_id, 0) + 1
+        
+        # Обработка даты заказа
+        order_date_str = order["date_created"]
+        if order_date_str:
+            try:
+                order_date = datetime.strptime(order_date_str, '%a, %d %b %Y %H:%M:%S +0000')
+                last_purchase_date = max(last_purchase_date or order_date, order_date)
+            except ValueError as e:
+                print(f"Error parsing date for order {order['id']}: {e}")
     
     product_customer_details.append({
         "customer": customer_info,
-        "product": product_info,
-        "total_spend": total_spend
+        "total_spend": total_spend,
+        "purchase_count": purchase_count,
+        "categories_purchased": categories_purchased,
+        "last_purchase_date": last_purchase_date
     })
-    
+
 print(product_customer_details)
