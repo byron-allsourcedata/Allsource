@@ -1,14 +1,14 @@
 from bigcommerce.api import BigcommerceApi
 from datetime import datetime
+import os
 import requests
 
 STORE_HASH = "23k6mb4fr5"
 ACCESS_TOKEN = "rsv2hj5p5cei9q6pie4epwnmhmj4ixo"
-CLIENT_ID = "bues9uk2dxgeeh86123472ux2y4tl40"
 
 api = BigcommerceApi(
     store_hash=STORE_HASH,
-    client_id=CLIENT_ID,
+    client_id=os.getenv('BIGCOMMERCE_CLIENT_ID'),
     access_token=ACCESS_TOKEN
 )
 
@@ -47,17 +47,6 @@ def filter_high_aov_customer(total_spend, purchase_count):
 def filter_lookalike_size(customer_similarity_score, lookalike_size):
     min_percentage, max_percentage = LOOKALIKE_AUDIENCE_THRESHOLDS.get(lookalike_size, (0, 0))
     return min_percentage <= customer_similarity_score <= max_percentage
-
-filters = {
-    "Loyal Category Customer": filter_loyal_category_customer,
-    "High LTV Customer": filter_high_ltv_customer,
-    "Frequent Customer": filter_frequent_customer,
-    "Recent Customer": filter_recent_customer,
-    "High AOV Customer": filter_high_aov_customer,
-    "Lookalike Audience": filter_lookalike_size
-}
-current_year = datetime.now().year
-start_of_year = f"{current_year}-01-01T00:00:00Z"
 
 orders = api.Orders.all(limit=250)
 product_customer_details = []

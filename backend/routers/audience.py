@@ -1,63 +1,25 @@
 from fastapi import APIRouter, Depends, Query
 
-from dependencies import get_audience_service, get_leads_service
+from dependencies import get_audience_service, check_user_authorization, check_domain
 from schemas.audience import AudienceInfoResponse, AudienceRequest
 from typing import List, Optional
+from models.users import User
 from services.audience import AudienceService
 from services.leads import LeadsService
 
 router = APIRouter()
-
-
-@router.get("")
-async def get_audience(page: int = Query(1, alias="page", ge=1, description="Page number"),
-                       per_page: int = Query(15, alias="per_page", ge=1, le=100, description="Items per page"),
-                       sort_by: str = Query(None, description="Field"),
-                       sort_order: str = Query(None, description="Field to sort by: 'asc' or 'desc'"),
-                       audience_service: AudienceService = Depends(get_audience_service)):
-    return audience_service.get_audience(page=page, per_page=per_page, sort_by=sort_by, sort_order=sort_order)
-
-
-@router.get("/leads")
-async def get_leads(
-        page: int = Query(1, alias="page", ge=1, description="Page number"),
-        per_page: int = Query(15, alias="per_page", ge=1, le=100, description="Items per page"),
-        regions: Optional[str] = Query(None),
-        professions: Optional[str] = Query(None),
-        ages: Optional[str] = Query(None),
-        genders: Optional[str] = Query(None),
-        net_worths: Optional[int] = Query(None),
-        interest_list: Optional[str] = Query(None),
-        not_in_existing_lists: Optional[str] = Query(None),
-        leads_service: LeadsService = Depends(get_leads_service)):
-    return leads_service.get_leads_for_build_an_audience(page=page, per_page=per_page,
-                                                         regions=regions, professions=professions,
-                                                         ages=ages,
-                                                         genders=genders, net_worths=net_worths,
-                                                         interest_list=interest_list,
-                                                         not_in_existing_lists=not_in_existing_lists)
-
 
 @router.get("/list")
 async def get_user_audience_list(audience_service: AudienceService = Depends(get_audience_service)):
     return audience_service.get_user_audience_list()
 
 
-@router.post("", response_model=AudienceInfoResponse)
+@router.post("")
 async def post_audience(audience_request: AudienceRequest,
+                        user: dict = Depends(check_user_authorization),
+                         domain=Depends(check_domain),
                         audience_service: AudienceService = Depends(get_audience_service)):
-    result = audience_service.post_audience(audience_request.leads_ids, audience_request.new_audience_name)
-    return AudienceInfoResponse(id=result.get('id'), status=result['status'])
-
-
-@router.put("", response_model=AudienceInfoResponse)
-async def put_audience(audience_request: AudienceRequest,
-                       audience_service: AudienceService = Depends(get_audience_service)):
-    return AudienceInfoResponse(
-        status=audience_service.put_audience(leads_ids=audience_request.leads_ids,
-                                             remove_leads_ids=audience_request.remove_leads_ids,
-                                             audience_ids=audience_request.audience_ids,
-                                             new_audience_name=audience_request.new_audience_name))
+    return audience_service.create_audience(user.get('id'), domain.id, audience_request.data_source, audience_request.audience_type, audience_request.audience_threshold)
 
 
 @router.delete("", response_model=AudienceInfoResponse)

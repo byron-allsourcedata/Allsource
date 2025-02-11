@@ -182,6 +182,7 @@ class AudienceInfoEnum(Enum):
     SUCCESS = "SUCCESS"
     NOT_FOUND = "NOT_FOUND"
     NOT_VALID_NAME = 'NOT_VALID_NAME'
+    ERROR_SEND_AUDIENCE = 'ERROR_SEND_AUDIENCE'
 
 
 class PartnersAssetsInfoEnum(Enum):

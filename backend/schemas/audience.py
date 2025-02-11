@@ -4,14 +4,7 @@ from pydantic import BaseModel
 
 from enums import AudienceInfoEnum
 
-
-class AudienceInfoResponse(BaseModel):
-    status: AudienceInfoEnum
-    id: Optional[int] = None
-
-
 class AudienceRequest(BaseModel):
-    leads_ids: List[int] = None
-    audience_ids: List[int] = None
-    new_audience_name: str = None
-    remove_leads_ids: List[int] = None
+    data_source: str
+    audience_type: str
+    audience_threshold: int
