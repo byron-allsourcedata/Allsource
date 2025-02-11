@@ -10,7 +10,7 @@ from typing_extensions import Annotated
 from config.auth import AuthConfig
 from config.aws import get_s3_client
 from config.database import SessionLocal
-from enums import DomainStatus, UserAuthorizationStatus
+from enums import DomainStatus, UserAuthorizationStatus, TeamAccessLevel
 from exceptions import InvalidToken
 from models.users import Users as User
 from persistence.company_persistence import CompanyPersistence
@@ -385,7 +385,6 @@ def check_user_partner(Authorization: Annotated[str, Header()],
         )
     return user
 
-
 def check_user_authentication(Authorization: Annotated[str, Header()],
                               user_persistence_service: UserPersistence = Depends(
                                   get_user_persistence_service)) -> Token:
@@ -408,6 +407,19 @@ def check_user_authentication(Authorization: Annotated[str, Header()],
         user['team_member'] = team_memer
     return user
 
+def check_team_access_standard_user(user: dict = Depends(check_user_authentication)):
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.get('team_access_level') not in {
+            TeamAccessLevel.ADMIN.value,
+            TeamAccessLevel.OWNER.value,
+            TeamAccessLevel.STANDARD.value
+        }:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins and standard only."
+            )
+    return user
 
 def get_users_service(user=Depends(check_user_authentication),
                       user_persistence: UserPersistence = Depends(get_user_persistence_service),

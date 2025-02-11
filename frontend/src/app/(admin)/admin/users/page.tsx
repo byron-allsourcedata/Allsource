@@ -5,31 +5,18 @@ import {
     Box, Button, Grid, Typography, TableHead, TableRow, TableCell,
     TableBody, TableContainer, Paper, Table,
     Switch, Pagination,
-    SwitchProps, Link,
-    Menu,
-    MenuItem,
+    SwitchProps,
     IconButton,
-    List,
-    ListItemButton,
-    ListItemText,
     Popover,
-    TextField,
-    InputAdornment
 } from "@mui/material";
-import Image from "next/image";
-import dynamic from "next/dynamic";
 import { useUser } from "@/context/UserContext";
 import { useTrial } from '@/context/TrialProvider';
 import { styled } from '@mui/material/styles';
 import axiosInstance from '../../../../axios/axiosInterceptorInstance';
 import { useRouter } from "next/navigation";
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import CustomizedProgressBar from '@/components/ProgressBar'
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import { suppressionsStyles } from "@/css/suppressions";
-import { orderBy } from "lodash";
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import { MoreHoriz } from "@mui/icons-material";
 import { datasyncStyle } from "@/app/(client)/data-sync/datasyncStyle";
@@ -132,19 +119,19 @@ const TableHeader: React.FC<{ onSort: (field: string) => void, sortField: string
                             textAlign: 'center',
                             position: "relative",
                             ...(key === "account_name" && {
-                              position: "sticky",
-                              left: 0,
-                              zIndex: 1,
+                                position: "sticky",
+                                left: 0,
+                                zIndex: 1,
                             }),
                             ...(key === "actions" && {
-                              "::after": {
-                                content: "none",
-                              },
+                                "::after": {
+                                    content: "none",
+                                },
                             }),
-                          }}
+                        }}
                         onClick={sortable ? () => onSort(key) : undefined}
                     >
-                        <Box sx={{ display: 'flex', alignItems: 'center' }} style={key === "email" || key === "status"  || key === "actions" ? { justifyContent: "center" } : {}}>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }} style={key === "email" || key === "status" || key === "actions" ? { justifyContent: "center" } : {}}>
                             <Typography variant="body2" className='table-heading'>{label}</Typography>
                             {sortable && (
                                 <IconButton size="small" sx={{ ml: 1 }}>
@@ -277,24 +264,24 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, handleSwitchChang
             case 'status':
                 return (
                     <Typography
-                    className="paragraph"
-                    sx={{
-                        display: 'flex',
-                        padding: '2px 8px',
-                        borderRadius: '2px',
-                        fontFamily: 'Roboto',
-                        fontSize: '12px',
-                        fontWeight: '400',
-                        lineHeight: 'normal',
-                        backgroundColor: getStatusStyle(row.payment_status).background,
-                        color: getStatusStyle(row.payment_status).color,
-                        justifyContent: 'center',
-                        minWidth: '130px',
-                        textTransform: 'capitalize'
-                    }}
-                  >
-                    {formatFunnelText(row.payment_status) || "--"}
-                  </Typography>
+                        className="paragraph"
+                        sx={{
+                            display: 'flex',
+                            padding: '2px 8px',
+                            borderRadius: '2px',
+                            fontFamily: 'Roboto',
+                            fontSize: '12px',
+                            fontWeight: '400',
+                            lineHeight: 'normal',
+                            backgroundColor: getStatusStyle(row.payment_status).background,
+                            color: getStatusStyle(row.payment_status).color,
+                            justifyContent: 'center',
+                            minWidth: '130px',
+                            textTransform: 'capitalize'
+                        }}
+                    >
+                        {formatFunnelText(row.payment_status) || "--"}
+                    </Typography>
                 );
             // case 'status':
             //     return (
@@ -498,7 +485,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, handleSwitchChang
             {data.map((row) => (
                 <TableRow key={row.id}>
                     {tableHeaders.map(({ key }) => (
-                        <TableCell key={key} sx={{...leadsStyles.table_array, textAlign: key === 'actions' ? 'center' : 'left', position: 'relative', padding:'8px' }} >
+                        <TableCell key={key} sx={{ ...leadsStyles.table_array, textAlign: key === 'actions' ? 'center' : 'left', position: 'relative', padding: '8px' }} >
                             {renderCellContent(key, row)}
                         </TableCell>
                     ))}
@@ -552,15 +539,11 @@ const Users: React.FC = () => {
 
         const fetchData = async () => {
             try {
-                const response = await axiosInstance.get('/admin/users', {
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`
-                    }
-                });
+                let url = `/admin/users?page=${currentPage + 1}&per_page=${rowsPerPage}`;
+                const response = await axiosInstance.get(url);
                 if (response.status === 200) {
-                    setData(response.data);
-                    setTotalItems(response.data.length);
-                    setSortedData(response.data);
+                    setPaginatedData(response.data.users);
+                    setTotalItems(response.data.count || 0);
                 }
             }
             catch {
@@ -570,27 +553,7 @@ const Users: React.FC = () => {
             }
         };
         fetchData();
-    }, [router]);
-
-    useEffect(() => {
-        if (!sortField) {
-            setSortField('created_at')
-        }
-        const sorted = [...data].sort((a: any, b: any) => {
-            const valueA = a[sortField];
-            const valueB = b[sortField];
-            if (valueA < valueB) return sortOrder === 'asc' ? -1 : 1;
-            if (valueA > valueB) return sortOrder === 'asc' ? 1 : -1;
-            return 0;
-        });
-        setSortedData(sorted);
-    }, [data, sortField, sortOrder]);
-
-    useEffect(() => {
-        const startIndex = (currentPage - 1) * rowsPerPage;
-        const endIndex = startIndex + rowsPerPage;
-        setPaginatedData(sortedData.slice(startIndex, endIndex));
-    }, [currentPage, sortedData, rowsPerPage]);
+    }, [currentPage]);
 
     const handlePageChange = (event: React.ChangeEvent<unknown>, page: number) => {
         setCurrentPage(page);
@@ -632,13 +595,13 @@ const Users: React.FC = () => {
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <Grid container width='100%'>
                     <Grid item xs={12} md={12} sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'start', justifyContent: 'space-between', mb:4 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'start', justifyContent: 'space-between', mb: 4 }}>
                             <Typography variant="h4" component="h1" sx={usersStyle.title}>
                                 Users
                             </Typography>
                         </Box>
                         {/* {data.length > 0 && ( */}
-                        <Grid sx={{pl: 1, pr:3}} xs={12} mt={0}>
+                        <Grid sx={{ pl: 1, pr: 3 }} xs={12} mt={0}>
                             <TableContainer component={Paper}>
                                 <Table aria-label="simple table">
                                     <TableHeader onSort={handleSort} sortField={sortField} sortOrder={sortOrder} />
