@@ -475,7 +475,6 @@ class CompanyPersistence:
             region_list = regions.split(',')
             for region_data in region_list:
                 region_data = region_data.split('-')
-                print("region_data", region_data)
                 filters.append(FiveXFiveLocations.city.ilike(f'{region_data[0]}%'))
 
                 if len(region_data) > 1 and region_data[1]:
