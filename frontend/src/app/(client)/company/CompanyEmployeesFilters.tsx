@@ -81,7 +81,9 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
   );
   const [regions, setTags] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [openSelect, setOpenSelect] = useState(false);
+  const [openSelectDepartment, setOpenSelectDepartment] = useState(false);
+  const [openSelectJobTitle, setOpenSelectJobTitle] = useState(false);
+  const [openSelectSeniority, setOpenSelectSeniority] = useState(false);
   // const [open_save, setOpen] = useState(false);
   // const [openLoadDrawer, setOpenLoadDrawer] = useState(false);
   // const [filterName, setFilterName] = useState("");
@@ -127,14 +129,6 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
   const [checkedFiltersJobTitles, setCheckedFiltersJobTitles] = useState<Record<string, boolean>>({});
   const [checkedFiltersDepartment, setCheckedFiltersDepartment] = useState<Record<string, boolean>>({});
 
-  const handleClose = () => {
-    setOpenSelect(false);
-  };
-
-  const handleOpen = () => {
-    setOpenSelect(true);
-  };
-
   const handleDepartmentChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value, checked } = event.target;
 
@@ -164,6 +158,17 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
 
 
   const handleMenuSeniorityClick = (item: string) => {
+    setCheckedFiltersSeniority((prevState) => ({
+      ...prevState,
+      [item]: !prevState[item],
+    }));
+
+    handleSeniorityChange({
+      target: { value: item, checked: !checkedFiltersSeniority[item] },
+    } as React.ChangeEvent<HTMLInputElement>);
+  };
+
+  const handleMenuDepartmentClick = (item: string) => {
     setCheckedFiltersDepartment((prevState) => ({
       ...prevState,
       [item]: !prevState[item],
@@ -174,14 +179,14 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
     } as React.ChangeEvent<HTMLInputElement>);
   };
 
-  const handleMenuItemClick = (item: string) => {
-    setCheckedFiltersDepartment((prevState) => ({
+  const handleMenuJobTitlesClick = (item: string) => {
+    setCheckedFiltersJobTitles((prevState) => ({
       ...prevState,
       [item]: !prevState[item],
     }));
 
-    handleDepartmentChange({
-      target: { value: item, checked: !checkedFiltersDepartment[item] },
+    handleJobTitlesChange({
+      target: { value: item, checked: !checkedFiltersJobTitles[item] },
     } as React.ChangeEvent<HTMLInputElement>);
   };
 
@@ -189,7 +194,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
 
     // Составление объекта с фильтрами
     const filters = {
-      jobTitles: checkedFiltersJobTitles,
+      jobTitle: checkedFiltersJobTitles,
       department: checkedFiltersDepartment,
       seniority: checkedFiltersSeniority,
       regions,
@@ -205,7 +210,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
 
   const saveFiltersToSessionStorage = (filters: {
     regions: string[];
-    jobTitles: typeof checkedFiltersJobTitles,
+    jobTitle: typeof checkedFiltersJobTitles,
     department: typeof checkedFiltersDepartment,
     seniority: typeof checkedFiltersSeniority,
     searchQuery: string; dateRange?: { fromDate: number | null; toDate: number | null; } | undefined;
@@ -227,12 +232,12 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
     if (savedFilters) {
       setCheckedFiltersDepartment(savedFilters.department || {})
       setCheckedFiltersSeniority(savedFilters.seniority || {})
-      setCheckedFiltersJobTitles(savedFilters.jobTitles || {})
+      setCheckedFiltersJobTitles(savedFilters.jobTitle || {})
       }
 
-      setSearchQuery(savedFilters.searchQuery || '');
+      setSearchQuery(savedFilters?.searchQuery || '');
 
-      if (savedFilters.regions) {
+      if (savedFilters?.regions) {
         setTags((prevTags) => {
           const uniqueTags = new Set(prevTags);
           savedFilters.regions.forEach((cityTag: string) => {
@@ -281,6 +286,14 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
   // Check active filters
   const isDepartmentFilterActive = () => {
     return Object.values(checkedFiltersDepartment).some(value => value);
+  };
+  
+  const isSeniorityFilterActive = () => {
+    return Object.values(checkedFiltersSeniority).some(value => value);
+  };
+
+  const isJobTitlesFilterActive = () => {
+    return Object.values(checkedFiltersJobTitles).some(value => value);
   };
 
   const handleClearFilters = () => {
@@ -488,94 +501,107 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
             </Box>
 
             {/* Job Title */}
+            <Box sx={filterStyles.main_filter_form}>
             <Box
-                sx={{ ...filterStyles.main_filter_form}}
-            >
-                <Box
                 sx={filterStyles.filter_form}
                 onClick={() => setIsJobTitleOpen(!isJobTitleOpen)}
-                >
+            >
                 <Box
-                    sx={{
+                sx={{
                     ...filterStyles.active_filter_dote,
-                    visibility: regions.length > 0 ? 'visible' : "hidden",
-                    }}
+                    visibility: isJobTitlesFilterActive() ? "visible" : "hidden",
+                }}
                 />
-                <WorkOutlineOutlinedIcon width={18} height={18}/>
-                <Typography
-                    sx={{
-                    ...filterStyles.filter_name
-                    }}
-                >
-                    Job Title
+                <WorkOutlineOutlinedIcon sx={{color: "rgba(95, 99, 104, 1)"}} width={18} height={18}/>
+                <Typography sx={filterStyles.filter_name}>
+                Job Title
                 </Typography>
-                <Box
-                    sx={{ display: "flex", flexWrap: "wrap", gap: "8px", mb: 2 }}
+                <IconButton
+                onClick={() => setIsJobTitleOpen(!isJobTitleOpen)}
+                aria-label="toggle-content"
                 >
-                    {regions.map((tag, index) => (
+                {isJobTitleOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                </IconButton>
+
+            </Box>
+            {Object.keys(checkedFiltersJobTitles).some((key) => checkedFiltersJobTitles[key]) && (
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1, mb: 2 }}>
+                {Object.keys(checkedFiltersJobTitles)
+                    .filter((key) => checkedFiltersJobTitles[key])
+                    .map((tag, index) => (
                     <CustomChip
                         key={index}
                         label={tag}
-                        onDelete={() =>
-                        setTags(regions.filter((_, i) => i !== index))
-                        }
+                        onDelete={() => handleMenuJobTitlesClick(tag)}
                     />
                     ))}
                 </Box>
-                <IconButton
-                    onClick={() => setIsJobTitleOpen(!isJobTitleOpen)}
-                    aria-label="toggle-content"
-                >
-                    {isJobTitleOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                </IconButton>
+            )}
+
+
+            <Collapse in={isJobTitleOpen}>
+                <Box sx={{ ...filterStyles.filter_dropdown, height: openSelectJobTitle ? 250 : 50 }}>
+                {jobTitles && jobTitles.length > 0 ? (
+                    <FormControl fullWidth>
+                    <Select
+                        labelId="jobTitles-select-label"
+                        id="jobTitles-select"
+                        multiple
+                        open={openSelectJobTitle}
+                        onClose={() => setOpenSelectJobTitle(false)}
+                        onOpen={() => setOpenSelectJobTitle(true)}
+                        value={Object.keys(checkedFiltersJobTitles).filter(
+                        (key) => checkedFiltersJobTitles[key]
+                        )}
+                        displayEmpty
+                        sx={{ maxHeight: '56px', pt: 1 }}
+                        renderValue={() => <Typography className='table-data' sx={{ fontSize: '14px !important' }}> Select an job title</Typography>}
+                        MenuProps={{
+                        PaperProps: {
+                            style: {
+                            maxHeight: 200,
+                            maxWidth: 80,
+                            marginLeft: 8,
+                            },
+                        },
+                        }}
+                    >
+                        {jobTitles.map((item) => (
+                        <MenuItem
+                            key={item}
+                            value={item}
+                            sx={{ maxHeight: '40px', pl: 0, padding: 0, marginTop: 0, marginBottom: 0 }}
+                            onClick={() => handleMenuJobTitlesClick(item)}
+                        >
+                            <Checkbox
+                            checked={checkedFiltersJobTitles[item] || false}
+                            onChange={handleJobTitlesChange}
+                            value={item}
+                            size='small'
+                            sx={{
+                                "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
+                            }}
+                            />
+                            <ListItemText sx={{}}>
+                            <Typography sx={{
+                                fontSize: "14px",
+                                fontFamily: "Nunito Sans",
+                                fontWeight: 500,
+                                lineHeight: "19.6px",
+                                color: checkedFiltersJobTitles[item] ? "rgba(80, 82, 178, 1)" : "rgba(32, 33, 36, 1)"
+                            }}>
+                                {item}
+                            </Typography>
+                            </ListItemText>
+                        </MenuItem>
+                        ))}
+                    </Select>
+                    </FormControl>
+                ) : (
+                    <Typography className='second-sub-title'>No job titles data</Typography>
+                )}
                 </Box>
-                <Collapse in={isJobTitleOpen}>
-                <TextField
-                    placeholder="Search by job title"
-                    variant="outlined"
-                    fullWidth
-                    value={region}
-                    onChange={handleRegionChange}
-                    onKeyDown={handleAddTag}
-                    InputProps={{
-                    sx: {
-                        fontFamily: 'Roboto',
-                        fontSize: '0.875rem',
-                        fontWeight: 400,
-                        lineHeight: '19.6px',
-                        textAlign: 'left',
-                        color: 'rgba(74, 74, 74, 1)',
-                    },
-                    }}
-                    sx={{
-                    mb: '3px',
-                    '& .MuiInputBase-input::placeholder': {
-                        fontFamily: 'Roboto',
-                        fontSize: '0.875rem',
-                        fontWeight: 400,
-                        lineHeight: '19.6px',
-                        textAlign: 'left',
-                        color: 'rgba(74, 74, 74, 1)',
-                    },
-                    }}
-                />
-                {cities.map((city, index) => (
-                    <ListItem button key={index} onClick={() => handleSelectCity(city)}>
-                    <ListItemText
-                        primary={
-                        <span style={{ fontFamily: 'Nunito Sans', fontSize: '13px', fontWeight: 600, lineHeight: '16.8px', textAlign: 'left', color: 'rgba(74, 74, 74, 1)' }}>
-                            {city.city},{' '}
-                            <span style={{ color: 'rgba(200, 202, 203, 1)' }}>
-                            {city.state}
-                            </span>
-                        </span>
-                        }
-                    />
-                    </ListItem>
-                ))}
-
-
-                </Collapse>
+            </Collapse>
             </Box>
 
             {/* Seniority */}
@@ -587,10 +613,10 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                 <Box
                 sx={{
                     ...filterStyles.active_filter_dote,
-                    visibility: isDepartmentFilterActive() ? "visible" : "hidden",
+                    visibility: isSeniorityFilterActive() ? "visible" : "hidden",
                 }}
                 />
-                <LineWeightIcon  width={18} height={18}/>
+                <LineWeightIcon sx={{color: "rgba(95, 99, 104, 1)"}}  width={18} height={18}/>
                 <Typography sx={filterStyles.filter_name}>
                 Seniority
                 </Typography>
@@ -610,7 +636,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                     <CustomChip
                         key={index}
                         label={tag}
-                        onDelete={() => handleMenuItemClick(tag)}
+                        onDelete={() => handleMenuSeniorityClick(tag)}
                     />
                     ))}
                 </Box>
@@ -618,16 +644,16 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
 
 
             <Collapse in={isSeniorityOpen}>
-                <Box sx={{ ...filterStyles.filter_dropdown, height: openSelect ? 250 : 50 }}>
-                {departments && departments.length > 0 ? (
+                <Box sx={{ ...filterStyles.filter_dropdown, height: openSelectSeniority ? 250 : 50 }}>
+                {seniorities && seniorities.length > 0 ? (
                     <FormControl fullWidth>
                     <Select
-                        labelId="industry-select-label"
-                        id="industry-select"
+                        labelId="seniority-select-label"
+                        id="seniority-select"
                         multiple
-                        open={openSelect}
-                        onClose={handleClose}
-                        onOpen={handleOpen}
+                        open={openSelectSeniority}
+                        onClose={() => setOpenSelectSeniority(false)}
+                        onOpen={() => setOpenSelectSeniority(true)}
                         value={Object.keys(checkedFiltersSeniority).filter(
                         (key) => checkedFiltersSeniority[key]
                         )}
@@ -649,7 +675,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                             key={item}
                             value={item}
                             sx={{ maxHeight: '40px', pl: 0, padding: 0, marginTop: 0, marginBottom: 0 }}
-                            onClick={() => handleMenuItemClick(item)}
+                            onClick={() => handleMenuSeniorityClick(item)}
                         >
                             <Checkbox
                             checked={checkedFiltersSeniority[item] || false}
@@ -694,7 +720,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                     visibility: isDepartmentFilterActive() ? "visible" : "hidden",
                 }}
                 />
-                <TimelineIcon  width={18} height={18}/>
+                <TimelineIcon sx={{color: "rgba(95, 99, 104, 1)"}} width={18} height={18}/>
                 <Typography sx={filterStyles.filter_name}>
                 Department
                 </Typography>
@@ -714,7 +740,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                     <CustomChip
                         key={index}
                         label={tag}
-                        onDelete={() => handleMenuItemClick(tag)}
+                        onDelete={() => handleMenuDepartmentClick(tag)}
                     />
                     ))}
                 </Box>
@@ -722,16 +748,16 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
 
 
             <Collapse in={isDepartmentOpen}>
-                <Box sx={{ ...filterStyles.filter_dropdown, height: openSelect ? 250 : 50 }}>
+                <Box sx={{ ...filterStyles.filter_dropdown, height: openSelectDepartment ? 250 : 50 }}>
                 {departments && departments.length > 0 ? (
                     <FormControl fullWidth>
                     <Select
                         labelId="industry-select-label"
                         id="industry-select"
                         multiple
-                        open={openSelect}
-                        onClose={handleClose}
-                        onOpen={handleOpen}
+                        open={openSelectDepartment}
+                        onClose={() => setOpenSelectDepartment(false)}
+                        onOpen={() => setOpenSelectDepartment(true)}
                         value={Object.keys(checkedFiltersDepartment).filter(
                         (key) => checkedFiltersDepartment[key]
                         )}
@@ -753,7 +779,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                             key={item}
                             value={item}
                             sx={{ maxHeight: '40px', pl: 0, padding: 0, marginTop: 0, marginBottom: 0 }}
-                            onClick={() => handleMenuItemClick(item)}
+                            onClick={() => handleMenuDepartmentClick(item)}
                         >
                             <Checkbox
                             checked={checkedFiltersDepartment[item] || false}
@@ -800,7 +826,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                     visibility: regions.length > 0 ? 'visible' : "hidden",
                 }}
                 />
-                <PlaceOutlinedIcon width={18} height={18}/>
+                <PlaceOutlinedIcon sx={{color: "rgba(95, 99, 104, 1)"}} width={18} height={18}/>
                 <Typography
                 sx={{
                     ...filterStyles.filter_name

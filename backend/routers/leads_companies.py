@@ -75,17 +75,17 @@ async def get_employees(
 async def get_industry(company_service: CompanyService = Depends(get_companies_service)):
     return company_service.get_uniq_primary_industry()
 
-@router.get("/departments")
-async def get_department(company_service: CompanyService = Depends(get_companies_service)):
-    return company_service.get_uniq_primary__departments()
+@router.get("/{company_id}/departments")
+async def get_department(company_id: int, company_service: CompanyService = Depends(get_companies_service)):
+    return company_service.get_uniq_primary__departments(company_id)
 
-@router.get("/seniorities")
-async def get_seniority(company_service: CompanyService = Depends(get_companies_service)):
-    return company_service.get_uniq_primary__seniorities()
+@router.get("/{company_id}/seniorities")
+async def get_seniority(company_id: int, company_service: CompanyService = Depends(get_companies_service)):
+    return company_service.get_uniq_primary__seniorities(company_id)
 
-@router.get("/job-titles")
-async def get_seniority(company_service: CompanyService = Depends(get_companies_service)):
-    return company_service.get_uniq_primary__job_titles()
+@router.get("/{company_id}/job-titles")
+async def get_seniority(company_id: int, company_service: CompanyService = Depends(get_companies_service)):
+    return company_service.get_uniq_primary__job_titles(company_id)
 
 @router.post("/download-company")
 async def download_company(companies_request: CompaniesRequest,

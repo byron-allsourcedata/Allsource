@@ -438,12 +438,14 @@ class CompanyPersistence:
                     FiveXFiveUser.job_title,
                     FiveXFiveLocations.city,
                     States.state_name,
+                    ep.email,
+                    eb.email,
                 )
         )
 
         sort_options = {
-            'personal_email': ep,
-            'business_email': eb,
+            'personal_email': ep.email,
+            'business_email': eb.email,
         }
 
         if sort_by in sort_options:
@@ -455,14 +457,10 @@ class CompanyPersistence:
                 query = query.order_by(asc(sort_column))
             else:
                 query = query.order_by(desc(sort_column))
-        
-        if job_title:
-            filters = []
-            job_titles = job_title.split(' ')
-            for title in job_titles:
-                filters.append(FiveXFiveUser.job_title.ilike(f'{title}%'))
 
-            query = query.filter(or_(*filters))
+        if job_title:
+            job_titles = [unquote(i.strip()) for i in job_title.split(',')]
+            query = query.filter(FiveXFiveUser.job_title.in_(job_titles))
 
         if department:
             departments = [unquote(i.strip()) for i in department.split(',')]
@@ -477,6 +475,7 @@ class CompanyPersistence:
             region_list = regions.split(',')
             for region_data in region_list:
                 region_data = region_data.split('-')
+                print("region_data", region_data)
                 filters.append(FiveXFiveLocations.city.ilike(f'{region_data[0]}%'))
 
                 if len(region_data) > 1 and region_data[1]:
@@ -546,36 +545,39 @@ class CompanyPersistence:
         return locations
 
 
-    def get_unique_primary__departments(self):
+    def get_unique_primary__departments(self, company_id):
         query = (
             self.db.query(FiveXFiveUser.department)
-                .filter(FiveXFiveUser.department != None)
+                .join(LeadCompany, LeadCompany.id == company_id)
+                .filter(FiveXFiveUser.company_alias == LeadCompany.alias)
                 .distinct()
                 .order_by(FiveXFiveUser.department)
         )
-        departments = [row.department for row in query.all()]
+        departments = [row.department for row in query.all() if row.department is not None]
         return departments
     
 
-    def get_unique_primary__seniorities(self):
+    def get_unique_primary__seniorities(self, company_id):
         query = (
             self.db.query(FiveXFiveUser.seniority_level)
-                .filter(FiveXFiveUser.seniority_level != None)
+                .join(LeadCompany, LeadCompany.id == company_id)
+                .filter(FiveXFiveUser.company_alias == LeadCompany.alias)
                 .distinct()
                 .order_by(FiveXFiveUser.seniority_level)
         )
-        seniorities = [row.seniority_level for row in query.all()]
+        seniorities = [row.seniority_level for row in query.all() if row.seniority_level is not None]
         return seniorities
     
     
-    def get_unique_primary__job_titles(self):
+    def get_unique_primary__job_titles(self, company_id):
         query = (
             self.db.query(FiveXFiveUser.job_title)
-                .filter(FiveXFiveUser.job_title != None)
+                .join(LeadCompany, LeadCompany.id == company_id)
+                .filter(FiveXFiveUser.company_alias == LeadCompany.alias)
                 .distinct()
                 .order_by(FiveXFiveUser.job_title)
         )
-        job_titles = [row.job_title for row in query.all()]
+        job_titles = [row.job_title for row in query.all() if row.job_title is not None]
         return job_titles
     
 

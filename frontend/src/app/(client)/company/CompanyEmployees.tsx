@@ -14,6 +14,8 @@ import DateRangeIcon from '@mui/icons-material/DateRange';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import FilterPopup from './CompanyEmployeesFilters';
 import AudiencePopup from '@/components/AudienceSlider';
+import SouthOutlinedIcon from '@mui/icons-material/SouthOutlined';
+import NorthOutlinedIcon from '@mui/icons-material/NorthOutlined';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import dayjs from 'dayjs';
@@ -27,6 +29,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useNotification } from '@/context/NotificationContext';
 import { showErrorToast } from '@/components/ToastNotification';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import SwapVertIcon from '@mui/icons-material/SwapVert';
 
 
 interface FetchDataParams {
@@ -154,6 +157,21 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
             if (sortBy) {
                 url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
             }
+
+            // filter with checkbox
+            const processMultiFilter = (label: string, paramName: string) => {
+                const filter = selectedFilters.find(filter => filter.label === label)?.value;
+                if (filter) {
+                    url += `&${paramName}=${encodeURIComponent(filter.split(', ').join(','))}`;
+                }
+            };
+
+    
+            processMultiFilter('Regions', 'regions');
+            processMultiFilter('Seniority', 'seniority');
+            processMultiFilter('Job Title', 'job_title');
+            processMultiFilter('Department', 'department');
+
     
             const response = await axiosInstance.get(url);
             const [employees, count] = response.data;
@@ -191,7 +209,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     const handleDepartment = async () => {
         setLoading(true);
         try {
-            const response = await axiosInstance.get('/company/departments')
+            const response = await axiosInstance.get(`/company/${companyId}/departments`)
             setDepartments(Array.isArray(response.data) ? response.data : []);
         }
         catch{
@@ -204,7 +222,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     const handleJobTitles = async () => {
         setLoading(true);
         try {
-            const response = await axiosInstance.get('/company/job-titles')
+            const response = await axiosInstance.get(`/company/${companyId}/job-titles`)
             setJobTitles(Array.isArray(response.data) ? response.data : []);
         }
         catch{
@@ -216,7 +234,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     const handleSeniorities = async () => {
         setLoading(true);
         try {
-            const response = await axiosInstance.get('/company/seniorities')
+            const response = await axiosInstance.get(`/company/${companyId}/seniorities`)
             setSeniorities(Array.isArray(response.data) ? response.data : []);
         }
         catch{
@@ -444,8 +462,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                 newSelectedFilters.push({ label, value: typeof value === 'function' ? value(filters) : value });
             }
         });
-
-        console.log({newSelectedFilters})
 
         setSelectedFilters(newSelectedFilters);
     };
@@ -827,19 +843,22 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                                     "::after": { content: 'none' }
                                                                 })
                                                             }}
+                                                            
                                                             onClick={sortable ? () => handleSortRequest(key) : undefined}
                                                             style={{ cursor: sortable ? 'pointer' : 'default' }}
                                                         >
-                                                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: "space-between", }}>
                                                                 <Typography variant="body2" sx={{ ...companyStyles.table_column, borderRight: '0' }}>{label}</Typography>
-                                                                {sortable && orderBy === key && (
-                                                                    <IconButton size="small" sx={{ ml: 1 }}>
-                                                                        {order === 'asc' ? (
-                                                                            <ArrowUpwardIcon
-                                                                                fontSize="inherit" />
+                                                                {sortable && (
+                                                                    <IconButton size="small">
+                                                                        {orderBy === key ? (
+                                                                            order === 'asc' ? (
+                                                                                <NorthOutlinedIcon fontSize="inherit" />
+                                                                            ) : (
+                                                                                <SouthOutlinedIcon fontSize="inherit" />
+                                                                            )
                                                                         ) : (
-                                                                            <ArrowDownwardIcon
-                                                                                fontSize="inherit" />
+                                                                            <SwapVertIcon fontSize="inherit" />
                                                                         )}
                                                                     </IconButton>
                                                                 )}
