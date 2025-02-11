@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, TEXT, VARCHAR, TIMESTAMP
+from sqlalchemy import Column, Integer, TEXT, Index, VARCHAR, TIMESTAMP
 
 from .base import Base
 
@@ -70,3 +70,9 @@ class FiveXFiveUser(Base):
     social_connections = Column(VARCHAR(32), nullable=True)
     dpv_code = Column(VARCHAR(2), nullable=True)
     company_alias = Column(VARCHAR(256), nullable=True)
+
+    __table_args__ = (
+        Index('5x5_users_department_idx', 'department'),
+        Index('5x5_users_job_title_idx', 'job_title'),
+        Index('5x5_users_seniority_level_idx', 'seniority_level')
+    )
