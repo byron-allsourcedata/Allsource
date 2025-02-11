@@ -74,11 +74,12 @@ class BigcommerceIntegrationsService:
             "store_v2_default "
             "store_v2_information_read_only "
             "store_v2_orders_read_only "
-            "store_v2_orders_write "  # Добавлено для создания заказов
+            "store_v2_orders_write "
             "store_v2_customers_read "
             "store_v2_customers_write "
             "store_v2_checkouts_read_only "
-            "store_v2_checkouts_write"  # Добавлено для работы с корзиной
+            "store_v2_checkouts_write "
+            "store_v2_checkouts_read_write"  # Для полного доступа к корзинам
         ),
         'state': f'{user.get("id")}:{domain.id}:{is_pixel_install}'
         }
