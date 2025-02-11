@@ -1126,8 +1126,7 @@ const Leads: React.FC = () => {
                                                         </TableCell>
 
                                                         {/* Employess Visited  Column */}
-                                                        <TableCell sx={{...companyStyles.table_array, position: 'relative',  color: row.employees_visited ? 'rgba(80, 82, 178, 1) !important' : '',
-                                                                cursor: row.employees_visited ? 'pointer' : 'default'}}>
+                                                        <TableCell sx={{...companyStyles.table_array, position: 'relative'}}>
                                                             {row.employees_visited || '--'}
                                                         </TableCell>
 
@@ -1158,7 +1157,7 @@ const Leads: React.FC = () => {
                                                             }}
                                                             
                                                             sx={{
-                                                                ...companyStyles.table_array, position: 'relative', cursor: "pointer"}}
+                                                                ...companyStyles.table_array, position: 'relative', cursor: "pointer", color: 'rgba(80, 82, 178, 1) !important'}}
                                                         >
                                                             {row.employee_count || '--'}
                                                         </TableCell>

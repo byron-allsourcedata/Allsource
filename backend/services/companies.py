@@ -154,9 +154,17 @@ class CompanyService:
         industry = self.company_persistence_service.get_unique_primary_industries(domain_id=self.domain.id)
         return industry
     
-    def get_uniq_primary_department(self):
-        department = self.company_persistence_service.get_unique_primary_department()
-        return department
+    def get_uniq_primary__departments(self, company_id):
+        departments = self.company_persistence_service.get_unique_primary__departments(company_id)
+        return departments
+
+    def get_uniq_primary__seniorities(self, company_id):
+        seniorities = self.company_persistence_service.get_unique_primary__seniorities(company_id)
+        return seniorities
+
+    def get_uniq_primary__job_titles(self, company_id):
+        job_titles = self.company_persistence_service.get_unique_primary__job_titles(company_id)
+        return job_titles
     
     def download_companies(self, from_date=None, to_date=None, regions=None, search_query=None, companies_ids=0, timezone_offset=None):
         if companies_ids == 0:

@@ -30,7 +30,8 @@ logger = logging.getLogger(__name__)
 class CompanyPersistence:
     def __init__(self, db: Session):
         self.db = db
-        
+
+
     def get_full_information_companies_by_filters(self, domain_id, from_date, to_date, regions, search_query, timezone_offset):
         first_visit_subquery = (
             self.db.query(
@@ -139,6 +140,7 @@ class CompanyPersistence:
         leads = query.limit(1000).all()
         return leads
     
+
     def get_full_companies_by_ids(self, domain_id, companies_ids):
         first_visit_subquery = (
             self.db.query(
@@ -181,6 +183,7 @@ class CompanyPersistence:
 
         leads = query.all()
         return leads
+
 
     def filter_companies(self, domain_id, page, per_page, from_date, to_date, regions, sort_by, sort_order,
                          search_query, employees_range, employee_visits, revenue_range, industry):
@@ -442,12 +445,14 @@ class CompanyPersistence:
                     FiveXFiveUser.job_title,
                     FiveXFiveLocations.city,
                     States.state_name,
+                    ep.email,
+                    eb.email,
                 )
         )
 
         sort_options = {
-            'personal_email': ep,
-            'business_email': eb,
+            'personal_email': ep.email,
+            'business_email': eb.email,
         }
 
         if sort_by in sort_options:
@@ -459,14 +464,10 @@ class CompanyPersistence:
                 query = query.order_by(asc(sort_column))
             else:
                 query = query.order_by(desc(sort_column))
-        
-        if job_title:
-            filters = []
-            job_titles = job_title.split(' ')
-            for title in job_titles:
-                filters.append(FiveXFiveUser.job_title.ilike(f'{title}%'))
 
-            query = query.filter(or_(*filters))
+        if job_title:
+            job_titles = [unquote(i.strip()) for i in job_title.split(',')]
+            query = query.filter(FiveXFiveUser.job_title.in_(job_titles))
 
         if department:
             departments = [unquote(i.strip()) for i in department.split(',')]
@@ -527,6 +528,7 @@ class CompanyPersistence:
         companies = query.all()
         return companies
 
+
     def search_location(self, start_letter, domain_id):
         query = (
             self.db.query(
@@ -548,16 +550,43 @@ class CompanyPersistence:
         locations = query.all()
         return locations
 
-    def get_unique_primary_department(self):
+
+    def get_unique_primary__departments(self, company_id):
         query = (
             self.db.query(FiveXFiveUser.department)
-                .filter(FiveXFiveUser.department != None)
+                .join(LeadCompany, LeadCompany.id == company_id)
+                .filter(FiveXFiveUser.company_alias == LeadCompany.alias)
                 .distinct()
                 .order_by(FiveXFiveUser.department)
         )
-        departments = [row.department for row in query.all()]
+        departments = [row.department for row in query.all() if row.department is not None]
         return departments
     
+
+    def get_unique_primary__seniorities(self, company_id):
+        query = (
+            self.db.query(FiveXFiveUser.seniority_level)
+                .join(LeadCompany, LeadCompany.id == company_id)
+                .filter(FiveXFiveUser.company_alias == LeadCompany.alias)
+                .distinct()
+                .order_by(FiveXFiveUser.seniority_level)
+        )
+        seniorities = [row.seniority_level for row in query.all() if row.seniority_level is not None]
+        return seniorities
+    
+    
+    def get_unique_primary__job_titles(self, company_id):
+        query = (
+            self.db.query(FiveXFiveUser.job_title)
+                .join(LeadCompany, LeadCompany.id == company_id)
+                .filter(FiveXFiveUser.company_alias == LeadCompany.alias)
+                .distinct()
+                .order_by(FiveXFiveUser.job_title)
+        )
+        job_titles = [row.job_title for row in query.all() if row.job_title is not None]
+        return job_titles
+    
+
     def get_unique_primary_industries(self, domain_id):
         query = (
             self.db.query(LeadCompany.primary_industry)
