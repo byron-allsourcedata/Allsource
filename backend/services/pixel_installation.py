@@ -28,24 +28,27 @@ class PixelInstallationService:
         client_id = domain.data_provider_id
         if client_id is None:
             client_id = hashlib.sha256((str(domain.id) + os.getenv('SECRET_SALT')).encode()).hexdigest()
-            self.db.query(UserDomains).filter(UserDomains.user_id == user.get('id'), UserDomains.domain == domain.domain).update(
+            self.db.query(UserDomains).filter(
+                UserDomains.user_id == user.get('id'), 
+                UserDomains.domain == domain.domain
+            ).update(
                 {UserDomains.data_provider_id: client_id},
                 synchronize_session=False
             )
-            self.db.commit() 
+            self.db.commit()
+
         script = f'''
-                <script id="acegm_pixel_script" type="text/javascript" defer="defer">
-                window.pixelClientId = "{client_id}";
-                var now = new Date();
-                var year = now.getFullYear();
-                var month = String(now.getMonth() + 1).padStart(2, '0');
-                var week = Math.ceil((now.getDate() + 6) / 7);
-                var acegm_pixelScriptUrl = 'https://maximiz-data.s3.us-east-2.amazonaws.com/pixel.js?v=' + year + '-' + month + '-' + week;
-                var acegm_base_pixel_script = document.createElement('script');
-                acegm_base_pixel_script.src = acegm_pixelScriptUrl;
-                document.body.appendChild(acegm_base_pixel_script);
-                </script>
-            '''
+            <script type="text/javascript">
+            (function(s, p, i, c, e) {{
+                s[e] = s[e] || function() {{ (s[e].a = s[e].a || []).push(arguments); }};
+                s[e].l = 1 * new Date();
+                var k = c.createElement("script"), a = c.getElementsByTagName("script")[0];
+                k.async = 1, k.src = p, a.parentNode.insertBefore(k, a);
+                s.pixelClientId = i;
+            }})(window, "https://maximiz-data.s3.us-east-2.amazonaws.com/pixel.js", "{client_id}", document, "script");
+            </script>
+        '''
+
         return script, client_id
 
     def send_pixel_code_in_email(self, email, user, domain):

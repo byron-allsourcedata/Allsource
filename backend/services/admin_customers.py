@@ -32,10 +32,10 @@ class AdminCustomersService:
         self.send_grid_persistence = send_grid_persistence
         self.partners_persistence = partners_persistence
 
-    def get_users(self):
-        users_object = self.user_persistence.get_not_partner_users()
+    def get_users(self, page, per_page):
+        users_dict, total_count = self.user_persistence.get_not_partner_users(page, per_page)
         result = []
-        for user in users_object:
+        for user in users_dict:
 
             payment_status = self.users_auth_service.get_user_authorization_status_without_pixel(user)
             if payment_status == UserAuthorizationStatus.SUCCESS:
@@ -63,7 +63,10 @@ class AdminCustomersService:
                 'payment_status': payment_status,
                 "is_trial": self.plans_persistence.get_trial_status_by_user_id(user.get('id'))
             })
-        return result
+        return {
+            'users': result,
+            'count': total_count
+        }
 
     def get_user_by_email(self, email):
         user_object = self.db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
@@ -74,7 +77,7 @@ class AdminCustomersService:
                     self.subscription_service.create_subscription_from_partners(user_id=user.id)
         else:
             user_subscription = self.subscription_service.get_user_subscription(user_id=user.id)
-            if user_subscription.plan_end.replace(tzinfo=timezone.utc) < get_utc_aware_date() or user_subscription.is_trial:
+            if user_subscription.is_trial or user_subscription.plan_end.replace(tzinfo=timezone.utc) < get_utc_aware_date():
                 self.subscription_service.create_subscription_from_partners(user_id=user.id)
 
     def update_user(self, update_data: UpdateUserRequest):

@@ -43,9 +43,41 @@ async def get_companies(
     )
 
 
+@router.get("/employess")
+async def get_employees(
+        page: int = Query(1, alias="page", ge=1, description="Page number"),
+        per_page: int = Query(15, alias="per_page", ge=1, le=500, description="Items per page"),
+        sort_by: str = Query(None, description="Field"),
+        sort_order: str = Query(None, description="Field to sort by: 'asc' or 'desc'"),
+        search_query: str = Query(None, description="Search for email, first name, lastname and phone number"),
+        company_id: int = Query(None),
+        job_title: str = Query(None),
+        department: str = Query(None),
+        seniority: str = Query(None),
+        regions: str = Query(None, description="Company regions "),
+        company_service: CompanyService = Depends(get_companies_service)
+):
+    return company_service.get_employees(
+        company_id=company_id,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        page=page,
+        per_page=per_page,
+        department=department,
+        job_title=job_title,
+        seniority=seniority,
+        regions=regions,
+        search_query=search_query
+    )
+
+
 @router.get("/industry")
 async def get_industry(company_service: CompanyService = Depends(get_companies_service)):
     return company_service.get_uniq_primary_industry()
+
+@router.get("/department")
+async def get_department(company_service: CompanyService = Depends(get_companies_service)):
+    return company_service.get_uniq_primary_department()
 
 @router.post("/download-company")
 async def download_company(companies_request: CompaniesRequest,

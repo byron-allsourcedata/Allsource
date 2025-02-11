@@ -71,10 +71,47 @@ class CompanyService:
                 'zipcode': company[12],
                 'description': company[13],
                 'city': company[14],
-                'state': company[15],
+                'state': company[15]
             })
 
         return company_list, count, max_page
+    
+
+    def get_employees(self, company_id, page, per_page, sort_by, sort_order,
+                      search_query, job_title, seniority, regions, department):
+        employees, count, max_page = self.company_persistence_service.filter_employees(
+            company_id=company_id,
+            page=page,
+            per_page=per_page,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            department=department,
+            job_title=job_title,
+            seniority=seniority,
+            regions=regions,
+            search_query=search_query,
+        )
+
+        employees_list = []
+        for employee in employees:
+
+            employees_list.append({
+                'id': employee[0],
+                'first_name': employee[1],
+                'last_name': employee[2],
+                'mobile_phone': self.format_phone_number(employee[3]) if employee[3] else None,
+                'linkedin_url': employee[4],
+                'personal_email': employee[5],
+                'business_email': employee[6],
+                'seniority': employee[7],
+                'department': employee[8],
+                'job_title': employee[9],
+                'city': employee[10],
+                'state': employee[11]
+            })
+
+        return employees_list, count, max_page
+    
 
     def search_company(self, start_letter):
         start_letter = start_letter.replace('+', '').strip().lower()
@@ -116,6 +153,10 @@ class CompanyService:
     def get_uniq_primary_industry(self):
         industry = self.company_persistence_service.get_unique_primary_industries(domain_id=self.domain.id)
         return industry
+    
+    def get_uniq_primary_department(self):
+        department = self.company_persistence_service.get_unique_primary_department()
+        return department
     
     def download_companies(self, from_date=None, to_date=None, regions=None, search_query=None, companies_ids=0, timezone_offset=None):
         if companies_ids == 0:

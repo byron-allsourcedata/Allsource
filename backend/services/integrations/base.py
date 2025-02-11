@@ -7,6 +7,7 @@ from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.integrations.suppression import IntegrationsSuppressionPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
+from persistence.domains import UserDomainsPersistence
 from persistence.audience_persistence import AudiencePersistence
 from persistence.integrations.external_apps_installations  import ExternalAppsInstallationsPersistence
 from .attentive import AttentiveIntegrationsService
@@ -27,7 +28,7 @@ class IntegrationService:
                  lead_persistence: LeadsPersistence, audience_persistence: AudiencePersistence, 
                  lead_orders_persistence: LeadOrdersPersistence, user_persistence: UserPersistence,
                  integrations_user_sync_persistence: IntegrationsUserSyncPersistence,
-                 aws_service: AWSService, domain_persistence, suppression_persistence: IntegrationsSuppressionPersistence, epi_persistence: ExternalAppsInstallationsPersistence):
+                 aws_service: AWSService, domain_persistence: UserDomainsPersistence, suppression_persistence: IntegrationsSuppressionPersistence, epi_persistence: ExternalAppsInstallationsPersistence):
         self.db = db
         self.client = httpx.Client()
         self.integration_persistence = integration_persistence
@@ -85,11 +86,11 @@ class IntegrationService:
                                                  self.lead_orders_persistence,
                                                  self.integrations_user_sync_persistence,
                                                  self.client, self.aws_service, self.db)
-        self.bigcommerce = BigcommerceIntegrationsService(self.integration_persistence, 
-                                                          self.lead_persistence, 
-                                                          self.lead_orders_persistence,
-                                                          self.aws_service, self.client,
-                                                          self.eai_persistence
+        self.bigcommerce = BigcommerceIntegrationsService(integrations_persistence=self.integration_persistence, 
+                                                          leads_persistence=self.lead_persistence, 
+                                                          leads_order_persistence=self.lead_orders_persistence,
+                                                          aws_service=self.aws_service, client=self.client,
+                                                          epi_persistence=self.eai_persistence, domain_persistence=self.domain_persistence
                                                           )
         self.klaviyo = KlaviyoIntegrationsService(self.domain_persistence, 
                                                 self.integration_persistence,  

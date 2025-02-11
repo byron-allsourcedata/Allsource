@@ -34,6 +34,8 @@ export const fetchUserData = async () => {
           currency: userPlan.currency,
         }));
 
+        localStorage.setItem('account_info', JSON.stringify({partner: userInfo.is_partner, business_type:userInfo.business_type }))
+
         if (!currentDomain){
           sessionStorage.setItem('current_domain', responseData.user_domains[0].domain)
         }

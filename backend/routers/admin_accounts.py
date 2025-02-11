@@ -34,7 +34,7 @@ def get_accounts(
     page: int = Query(0),
     rows_per_page: int = Query(10),
     order_by: str = Query("id"),
-    order: str = Query("asc"),
+    order: str = Query("desk"),
     get_accounts_service: AccountsService = Depends(get_accounts_service)):
     
     accounts = get_accounts_service.get_admin_accounts(search, start_date, end_date, page, rows_per_page, order_by, order)
