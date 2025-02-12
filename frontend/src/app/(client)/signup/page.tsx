@@ -230,6 +230,9 @@ const Signup: React.FC = () => {
             case "PASSWORD_NOT_VALID":
               showErrorToast('Password not valid');
               break;
+            case "INCORRECT_FULL_NAME":
+              showErrorToast('Full name not valid');
+              break;
             case "NEED_CONFIRM_EMAIL":
               get_me()
               navigateTo('/email-verificate');
