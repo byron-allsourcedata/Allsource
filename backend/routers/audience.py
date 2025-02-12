@@ -10,8 +10,9 @@ from services.leads import LeadsService
 router = APIRouter()
 
 @router.get("/list")
-async def get_user_audience_list(audience_service: AudienceService = Depends(get_audience_service)):
-    return audience_service.get_user_audience_list()
+async def get_user_audience_list(domain=Depends(check_domain),
+                                 audience_service: AudienceService = Depends(get_audience_service)):
+    return audience_service.get_user_audience_list(domain.id)
 
 
 @router.post("")

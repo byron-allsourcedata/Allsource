@@ -5,10 +5,9 @@ import requests
 
 STORE_HASH = "23k6mb4fr5"
 ACCESS_TOKEN = "rsv2hj5p5cei9q6pie4epwnmhmj4ixo"
-
 api = BigcommerceApi(
     store_hash=STORE_HASH,
-    client_id=os.getenv('BIGCOMMERCE_CLIENT_ID'),
+    client_id='1m5fy4aqtify7q58hout6rsqwnibyy8',
     access_token=ACCESS_TOKEN
 )
 
@@ -73,7 +72,7 @@ for order in orders:
     if order["custom_status"] in ('Pending', 'Awaiting Payment', 'Declined', 'Cancelled', 'Refunded', 'Incomplete', 
                                   'Awaiting Fulfillment', 'Disputed', 'Partially Refunded'):
         continue
-    
+    print(order)
     consignments_url = order["consignments"]["url"]
     try:
         response = requests.get(
@@ -85,6 +84,8 @@ for order in orders:
         )
         response.raise_for_status()
         consignments_data = response.json()
+        print('------')
+        print(consignments_data)
     except Exception as e:
         print(f"Error fetching consignments data for order {order['id']}: {e}")
         continue
@@ -105,6 +106,9 @@ for order in orders:
                 )
                 item_response.raise_for_status()
                 item_data = item_response.json()
+                print('--------')
+                print(item_data)
+                exit()
             except Exception as e:
                 print(f"Error fetching item data for URL {item_url}: {e}")
                 continue

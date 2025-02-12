@@ -1,6 +1,8 @@
 import logging
 
 from enums import AudienceInfoEnum
+from typing import List
+from schemas.audience import AudienceResponse
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from persistence.audience_persistence import AudiencePersistence
 
@@ -12,8 +14,8 @@ class AudienceService:
         self.audience_persistence_service = audience_persistence_service
         self.AUDIENCE_SYNC = 'audience_sync'
 
-    def get_user_audience_list(self):
-        return self.audience_persistence_service.get_user_audience_list(self.user.get('id'))
+    def get_user_audience_list(self, domain_id) -> List[AudienceResponse]:
+        return self.audience_persistence_service.get_user_audience_list(domain_id)
 
     async def create_audience(self, domain_id: int, data_source: str, audience_type: str, audience_threshold: int):
         audience = self.audience_persistence_service.create_domain_audience(domain_id, data_source, audience_type, audience_threshold)

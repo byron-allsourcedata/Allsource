@@ -15,28 +15,8 @@ class AudiencePersistence:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_user_audience_list(self, user_id):
-        audience_counts = (
-            self.db.query(
-                Audience.id,
-                Audience.name,
-                func.count(AudienceLeads.id).label('leads_count')
-            )
-            .outerjoin(AudienceLeads, AudienceLeads.audience_id == Audience.id)
-            .filter(Audience.user_id == user_id)
-            .group_by(Audience.id)
-            .all()
-        )
-        audience_list = [
-            {
-                'audience_id': audience.id,
-                'audience_name': audience.name,
-                'leads_count': audience.leads_count
-            }
-            for audience in audience_counts
-        ]
-
-        return audience_list
+    def get_user_audience_list(self, domain_id):
+        return self.db.query(Audience.id).filter(Audience.domain_id == domain_id).order_by(desc(Audience.id)).all()
 
     def create_domain_audience(self, domain_id, data_source, audience_type, audience_threshold):
         audience = Audience(domain_id=domain_id, data_source=data_source, audience_type=audience_type, audience_threshold=audience_threshold)

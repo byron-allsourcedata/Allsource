@@ -49,6 +49,23 @@ def filter_recent_customer(last_purchase_date):
     current_date = get_utc_aware_date
     return (current_date - last_purchase_date).days <= RECENT_PURCHASE_DAYS
 
+def filter_high_intent_visitor(pages_visited, avg_time_on_site, product_page_time):
+    if pages_visited > 3 and avg_time_on_site > 60:
+        return True
+    if product_page_time > 60:
+        return True
+    return False
+
+def filter_returning_visitor(first_visit_date, last_visit_date):
+    if (last_visit_date - first_visit_date).days <= 30:
+        return True
+    return False
+
+def filter_abandoned_cart_visitor(cart_items, checkout_status, last_cart_update):
+    if cart_items > 0 and checkout_status != 'Completed' and (get_utc_aware_date - last_cart_update).days <= 1:
+        return True
+    return False
+
 def filter_high_aov_customer(total_spend, purchase_count):
     average_order_value = total_spend / purchase_count if purchase_count else 0
     return average_order_value >= HIGH_AOV_THRESHOLD
@@ -82,7 +99,8 @@ def bigcommerce_process(store_hash, access_token, audience_type, audience_thresh
         
         total_spend = 0
         purchase_count = 0
-        last_purchase_date = None
+        first_visit_date = None
+        last_visit_date = None
         categories_purchased = {}
         customer_similarity_score = 5
         if order["custom_status"] in ('Pending', 'Awaiting Payment', 'Declined', 'Cancelled', 'Refunded', 'Incomplete', 
@@ -140,7 +158,9 @@ def bigcommerce_process(store_hash, access_token, audience_type, audience_thresh
             if order_date_str:
                 try:
                     order_date = datetime.strptime(order_date_str, '%a, %d %b %Y %H:%M:%S +0000')
-                    last_purchase_date = max(last_purchase_date or order_date, order_date)
+                    if not first_visit_date:
+                        first_visit_date = order_date
+                    last_visit_date = max(last_visit_date or order_date, order_date)
                 except ValueError as e:
                     logging.error(f"Error parsing date for order {order['id']}: {e}")
                     
@@ -150,9 +170,16 @@ def bigcommerce_process(store_hash, access_token, audience_type, audience_thresh
            continue
         if audience_type == 'Frequent customer' and not filter_frequent_customer(purchase_count):
             continue
-        if audience_type == 'Recent customer' and not filter_recent_customer(last_purchase_date):
+        if audience_type == 'Recent customer' and not filter_recent_customer(last_visit_date):
             continue
         if audience_type == 'High AOV customer' and not filter_high_aov_customer(total_spend, purchase_count):
+            continue
+        
+        if audience_type == 'High Intent Visitor' and not filter_high_intent_visitor(pages_visited, avg_time_on_site, product_page_time):
+            continue
+        if audience_type == 'Returning Visitor' and not filter_returning_visitor(first_visit_date, last_visit_date):
+            continue
+        if audience_type == 'Abandoned Cart Visitor' and not filter_abandoned_cart_visitor(cart_items, checkout_status, last_cart_update):
             continue
         
         if not filter_lookalike_size(customer_similarity_score, audience_threshold):
@@ -163,8 +190,9 @@ def bigcommerce_process(store_hash, access_token, audience_type, audience_thresh
             "total_spend": total_spend,
             "purchase_count": purchase_count,
             "categories_purchased": categories_purchased,
-            "last_purchase_date": last_purchase_date
+            "last_purchase_date": last_visit_date
         })
+        
     return product_customer_details
     
 async def audience_process(message: IncomingMessage, session: Session):
