@@ -79,6 +79,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     const [departments, setDepartments] = React.useState<string[]>([]);
     const [seniorities, setSeniorities] = React.useState<string[]>([]);
     const [jobTitles, setJobTitles] = React.useState<string[]>([]);
+    const [employeeId, setEmployeeId] = useState(0)
 
 
     const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, industry: string) => {
@@ -99,11 +100,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
             document.body.style.overflow = 'auto';
         };
     }, []);
-
-    const handleOpenPopup = (row: any) => {
-        setPopupData(row);
-        setOpenPopup(true);
-    };
 
     const handleClosePopup = () => {
         setOpenPopup(false);
@@ -833,7 +829,8 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
 
                                                                 }} onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    handleOpenPopup(row);
+                                                                    setOpenPopup(true);
+                                                                    setEmployeeId(row.id)
 
                                                                 }}>
                                                                 {(row.first_name || row.last_name)
@@ -906,10 +903,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                             </TableCell>
 
                                                         </TableRow>
-                                                        <PopupDetails open={openPopup}
-                                                            onClose={handleClosePopup}
-                                                            companyId={companyId}
-                                                            employeeId={row.id} />
                                                     </>
                                                 ))}
                                             </TableBody>
@@ -980,6 +973,10 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                         jobTitles={jobTitles || []} 
                         seniorities={seniorities || []} 
                         departments={departments || []} />
+                    <PopupDetails open={openPopup}
+                        onClose={handleClosePopup}
+                        companyId={companyId}
+                        employeeId={employeeId} />
                 </Box>
             </Box>
         </>

@@ -84,18 +84,6 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
   const [openSelectDepartment, setOpenSelectDepartment] = useState(false);
   const [openSelectJobTitle, setOpenSelectJobTitle] = useState(false);
   const [openSelectSeniority, setOpenSelectSeniority] = useState(false);
-  // const [open_save, setOpen] = useState(false);
-  // const [openLoadDrawer, setOpenLoadDrawer] = useState(false);
-  // const [filterName, setFilterName] = useState("");
-  // const [isButtonDisabled, setIsButtonDisabled] = useState(true);
-
-  // type SavedFilter = {
-  //   name: string;
-  //   data: ReturnType<typeof handleFilters>; // Use the return type of handleFilters directly
-  // };
-
-  // const handleOpen = () => setOpen(true);
-  // const handleClose = () => setOpen(false);
 
   const handleAddTag = (e: { key: string }) => {
     if (e.key === "Enter" && region.trim()) {
