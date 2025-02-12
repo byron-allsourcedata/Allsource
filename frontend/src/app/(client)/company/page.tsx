@@ -726,7 +726,10 @@ const Leads: React.FC = () => {
             {loading && (
                 <CustomizedProgressBar/>
             )}
-            {companyEmployeesOpen && <CompanyEmployees companyId={companyId} companyName={companyName} onBack={() => setCompanyEmployeesOpen(false)}/>}
+            {companyEmployeesOpen && <CompanyEmployees companyId={companyId} companyName={companyName} onBack={() => {
+                setCompanyEmployeesOpen(false)
+                sessionStorage.removeItem('filters-employee')
+            }}/>}
             {!companyEmployeesOpen && 
             <Box sx={{
                 display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
