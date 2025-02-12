@@ -166,6 +166,52 @@ class CompanyService:
         job_titles = self.company_persistence_service.get_unique_primary__job_titles(company_id)
         return job_titles
     
+
+    def download_employees(self, from_date=None, to_date=None, regions=None, search_query=None, companies_ids=0, timezone_offset=None):
+        if companies_ids == 0:
+            leads = self.company_persistence_service.get_full_information_companies_by_filters(domain_id=self.domain.id,
+                                                                                from_date=from_date,
+                                                                                to_date=to_date,
+                                                                                regions=regions,
+                                                                                search_query=search_query,
+                                                                                timezone_offset=timezone_offset
+                                                                                )
+        else:
+            leads = self.company_persistence_service.get_full_companies_by_ids(self.domain.id, companies_ids)
+        if len(leads) == 0:
+            return None
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow([
+            'Company name', 'Company phone', 'Company LinkedIn URL', 'Number of employees', 
+            'First visit date', 'Company revenue', 'Company employee count', 'Company address', 
+            'Primary industry', 'Company domain', 'Company zip', 'Company description', 
+            'City', 'State', 'Last company update'
+        ])
+        for lead in leads:
+            relevant_data = [
+                lead.name or 'None',
+                format_phone_number(lead.phone) or 'None',
+                lead.linkedin_url or 'None',
+                lead.number_of_employees or 'None',
+                lead.visited_date or 'None',
+                lead.revenue or 'None',
+                lead.employee_count or 'None',
+                lead.address or 'None',
+                lead.primary_industry or 'None',
+                lead.domain or 'None',
+                lead.zip or 'None',
+                lead.description or 'None',
+                lead.city or 'None',
+                lead.state_name or 'None',
+                lead.last_updated or 'None',
+            ]
+            writer.writerow(relevant_data)
+
+        output.seek(0)
+        return output
+    
+    
     def download_companies(self, from_date=None, to_date=None, regions=None, search_query=None, companies_ids=0, timezone_offset=None):
         if companies_ids == 0:
             leads = self.company_persistence_service.get_full_information_companies_by_filters(domain_id=self.domain.id,

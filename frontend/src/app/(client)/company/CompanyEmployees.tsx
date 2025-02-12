@@ -16,10 +16,8 @@ import FilterPopup from './CompanyEmployeesFilters';
 import AudiencePopup from '@/components/AudienceSlider';
 import SouthOutlinedIcon from '@mui/icons-material/SouthOutlined';
 import NorthOutlinedIcon from '@mui/icons-material/NorthOutlined';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import dayjs from 'dayjs';
-import PopupDetails from './CompanyDetails';
+import PopupDetails from './EmployeeDetails';
 import CloseIcon from '@mui/icons-material/Close';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import Tooltip from '@mui/material/Tooltip';
@@ -77,20 +75,20 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
     const [openDrawer, setOpenDrawer] = React.useState(false);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-    const [selectedIndustry, setSelectedIndustry] = React.useState<string | null>(null);
+    const [selectedJobTitle, setSelectedJobTitle] = React.useState<string | null>(null);
     const [departments, setDepartments] = React.useState<string[]>([]);
     const [seniorities, setSeniorities] = React.useState<string[]>([]);
     const [jobTitles, setJobTitles] = React.useState<string[]>([]);
 
 
     const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, industry: string) => {
-        setSelectedIndustry(industry);
+        setSelectedJobTitle(industry);
         setAnchorEl(event.currentTarget);
     };
 
     const handleClosePopover = () => {
         setAnchorEl(null);
-        setSelectedIndustry(null);
+        setSelectedJobTitle(null);
     };
 
     const isOpen = Boolean(anchorEl);
@@ -934,7 +932,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                         </TableCell>
 
                                                         {/* Job Title Column */}
-                                                        <TableCell sx={{...companyStyles.table_array, position: 'relative'}}>
+                                                        <TableCell sx={{...companyStyles.table_array, position: 'relative', cursor: row.job_title ? "pointer" : "default"}} onClick={(e) => row.job_title ? handleOpenPopover(e, row.job_title || "--") : ''}>
                                                             {row.job_title ? truncateText(row.job_title, 20) : '--'}
                                                         </TableCell>
 
@@ -1006,7 +1004,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                         }}
                     >
                         <Box sx={{ maxHeight: "92px", overflowY: "auto", backgroundColor: 'rgba(255, 255, 255, 1)' }}>
-                            {selectedIndustry?.split(",").map((part, index) => (
+                            {selectedJobTitle?.split(",").map((part, index) => (
                                 <Typography
                                     key={index}
                                     variant="body2"
@@ -1016,7 +1014,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                         backgroundColor: 'rgba(243, 243, 243, 1)',
                                         borderRadius: '4px',
                                         color: 'rgba(95, 99, 104, 1) !important',
-                                        marginBottom: index < selectedIndustry.split(",").length - 1 ? "4px" : 0, // Отступы между строками
+                                        marginBottom: index < selectedJobTitle.split(",").length - 1 ? "4px" : 0, // Отступы между строками
                                     }}
                                 >
                                     {part.trim()}

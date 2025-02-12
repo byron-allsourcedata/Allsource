@@ -184,6 +184,73 @@ class CompanyPersistence:
         return leads
 
 
+    def get_full_information_employees(self, company_id, employee_id):
+        FiveXFiveNamesFirst = aliased(FiveXFiveNames)
+        FiveXFiveNamesLast = aliased(FiveXFiveNames)
+        uep = aliased(FiveXFiveUsersEmails)
+        ueb = aliased(FiveXFiveUsersEmails)
+        ep = aliased(FiveXFiveEmails)
+        eb = aliased(FiveXFiveEmails)
+
+
+        query = (
+            self.db.query(
+                FiveXFiveUser.id,
+                FiveXFiveNamesFirst.name,
+                FiveXFiveNamesLast.name,
+                FiveXFiveUser.mobile_phone,
+                FiveXFiveUser.linkedin_url,
+                ep.email,
+                eb.email,
+                FiveXFiveUser.seniority_level,
+                FiveXFiveUser.department,
+                FiveXFiveUser.job_title,
+                FiveXFiveLocations.city,
+                States.state_name,
+                FiveXFiveUser.company_name,
+                FiveXFiveUser.company_city,
+                FiveXFiveUser.company_phone,
+                FiveXFiveUser.company_description,
+                FiveXFiveUser.company_address,
+                FiveXFiveUser.company_zip,
+                FiveXFiveUser.company_linkedin_url,
+                FiveXFiveUser.business_email_last_seen,
+                FiveXFiveUser.personal_emails_last_seen,
+                FiveXFiveUser.personal_zip,
+                FiveXFiveUser.company_last_updated,
+            )
+                .select_from(LeadCompany)
+                .join(FiveXFiveUser, FiveXFiveUser.company_alias == LeadCompany.alias)    
+                .join(FiveXFiveUsersLocations, FiveXFiveUsersLocations.five_x_five_user_id == FiveXFiveUser.id)
+                .join(FiveXFiveLocations, FiveXFiveLocations.id == FiveXFiveUsersLocations.location_id)
+                .join(States, States.id == FiveXFiveLocations.state_id)
+                .join(FiveXFiveNamesFirst, FiveXFiveNamesFirst.id == FiveXFiveUser.first_name_id)
+                .join(FiveXFiveNamesLast, FiveXFiveNamesLast.id == FiveXFiveUser.last_name_id)
+                .outerjoin(uep, (uep.user_id == FiveXFiveUser.id) & (uep.type == "personal"))
+                .outerjoin(ueb, (ueb.user_id == FiveXFiveUser.id) & (ueb.type == "business"))
+                .outerjoin(ep, uep.email_id == ep.id)
+                .outerjoin(eb, ueb.email_id == eb.id)
+                .filter(LeadCompany.id  == company_id)
+                .group_by(
+                    FiveXFiveUser.id,
+                    FiveXFiveNamesFirst.name,
+                    FiveXFiveNamesLast.name,
+                    FiveXFiveUser.mobile_phone,
+                    FiveXFiveUser.linkedin_url,
+                    FiveXFiveUser.seniority_level,
+                    FiveXFiveUser.department,
+                    FiveXFiveUser.job_title,
+                    FiveXFiveLocations.city,
+                    States.state_name,
+                    ep.email,
+                    eb.email,
+                )
+        )
+
+        employees = query.all()
+        return employees
+
+
     def filter_companies(self, domain_id, page, per_page, from_date, to_date, regions, sort_by, sort_order,
                          search_query, employees_range, employee_visits, revenue_range, industry):
         FirstLeadUser = aliased(LeadUser)
@@ -405,8 +472,8 @@ class CompanyPersistence:
                 FiveXFiveNamesLast.name,
                 FiveXFiveUser.mobile_phone,
                 FiveXFiveUser.linkedin_url,
-                FiveXFiveUser.personal_emails,
-                FiveXFiveUser.business_email,
+                ep.email,
+                eb.email,
                 FiveXFiveUser.seniority_level,
                 FiveXFiveUser.department,
                 FiveXFiveUser.job_title,
@@ -429,10 +496,7 @@ class CompanyPersistence:
                     FiveXFiveUser.id,
                     FiveXFiveNamesFirst.name,
                     FiveXFiveNamesLast.name,
-                    FiveXFiveUser.mobile_phone,
                     FiveXFiveUser.linkedin_url,
-                    FiveXFiveUser.personal_emails,
-                    FiveXFiveUser.business_email,
                     FiveXFiveUser.seniority_level,
                     FiveXFiveUser.department,
                     FiveXFiveUser.job_title,
@@ -489,9 +553,8 @@ class CompanyPersistence:
                 FiveXFiveUser.business_email.ilike(f'{search_query}%'),
                 FiveXFiveUser.personal_emails.ilike(f'{search_query}%'),
                 FiveXFiveUser.linkedin_url.ilike(f'{search_query}%'),
-                FiveXFiveUser.mobile_phone.ilike(f"{search_query.replace('+', '')}%"),
+                FiveXFiveUser.mobile_phone.ilike(f"{search_query}%"),
             ]
-
             query = query.filter(or_(*filters))
 
         offset = (page - 1) * per_page
