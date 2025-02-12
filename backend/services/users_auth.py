@@ -145,7 +145,7 @@ class UsersAuth:
             source_platform = SourcePlatformEnum.AWIN.value
         
         user_object = Users(
-            email=user_form.get('email'),
+            email=user_form.get('email').lower(),
             is_email_confirmed=user_form.get('is_email_confirmed', False),
             password=user_form.get('password'),
             is_company_details_filled=False,
@@ -458,6 +458,13 @@ class UsersAuth:
             return {
                 'is_success': True,
                 'status': SignUpStatus.PASSWORD_NOT_VALID
+            }
+        user_form.full_name = user_form.full_name.strip()
+        if not user_form.full_name:
+            logger.debug("Invalid full name provided.")
+            return {
+                'is_success': True,
+                'status': SignUpStatus.INCORRECT_FULL_NAME
             }
         user_form.password = get_password_hash(user_form.password.strip())
         
