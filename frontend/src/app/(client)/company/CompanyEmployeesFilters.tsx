@@ -215,11 +215,11 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
     seniority: typeof checkedFiltersSeniority,
     searchQuery: string; dateRange?: { fromDate: number | null; toDate: number | null; } | undefined;
   }) => {
-    sessionStorage.setItem('filters', JSON.stringify(filters));
+    sessionStorage.setItem('filters-employee', JSON.stringify(filters));
   };
 
   const loadFiltersFromSessionStorage = () => {
-    const savedFilters = sessionStorage.getItem('filters');
+    const savedFilters = sessionStorage.getItem('filters-employee');
     if (savedFilters) {
       return JSON.parse(savedFilters);
     }
@@ -299,6 +299,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
   const handleClearFilters = () => {
     setIsDepartmentOpen(false)
     setIsSeniorityOpen(false)
+    setIsJobTitleOpen(false)
     setCheckedFiltersDepartment({})
     setCheckedFiltersSeniority({})
     setCheckedFiltersJobTitles({})
@@ -312,7 +313,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
     setTags([]);
     setSearchQuery("");
 
-    sessionStorage.removeItem('filters')
+    sessionStorage.removeItem('filters-employee')
   };
 
   const fetchCities = debounce(async (searchValue: string) => {
@@ -466,13 +467,16 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                 }}
                 sx={{
                     padding: "1em 1em 0em 1em",
+                    '& input': {
+                      paddingLeft: 0,
+                    },
                     '& .MuiInputBase-input::placeholder': {
-                    fontFamily: 'Roboto',
-                    fontSize: '0.875rem',
-                    fontWeight: 400,
-                    lineHeight: '19.6px',
-                    textAlign: 'left',
-                    color: 'rgba(112, 112, 113, 1)',
+                      fontFamily: 'Roboto',
+                      fontSize: '0.875rem',
+                      fontWeight: 400,
+                      lineHeight: '19.6px',
+                      textAlign: 'left',
+                      color: 'rgba(112, 112, 113, 1)',
                     },
                 }}
                 />

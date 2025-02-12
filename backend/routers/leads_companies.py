@@ -73,21 +73,36 @@ async def get_employees(
     )
 
 
+@router.get("/employees/{employee_id}")
+async def get_employees_by_id(
+    employee_id: int,
+    company_id: int = Query(None),
+    company_service: CompanyService = Depends(get_companies_service)):
+    
+    return company_service.get_full_information_employee(
+        company_id=company_id, employee_id=employee_id
+    )
+
+
 @router.get("/industry")
 async def get_industry(company_service: CompanyService = Depends(get_companies_service)):
     return company_service.get_uniq_primary_industry()
+
 
 @router.get("/{company_id}/departments")
 async def get_department(company_id: int, company_service: CompanyService = Depends(get_companies_service)):
     return company_service.get_uniq_primary__departments(company_id)
 
+
 @router.get("/{company_id}/seniorities")
 async def get_seniority(company_id: int, company_service: CompanyService = Depends(get_companies_service)):
     return company_service.get_uniq_primary__seniorities(company_id)
 
+
 @router.get("/{company_id}/job-titles")
 async def get_seniority(company_id: int, company_service: CompanyService = Depends(get_companies_service)):
     return company_service.get_uniq_primary__job_titles(company_id)
+
 
 @router.post("/download-company")
 async def download_company(companies_request: CompaniesRequest,
@@ -97,6 +112,7 @@ async def download_company(companies_request: CompaniesRequest,
         return StreamingResponse(result, media_type="text/csv",
                                  headers={"Content-Disposition": "attachment; filename=data.csv"})
     return BaseEnum.FAILURE
+
 
 @router.get("/download-companies")
 async def download_companies(
@@ -124,8 +140,3 @@ async def search_location(start_letter: str = Query(..., min_length=3),
 async def search_contact(start_letter: str = Query(..., min_length=3),
                          company_service: CompanyService = Depends(get_companies_service)):
     return company_service.search_company(start_letter)
-
-
-
-
-
