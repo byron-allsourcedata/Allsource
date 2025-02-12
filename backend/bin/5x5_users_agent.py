@@ -358,6 +358,7 @@ async def on_message_received(message, session):
         await message.ack()
 
     except Exception as e:
+        logging.error(f"Database transaction failed: {e}", exc_info=True)
         logging.error("excepted message. error", exc_info=True)
         session.rollback()
         await asyncio.sleep(5)
