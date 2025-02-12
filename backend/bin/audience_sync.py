@@ -6,7 +6,7 @@ import functools
 import json
 from datetime import datetime
 from typing import Dict, List, Optional
-
+from collections import defaultdict
 import aiohttp
 import requests
 from aio_pika import IncomingMessage
@@ -114,7 +114,13 @@ async def bigcommerce_process(store_hash: str, access_token: str, audience_type:
     )
     
     orders = api.Orders.all(limit=250)
-    product_customer_details = []
+    customer_orders = defaultdict(lambda: {
+        "customer": None,
+        "total_spend": 0,
+        "purchase_count": 0,
+        "categories_purchased": defaultdict(int),
+        "last_visit_date": None
+    })
     
     for order in orders:
         customer_id = order.get("customer_id")
@@ -143,9 +149,9 @@ async def bigcommerce_process(store_hash: str, access_token: str, audience_type:
         last_cart_update = None  # Пример: время последнего обновления корзины
         customer_similarity_score = 5
         
-        # if order["custom_status"] in ('Pending', 'Awaiting Payment', 'Declined', 'Cancelled', 'Refunded', 'Incomplete', 
-        #                             'Awaiting Fulfillment', 'Disputed', 'Partially Refunded'):
-        #     continue
+        if order["custom_status"] in ('Pending', 'Awaiting Payment', 'Declined', 'Cancelled', 'Refunded', 'Incomplete', 
+                                    'Awaiting Fulfillment', 'Disputed', 'Partially Refunded'):
+            continue
         
         consignments_url = order["consignments"]["url"]
         consignments_data = await fetch_consignments_data(consignments_url, access_token)
@@ -206,18 +212,34 @@ async def bigcommerce_process(store_hash: str, access_token: str, audience_type:
         if audience_type == 'Abandoned Cart Visitor' and not filter_abandoned_cart_visitor(cart_items, checkout_status, last_cart_update):
             continue
         
-        if not filter_lookalike_size(customer_similarity_score, audience_threshold):
-            continue
+        # if not filter_lookalike_size(customer_similarity_score, audience_threshold):
+        #     continue
         
-        product_customer_details.append({
-            "customer": customer_info,
-            "total_spend": total_spend,
-            "purchase_count": purchase_count,
-            "categories_purchased": categories_purchased,
-            "last_purchase_date": last_visit_date
-        })
+        customer_data = customer_orders[customer_id]
+        customer_data["total_spend"] += total_spend
+        customer_data["purchase_count"] += purchase_count
+        customer_data["last_visit_date"] = max(customer_data["last_purchase_date"] or last_visit_date, last_visit_date)
+
+        for category, count in categories_purchased.items():
+            customer_data["categories_purchased"][category] += count
+
+        if not customer_data["customer"]:
+            customer_data["customer"] = {
+                'first_name': customer_info['first_name'],
+                'last_name': customer_info['last_name'],
+                'email': customer_info['email'],
+                'phone': customer_info['phone'],
+                'date_created': customer_info['date_created'],
+                'date_modified': customer_info['date_modified'],
+                'store_credit': customer_info['store_credit'],
+                'registration_ip_address': customer_info['registration_ip_address'],
+                'customer_group_id': customer_info['customer_group_id'],
+                'tax_exempt_category': customer_info['tax_exempt_category'],
+                'reset_pass_on_login': customer_info['reset_pass_on_login'],
+                'accepts_marketing': customer_info['accepts_marketing'],
+            }
         
-    return product_customer_details
+    return list(customer_orders.values())
     
 async def audience_process(message: IncomingMessage, session: Session):
     try:       

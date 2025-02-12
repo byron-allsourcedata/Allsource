@@ -57,7 +57,13 @@ def filter_lookalike_size(customer_similarity_score, lookalike_size):
     return min_percentage <= customer_similarity_score <= max_percentage
 
 orders = api.Orders.all(limit=50)
-product_customer_details = []
+customer_orders = defaultdict(lambda: {
+    "customer": None,
+    "total_spend": 0,
+    "purchase_count": 0,
+    "categories_purchased": defaultdict(int),
+    "last_purchase_date": None
+})
 for order in orders:
     
     customer_id = order["customer_id"]
@@ -142,13 +148,30 @@ for order in orders:
                 last_purchase_date = max(last_purchase_date or order_date, order_date)
             except ValueError as e:
                 print(f"Error parsing date for order {order['id']}: {e}")
-    
-    product_customer_details.append({
-        "customer": customer_info,
-        "total_spend": total_spend,
-        "purchase_count": purchase_count,
-        "categories_purchased": categories_purchased,
-        "last_purchase_date": last_purchase_date
-    })
+                
+    customer_data = customer_orders[customer_id]
+    customer_data["total_spend"] += total_spend
+    customer_data["purchase_count"] += purchase_count
+    customer_data["last_purchase_date"] = max(customer_data["last_purchase_date"] or last_purchase_date, last_purchase_date)
 
-print(product_customer_details)
+    for category, count in categories_purchased.items():
+        customer_data["categories_purchased"][category] += count
+
+    if not customer_data["customer"]:
+        customer_data["customer"] = {
+            'first_name': customer_info['first_name'],
+            'last_name': customer_info['last_name'],
+            'email': customer_info['email'],
+            'phone': customer_info['phone'],
+            'date_created': customer_info['date_created'],
+            'date_modified': customer_info['date_modified'],
+            'store_credit': customer_info['store_credit'],
+            'registration_ip_address': customer_info['registration_ip_address'],
+            'customer_group_id': customer_info['customer_group_id'],
+            'tax_exempt_category': customer_info['tax_exempt_category'],
+            'reset_pass_on_login': customer_info['reset_pass_on_login'],
+            'accepts_marketing': customer_info['accepts_marketing'],
+        }
+
+final_customers = list(customer_orders.values())
+print(final_customers)
