@@ -112,6 +112,11 @@ async def main():
         await asyncio.Future()
     except Exception as err:
         logging.error('Unhandled Exception:', exc_info=True)
+    finally:
+        if rabbitmq_connection:
+            logging.info("Closing RabbitMQ connection...")
+            await rabbitmq_connection.close()
+        await asyncio.sleep(10)
 
 
 if __name__ == "__main__":
