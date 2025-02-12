@@ -66,7 +66,7 @@ async def get_credential_service(platform: str,
 @router.post('/', status_code=200)
 async def create_integration(credentials: IntegrationCredentials, service_name: str = Query(...),
                              integration_service: IntegrationService = Depends(get_integration_service),
-                             user=Depends(check_user_authorization_without_pixel), domain=Depends(check_domain)):
+                             user=Depends(check_user_authentication), domain=Depends(check_domain)):
     if user.get('team_member'):
         team_member = user.get('team_member')
         if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value,
@@ -103,9 +103,9 @@ async def connect_integration(credentials: IntegrationCredentials, service_name:
 
 @router.delete('/')
 async def delete_integration(service_name: str = Query(...),
-                             user=Depends(check_user_authorization),
+                             user=Depends(check_user_authentication),
                              integration_service: IntegrationService = Depends(get_integration_service),
-                             domain=Depends(check_pixel_install_domain)):
+                             domain=Depends(check_domain)):
     if user.get('team_member'):
         team_member = user.get('team_member')
         if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value,

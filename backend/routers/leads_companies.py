@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from starlette.responses import StreamingResponse
 
-from dependencies import get_companies_service
+from dependencies import get_companies_service, check_user_authorization
 from enums import BaseEnum
 from schemas.companies import CompaniesRequest
 from services.companies import CompanyService
@@ -11,6 +11,7 @@ router = APIRouter()
 
 @router.get("")
 async def get_companies(
+        user=Depends(check_user_authorization),
         page: int = Query(1, alias="page", ge=1, description="Page number"),
         per_page: int = Query(15, alias="per_page", ge=1, le=500, description="Items per page"),
         from_date: int = Query(None, description="Start date in integer format"),
@@ -55,6 +56,7 @@ async def get_employees(
         department: str = Query(None),
         seniority: str = Query(None),
         regions: str = Query(None, description="Company regions "),
+        user=Depends(check_user_authorization),
         company_service: CompanyService = Depends(get_companies_service)
 ):
     return company_service.get_employees(

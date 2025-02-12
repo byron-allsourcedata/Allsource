@@ -99,6 +99,9 @@ async def fetch_users_by_domain(db_session, company_domains, job_titles, mail_do
                 if email:
                     results.append({
                         "domain": domain,
+                        "personal city": user.personal_city,
+                        "personal state": user.personal_state,
+                        "gender": user.gender,
                         "job title": user.job_title,
                         "first name": user.first_name,
                         "last name": user.last_name,
@@ -107,7 +110,6 @@ async def fetch_users_by_domain(db_session, company_domains, job_titles, mail_do
                         "linkedin URL": user.linkedin_url
                     })
         count += 1
-    print(results)
     if results:
         output_file = f"tmp/output_users_{output_files_counter}.csv"
         df = pd.DataFrame(results)

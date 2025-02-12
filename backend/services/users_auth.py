@@ -291,8 +291,14 @@ class UsersAuth:
             self.user_persistence_service.set_partner_role(user_object.id)
             self.subscription_service.create_subscription_from_partners(user_id=user_object.id, ftd=ftd)
             self.partners_service.setUser(user_object.email, user_object.id, "signup", datetime.datetime.now())
-        else:
-            self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)
+        
+        conditions = [
+                auth_google_data.spi is None,
+                teams_token is None,
+                referral_token is None,
+            ]
+        if all(conditions):
+            self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)    
             
         if not user_object.is_with_card:
             return {
@@ -570,8 +576,13 @@ class UsersAuth:
             self.subscription_service.create_subscription_from_partners(user_id=user_object.id)
             self.partners_service.setUser(user_object.email, user_object.id, "signup", datetime.now())
        
-        if not user_form.spi:
-            self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)
+        conditions = [
+                user_form.spi is None,
+                teams_token is None,
+                referral_token is None,
+            ]
+        if all(conditions):
+            self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)    
         
         conditions = [
             is_with_card is False,

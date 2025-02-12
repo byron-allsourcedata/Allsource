@@ -50,8 +50,11 @@ async def verify_token(admin_customers_service: AdminCustomersService = Depends(
 
 
 @router.get('/users')
-async def get_users(admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service)):
-    users = admin_customers_service.get_users()
+async def get_users(
+        page: int = Query(1, alias="page", ge=1, description="Page number"),
+        per_page: int = Query(9, alias="per_page", ge=1, le=500, description="Items per page"),
+        admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service)):
+    users = admin_customers_service.get_users(page, per_page)
     return users
 
 @router.put('/user')

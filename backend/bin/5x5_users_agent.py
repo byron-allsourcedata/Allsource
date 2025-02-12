@@ -29,7 +29,6 @@ from dotenv import load_dotenv
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
-BUCKET_NAME = 'trovo-coop-shakespeare'
 QUEUE_USERS_USERS_ROWS = '5x5_users_rows'
 
 
@@ -192,10 +191,12 @@ async def on_message_received(message, session):
         mobile_phone = convert_to_none(str(user_json.get('MOBILE_PHONE')))
         personal_phone = convert_to_none(str(user_json.get('PERSONAL_PHONE')))
         company_phone = convert_to_none(str(user_json.get('COMPANY_PHONE')))
+        direct_number = convert_to_none(str(user_json.get('DIRECT_NUMBER')))
         if mobile_phone:
             mobile_phone = format_phone_number(mobile_phone)
             personal_phone = format_phone_number(personal_phone)
             company_phone = format_phone_number(company_phone)
+            direct_number = format_phone_number(direct_number)
                                                                                
         five_x_five_user = FiveXFiveUser(
             up_id=convert_to_none(user_json.get('UP_ID')),
@@ -330,10 +331,9 @@ async def on_message_received(message, session):
             existing_user.dpv_code = five_x_five_user.dpv_code
             existing_user.personal_zip4 = five_x_five_user.personal_zip4
             five_x_five_user_id = existing_user.id
-            session.commit()
         else:
             session.add(five_x_five_user)
-            session.commit()
+            session.flush()
             five_x_five_user_id = five_x_five_user.id
 
         emails = str(user_json.get('BUSINESS_EMAIL', '')).split(', ')
@@ -342,15 +342,18 @@ async def on_message_received(message, session):
         save_emails_to_user(session, emails, five_x_five_user_id, 'personal')
         emails = str(user_json.get('ADDITIONAL_PERSONAL_EMAILS', '')).split(', ')
         save_emails_to_user(session, emails, five_x_five_user_id, 'additional_personal')
-                
-        mobile_phone_set = set(mobile_phone.split(', '))
-        direct_number = [num for num in direct_number.split(', ') if
-                         num not in mobile_phone_set]
-        personal_phone = [num for num in personal_phone.split(', ') if
-                          num not in mobile_phone_set]
-        save_phones_to_user(session, mobile_phone, five_x_five_user_id, 'mobile_phone')
-        save_phones_to_user(session, direct_number, five_x_five_user_id, 'direct_number')
-        save_phones_to_user(session, personal_phone, five_x_five_user_id, 'personal_phone')
+        if mobile_phone:        
+            mobile_phone_set = set(mobile_phone.split(', '))
+            save_phones_to_user(session, mobile_phone, five_x_five_user_id, 'mobile_phone')
+        if direct_number:
+            direct_number = [num for num in direct_number.split(', ') if
+                            num not in mobile_phone_set]
+            save_phones_to_user(session, direct_number, five_x_five_user_id, 'direct_number')
+            
+        if personal_phone:
+            personal_phone = [num for num in personal_phone.split(', ') if
+                            num not in mobile_phone_set]
+            save_phones_to_user(session, personal_phone, five_x_five_user_id, 'personal_phone')
 
         save_city_and_state_to_user(session, user_json.get('PERSONAL_CITY'), user_json.get('PERSONAL_STATE'),
                                     five_x_five_user_id)
@@ -360,7 +363,9 @@ async def on_message_received(message, session):
         await message.ack()
 
     except Exception as e:
+        logging.error(f"Database transaction failed: {e}", exc_info=True)
         logging.error("excepted message. error", exc_info=True)
+        session.rollback()
         await asyncio.sleep(5)
         await message.reject(requeue=True)
 
@@ -383,8 +388,9 @@ async def main():
         )
 
         engine = create_engine(
-            f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
-        )
+			f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}",
+			pool_pre_ping=True
+		)
         Session = sessionmaker(bind=engine)
         db_session = Session()
         await queue.consume(

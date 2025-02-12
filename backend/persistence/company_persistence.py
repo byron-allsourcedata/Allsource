@@ -8,6 +8,7 @@ from sqlalchemy import and_, or_, desc, asc, Integer, cast, VARCHAR, case
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql import func
 from models.five_x_five_emails import FiveXFiveEmails
+from models.leads_users_companies import LeadUserCompany
 from models.five_x_five_locations import FiveXFiveLocations
 from models.five_x_five_names import FiveXFiveNames
 from models.five_x_five_phones import FiveXFivePhones
@@ -244,15 +245,17 @@ class CompanyPersistence:
 
     def filter_companies(self, domain_id, page, per_page, from_date, to_date, regions, sort_by, sort_order,
                          search_query, employees_range, employee_visits, revenue_range, industry):
-        FirstLeadUser = aliased(LeadUser)
 
+        LeadUserCompanyAlias = aliased(LeadUserCompany)
+        FirstLeadUserAlias = aliased(LeadUser)
+        LeadUserAlias = aliased(LeadUser)
         query = (
             self.db.query(
                 LeadCompany.id,
                 LeadCompany.name,
                 LeadCompany.phone,
                 LeadCompany.linkedin_url,
-                func.count(LeadUser.id).label("number_of_employees"),
+                func.count(LeadUserAlias.id).label("number_of_employees"),
                 LeadsVisits.start_date.label("visited_date"),
                 LeadsVisits.start_time.label("visited_time"),
                 LeadCompany.revenue,
@@ -266,19 +269,22 @@ class CompanyPersistence:
                 States.state_name,
                 LeadCompany.last_updated,
             )
-                .join(LeadUser, LeadUser.company_id == LeadCompany.id)
-                .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
-                .outerjoin(FiveXFiveLocations, FiveXFiveLocations.id == LeadCompany.five_x_five_location_id)
-                .outerjoin(States, States.id == FiveXFiveLocations.state_id)
-                .filter(LeadUser.domain_id == domain_id)
-                .group_by(
+            .select_from(LeadCompany)
+            .join(LeadUserCompanyAlias, LeadUserCompanyAlias.lead_company_id == LeadCompany.id)
+            .join(FirstLeadUserAlias, LeadUserCompanyAlias.first_lead_user_id == FirstLeadUserAlias.id)
+            .join(LeadUserAlias, LeadUserAlias.company_id == LeadCompany.id)
+            .outerjoin(LeadsVisits, LeadsVisits.id == FirstLeadUserAlias.first_visit_id)
+            .outerjoin(FiveXFiveLocations, FiveXFiveLocations.id == LeadCompany.five_x_five_location_id)
+            .outerjoin(States, States.id == FiveXFiveLocations.state_id)
+            .filter(FirstLeadUserAlias.domain_id == domain_id, LeadUserAlias.domain_id == domain_id)
+            .group_by(
                 LeadCompany.id,
+                FiveXFiveLocations.city,
                 LeadsVisits.start_date,
                 LeadsVisits.start_time,
-                FiveXFiveLocations.city,
                 States.state_name
             )
-                .order_by(asc(LeadCompany.name), desc(LeadsVisits.start_date))
+            .order_by(desc(func.max(LeadsVisits.start_date)))
         )
 
         employees_case = case(
@@ -311,7 +317,7 @@ class CompanyPersistence:
 
         sort_options = {
             'company_name': LeadCompany.name,
-            'employees_visited': func.count(LeadUser.id).label("number_of_employees"),
+            'employees_visited': func.count(LeadUserAlias.id).label("number_of_employees"),
             'visited_date': LeadsVisits.start_date,
             'revenue': revenue_case,
             'number_of_employees': employees_case,
@@ -434,7 +440,7 @@ class CompanyPersistence:
         if search_query:
             filters = [
                 LeadCompany.name.ilike(f'{search_query}%'),
-                LeadCompany.phone.ilike(f"{search_query.replace('+', '')}%"),
+                LeadCompany.phone.ilike(f"%{search_query.replace('+', '')}%"),
             ]
 
             query = query.filter(or_(*filters))
@@ -446,7 +452,7 @@ class CompanyPersistence:
         return leads, count, max_page
 
 
-    def filter_employees(self, domain_id, company_id, page, per_page, sort_by, sort_order,
+      def filter_employees(self, domain_id, company_id, page, per_page, sort_by, sort_order,
                          search_query, job_title, department, seniority, regions):
        
         FiveXFiveNamesFirst = aliased(FiveXFiveNames)
@@ -554,27 +560,6 @@ class CompanyPersistence:
         count = query.count()
         max_page = math.ceil(count / per_page)
         return employees, count, max_page
-    
-
-    def search_company(self, start_letter, domain_id):
-        query = (
-            self.db.query(
-                LeadCompany.name,
-                LeadCompany.phone
-            )
-                .join(LeadUser, LeadUser.company_id == LeadCompany.id)
-                .filter(
-                LeadUser.domain_id == domain_id,
-                or_(
-                    LeadCompany.name.ilike(f'{start_letter}%'),
-                    LeadCompany.phone.ilike(f"{start_letter.replace('+', '')}%")
-                )
-            )
-                .limit(10)
-        )
-
-        companies = query.all()
-        return companies
 
 
     def search_location(self, start_letter, domain_id):
