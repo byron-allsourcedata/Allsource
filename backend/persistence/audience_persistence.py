@@ -42,7 +42,7 @@ class AudiencePersistence:
         audience = Audience(domain_id=domain_id, data_source=data_source, audience_type=audience_type, audience_threshold=audience_threshold)
         self.db.add(audience)
         self.db.commit()
-        return {'status': AudienceInfoEnum.SUCCESS}
+        return audience
 
 
     def delete_user_audience(self, user_id, audience_id):

@@ -11,16 +11,23 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
+from models.audience import Audience
 from models.integrations.users_domains_integrations import UserIntegration
 from sqlalchemy.orm import sessionmaker, Session
 from aio_pika import IncomingMessage
 from config.rmq_connection import RabbitMQConnection
 from bigcommerce.api import BigcommerceApi
+from utils import get_utc_aware_date
 from datetime import datetime
 import requests
 load_dotenv()
 
 AUDIENCE_SYNC = 'audience_sync'
+LOYAL_CATEGORY_THRESHOLD = 3  # Пример: Частые покупки в одной категории
+HIGH_LTV_THRESHOLD = 3000  # Пример: Порог для High LTV
+HIGH_AOV_THRESHOLD = 50  # Пример: Порог для High AOV
+RECENT_PURCHASE_DAYS = 30  # Порог по времени для недавних покупателей
+FREQUENT_PURCHASE_THRESHOLD = 2  # Минимум покупок в месяц для частых покупателей
 
 def setup_logging(level):
     logging.basicConfig(
@@ -29,34 +36,49 @@ def setup_logging(level):
         datefmt='%Y-%m-%d %H:%M:%S'
     )
 
+def filter_loyal_category_customer(categories_purchased):
+    return any(count >= LOYAL_CATEGORY_THRESHOLD for category, count in categories_purchased.items())
+
+def filter_high_ltv_customer(total_spend):
+    return total_spend >= HIGH_LTV_THRESHOLD
+
+def filter_frequent_customer(purchase_count):
+    return purchase_count >= FREQUENT_PURCHASE_THRESHOLD
+
+def filter_recent_customer(last_purchase_date):
+    current_date = get_utc_aware_date
+    return (current_date - last_purchase_date).days <= RECENT_PURCHASE_DAYS
+
+def filter_high_aov_customer(total_spend, purchase_count):
+    average_order_value = total_spend / purchase_count if purchase_count else 0
+    return average_order_value >= HIGH_AOV_THRESHOLD
+
+def filter_lookalike_size(customer_similarity_score, lookalike_size):
+    min_percentage = 0
+    max_percentage = lookalike_size
+    return min_percentage <= customer_similarity_score <= max_percentage
+
 def bigcommerce_process(store_hash, access_token, audience_type, audience_threshold):
     api = BigcommerceApi(
         store_hash=store_hash,
         client_id=os.getenv('BIGCOMMERCE_CLIENT_ID'),
         access_token=access_token
     )
-
-    LOYAL_CATEGORY_THRESHOLD = 3  # Пример: Частые покупки в одной категории
-    HIGH_LTV_THRESHOLD = 3000  # Пример: Порог для High LTV
-    HIGH_AOV_THRESHOLD = 50  # Пример: Порог для High AOV
-    RECENT_PURCHASE_DAYS = 30  # Порог по времени для недавних покупателей
-    FREQUENT_PURCHASE_THRESHOLD = 2  # Минимум покупок в месяц для частых покупателей
+    
     orders = api.Orders.all(limit=250)
     product_customer_details = []
     for order in orders:
-        
         customer_id = order["customer_id"]
         if not customer_id or customer_id == 0:
             continue
-        
         try:
-            customer_info = api.Customers.get(customer_id)  # Получение информации о клиенте
+            customer_info = api.Customers.get(customer_id)
         except Exception as e:
-            print(f"Error fetching customer info for customer_id {customer_id}: {e}")
+            logging.error(f"Error fetching customer info for customer_id {customer_id}: {e}")
             continue
         
         if not customer_info:
-            continue  # Пропустить, если информация о клиенте отсутствует
+            continue
         
         total_spend = 0
         purchase_count = 0
@@ -72,14 +94,14 @@ def bigcommerce_process(store_hash, access_token, audience_type, audience_thresh
             response = requests.get(
                 consignments_url,
                 headers={
-                    "X-Auth-Token": ACCESS_TOKEN,
+                    "X-Auth-Token": access_token,
                     "Accept": "application/json"
                 }
             )
             response.raise_for_status()
             consignments_data = response.json()
         except Exception as e:
-            print(f"Error fetching consignments data for order {order['id']}: {e}")
+            logging.error(f"Error fetching consignments data for order {order['id']}: {e}")
             continue
         
         for consignment in consignments_data.get("shipping", []):
@@ -87,46 +109,54 @@ def bigcommerce_process(store_hash, access_token, audience_type, audience_thresh
                 item_url = item.get("url")
                 if not item_url:
                     continue
-                
                 try:
                     item_response = requests.get(
                         item_url,
                         headers={
-                            "X-Auth-Token": ACCESS_TOKEN,
+                            "X-Auth-Token": access_token,
                             "Accept": "application/json"
                         }
                     )
                     item_response.raise_for_status()
                     item_data = item_response.json()
                 except Exception as e:
-                    print(f"Error fetching item data for URL {item_url}: {e}")
+                    logging.error(f"Error fetching item data for URL {item_url}: {e}")
                     continue
-                
                 product_id = item_data.get("product_id")
                 if not product_id:
                     continue 
-                
                 try:
                     product_info = api.Products.get(product_id)
                 except Exception as e:
-                    print(f"Error fetching product info for product_id {product_id}: {e}")
+                    logging.error(f"Error fetching product info for product_id {product_id}: {e}")
                     continue
                 total_spend += float(product_info["price"])
                 purchase_count += 1 
-                
-                # Обработка категорий товара
                 if product_info["categories"]:
                     for category_id in product_info["categories"]:
                         categories_purchased[category_id] = categories_purchased.get(category_id, 0) + 1
             
-            # Обработка даты заказа
             order_date_str = order["date_created"]
             if order_date_str:
                 try:
                     order_date = datetime.strptime(order_date_str, '%a, %d %b %Y %H:%M:%S +0000')
                     last_purchase_date = max(last_purchase_date or order_date, order_date)
                 except ValueError as e:
-                    print(f"Error parsing date for order {order['id']}: {e}")
+                    logging.error(f"Error parsing date for order {order['id']}: {e}")
+                    
+        if audience_type == 'Loyal category customer' and not filter_loyal_category_customer(categories_purchased):
+           continue 
+        if audience_type == 'High LTV customer' and not filter_high_ltv_customer(total_spend):
+           continue
+        if audience_type == 'Frequent customer' and not filter_frequent_customer(purchase_count):
+            continue
+        if audience_type == 'Recent customer' and not filter_recent_customer(last_purchase_date):
+            continue
+        if audience_type == 'High AOV customer' and not filter_high_aov_customer(total_spend, purchase_count):
+            continue
+        
+        if not filter_lookalike_size(customer_similarity_score, audience_threshold):
+            continue
         
         product_customer_details.append({
             "customer": customer_info,
@@ -137,40 +167,26 @@ def bigcommerce_process(store_hash, access_token, audience_type, audience_thresh
         })
     return product_customer_details
     
-
-def filter_loyal_category_customer(categories_purchased):
-    return any(count >= LOYAL_CATEGORY_THRESHOLD for category, count in categories_purchased.items())
-
-def filter_high_ltv_customer(total_spend):
-    return total_spend >= HIGH_LTV_THRESHOLD
-
-def filter_frequent_customer(purchase_count):
-    return purchase_count >= FREQUENT_PURCHASE_THRESHOLD
-
-def filter_recent_customer(last_purchase_date):
-    return (current_date - last_purchase_date).days <= RECENT_PURCHASE_DAYS
-
-def filter_high_aov_customer(total_spend, purchase_count):
-    average_order_value = total_spend / purchase_count if purchase_count else 0
-    return average_order_value >= HIGH_AOV_THRESHOLD
-
-def filter_lookalike_size(customer_similarity_score, lookalike_size):
-    min_percentage, max_percentage = LOOKALIKE_AUDIENCE_THRESHOLDS.get(lookalike_size, (0, 0))
-    return min_percentage <= customer_similarity_score <= max_percentage
-
 async def audience_process(message: IncomingMessage, session: Session):
     try:       
         logging.info(f"Start audience process")
         message_body = json.loads(message.body)
         domain_id = message_body.get('domain_id')
+        audience_id = message_body.get('audience_id')
         data_source = message_body.get('data_source')
         audience_type = message_body.get('audience_type')
         audience_threshold = message_body.get('audience_threshold')
+        result_process = None
         if data_source == 'bigcommerce':
             user_integration = session.query(UserIntegration) \
             .filter((UserIntegration.id == domain_id) & (UserIntegration.service_name == data_source)) \
             .first()
-            bigcommerce_process(user_integration.shop_domain, user_integration.access_token, audience_type, audience_threshold)
+            result_process = bigcommerce_process(user_integration.shop_domain, user_integration.access_token, audience_type, audience_threshold)
+        if result_process:
+            audience = session.query(Audience).filter(Audience.id == audience_id).first()
+            if audience:
+                audience.status = 'success'
+                session.db.commit()
     except Exception as e:
         logging.error("Error processing message", exc_info=True)
         await asyncio.sleep(5)

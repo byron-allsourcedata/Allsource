@@ -16,11 +16,12 @@ class AudienceService:
         return self.audience_persistence_service.get_user_audience_list(self.user.get('id'))
 
     async def create_audience(self, domain_id: int, data_source: str, audience_type: str, audience_threshold: int):
-        self.audience_persistence_service.create_domain_audience(domain_id, data_source, audience_type, audience_threshold)
+        audience = self.audience_persistence_service.create_domain_audience(domain_id, data_source, audience_type, audience_threshold)
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
         try:
             message_text = {
+                'audience_id': audience.id,
                 'domain_id': domain_id,
                 'data_source': data_source,
                 'audience_type': audience_type,
