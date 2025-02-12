@@ -127,6 +127,7 @@ def save_city_and_state_to_user(session, personal_city, personal_state, five_x_f
     session.flush()
 
 def format_phone_number(phones):
+    if phone:
         phone_list = phones.split(',')
         formatted_phones = []
         for phone in phone_list:
@@ -188,15 +189,10 @@ async def on_message_received(message, session):
                 except ValueError:
                     logging.warning(f"Invalid age range format: {age_range}")
                     
-        mobile_phone = convert_to_none(str(user_json.get('MOBILE_PHONE')))
-        personal_phone = convert_to_none(str(user_json.get('PERSONAL_PHONE')))
-        company_phone = convert_to_none(str(user_json.get('COMPANY_PHONE')))
-        direct_number = convert_to_none(str(user_json.get('DIRECT_NUMBER')))
-        if mobile_phone:
-            mobile_phone = format_phone_number(mobile_phone)
-            personal_phone = format_phone_number(personal_phone)
-            company_phone = format_phone_number(company_phone)
-            direct_number = format_phone_number(direct_number)
+        mobile_phone = format_phone_number(convert_to_none(str(user_json.get('MOBILE_PHONE'))))
+        personal_phone = format_phone_number(convert_to_none(str(user_json.get('PERSONAL_PHONE'))))
+        company_phone = format_phone_number(convert_to_none(str(user_json.get('COMPANY_PHONE'))))
+        direct_number = format_phone_number(convert_to_none(str(user_json.get('DIRECT_NUMBER'))))
                                                                                
         five_x_five_user = FiveXFiveUser(
             up_id=convert_to_none(user_json.get('UP_ID')),
