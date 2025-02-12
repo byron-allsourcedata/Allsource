@@ -21,7 +21,7 @@ class FiveXFiveUser(Base):
     personal_city = Column(VARCHAR(64), nullable=True)
     personal_state = Column(VARCHAR(32), nullable=True)
     company_name = Column(VARCHAR(64), nullable=True)
-    company_domain = Column(VARCHAR(32), nullable=True)
+    company_domain = Column(VARCHAR(128), nullable=True)
     company_phone = Column(VARCHAR(128), nullable=True)
     company_sic = Column(VARCHAR(64), nullable=True)
     company_address = Column(VARCHAR(256), nullable=True)

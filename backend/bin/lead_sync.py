@@ -513,11 +513,6 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
         session.add(lead_user)
         session.flush()
         if five_x_five_user.company_name:
-            company_name = five_x_five_user.company_name.strip()
-            alias = regex.sub(r'[\p{Z}\s]+', ' ', company_name)
-            alias = company_name.replace(" ", "_")
-            alias = alias.lower()
-            five_x_five_user.company_alias = alias
             company = get_company(session, five_x_five_user)
             if company:
                 if not get_first_lead_user_by_company_and_domain(session, company.id, lead_user.domain_id):

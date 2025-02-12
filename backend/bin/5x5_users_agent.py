@@ -4,7 +4,7 @@ import json
 import logging
 import os
 import sys
-
+import regex
 import pandas as pd
 from sqlalchemy import create_engine
 
@@ -126,6 +126,14 @@ def save_city_and_state_to_user(session, personal_city, personal_state, five_x_f
     session.execute(leads_locations)
     session.flush()
 
+def create_company_alias(company_name):
+    if company_name:
+        company_name = company_name.strip()
+        alias = regex.sub(r'[\p{Z}\s]+', ' ', company_name)
+        alias = company_name.replace(" ", "_")
+        alias = alias.lower()
+        return alias
+
 def format_phone_number(phones):
     if phones:
         phone_list = phones.split(',')
@@ -193,7 +201,7 @@ async def on_message_received(message, session):
         personal_phone = format_phone_number(convert_to_none(str(user_json.get('PERSONAL_PHONE'))))
         company_phone = format_phone_number(convert_to_none(str(user_json.get('COMPANY_PHONE'))))
         direct_number = format_phone_number(convert_to_none(str(user_json.get('DIRECT_NUMBER'))))
-                                                                               
+        company_alias = create_company_alias(convert_to_none(user_json.get('COMPANY_NAME')))                                  
         five_x_five_user = FiveXFiveUser(
             up_id=convert_to_none(user_json.get('UP_ID')),
             cc_id=convert_to_none(user_json.get('CC_ID')),
@@ -260,6 +268,7 @@ async def on_message_received(message, session):
             related_domains=convert_to_none(user_json.get('RELATED_DOMAINS')),
             social_connections=convert_to_none(user_json.get('SOCIAL_CONNECTIONS')),
             dpv_code=convert_to_none(user_json.get('DPV_CODE')),
+            company_alias=company_alias,
             personal_zip4=None if convert_to_none(user_json.get('PERSONAL_ZIP4')) is None else str(
                 int(user_json.get('PERSONAL_ZIP4'))),
         )
@@ -325,6 +334,7 @@ async def on_message_received(message, session):
             existing_user.related_domains = five_x_five_user.related_domains
             existing_user.social_connections = five_x_five_user.social_connections
             existing_user.dpv_code = five_x_five_user.dpv_code
+            existing_user.company_alias=company_alias
             existing_user.personal_zip4 = five_x_five_user.personal_zip4
             five_x_five_user_id = existing_user.id
         else:
