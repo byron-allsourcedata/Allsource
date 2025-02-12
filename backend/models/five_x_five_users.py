@@ -57,7 +57,7 @@ class FiveXFiveUser(Base):
     professional_address = Column(VARCHAR(256), nullable=True)
     professional_address_2 = Column(VARCHAR(256), nullable=True)
     professional_city = Column(VARCHAR(64), nullable=True)
-    professional_state = Column(VARCHAR(32), nullable=True)
+    professional_state = Column(VARCHAR(64), nullable=True)
     professional_zip4 = Column(VARCHAR(8), nullable=True)
     primary_industry = Column(VARCHAR(128), nullable=True)
     business_email_validation_status = Column(VARCHAR(64), nullable=True)
