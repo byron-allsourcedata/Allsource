@@ -165,20 +165,25 @@ async def on_message_received(message, session):
         first_name = str(user_json.get('FIRST_NAME')).lower().strip()
         last_name = str(user_json.get('LAST_NAME', '')).lower().strip()
 
-        first_name_obj = session.query(FiveXFiveNames).filter(
-            FiveXFiveNames.name == first_name).first()
-        if not first_name_obj:
-            first_name_obj = FiveXFiveNames(name=first_name)
-            session.add(first_name_obj)
-            session.flush()
+        with session.begin_nested():
+            first_name_obj = session.query(FiveXFiveNames).filter(
+                FiveXFiveNames.name == first_name).first()
+            if not first_name_obj:
+                first_name_obj = FiveXFiveNames(name=first_name)
+                session.add(first_name_obj)
+                session.flush()
+            
         first_name_id = first_name_obj.id
-
-        last_name_obj = session.query(FiveXFiveNames).filter(
-            FiveXFiveNames.name == last_name).first()
-        if not last_name_obj:
-            last_name_obj = FiveXFiveNames(name=last_name)
-            session.add(last_name_obj)
-            session.flush()
+        with session.begin_nested():
+            last_name_obj = session.query(FiveXFiveNames).filter(
+                FiveXFiveNames.name == last_name
+            ).first()
+            
+            if not last_name_obj:
+                last_name_obj = FiveXFiveNames(name=last_name)
+                session.add(last_name_obj)
+                session.flush()
+            
         last_name_id = last_name_obj.id
 
         age_range = str(user_json.get('AGE_RANGE', None))
