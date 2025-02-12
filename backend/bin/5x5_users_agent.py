@@ -338,8 +338,9 @@ async def on_message_received(message, session):
         save_emails_to_user(session, emails, five_x_five_user_id, 'personal')
         emails = str(user_json.get('ADDITIONAL_PERSONAL_EMAILS', '')).split(', ')
         save_emails_to_user(session, emails, five_x_five_user_id, 'additional_personal')
-        if mobile_phone:        
-            mobile_phone_set = set(mobile_phone.split(', '))
+             
+        mobile_phone_set = set(mobile_phone.split(', ')) if mobile_phone else set()
+        if mobile_phone:
             save_phones_to_user(session, mobile_phone, five_x_five_user_id, 'mobile_phone')
         if direct_number:
             direct_number = [num for num in direct_number.split(', ') if
