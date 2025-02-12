@@ -127,7 +127,7 @@ def save_city_and_state_to_user(session, personal_city, personal_state, five_x_f
     session.flush()
 
 def format_phone_number(phones):
-    if phone:
+    if phones:
         phone_list = phones.split(',')
         formatted_phones = []
         for phone in phone_list:
