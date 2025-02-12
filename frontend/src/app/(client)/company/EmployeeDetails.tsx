@@ -79,7 +79,6 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                 const response = await axiosInstance.get(`/company/employees/${employeeId}?company_id=${companyId}`);
                 if (response.status === 200) {
                     setPopupData(response.data);
-                    console.log({response})
                 } else {
                     showErrorToast("Error receiving employee data");
                 }

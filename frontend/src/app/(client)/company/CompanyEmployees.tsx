@@ -478,7 +478,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
             setIsLoading(true)
             setAppliedDates({ start: null, end: null })
             setFormattedDates('')
-            sessionStorage.removeItem('filters')
+            sessionStorage.removeItem('filters-employee')
             const response = await axiosInstance.get(url);
             const [leads, count] = response.data;
 
@@ -499,7 +499,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
         const updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
         setSelectedFilters(updatedFilters);
         
-        const filters = JSON.parse(sessionStorage.getItem('filters') || '{}');
+        const filters = JSON.parse(sessionStorage.getItem('filters-employee') || '{}');
     
         switch (filterToDelete.label) {
             case 'Regions':
@@ -509,31 +509,31 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                 filters.searchQuery = '';
                 break;
             case 'JobTitle':
-                Object.keys(filters.industry).forEach(key => {
-                    filters.industry[key] = false;
+                Object.keys(filters.jobTitle).forEach(key => {
+                    filters.jobTitle[key] = false;
                 });
                 break;
             case 'Department':
-                Object.keys(filters.industry).forEach(key => {
-                    filters.industry[key] = false;
+                Object.keys(filters.department).forEach(key => {
+                    filters.department[key] = false;
                 });
                 break;
             case 'Seniority':
-                Object.keys(filters.industry).forEach(key => {
-                    filters.industry[key] = false;
+                Object.keys(filters.seniority).forEach(key => {
+                    filters.seniority[key] = false;
                 });
                 break;
             default:
                 break;
         }
         
-        sessionStorage.setItem('filters', JSON.stringify(filters));
+        sessionStorage.setItem('filters-employee', JSON.stringify(filters));
     
         // Обновляем фильтры для применения
         const newFilters: FilterParams = {
             regions: updatedFilters.find(f => f.label === 'Regions') ? updatedFilters.find(f => f.label === 'Regions')!.value.split(', ') : [],
             searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',
-            department: Object.fromEntries(Object.keys(filters.industry).map(key => [key, updatedFilters.some(f => f.label === 'Industry' && f.value.includes(key))])),
+            department: Object.fromEntries(Object.keys(filters.department).map(key => [key, updatedFilters.some(f => f.label === 'Department' && f.value.includes(key))])),
             jobTitle: Object.fromEntries(Object.keys(filters.jobTitle).map(key => [key, updatedFilters.some(f => f.label === 'JobTitle' && f.value.includes(key))])),
             seniority: Object.fromEntries(Object.keys(filters.seniority).map(key => [key, updatedFilters.some(f => f.label === 'Seniority' && f.value.includes(key))]))
         };
