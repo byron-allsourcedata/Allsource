@@ -12,7 +12,6 @@ from persistence.domains import UserDomainsPersistence
 from utils import extract_first_email
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
 from models.five_x_five_users import FiveXFiveUser
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 class OmnisendIntegrationService:
 
@@ -23,7 +22,6 @@ class OmnisendIntegrationService:
         self.sync_persistence = sync_persistence
         self.integration_persistence = integration_persistence
         self.domain_persistence = domain_persistence
-        self.QUEUE_DATA_SYNC = 'data_sync_leads'
 
     def get_credentials(self, domain_id: int):
         return self.integration_persistence.get_credentials_for_service(domain_id, SourcePlatformEnum.OMNISEND.value)
@@ -85,29 +83,6 @@ class OmnisendIntegrationService:
             'data_map': data_map,
             'created_by': created_by,
         })
-        message = {
-            'sync':  {
-                'id': sync.id,
-                "domain_id": sync.domain_id, 
-                "integration_id": sync.integration_id, 
-                "leads_type": sync.leads_type, 
-                'data_map': sync.data_map
-                },
-            'leads_type': leads_type,
-            'domain_id': domain_id
-        }
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        channel = await connection.channel()
-        await channel.declare_queue(
-            name=self.QUEUE_DATA_SYNC,
-            durable=True
-        )
-        await publish_rabbitmq_message(
-            connection=connection,
-            queue_name=self.QUEUE_DATA_SYNC, 
-            message_body=message)
-        rabbitmq_connection.close()
         
     async def process_data_sync(self, five_x_five_user, user_integration, data_sync, lead_user):    
         profile = self.__create_profile(five_x_five_user, user_integration.access_token, data_sync.data_map)

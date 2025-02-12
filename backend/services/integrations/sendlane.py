@@ -21,7 +21,6 @@ class SendlaneIntegrationService:
         self.integrations_persisntece = integrations_persistence
         self.leads_persistence = leads_persistence
         self.sync_persistence = sync_persistence
-        self.QUEUE_DATA_SYNC = 'data_sync_leads'
         self.client = client
 
     def get_credentials(self, domain_id: int):
