@@ -452,7 +452,7 @@ class CompanyPersistence:
         return leads, count, max_page
 
 
-      def filter_employees(self, domain_id, company_id, page, per_page, sort_by, sort_order,
+    def filter_employees(self, domain_id, company_id, page, per_page, sort_by, sort_order,
                          search_query, job_title, department, seniority, regions):
        
         FiveXFiveNamesFirst = aliased(FiveXFiveNames)
