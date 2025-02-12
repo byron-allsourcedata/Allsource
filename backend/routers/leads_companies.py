@@ -69,6 +69,16 @@ async def get_employees(
         regions=regions,
         search_query=search_query
     )
+    
+@router.get("/employees/{employee_id}")
+async def get_employees_by_id(
+        employee_id: int,
+        company_id: int = Query(None),
+        company_service: CompanyService = Depends(get_companies_service)
+):
+    return company_service.get_full_information_employee(
+        company_id=company_id, employee_id=employee_id
+    )
 
 
 @router.get("/industry")

@@ -867,99 +867,105 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                             </TableHead>
                                             <TableBody>
                                                 {data.map((row) => (
-                                                    <TableRow
-                                                        key={row.id}
-                                                        selected={selectedRows.has(row.id)}
-                                                        sx={{
-                                                            backgroundColor: selectedRows.has(row.id) ? 'rgba(247, 247, 247, 1)' : '#fff',
-                                                            '&:hover': {
-                                                                backgroundColor: 'rgba(247, 247, 247, 1)',
-                                                                '& .sticky-cell': {
-                                                                    backgroundColor: 'rgba(247, 247, 247, 1)',
-                                                                }
-                                                            }
-                                                        }}
-                                                    >
-                                                        {/* Full name Column */}
-                                                        <TableCell className="sticky-cell"
+                                                    <>
+                                                        <TableRow
+                                                            key={row.id}
+                                                            selected={selectedRows.has(row.id)}
                                                             sx={{
-                                                                ...companyStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, color: 'rgba(80, 82, 178, 1)', backgroundColor: '#fff'
-
-                                                            }} onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleOpenPopup(row);
-
-                                                            }}>
-                                                            {(row.first_name || row.last_name)
-                                                                ? truncateText(
-                                                                    [capitalizeTableCell(row.first_name), capitalizeTableCell(row.last_name)]
-                                                                      .filter(Boolean)
-                                                                      .join(' '),
-                                                                    20
-                                                                  )
-                                                                : '--'}
-                                                        </TableCell>
-
-                                                        {/* Personal Email Column */}
-                                                        <TableCell
-                                                            sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                                backgroundColor: selectedRows.has(row.id) ? 'rgba(247, 247, 247, 1)' : '#fff',
+                                                                '&:hover': {
+                                                                    backgroundColor: 'rgba(247, 247, 247, 1)',
+                                                                    '& .sticky-cell': {
+                                                                        backgroundColor: 'rgba(247, 247, 247, 1)',
+                                                                    }
+                                                                }
+                                                            }}
                                                         >
-                                                            {row.personal_email?.split(',')[0] || '--'}
-                                                        </TableCell>
+                                                            {/* Full name Column */}
+                                                            <TableCell className="sticky-cell"
+                                                                sx={{
+                                                                    ...companyStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, color: 'rgba(80, 82, 178, 1)', backgroundColor: '#fff'
 
-                                                        {/* Business Email Column */}
-                                                        <TableCell
-                                                            sx={{ ...companyStyles.table_array, position: 'relative' }}
-                                                        >
-                                                            {row.business_email || '--'}
-                                                        </TableCell>
+                                                                }} onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleOpenPopup(row);
 
-                                                        {/* Company linkedIn Column */}
-                                                        <TableCell sx={{ ...companyStyles.table_array, position: 'relative', color: row.linkedin_url ? 'rgba(80, 82, 178, 1)' : '', cursor: row.linkedin_url ? 'pointer' : 'default' }} onClick={() => { window.open(`https://${row.linkedin_url}`, '_blank') }}>
-                                                            {row.linkedin_url ? (
-                                                                <>
-                                                                    <Image src="/linkedIn.svg" alt="linkedIn" width={16} height={16} style={{ marginRight: '2px' }} />
-                                                                    /{truncateText(row.linkedin_url.replace('linkedin.com/company/', ''), 20)}
-                                                                </>
-                                                            ) : (
-                                                                '--'
-                                                            )}
-                                                        </TableCell>
+                                                                }}>
+                                                                {(row.first_name || row.last_name)
+                                                                    ? truncateText(
+                                                                        [capitalizeTableCell(row.first_name), capitalizeTableCell(row.last_name)]
+                                                                        .filter(Boolean)
+                                                                        .join(' '),
+                                                                        20
+                                                                    )
+                                                                    : '--'}
+                                                            </TableCell>
 
-                                                        {/* Mobile phone Column */}
-                                                        <TableCell sx={{ ...companyStyles.table_array, position: 'relative' }}>
-                                                            {row.mobile_phone?.split(',')[0] || '--'}
-                                                        </TableCell>
+                                                            {/* Personal Email Column */}
+                                                            <TableCell
+                                                                sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                            >
+                                                                {row.personal_email?.split(',')[0] || '--'}
+                                                            </TableCell>
 
-                                                        {/* Job Title Column */}
-                                                        <TableCell sx={{...companyStyles.table_array, position: 'relative', cursor: row.job_title ? "pointer" : "default"}} onClick={(e) => row.job_title ? handleOpenPopover(e, row.job_title || "--") : ''}>
-                                                            {row.job_title ? truncateText(row.job_title, 20) : '--'}
-                                                        </TableCell>
+                                                            {/* Business Email Column */}
+                                                            <TableCell
+                                                                sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                            >
+                                                                {row.business_email || '--'}
+                                                            </TableCell>
 
-                                                        {/* Seniority Column */}
-                                                        <TableCell
-                                                            sx={{ ...companyStyles.table_array, position: 'relative' }}
-                                                        >
-                                                            {row.seniority || '--'}
-                                                        </TableCell>
+                                                            {/* Company linkedIn Column */}
+                                                            <TableCell sx={{ ...companyStyles.table_array, position: 'relative', color: row.linkedin_url ? 'rgba(80, 82, 178, 1)' : '', cursor: row.linkedin_url ? 'pointer' : 'default' }} onClick={() => { window.open(`https://${row.linkedin_url}`, '_blank') }}>
+                                                                {row.linkedin_url ? (
+                                                                    <>
+                                                                        <Image src="/linkedIn.svg" alt="linkedIn" width={16} height={16} style={{ marginRight: '2px' }} />
+                                                                        /{truncateText(row.linkedin_url.replace('linkedin.com/company/', ''), 20)}
+                                                                    </>
+                                                                ) : (
+                                                                    '--'
+                                                                )}
+                                                            </TableCell>
 
-                                                        {/* Department Column */}
-                                                        <TableCell
-                                                            sx={{ ...companyStyles.table_array, position: 'relative' }}
-                                                        >
-                                                            {row.department || '--'}
-                                                        </TableCell>
+                                                            {/* Mobile phone Column */}
+                                                            <TableCell sx={{ ...companyStyles.table_array, position: 'relative' }}>
+                                                                {row.mobile_phone?.split(',')[0] || '--'}
+                                                            </TableCell>
 
-                                                        {/* Company location  Column */}
-                                                        <TableCell
-                                                            sx={{ ...companyStyles.table_array, position: 'relative' }}
-                                                        >
-                                                            {(row.city || row.state)
-                                                                ? [capitalizeTableCell(row.city), row.state].filter(Boolean).join(', ')
-                                                                : '--'}
-                                                        </TableCell>
+                                                            {/* Job Title Column */}
+                                                            <TableCell sx={{...companyStyles.table_array, position: 'relative', cursor: row.job_title ? "pointer" : "default"}} onClick={(e) => row.job_title ? handleOpenPopover(e, row.job_title || "--") : ''}>
+                                                                {row.job_title ? truncateText(row.job_title, 20) : '--'}
+                                                            </TableCell>
 
-                                                    </TableRow>
+                                                            {/* Seniority Column */}
+                                                            <TableCell
+                                                                sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                            >
+                                                                {row.seniority || '--'}
+                                                            </TableCell>
+
+                                                            {/* Department Column */}
+                                                            <TableCell
+                                                                sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                            >
+                                                                {row.department || '--'}
+                                                            </TableCell>
+
+                                                            {/* Company location  Column */}
+                                                            <TableCell
+                                                                sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                            >
+                                                                {(row.city || row.state)
+                                                                    ? [capitalizeTableCell(row.city), row.state].filter(Boolean).join(', ')
+                                                                    : '--'}
+                                                            </TableCell>
+
+                                                        </TableRow>
+                                                        <PopupDetails open={openPopup}
+                                                            onClose={handleClosePopup}
+                                                            companyId={companyId}
+                                                            employeeId={row.id} />
+                                                    </>
                                                 ))}
                                             </TableBody>
                                         </Table>
@@ -1023,9 +1029,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                         </Box>
                     </Popover>
 
-                    <PopupDetails open={openPopup}
-                        onClose={handleClosePopup}
-                        rowData={popupData} />
                     <FilterPopup open={filterPopupOpen} 
                         onClose={handleFilterPopupClose} 
                         onApply={handleApplyFilters} 
