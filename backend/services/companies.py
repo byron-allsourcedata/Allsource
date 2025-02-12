@@ -84,7 +84,6 @@ class CompanyService:
         employees, count, max_page = self.company_persistence_service.filter_employees(
             domain_id=self.domain.id,
             company_id=company_id,
-            domain_id=self.domain.id,
             page=page,
             per_page=per_page,
             sort_by=sort_by,
