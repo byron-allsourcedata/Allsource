@@ -66,7 +66,6 @@ LAST_PROCESSED_FILE_PATH = 'tmp/last_processed_leads_sync.txt'
 AMOUNT_CREDITS = 1
 QUEUE_CREDITS_CHARGING = 'credits_charging'
 EMAIL_NOTIFICATIONS = 'email_notifications'
-QUEUE_DATA_SYNC = 'data_sync_leads'
 
 ROOT_BOT_CLIENT_EMAIL = 'master-demo@maximiz.ai'
 ROOT_BOT_CLIENT_DOMAIN = 'demo.com'
@@ -256,15 +255,6 @@ def generate_random_order_detail():
         'currency': random.choice(['USD', 'EUR', 'GBP']),
         'platform_created_at': datetime.now(timezone.utc).isoformat()
     }
-
-
-async def process_lead_sync(rabbitmq_connection, user_domain_id, behavior_type, lead_user):
-    await publish_rabbitmq_message(rabbitmq_connection, QUEUE_DATA_SYNC,
-                                   {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
-                                       'id': lead_user.id,
-                                       'five_x_five_user_id': lead_user.five_x_five_user_id
-                                   }})
-
 
 def process_root_user_behavior(lead_user, behavior_type, requested_at, session):
     events = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
@@ -554,7 +544,6 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
             await dispatch_leads_to_rabbitmq(session=session, user=user, rabbitmq_connection=rabbitmq_connection,
                                              plan_id=plan_contact_credits_id)
 
-        await process_lead_sync(rabbitmq_connection, user_domain_id, behavior_type, lead_user)
     requested_at_str = str(possible_lead['EVENT_DATE'])
     requested_at = datetime.fromisoformat(requested_at_str).replace(tzinfo=None)
     thirty_minutes_ago = requested_at - timedelta(minutes=30)
@@ -838,10 +827,6 @@ async def main():
         arguments={
             'x-consumer-timeout': 3600000,
         }
-    )
-    await channel.declare_queue(
-        name=QUEUE_DATA_SYNC,
-        durable=True
     )
 
     await channel.declare_queue(

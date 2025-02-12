@@ -24,7 +24,6 @@ class KlaviyoIntegrationsService:
         self.integrations_persisntece = integrations_persistence
         self.leads_persistence = leads_persistence
         self.sync_persistence = sync_persistence
-        self.QUEUE_DATA_SYNC = 'data_sync_leads'
         self.client = client
 
     def __handle_request(self, method: str, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None, api_key: str = None):
