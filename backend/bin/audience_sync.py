@@ -52,23 +52,6 @@ def filter_high_aov_customer(total_spend: float, purchase_count: int) -> bool:
     average_order_value = total_spend / purchase_count if purchase_count else 0
     return average_order_value >= HIGH_AOV_THRESHOLD
 
-def filter_high_intent_visitor(pages_visited, avg_time_on_site, product_page_time):
-    if pages_visited > 3 and avg_time_on_site > 60:
-        return True
-    if product_page_time > 60:
-        return True
-    return False
-
-def filter_returning_visitor(first_visit_date, last_visit_date):
-    if (last_visit_date - first_visit_date).days <= 30:
-        return True
-    return False
-
-def filter_abandoned_cart_visitor(cart_items, checkout_status, last_cart_update):
-    if cart_items > 0 and checkout_status != 'Completed' and (get_utc_aware_date - last_cart_update).days <= 1:
-        return True
-    return False
-
 async def fetch_consignments_data(consignments_url: str, access_token: str) -> Optional[dict]:
     try:
         async with aiohttp.ClientSession() as session:
@@ -100,11 +83,6 @@ async def fetch_item_data(item_url: str, access_token: str) -> Optional[dict]:
     except Exception as e:
         logging.error(f"Error fetching item data: {e}")
         return None
-
-def filter_lookalike_size(customer_similarity_score, lookalike_size):
-    min_percentage = 0
-    max_percentage = lookalike_size
-    return min_percentage <= customer_similarity_score <= max_percentage
 
 async def bigcommerce_process(store_hash: str, access_token: str, audience_type: str, audience_threshold: float) -> List[dict]:
     api = BigcommerceApi(
@@ -205,16 +183,7 @@ async def bigcommerce_process(store_hash: str, access_token: str, audience_type:
             continue
         if audience_type == 'High AOV customer' and not filter_high_aov_customer(total_spend, purchase_count):
             continue
-        if audience_type == 'High Intent Visitor' and not filter_high_intent_visitor(pages_visited, avg_time_on_site, product_page_time):
-            continue
-        if audience_type == 'Returning Visitor' and not filter_returning_visitor(first_visit_date, last_visit_date):
-            continue
-        if audience_type == 'Abandoned Cart Visitor' and not filter_abandoned_cart_visitor(cart_items, checkout_status, last_cart_update):
-            continue
-        
-        # if not filter_lookalike_size(customer_similarity_score, audience_threshold):
-        #     continue
-        
+                
         customer_data = customer_orders[customer_id]
         customer_data["total_spend"] += total_spend
         customer_data["purchase_count"] += purchase_count
