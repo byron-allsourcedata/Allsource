@@ -153,17 +153,25 @@ class OmnisendIntegrationService:
     
 
     def __mapped_identifiers(self, lead: FiveXFiveUser):
-        first_email = (
-            getattr(lead, 'business_email') or 
-            getattr(lead, 'personal_emails') or
-            getattr(lead, 'additional_personal_emails') or
-            getattr(lead, 'programmatic_business_emails', None)
-        )
-        first_email = extract_first_email(first_email) if first_email else None
+        email_fields = [
+            'business_email', 
+            'personal_emails', 
+            'additional_personal_emails',
+        ]
+        
+        def get_valid_email(user) -> str:
+            for field in email_fields:
+                email = getattr(user, field, None)
+                if email:
+                    emails = extract_first_email(email)
+                    for e in emails:
+                        if e and self.million_verifier_integrations.is_email_verify(email=e.strip()):
+                            return e.strip()
+            return None
+
+        first_email = get_valid_email(lead)
+        
         if not first_email:
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
-        first_email = first_email.strip()
-        if not self.million_verifier_integrations.is_email_verify(email=first_email):
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
         
         return Identifiers(id=first_email)

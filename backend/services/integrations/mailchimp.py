@@ -252,18 +252,25 @@ class MailchimpIntegrationsService:
         return ListFromIntegration(id=list['id'], list_name=list['name'])
     
     def __mapped_member_into_list(self, five_x_five_user: FiveXFiveUser):
-        first_email = (
-            getattr(five_x_five_user, 'business_email') or 
-            getattr(five_x_five_user, 'personal_emails') or 
-            getattr(five_x_five_user, 'additional_personal_emails') or
-            getattr(five_x_five_user, 'programmatic_business_emails', None)
-        )
-        first_email = extract_first_email(first_email) if first_email else None
-        if not first_email:
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
-        first_email = first_email.strip()
+        email_fields = [
+            'business_email', 
+            'personal_emails', 
+            'additional_personal_emails',
+        ]
         
-        if not self.million_verifier_integrations.is_email_verify(email=first_email):
+        def get_valid_email(user) -> str:
+            for field in email_fields:
+                email = getattr(user, field, None)
+                if email:
+                    emails = extract_first_email(email)
+                    for e in emails:
+                        if e and self.million_verifier_integrations.is_email_verify(email=e.strip()):
+                            return e.strip()
+            return None
+
+        first_email = get_valid_email(five_x_five_user)
+        
+        if not first_email:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
         
         first_phone = (
