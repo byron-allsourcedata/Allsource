@@ -27,8 +27,6 @@ import CustomTablePagination from '@/components/CustomTablePagination';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useNotification } from '@/context/NotificationContext';
 import { showErrorToast } from '@/components/ToastNotification';
-import CompanyFilterPopup from './CompanyFilters';
-import CompanyEmployees from './CompanyEmployees';
 
 
 interface FetchDataParams {
@@ -61,11 +59,8 @@ const Leads: React.FC = () => {
     const [selectedDates, setSelectedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
     const isCalendarOpen = Boolean(calendarAnchorEl);
     const [formattedDates, setFormattedDates] = useState<string>('');
-    const [companyName, setCompanyName] = useState<string>('');
-    const [companyId, setCompanyId] = useState<number>(0);
     const [filterPopupOpen, setFilterPopupOpen] = useState(false);
     const [audiencePopupOpen, setAudiencePopupOpen] = useState(false);
-    const [companyEmployeesOpen, setCompanyEmployeesOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [selectedFilters, setSelectedFilters] = useState<{ label: string, value: string }[]>([]);
     const [openPopup, setOpenPopup] = React.useState(false);
@@ -234,7 +229,7 @@ const Leads: React.FC = () => {
             const processMultiFilter = (label: string, paramName: string) => {
                 const filter = selectedFilters.find(filter => filter.label === label)?.value;
                 if (filter) {
-                    url += `&${paramName}=${encodeURIComponent(filter.split(', ').join(','))}`;
+                    url += `&${paramName}=${encodeURIComponent(filter?.split(', ').join(','))}`;
                 }
             };
     
@@ -402,7 +397,7 @@ const Leads: React.FC = () => {
             }
 
             if (selectedFilters.some(filter => filter.label === 'Visitor Type')) {
-                const status = selectedFilters.find(filter => filter.label === 'Visitor Type')?.value.split(', ') || [];
+                const status = selectedFilters.find(filter => filter.label === 'Visitor Type')?.value?.split(', ') || [];
                 if (status.length > 0) {
                     const formattedStatus = status.map(status => status.toLowerCase().replace(/\s+/g, '_'));
                     params.push(`behavior_type=${encodeURIComponent(formattedStatus.join(','))}`);
@@ -410,7 +405,7 @@ const Leads: React.FC = () => {
             }
 
             if (selectedFilters.some(filter => filter.label === 'Regions')) {
-                const regions = selectedFilters.find(filter => filter.label === 'Regions')?.value.split(', ') || [];
+                const regions = selectedFilters.find(filter => filter.label === 'Regions')?.value?.split(', ') || [];
                 if (regions.length > 0) {
                     params.push(`regions=${encodeURIComponent(regions.join(','))}`);
                 }
@@ -433,7 +428,7 @@ const Leads: React.FC = () => {
             }
 
             if (selectedFilters.some(filter => filter.label === 'Lead Status')) {
-                const funnels = selectedFilters.find(filter => filter.label === 'Lead Status')?.value.split(', ') || [];
+                const funnels = selectedFilters.find(filter => filter.label === 'Lead Status')?.value?.split(', ') || [];
                 if (funnels.length > 0) {
                     const formattedFunnels = funnels.map(funnel => funnel.toLowerCase().replace(/\s+/g, '_'));
                     params.push(`status=${encodeURIComponent(formattedFunnels.join(','))}`);
@@ -462,7 +457,7 @@ const Leads: React.FC = () => {
             }
 
             if (selectedFilters.some(filter => filter.label === 'Time Spent')) {
-                const timeSpent = selectedFilters.find(filter => filter.label === 'Time Spent')?.value.split(', ') || [];
+                const timeSpent = selectedFilters.find(filter => filter.label === 'Time Spent')?.value?.split(', ') || [];
                 if (timeSpent.length > 0) {
                     const formattedTimeSpent = timeSpent.map(value => value.replace(/\s+/g, '_'));
                     params.push(`average_time_sec=${encodeURIComponent(formattedTimeSpent.join(','))}`);
@@ -470,7 +465,7 @@ const Leads: React.FC = () => {
             }
 
             if (selectedFilters.some(filter => filter.label === 'Recurring Visits')) {
-                const recurringVisits = selectedFilters.find(filter => filter.label === 'Recurring Visits')?.value.split(', ') || [];
+                const recurringVisits = selectedFilters.find(filter => filter.label === 'Recurring Visits')?.value?.split(', ') || [];
                 if (recurringVisits.length > 0) {
                     const formattedRecurringVisits = recurringVisits.map(value => value.replace(/\s+/g, '_'));
                     params.push(`recurring_visits=${encodeURIComponent(formattedRecurringVisits.join(','))}`);
@@ -478,7 +473,7 @@ const Leads: React.FC = () => {
             }
 
             if (selectedFilters.some(filter => filter.label === 'Page Visits')) {
-                const pageVisits = selectedFilters.find(filter => filter.label === 'Page Visits')?.value.split(', ') || [];
+                const pageVisits = selectedFilters.find(filter => filter.label === 'Page Visits')?.value?.split(', ') || [];
                 if (pageVisits.length > 0) {
                     const formattedPageVisits = pageVisits.map(value => value.replace(/\s+/g, '_'));
                     params.push(`page_visits=${encodeURIComponent(formattedPageVisits.join(','))}`);
@@ -663,7 +658,7 @@ const Leads: React.FC = () => {
         const newFilters: FilterParams = {
             from_date: updatedFilters.find(f => f.label === 'From Date') ? dayjs(updatedFilters.find(f => f.label === 'From Date')!.value).unix() : null,
             to_date: updatedFilters.find(f => f.label === 'To Date') ? dayjs(updatedFilters.find(f => f.label === 'To Date')!.value).unix() : null,
-            regions: updatedFilters.find(f => f.label === 'Regions') ? updatedFilters.find(f => f.label === 'Regions')!.value.split(', ') : [],
+            regions: updatedFilters.find(f => f.label === 'Regions') ? updatedFilters.find(f => f.label === 'Regions')!.value?.split(', ') : [],
             searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',
             selectedPageVisit: updatedFilters.find(f => f.label === 'Employee Visits') ? updatedFilters.find(f => f.label === 'Employee Visits')!.value : '',
             checkedFiltersNumberOfEmployees: {
@@ -726,11 +721,6 @@ const Leads: React.FC = () => {
             {loading && (
                 <CustomizedProgressBar/>
             )}
-            {companyEmployeesOpen && <CompanyEmployees companyId={companyId} companyName={companyName} onBack={() => {
-                setCompanyEmployeesOpen(false)
-                sessionStorage.removeItem('filters-employee')
-            }}/>}
-            {!companyEmployeesOpen && 
             <Box sx={{
                 display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
                 '@media (max-width: 900px)': {
@@ -907,9 +897,9 @@ const Leads: React.FC = () => {
                             let displayValue = filter.value;
                             // Если фильтр Regions, применяем форматирование
                             if (filter.label === 'Regions') {
-                                const regions = filter.value.split(', ') || [];
+                                const regions = filter.value?.split(', ') || [];
                                 const formattedRegions = regions.map(region => {
-                                    const [name] = region.split('-');
+                                    const [name] = region?.split('-');
                                     return name;
                                 });
                                 displayValue = formattedRegions.join(', ');
@@ -1020,7 +1010,7 @@ const Leads: React.FC = () => {
                                         component={Paper}
                                         sx={{
                                             border: '1px solid rgba(235, 235, 235, 1)',
-                                            overflowX: 'scroll',
+
                                             maxHeight: selectedFilters.length > 0
                                                 ? (hasNotification ? '63vh' : '68vh')
                                                 : '72vh',
@@ -1044,7 +1034,7 @@ const Leads: React.FC = () => {
                                                         { key: 'company_name', label: 'Company', sortable: true },
                                                         { key: 'phone_number', label: 'Phone Number' },
                                                         { key: 'linkedin', label: 'LinkedIn' },
-                                                        { key: 'employees_visited', label: 'Employees Visited', sortable: true },
+                                                        { key: 'employees_visited', label: 'Visitors', sortable: true },
                                                         { key: 'visited_date', label: 'Visited date', sortable: true },
                                                         { key: 'revenue', label: 'Revenue', sortable: true },
                                                         { key: 'number_of_employees', label: 'No. of Employees', sortable: true },
@@ -1129,7 +1119,8 @@ const Leads: React.FC = () => {
                                                         </TableCell>
 
                                                         {/* Employess Visited  Column */}
-                                                        <TableCell sx={{...companyStyles.table_array, position: 'relative'}}>
+                                                        <TableCell sx={{...companyStyles.table_array, position: 'relative',  color: row.employees_visited ? 'rgba(80, 82, 178, 1) !important' : '',
+                                                                cursor: row.employees_visited ? 'pointer' : 'default'}}>
                                                             {row.employees_visited || '--'}
                                                         </TableCell>
 
@@ -1138,7 +1129,7 @@ const Leads: React.FC = () => {
                                                             sx={{ ...companyStyles.table_array, position: 'relative' }}>
                                                             {row.visited_date
                                                                 ? (() => {
-                                                                    const [day, month, year] = row.visited_date.split('.');
+                                                                    const [day, month, year] = row.visited_date?.split('.');
                                                                     return `${month}/${day}/${year}`;
                                                                 })()
                                                                 : '--'}
@@ -1153,14 +1144,8 @@ const Leads: React.FC = () => {
 
                                                         {/* Company employee count  Column */}
                                                         <TableCell
-                                                            onClick={() => {
-                                                                setCompanyEmployeesOpen(true)
-                                                                setCompanyName(row.name)
-                                                                setCompanyId(row.id)
-                                                            }}
-                                                            
                                                             sx={{
-                                                                ...companyStyles.table_array, position: 'relative', cursor: "pointer", color: 'rgba(80, 82, 178, 1) !important'}}
+                                                                ...companyStyles.table_array, position: 'relative',}}
                                                         >
                                                             {row.employee_count || '--'}
                                                         </TableCell>
@@ -1236,7 +1221,7 @@ const Leads: React.FC = () => {
                                         backgroundColor: 'rgba(243, 243, 243, 1)',
                                         borderRadius: '4px',
                                         color: 'rgba(95, 99, 104, 1) !important',
-                                        marginBottom: index < selectedIndustry.split(",").length - 1 ? "4px" : 0, // Отступы между строками
+                                        marginBottom: index < selectedIndustry?.split(",").length - 1 ? "4px" : 0, // Отступы между строками
                                     }}
                                 >
                                     {part.trim()}
@@ -1259,7 +1244,7 @@ const Leads: React.FC = () => {
                         selectedDates={selectedDates}
                     />
                 </Box>
-            </Box>}
+            </Box>
         </>
     );
 };
