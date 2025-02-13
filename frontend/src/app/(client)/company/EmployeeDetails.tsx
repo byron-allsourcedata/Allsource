@@ -16,7 +16,7 @@ import dayjs from "dayjs";
 interface PopupDetailsProps {
     open: boolean;
     onClose: () => void;
-    employeeId: number;
+    employeeId: number | null;
     companyId: number;
 }
 
@@ -41,11 +41,8 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
     const [popupData, setPopupData] = useState<any>()
 
     const handleDownload = async () => {
-        const requestBody = {
-            companies_ids: popupData?.id ? [popupData?.id] : []
-        };
         try {
-            const response = await axiosInstance.post('/company/download-company', requestBody, {
+            const response = await axiosInstance.get(`/company/download-employee/${employeeId}?company_id=${companyId}`, {
                 responseType: 'blob'
             });
 
@@ -76,18 +73,20 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
     useEffect(() => {
         const fetchEmployees = async () => {
             try {
-                const response = await axiosInstance.get(`/company/employees/${employeeId}?company_id=${companyId}`);
-                if (response.status === 200) {
-                    setPopupData(response.data);
-                } else {
-                    showErrorToast("Error receiving employee data");
+                if (employeeId) {
+                    const response = await axiosInstance.get(`/company/employees/${employeeId}?company_id=${companyId}`);
+                    if (response.status === 200) {
+                        setPopupData(response.data);
+                    } else {
+                        showErrorToast("Error receiving employee data");
+                    }
                 }
             } catch {
             }
         };
     
         fetchEmployees();
-    }, [companyId]);
+    }, [companyId, employeeId]);
 
     useEffect(() => {
         if (open) {
@@ -268,7 +267,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                     </Box>
                     {/* Company Details */}
                     <Box sx={companyStyles.box_param}>
-                        <Typography sx={companyStyles.title_company}>
+                        <Typography sx={{...companyStyles.title_company, alignItems: "center"}}>
                             <CorporateFareRoundedIcon width={18} height={18}/>
                             Company Details
                         </Typography>
@@ -309,7 +308,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
 
                         <Box sx={companyStyles.rows_pam}>
                             <Typography sx={{ ...companyStyles.title_text }}>
-                                Address:
+                                Company address:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
                                 {popupData?.company_address|| '--'}
@@ -346,6 +345,15 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                             </Typography>
                         </Box>
 
+                        <Box sx={{...companyStyles.rows_pam}}>
+                            <Typography sx={{ ...companyStyles.title_text }}>
+                                Company last updated:
+                            </Typography>
+                            <Typography sx={{ ...companyStyles.text }}>
+                                {dayjs(popupData?.company_last_updated).isValid() ? dayjs(popupData?.company_last_updated).format('M/D/YYYY h:mm:ss A') : '--'}
+                            </Typography>
+                        </Box>
+
                         <Box sx={{...companyStyles.rows_pam, borderBottom: 'none'}}>
                             <Typography sx={{ ...companyStyles.title_text }}>
                                 Company LinkedIn url:
@@ -366,11 +374,12 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 )}
                             </Typography>
                         </Box>
+                        
 
                     </Box>
                     {/* Personal details */}
                     <Box sx={companyStyles.box_param}>
-                        <Typography sx={companyStyles.title_company}>
+                        <Typography sx={{...companyStyles.title_company, alignItems: "center"}}>
                             <AccountCircleOutlinedIcon width={18} height={18} />
                             Personal details:
                         </Typography>
@@ -482,14 +491,6 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
                                 {popupData?.personal_zip || '--'}
-                            </Typography>
-                        </Box>
-                        <Box sx={{...companyStyles.rows_pam}}>
-                            <Typography sx={{ ...companyStyles.title_text }}>
-                                Company last updated:
-                            </Typography>
-                            <Typography sx={{ ...companyStyles.text }}>
-                                {dayjs(popupData?.company_last_updated).isValid() ? dayjs(popupData?.company_last_updated).format('M/D/YYYY h:mm:ss A') : '--'}
                             </Typography>
                         </Box>
 

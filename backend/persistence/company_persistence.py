@@ -28,6 +28,8 @@ from models.lead_company import LeadCompany
 logger = logging.getLogger(__name__)
 
 class CompanyPersistence:
+    DOWNLOAD_LIMIT_ROWS = 20000
+    
     def __init__(self, db: Session):
         self.db = db
 
@@ -452,6 +454,27 @@ class CompanyPersistence:
         return leads, count, max_page
 
 
+    def search_company(self, start_letter, domain_id):
+        query = (
+            self.db.query(
+                LeadCompany.name,
+                LeadCompany.phone
+            )
+                .join(LeadUser, LeadUser.company_id == LeadCompany.id)
+                .filter(
+                LeadUser.domain_id == domain_id,
+                or_(
+                    LeadCompany.name.ilike(f'{start_letter}%'),
+                    LeadCompany.phone.ilike(f"{start_letter.replace('+', '')}%")
+                )
+            )
+                .limit(10)
+        )
+
+        companies = query.all()
+        return companies
+
+
     def filter_employees(self, domain_id, company_id, page, per_page, sort_by, sort_order,
                          search_query, job_title, department, seniority, regions):
        
@@ -555,10 +578,15 @@ class CompanyPersistence:
             ]
             query = query.filter(or_(*filters))
 
-        offset = (page - 1) * per_page
-        employees = query.limit(per_page).offset(offset).all()
-        count = query.count()
-        max_page = math.ceil(count / per_page)
+        count = 0
+        max_page = 0
+        if per_page:
+            offset = (page - 1) * per_page
+            employees = query.limit(per_page).offset(offset).all()
+            count = query.count()
+            max_page = math.ceil(count / per_page)
+        else:
+            employees = query.limit(self.DOWNLOAD_LIMIT_ROWS).all()
         return employees, count, max_page
 
 
