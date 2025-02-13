@@ -26,10 +26,6 @@ interface FilterPopupProps {
   jobTitles: string[];
 }
 
-interface TagMap {
-  [key: string]: string;
-}
-
 interface CustomChipProps {
   label: string;
   onDelete: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
@@ -90,26 +86,6 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
       setTags([...regions, region.trim()]);
       setRegions("");
     }
-  };
-
-  const addTag = (category: string, tag: string) => {
-    setSelectedTags((prevTags) => {
-      const newTags = [...prevTags[category]];
-      if (!newTags.includes(tag)) {
-        newTags.push(tag);
-      }
-      return { ...prevTags, [category]: newTags };
-    });
-  };
-
-  const removeTag = (category: string, tag: string) => {
-    setSelectedTags((prevTags) => {
-      const updatedTags = prevTags[category].filter((t) => t !== tag);
-
-      const isLastTagRemoved = updatedTags.length === 0;
-
-      return { ...prevTags, [category]: updatedTags };
-    });
   };
 
   // Industry
@@ -206,37 +182,6 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
     sessionStorage.setItem('filters-employee', JSON.stringify(filters));
   };
 
-  const loadFiltersFromSessionStorage = () => {
-    const savedFilters = sessionStorage.getItem('filters-employee');
-    if (savedFilters) {
-      return JSON.parse(savedFilters);
-    }
-    return null;
-  };
-
-  const initializeFilters = () => {
-    const savedFilters = loadFiltersFromSessionStorage();
-    
-    if (savedFilters) {
-      setCheckedFiltersDepartment(savedFilters.department || {})
-      setCheckedFiltersSeniority(savedFilters.seniority || {})
-      setCheckedFiltersJobTitles(savedFilters.jobTitle || {})
-      }
-
-      setSearchQuery(savedFilters?.searchQuery || '');
-
-      if (savedFilters?.regions) {
-        setTags((prevTags) => {
-          const uniqueTags = new Set(prevTags);
-          savedFilters.regions.forEach((cityTag: string) => {
-            uniqueTags.add(cityTag);
-          });
-          return Array.from(uniqueTags);
-        });
-      }
-  
-    };
-
   useEffect(() => {
     if (open) {
       if (departments) {
@@ -260,7 +205,6 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
         }, {} as Record<string, boolean>);
         setCheckedFiltersJobTitles(initialState);
       }
-      initializeFilters();
     }
   }, [open, departments, seniorities, jobTitles]);
 
