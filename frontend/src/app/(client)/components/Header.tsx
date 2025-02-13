@@ -92,6 +92,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
         sessionStorage.setItem('current_domain', parent_domain || '')
         await fetchUserData()
         setBackButton(false)
+        setVisibleButton(false)
         setTimeout(() => {
           resolve();
         }, 0);

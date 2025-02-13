@@ -26,10 +26,6 @@ interface FilterPopupProps {
   jobTitles: string[];
 }
 
-interface TagMap {
-  [key: string]: string;
-}
-
 interface CustomChipProps {
   label: string;
   onDelete: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
@@ -84,44 +80,12 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
   const [openSelectDepartment, setOpenSelectDepartment] = useState(false);
   const [openSelectJobTitle, setOpenSelectJobTitle] = useState(false);
   const [openSelectSeniority, setOpenSelectSeniority] = useState(false);
-  // const [open_save, setOpen] = useState(false);
-  // const [openLoadDrawer, setOpenLoadDrawer] = useState(false);
-  // const [filterName, setFilterName] = useState("");
-  // const [isButtonDisabled, setIsButtonDisabled] = useState(true);
-
-  // type SavedFilter = {
-  //   name: string;
-  //   data: ReturnType<typeof handleFilters>; // Use the return type of handleFilters directly
-  // };
-
-  // const handleOpen = () => setOpen(true);
-  // const handleClose = () => setOpen(false);
 
   const handleAddTag = (e: { key: string }) => {
     if (e.key === "Enter" && region.trim()) {
       setTags([...regions, region.trim()]);
       setRegions("");
     }
-  };
-
-  const addTag = (category: string, tag: string) => {
-    setSelectedTags((prevTags) => {
-      const newTags = [...prevTags[category]];
-      if (!newTags.includes(tag)) {
-        newTags.push(tag);
-      }
-      return { ...prevTags, [category]: newTags };
-    });
-  };
-
-  const removeTag = (category: string, tag: string) => {
-    setSelectedTags((prevTags) => {
-      const updatedTags = prevTags[category].filter((t) => t !== tag);
-
-      const isLastTagRemoved = updatedTags.length === 0;
-
-      return { ...prevTags, [category]: updatedTags };
-    });
   };
 
   // Industry
@@ -218,37 +182,6 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
     sessionStorage.setItem('filters-employee', JSON.stringify(filters));
   };
 
-  const loadFiltersFromSessionStorage = () => {
-    const savedFilters = sessionStorage.getItem('filters-employee');
-    if (savedFilters) {
-      return JSON.parse(savedFilters);
-    }
-    return null;
-  };
-
-  const initializeFilters = () => {
-    const savedFilters = loadFiltersFromSessionStorage();
-    
-    if (savedFilters) {
-      setCheckedFiltersDepartment(savedFilters.department || {})
-      setCheckedFiltersSeniority(savedFilters.seniority || {})
-      setCheckedFiltersJobTitles(savedFilters.jobTitle || {})
-      }
-
-      setSearchQuery(savedFilters?.searchQuery || '');
-
-      if (savedFilters?.regions) {
-        setTags((prevTags) => {
-          const uniqueTags = new Set(prevTags);
-          savedFilters.regions.forEach((cityTag: string) => {
-            uniqueTags.add(cityTag);
-          });
-          return Array.from(uniqueTags);
-        });
-      }
-  
-    };
-
   useEffect(() => {
     if (open) {
       if (departments) {
@@ -272,7 +205,6 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
         }, {} as Record<string, boolean>);
         setCheckedFiltersJobTitles(initialState);
       }
-      initializeFilters();
     }
   }, [open, departments, seniorities, jobTitles]);
 
@@ -362,7 +294,6 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
   const handleSearchQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchQuery(value);
-    fetchContacts(value);
   };
 
   const handleSelectContact = (contact: { name: string }) => {
