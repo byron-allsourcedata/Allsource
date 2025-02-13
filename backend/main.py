@@ -19,8 +19,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-app = FastAPI()
-external_api = FastAPI()
+app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+external_api = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
 
 @external_api.exception_handler(StarletteHTTPException)

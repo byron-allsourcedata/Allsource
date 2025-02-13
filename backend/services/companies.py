@@ -81,7 +81,7 @@ class CompanyService:
 
     def get_employees(self, company_id, sort_by, sort_order,
                       search_query, job_title, seniority, regions, department, page, per_page=None):
-        employees, count, max_page = self.company_persistence_service.filter_employees(
+        employees, count, max_page, states = self.company_persistence_service.filter_employees(
             domain_id=self.domain.id,
             company_id=company_id,
             page=page,
@@ -96,6 +96,7 @@ class CompanyService:
         )
 
         employees_list = []
+        state_dict = {state.state_code: state.state_name for state in states} if states else {}
         for employee in employees:
 
             employees_list.append({
@@ -110,7 +111,7 @@ class CompanyService:
                 'department': employee[8],
                 'job_title': employee[9],
                 'city': employee[10],
-                'state': employee[11]
+                'state': self.convert_state_code_to_name(employee[11], state_dict)
             })
 
         return employees_list, count, max_page
