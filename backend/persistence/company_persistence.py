@@ -493,12 +493,11 @@ class CompanyPersistence:
             FiveXFiveUser.job_title,
             FiveXFiveUser.personal_city,
             FiveXFiveUser.personal_state
-        ).select_from(LeadUser)\
-        .join(LeadCompany, LeadCompany.id == LeadUser.company_id) \
-        .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id) \
+        )\
+        .join(LeadCompany, LeadCompany.alias == FiveXFiveUser.company_alias) \
         .join(FiveXFiveNamesFirst, FiveXFiveNamesFirst.id == FiveXFiveUser.first_name_id) \
         .join(FiveXFiveNamesLast, FiveXFiveNamesLast.id == FiveXFiveUser.last_name_id)\
-        .filter(LeadUser.domain_id == domain_id, LeadCompany.id == company_id)\
+        .filter(LeadCompany.id == company_id)\
 
         sort_options = {
             'business_email': FiveXFiveUser.business_email,
