@@ -555,10 +555,15 @@ class CompanyPersistence:
             ]
             query = query.filter(or_(*filters))
 
-        offset = (page - 1) * per_page
-        employees = query.limit(per_page).offset(offset).all()
-        count = query.count()
-        max_page = math.ceil(count / per_page)
+        count = 0
+        max_page = 0
+        if per_page:
+            offset = (page - 1) * per_page
+            employees = query.limit(per_page).offset(offset).all()
+            count = query.count()
+            max_page = math.ceil(count / per_page)
+        else:
+            employees = query.all()
         return employees, count, max_page
 
 

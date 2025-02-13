@@ -114,16 +114,18 @@ async def download_company(companies_request: CompaniesRequest,
     return BaseEnum.FAILURE
 
 
-@router.get("/download-companies")
-async def download_companies(
-    
-        from_date: int = Query(None, description="Start date in integer format"),
-        to_date: int = Query(None, description="End date in integer format"),
+@router.get("/download-employees")
+async def download_employees(
+        company_id: int = Query(None),
+        job_title: str = Query(None),
+        department: str = Query(None),
+        seniority: str = Query(None),
+        sort_by: str = Query(None, description="Field"),
+        sort_order: str = Query(None, description="Field to sort by: 'asc' or 'desc'"),
         regions: str = Query(None, description="Comma-separated list of regions"),
         search_query: str = Query(None, description="Search for email, first name, lastname and phone number"),
-        timezone_offset: float = Query(0, description="timezone offset in integer format"),
         company_service: CompanyService = Depends(get_companies_service)):
-    result = company_service.download_companies(from_date=from_date, to_date=to_date, regions=regions, search_query=search_query, timezone_offset=timezone_offset)
+    result = company_service.download_employees(company_id=company_id, regions=regions, sort_by=sort_by, sort_order=sort_order, search_query=search_query, job_title=job_title, department=department, seniority=seniority)
     if result:
         return StreamingResponse(result, media_type="text/csv",
                                  headers={"Content-Disposition": "attachment; filename=data.csv"})

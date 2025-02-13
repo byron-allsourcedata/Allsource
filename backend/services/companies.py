@@ -79,8 +79,8 @@ class CompanyService:
         return company_list, count, max_page
     
 
-    def get_employees(self, company_id, page, per_page, sort_by, sort_order,
-                      search_query, job_title, seniority, regions, department):
+    def get_employees(self, company_id, sort_by, sort_order,
+                      search_query, job_title, seniority, regions, department, page, per_page=None):
         employees, count, max_page = self.company_persistence_service.filter_employees(
             domain_id=self.domain.id,
             company_id=company_id,
@@ -216,51 +216,43 @@ class CompanyService:
         return job_titles
     
 
-    def download_employees(self, from_date=None, to_date=None, regions=None, search_query=None, companies_ids=0, timezone_offset=None):
-        if companies_ids == 0:
-            leads = self.company_persistence_service.get_full_information_companies_by_filters(domain_id=self.domain.id,
-                                                                                from_date=from_date,
-                                                                                to_date=to_date,
-                                                                                regions=regions,
-                                                                                search_query=search_query,
-                                                                                timezone_offset=timezone_offset
-                                                                                )
-        else:
-            leads = self.company_persistence_service.get_full_companies_by_ids(self.domain.id, companies_ids)
-        if len(leads) == 0:
-            return None
+    def download_employees(self, sort_by, sort_order, regions, search_query, job_title, seniority, department, company_id):
+        employees_list, _, _ = self.get_employees(
+            company_id=company_id,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            department=department,
+            job_title=job_title,
+            seniority=seniority,
+            regions=regions,
+            search_query=search_query,
+            page=1
+        )
+
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow([
-            'Company name', 'Company phone', 'Company LinkedIn URL', 'Number of employees', 
-            'First visit date', 'Company revenue', 'Company employee count', 'Company address', 
-            'Primary industry', 'Company domain', 'Company zip', 'Company description', 
-            'City', 'State', 'Last company update'
+            'First name', 'Last_name', 'Mobile_phone', 'Linkedin_url', 'Personal_email', 'Business_email', 'Seniority', 'Department', 'Job title', 'City', 'State'
         ])
-        for lead in leads:
-            relevant_data = [
-                lead.name or 'None',
-                format_phone_number(lead.phone) or 'None',
-                lead.linkedin_url or 'None',
-                lead.number_of_employees or 'None',
-                lead.visited_date or 'None',
-                lead.revenue or 'None',
-                lead.employee_count or 'None',
-                lead.address or 'None',
-                lead.primary_industry or 'None',
-                lead.domain or 'None',
-                lead.zip or 'None',
-                lead.description or 'None',
-                lead.city or 'None',
-                lead.state_name or 'None',
-                lead.last_updated or 'None',
-            ]
-            writer.writerow(relevant_data)
+        for employee in employees_list:
+            writer.writerow([
+                employee['first_name'] or 'None',
+                employee['last_name'] or 'None',
+                employee['mobile_phone'] or 'None',
+                employee['linkedin_url'] or 'None',
+                employee['personal_email'] or 'None',
+                employee['business_email'] or 'None',
+                employee['seniority'] or 'None',
+                employee['department'] or 'None',
+                employee['job_title'] or 'None',
+                employee['city'] or 'None',
+                employee['state'] or 'None',
+            ])
 
         output.seek(0)
         return output
-    
-    
+
+
     def download_companies(self, from_date=None, to_date=None, regions=None, search_query=None, companies_ids=0, timezone_offset=None):
         if companies_ids == 0:
             leads = self.company_persistence_service.get_full_information_companies_by_filters(domain_id=self.domain.id,
