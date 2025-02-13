@@ -482,9 +482,8 @@ def get_companies_service(domain: UserDomains = Depends(check_pixel_install_doma
     return CompanyService(domain=domain, company_persistence_service=companies_persistence_service)
 
 
-def get_audience_service(user: User = Depends(check_user_authorization),
-                         audience_persistence_service: AudiencePersistence = Depends(get_audience_persistence)):
-    return AudienceService(user=user, audience_persistence_service=audience_persistence_service)
+def get_audience_service(audience_persistence_service: AudiencePersistence = Depends(get_audience_persistence)):
+    return AudienceService(audience_persistence_service=audience_persistence_service)
 
 
 def get_sse_events_service(user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
