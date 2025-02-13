@@ -27,6 +27,8 @@ import CustomTablePagination from '@/components/CustomTablePagination';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useNotification } from '@/context/NotificationContext';
 import { showErrorToast } from '@/components/ToastNotification';
+import CompanyFilterPopup from './CompanyFilters';
+import CompanyEmployees from './CompanyEmployees';
 
 
 interface FetchDataParams {
@@ -59,8 +61,11 @@ const Leads: React.FC = () => {
     const [selectedDates, setSelectedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
     const isCalendarOpen = Boolean(calendarAnchorEl);
     const [formattedDates, setFormattedDates] = useState<string>('');
+    const [companyName, setCompanyName] = useState<string>('');
+    const [companyId, setCompanyId] = useState<number>(0);
     const [filterPopupOpen, setFilterPopupOpen] = useState(false);
     const [audiencePopupOpen, setAudiencePopupOpen] = useState(false);
+    const [companyEmployeesOpen, setCompanyEmployeesOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [selectedFilters, setSelectedFilters] = useState<{ label: string, value: string }[]>([]);
     const [openPopup, setOpenPopup] = React.useState(false);
@@ -721,6 +726,11 @@ const Leads: React.FC = () => {
             {loading && (
                 <CustomizedProgressBar/>
             )}
+            {companyEmployeesOpen && <CompanyEmployees companyId={companyId} companyName={companyName} onBack={() => {
+                setCompanyEmployeesOpen(false)
+                sessionStorage.removeItem('filters-employee')
+            }}/>}
+            {!companyEmployeesOpen && 
             <Box sx={{
                 display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
                 '@media (max-width: 900px)': {
@@ -1010,7 +1020,6 @@ const Leads: React.FC = () => {
                                         component={Paper}
                                         sx={{
                                             border: '1px solid rgba(235, 235, 235, 1)',
-
                                             maxHeight: selectedFilters.length > 0
                                                 ? (hasNotification ? '63vh' : '68vh')
                                                 : '72vh',
@@ -1119,8 +1128,7 @@ const Leads: React.FC = () => {
                                                         </TableCell>
 
                                                         {/* Employess Visited  Column */}
-                                                        <TableCell sx={{...companyStyles.table_array, position: 'relative',  color: row.employees_visited ? 'rgba(80, 82, 178, 1) !important' : '',
-                                                                cursor: row.employees_visited ? 'pointer' : 'default'}}>
+                                                        <TableCell sx={{...companyStyles.table_array, position: 'relative'}}>
                                                             {row.employees_visited || '--'}
                                                         </TableCell>
 
@@ -1129,7 +1137,7 @@ const Leads: React.FC = () => {
                                                             sx={{ ...companyStyles.table_array, position: 'relative' }}>
                                                             {row.visited_date
                                                                 ? (() => {
-                                                                    const [day, month, year] = row.visited_date?.split('.');
+                                                                    const [day, month, year] = row.visited_date.split('.');
                                                                     return `${month}/${day}/${year}`;
                                                                 })()
                                                                 : '--'}
@@ -1144,8 +1152,14 @@ const Leads: React.FC = () => {
 
                                                         {/* Company employee count  Column */}
                                                         <TableCell
+                                                            onClick={() => {
+                                                                setCompanyEmployeesOpen(true)
+                                                                setCompanyName(row.name)
+                                                                setCompanyId(row.id)
+                                                            }}
+                                                            
                                                             sx={{
-                                                                ...companyStyles.table_array, position: 'relative',}}
+                                                                ...companyStyles.table_array, position: 'relative', cursor: "pointer", color: 'rgba(80, 82, 178, 1) !important'}}
                                                         >
                                                             {row.employee_count || '--'}
                                                         </TableCell>
@@ -1244,7 +1258,7 @@ const Leads: React.FC = () => {
                         selectedDates={selectedDates}
                     />
                 </Box>
-            </Box>
+            </Box>}
         </>
     );
 };
