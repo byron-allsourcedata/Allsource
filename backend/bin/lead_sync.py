@@ -357,6 +357,7 @@ def create_company(session: Session, five_x_five_user: FiveXFiveUser, states_dic
         alias = regex.sub(r'[\p{Z}\s]+', ' ', company_name)
         alias = company_name.replace(" ", "_")
         alias = alias.lower()
+        five_x_five_user.company_alias = alias
         five_x_five_location_id = get_five_x_five_location(session, five_x_five_user.company_city, five_x_five_user.company_state, states_dict)
         lead_company = LeadCompany(
                             name=five_x_five_user.company_name,
