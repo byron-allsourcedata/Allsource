@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 class CompanyPersistence:
     def __init__(self, db: Session):
         self.db = db
+        self.download_limit_rows = 5000
 
 
     def get_full_information_companies_by_filters(self, domain_id, from_date, to_date, regions, search_query, timezone_offset):
@@ -563,7 +564,7 @@ class CompanyPersistence:
             count = query.count()
             max_page = math.ceil(count / per_page)
         else:
-            employees = query.all()
+            employees = query.limit(self.download_limit_rows).all()
         return employees, count, max_page
 
 
