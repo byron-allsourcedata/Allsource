@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 class CompanyPersistence:
     DOWNLOAD_LIMIT_ROWS = 20000
+    
     def __init__(self, db: Session):
         self.db = db
 
