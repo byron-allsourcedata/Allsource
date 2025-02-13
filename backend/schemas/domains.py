@@ -12,3 +12,6 @@ class DomainResponse(BaseModel):
 
 class UpdateDomain(BaseModel):
     new_domain: str
+    
+class UpdateDomainRequest(BaseModel):
+    domain_name: str

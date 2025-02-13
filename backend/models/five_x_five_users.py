@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, TEXT, VARCHAR, TIMESTAMP
+from sqlalchemy import Column, Integer, TEXT, Index, VARCHAR, TIMESTAMP
 
 from .base import Base
 
@@ -21,12 +21,12 @@ class FiveXFiveUser(Base):
     personal_city = Column(VARCHAR(64), nullable=True)
     personal_state = Column(VARCHAR(32), nullable=True)
     company_name = Column(VARCHAR(64), nullable=True)
-    company_domain = Column(VARCHAR(32), nullable=True)
+    company_domain = Column(VARCHAR(128), nullable=True)
     company_phone = Column(VARCHAR(128), nullable=True)
-    company_sic = Column(VARCHAR(64), nullable=True)
+    company_sic = Column(VARCHAR(512), nullable=True)
     company_address = Column(VARCHAR(256), nullable=True)
     company_city = Column(VARCHAR(64), nullable=True)
-    company_state = Column(VARCHAR(32), nullable=True)
+    company_state = Column(VARCHAR(64), nullable=True)
     company_zip = Column(VARCHAR(16), nullable=True)
     company_linkedin_url = Column(VARCHAR(128), nullable=True)
     company_revenue = Column(VARCHAR(64), nullable=True)
@@ -49,7 +49,7 @@ class FiveXFiveUser(Base):
     personal_zip4 = Column(VARCHAR(16), nullable=True)
     professional_zip = Column(VARCHAR(8), nullable=True)
     married = Column(VARCHAR(4), nullable=True)
-    children = Column(VARCHAR(4), nullable=True)
+    children = Column(VARCHAR(16), nullable=True)
     income_range = Column(VARCHAR(256), nullable=True)
     homeowner = Column(VARCHAR(4), nullable=True)
     seniority_level = Column(VARCHAR(64), nullable=True)
@@ -57,8 +57,8 @@ class FiveXFiveUser(Base):
     professional_address = Column(VARCHAR(256), nullable=True)
     professional_address_2 = Column(VARCHAR(256), nullable=True)
     professional_city = Column(VARCHAR(64), nullable=True)
-    professional_state = Column(VARCHAR(32), nullable=True)
-    professional_zip4 = Column(VARCHAR(4), nullable=True)
+    professional_state = Column(VARCHAR(64), nullable=True)
+    professional_zip4 = Column(VARCHAR(8), nullable=True)
     primary_industry = Column(VARCHAR(128), nullable=True)
     business_email_validation_status = Column(VARCHAR(64), nullable=True)
     business_email_last_seen = Column(TIMESTAMP, nullable=True)
@@ -70,3 +70,9 @@ class FiveXFiveUser(Base):
     social_connections = Column(VARCHAR(32), nullable=True)
     dpv_code = Column(VARCHAR(2), nullable=True)
     company_alias = Column(VARCHAR(256), nullable=True)
+
+    __table_args__ = (
+        Index('5x5_users_department_idx', 'department'),
+        Index('5x5_users_job_title_idx', 'job_title'),
+        Index('5x5_users_seniority_level_idx', 'seniority_level')
+    )

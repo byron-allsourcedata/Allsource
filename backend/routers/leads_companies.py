@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from starlette.responses import StreamingResponse
 
-from dependencies import get_companies_service
+from dependencies import get_companies_service, check_user_authorization
 from enums import BaseEnum
 from schemas.companies import CompaniesRequest
 from services.companies import CompanyService
@@ -11,6 +11,7 @@ router = APIRouter()
 
 @router.get("")
 async def get_companies(
+        user=Depends(check_user_authorization),
         page: int = Query(1, alias="page", ge=1, description="Page number"),
         per_page: int = Query(15, alias="per_page", ge=1, le=500, description="Items per page"),
         from_date: int = Query(None, description="Start date in integer format"),
@@ -43,9 +44,65 @@ async def get_companies(
     )
 
 
+@router.get("/employess")
+async def get_employees(
+        page: int = Query(1, alias="page", ge=1, description="Page number"),
+        per_page: int = Query(15, alias="per_page", ge=1, le=500, description="Items per page"),
+        sort_by: str = Query(None, description="Field"),
+        sort_order: str = Query(None, description="Field to sort by: 'asc' or 'desc'"),
+        search_query: str = Query(None, description="Search for email, first name, lastname and phone number"),
+        company_id: int = Query(None),
+        job_title: str = Query(None),
+        department: str = Query(None),
+        seniority: str = Query(None),
+        regions: str = Query(None, description="Company regions "),
+        user=Depends(check_user_authorization),
+        company_service: CompanyService = Depends(get_companies_service)
+):
+    return company_service.get_employees(
+        company_id=company_id,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        page=page,
+        per_page=per_page,
+        department=department,
+        job_title=job_title,
+        seniority=seniority,
+        regions=regions,
+        search_query=search_query
+    )
+
+
+@router.get("/employees/{employee_id}")
+async def get_employees_by_id(
+    employee_id: int,
+    company_id: int = Query(None),
+    company_service: CompanyService = Depends(get_companies_service)):
+    
+    return company_service.get_full_information_employee(
+        company_id=company_id, employee_id=employee_id
+    )
+
+
 @router.get("/industry")
 async def get_industry(company_service: CompanyService = Depends(get_companies_service)):
     return company_service.get_uniq_primary_industry()
+
+
+@router.get("/{company_id}/departments")
+async def get_department(company_id: int, company_service: CompanyService = Depends(get_companies_service)):
+    return company_service.get_uniq_primary__departments(company_id)
+
+
+@router.get("/{company_id}/seniorities")
+async def get_seniority(company_id: int, company_service: CompanyService = Depends(get_companies_service)):
+    return company_service.get_uniq_primary__seniorities(company_id)
+
+
+@router.get("/{company_id}/job-titles")
+async def get_seniority(company_id: int, company_service: CompanyService = Depends(get_companies_service)):
+    return company_service.get_uniq_primary__job_titles(company_id)
+
 
 @router.post("/download-company")
 async def download_company(companies_request: CompaniesRequest,
@@ -55,6 +112,7 @@ async def download_company(companies_request: CompaniesRequest,
         return StreamingResponse(result, media_type="text/csv",
                                  headers={"Content-Disposition": "attachment; filename=data.csv"})
     return BaseEnum.FAILURE
+
 
 @router.get("/download-companies")
 async def download_companies(
@@ -82,8 +140,3 @@ async def search_location(start_letter: str = Query(..., min_length=3),
 async def search_contact(start_letter: str = Query(..., min_length=3),
                          company_service: CompanyService = Depends(get_companies_service)):
     return company_service.search_company(start_letter)
-
-
-
-
-

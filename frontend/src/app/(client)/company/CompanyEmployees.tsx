@@ -12,23 +12,22 @@ import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import DownloadIcon from '@mui/icons-material/Download';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import FilterPopup from './CompanyFilters';
+import FilterPopup from './CompanyEmployeesFilters';
 import AudiencePopup from '@/components/AudienceSlider';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import SouthOutlinedIcon from '@mui/icons-material/SouthOutlined';
+import NorthOutlinedIcon from '@mui/icons-material/NorthOutlined';
 import dayjs from 'dayjs';
-import PopupDetails from './CompanyDetails';
+import PopupDetails from './EmployeeDetails';
 import CloseIcon from '@mui/icons-material/Close';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import Tooltip from '@mui/material/Tooltip';
 import CustomToolTip from '@/components/customToolTip';
-import CalendarPopup from '@/components/CustomCalendar';
 import CustomTablePagination from '@/components/CustomTablePagination';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useNotification } from '@/context/NotificationContext';
 import { showErrorToast } from '@/components/ToastNotification';
-import CompanyFilterPopup from './CompanyFilters';
-import CompanyEmployees from './CompanyEmployees';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import SwapVertIcon from '@mui/icons-material/SwapVert';
 
 
 interface FetchDataParams {
@@ -36,11 +35,16 @@ interface FetchDataParams {
     sortOrder?: 'asc' | 'desc';
     page: number;
     rowsPerPage: number;
-    appliedDates: { start: Date | null; end: Date | null };
+}
+
+interface CompanyEmployeesProps {
+    onBack: () => void
+    companyName: string
+    companyId: number
 }
 
 
-const Leads: React.FC = () => {
+const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName, companyId }) => {
     const router = useRouter();
     const { hasNotification } = useNotification();
     const [data, setData] = useState<any[]>([]);
@@ -61,8 +65,6 @@ const Leads: React.FC = () => {
     const [selectedDates, setSelectedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
     const isCalendarOpen = Boolean(calendarAnchorEl);
     const [formattedDates, setFormattedDates] = useState<string>('');
-    const [companyName, setCompanyName] = useState<string>('');
-    const [companyId, setCompanyId] = useState<number>(0);
     const [filterPopupOpen, setFilterPopupOpen] = useState(false);
     const [audiencePopupOpen, setAudiencePopupOpen] = useState(false);
     const [companyEmployeesOpen, setCompanyEmployeesOpen] = useState(false);
@@ -73,18 +75,20 @@ const Leads: React.FC = () => {
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
     const [openDrawer, setOpenDrawer] = React.useState(false);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-    const [selectedIndustry, setSelectedIndustry] = React.useState<string | null>(null);
-    const [industry, setIndustry] = React.useState<string[]>([]);
+    const [selectedJobTitle, setSelectedJobTitle] = React.useState<string | null>(null);
+    const [departments, setDepartments] = React.useState<string[]>([]);
+    const [seniorities, setSeniorities] = React.useState<string[]>([]);
+    const [jobTitles, setJobTitles] = React.useState<string[]>([]);
 
 
     const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, industry: string) => {
-        setSelectedIndustry(industry);
+        setSelectedJobTitle(industry);
         setAnchorEl(event.currentTarget);
     };
 
     const handleClosePopover = () => {
         setAnchorEl(null);
-        setSelectedIndustry(null);
+        setSelectedJobTitle(null);
     };
 
     const isOpen = Boolean(anchorEl);
@@ -120,52 +124,6 @@ const Leads: React.FC = () => {
         setOrderBy(property);
     };
 
-    const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-        setCalendarAnchorEl(event.currentTarget);
-    };
-
-    const handleCalendarClose = () => {
-        setCalendarAnchorEl(null);
-    };
-
-    const handleDateChange = (dates: { start: Date | null; end: Date | null }) => {
-        setSelectedDates(dates);
-        const { start, end } = dates;
-        if (start && end) {
-            setFormattedDates(`${start.toLocaleDateString()} - ${end.toLocaleDateString()}`);
-        } else if (start) {
-            setFormattedDates(`${start.toLocaleDateString()}`);
-        } else {
-            setFormattedDates('');
-        }
-    };
-
-    const handleApply = (dates: { start: Date | null; end: Date | null }) => {
-        if (dates.start && dates.end) {
-            const formattedStart = dates.start.toLocaleDateString();
-            const formattedEnd = dates.end.toLocaleDateString();
-
-            const dateRange = `${formattedStart} - ${formattedEnd}`;
-
-            setAppliedDates(dates);
-            setCalendarAnchorEl(null);
-
-            setSelectedFilters(prevFilters => {
-                const existingIndex = prevFilters.findIndex(filter => filter.label === 'Dates');
-                const newFilter = { label: 'Dates', value: dateRange };
-
-                if (existingIndex !== -1) {
-                    const updatedFilters = [...prevFilters];
-                    updatedFilters[existingIndex] = newFilter;
-                    return updatedFilters;
-                } else {
-                    return [...prevFilters, newFilter];
-                }
-            });
-            handleCalendarClose();
-        }
-    };
-
 
     const installPixel = () => {
         router.push('/dashboard');
@@ -177,8 +135,8 @@ const Leads: React.FC = () => {
         setPage(0);
     };
 
-
-    const fetchData = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
+    
+    const fetchEmployeesCompany = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
         try {
             setIsLoading(true);
             const accessToken = localStorage.getItem("token");
@@ -186,78 +144,38 @@ const Leads: React.FC = () => {
                 router.push('/signin');
                 return;
             }
-    
-            const timezoneOffsetInHours = -new Date().getTimezoneOffset() / 60;
-            let url = `/company?page=${page + 1}&per_page=${rowsPerPage}&timezone_offset=${timezoneOffsetInHours}`;
 
-            const startEpoch = appliedDates.start
-                ? Math.floor(new Date(appliedDates.start.toISOString()).getTime() / 1000)
-                : null;
-
-            const endEpoch = appliedDates.end
-                ? Math.floor(new Date(appliedDates.end.toISOString()).getTime() / 1000)
-                : null;
-
-            if (startEpoch !== null && endEpoch !== null) {
-                url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
-            }
-    
-            // Processing "From Date"
-            if (selectedFilters.some(filter => filter.label === 'From Date')) {
-                const fromDate = selectedFilters.find(filter => filter.label === 'From Date')?.value || '';
-                if (fromDate) {
-                    const fromDateUtc = new Date(fromDate);
-                    fromDateUtc.setHours(0, 0, 0, 0);
-                    const fromDateEpoch = Math.floor(fromDateUtc.getTime() / 1000);
-                    url += `&from_date=${fromDateEpoch}`;
-                }
+            let url = `/company/employess?company_id=${companyId}&page=${page + 1}&per_page=${rowsPerPage}`;
+            
+            const searchQuery = selectedFilters.find(filter => filter.label === 'Search')?.value;
+            if (searchQuery) {
+                url += `&search_query=${encodeURIComponent(searchQuery)}`;
             }
 
-            // Processing "To Date"
-            if (selectedFilters.some(filter => filter.label === 'To Date')) {
-                const toDate = selectedFilters.find(filter => filter.label === 'To Date')?.value || '';
-                if (toDate) {
-                    const toDateUtc = new Date(toDate);
-                    toDateUtc.setHours(23, 59, 59, 999);
-                    const toDateEpoch = Math.floor(toDateUtc.getTime() / 1000);
-                    url += `&to_date=${toDateEpoch}`;
-                }
+            if (sortBy) {
+                url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
             }
 
-            // employee visits
-            const employeeVisits = selectedFilters.find(filter => filter.label === 'Employee Visits')?.value;
-            if (employeeVisits) {
-                url += `&employee_visits=${encodeURIComponent(employeeVisits)}`;
-            }
-    
-            // filter with checkbox or radio button
+            // filter with checkbox
             const processMultiFilter = (label: string, paramName: string) => {
                 const filter = selectedFilters.find(filter => filter.label === label)?.value;
                 if (filter) {
                     url += `&${paramName}=${encodeURIComponent(filter.split(', ').join(','))}`;
                 }
             };
+
     
             processMultiFilter('Regions', 'regions');
-            processMultiFilter('Number of Employees', 'employees_range');
-            processMultiFilter('Revenue', 'revenue_range');
-            processMultiFilter('Industry', 'industry');
-    
-            // search
-            const searchQuery = selectedFilters.find(filter => filter.label === 'Search')?.value;
-            if (searchQuery) {
-                url += `&search_query=${encodeURIComponent(searchQuery)}`;
-            }
-    
-            // sort
-            if (sortBy) {
-                url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
-            }
+            processMultiFilter('Seniority', 'seniority');
+            processMultiFilter('Job Title', 'job_title');
+            processMultiFilter('Department', 'department');
+
     
             const response = await axiosInstance.get(url);
-            const [leads, count] = response.data;
+            const [employees, count] = response.data;
+
     
-            setData(Array.isArray(leads) ? leads : []);
+            setData(Array.isArray(employees) ? employees : []);
             setCount(count || 0);
             setStatus(response.data.status);
     
@@ -269,6 +187,7 @@ const Leads: React.FC = () => {
             setRowsPerPageOptions(RowsPerPageOptions);
             const selectedValue = RowsPerPageOptions.includes(rowsPerPage) ? rowsPerPage : 15;
             setRowsPerPage(selectedValue);
+
         } catch (error) {
             if (error instanceof AxiosError && error.response?.status === 403) {
                 if (error.response.data.status === 'NEED_BOOK_CALL') {
@@ -280,18 +199,41 @@ const Leads: React.FC = () => {
                     setShowSlider(false);
                 }
             }
-            setIsLoading(false);
         } finally {
             setIsLoading(false);
         }
-    };
-    
+    }
 
-    const handleIndustry = async () => {
+    const handleDepartment = async () => {
         setLoading(true);
         try {
-            const response = await axiosInstance.get('/company/industry')
-            setIndustry(Array.isArray(response.data) ? response.data : []);
+            const response = await axiosInstance.get(`/company/${companyId}/departments`)
+            setDepartments(Array.isArray(response.data) ? response.data : []);
+        }
+        catch{
+        }
+        finally{ 
+            setLoading(false)
+        }
+    }
+    
+    const handleJobTitles = async () => {
+        setLoading(true);
+        try {
+            const response = await axiosInstance.get(`/company/${companyId}/job-titles`)
+            setJobTitles(Array.isArray(response.data) ? response.data : []);
+        }
+        catch{
+        }
+        finally{ 
+            setLoading(false)
+        }
+    }
+    const handleSeniorities = async () => {
+        setLoading(true);
+        try {
+            const response = await axiosInstance.get(`/company/${companyId}/seniorities`)
+            setSeniorities(Array.isArray(response.data) ? response.data : []);
         }
         catch{
         }
@@ -301,68 +243,27 @@ const Leads: React.FC = () => {
     }
 
     interface FilterParams {
-        from_date: number | null;
-        to_date: number | null;
         regions: string[];
         searchQuery: string | null;
-        selectedPageVisit: string | null;
-        checkedFiltersNumberOfEmployees: {
-            '1-10': boolean,
-            '11-25': boolean,
-            '26-50': boolean,
-            '51-100': boolean,
-            '101-250': boolean,
-            '251-500': boolean,
-            '501-1000': boolean,
-            '1001-5000': boolean,
-            '2001-5000': boolean,
-            '5001-10000': boolean,
-            '10001+': boolean,
-            "unknown": boolean,
-        };
-        checkedFiltersRevenue: {
-        "Below 10k": boolean,
-        "$10k - $50k": boolean,
-        "$50k - $100k": boolean,
-        "$100k - $500k": boolean,
-        "$500k - $1M": boolean,
-        "$1M - $5M": boolean,
-        "$5M - $10M": boolean,
-        "$10M - $50M": boolean,
-        "$50M - $100M": boolean,
-        "$100M - $500M": boolean,
-        "$500M - $1B": boolean,
-        "$1 Billion +": boolean,
-        "unknown": boolean,
-        }
-        checkedFilters: {
-            lastWeek: boolean;
-            last30Days: boolean;
-            last6Months: boolean;
-            allTime: boolean;
-        };
-        industry: Record<string, boolean>; 
+        department: Record<string, boolean>; 
+        seniority: Record<string, boolean>; 
+        jobTitle: Record<string, boolean>; 
     }
 
     useEffect(() => {
-        handleIndustry();
+        handleDepartment();
+        handleSeniorities()
+        handleJobTitles()
     }, [])
 
     useEffect(() => {
-        fetchData({
+        fetchEmployeesCompany({
             sortBy: orderBy,
             sortOrder: order,
             page,
             rowsPerPage,
-            appliedDates: {
-                start: appliedDates.start,
-                end: appliedDates.end,
-            }
         });
-    }, [appliedDates, orderBy, order, page, rowsPerPage, selectedFilters]);
-
-    const handleDateLabelChange = (label: string) => {
-    };
+    }, [orderBy, order, page, rowsPerPage, selectedFilters]);
 
     if (isLoading) {
         return <CustomizedProgressBar />;
@@ -525,8 +426,6 @@ const Leads: React.FC = () => {
     const handleApplyFilters = (filters: FilterParams) => {
         const newSelectedFilters: { label: string; value: string }[] = [];
 
-        const dateFormat = 'YYYY-MM-DD';
-
         const getSelectedValues = (obj: Record<string, boolean>): string => {
             return Object.entries(obj)
                 .filter(([_, value]) => value)
@@ -536,25 +435,22 @@ const Leads: React.FC = () => {
 
         // Map of filter conditions to their labels
         const filterMappings: { condition: boolean | string | string[] | number | null, label: string, value: string | ((f: any) => string) }[] = [
-            { condition: filters.from_date, label: 'From Date', value: () => dayjs.unix(filters.from_date!).format(dateFormat) },
-            { condition: filters.to_date, label: 'To Date', value: () => dayjs.unix(filters.to_date!).format(dateFormat) },
             { condition: filters.regions?.length, label: 'Regions', value: () => filters.regions!.join(', ') },
             { condition: filters.searchQuery?.trim() !== '', label: 'Search', value: filters.searchQuery || '' },
-            { condition: filters.selectedPageVisit?.trim() !== '', label: 'Employee Visits', value: filters.selectedPageVisit || '' },
             { 
-                condition: filters.checkedFiltersNumberOfEmployees && Object.values(filters.checkedFiltersNumberOfEmployees).some(Boolean), 
-                label: 'Number of Employees', 
-                value: () => getSelectedValues(filters.checkedFiltersNumberOfEmployees!) 
+                condition: filters.seniority && Object.values(filters.seniority).some(Boolean), 
+                label: 'Seniority', 
+                value: () => getSelectedValues(filters.seniority!) 
             },
             { 
-                condition: filters.checkedFiltersRevenue && Object.values(filters.checkedFiltersRevenue).some(Boolean), 
-                label: 'Revenue', 
-                value: () => getSelectedValues(filters.checkedFiltersRevenue!) 
+                condition: filters.jobTitle && Object.values(filters.jobTitle).some(Boolean), 
+                label: 'Job Title', 
+                value: () => getSelectedValues(filters.jobTitle!) 
             },
             { 
-                condition: filters.industry && Object.values(filters.industry).some(Boolean), 
-                label: 'Industry', 
-                value: () => getSelectedValues(filters.industry!) 
+                condition: filters.department && Object.values(filters.department).some(Boolean), 
+                label: 'Department', 
+                value: () => getSelectedValues(filters.department!) 
             },
         ];
 
@@ -568,7 +464,7 @@ const Leads: React.FC = () => {
         setSelectedFilters(newSelectedFilters);
     };
 
-    const capitalizeCity = (city: string) => {
+    const capitalizeTableCell  = (city: string) => {
         return city
             .split(' ')
             .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -582,7 +478,7 @@ const Leads: React.FC = () => {
             setIsLoading(true)
             setAppliedDates({ start: null, end: null })
             setFormattedDates('')
-            sessionStorage.removeItem('filters')
+            sessionStorage.removeItem('filters-employee')
             const response = await axiosInstance.get(url);
             const [leads, count] = response.data;
 
@@ -603,117 +499,43 @@ const Leads: React.FC = () => {
         const updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
         setSelectedFilters(updatedFilters);
         
-        const filters = JSON.parse(sessionStorage.getItem('filters') || '{}');
+        const filters = JSON.parse(sessionStorage.getItem('filters-employee') || '{}');
     
         switch (filterToDelete.label) {
-            case 'From Date':
-                filters.from_date = null;
-                setSelectedDates({ start: null, end: null });
-                break;
-            case 'To Date':
-                filters.to_date = null;
-                setSelectedDates({ start: null, end: null });
-                break;
             case 'Regions':
                 filters.regions = [];
                 break;
             case 'Search':
                 filters.searchQuery = '';
                 break;
-            case 'Employee Visits':
-                filters.selectedPageVisit = '';
-                break;
-            case 'Number of Employees':
-                Object.keys(filters.checkedFiltersNumberOfEmployees).forEach(key => {
-                    filters.checkedFiltersNumberOfEmployees[key] = false;
+            case 'JobTitle':
+                Object.keys(filters.jobTitle).forEach(key => {
+                    filters.jobTitle[key] = false;
                 });
                 break;
-            case 'Revenue':
-                Object.keys(filters.checkedFiltersRevenue).forEach(key => {
-                    filters.checkedFiltersRevenue[key] = false;
+            case 'Department':
+                Object.keys(filters.department).forEach(key => {
+                    filters.department[key] = false;
                 });
                 break;
-            case 'Industry':
-                Object.keys(filters.industry).forEach(key => {
-                    filters.industry[key] = false;
+            case 'Seniority':
+                Object.keys(filters.seniority).forEach(key => {
+                    filters.seniority[key] = false;
                 });
                 break;
             default:
                 break;
         }
         
-        if (!filters.from_date && !filters.to_date) {
-            filters.checkedFilters = {
-                lastWeek: false,
-                last30Days: false,
-                last6Months: false,
-                allTime: false,
-            };
-        }
-    
-        sessionStorage.setItem('filters', JSON.stringify(filters));
-    
-        if (filterToDelete.label === 'Dates') {
-            setAppliedDates({ start: null, end: null });
-            setFormattedDates('');
-            setSelectedDates({ start: null, end: null });
-        }
+        sessionStorage.setItem('filters-employee', JSON.stringify(filters));
     
         // Обновляем фильтры для применения
         const newFilters: FilterParams = {
-            from_date: updatedFilters.find(f => f.label === 'From Date') ? dayjs(updatedFilters.find(f => f.label === 'From Date')!.value).unix() : null,
-            to_date: updatedFilters.find(f => f.label === 'To Date') ? dayjs(updatedFilters.find(f => f.label === 'To Date')!.value).unix() : null,
             regions: updatedFilters.find(f => f.label === 'Regions') ? updatedFilters.find(f => f.label === 'Regions')!.value.split(', ') : [],
             searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',
-            selectedPageVisit: updatedFilters.find(f => f.label === 'Employee Visits') ? updatedFilters.find(f => f.label === 'Employee Visits')!.value : '',
-            checkedFiltersNumberOfEmployees: {
-                ...Object.keys(filters.checkedFiltersNumberOfEmployees).reduce((acc, key) => {
-                    acc[key as keyof typeof filters.checkedFiltersNumberOfEmployees] = updatedFilters.some(
-                        f => f.label === 'Number of Employees' && f.value.includes(key)
-                    );
-                    return acc;
-                }, {} as Record<keyof typeof filters.checkedFiltersNumberOfEmployees, boolean>),
-                '1-10': false,
-                '11-25': false,
-                '26-50': false,
-                '51-100': false,
-                '101-250': false,
-                '251-500': false,
-                '501-1000': false,
-                '1001-5000': false,
-                '2001-5000': false,
-                '5001-10000': false,
-                '10001+': false,
-                unknown: false
-            },
-            checkedFiltersRevenue: {
-                ...Object.keys(filters.checkedFiltersRevenue).reduce((acc, key) => {
-                    acc[key as keyof typeof filters.checkedFiltersRevenue] = updatedFilters.some(
-                        f => f.label === 'Revenue' && f.value.includes(key)
-                    );
-                    return acc;
-                }, {} as Record<keyof typeof filters.checkedFiltersRevenue, boolean>),
-                'Below 10k': false,
-                '$10k - $50k': false,
-                '$50k - $100k': false,
-                '$100k - $500k': false,
-                '$500k - $1M': false,
-                '$1M - $5M': false,
-                '$5M - $10M': false,
-                '$10M - $50M': false,
-                '$50M - $100M': false,
-                '$100M - $500M': false,
-                '$500M - $1B': false,
-                '$1 Billion +': false,
-                unknown: false
-            },
-            checkedFilters: {
-                lastWeek: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'lastWeek'),
-                last30Days: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'last30Days'),
-                last6Months: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'last6Months'),
-                allTime: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'allTime')
-            },
-            industry: Object.fromEntries(Object.keys(filters.industry).map(key => [key, updatedFilters.some(f => f.label === 'Industry' && f.value.includes(key))]))
+            department: Object.fromEntries(Object.keys(filters.department).map(key => [key, updatedFilters.some(f => f.label === 'Department' && f.value.includes(key))])),
+            jobTitle: Object.fromEntries(Object.keys(filters.jobTitle).map(key => [key, updatedFilters.some(f => f.label === 'JobTitle' && f.value.includes(key))])),
+            seniority: Object.fromEntries(Object.keys(filters.seniority).map(key => [key, updatedFilters.some(f => f.label === 'Seniority' && f.value.includes(key))]))
         };
     
         // Применяем обновленные фильтры
@@ -726,11 +548,6 @@ const Leads: React.FC = () => {
             {loading && (
                 <CustomizedProgressBar/>
             )}
-            {companyEmployeesOpen && <CompanyEmployees companyId={companyId} companyName={companyName} onBack={() => {
-                setCompanyEmployeesOpen(false)
-                sessionStorage.removeItem('filters-employee')
-            }}/>}
-            {!companyEmployeesOpen && 
             <Box sx={{
                 display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
                 '@media (max-width: 900px)': {
@@ -758,8 +575,11 @@ const Leads: React.FC = () => {
                             },
                         }}>
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                            <IconButton onClick={onBack}>
+                                <ArrowBackIcon sx={{color: 'rgba(80, 82, 178, 1)'}}/>
+                            </IconButton>
                             <Typography className='first-sub-title'>
-                                Company list {data.length === 0 ? '' : `(${count_companies})`}
+                                Employee  {`(${companyName})`}
                             </Typography>
                             <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
                         </Box>
@@ -849,49 +669,6 @@ const Leads: React.FC = () => {
                                 )}
                             </Button>
 
-                            <Button
-                                aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
-                                aria-haspopup="true"
-                                disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
-                                aria-expanded={isCalendarOpen ? 'true' : undefined}
-                                onClick={handleCalendarClick}
-                                sx={{
-                                    textTransform: 'none',
-                                    color: 'rgba(128, 128, 128, 1)',
-                                    border: formattedDates ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
-                                    borderRadius: '4px',
-                                    opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
-                                    padding: '8px',
-                                    minWidth: 'auto',
-                                    '@media (max-width: 900px)': {
-                                        border: 'none',
-                                        padding: 0
-                                    },
-                                    '&:hover': {
-                                        backgroundColor: 'transparent',
-                                        border: '1px solid rgba(80, 82, 178, 1)',
-                                        color: 'rgba(80, 82, 178, 1)',
-                                        '& .MuiSvgIcon-root': {
-                                            color: 'rgba(80, 82, 178, 1)'
-                                        }
-                                    }
-                                }}
-                            >
-                                <DateRangeIcon fontSize='medium' sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)', }} />
-                                <Typography variant="body1" sx={{
-                                    fontFamily: 'Nunito Sans',
-                                    fontSize: '14px',
-                                    fontWeight: '600',
-                                    lineHeight: '19.6px',
-                                    textAlign: 'left',
-
-                                    "@media (max-width: 600px)": {
-                                        display: 'none'
-                                    },
-                                }}>
-                                    {formattedDates}
-                                </Typography>
-                            </Button>
                         </Box>
                     </Box>
                     <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, overflowX: 'auto', "@media (max-width: 600px)": { mb: 1 } }}>
@@ -1041,21 +818,21 @@ const Leads: React.FC = () => {
                                             <TableHead>
                                                 <TableRow>
                                                     {[
-                                                        { key: 'company_name', label: 'Company', sortable: true },
-                                                        { key: 'phone_number', label: 'Phone Number' },
+                                                        { key: 'employee_name', label: 'Name' },
+                                                        { key: 'personal_email', label: 'Personal Email', sortable: true },
+                                                        { key: 'business_email', label: 'Business Email', sortable: true },
                                                         { key: 'linkedin', label: 'LinkedIn' },
-                                                        { key: 'employees_visited', label: 'Employees Visited', sortable: true },
-                                                        { key: 'visited_date', label: 'Visited date', sortable: true },
-                                                        { key: 'revenue', label: 'Revenue', sortable: true },
-                                                        { key: 'number_of_employees', label: 'No. of Employees', sortable: true },
-                                                        { key: 'location', label: 'Location', },
-                                                        { key: 'average_time_sec', label: 'Industry', },
+                                                        { key: 'mobile_number', label: 'Mobile Number'},
+                                                        { key: 'job_title', label: 'Job Title'},
+                                                        { key: 'seniority', label: 'Seniority'},
+                                                        { key: 'department', label: 'Department'},
+                                                        { key: 'location', label: 'Location'}
                                                     ].map(({ key, label, sortable = false }) => (
                                                         <TableCell
                                                             key={key}
                                                             sx={{
                                                                 ...companyStyles.table_column,
-                                                                ...(key === 'company_name' && {
+                                                                ...(key === 'employee_name' && {
                                                                     position: 'sticky',
                                                                     left: 0,
                                                                     zIndex: 10
@@ -1064,19 +841,22 @@ const Leads: React.FC = () => {
                                                                     "::after": { content: 'none' }
                                                                 })
                                                             }}
+                                                            
                                                             onClick={sortable ? () => handleSortRequest(key) : undefined}
                                                             style={{ cursor: sortable ? 'pointer' : 'default' }}
                                                         >
-                                                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: "space-between", }}>
                                                                 <Typography variant="body2" sx={{ ...companyStyles.table_column, borderRight: '0' }}>{label}</Typography>
-                                                                {sortable && orderBy === key && (
-                                                                    <IconButton size="small" sx={{ ml: 1 }}>
-                                                                        {order === 'asc' ? (
-                                                                            <ArrowUpwardIcon
-                                                                                fontSize="inherit" />
+                                                                {sortable && (
+                                                                    <IconButton size="small">
+                                                                        {orderBy === key ? (
+                                                                            order === 'asc' ? (
+                                                                                <NorthOutlinedIcon fontSize="inherit" />
+                                                                            ) : (
+                                                                                <SouthOutlinedIcon fontSize="inherit" />
+                                                                            )
                                                                         ) : (
-                                                                            <ArrowDownwardIcon
-                                                                                fontSize="inherit" />
+                                                                            <SwapVertIcon fontSize="inherit" />
                                                                         )}
                                                                     </IconButton>
                                                                 )}
@@ -1087,101 +867,105 @@ const Leads: React.FC = () => {
                                             </TableHead>
                                             <TableBody>
                                                 {data.map((row) => (
-                                                    <TableRow
-                                                        key={row.id}
-                                                        selected={selectedRows.has(row.id)}
-                                                        sx={{
-                                                            backgroundColor: selectedRows.has(row.id) ? 'rgba(247, 247, 247, 1)' : '#fff',
-                                                            '&:hover': {
-                                                                backgroundColor: 'rgba(247, 247, 247, 1)',
-                                                                '& .sticky-cell': {
+                                                    <>
+                                                        <TableRow
+                                                            key={row.id}
+                                                            selected={selectedRows.has(row.id)}
+                                                            sx={{
+                                                                backgroundColor: selectedRows.has(row.id) ? 'rgba(247, 247, 247, 1)' : '#fff',
+                                                                '&:hover': {
                                                                     backgroundColor: 'rgba(247, 247, 247, 1)',
+                                                                    '& .sticky-cell': {
+                                                                        backgroundColor: 'rgba(247, 247, 247, 1)',
+                                                                    }
                                                                 }
-                                                            }
-                                                        }}
-                                                    >
-                                                        {/* Company name Column */}
-                                                        <TableCell className="sticky-cell"
-                                                            sx={{
-                                                                ...companyStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, color: 'rgba(80, 82, 178, 1)', backgroundColor: '#fff'
-
-                                                            }} onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleOpenPopup(row);
-
-                                                            }}>{row.name ? truncateText(row.name, 20) : '--'}</TableCell>
-
-                                                        {/* Company phone Column */}
-                                                        <TableCell sx={{ ...companyStyles.table_array, position: 'relative' }}>
-                                                            {row.phone?.split(',')[0] || '--'}
-                                                        </TableCell>
-
-                                                        {/* Company linkedIn Column */}
-                                                        <TableCell sx={{ ...companyStyles.table_array, position: 'relative', color: row.linkedin_url ? 'rgba(80, 82, 178, 1)' : '', cursor: row.linkedin_url ? 'pointer' : 'default' }} onClick={() => { window.open(`https://${row.linkedin_url}`, '_blank') }}>
-                                                            {row.linkedin_url ? (
-                                                                <>
-                                                                    <Image src="/linkedIn.svg" alt="linkedIn" width={16} height={16} style={{ marginRight: '2px' }} />
-                                                                    /{truncateText(row.linkedin_url.replace('linkedin.com/company/', ''), 20)}
-                                                                </>
-                                                            ) : (
-                                                                '--'
-                                                            )}
-                                                        </TableCell>
-
-                                                        {/* Employess Visited  Column */}
-                                                        <TableCell sx={{...companyStyles.table_array, position: 'relative'}}>
-                                                            {row.employees_visited || '--'}
-                                                        </TableCell>
-
-                                                        {/* Employess Visited date  Column */}
-                                                        <TableCell
-                                                            sx={{ ...companyStyles.table_array, position: 'relative' }}>
-                                                            {row.visited_date
-                                                                ? (() => {
-                                                                    const [day, month, year] = row.visited_date.split('.');
-                                                                    return `${month}/${day}/${year}`;
-                                                                })()
-                                                                : '--'}
-                                                        </TableCell>
-
-                                                        {/* Company revenue  Column */}
-                                                        <TableCell
-                                                            sx={{ ...companyStyles.table_array, position: 'relative' }}
-                                                        >
-                                                            {row.company_revenue || '--'}
-                                                        </TableCell>
-
-                                                        {/* Company employee count  Column */}
-                                                        <TableCell
-                                                            onClick={() => {
-                                                                setCompanyEmployeesOpen(true)
-                                                                setCompanyName(row.name)
-                                                                setCompanyId(row.id)
                                                             }}
-                                                            
-                                                            sx={{
-                                                                ...companyStyles.table_array, position: 'relative', cursor: "pointer", color: 'rgba(80, 82, 178, 1) !important'}}
                                                         >
-                                                            {row.employee_count || '--'}
-                                                        </TableCell>
+                                                            {/* Full name Column */}
+                                                            <TableCell className="sticky-cell"
+                                                                sx={{
+                                                                    ...companyStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, color: 'rgba(80, 82, 178, 1)', backgroundColor: '#fff'
 
-                                                        {/* Company location  Column */}
-                                                        <TableCell
-                                                            sx={{ ...companyStyles.table_array, position: 'relative' }}
-                                                        >
-                                                            {(row.city || row.state)
-                                                                ? [capitalizeCity(row.city), row.state].filter(Boolean).join(', ')
-                                                                : '--'}
-                                                        </TableCell>
+                                                                }} onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleOpenPopup(row);
 
-                                                        {/* Company industry  Column */}
-                                                        <TableCell sx={{ ...companyStyles.table_array, "::after": { content: 'none' }, cursor: row.industry ? "pointer" : "default", }} onClick={(e) => row.industry ? handleOpenPopover(e, row.industry || "--") : ''}>
-                                                            {row.industry && row.industry.length > 30
-                                                                ? `${row.industry.slice(0, 20)}...`
-                                                                : row.industry || "--"}
-                                                        </TableCell>
+                                                                }}>
+                                                                {(row.first_name || row.last_name)
+                                                                    ? truncateText(
+                                                                        [capitalizeTableCell(row.first_name), capitalizeTableCell(row.last_name)]
+                                                                        .filter(Boolean)
+                                                                        .join(' '),
+                                                                        20
+                                                                    )
+                                                                    : '--'}
+                                                            </TableCell>
 
-                                                    </TableRow>
+                                                            {/* Personal Email Column */}
+                                                            <TableCell
+                                                                sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                            >
+                                                                {row.personal_email?.split(',')[0] || '--'}
+                                                            </TableCell>
+
+                                                            {/* Business Email Column */}
+                                                            <TableCell
+                                                                sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                            >
+                                                                {row.business_email || '--'}
+                                                            </TableCell>
+
+                                                            {/* Company linkedIn Column */}
+                                                            <TableCell sx={{ ...companyStyles.table_array, position: 'relative', color: row.linkedin_url ? 'rgba(80, 82, 178, 1)' : '', cursor: row.linkedin_url ? 'pointer' : 'default' }} onClick={() => { window.open(`https://${row.linkedin_url}`, '_blank') }}>
+                                                                {row.linkedin_url ? (
+                                                                    <>
+                                                                        <Image src="/linkedIn.svg" alt="linkedIn" width={16} height={16} style={{ marginRight: '2px' }} />
+                                                                        /{truncateText(row.linkedin_url.replace('linkedin.com/company/', ''), 20)}
+                                                                    </>
+                                                                ) : (
+                                                                    '--'
+                                                                )}
+                                                            </TableCell>
+
+                                                            {/* Mobile phone Column */}
+                                                            <TableCell sx={{ ...companyStyles.table_array, position: 'relative' }}>
+                                                                {row.mobile_phone?.split(',')[0] || '--'}
+                                                            </TableCell>
+
+                                                            {/* Job Title Column */}
+                                                            <TableCell sx={{...companyStyles.table_array, position: 'relative', cursor: row.job_title ? "pointer" : "default"}} onClick={(e) => row.job_title ? handleOpenPopover(e, row.job_title || "--") : ''}>
+                                                                {row.job_title ? truncateText(row.job_title, 20) : '--'}
+                                                            </TableCell>
+
+                                                            {/* Seniority Column */}
+                                                            <TableCell
+                                                                sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                            >
+                                                                {row.seniority || '--'}
+                                                            </TableCell>
+
+                                                            {/* Department Column */}
+                                                            <TableCell
+                                                                sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                            >
+                                                                {row.department || '--'}
+                                                            </TableCell>
+
+                                                            {/* Company location  Column */}
+                                                            <TableCell
+                                                                sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                            >
+                                                                {(row.city || row.state)
+                                                                    ? [capitalizeTableCell(row.city), row.state].filter(Boolean).join(', ')
+                                                                    : '--'}
+                                                            </TableCell>
+
+                                                        </TableRow>
+                                                        <PopupDetails open={openPopup}
+                                                            onClose={handleClosePopup}
+                                                            companyId={companyId}
+                                                            employeeId={row.id} />
+                                                    </>
                                                 ))}
                                             </TableBody>
                                         </Table>
@@ -1226,7 +1010,7 @@ const Leads: React.FC = () => {
                         }}
                     >
                         <Box sx={{ maxHeight: "92px", overflowY: "auto", backgroundColor: 'rgba(255, 255, 255, 1)' }}>
-                            {selectedIndustry?.split(",").map((part, index) => (
+                            {selectedJobTitle?.split(",").map((part, index) => (
                                 <Typography
                                     key={index}
                                     variant="body2"
@@ -1236,7 +1020,7 @@ const Leads: React.FC = () => {
                                         backgroundColor: 'rgba(243, 243, 243, 1)',
                                         borderRadius: '4px',
                                         color: 'rgba(95, 99, 104, 1) !important',
-                                        marginBottom: index < selectedIndustry.split(",").length - 1 ? "4px" : 0, // Отступы между строками
+                                        marginBottom: index < selectedJobTitle.split(",").length - 1 ? "4px" : 0, // Отступы между строками
                                     }}
                                 >
                                     {part.trim()}
@@ -1245,33 +1029,16 @@ const Leads: React.FC = () => {
                         </Box>
                     </Popover>
 
-                    <PopupDetails open={openPopup}
-                        onClose={handleClosePopup}
-                        rowData={popupData} />
-                    <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose} onApply={handleApplyFilters} industry={industry || []} />
-                    <CalendarPopup
-                        anchorEl={calendarAnchorEl}
-                        open={isCalendarOpen}
-                        onClose={handleCalendarClose}
-                        onDateChange={handleDateChange}
-                        onApply={handleApply}
-                        onDateLabelChange={handleDateLabelChange}
-                        selectedDates={selectedDates}
-                    />
+                    <FilterPopup open={filterPopupOpen} 
+                        onClose={handleFilterPopupClose} 
+                        onApply={handleApplyFilters} 
+                        jobTitles={jobTitles || []} 
+                        seniorities={seniorities || []} 
+                        departments={departments || []} />
                 </Box>
-            </Box>}
+            </Box>
         </>
     );
 };
 
-const LeadsPage: React.FC = () => {
-    return (
-        <Suspense fallback={<CustomizedProgressBar />}>
-            <SliderProvider>
-                <Leads />
-            </SliderProvider>
-        </Suspense>
-    );
-};
-
-export default LeadsPage;
+export default CompanyEmployees;

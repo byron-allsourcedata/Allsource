@@ -4,7 +4,7 @@ import json
 import logging
 import os
 import sys
-
+import regex
 import pandas as pd
 from sqlalchemy import create_engine
 
@@ -126,7 +126,16 @@ def save_city_and_state_to_user(session, personal_city, personal_state, five_x_f
     session.execute(leads_locations)
     session.flush()
 
+def create_company_alias(company_name):
+    if company_name:
+        company_name = company_name.strip()
+        alias = regex.sub(r'[\p{Z}\s]+', ' ', company_name)
+        alias = company_name.replace(" ", "_")
+        alias = alias.lower()
+        return alias
+
 def format_phone_number(phones):
+    if phones:
         phone_list = phones.split(',')
         formatted_phones = []
         for phone in phone_list:
@@ -156,20 +165,25 @@ async def on_message_received(message, session):
         first_name = str(user_json.get('FIRST_NAME')).lower().strip()
         last_name = str(user_json.get('LAST_NAME', '')).lower().strip()
 
-        first_name_obj = session.query(FiveXFiveNames).filter(
-            FiveXFiveNames.name == first_name).first()
-        if not first_name_obj:
-            first_name_obj = FiveXFiveNames(name=first_name)
-            session.add(first_name_obj)
-            session.flush()
+        with session.begin_nested():
+            first_name_obj = session.query(FiveXFiveNames).filter(
+                FiveXFiveNames.name == first_name).first()
+            if not first_name_obj:
+                first_name_obj = FiveXFiveNames(name=first_name)
+                session.add(first_name_obj)
+                session.flush()
+            
         first_name_id = first_name_obj.id
-
-        last_name_obj = session.query(FiveXFiveNames).filter(
-            FiveXFiveNames.name == last_name).first()
-        if not last_name_obj:
-            last_name_obj = FiveXFiveNames(name=last_name)
-            session.add(last_name_obj)
-            session.flush()
+        with session.begin_nested():
+            last_name_obj = session.query(FiveXFiveNames).filter(
+                FiveXFiveNames.name == last_name
+            ).first()
+            
+            if not last_name_obj:
+                last_name_obj = FiveXFiveNames(name=last_name)
+                session.add(last_name_obj)
+                session.flush()
+            
         last_name_id = last_name_obj.id
 
         age_range = str(user_json.get('AGE_RANGE', None))
@@ -188,14 +202,11 @@ async def on_message_received(message, session):
                 except ValueError:
                     logging.warning(f"Invalid age range format: {age_range}")
                     
-        mobile_phone = convert_to_none(str(user_json.get('MOBILE_PHONE')))
-        personal_phone = convert_to_none(str(user_json.get('PERSONAL_PHONE')))
-        company_phone = convert_to_none(str(user_json.get('COMPANY_PHONE')))
-        if mobile_phone:
-            mobile_phone = format_phone_number(mobile_phone)
-            personal_phone = format_phone_number(personal_phone)
-            company_phone = format_phone_number(company_phone)
-                                                                               
+        mobile_phone = format_phone_number(convert_to_none(str(user_json.get('MOBILE_PHONE'))))
+        personal_phone = format_phone_number(convert_to_none(str(user_json.get('PERSONAL_PHONE'))))
+        company_phone = format_phone_number(convert_to_none(str(user_json.get('COMPANY_PHONE'))))
+        direct_number = format_phone_number(convert_to_none(str(user_json.get('DIRECT_NUMBER'))))
+        company_alias = create_company_alias(convert_to_none(user_json.get('COMPANY_NAME')))                                  
         five_x_five_user = FiveXFiveUser(
             up_id=convert_to_none(user_json.get('UP_ID')),
             cc_id=convert_to_none(user_json.get('CC_ID')),
@@ -262,6 +273,7 @@ async def on_message_received(message, session):
             related_domains=convert_to_none(user_json.get('RELATED_DOMAINS')),
             social_connections=convert_to_none(user_json.get('SOCIAL_CONNECTIONS')),
             dpv_code=convert_to_none(user_json.get('DPV_CODE')),
+            company_alias=company_alias,
             personal_zip4=None if convert_to_none(user_json.get('PERSONAL_ZIP4')) is None else str(
                 int(user_json.get('PERSONAL_ZIP4'))),
         )
@@ -327,6 +339,7 @@ async def on_message_received(message, session):
             existing_user.related_domains = five_x_five_user.related_domains
             existing_user.social_connections = five_x_five_user.social_connections
             existing_user.dpv_code = five_x_five_user.dpv_code
+            existing_user.company_alias=company_alias
             existing_user.personal_zip4 = five_x_five_user.personal_zip4
             five_x_five_user_id = existing_user.id
         else:
@@ -340,15 +353,19 @@ async def on_message_received(message, session):
         save_emails_to_user(session, emails, five_x_five_user_id, 'personal')
         emails = str(user_json.get('ADDITIONAL_PERSONAL_EMAILS', '')).split(', ')
         save_emails_to_user(session, emails, five_x_five_user_id, 'additional_personal')
-                
-        mobile_phone_set = set(mobile_phone.split(', '))
-        direct_number = [num for num in direct_number.split(', ') if
-                         num not in mobile_phone_set]
-        personal_phone = [num for num in personal_phone.split(', ') if
-                          num not in mobile_phone_set]
-        save_phones_to_user(session, mobile_phone, five_x_five_user_id, 'mobile_phone')
-        save_phones_to_user(session, direct_number, five_x_five_user_id, 'direct_number')
-        save_phones_to_user(session, personal_phone, five_x_five_user_id, 'personal_phone')
+             
+        mobile_phone_set = set(mobile_phone.split(', ')) if mobile_phone else set()
+        if mobile_phone:
+            save_phones_to_user(session, mobile_phone, five_x_five_user_id, 'mobile_phone')
+        if direct_number:
+            direct_number = [num for num in direct_number.split(', ') if
+                            num not in mobile_phone_set]
+            save_phones_to_user(session, direct_number, five_x_five_user_id, 'direct_number')
+            
+        if personal_phone:
+            personal_phone = [num for num in personal_phone.split(', ') if
+                            num not in mobile_phone_set]
+            save_phones_to_user(session, personal_phone, five_x_five_user_id, 'personal_phone')
 
         save_city_and_state_to_user(session, user_json.get('PERSONAL_CITY'), user_json.get('PERSONAL_STATE'),
                                     five_x_five_user_id)
@@ -358,6 +375,7 @@ async def on_message_received(message, session):
         await message.ack()
 
     except Exception as e:
+        logging.error(f"Database transaction failed: {e}", exc_info=True)
         logging.error("excepted message. error", exc_info=True)
         session.rollback()
         await asyncio.sleep(5)

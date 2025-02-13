@@ -1,20 +1,17 @@
 import hashlib
 import os
 import httpx
-from typing import List
-from sqlalchemy.orm import Session
-import requests
 from urllib.parse import urlencode
 from jose import JWTError
 from config.bigcommerce import BigcommerceConfig
 from models.users_domains import UserDomains
-from models.integrations.external_apps_installations import ExternalAppsInstall
 from enums import IntegrationsStatus, SourcePlatformEnum
 from schemas.integrations.integrations import IntegrationCredentials, OrderAPI
 from schemas.integrations.bigcommerce import BigCommerceInfo
 from persistence.leads_persistence import LeadsPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from services.aws import AWSService
+from persistence.domains import UserDomainsPersistence
 from bigcommerce.api import BigcommerceApi
 from httpx import Client
 from fastapi import HTTPException, status
@@ -28,12 +25,14 @@ class BigcommerceIntegrationsService:
                  leads_persistence: LeadsPersistence, 
                  leads_order_persistence: LeadOrdersPersistence,
                  aws_service: AWSService, client: Client,
+                 domain_persistence: UserDomainsPersistence,
                  epi_persistence: ExternalAppsInstallationsPersistence):
         self.integrations_persistence = integrations_persistence
         self.lead_persistence = leads_persistence
         self.AWS = aws_service
         self.lead_orders_persistence = leads_order_persistence
         self.client = client
+        self.domain_persistence = domain_persistence
         self.eai_persistence = epi_persistence
 
     def get_credentials(self, domain_id: int):
@@ -69,7 +68,15 @@ class BigcommerceIntegrationsService:
         'context': f'stores/{store_hash}',
         "redirect_uri": BigcommerceConfig.redirect_uri,
         "response_type": "code",
-        "scope": "store_content_checkout store_v2_content store_v2_default store_v2_information_read_only store_v2_orders_read_only",
+        "scope": (
+            "store_content_checkout "
+            "store_v2_content "
+            "store_v2_default "
+            "store_v2_information_read_only "
+            "store_v2_orders_read_only "
+            "store_v2_customers_read "
+            "store_v2_checkouts_read"
+        ),
         'state': f'{user.get("id")}:{domain.id}:{is_pixel_install}'
         }
         query_string = urlencode(params, safe=':/')
@@ -183,6 +190,7 @@ class BigcommerceIntegrationsService:
         self.integrations_persistence.delete_external_apps_installations(shop_hash=payload.get("store_hash"))
         if user_integration:
             self.integrations_persistence.delete_integration(user_integration.domain_id, user_integration.service_name)
+            self.domain_persistence.update_pixel_installation(user_integration.domain_id, False)
             
         return 'The BigCommerce Uninstall Was Successful'
 
@@ -295,3 +303,6 @@ class BigcommerceIntegrationsService:
             platform_created_at=json.get('date_created'),
             currency_code=json.get('currency_code')
         )
+    
+    def filter_customers_based_on_criteria(self,):
+        pass

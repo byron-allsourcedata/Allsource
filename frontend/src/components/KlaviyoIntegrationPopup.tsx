@@ -181,7 +181,6 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                 },
                 params: { service_name: "klaviyo" },
             });
-
             if (response?.status === 200) {
                 if (onSave) {
                     onSave({
@@ -194,7 +193,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                 handleNextTab();
             }
         } catch (err) {
-            console.error("Error saving integration:", err);
+            showErrorToast('Integration Klaviyo error, credentails invalid')
         }
     };
 
