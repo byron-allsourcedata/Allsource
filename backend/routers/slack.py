@@ -1,16 +1,43 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import RedirectResponse
 from dependencies import get_slack_service, check_domain, check_user_authentication
 from services.integrations.slack import SlackService
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from config.slack import SlackConfig
+import time
+import os
+import hmac
+import hashlib
 from schemas.integrations.slack import SlackCreateListRequest
 import logging
 
 router = APIRouter()
 
+def verify_slack_signature(request: Request, body: bytes):
+    timestamp = request.headers.get('X-Slack-Request-Timestamp')
+    slack_signature = request.headers.get('x-slack-signature')
+
+    if not timestamp or not slack_signature:
+        raise HTTPException(status_code=400, detail="Missing Slack headers")
+    
+    if abs(time.time() - int(timestamp)) > 60 * 5:
+        raise HTTPException(status_code=400, detail="Request timestamp is too old")
+
+    sig_basestring = f"v0:{timestamp}:{body.decode('utf-8')}"
+
+    my_signature = 'v0=' + hmac.new(
+        os.getenv('SLACK_CLIENT_SECRET').encode('utf-8'),
+        sig_basestring.encode('utf-8'),
+        hashlib.sha256
+    ).hexdigest()
+    
+    if not hmac.compare_digest(my_signature, slack_signature):
+        raise HTTPException(status_code=400, detail="Invalid Slack signature")
+
 @router.get("/oauth/callback")
 async def slack_oauth_callback(request: Request, slack_service: SlackService = Depends(get_slack_service)):
+    body = await request.body()
+    verify_slack_signature(request, body)
     code = request.query_params.get("code")
     state = request.query_params.get("state")
     result = slack_service.slack_oauth_callback(code=code, state=state)
@@ -52,6 +79,8 @@ async def get_channels(slack_create_List_request: SlackCreateListRequest,
 
 @router.post("/events")
 async def handle_slack_events(request: Request, slack_service: SlackService = Depends(get_slack_service)):
+    body = await request.body()
+    verify_slack_signature(request, body)
     data = await request.json()
     if "challenge" in data:
         return {"challenge": data["challenge"]}
