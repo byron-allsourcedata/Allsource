@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 class CompanyPersistence:
     def __init__(self, db: Session):
         self.db = db
-        self.download_limit_rows = 5000
+        self.download_limit_rows = 20000
 
 
     def get_full_information_companies_by_filters(self, domain_id, from_date, to_date, regions, search_query, timezone_offset):
