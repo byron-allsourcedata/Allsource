@@ -232,12 +232,12 @@ class CompanyService:
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow([
-            'First name', 'Last_name', 'Mobile_phone', 'Linkedin_url', 'Personal_email', 'Business_email', 'Seniority', 'Department', 'Job title', 'City', 'State'
+            'First name', 'Last name', 'Mobile phone', 'Linkedin url', 'Personal email', 'Business email', 'Seniority', 'Department', 'Job title', 'City', 'State'
         ])
         for employee in employees_list:
             writer.writerow([
-                employee['first_name'] or 'None',
-                employee['last_name'] or 'None',
+                employee['first_name'].capitalize() or 'None',
+                employee['last_name'].capitalize() or 'None',
                 employee['mobile_phone'] or 'None',
                 employee['linkedin_url'] or 'None',
                 employee['personal_email'] or 'None',
@@ -245,9 +245,56 @@ class CompanyService:
                 employee['seniority'] or 'None',
                 employee['department'] or 'None',
                 employee['job_title'] or 'None',
-                employee['city'] or 'None',
+                employee['city'].capitalize() or 'None',
                 employee['state'] or 'None',
             ])
+
+        output.seek(0)
+        return output
+
+
+    def download_employee(self, employee_id, company_id):
+        employee = self.get_full_information_employee(
+            company_id=company_id,
+            employee_id=employee_id
+        )
+
+        headers_mapping = [
+            ('First name', 'first_name'),
+            ('Last name', 'last_name'),
+            ('Mobile phone', 'mobile_phone'),
+            ('Linkedin url', 'linkedin_url'),
+            ('Personal email', 'personal_email'),
+            ('Business email', 'business_email'),
+            ('Seniority', 'seniority'),
+            ('Department', 'department'),
+            ('Job title', 'job_title'),
+            ('City', 'city'),
+            ('State', 'state'),
+            ('Company name', 'company_name'),
+            ('Company city', 'company_city'),
+            ('Company description', 'company_description'),
+            ('Company address', 'company_address'),
+            ('Company zip', 'company_zip'),
+            ('Company linkedin url', 'company_linkedin_url'),
+            ('Business email last seen', 'business_email_last_seen'),
+            ('Personal email last seen', 'personal_emails_last_seen'),
+            ('Personal zip', 'personal_zip'),
+            ('Company last updated', 'company_last_updated'),
+            ('Company domain', 'company_domain'),
+            ('Personal address', 'personal_address'),
+            ('Other personal emails', 'other_personal_emails'),
+            ('Company state', 'company_state'),
+        ]
+
+        values = [employee.get(key, 'None') for _, key in headers_mapping]
+
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(['Column', 'Value'])
+
+        for i, (header, _) in enumerate(headers_mapping):
+            writer.writerow([header, values[i].capitalize() if isinstance(values[i], str) and '@' not in values[i] else values[i]])
 
         output.seek(0)
         return output

@@ -79,7 +79,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     const [departments, setDepartments] = React.useState<string[]>([]);
     const [seniorities, setSeniorities] = React.useState<string[]>([]);
     const [jobTitles, setJobTitles] = React.useState<string[]>([]);
-    const [employeeId, setEmployeeId] = useState(0)
+    const [employeeId, setEmployeeId] = useState<number | null>(null)
 
 
     const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, industry: string) => {
@@ -441,27 +441,31 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
         setSelectedFilters(updatedFilters);
         
         const filters = JSON.parse(sessionStorage.getItem('filters-employee') || '{}');
+        const valuesToDelete = filterToDelete.value.split(',').map(value => value.trim());
     
         switch (filterToDelete.label) {
-            case 'Regions':
-                filters.regions = [];
-                break;
             case 'Search':
                 filters.searchQuery = '';
                 break;
-            case 'JobTitle':
+            case 'Job Title':
                 Object.keys(filters.jobTitle).forEach(key => {
-                    filters.jobTitle[key] = false;
+                    if (valuesToDelete.includes(key)) {
+                        filters.jobTitle[key] = false;
+                    }
                 });
                 break;
             case 'Department':
                 Object.keys(filters.department).forEach(key => {
-                    filters.department[key] = false;
+                    if (valuesToDelete.includes(key)) {
+                        filters.department[key] = false;
+                    }
                 });
                 break;
             case 'Seniority':
                 Object.keys(filters.seniority).forEach(key => {
-                    filters.seniority[key] = false;
+                    if (valuesToDelete.includes(key)) {
+                        filters.seniority[key] = false;
+                    }
                 });
                 break;
             default:
@@ -475,7 +479,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
             regions: updatedFilters.find(f => f.label === 'Regions') ? updatedFilters.find(f => f.label === 'Regions')!.value.split(', ') : [],
             searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',
             department: Object.fromEntries(Object.keys(filters.department).map(key => [key, updatedFilters.some(f => f.label === 'Department' && f.value.includes(key))])),
-            jobTitle: Object.fromEntries(Object.keys(filters.jobTitle).map(key => [key, updatedFilters.some(f => f.label === 'JobTitle' && f.value.includes(key))])),
+            jobTitle: Object.fromEntries(Object.keys(filters.jobTitle).map(key => [key, updatedFilters.some(f => f.label === 'Job Title' && f.value.includes(key))])),
             seniority: Object.fromEntries(Object.keys(filters.seniority).map(key => [key, updatedFilters.some(f => f.label === 'Seniority' && f.value.includes(key))]))
         };
     
@@ -623,11 +627,26 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                         )}
                         {selectedFilters.map(filter => {
                             let displayValue = filter.value;
-                            // Если фильтр Regions, применяем форматирование
-                            if (filter.label === 'Regions') {
-                                const regions = filter.value.split(', ') || [];
-                                const formattedRegions = regions.map(region => {
-                                    const [name] = region.split('-');
+                            if (filter.label === 'Department') {
+                                const departments = filter.value.split(', ') || [];
+                                const formattedRegions = departments.map(department => {
+                                    const [name] = department.split('-');
+                                    return name;
+                                });
+                                displayValue = formattedRegions.join(', ');
+                            }
+                            if (filter.label === 'Job Title') {
+                                const jobTitles = filter.value.split(', ') || [];
+                                const formattedRegions = jobTitles.map(jobTitle => {
+                                    const [name] = jobTitle.split('-');
+                                    return name;
+                                });
+                                displayValue = formattedRegions.join(', ');
+                            }
+                            if (filter.label === 'Seniority') {
+                                const seniorities = filter.value.split(', ') || [];
+                                const formattedRegions = seniorities.map(seniority => {
+                                    const [name] = seniority.split('-');
                                     return name;
                                 });
                                 displayValue = formattedRegions.join(', ');

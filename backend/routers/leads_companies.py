@@ -132,6 +132,18 @@ async def download_employees(
     return BaseEnum.FAILURE
 
 
+@router.get("/download-employee/{employee_id}")
+async def download_employee(
+        employee_id: int,
+        company_id: int = Query(None),
+        company_service: CompanyService = Depends(get_companies_service)):
+    result = company_service.download_employee(company_id=company_id, employee_id=employee_id)
+    if result:
+        return StreamingResponse(result, media_type="text/csv",
+                                 headers={"Content-Disposition": "attachment; filename=data.csv"})
+    return BaseEnum.FAILURE
+
+
 @router.get("/search-location")
 async def search_location(start_letter: str = Query(..., min_length=3),
                           company_service: CompanyService = Depends(get_companies_service)):

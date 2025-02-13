@@ -350,7 +350,6 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
   const handleSearchQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchQuery(value);
-    fetchContacts(value);
   };
 
   const handleSelectContact = (contact: { name: string }) => {

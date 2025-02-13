@@ -16,7 +16,7 @@ import dayjs from "dayjs";
 interface PopupDetailsProps {
     open: boolean;
     onClose: () => void;
-    employeeId: number;
+    employeeId: number | null;
     companyId: number;
 }
 
@@ -41,11 +41,8 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
     const [popupData, setPopupData] = useState<any>()
 
     const handleDownload = async () => {
-        const requestBody = {
-            companies_ids: popupData?.id ? [popupData?.id] : []
-        };
         try {
-            const response = await axiosInstance.post('/company/download-company', requestBody, {
+            const response = await axiosInstance.get(`/company/download-employee/${employeeId}?company_id=${companyId}`, {
                 responseType: 'blob'
             });
 
@@ -76,11 +73,13 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
     useEffect(() => {
         const fetchEmployees = async () => {
             try {
-                const response = await axiosInstance.get(`/company/employees/${employeeId}?company_id=${companyId}`);
-                if (response.status === 200) {
-                    setPopupData(response.data);
-                } else {
-                    showErrorToast("Error receiving employee data");
+                if (employeeId) {
+                    const response = await axiosInstance.get(`/company/employees/${employeeId}?company_id=${companyId}`);
+                    if (response.status === 200) {
+                        setPopupData(response.data);
+                    } else {
+                        showErrorToast("Error receiving employee data");
+                    }
                 }
             } catch {
             }
