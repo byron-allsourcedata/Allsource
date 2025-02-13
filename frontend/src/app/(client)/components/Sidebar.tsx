@@ -348,7 +348,10 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                 bottom: '0',
                 left: '0',
                 right: '0',
-                width: '100%'
+                width: '100%',
+                '@media (max-height: 600px)': {
+                    position: 'relative',
+                }
             }}>
                 <SetupSection percent_steps={activatePercent ? activatePercent : 0} />
                 <Box sx={sidebarStyles.settings}>
