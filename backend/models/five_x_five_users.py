@@ -26,7 +26,7 @@ class FiveXFiveUser(Base):
     company_sic = Column(VARCHAR(512), nullable=True)
     company_address = Column(VARCHAR(256), nullable=True)
     company_city = Column(VARCHAR(64), nullable=True)
-    company_state = Column(VARCHAR(32), nullable=True)
+    company_state = Column(VARCHAR(64), nullable=True)
     company_zip = Column(VARCHAR(16), nullable=True)
     company_linkedin_url = Column(VARCHAR(128), nullable=True)
     company_revenue = Column(VARCHAR(64), nullable=True)
