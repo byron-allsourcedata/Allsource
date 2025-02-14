@@ -36,8 +36,6 @@ def verify_slack_signature(request: Request, body: bytes):
 
 @router.get("/oauth/callback")
 async def slack_oauth_callback(request: Request, slack_service: SlackService = Depends(get_slack_service)):
-    body = await request.body()
-    verify_slack_signature(request, body)
     code = request.query_params.get("code")
     state = request.query_params.get("state")
     result = slack_service.slack_oauth_callback(code=code, state=state)
