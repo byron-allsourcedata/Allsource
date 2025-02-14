@@ -245,7 +245,7 @@ class CompanyService:
                 employee['seniority'] or 'None',
                 employee['department'] or 'None',
                 employee['job_title'] or 'None',
-                employee.get('city', 'None').capitalize(),
+                employee.get('city', 'None').capitalize() if isinstance(employee.get('city'), str) else 'None',
                 employee['state'] or 'None',
             ])
 
