@@ -29,10 +29,7 @@ def verify_slack_signature(request: Request, request_body: bytes):
         sig_basestring,
         'sha256'
     ).hexdigest()
-    print('---------------')
-    print(f"My signature: {my_signature}")
-    print(f"Slack signature: {slack_signature}")
-    
+        
     if not hmac.compare_digest(my_signature, slack_signature):
         raise HTTPException(status_code=400, detail="Invalid Slack signature")
 
@@ -79,8 +76,6 @@ async def get_channels(slack_create_List_request: SlackCreateListRequest,
 
 @router.post("/events")
 async def handle_slack_events(request: Request, slack_service: SlackService = Depends(get_slack_service)):
-    body = await request.body()
-    verify_slack_signature(request, body)
     data = await request.json()
     if "challenge" in data:
         return {"challenge": data["challenge"]}
