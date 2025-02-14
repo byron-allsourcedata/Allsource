@@ -145,10 +145,12 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
             
             const searchQuery = selectedFilters.find(filter => filter.label === 'Search')?.value;
             if (searchQuery) {
+                setPage(0)
                 url += `&search_query=${encodeURIComponent(searchQuery)}`;
             }
 
             if (sortBy) {
+                setPage(0)
                 url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
             }
 
@@ -156,6 +158,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
             const processMultiFilter = (label: string, paramName: string) => {
                 const filter = selectedFilters.find(filter => filter.label === label)?.value;
                 if (filter) {
+                    setPage(0)
                     url += `&${paramName}=${encodeURIComponent(filter?.split(', ').join(','))}`;
                 }
             };
@@ -927,7 +930,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                             </TableBody>
                                         </Table>
                                     </TableContainer>
-                                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0', "@media (max-width: 600px)": { padding: '12px 0 0' } }}>
+                                    {count_companies && count_companies > 15 && <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0', "@media (max-width: 600px)": { padding: '12px 0 0' } }}>
                                         <CustomTablePagination
                                             count={count_companies ?? 0}
                                             page={page}
@@ -936,7 +939,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                             onRowsPerPageChange={handleChangeRowsPerPage}
                                             rowsPerPageOptions={rowsPerPageOptions}
                                         />
-                                    </Box>
+                                    </Box>}
                                 </Grid>
                             </Grid>
 
