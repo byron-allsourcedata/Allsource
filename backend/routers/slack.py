@@ -7,15 +7,14 @@ from config.slack import SlackConfig
 import time
 import os
 import hmac
-import hashlib
 from schemas.integrations.slack import SlackCreateListRequest
 import logging
 
 router = APIRouter()
 
-def verify_slack_signature(request: Request, body: bytes):
+def verify_slack_signature(request: Request, request_body: bytes):
     timestamp = request.headers.get('X-Slack-Request-Timestamp')
-    slack_signature = request.headers.get('x-slack-signature')
+    slack_signature = request.headers.get('X-Slack-Signature')
 
     if not timestamp or not slack_signature:
         raise HTTPException(status_code=400, detail="Missing Slack headers")
@@ -23,12 +22,12 @@ def verify_slack_signature(request: Request, body: bytes):
     if abs(time.time() - int(timestamp)) > 60 * 5:
         raise HTTPException(status_code=400, detail="Request timestamp is too old")
 
-    sig_basestring = f"v0:{timestamp}:{body.decode('utf-8')}"
+    sig_basestring = f"v0:{timestamp}:".encode('utf-8') + request_body
 
     my_signature = 'v0=' + hmac.new(
         os.getenv('SLACK_CLIENT_SECRET').encode('utf-8'),
-        sig_basestring.encode('utf-8'),
-        hashlib.sha256
+        sig_basestring,
+        'sha256'
     ).hexdigest()
     
     if not hmac.compare_digest(my_signature, slack_signature):
