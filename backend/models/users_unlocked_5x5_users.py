@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, event, Integer, VARCHAR, Index
+from sqlalchemy import Column, ForeignKey, event, Integer, VARCHAR
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 
 from .base import Base, create_timestamps
@@ -18,5 +18,6 @@ class UsersUnlockedFiveXFiveUser(Base):
     domain_id = Column(Integer, ForeignKey("users_domains.id"), nullable=True)
     five_x_five_up_id = Column(VARCHAR, nullable=False)
     stripe_request_created_at = Column(TIMESTAMP)
+
 
 event.listen(UsersUnlockedFiveXFiveUser, "before_insert", create_timestamps)
