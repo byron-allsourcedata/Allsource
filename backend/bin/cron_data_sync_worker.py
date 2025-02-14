@@ -10,6 +10,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from sqlalchemy import create_engine
+from sqlalchemy.exc import PendingRollbackError
 from dotenv import load_dotenv
 from config.aws import get_s3_client
 from enums import ProccessDataSyncResult, DataSyncImportedStatus
@@ -161,11 +162,17 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
             await message.reject(requeue=True)
             return
 
-    except Exception as e:
-        logging.error("Error processing message", exc_info=True)
+    except PendingRollbackError:
+        logging.error("PendingRollbackError occurred, rolling back session.")
+        session.rollback()
         await asyncio.sleep(5)
         await message.reject(requeue=True)
 
+    except Exception as e:
+        logging.error(f"Error processing message {e}", exc_info=True)
+        session.rollback()
+        await asyncio.sleep(5)
+        await message.reject(requeue=True)
     
 async def main():
     log_level = logging.INFO
