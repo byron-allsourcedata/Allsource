@@ -18,7 +18,7 @@ import SwapVertIcon from '@mui/icons-material/SwapVert';
 interface RewardData {
     month: string;
     is_payment_active: boolean;
-    company_name: string;
+    account_name: string;
     email: string;
     sources: string;
     number_of_accounts: number;
@@ -170,7 +170,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ partner_id, isMaster, open,
                     is_payment_active: reward.is_payment_active,
                     partner_id: reward.partner_id,
                     join_date: reward.join_date,
-                    company_name: reward.company_name,
+                    account_name: reward.account_name,
                     plan_amount: reward.plan_amount,
                     email: reward.email,
                     sources: reward.sources,
@@ -402,9 +402,9 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ partner_id, isMaster, open,
                                                     zIndex: 1,
                                                     backgroundColor: '#fff',
                                                 }}
-                                                    onClick={() => onPartnerClick(item.partner_id, item.company_name, selectedYear)}
+                                                    onClick={() => onPartnerClick(item.partner_id, item.account_name, selectedYear)}
                                                 >
-                                                    {item.company_name}
+                                                    {item.account_name}
                                                 </TableCell>
 
                                                 <TableCell className='table-data' sx={partnersStyle.tableBodyColumn}>

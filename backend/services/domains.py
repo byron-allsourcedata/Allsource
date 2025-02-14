@@ -33,6 +33,10 @@ class UserDomainsService:
             self.domain_mapped(domain)
             for i, domain in enumerate(sorted_domains)
         ]
+        
+    def update_domain_name(self, domain_id: int, domain_name: str):
+        self.domain_persistence.update_domain_name(domain_id, domain_name)
+        return {'status': 'SUCCESS'}
     
     def update_domain(self, user_id: int, request: UpdateDomain):
         self.domain_persistence.update_first_domain_by_user_id(user_id, request.new_domain)

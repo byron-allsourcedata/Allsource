@@ -32,10 +32,10 @@ class AdminCustomersService:
         self.send_grid_persistence = send_grid_persistence
         self.partners_persistence = partners_persistence
 
-    def get_users(self):
-        users_object = self.user_persistence.get_not_partner_users()
+    def get_users(self, page, per_page):
+        users_dict, total_count = self.user_persistence.get_not_partner_users(page, per_page)
         result = []
-        for user in users_object:
+        for user in users_dict:
 
             payment_status = self.users_auth_service.get_user_authorization_status_without_pixel(user)
             if payment_status == UserAuthorizationStatus.SUCCESS:
@@ -63,7 +63,10 @@ class AdminCustomersService:
                 'payment_status': payment_status,
                 "is_trial": self.plans_persistence.get_trial_status_by_user_id(user.get('id'))
             })
-        return result
+        return {
+            'users': result,
+            'count': total_count
+        }
 
     def get_user_by_email(self, email):
         user_object = self.db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
@@ -74,7 +77,7 @@ class AdminCustomersService:
                     self.subscription_service.create_subscription_from_partners(user_id=user.id)
         else:
             user_subscription = self.subscription_service.get_user_subscription(user_id=user.id)
-            if user_subscription.plan_end.replace(tzinfo=timezone.utc) < get_utc_aware_date() or user_subscription.is_trial:
+            if user_subscription.is_trial or user_subscription.plan_end.replace(tzinfo=timezone.utc) < get_utc_aware_date():
                 self.subscription_service.create_subscription_from_partners(user_id=user.id)
 
     def update_user(self, update_data: UpdateUserRequest):
@@ -134,33 +137,4 @@ class AdminCustomersService:
             self.subscription_service.remove_trial(user_data.id)
         
         return user_data
-
-
-    def set_pixel_installed(self, mail, user_id):
-        (
-            self.db.query(Users)
-            .filter(Users.email == mail)
-            .update(
-                {Users.is_pixel_installed: True},
-                synchronize_session=False,
-            )
-        )
-        self.db.query(Users).filter(Users.id == user_id).update({Users.activate_steps_percent: 90},
-                                                              synchronize_session=False)
-        self.db.commit()
-
-    def pixel_code_passed(self, mail):
-        user_data = self.get_user_by_email(mail)
-        if user_data:
-            if not user_data.is_pixel_installed:
-                self.set_pixel_installed(mail, user_data.id)
-                user_subscription = self.get_user_subscription(user_data.id)
-                if not user_subscription.plan_start and not user_subscription.plan_end:
-                    free_trial_plan = self.get_free_trial_plan()
-                    start_date = datetime.now(timezone.utc)
-                    end_date = start_date + timedelta(days=free_trial_plan.trial_days)
-                    start_date_str = start_date.isoformat() + "Z"
-                    end_date_str = end_date.isoformat() + "Z"
-                    self.set_user_subscription(user_data.id, start_date_str, end_date_str)
-        return user_data
-
+    

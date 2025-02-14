@@ -173,7 +173,7 @@ const Assets: React.FC = () => {
                     "sidebar content"
                 `,
                 gridTemplateRows: 'auto 1fr',
-                gridTemplateColumns: '200px 1fr',
+                gridTemplateColumns: '0 1fr',
                 height: '100vh',
             }}
 >
@@ -185,22 +185,22 @@ const Assets: React.FC = () => {
             pl: 0
         }}
     >
-        {loading && (
-            <Box
-                sx={{
-                    position: 'fixed',
-                    top: '5.2rem',
-                    left: '200px',
-                    width: 'calc(100% - 200px)',
-                    zIndex: 1201,
-                }}
-            >
-                <BorderLinearProgress variant="indeterminate" />
-            </Box>
-        )}
 
         <Grid container spacing={1}>
             <Grid item xs={12} sx={{ display: 'flex', flexDirection: 'column', gap: '24px', }}>
+                {loading && 
+                    <Box
+                        sx={{
+                        width: '100%',
+                        position: 'fixed',
+                        top: '4.2rem',
+                        left: '7.6rem',
+                        zIndex: 1200
+                        }}
+                        >
+                        <BorderLinearProgress variant="indeterminate" />
+                    </Box>
+                    }
                 <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Typography variant="h4" component="h1" sx={assetsStyle.title}>
                         Assets

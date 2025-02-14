@@ -44,7 +44,7 @@ async def get_integrations_service(type: str | None = Query(None), data_sync: bo
 @router.get('/credentials/')
 async def get_integrations_credentials(integration_serivce: IntegrationService = Depends(get_integration_service),
                                        user=Depends(check_user_authorization),
-                                       domain=Depends(check_pixel_install_domain)):
+                                       domain=Depends(check_domain)):
     filters = []
     source_platform = user.get('source_platform')
     if source_platform in ['big_commerce', 'shopify']:
@@ -66,7 +66,7 @@ async def get_credential_service(platform: str,
 @router.post('/', status_code=200)
 async def create_integration(credentials: IntegrationCredentials, service_name: str = Query(...),
                              integration_service: IntegrationService = Depends(get_integration_service),
-                             user=Depends(check_user_authorization_without_pixel), domain=Depends(check_domain)):
+                             user=Depends(check_user_authentication), domain=Depends(check_domain)):
     if user.get('team_member'):
         team_member = user.get('team_member')
         if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value,
@@ -103,9 +103,9 @@ async def connect_integration(credentials: IntegrationCredentials, service_name:
 
 @router.delete('/')
 async def delete_integration(service_name: str = Query(...),
-                             user=Depends(check_user_authorization),
+                             user=Depends(check_user_authentication),
                              integration_service: IntegrationService = Depends(get_integration_service),
-                             domain=Depends(check_pixel_install_domain)):
+                             domain=Depends(check_domain)):
     if user.get('team_member'):
         team_member = user.get('team_member')
         if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value,
@@ -125,7 +125,7 @@ async def delete_integration(service_name: str = Query(...),
 async def get_list(ad_account_id: str = Query(None),
                    service_name: str = Query(...),
                    integration_service: IntegrationService = Depends(get_integration_service),
-                   user=Depends(check_user_authorization), domain=Depends(check_pixel_install_domain)):
+                   user=Depends(check_user_authorization), domain=Depends(check_domain)):
     with integration_service as service:
         service = getattr(service, service_name.lower())
         _ = {'domain_id': domain.id}
@@ -138,20 +138,20 @@ async def get_list(ad_account_id: str = Query(None),
 async def create_list(list_data: CreateListOrTags,
                       service_name: str = Query(...),
                       integrations_service: IntegrationService = Depends(get_integration_service),
-                      user=Depends(check_user_authorization), domain=Depends(check_pixel_install_domain)):
+                      user=Depends(check_user_authorization), domain=Depends(check_domain)):
     with integrations_service as service:
         service = getattr(service, service_name)
         return service.create_list(list_data, domain.id)
     
 @router.get('/sync/sender', status_code=200)
-async def get_sender(integrations_service: IntegrationService = Depends(get_integration_service), user = Depends(check_user_authorization), domain = Depends(check_pixel_install_domain)):
+async def get_sender(integrations_service: IntegrationService = Depends(get_integration_service), user = Depends(check_user_authorization), domain = Depends(check_domain)):
     with integrations_service as service:
         return service.sendlane.get_sender(domain.id)
 
 
 @router.get('/sync/ad_accounts')
 async def get_ad_accounts(integration_service: IntegrationService = Depends(get_integration_service),
-                          user = Depends(check_user_authorization), domain = Depends(check_pixel_install_domain)):
+                          user = Depends(check_user_authorization), domain = Depends(check_domain)):
     with integration_service as serivce:
         return serivce.meta.get_ad_accounts(domain.id)
 
@@ -260,39 +260,17 @@ def bigcommerce_auth(
 
             shop_data = shop_response.json()
             domain_url = shop_data.get("domain")
-
-            domain_entry = domain_persistence.get_domain_by_filter(domain=domain_url)
-            if domain_entry:
-                redirect_url = BigcommerceConfig.frontend_redirect
-                domain = domain_entry[0]
-                user = user_persistence.get_user_by_id(domain_entry[0].user_id)
-                if user:
-                    try:
-                        with integration_service as service:
-                            service.bigcommerce.add_integration_with_app(
-                                new_credentials=IntegrationCredentials(
-                                    bigcommerce=ShopifyOrBigcommerceCredentials(
-                                        shop_domain=shop_hash,
-                                        access_token=access_token
-                                    )
-                                ),
-                                domain=domain,
-                                user=user
-                            )
-                        return RedirectResponse(f'{redirect_url}?message=Successfully')
-                    except Exception:
-                        return RedirectResponse(f'{redirect_url}?message=Failed')
         
-    with integration_service as service:
-            service.bigcommerce.add_external_apps_install(
-            new_credentials=IntegrationCredentials(
-                bigcommerce=ShopifyOrBigcommerceCredentials(
-                    shop_domain=shop_hash,
-                    access_token=access_token
-                )
-            ),
-            domain_url=domain_url
-        )
+        with integration_service as service:
+                service.bigcommerce.add_external_apps_install(
+                new_credentials=IntegrationCredentials(
+                    bigcommerce=ShopifyOrBigcommerceCredentials(
+                        shop_domain=shop_hash,
+                        access_token=access_token
+                    )
+                ),
+                domain_url=domain_url
+            )
                  
     return RedirectResponse(f"{BigcommerceConfig.frontend_sign_up_redirect}?source_platform=big_commerce&shop_hash={shop_hash}")
     

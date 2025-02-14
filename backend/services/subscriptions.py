@@ -13,7 +13,7 @@ from models.subscriptions import Subscription, UserSubscriptions
 from models.users import Users, User
 from persistence.partners_persistence import PartnersPersistence
 from models.users_domains import UserDomains
-from models.users_payments_transactions import UsersPaymentsTransactions
+from models.users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
 from persistence.plans_persistence import PlansPersistence
 from persistence.user_persistence import UserPersistence
 from utils import get_utc_aware_date_for_postgres
@@ -201,15 +201,15 @@ class SubscriptionService:
     def create_payments_transaction(self, user_id, stripe_payload, product_description, quantity):
         payment_intent = stripe_payload.get("data", {}).get("object", {})
         transaction_id = payment_intent.get("id")
-        users_payments_transactions = self.db.query(UsersPaymentsTransactions).filter(
-            UsersPaymentsTransactions.transaction_id == transaction_id).first()
+        users_payments_transactions = self.db.query(UsersUnlockedFiveXFiveUser).filter(
+            UsersUnlockedFiveXFiveUser.transaction_id == transaction_id).first()
         if not users_payments_transactions:
             created_timestamp = stripe_payload.get("created")
             created_at = datetime.fromtimestamp(created_timestamp, timezone.utc).replace(
                 tzinfo=None) if created_timestamp else None
             status = payment_intent.get("status")
             if status == 'succeeded':
-                payment_transaction_obj = UsersPaymentsTransactions(
+                payment_transaction_obj = UsersUnlockedFiveXFiveUser(
                     user_id=user_id,
                     transaction_id=transaction_id,
                     created_at=datetime.now(timezone.utc).replace(tzinfo=None),
@@ -312,8 +312,8 @@ class SubscriptionService:
         return status
 
     def get_user_payment_by_transaction_id(self, transaction_id):
-        user_payment_transaction = self.db.query(UsersPaymentsTransactions).filter(
-            UsersPaymentsTransactions.transaction_id == transaction_id
+        user_payment_transaction = self.db.query(UsersUnlockedFiveXFiveUser).filter(
+            UsersUnlockedFiveXFiveUser.transaction_id == transaction_id
         ).first()
 
         return user_payment_transaction
@@ -362,6 +362,7 @@ class SubscriptionService:
         self.db.flush()
         user = self.db.query(User).filter(User.id == user_id).first()
         user.activate_steps_percent=50
+        user.is_book_call_passed=True
         user.leads_credits=plan.leads_credits
         user.prospect_credits=plan.prospect_credits
         user.current_subscription_id=add_subscription_obj.id

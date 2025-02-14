@@ -149,7 +149,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
             setAccessTokenExists(true)
           }
         }
-      } catch (error) {}
+      } catch (error) { }
       try {
         const response_big_commerce = await axiosInstance.get('/integrations/credentials/bigcommerce');
         if (response_big_commerce.status === 200) {
@@ -159,7 +159,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
           }
         }
       }
-      catch(error) {}
+      catch (error) { }
 
       if (sourcePlatform === 'shopify') {
         setSelectedCMS('Shopify')
@@ -260,6 +260,20 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
       }
     } catch (error) {
       showErrorToast('An error occurred while installing the pixel');
+    }
+  };
+
+  const handleInstallButtonClick = () => {
+    let url = shop_domain.trim();
+
+    if (url) {
+      if (!/^https?:\/\//i.test(url)) {
+        url = "http://" + url;
+      }
+
+      const hasQuery = url.includes("?");
+      const newUrl = url + (hasQuery ? "&" : "?") + "vge=true" + "&api=https://api-dev.maximiz.ai";
+      window.open(newUrl, "_blank");
     }
   };
 
@@ -525,8 +539,29 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                         <Image src='/3.svg' alt='3' width={28} height={28} />
                         <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '1em', fontWeight: '500' }}>Verify if Maximiz is receiving data from your site</Typography>
                       </Box>
-                      <Button variant="outlined" sx={{ ml: 5, backgroundColor: 'rgba(255, 255, 255, 1)', textTransform: 'none', padding: '1em 2em', border: '1px solid rgba(80, 82, 178, 1)' }}>
-                        <Typography className='second-sub-title' sx={{ fontSize: '14px !important', color: 'rgba(80, 82, 178, 1) !important', lineHeight: '22.4px', textAlign: 'left', textWrap: 'wrap' }}>View installation</Typography>
+                      <Button
+                        onClick={handleInstallButtonClick}
+                        variant="outlined"
+                        sx={{
+                          ml: 5,
+                          backgroundColor: 'rgba(255, 255, 255, 1)',
+                          textTransform: 'none',
+                          padding: '1em 2em',
+                          border: '1px solid rgba(80, 82, 178, 1)'
+                        }}
+                      >
+                        <Typography
+                          className='second-sub-title'
+                          sx={{
+                            fontSize: '14px !important',
+                            color: 'rgba(80, 82, 178, 1) !important',
+                            lineHeight: '22.4px',
+                            textAlign: 'left',
+                            textWrap: 'wrap'
+                          }}
+                        >
+                          View installation
+                        </Typography>
                       </Button>
                     </Box>
                   </>
@@ -576,7 +611,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                           InputLabelProps={{ sx: styles.inputLabel }}
                         />
                       </Box>
-                      {(sourcePlatform !== 'big_commerce' ||!accessTokenExists) && (
+                      {(sourcePlatform !== 'big_commerce' || !accessTokenExists) && (
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'start' }}>
                           <Image src='/2.svg' alt='2' width={28} height={28} />
                           <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'left', padding: '2em 1em 1em', fontWeight: '500', '@media (max-width: 600px)': { padding: '1em' } }}>Once you have submitted the required information, our system will automatically install the script on your Bigcommerce store. You don’t need to take any further action.</Typography>

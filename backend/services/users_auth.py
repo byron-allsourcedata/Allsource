@@ -145,7 +145,7 @@ class UsersAuth:
             source_platform = SourcePlatformEnum.AWIN.value
         
         user_object = Users(
-            email=user_form.get('email'),
+            email=user_form.get('email').lower(),
             is_email_confirmed=user_form.get('is_email_confirmed', False),
             password=user_form.get('password'),
             is_company_details_filled=False,
@@ -291,8 +291,14 @@ class UsersAuth:
             self.user_persistence_service.set_partner_role(user_object.id)
             self.subscription_service.create_subscription_from_partners(user_id=user_object.id, ftd=ftd)
             self.partners_service.setUser(user_object.email, user_object.id, "signup", datetime.datetime.now())
-        else:
-            self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)
+        
+        conditions = [
+                auth_google_data.spi is None,
+                teams_token is None,
+                referral_token is None,
+            ]
+        if all(conditions):
+            self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)    
             
         if not user_object.is_with_card:
             return {
@@ -328,10 +334,7 @@ class UsersAuth:
                     if user.is_book_call_passed:
                         subscription_plan_is_active = self.subscription_service.is_user_has_active_subscription(user.id)
                         if subscription_plan_is_active:
-                            if user.is_pixel_installed:
-                                return {'status': LoginStatus.SUCCESS}
-                            else:
-                                return {'status': LoginStatus.PIXEL_INSTALLATION_NEEDED}
+                            return {'status': LoginStatus.SUCCESS}
                         else:
                             if user.stripe_payment_url:
                                 return {
@@ -453,6 +456,13 @@ class UsersAuth:
                 'is_success': True,
                 'status': SignUpStatus.PASSWORD_NOT_VALID
             }
+        user_form.full_name = user_form.full_name.strip()
+        if not user_form.full_name:
+            logger.debug("Invalid full name provided.")
+            return {
+                'is_success': True,
+                'status': SignUpStatus.INCORRECT_FULL_NAME
+            }
         user_form.password = get_password_hash(user_form.password.strip())
         
         if self.user_persistence_service.get_user_by_email(user_form.email):
@@ -570,8 +580,13 @@ class UsersAuth:
             self.subscription_service.create_subscription_from_partners(user_id=user_object.id)
             self.partners_service.setUser(user_object.email, user_object.id, "signup", datetime.now())
        
-        if not user_form.spi:
-            self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)
+        conditions = [
+                user_form.spi is None,
+                teams_token is None,
+                referral_token is None,
+            ]
+        if all(conditions):
+            self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)    
         
         conditions = [
             is_with_card is False,

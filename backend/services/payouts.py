@@ -167,6 +167,7 @@ class PayoutsService:
                 'referral_payouts_id': referral_payout.id,
                 'user_id': referral_payout.user_id,
                 'company_name': referral_payout.company_name,
+                'account_name': referral_payout.full_name,
                 'email': referral_payout.email,
                 'join_date': referral_payout.created_at.strftime('%Y-%m-%d') if referral_payout.created_at else None,
                 'plan_amount': referral_payout.plan_amount,

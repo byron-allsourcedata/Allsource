@@ -16,7 +16,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
-from utils import normalize_url
+from utils import normalize_url, get_url_params_list
 from enums import NotificationTitles, PlanAlias
 from persistence.leads_persistence import LeadsPersistence
 from persistence.notification import NotificationPersistence
@@ -27,6 +27,7 @@ from models.leads_requests import LeadsRequests
 from models.users_domains import UserDomains
 from models.suppression_rule import SuppressionRule
 from models.lead_company import LeadCompany
+from models.leads_users_companies import LeadUserCompany
 from models.state import States
 from models.five_x_five_locations import FiveXFiveLocations
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
@@ -34,9 +35,9 @@ from models.leads_users_ordered import LeadsUsersOrdered
 from models.leads_visits import LeadsVisits
 from models.five_x_five_hems import FiveXFiveHems
 from models.suppressions_list import SuppressionList
-from models.users_payments_transactions import UsersPaymentsTransactions
+from models.users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
 from models.integrations.suppressed_contact import SuppressedContact
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, desc
 from sqlalchemy.orm import sessionmaker, Session
 from models.five_x_five_users import FiveXFiveUser
 from models.leads_users import LeadUser
@@ -65,7 +66,6 @@ LAST_PROCESSED_FILE_PATH = 'tmp/last_processed_leads_sync.txt'
 AMOUNT_CREDITS = 1
 QUEUE_CREDITS_CHARGING = 'credits_charging'
 EMAIL_NOTIFICATIONS = 'email_notifications'
-QUEUE_DATA_SYNC = 'data_sync_leads'
 
 ROOT_BOT_CLIENT_EMAIL = 'master-demo@maximiz.ai'
 ROOT_BOT_CLIENT_DOMAIN = 'demo.com'
@@ -194,14 +194,14 @@ async def notify_missing_plan(notification_persistence, user):
 async def process_payment_transaction(session, five_x_five_user_up_id, user_domain_id, user, lead_user,
                                       leads_persistence, notification_persistence, plan_leads_credits,
                                       plan_lead_credit_price):
-    users_payments_transactions = session.query(UsersPaymentsTransactions).filter(
-        UsersPaymentsTransactions.five_x_five_up_id == str(five_x_five_user_up_id),
-        UsersPaymentsTransactions.domain_id == user_domain_id
+    users_payments_transactions = session.query(UsersUnlockedFiveXFiveUser).filter(
+        UsersUnlockedFiveXFiveUser.five_x_five_up_id == str(five_x_five_user_up_id),
+        UsersUnlockedFiveXFiveUser.domain_id == user_domain_id
     ).first()
     if users_payments_transactions:
         logging.info(f"users_payments_transactions is already exists with id = {users_payments_transactions.id}")
         return
-    user_payment_transactions = UsersPaymentsTransactions(user_id=user.id, status='success',
+    user_payment_transactions = UsersUnlockedFiveXFiveUser(user_id=user.id, status='success',
                                                           amount_credits=AMOUNT_CREDITS, type='buy_lead',
                                                           domain_id=user_domain_id,
                                                           five_x_five_up_id=five_x_five_user_up_id)
@@ -255,15 +255,6 @@ def generate_random_order_detail():
         'currency': random.choice(['USD', 'EUR', 'GBP']),
         'platform_created_at': datetime.now(timezone.utc).isoformat()
     }
-
-
-async def process_lead_sync(rabbitmq_connection, user_domain_id, behavior_type, lead_user):
-    await publish_rabbitmq_message(rabbitmq_connection, QUEUE_DATA_SYNC,
-                                   {'domain_id': user_domain_id, 'leads_type': behavior_type, 'lead': {
-                                       'id': lead_user.id,
-                                       'five_x_five_user_id': lead_user.five_x_five_user_id
-                                   }})
-
 
 def process_root_user_behavior(lead_user, behavior_type, requested_at, session):
     events = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
@@ -343,37 +334,54 @@ def get_five_x_five_location(session, company_city, company_state, states_dict):
     if not location:
         return None
     return location.id
-    
-def get_or_create_company(session: Session, five_x_five_user: FiveXFiveUser, states_dict: dict):
+
+def get_company(session: Session, five_x_five_user: FiveXFiveUser):
     if five_x_five_user.company_name:
         company_name = five_x_five_user.company_name.strip()
         alias = regex.sub(r'[\p{Z}\s]+', ' ', company_name)
         alias = company_name.replace(" ", "_")
         alias = alias.lower()
-        lead_company = session.query(LeadCompany).filter_by(alias=alias).first()
-        if not lead_company:
-            five_x_five_location_id = get_five_x_five_location(session, five_x_five_user.company_city, five_x_five_user.company_state, states_dict)
-            lead_company = LeadCompany(
-                                name=five_x_five_user.company_name,
-                                alias=alias,
-                                domain=five_x_five_user.company_domain,
-                                phone=five_x_five_user.company_phone,
-                                sic=five_x_five_user.company_sic,
-                                address=five_x_five_user.company_address,
-                                five_x_five_location_id=five_x_five_location_id,
-                                zip=five_x_five_user.company_zip,
-                                linkedin_url=five_x_five_user.company_linkedin_url,
-                                revenue=five_x_five_user.company_revenue,
-                                employee_count=five_x_five_user.company_employee_count,
-                                last_updated=five_x_five_user.company_last_updated,
-                                description=five_x_five_user.company_description,
-                                primary_industry=five_x_five_user.primary_industry
-                            )
-            session.add(lead_company)
-            session.flush()
-        return lead_company.id
+        return session.query(LeadCompany).filter_by(alias=alias).first()
+
+def create_lead_user_company(session, company_id, lead_user_id):
+    lead_company = LeadUserCompany(
+                            lead_company_id=company_id,
+                            first_lead_user_id=lead_user_id
+                        )
+    session.add(lead_company)
+    session.flush()
+ 
+def create_company(session: Session, five_x_five_user: FiveXFiveUser, states_dict: dict):
+    if five_x_five_user.company_name:
+        company_name = five_x_five_user.company_name.strip()
+        alias = regex.sub(r'[\p{Z}\s]+', ' ', company_name)
+        alias = company_name.replace(" ", "_")
+        alias = alias.lower()
+        five_x_five_location_id = get_five_x_five_location(session, five_x_five_user.company_city, five_x_five_user.company_state, states_dict)
+        lead_company = LeadCompany(
+                            name=five_x_five_user.company_name,
+                            alias=alias,
+                            domain=five_x_five_user.company_domain,
+                            phone=five_x_five_user.company_phone,
+                            sic=five_x_five_user.company_sic,
+                            address=five_x_five_user.company_address,
+                            five_x_five_location_id=five_x_five_location_id,
+                            zip=five_x_five_user.company_zip,
+                            linkedin_url=five_x_five_user.company_linkedin_url,
+                            revenue=five_x_five_user.company_revenue,
+                            employee_count=five_x_five_user.company_employee_count,
+                            last_updated=five_x_five_user.company_last_updated,
+                            description=five_x_five_user.company_description,
+                            primary_industry=five_x_five_user.primary_industry
+                        )
+        session.add(lead_company)
+        session.flush()
+        return lead_company
     
     return None
+
+def get_first_lead_user_by_company_and_domain(session, company_id, domain_id):
+    return session.query(LeadUser).filter(LeadUser.domain_id==domain_id, LeadUser.company_id==company_id).first()
 
 async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXFiveUser, session: Session, rabbitmq_connection,
                             subscription_service: SubscriptionService, leads_persistence: LeadsPersistence,
@@ -499,10 +507,27 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
             return
 
         is_first_request = True
-        company_id = get_or_create_company(session, five_x_five_user, states_dict)
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type,
-                             domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0, company_id=company_id)
-
+                             domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0)
+        
+        session.add(lead_user)
+        session.flush()
+        if five_x_five_user.company_name:
+            company_name = five_x_five_user.company_name.strip()
+            alias = regex.sub(r'[\p{Z}\s]+', ' ', company_name)
+            alias = company_name.replace(" ", "_")
+            alias = alias.lower()
+            five_x_five_user.company_alias = alias
+            company = get_company(session, five_x_five_user)
+            if company:
+                if not get_first_lead_user_by_company_and_domain(session, company.id, lead_user.domain_id):
+                    create_lead_user_company(session, company.id, lead_user.id)
+            else:
+                company = create_company(session, five_x_five_user, states_dict)
+                create_lead_user_company(session, company.id, lead_user.id)
+            lead_user.company_id = company.id
+            
+            
         plan_contact_credits_id = None
 
         if root_user is None and not subscription_service.is_trial_subscription(user.id):
@@ -515,14 +540,10 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
                                               lead_user, leads_persistence, notification_persistence,
                                               subscription_plan.leads_credits, subscription_plan.lead_credit_price)
 
-        session.add(lead_user)
-        session.flush()
-
         if not lead_user.is_active and user.is_leads_auto_charging:
             await dispatch_leads_to_rabbitmq(session=session, user=user, rabbitmq_connection=rabbitmq_connection,
                                              plan_id=plan_contact_credits_id)
 
-        await process_lead_sync(rabbitmq_connection, user_domain_id, behavior_type, lead_user)
     requested_at_str = str(possible_lead['EVENT_DATE'])
     requested_at = datetime.fromisoformat(requested_at_str).replace(tzinfo=None)
     thirty_minutes_ago = requested_at - timedelta(minutes=30)
@@ -610,9 +631,21 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
             else:
                 new_record = LeadsUsersAddedToCart(lead_user_id=lead_user.id, added_at=requested_at)
                 session.add(new_record)
+    
+    prev_leads_requests = (
+        session.query(LeadsRequests)
+        .filter_by(visit_id=lead_visit_id)
+        .order_by(desc(LeadsRequests.id))
+        .first()
+    )
+    if prev_leads_requests:
+        total_sec = (requested_at - prev_leads_requests.requested_at).total_seconds()
+        if total_sec > 0:
+            prev_leads_requests.spent_time_sec = total_sec
+
     lead_request = insert(LeadsRequests).values(
-        lead_id=lead_user.id,
-        page=page, requested_at=requested_at, visit_id=lead_visit_id
+        lead_id=lead_user.id, page_parameters = get_url_params_list(page),
+        page=normalize_url(page), requested_at=requested_at, visit_id=lead_visit_id, spent_time_sec=10
     ).on_conflict_do_nothing()
     session.execute(lead_request)
     session.flush()
@@ -794,10 +827,6 @@ async def main():
         arguments={
             'x-consumer-timeout': 3600000,
         }
-    )
-    await channel.declare_queue(
-        name=QUEUE_DATA_SYNC,
-        durable=True
     )
 
     await channel.declare_queue(

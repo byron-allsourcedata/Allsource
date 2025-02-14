@@ -1,13 +1,9 @@
 "use client"
 import { Box, Grid, LinearProgress } from "@mui/material";
 import { useState } from "react";
-import { useTrial } from '@/context/TrialProvider';
-import { useUser } from "@/context/UserContext";
-import { useRouter } from "next/navigation";
 import { styled } from '@mui/material/styles';
 import PartnersAdmin from '@/components/PartnersAdmin'
 import PartnersAccounts from '@/components/PartnersAccounts'
-import CustomizedProgressBar from "@/components/ProgressBar";
 
 
 interface TabPanelProps {
@@ -30,13 +26,23 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
     );
 };
 
-const Assets: React.FC = () => {
+const Partners: React.FC = () => {
     const [masterData, setMasterData] = useState<any>(null)
     const [loading, setLoading] = useState(false);
     const [tabIndex, setTabIndex] = useState(0);
     const handleTabChange = (event: React.SyntheticEvent | null, newIndex: number) => {
         setTabIndex(newIndex);
     };
+
+    const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
+        height: 4,
+        borderRadius: 0,
+        backgroundColor: '#c6dafc',
+        '& .MuiLinearProgress-bar': {
+          borderRadius: 5,
+          backgroundColor: '#4285f4',
+        },
+    }));
 
 
     return (
@@ -63,6 +69,19 @@ const Assets: React.FC = () => {
                 >
                     <Grid container>
                         <Grid item xs={12} sx={{ display: 'flex', flexDirection: 'column' }}>
+                            {loading && 
+                            <Box
+                                sx={{
+                                width: '100%',
+                                position: 'fixed',
+                                top: '4.2rem',
+                                left: '7.6rem',
+                                zIndex: 1200
+                                }}
+                                >
+                                <BorderLinearProgress variant="indeterminate" />
+                            </Box>
+                            }
                             <Box sx={{ display: "flex", flexDirection: "column" }}>
                                 <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
                                     {masterData?.id && <TabPanel value={tabIndex} index={0}>
@@ -88,4 +107,4 @@ const Assets: React.FC = () => {
     )
 };
 
-export default Assets;
+export default Partners;

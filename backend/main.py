@@ -13,14 +13,14 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.WARNING,
     format='%(asctime)s.%(msecs)03d %(levelname)s: %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 logger = logging.getLogger(__name__)
 
-app = FastAPI()
-external_api = FastAPI()
+app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+external_api = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
 
 @external_api.exception_handler(StarletteHTTPException)

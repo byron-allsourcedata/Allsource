@@ -1,5 +1,5 @@
 'use client';
-import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import React, { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { Box, List, ListItem, ListItemIcon, ListItemText, LinearProgress, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
@@ -101,7 +101,7 @@ const sidebarStyles = {
     },
     ListItem: {
         minHeight: '4.5em',
-        color:'rgba(59, 59, 59, 1)',
+        color: 'rgba(59, 59, 59, 1)',
         ml: '3px'
     },
     activeItem: {
@@ -114,7 +114,7 @@ const sidebarStyles = {
     },
 };
 
-const containerStyles = (hasNotification: boolean) => ( {
+const containerStyles = (hasNotification: boolean) => ({
     container: {
         width: '100%',
         flexShrink: 0,
@@ -130,14 +130,15 @@ const containerStyles = (hasNotification: boolean) => ( {
         flexDirection: 'column',
         justifyContent: 'start',
         position: 'relative'
-    }})
+    }
+})
 
 interface ProgressSectionProps {
     percent_steps: number;
 }
 
 const SetupSection: React.FC<ProgressSectionProps> = ({ percent_steps }) => {
-    if(percent_steps > 50){
+    if (percent_steps > 50) {
         return null
     }
 
@@ -193,7 +194,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
     const [currentDomain, setCurrentDomain] = useState<string | null>(null);
     const [activatePercent, setActivatePercent] = useState<number>(0);
     const [isPartnerAvailable, setIsPartnerAvailable] = useState(false);
-    const [typeBusiness, setTypeBusiness] = useState("")
+    const isAuthorized = useRef(false);
     useEffect(() => {
         const storedDomain = sessionStorage.getItem('current_domain');
         if (storedDomain) {
@@ -202,23 +203,18 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
     }, []);
 
     const checkPartner = () => {
-        const storedMe = sessionStorage.getItem('me');
+        
+        const storedMe = localStorage.getItem('account_info');
+        let partner = false
         if (storedMe) {
             const storedData = JSON.parse(storedMe);
-            setIsPartnerAvailable(storedData.partner)
+            partner = storedData.partner
+            setIsPartnerAvailable(partner)
         }
         else {
-            setIsPartnerAvailable(false) 
+            setIsPartnerAvailable(false)
         }
     }
-
-    const checkB2B = () => {
-        const storedMe = sessionStorage.getItem('me');
-        if (storedMe) {
-            const storedData = JSON.parse(storedMe);
-            setTypeBusiness(storedData.business_type)
-        }
-    }   
 
     useEffect(() => {
         if (currentDomain) {
@@ -231,36 +227,49 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
 
     useEffect(() => {
         checkPartner()
-        checkB2B()
     }, [backButton]);
-    
+
+
     const handleNavigation = async (route: string) => {
         try {
-            setLoading(true)
+            setLoading(true);
+
+            if (isAuthorized.current) {
+                router.push(route);
+                return;
+            }
+
             const response = await axiosInstance.get('/check-user-authorization');
-            if (response.data.status === "NEED_BOOK_CALL") {
-                sessionStorage?.setItem("is_slider_opened", "true");
+            const status = response.data.status;
+
+            if (status === "SUCCESS") {
+                isAuthorized.current = true;
+                router.push(route);
+            } else if (status === "NEED_BOOK_CALL") {
+                sessionStorage.setItem("is_slider_opened", "true");
                 setShowSlider(true);
             } else {
-                router.push(route)
+                router.push(route);
             }
-        
         } catch (error) {
-            if (error instanceof AxiosError && error.response?.status === 403) {
-                if (error.response.data.status === "NEED_BOOK_CALL") {
-                    sessionStorage?.setItem("is_slider_opened", "true");
-                    setShowSlider(true);
+            if (error instanceof AxiosError) {
+                if (error.response?.status === 403) {
+                    if (error.response.data.status === "NEED_BOOK_CALL") {
+                        sessionStorage.setItem("is_slider_opened", "true");
+                        setShowSlider(true);
+                    } else {
+                        setShowSlider(false);
+                        router.push(route);
+                    }
                 } else {
-                    setShowSlider(false);
-                    router.push(route);
                 }
             } else {
             }
-        }
-        finally {
-            setLoading(false)
+        } finally {
+            setLoading(false);
         }
     };
+
 
     const isActive = (path: string) => pathname === path;
 
@@ -279,12 +288,12 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                     </ListItemIcon>
                     <ListItemText primary="Contacts" />
                 </ListItem>
-                {typeBusiness === "b2b" && <ListItem button onClick={() => handleNavigation('/company')} sx={isActive('/company') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                <ListItem button onClick={() => handleNavigation('/company')} sx={isActive('/company') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <BusinessIcon />
                     </ListItemIcon>
                     <ListItemText primary="Company" />
-                </ListItem>}
+                </ListItem>
                 <ListItem button onClick={() => handleNavigation('/data-sync')} sx={isActive('/data-sync') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <CategoryIcon />
@@ -339,9 +348,12 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                 bottom: '0',
                 left: '0',
                 right: '0',
-                width: '100%'
+                width: '100%',
+                '@media (max-height: 600px)': {
+                    position: 'relative',
+                }
             }}>
-                <SetupSection percent_steps={activatePercent ? activatePercent : 0 } />
+                <SetupSection percent_steps={activatePercent ? activatePercent : 0} />
                 <Box sx={sidebarStyles.settings}>
                     <ListItem button onClick={() => handleNavigation('settings?section=accountDetails')} sx={isActive('/settings') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                         <ListItemIcon sx={sidebarStyles.listItemIcon}>

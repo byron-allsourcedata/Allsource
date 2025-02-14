@@ -878,21 +878,22 @@ export const SettingsBilling: React.FC = () => {
                                         <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                             <Box sx={{
                                                 display: 'flex', flexDirection: 'row', gap: '26px',
+                                                alignItems: 'center',
                                                 '@media (max-width: 600px)': {
                                                     gap: '12px'
                                                 }
                                             }}>
+                                                <Box sx={{display: 'flex', flexDirection: 'row', width: '130px', gap:0.5, alignItems: 'center', '@media (max-width: 600px)': {
+                                                        width: '110px'
+                                                    }}}> 
                                                 <Typography className="third-sub-title" sx={{
-                                                    width: '130px',
                                                     fontWeight: '600 !important',
                                                     lineHeight: '16px !important',
-                                                    '@media (max-width: 600px)': {
-                                                        width: '110px'
-                                                    }
                                                 }}>
                                                     Overage
                                                 </Typography>
-
+                                                <CustomTooltip title='How overage works.' linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/settings/enable-overage" />
+                                                </Box>
                                                 <Typography className="second-text" sx={{
                                                     fontSize: '12px',
                                                     fontWeight: '400',

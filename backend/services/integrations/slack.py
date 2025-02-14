@@ -68,8 +68,6 @@ class SlackService:
                 "channels:manage",
                 "channels:read",
                 "chat:write",
-                "groups:read",
-                "groups:write",
                 "chat:write.public"
             ],
             user_scopes=[],
@@ -147,13 +145,13 @@ class SlackService:
         elif event_type == "app_uninstalled":
             self.handle_app_uninstalled(team_id)
 
-    def create_channel(self, domain_id, channel_name, is_private=False):
+    def create_channel(self, domain_id, channel_name):
         user_integration = self.get_credential(domain_id)
         client = WebClient(token=user_integration.access_token)
         try:
             response = client.conversations_create(
                 name=channel_name,
-                is_private=is_private
+                is_private=False
             )
             if response["ok"]:
                 return {
