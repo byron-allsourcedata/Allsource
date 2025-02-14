@@ -208,7 +208,7 @@ const Partners: React.FC = () => {
                                 <Typography className="first-sub-title">{isMaster ? "Master Partner" : "Partner"}</Typography>
                                 <Box sx={{ "@media (max-width: 600px)": { display: 'none' } }}><CustomTooltip title={"Collaborate with trusted partners to access exclusive resources and services that drive success."} linkText="Learn more" linkUrl={isMaster ? "https://maximizai.zohodesk.eu/portal/en/kb/articles/master-partner" :"https://maximizai.zohodesk.eu/portal/en/kb/articles/partner"} /></Box>
                             </Box>
-                            {tabIndex === 0 && <IconButton sx={{
+                            {tabIndex === 0 && <IconButton disabled={!isMaster} sx={{
                                 display: "none", cursor: "pointer", "@media (max-width: 600px)": { display: "block" }}} onClick={handleFormOpenPopup}>
                             <Image src='/add.svg' alt="add partner" width={24} height={24}/>
                             </IconButton>
@@ -413,7 +413,7 @@ const Partners: React.FC = () => {
                         </Box>}
 
                         {tabIndex === 0 && <IconButton sx={{
-                                display: "none", cursor: "pointer", "@media (max-width: 900px)": { display: "block" }, "@media (max-width: 600px)": { display: "none" }}} onClick={handleFormOpenPopup}>
+                                display: "none", cursor: "pointer", "@media (max-width: 900px)": { display: "block" }, "@media (max-width: 600px)": { display: "none" }}} disabled={!isMaster} onClick={handleFormOpenPopup}>
                             <Image src='/add.svg' alt="add partner" width={24} height={24}/>
                             </IconButton>
                             }
