@@ -137,33 +137,4 @@ class AdminCustomersService:
             self.subscription_service.remove_trial(user_data.id)
         
         return user_data
-
-
-    def set_pixel_installed(self, mail, user_id):
-        (
-            self.db.query(Users)
-            .filter(Users.email == mail)
-            .update(
-                {Users.is_pixel_installed: True},
-                synchronize_session=False,
-            )
-        )
-        self.db.query(Users).filter(Users.id == user_id).update({Users.activate_steps_percent: 90},
-                                                              synchronize_session=False)
-        self.db.commit()
-
-    def pixel_code_passed(self, mail):
-        user_data = self.get_user_by_email(mail)
-        if user_data:
-            if not user_data.is_pixel_installed:
-                self.set_pixel_installed(mail, user_data.id)
-                user_subscription = self.get_user_subscription(user_data.id)
-                if not user_subscription.plan_start and not user_subscription.plan_end:
-                    free_trial_plan = self.get_free_trial_plan()
-                    start_date = datetime.now(timezone.utc)
-                    end_date = start_date + timedelta(days=free_trial_plan.trial_days)
-                    start_date_str = start_date.isoformat() + "Z"
-                    end_date_str = end_date.isoformat() + "Z"
-                    self.set_user_subscription(user_data.id, start_date_str, end_date_str)
-        return user_data
-
+    

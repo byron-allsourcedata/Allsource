@@ -25,30 +25,6 @@ async def verify_token(admin_customers_service: AdminCustomersService = Depends(
         await rabbitmq_connection.close()
     return "OK"
 
-
-@router.get("/pixel_code_passed")
-async def verify_token(admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service),
-                       mail: str = Query(...)):
-    user = admin_customers_service.pixel_code_passed(mail)
-    queue_name = f'sse_events_{str(user.id)}'
-
-    rabbitmq_connection = RabbitMQConnection()
-    connection = await rabbitmq_connection.connect()
-
-    try:
-        await publish_rabbitmq_message(
-            connection=connection,
-            queue_name=queue_name,
-            message_body={'status': "PIXEL_CODE_INSTALLED", 'percent': 90}
-        )
-    except:
-        await rabbitmq_connection.close()
-    finally:
-        await rabbitmq_connection.close()
-
-    return 'OK'
-
-
 @router.get('/users')
 async def get_users(
         page: int = Query(1, alias="page", ge=1, description="Page number"),
