@@ -35,7 +35,7 @@ from models.leads_users_ordered import LeadsUsersOrdered
 from models.leads_visits import LeadsVisits
 from models.five_x_five_hems import FiveXFiveHems
 from models.suppressions_list import SuppressionList
-from models.users_payments_transactions import UsersPaymentsTransactions
+from models.users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
 from models.integrations.suppressed_contact import SuppressedContact
 from sqlalchemy import create_engine, desc
 from sqlalchemy.orm import sessionmaker, Session
@@ -194,14 +194,14 @@ async def notify_missing_plan(notification_persistence, user):
 async def process_payment_transaction(session, five_x_five_user_up_id, user_domain_id, user, lead_user,
                                       leads_persistence, notification_persistence, plan_leads_credits,
                                       plan_lead_credit_price):
-    users_payments_transactions = session.query(UsersPaymentsTransactions).filter(
-        UsersPaymentsTransactions.five_x_five_up_id == str(five_x_five_user_up_id),
-        UsersPaymentsTransactions.domain_id == user_domain_id
+    users_payments_transactions = session.query(UsersUnlockedFiveXFiveUser).filter(
+        UsersUnlockedFiveXFiveUser.five_x_five_up_id == str(five_x_five_user_up_id),
+        UsersUnlockedFiveXFiveUser.domain_id == user_domain_id
     ).first()
     if users_payments_transactions:
         logging.info(f"users_payments_transactions is already exists with id = {users_payments_transactions.id}")
         return
-    user_payment_transactions = UsersPaymentsTransactions(user_id=user.id, status='success',
+    user_payment_transactions = UsersUnlockedFiveXFiveUser(user_id=user.id, status='success',
                                                           amount_credits=AMOUNT_CREDITS, type='buy_lead',
                                                           domain_id=user_domain_id,
                                                           five_x_five_up_id=five_x_five_user_up_id)
