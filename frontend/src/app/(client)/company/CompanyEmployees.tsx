@@ -156,7 +156,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
             const processMultiFilter = (label: string, paramName: string) => {
                 const filter = selectedFilters.find(filter => filter.label === label)?.value;
                 if (filter) {
-                    url += `&${paramName}=${encodeURIComponent(filter.split(', ').join(','))}`;
+                    url += `&${paramName}=${encodeURIComponent(filter?.split(', ').join(','))}`;
                 }
             };
 
@@ -407,7 +407,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
 
     const capitalizeTableCell  = (city: string) => {
         return city
-            .split(' ')
+            ?.split(' ')
             .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
             .join(' ');
     }
