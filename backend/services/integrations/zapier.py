@@ -5,6 +5,7 @@ from persistence.domains import UserDomainsPersistence
 from persistence.leads_persistence import LeadsPersistence
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+from datetime import datetime, timedelta
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from fastapi import HTTPException
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
@@ -71,7 +72,7 @@ class ZapierIntegrationService:
 
     async def process_data_sync(self, five_x_five_user, access_token, integration_data_sync, lead_user):
         profile = self.__create_profile(five_x_five_user, integration_data_sync)
-        if profile == ProccessDataSyncResult.AUTHENTICATION_FAILED.value or profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+        if profile == ProccessDataSyncResult.AUTHENTICATION_FAILED.value or profile == ProccessDataSyncResult.INCORRECT_FORMAT.value or profile == ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value:
             return profile
             
         return ProccessDataSyncResult.SUCCESS.value
@@ -79,7 +80,7 @@ class ZapierIntegrationService:
 
     def __create_profile(self, five_x_five_user, sync: IntegrationUserSync):
         data = self.__mapped_lead(five_x_five_user)
-        if  data == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+        if data in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return data
         response = self.client.post(url=sync.hook_url, json=data)
         if response.status_code == 400:
@@ -102,7 +103,7 @@ class ZapierIntegrationService:
             return 'allContacts'
         return 'allContacts'
     
-    def __mapped_lead(self, lead):
+    def __mapped_lead(self, five_x_five_user):
         email_fields = [
             'business_email', 
             'personal_emails', 
@@ -110,42 +111,52 @@ class ZapierIntegrationService:
         ]
         
         def get_valid_email(user) -> str:
+            thirty_days_ago = datetime.now() - timedelta(days=30)
+            thirty_days_ago_str = thirty_days_ago.strftime('%Y-%m-%d %H:%M:%S')
+            verity = 0
             for field in email_fields:
                 email = getattr(user, field, None)
                 if email:
                     emails = extract_first_email(email)
                     for e in emails:
+                        if e and field == 'business_email' and five_x_five_user.business_email_last_seen and five_x_five_user.business_email_last_seen.strftime('%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
+                            return e.strip()
+                        if e and field == 'personal_emails' and five_x_five_user.personal_emails_last_seen and five_x_five_user.personal_emails_last_seen.strftime('%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
+                            return e.strip()
                         if e and self.million_verifier_integrations.is_email_verify(email=e.strip()):
                             return e.strip()
-            return None
-
-        first_email = get_valid_email(lead)
-        
-        if not first_email:
+                    verity += 1
+            if verity > 0:
+                return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        first_email = get_valid_email(five_x_five_user)
+
+        if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
+            return first_email
         
         lead_dict = {
-            "id": lead.id,
-            "first_name": lead.first_name,
-            "last_name": lead.last_name,
-            "mobile_phone": format_phone_number(lead.mobile_phone),
-            "direct_number": lead.direct_number,
-            "gender": lead.gender.lower() if lead.gender else None,
-            "personal_zip": lead.personal_zip or "N/A",
-            "personal_phone": format_phone_number(lead.personal_phone),
+            "id": five_x_five_user.id,
+            "first_name": five_x_five_user.first_name,
+            "last_name": five_x_five_user.last_name,
+            "mobile_phone": format_phone_number(five_x_five_user.mobile_phone),
+            "direct_number": five_x_five_user.direct_number,
+            "gender": five_x_five_user.gender.lower() if five_x_five_user.gender else None,
+            "personal_zip": five_x_five_user.personal_zip or "N/A",
+            "personal_phone": format_phone_number(five_x_five_user.personal_phone),
             "personal_emails": first_email,
-            "personal_city": lead.personal_city or "N/A",
-            "personal_state": lead.personal_state or "N/A",
-            "company_name": lead.company_name or "N/A",
-            "company_domain": lead.company_domain or "N/A",
-            "job_title": lead.job_title or "N/A",
-            "last_updated": lead.last_updated.isoformat() if isinstance(lead.last_updated, datetime) else None,
-            "age_min": lead.age_min,
-            "age_max": lead.age_max,
-            "personal_address": lead.personal_address or "N/A",
-            "married": lead.married,
-            "homeowner": lead.homeowner,
-            "dpv_code": lead.dpv_code
+            "personal_city": five_x_five_user.personal_city or "N/A",
+            "personal_state": five_x_five_user.personal_state or "N/A",
+            "company_name": five_x_five_user.company_name or "N/A",
+            "company_domain": five_x_five_user.company_domain or "N/A",
+            "job_title": five_x_five_user.job_title or "N/A",
+            "last_updated": five_x_five_user.last_updated.isoformat() if isinstance(five_x_five_user.last_updated, datetime) else None,
+            "age_min": five_x_five_user.age_min,
+            "age_max": five_x_five_user.age_max,
+            "personal_address": five_x_five_user.personal_address or "N/A",
+            "married": five_x_five_user.married,
+            "homeowner": five_x_five_user.homeowner,
+            "dpv_code": five_x_five_user.dpv_code
         }
         
         return {k: v for k, v in lead_dict.items() if v is not None}

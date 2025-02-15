@@ -133,6 +133,10 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
                     logging.debug(f"incorrect_format: {service_name}")
                     import_status = DataSyncImportedStatus.INCORRECT_FORMAT.value
                     
+                case ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value:
+                    logging.debug(f"incorrect_format: {service_name}")
+                    import_status = DataSyncImportedStatus.VERIFY_EMAIL_FAILED.value
+                    
                 case ProccessDataSyncResult.SUCCESS.value:
                     logging.debug(f"success: {service_name}")
                     import_status = DataSyncImportedStatus.SUCCESS.value

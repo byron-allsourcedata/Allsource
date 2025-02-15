@@ -1,5 +1,3 @@
-import re
-from datetime import datetime
 from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
@@ -8,6 +6,7 @@ from persistence.domains import UserDomainsPersistence
 from schemas.integrations.integrations import *
 from schemas.integrations.klaviyo import *
 from fastapi import HTTPException
+from datetime import datetime, timedelta
 from utils import extract_first_email
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
 import httpx
@@ -204,7 +203,7 @@ class KlaviyoIntegrationsService:
         data_map = data_sync.data_map if data_sync.data_map else None
         profile = self.__create_profile(five_x_five_user, user_integration.access_token, data_map)
         
-        if profile == ProccessDataSyncResult.AUTHENTICATION_FAILED.value or profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+        if profile == ProccessDataSyncResult.AUTHENTICATION_FAILED.value or profile == ProccessDataSyncResult.INCORRECT_FORMAT.value or profile == ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value:
             return profile
 
         list_response = self.__add_profile_to_list(data_sync.list_id, profile.get('id'), user_integration.access_token)
@@ -237,7 +236,7 @@ class KlaviyoIntegrationsService:
 
     def __create_profile(self, five_x_five_user, api_key: str, data_map):
         profile = self.__mapped_klaviyo_profile(five_x_five_user)
-        if profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+        if profile in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return profile
         
         if data_map:
@@ -321,19 +320,31 @@ class KlaviyoIntegrationsService:
         ]
         
         def get_valid_email(user) -> str:
+            thirty_days_ago = datetime.now() - timedelta(days=30)
+            thirty_days_ago_str = thirty_days_ago.strftime('%Y-%m-%d %H:%M:%S')
+            verity = 0
             for field in email_fields:
                 email = getattr(user, field, None)
                 if email:
                     emails = extract_first_email(email)
                     for e in emails:
+                        if e and field == 'business_email' and five_x_five_user.business_email_last_seen and five_x_five_user.business_email_last_seen.strftime('%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
+                            return e.strip()
+                        if e and field == 'personal_emails' and five_x_five_user.personal_emails_last_seen:
+                            personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime('%Y-%m-%d %H:%M:%S')
+                            if personal_emails_last_seen_str > thirty_days_ago_str:
+                                return e.strip()
                         if e and self.million_verifier_integrations.is_email_verify(email=e.strip()):
                             return e.strip()
-            return None
+                    verity += 1
+            if verity > 0:
+                return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
         first_email = get_valid_email(five_x_five_user)
         
-        if not first_email:
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+        if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
+            return first_email
         
         first_phone = (
             getattr(five_x_five_user, 'mobile_phone') or 

@@ -6,6 +6,7 @@ from datetime import datetime
 from schemas.integrations.omnisend import Identifiers, OmnisendProfile
 from schemas.integrations.integrations import DataMap, IntegrationCredentials
 from persistence.leads_persistence import LeadsPersistence
+from datetime import datetime, timedelta
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.domains import UserDomainsPersistence
@@ -114,7 +115,7 @@ class OmnisendIntegrationService:
     async def process_data_sync(self, five_x_five_user, user_integration, data_sync, lead_user):    
         profile = self.__create_profile(five_x_five_user, user_integration.access_token, data_sync.data_map)
         
-        if profile == ProccessDataSyncResult.AUTHENTICATION_FAILED.value or profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+        if profile == ProccessDataSyncResult.AUTHENTICATION_FAILED.value or profile == ProccessDataSyncResult.INCORRECT_FORMAT.value or profile == ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value:
             return profile
             
         return ProccessDataSyncResult.SUCCESS.value
@@ -122,7 +123,7 @@ class OmnisendIntegrationService:
     def __create_profile(self, five_x_five_user, access_token, data_map):
         profile = self.__mapped_profile(five_x_five_user)
         identifiers = self.__mapped_identifiers(five_x_five_user)
-        if identifiers == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+        if identifiers in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return identifiers
         if data_map:
             properties = self.__map_properties(five_x_five_user, data_map)
@@ -152,7 +153,7 @@ class OmnisendIntegrationService:
         return response.json()
     
 
-    def __mapped_identifiers(self, lead: FiveXFiveUser):
+    def __mapped_identifiers(self, five_x_five_user: FiveXFiveUser):
         email_fields = [
             'business_email', 
             'personal_emails', 
@@ -160,34 +161,44 @@ class OmnisendIntegrationService:
         ]
         
         def get_valid_email(user) -> str:
+            thirty_days_ago = datetime.now() - timedelta(days=30)
+            thirty_days_ago_str = thirty_days_ago.strftime('%Y-%m-%d %H:%M:%S')
+            verity = 0
             for field in email_fields:
                 email = getattr(user, field, None)
                 if email:
                     emails = extract_first_email(email)
                     for e in emails:
+                        if e and field == 'business_email' and five_x_five_user.business_email_last_seen and five_x_five_user.business_email_last_seen.strftime('%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
+                            return e.strip()
+                        if e and field == 'personal_emails' and five_x_five_user.personal_emails_last_seen and five_x_five_user.personal_emails_last_seen.strftime('%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
+                            return e.strip()
                         if e and self.million_verifier_integrations.is_email_verify(email=e.strip()):
                             return e.strip()
-            return None
-
-        first_email = get_valid_email(lead)
-        
-        if not first_email:
+                    verity += 1
+            if verity > 0:
+                return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        first_email = get_valid_email(five_x_five_user)
+        
+        if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
+            return first_email
         
         return Identifiers(id=first_email)
     
 
-    def __mapped_profile(self, lead: FiveXFiveUser) -> OmnisendProfile:
-        gender = getattr(lead, 'gender', None)
+    def __mapped_profile(self, five_x_five_user: FiveXFiveUser) -> OmnisendProfile:
+        gender = getattr(five_x_five_user, 'gender', None)
         if gender not in ['m', 'f']:
             gender = None
         return OmnisendProfile(
-            address=getattr(lead, 'personal_address') or getattr(lead, 'company_address', None),
-            city=getattr(lead, 'personal_city') or getattr(lead, 'company_city', None),
-            state=getattr(lead, 'personal_state') or getattr(lead, 'company_state', None),
-            postalCode=getattr(lead, 'personal_zip') or getattr(lead, 'company_zip', None),
-            firstName=getattr(lead, 'first_name', None),
-            lastName=getattr(lead, 'last_name', None),
+            address=getattr(five_x_five_user, 'personal_address') or getattr(five_x_five_user, 'company_address', None),
+            city=getattr(five_x_five_user, 'personal_city') or getattr(five_x_five_user, 'company_city', None),
+            state=getattr(five_x_five_user, 'personal_state') or getattr(five_x_five_user, 'company_state', None),
+            postalCode=getattr(five_x_five_user, 'personal_zip') or getattr(five_x_five_user, 'company_zip', None),
+            firstName=getattr(five_x_five_user, 'first_name', None),
+            lastName=getattr(five_x_five_user, 'last_name', None),
             gender=gender.lower() if gender else None
         )
 

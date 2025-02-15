@@ -47,5 +47,5 @@ class MillionVerifierIntegrationsService:
         
         if subresult_value in ('ok', 'unknown', 'greylisted'):
             is_verify = True
-        self.million_verifier_persistence.save_checked_email(email=email, is_verify=is_verify)
+        self.million_verifier_persistence.save_checked_email(email=email, is_verify=is_verify, verify_result=subresult_value)
         return is_verify
