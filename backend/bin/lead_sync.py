@@ -211,8 +211,8 @@ async def process_payment_unlocked_five_x_five_user(session, five_x_five_user_up
         lead_user.is_active = False
         return
     
-    users_unlocked_five_x_five_user = UsersUnlockedFiveXFiveUser(user_id=user.id, status='success',
-                                                          amount_credits=AMOUNT_CREDITS, type='buy_lead',
+    users_unlocked_five_x_five_user = UsersUnlockedFiveXFiveUser(user_id=user.id,
+                                                          amount_credits=AMOUNT_CREDITS,
                                                           domain_id=user_domain_id,
                                                           five_x_five_up_id=five_x_five_user_up_id)
 
