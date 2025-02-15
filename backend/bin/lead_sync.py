@@ -67,6 +67,7 @@ LAST_PROCESSED_FILE_PATH = 'tmp/last_processed_leads_sync.txt'
 AMOUNT_CREDITS = 1
 QUEUE_CREDITS_CHARGING = 'credits_charging'
 EMAIL_NOTIFICATIONS = 'email_notifications'
+UNLIMITED = -1
 
 ROOT_BOT_CLIENT_EMAIL = 'master-demo@maximiz.ai'
 ROOT_BOT_CLIENT_DOMAIN = 'demo.com'
@@ -192,29 +193,30 @@ async def notify_missing_plan(notification_persistence, user):
     )
 
 
-async def process_payment_transaction(session, five_x_five_user_up_id, user_domain_id, user, lead_user,
+async def process_payment_unlocked_five_x_five_user(session, five_x_five_user_up_id, user_domain_id, user, lead_user,
                                       leads_persistence, notification_persistence, plan_leads_credits,
                                       plan_lead_credit_price):
-    users_payments_transactions = session.query(UsersUnlockedFiveXFiveUser).filter(
+    users_unlocked_five_x_five_user = session.query(UsersUnlockedFiveXFiveUser).filter(
         UsersUnlockedFiveXFiveUser.five_x_five_up_id == str(five_x_five_user_up_id),
         UsersUnlockedFiveXFiveUser.domain_id == user_domain_id
     ).first()
-    if users_payments_transactions:
-        logging.info(f"users_payments_transactions is already exists with id = {users_payments_transactions.id}")
+    if users_unlocked_five_x_five_user:
+        logging.debug(f"users_unlocked_five_x_five_user is already exists with id = {users_unlocked_five_x_five_user.id}")
         return
-    user_payment_transactions = UsersUnlockedFiveXFiveUser(user_id=user.id, status='success',
+
+    if user.leads_credit != UNLIMITED or user.leads_credits - AMOUNT_CREDITS < 0:
+        if user.is_leads_auto_charging is False:
+            await handle_inactive_leads_notification(user, leads_persistence, notification_persistence)
+            logging.debug(f"User leads_auto_charging is False")
+        lead_user.is_active = False
+        return
+    
+    users_unlocked_five_x_five_user = UsersUnlockedFiveXFiveUser(user_id=user.id, status='success',
                                                           amount_credits=AMOUNT_CREDITS, type='buy_lead',
                                                           domain_id=user_domain_id,
                                                           five_x_five_up_id=five_x_five_user_up_id)
 
-    if (user.leads_credits - AMOUNT_CREDITS) < 0:
-        if user.is_leads_auto_charging is False:
-            await handle_inactive_leads_notification(user, leads_persistence, notification_persistence)
-            logging.info(f"User leads_auto_charging is False")
-        lead_user.is_active = False
-        return
-
-    session.add(user_payment_transactions)
+    session.add(users_unlocked_five_x_five_user)
     user.leads_credits -= AMOUNT_CREDITS
     session.flush()
     await handle_payment_notification(user, notification_persistence, plan_leads_credits, user.leads_credits,
@@ -517,22 +519,19 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
                 create_lead_user_company(session, company.id, lead_user.id)
             lead_user.company_id = company.id
             
-            
-        plan_contact_credits_id = None
-
-        if root_user is None and not subscription_service.is_trial_subscription(user.id):
-            user_subscription = subscription_service.get_user_subscription(user.id)
-            plan_contact_credits_id = session.query(SubscriptionPlan.id).filter(
-                SubscriptionPlan.price == user_subscription.lead_credit_price).scalar()
+        user_subscription = subscription_service.get_user_subscription(user.id)
+        if user_subscription:
             subscription_plan = session.query(SubscriptionPlan).filter(
                 SubscriptionPlan.id == user_subscription.plan_id).first()
-            await process_payment_transaction(session, five_x_five_user.up_id, user_domain_id, user,
-                                              lead_user, leads_persistence, notification_persistence,
-                                              subscription_plan.leads_credits, subscription_plan.lead_credit_price)
+            await process_payment_unlocked_five_x_five_user(session, five_x_five_user.up_id, user_domain_id, user,
+                                                lead_user, leads_persistence, notification_persistence,
+                                                subscription_plan.leads_credits, subscription_plan.lead_credit_price)
 
-        if not lead_user.is_active and user.is_leads_auto_charging:
-            await dispatch_leads_to_rabbitmq(session=session, user=user, rabbitmq_connection=rabbitmq_connection,
-                                             plan_id=plan_contact_credits_id)
+            if not lead_user.is_active and user.is_leads_auto_charging:
+                await dispatch_leads_to_rabbitmq(session=session, user=user, rabbitmq_connection=rabbitmq_connection,
+                                                plan_id=user_subscription.plan_id)
+        else:
+            lead_user.is_active = False
 
     requested_at_str = str(possible_lead['EVENT_DATE'])
     requested_at = datetime.fromisoformat(requested_at_str).replace(tzinfo=None)

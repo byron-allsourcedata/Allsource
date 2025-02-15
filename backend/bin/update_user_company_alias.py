@@ -9,22 +9,20 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
-from models.five_x_five_locations import FiveXFiveLocations
-from models.five_x_five_users_locations import FiveXFiveUsersLocations
-from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import sessionmaker
 from utils import create_company_alias
 from models.five_x_five_users import FiveXFiveUser
-from models.state import States
 from dotenv import load_dotenv
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
 
-def update_company_alias_to_user(session, five_x_five_user: FiveXFiveUser):
-    company_alias = create_company_alias(five_x_five_user.company_name)
-    five_x_five_user.company_alias = company_alias
+def update_company_alias_to_user(session, user_id: int, company_name:str):
+    company_alias = create_company_alias(company_name)
+    session.query(FiveXFiveUser).filter(
+        FiveXFiveUser.id == user_id
+    ).update({FiveXFiveUser.company_alias: company_alias})
     session.commit()
 
 async def process_users(session):
@@ -45,7 +43,8 @@ async def process_users(session):
             if five_x_five_user.company_name and not five_x_five_user.company_alias:
                 update_company_alias_to_user(
                     session=session,
-                    five_x_five_user=five_x_five_user
+                    user_id=five_x_five_user.id,
+                    company_name=five_x_five_user.company_name
                 )
 
         current_id += 1000
