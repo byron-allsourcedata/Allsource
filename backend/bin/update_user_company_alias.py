@@ -35,7 +35,7 @@ async def process_users(session):
     while current_id < max_id:
         logging.info(f"current_id: {current_id}")
         logging.info(f"max_id: {max_id}")
-        five_x_five_users = session.query(FiveXFiveUser).filter(
+        five_x_five_users = session.query(FiveXFiveUser.id, FiveXFiveUser.company_name, FiveXFiveUser.company_alias).filter(
             and_(
                 FiveXFiveUser.id > current_id,
                 FiveXFiveUser.id <= current_id + 1000
