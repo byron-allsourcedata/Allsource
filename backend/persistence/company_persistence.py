@@ -626,6 +626,7 @@ class CompanyPersistence:
 
         count = 0
         max_page = 0
+        states = 0
         if per_page:
             offset = (page - 1) * per_page
             employees = query.limit(per_page).offset(offset).all()
