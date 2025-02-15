@@ -204,7 +204,7 @@ async def process_payment_unlocked_five_x_five_user(session, five_x_five_user_up
         logging.debug(f"users_unlocked_five_x_five_user is already exists with id = {users_unlocked_five_x_five_user.id}")
         return
 
-    if user.leads_credit != UNLIMITED or user.leads_credits - AMOUNT_CREDITS < 0:
+    if plan_leads_credits != UNLIMITED and user.leads_credits - AMOUNT_CREDITS < 0:
         if user.is_leads_auto_charging is False:
             await handle_inactive_leads_notification(user, leads_persistence, notification_persistence)
             logging.debug(f"User leads_auto_charging is False")
@@ -217,10 +217,11 @@ async def process_payment_unlocked_five_x_five_user(session, five_x_five_user_up
                                                           five_x_five_up_id=five_x_five_user_up_id)
 
     session.add(users_unlocked_five_x_five_user)
-    user.leads_credits -= AMOUNT_CREDITS
+    if plan_leads_credits != UNLIMITED:
+        user.leads_credits -= AMOUNT_CREDITS
+        await handle_payment_notification(user, notification_persistence, plan_leads_credits, user.leads_credits,
+                                        plan_lead_credit_price)
     session.flush()
-    await handle_payment_notification(user, notification_persistence, plan_leads_credits, user.leads_credits,
-                                      plan_lead_credit_price)
 
 
 def check_certain_urls(page, suppression_rule):
