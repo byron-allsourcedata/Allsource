@@ -21,6 +21,7 @@ from enums import NotificationTitles, PlanAlias
 from persistence.leads_persistence import LeadsPersistence
 from persistence.notification import NotificationPersistence
 from models.plans import SubscriptionPlan
+from utils import create_company_alias
 from models.five_x_five_cookie_sync_file import FiveXFiveCookieSyncFile
 from urllib.parse import urlparse, parse_qs
 from models.leads_requests import LeadsRequests
@@ -352,33 +353,27 @@ def create_lead_user_company(session, company_id, lead_user_id):
     session.flush()
  
 def create_company(session: Session, five_x_five_user: FiveXFiveUser, states_dict: dict):
-    if five_x_five_user.company_name:
-        company_name = five_x_five_user.company_name.strip()
-        alias = regex.sub(r'[\p{Z}\s]+', ' ', company_name)
-        alias = company_name.replace(" ", "_")
-        alias = alias.lower()
-        five_x_five_location_id = get_five_x_five_location(session, five_x_five_user.company_city, five_x_five_user.company_state, states_dict)
-        lead_company = LeadCompany(
-                            name=five_x_five_user.company_name,
-                            alias=alias,
-                            domain=five_x_five_user.company_domain,
-                            phone=five_x_five_user.company_phone,
-                            sic=five_x_five_user.company_sic,
-                            address=five_x_five_user.company_address,
-                            five_x_five_location_id=five_x_five_location_id,
-                            zip=five_x_five_user.company_zip,
-                            linkedin_url=five_x_five_user.company_linkedin_url,
-                            revenue=five_x_five_user.company_revenue,
-                            employee_count=five_x_five_user.company_employee_count,
-                            last_updated=five_x_five_user.company_last_updated,
-                            description=five_x_five_user.company_description,
-                            primary_industry=five_x_five_user.primary_industry
-                        )
-        session.add(lead_company)
-        session.flush()
-        return lead_company
-    
-    return None
+    alias = create_company_alias(five_x_five_user.company_name)
+    five_x_five_location_id = get_five_x_five_location(session, five_x_five_user.company_city, five_x_five_user.company_state, states_dict)
+    lead_company = LeadCompany(
+                        name=five_x_five_user.company_name,
+                        alias=alias,
+                        domain=five_x_five_user.company_domain,
+                        phone=five_x_five_user.company_phone,
+                        sic=five_x_five_user.company_sic,
+                        address=five_x_five_user.company_address,
+                        five_x_five_location_id=five_x_five_location_id,
+                        zip=five_x_five_user.company_zip,
+                        linkedin_url=five_x_five_user.company_linkedin_url,
+                        revenue=five_x_five_user.company_revenue,
+                        employee_count=five_x_five_user.company_employee_count,
+                        last_updated=five_x_five_user.company_last_updated,
+                        description=five_x_five_user.company_description,
+                        primary_industry=five_x_five_user.primary_industry
+                    )
+    session.add(lead_company)
+    session.flush()
+    return lead_company
 
 def get_first_lead_user_by_company_and_domain(session, company_id, domain_id):
     return session.query(LeadUser).filter(LeadUser.domain_id==domain_id, LeadUser.company_id==company_id).first()
@@ -513,11 +508,6 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
         session.add(lead_user)
         session.flush()
         if five_x_five_user.company_name:
-            company_name = five_x_five_user.company_name.strip()
-            alias = regex.sub(r'[\p{Z}\s]+', ' ', company_name)
-            alias = company_name.replace(" ", "_")
-            alias = alias.lower()
-            five_x_five_user.company_alias = alias
             company = get_company(session, five_x_five_user)
             if company:
                 if not get_first_lead_user_by_company_and_domain(session, company.id, lead_user.domain_id):

@@ -15,6 +15,7 @@ sys.path.append(parent_dir)
 from models.five_x_five_locations import FiveXFiveLocations
 from models.five_x_five_users_locations import FiveXFiveUsersLocations
 from models.five_x_five_phones import FiveXFivePhones
+from utils import create_company_alias
 from models.five_x_five_users_phones import FiveXFiveUsersPhones
 from models.five_x_five_emails import FiveXFiveEmails
 from models.five_x_five_names import FiveXFiveNames
@@ -125,14 +126,6 @@ def save_city_and_state_to_user(session, personal_city, personal_state, five_x_f
     ).on_conflict_do_nothing()
     session.execute(leads_locations)
     session.flush()
-
-def create_company_alias(company_name):
-    if company_name:
-        company_name = company_name.strip()
-        alias = regex.sub(r'[\p{Z}\s]+', ' ', company_name)
-        alias = company_name.replace(" ", "_")
-        alias = alias.lower()
-        return alias
 
 def format_phone_number(phones):
     if phones:

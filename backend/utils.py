@@ -3,6 +3,7 @@ import re
 import os
 import hashlib
 import json
+import regex
 from urllib.parse import urlparse, parse_qs
 
 def get_utc_aware_date():
@@ -43,6 +44,14 @@ def extract_first_email(text: str) -> str:
         if emails:
             return emails[0]
         return None
+
+def create_company_alias(company_name):
+    if company_name:
+        company_name = company_name.strip()
+        alias = regex.sub(r'[\p{Z}\s]+', ' ', company_name)
+        alias = company_name.replace(" ", "_")
+        alias = alias.lower()
+        return alias
     
 def validate_and_format_phone(phone_numbers: str) -> str:
     if not phone_numbers:
