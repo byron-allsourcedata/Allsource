@@ -197,7 +197,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
         });
 
         if (newListResponse.status !== 201) {
-            throw new Error('Failed to create a new tags')
+            showErrorToast('Failed to create a new tags')
         }
 
         return newListResponse.data;

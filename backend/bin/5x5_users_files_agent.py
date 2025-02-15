@@ -44,11 +44,10 @@ def assume_role(role_arn, sts_client):
     return credentials
 
 
-async def on_message_received(message, s3_session, rmq_connection):
-    try:
+async def on_message_received(message_body, s3_session, rmq_connection):
         sts_client = create_sts_client(os.getenv('S3_KEY_ID'), os.getenv('S3_KEY_SECRET'))
         credentials = assume_role(os.getenv('S3_ROLE_ARN'), sts_client)
-        message_json = json.loads(message.body)
+        message_json = json.loads(message_body)
         logging.info(f"{message_json['file_name']} started")
         async with s3_session.client(
                 's3',
@@ -75,13 +74,6 @@ async def on_message_received(message, s3_session, rmq_connection):
                         rows_counter += 1
                     logging.info(f"{rows_counter} rows processed")
         logging.info(f"{message_json['file_name']} processed")
-        await message.ack()
-    except Exception as e:
-        logging.error("excepted message. error", exc_info=True)
-        await asyncio.sleep(5)
-        await message.reject(requeue=True)
-
-
 
 async def main():
     logging.info("Started")
@@ -105,13 +97,27 @@ async def main():
             }
         )
         session = aioboto3.Session()
-        await queue.consume(
-            functools.partial(on_message_received, s3_session=session,
-                              rmq_connection=connection)
-        )
-        await asyncio.Future()
+        
+        while(True):
+            channel = await connection.channel()
+            queue = await channel.get_queue(QUEUE_USERS_FILES)
+            message = await queue.get(no_ack=False)
+            if message:
+                await message.ack()
+                await on_message_received(message.body, session, connection)
+            else:
+                logging.info("No message returned")
+                await asyncio.sleep(5) 
+                break
+            await channel.close()
+        await connection.close()
     except Exception as err:
         logging.error('Unhandled Exception:', exc_info=True)
+    finally:
+        if rabbitmq_connection:
+            logging.info("Closing RabbitMQ connection...")
+            await rabbitmq_connection.close()
+        await asyncio.sleep(10)
 
 
 if __name__ == "__main__":

@@ -25,7 +25,6 @@ class KlaviyoIntegrationsService:
         self.leads_persistence = leads_persistence
         self.sync_persistence = sync_persistence
         self.million_verifier_integrations = million_verifier_integrations
-        self.QUEUE_DATA_SYNC = 'data_sync_leads'
         self.client = client
 
     def __handle_request(self, method: str, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None, api_key: str = None):
@@ -148,11 +147,32 @@ class KlaviyoIntegrationsService:
             self.integrations_persisntece.db.commit()
             raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
         return self.__mapped_list(response.json().get('data'))
-
+    
+    def create_and_delete_contact(self, access_token: str):
+        json_data = {
+            'data': {
+                'type': 'profile',
+                'attributes': {
+                    'email': 'test',
+                    'first_name': 'Test',
+                    'last_name': 'Test',
+                }
+            }
+        }
+        response = self.__handle_request(
+            method='POST',
+            url='https://a.klaviyo.com/api/profiles/',
+            api_key=access_token,
+            json=json_data
+        )
+        if response.status_code == 400:
+            return True
+        return False
 
     def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
         try:
-            self.__get_list(credentials.klaviyo.api_key)
+            if self.create_and_delete_contact(credentials.klaviyo.api_key) == False:
+                raise HTTPException(status_code=400, detail=IntegrationsStatus.CREDENTAILS_INVALID.value)
         except:
             raise HTTPException(status_code=400, detail=IntegrationsStatus.CREDENTAILS_INVALID.value)
         integartions = self.__save_integrations(credentials.klaviyo.api_key, domain.id, user)
@@ -202,7 +222,6 @@ class KlaviyoIntegrationsService:
     async def process_data_sync(self, five_x_five_user, user_integration, data_sync, lead_user):
         data_map = data_sync.data_map if data_sync.data_map else None
         profile = self.__create_profile(five_x_five_user, user_integration.access_token, data_map)
-        
         if profile == ProccessDataSyncResult.AUTHENTICATION_FAILED.value or profile == ProccessDataSyncResult.INCORRECT_FORMAT.value or profile == ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value:
             return profile
 
@@ -211,7 +230,6 @@ class KlaviyoIntegrationsService:
             return ProccessDataSyncResult.LIST_NOT_EXISTS.value
             
         return ProccessDataSyncResult.SUCCESS.value
-
     
     def get_count_profiles(self, list_id: str, api_key: str):
         url = f'https://a.klaviyo.com/api/lists/{list_id}?additional-fields[list]=profile_count'
@@ -276,7 +294,6 @@ class KlaviyoIntegrationsService:
                 return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
         if response.status_code == 409:
             return {'id': response.json().get('errors')[0].get('meta').get('duplicate_profile_id')}
-        
         
 
     def __add_profile_to_list(self, list_id: str, profile_id: str, api_key: str):

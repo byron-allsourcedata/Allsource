@@ -98,9 +98,9 @@ class DashboardService:
             'lifetime_revenue': int(lifetime_revenue),
         }
         return response
-
-    def get_contact(self, from_date, to_date):
-        results = self.leads_persistence_service.get_contact_data(
+    
+    def get_contacts_for_d2c(self, from_date, to_date):
+        results = self.leads_persistence_service.get_contact_data_for_d2c(
             domain_id=self.domain.id,
             from_date=from_date,
             to_date=to_date
@@ -171,3 +171,67 @@ class DashboardService:
         }
 
         return response
+    
+    def get_contacts_for_b2b(self, from_date, to_date):
+        new_leads_data, returning_visitors_data, page_views_data = self.leads_persistence_service.get_contact_data_for_b2b(
+            domain_id=self.domain.id,
+            from_date=from_date,
+            to_date=to_date
+        )
+        results = []
+        all_dates = set([d[0] for d in new_leads_data] + [d[0] for d in returning_visitors_data] + [d[0] for d in page_views_data])
+
+        for date in sorted(all_dates):
+            new_leads = next((item[1] for item in new_leads_data if item[0] == date), 0)
+            returning_visitors = next((item[1] for item in returning_visitors_data if item[0] == date), 0)
+            page_views = next((item[1] for item in page_views_data if item[0] == date), 0)
+            
+            results.append({
+                'start_date': date,
+                'new_leads': new_leads,
+                'returning_visitors': returning_visitors,
+                'page_views': page_views
+            })
+        daily_data = {}
+        
+        total_counts = {
+            'total_contacts_collected': 0,
+            'total_new_leads': 0,
+            'total_returning_visitors': 0,
+            'total_page_views': 0,
+        }
+    
+        accumulated_contacts_collected = 0
+        accumulated_new_leads = 0
+        accumulated_returning_visitors = 0
+        accumulated_page_views = 0
+
+        for result in results:
+            start_date = result.get('start_date').isoformat()
+            accumulated_contacts_collected += result.get('new_leads', 0) + result.get('returning_visitors', 0)
+            accumulated_new_leads += result.get('new_leads', 0)
+            accumulated_returning_visitors += result.get('returning_visitors', 0)
+            accumulated_page_views += result.get('page_views', 0)
+            daily_data[start_date] = {
+                'contacts_collected': accumulated_contacts_collected,
+                'new_leads': accumulated_new_leads,
+                'returning_visitors': accumulated_returning_visitors,
+                'page_views': accumulated_page_views,
+            }
+            
+            total_counts['total_contacts_collected'] += result.get('new_leads', 0) + result.get('returning_visitors', 0)
+            total_counts['total_new_leads'] += result.get('new_leads', 0)
+            total_counts['total_returning_visitors'] += result.get('returning_visitors', 0)
+            total_counts['total_page_views'] += result.get('page_views', 0)
+
+        response = {
+            'daily_data': daily_data,
+            'total_counts': total_counts
+        }
+
+        return response
+    
+    def get_contact(self, from_date, to_date, business_type):
+        if business_type == 'b2b':
+            return self.get_contacts_for_b2b(from_date, to_date)
+        return self.get_contacts_for_d2c(from_date, to_date)

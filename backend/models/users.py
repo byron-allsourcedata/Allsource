@@ -1,5 +1,5 @@
 from sqlalchemy import Column, DateTime, event, Integer
-from sqlalchemy.dialects.postgresql import BIGINT, BOOLEAN, INTEGER, TIMESTAMP, VARCHAR, ARRAY, JSON, TEXT
+from sqlalchemy.dialects.postgresql import BIGINT, BOOLEAN, INTEGER, TIMESTAMP, VARCHAR, ARRAY, JSON
 
 from .base import Base, create_timestamps, update_timestamps
 
@@ -34,7 +34,6 @@ class Users(Base):
     is_book_call_passed = Column(BOOLEAN, default=False, nullable=True)
     stripe_payment_url = Column(JSON, nullable=True)
     data_provider_id = Column(VARCHAR(64), nullable=True)
-    is_pixel_installed = Column(BOOLEAN, default=False, nullable=True)
     role = Column(ARRAY(VARCHAR(32)))
     calendly_uuid = Column(VARCHAR(64), nullable=True)
     calendly_invitee_uuid = Column(VARCHAR(64), nullable=True)

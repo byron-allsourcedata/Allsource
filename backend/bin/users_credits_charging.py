@@ -22,7 +22,7 @@ from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from sqlalchemy.orm import sessionmaker
 from models.users import Users
 from datetime import datetime, timezone
-from models.users_payments_transactions import UsersPaymentsTransactions
+from models.users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
 from services.stripe_service import purchase_product
 from dotenv import load_dotenv
 
@@ -94,7 +94,7 @@ async def on_message_received(message, session):
                         if result['success']:
                             stripe_payload = result['stripe_payload']
                             transaction_id = stripe_payload.get("id")
-                            if not session.query(UsersPaymentsTransactions).filter_by(
+                            if not session.query(UsersUnlockedFiveXFiveUser).filter_by(
                                     transaction_id=transaction_id).first():
                                 created_timestamp = stripe_payload.get("created")
                                 created_at = datetime.fromtimestamp(created_timestamp,
@@ -108,7 +108,7 @@ async def on_message_received(message, session):
                                     transaction_counter = 1
                                     for domain_id, users in grouped_users.items():
                                         transaction_id_with_iteration = f"{transaction_id}_{transaction_counter}"
-                                        payment_transaction_obj = UsersPaymentsTransactions(
+                                        payment_transaction_obj = UsersUnlockedFiveXFiveUser(
                                             user_id=user.id,
                                             transaction_id=transaction_id_with_iteration,
                                             created_at=datetime.now(timezone.utc),

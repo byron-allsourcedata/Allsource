@@ -2,9 +2,10 @@
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import {
     Box, Grid, Typography, TextField, Button, List, ListItemText, ListItemButton, IconButton, SelectChangeEvent, Select, MenuItem, Tabs, Tab,
-    InputAdornment, Popover, Table, TableBody, TableCell, TableContainer, TableHead, TableRow
+    InputAdornment, Popover, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, LinearProgress
 } from "@mui/material";
 import { Suspense, useCallback, useEffect, useState } from "react";
+import { styled } from '@mui/material/styles';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import { suppressionsStyles } from "@/css/suppressions";
@@ -385,9 +386,15 @@ const Accounts: React.FC = () => {
     }, [page, rowsPerPage, appliedDates, orderBy, order])
 
 
-    if (loading) {
-        return <CustomizedProgressBar />;
-    }
+    const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
+        height: 4,
+        borderRadius: 0,
+        backgroundColor: '#c6dafc',
+        '& .MuiLinearProgress-bar': {
+          borderRadius: 5,
+          backgroundColor: '#4285f4',
+        },
+    }));
 
 
     return (
@@ -411,6 +418,19 @@ const Accounts: React.FC = () => {
                 <Grid container>
                     <Grid item xs={12} sx={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                         <Box sx={{ display: "flex", flexDirection: "column" }}>
+                        {loading && 
+                            <Box
+                                sx={{
+                                width: '100%',
+                                position: 'fixed',
+                                top: '4.2rem',
+                                left: '7.6rem',
+                                zIndex: 1200
+                                }}
+                                >
+                                <BorderLinearProgress variant="indeterminate" />
+                            </Box>
+                            }
                             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', mt: 3, pr: 3, justifyContent: 'space-between' }}>
                                 {partnerName
                                     &&

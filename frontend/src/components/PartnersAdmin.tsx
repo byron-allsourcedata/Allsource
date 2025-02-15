@@ -400,7 +400,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
             const index = prevAccounts.findIndex((account) => account.id === updatedPartner.id);
             if (index !== -1) {
                 const newAccounts = [...prevAccounts];
-                newAccounts[index] = updatedPartner;
+                newAccounts[index] = {...updatedPartner, partner_name: updatedPartner.name, isActive: updatedPartner.is_active, last_payment_date: null};
                 return newAccounts;
             }
             return [...prevAccounts, {...updatedPartner, partner_name: updatedPartner.name, isActive: updatedPartner.is_active, last_payment_date: null}];
@@ -1024,14 +1024,14 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                             fontWeight: "600",
                                                             lineHeight: "20px"
                                                         }}>
-                                                        No Invitee joined from the referreal link.
+                                                        No {isMaster ? "master" : ""} partners found.
                                                     </Typography>
                                                 </Box>
                                                 )}
                                     </Box>
                                     <InvitePartnerPopup 
                                         isMaster={isMaster}
-                                        updateOrAddAsset={updateOrAddPartner}
+                                        updateOrAddPartner={updateOrAddPartner}
                                         fileData={fileData} 
                                         open={formPopupOpen} 
                                         onClose={handleFormClosePopup}  />

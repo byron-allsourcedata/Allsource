@@ -23,13 +23,15 @@ class CompanyService:
 
         return ', '.join(formatted_phones)
 
+
     def convert_state_code_to_name(self, state_code, state_dict):
         if state_code:
             return state_dict.get(state_code.lower(), None)
         return None
 
+
     def get_companies(self, page, per_page, from_date, to_date, regions, sort_by, sort_order,
-                      search_query, timezone_offset):
+                      search_query, timezone_offset, employees_range, employee_visits, revenue_range, industry):
         companies, count, max_page = self.company_persistence_service.filter_companies(
             domain_id=self.domain.id,
             page=page,
@@ -39,13 +41,22 @@ class CompanyService:
             regions=regions,
             sort_by=sort_by,
             sort_order=sort_order,
+            employees_range=employees_range,
+            employee_visits=employee_visits,
+            revenue_range=revenue_range,
+            industry=industry,
             search_query=search_query,
-            timezone_offset=timezone_offset
         )
 
         company_list = []
         for company in companies:
             first_visited_date = company[5].strftime('%d.%m.%Y') if company[5] else None
+            first_visited_time = company[6].strftime('%H:%M')
+            combined_datetime = datetime.strptime(f"{first_visited_date} {first_visited_time}", '%d.%m.%Y %H:%M')
+            adjusted_datetime = combined_datetime + timedelta(hours=timezone_offset)
+            adjusted_date = adjusted_datetime.strftime('%d.%m.%Y')
+            adjusted_time = adjusted_datetime.strftime('%H:%M')
+
 
             company_list.append({
                 'id': company[0],
@@ -53,40 +64,126 @@ class CompanyService:
                 'phone': self.format_phone_number(company[2]) if company[2] else None,
                 'linkedin_url': company[3],
                 'employees_visited': company[4],
-                'visited_date': first_visited_date,
-                'company_revenue': company[6],
-                'employee_count': company[7],
-                'location': company[8],
-                'industry': company[9],
-                'domain': company[10],
-                'zipcode': company[11],
-                'description': company[12],
-                'city': company[13],
-                'state': company[14],
+                'visited_date': adjusted_date,
+                'company_revenue': company[7],
+                'employee_count': company[8],
+                'location': company[9],
+                'industry': company[10],
+                'domain': company[11],
+                'zipcode': company[12],
+                'description': company[13],
+                'city': company[14],
+                'state': company[15]
             })
 
         return company_list, count, max_page
+    
 
-    def search_contact(self, start_letter):
+    def get_employees(self, company_id, sort_by, sort_order,
+                      search_query, job_title, seniority, regions, department, page, per_page=None):
+        employees, count, max_page, states = self.company_persistence_service.filter_employees(
+            domain_id=self.domain.id,
+            company_id=company_id,
+            page=page,
+            per_page=per_page,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            department=department,
+            job_title=job_title,
+            seniority=seniority,
+            regions=regions,
+            search_query=search_query,
+        )
+
+        employees_list = []
+        state_dict = {state.state_code: state.state_name for state in states} if states else {}
+        for employee in employees:
+
+            employees_list.append({
+                'id': employee[0],
+                'first_name': employee[1],
+                'last_name': employee[2],
+                'mobile_phone': self.format_phone_number(employee[3]) if employee[3] and employee[12] else None,
+                'linkedin_url': employee[4] if employee[12] else None,
+                'personal_email': employee[5] if employee[12] else None,
+                'business_email': employee[6] if employee[12] else None,
+                'seniority': employee[7],
+                'department': employee[8],
+                'job_title': employee[9],
+                'city': employee[10] if employee[12] else None,
+                'state': self.convert_state_code_to_name(employee[11], state_dict) if employee[12] else None,
+                'is_unlocked': employee[12]
+            })
+
+        return employees_list, count, max_page
+    
+
+    def get_full_information_employee(self, company_id, employee_id):
+        employees = self.company_persistence_service.get_full_information_employee(
+            company_id=company_id,
+            employee_id=employee_id,
+            domain_id=self.domain.id,
+        )
+
+        employee = employees[0]
+        employee_data = {
+            'id': employee[0],
+            'first_name': employee[1],
+            'last_name': employee[2],
+            'mobile_phone': self.format_phone_number(employee[3]) if employee[3] else None,
+            'linkedin_url': employee[4],
+            'personal_email': employee[5],
+            'business_email': employee[6],
+            'seniority': employee[7],
+            'department': employee[8],
+            'job_title': employee[9],
+            'city': employee[10],
+            'state': employee[11],
+            'company_name': employee[12],
+            'company_city': employee[13],
+            'company_phone': employee[14],
+            'company_description': employee[15],
+            'company_address': employee[16],
+            'company_zip': employee[17],
+            'company_linkedin_url': employee[18],
+            'business_email_last_seen': employee[19],
+            'personal_emails_last_seen': employee[20],
+            'personal_zip': employee[21],
+            'company_last_updated': employee[22],
+            'company_domain': employee[23],
+            'personal_address': employee[24],
+            'other_personal_emails': employee[25],
+            'company_state': employee[26]
+        }
+
+        return employee_data
+
+
+    def search_company(self, start_letter):
         start_letter = start_letter.replace('+', '').strip().lower()
-        if start_letter.split()[0].isdecimal():
+
+        if start_letter.isdecimal():
             start_letter = start_letter.replace(' ', '')
-        leads_data = self.company_persistence_service.search_contact(start_letter=start_letter, domain_id=self.domain.id)
+
+        companies_data = self.company_persistence_service.search_company(
+            start_letter=start_letter,
+            domain_id=self.domain.id
+        )
+
         results = set()
-        for lead in leads_data:
+        for company in companies_data:
             if start_letter.isdecimal():
-                results.add(lead.number)
+                results.add(company.phone)
             else:
-                if start_letter in (f"{lead.first_name} {lead.last_name}").lower():
-                    results.add(f"{lead.first_name} {lead.last_name}")
-                if lead.email and start_letter in (lead.email).lower():
-                    results.add(lead.email)
-        limited_results = list(results)[:10]
-        return limited_results
+                if start_letter in company.name.lower():
+                    results.add(company.name)
+
+        return list(results)[:10]
+
 
     def search_location(self, start_letter):
         location_data = self.company_persistence_service.search_location(start_letter=start_letter,
-                                                                       dommain_id=self.domain.id)
+                                                                       domain_id=self.domain.id)
         results_set = set()
 
         for location in location_data:
@@ -100,10 +197,111 @@ class CompanyService:
         limited_results = list(results)[:10]
         return limited_results
 
+
     def get_uniq_primary_industry(self):
         industry = self.company_persistence_service.get_unique_primary_industries(domain_id=self.domain.id)
         return industry
     
+
+    def get_uniq_primary__departments(self, company_id):
+        departments = self.company_persistence_service.get_unique_primary__departments(company_id)
+        return departments
+
+
+    def get_uniq_primary__seniorities(self, company_id):
+        seniorities = self.company_persistence_service.get_unique_primary__seniorities(company_id)
+        return seniorities
+
+
+    def get_uniq_primary__job_titles(self, company_id):
+        job_titles = self.company_persistence_service.get_unique_primary__job_titles(company_id)
+        return job_titles
+    
+
+    def download_employees(self, sort_by, sort_order, regions, search_query, job_title, seniority, department, company_id):
+        employees_list, _, _ = self.get_employees(
+            company_id=company_id,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            department=department,
+            job_title=job_title,
+            seniority=seniority,
+            regions=regions,
+            search_query=search_query,
+            page=1
+        )
+
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow([
+            'First name', 'Last name', 'Mobile phone', 'Linkedin url', 'Personal email', 'Business email', 'Seniority', 'Department', 'Job title', 'City', 'State'
+        ])
+        for employee in employees_list:
+            writer.writerow([
+                employee['first_name'].capitalize() or 'None',
+                employee['last_name'].capitalize() or 'None',
+                employee['mobile_phone'] or 'None',
+                employee['linkedin_url'] or 'None',
+                employee['personal_email'] or 'None',
+                employee['business_email'] or 'None',
+                employee['seniority'] or 'None',
+                employee['department'] or 'None',
+                employee['job_title'] or 'None',
+                employee.get('city', 'None').capitalize() if isinstance(employee.get('city'), str) else 'None',
+                employee['state'] or 'None',
+            ])
+
+        output.seek(0)
+        return output
+
+
+    def download_employee(self, employee_id, company_id):
+        employee = self.get_full_information_employee(
+            company_id=company_id,
+            employee_id=employee_id
+        )
+
+        headers_mapping = [
+            ('First name', 'first_name'),
+            ('Last name', 'last_name'),
+            ('Mobile phone', 'mobile_phone'),
+            ('Linkedin url', 'linkedin_url'),
+            ('Personal email', 'personal_email'),
+            ('Business email', 'business_email'),
+            ('Seniority', 'seniority'),
+            ('Department', 'department'),
+            ('Job title', 'job_title'),
+            ('City', 'city'),
+            ('State', 'state'),
+            ('Company name', 'company_name'),
+            ('Company city', 'company_city'),
+            ('Company description', 'company_description'),
+            ('Company address', 'company_address'),
+            ('Company zip', 'company_zip'),
+            ('Company linkedin url', 'company_linkedin_url'),
+            ('Business email last seen', 'business_email_last_seen'),
+            ('Personal email last seen', 'personal_emails_last_seen'),
+            ('Personal zip', 'personal_zip'),
+            ('Company last updated', 'company_last_updated'),
+            ('Company domain', 'company_domain'),
+            ('Personal address', 'personal_address'),
+            ('Other personal emails', 'other_personal_emails'),
+            ('Company state', 'company_state'),
+        ]
+
+        values = [employee.get(key, 'None') for _, key in headers_mapping]
+
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(['Column', 'Value'])
+
+        for i, (header, _) in enumerate(headers_mapping):
+            writer.writerow([header, values[i].capitalize() if isinstance(values[i], str) and '@' not in values[i] else values[i]])
+
+        output.seek(0)
+        return output
+
+
     def download_companies(self, from_date=None, to_date=None, regions=None, search_query=None, companies_ids=0, timezone_offset=None):
         if companies_ids == 0:
             leads = self.company_persistence_service.get_full_information_companies_by_filters(domain_id=self.domain.id,

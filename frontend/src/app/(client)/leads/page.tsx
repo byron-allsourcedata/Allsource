@@ -234,15 +234,6 @@ const Leads: React.FC = () => {
                 ? Math.floor(new Date(appliedDates.start.toISOString()).getTime() / 1000)
                 : null;
 
-            const normalDate = startEpoch
-                ? new Date(startEpoch * 1000).toLocaleString('en-US', { timeZone: 'UTC' })
-                : null;
-
-            const normalDateSmr = startEpoch
-                ? new Date(startEpoch * 1000).toLocaleString('ru-RU', { timeZone: 'Europe/Samara' })
-                : null;
-
-
             const endEpoch = appliedDates.end
                 ? Math.floor(new Date(appliedDates.end.toISOString()).getTime() / 1000)
                 : null;
@@ -1444,7 +1435,7 @@ const Leads: React.FC = () => {
                                                                 e.stopPropagation();
                                                                 handleOpenPopup(row)
                                                          }} sx={{ ...leadsStyles.table_array, position: 'relative', cursor: 'pointer', color: 'rgba(80, 82, 178, 1)' }}>
-                                                        {Array.isArray(row.url_visited) ? row.url_visited.length : '--'}
+                                                        {Array.isArray(row.page_visits) ? row.page_visits.length : '--'}
                                                         </TableCell>
 
                                                         <TableCell sx={{ ...leadsStyles.table_array, "::after": { content: 'none' } }}>

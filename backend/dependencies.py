@@ -10,7 +10,7 @@ from typing_extensions import Annotated
 from config.auth import AuthConfig
 from config.aws import get_s3_client
 from config.database import SessionLocal
-from enums import DomainStatus, UserAuthorizationStatus
+from enums import DomainStatus, UserAuthorizationStatus, TeamAccessLevel
 from exceptions import InvalidToken
 from models.users import Users as User
 from persistence.company_persistence import CompanyPersistence
@@ -383,18 +383,6 @@ def check_user_setting_access(Authorization: Annotated[str, Header()],
         )
     return user
 
-def check_user_company(Authorization: Annotated[str, Header()],
-                       user_persistence_service: UserPersistence = Depends(
-                           get_user_persistence_service)) -> Token:
-    user = check_user_authentication(Authorization, user_persistence_service)
-    if user['business_type'] == 'd2c':
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={'status': 'Not found'}
-        )
-    return user
-
-
 def check_user_partner(Authorization: Annotated[str, Header()],
                        user_persistence_service: UserPersistence = Depends(
                            get_user_persistence_service)) -> Token:
@@ -405,7 +393,6 @@ def check_user_partner(Authorization: Annotated[str, Header()],
             detail={'status': 'Aссess Forbidden'}
         )
     return user
-
 
 def check_user_authentication(Authorization: Annotated[str, Header()],
                               user_persistence_service: UserPersistence = Depends(
@@ -429,6 +416,19 @@ def check_user_authentication(Authorization: Annotated[str, Header()],
         user['team_member'] = team_memer
     return user
 
+def check_team_access_standard_user(user: dict = Depends(check_user_authentication)):
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.get('team_access_level') not in {
+            TeamAccessLevel.ADMIN.value,
+            TeamAccessLevel.OWNER.value,
+            TeamAccessLevel.STANDARD.value
+        }:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins and standard only."
+            )
+    return user
 
 def get_users_service(user=Depends(check_user_authentication),
                       user_persistence: UserPersistence = Depends(get_user_persistence_service),
@@ -450,10 +450,10 @@ def check_domain(
         return None
     if not current_domain or len(current_domain) == 0:
         if user.get('is_email_confirmed') is False and user.get('is_with_card') is False:
-            raise HTTPException(status_code=404, detail={'status': 'NEED_CONFIRM_EMAIL'})
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={'status': 'NEED_CONFIRM_EMAIL'})
         if user.get('is_company_details_filled') is False:
-            raise HTTPException(status_code=404, detail={'status': 'FILL_COMPANY_DETAILS'})
-        raise HTTPException(status_code=404, detail={'status': "DOMAIN_NOT_FOUND"})
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={'status': 'FILL_COMPANY_DETAILS'})
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={'status': "DOMAIN_NOT_FOUND"})
     return current_domain[0]
 
 
@@ -491,9 +491,8 @@ def get_companies_service(domain: UserDomains = Depends(check_pixel_install_doma
     return CompanyService(domain=domain, company_persistence_service=companies_persistence_service)
 
 
-def get_audience_service(user: User = Depends(check_user_authorization),
-                         audience_persistence_service: AudiencePersistence = Depends(get_audience_persistence)):
-    return AudienceService(user=user, audience_persistence_service=audience_persistence_service)
+def get_audience_service(audience_persistence_service: AudiencePersistence = Depends(get_audience_persistence)):
+    return AudienceService(audience_persistence_service=audience_persistence_service)
 
 
 def get_sse_events_service(user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):

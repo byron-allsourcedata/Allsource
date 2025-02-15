@@ -53,7 +53,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [selectedOption, setSelectedOption] = useState<string | null>(null);
     const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
     const [isExistingListsOpen, setIsExistingListsOpen] = useState<boolean>(false);
-    const [listItems, setListItems] = useState<ListItem[]>([]);
     const [checkedItems, setCheckedItems] = useState<Set<number>>(new Set());
     const [listName, setListName] = useState<string>('');
     const [plusIconPopupOpen, setPlusIconPopupOpen] = useState(false);
@@ -76,14 +75,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
     const [openZapierDataSync, setOpenZapierDataSync] = useState(false)
     const [openZapierConnect, setOpenZapierConnect] = useState(false)
-    const fetchListItems = async () => {
-        try {
-            const response = await axiosInstance.get('/audience/list');
-            setListItems(response.data);
-        } catch (error) {
-            showErrorToast('Error fetching list items');
-        }
-    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -112,14 +103,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             fetchData()
         }
     }, [open])
-
-    useEffect(() => {
-        if (open) {
-            fetchListItems();
-        }
-    }, [open]);
-
-
+    
     const handleOmnisendIconPopupOpenClose = () => {
         setOpenOmnisendConnect(false)
         setOpenOmnisendIconPopupOpen(false)

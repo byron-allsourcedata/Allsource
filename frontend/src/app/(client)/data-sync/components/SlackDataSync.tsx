@@ -19,7 +19,6 @@ interface ConnectSlackPopupProps {
 type ChannelList = {
     id: string;
     name: string;
-    is_private?: boolean;
 }
 
 interface CustomField {
@@ -51,7 +50,6 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
     const [UpdateKlaviuo, setUpdateKlaviuo] = useState<any>(null);
     const [maplistNameError, setMapListNameError] = useState(false);
     const [slackList, setSlackList] = useState<ChannelList[]>([])
-    const [isPrivate, setIsPrivate] = useState(false)
     const [listNameErrorMessage, setListNameErrorMessage] = useState('')
     const [customFieldsList, setCustomFieldsList] = useState<CustomField[]>([]);
     const [savedList, setSavedList] = useState<ChannelList | null>(null);
@@ -135,8 +133,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                 setUpdateKlaviuo(data.id)
                 setSelectedOption({
                     id: foundItem.id,
-                    name: foundItem.name,
-                    is_private: foundItem.is_private
+                    name: foundItem.name
                 });
             } else {
                 setSelectedOption(null);
@@ -157,8 +154,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         try {
             setLoading(true)
             const newListResponse = await axiosInstance.post('/slack/create-channel', {
-                name: selectedOption?.name,
-                is_private: isPrivate
+                name: selectedOption?.name
             }
             );
             
@@ -289,7 +285,6 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
             setSelectedOption({
                 id: value.id,
                 name: value.name,
-                is_private: value.is_private
             });
             setIsDropdownValid(true);
             handleClose();
@@ -323,7 +318,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
 
         // If valid, save and close
         if (valid) {
-            const newSlackList = { id: '-1', name: newListName, is_private: isPrivate }
+            const newSlackList = { id: '-1', name: newListName }
             setSelectedOption(newSlackList);
             if (isKlaviyoList(newSlackList)) {
                 setIsDropdownValid(true);
@@ -1098,24 +1093,6 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                                                                     marginLeft: '0',
                                                                                 },
                                                                             }
-                                                                        }}
-                                                                    />
-                                                                    <FormControlLabel
-                                                                        control={
-                                                                            <Checkbox
-                                                                                checked={isPrivate}
-                                                                                onChange={(e) => setIsPrivate(e.target.checked)}
-                                                                                color="primary"
-                                                                            />
-                                                                        }
-                                                                        label="Private"
-                                                                        sx={{
-                                                                            '& .MuiFormControlLabel-label': { // Стилизация непосредственно label
-                                                                                fontFamily: 'Nunito Sans',
-                                                                                fontSize: '14px',
-                                                                                fontWeight: '600',
-                                                                                color: '#333', // Задайте нужный цвет
-                                                                            },
                                                                         }}
                                                                     />
 
