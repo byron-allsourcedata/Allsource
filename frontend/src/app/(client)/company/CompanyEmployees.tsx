@@ -55,7 +55,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
     const [status, setStatus] = useState<string | null>(null);
     const [showSlider, setShowSlider] = useState(false);
-    const [lockedEmployee, setLockedEmployee] = useState(false);
+    const [unlockedEmployee, setUnlockedEmployee] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
     const dropdownOpen = Boolean(dropdownEl);
@@ -860,7 +860,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                                     e.stopPropagation();
                                                                     setOpenPopup(true);
                                                                     setEmployeeId(row.id)
-                                                                    setLockedEmployee(row.is_unlocked)
+                                                                    setUnlockedEmployee(row.is_unlocked)
 
                                                                 }}>
                                                                 {(row.first_name || row.last_name)
@@ -877,7 +877,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                             <TableCell
                                                                 sx={{ ...companyStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {row.is_unlocked ? (
+                                                                {!row.is_unlocked ? (
                                                                     <UnlockButton onClick={() => {}} label="Unlock personal email" /> 
                                                                     
                                                                 ) : (
@@ -889,7 +889,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                             <TableCell
                                                                 sx={{ ...companyStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {row.is_unlocked ? (
+                                                                {!row.is_unlocked ? (
                                                                     <UnlockButton onClick={() => {}} label="Unlock business email" /> 
                                                                     
                                                                 ) : (
@@ -899,7 +899,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
 
                                                             {/* Company linkedIn Column */}
                                                             <TableCell sx={{ ...companyStyles.table_array, position: 'relative', color: row.linkedin_url ? 'rgba(80, 82, 178, 1)' : '', cursor: row.linkedin_url ? 'pointer' : 'default' }} onClick={() => { window.open(`https://${row.linkedin_url}`, '_blank') }}>
-                                                                {row.is_unlocked ? (
+                                                                {!row.is_unlocked ? (
                                                                     <UnlockButton onClick={() => {}} label="Unlock linkedin link" /> 
                                                                     
                                                                 ) : (
@@ -916,7 +916,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
 
                                                             {/* Mobile phone Column */}
                                                             <TableCell sx={{ ...companyStyles.table_array, position: 'relative' }}>
-                                                                {row.is_unlocked ? (
+                                                                {!row.is_unlocked ? (
                                                                     <UnlockButton onClick={() => {}} label="Unlock mobile phone" /> 
                                                                     
                                                                 ) : (
@@ -947,7 +947,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                             <TableCell
                                                                 sx={{ ...companyStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {row.is_unlocked ? (
+                                                                {!row.is_unlocked ? (
                                                                     <UnlockButton onClick={() => {}} label="Unlock city and state" /> 
                                                                     
                                                                 ) : (
@@ -1031,7 +1031,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                     <PopupDetails open={openPopup}
                         onClose={handleClosePopup}
                         companyId={companyId}
-                        isLocked={lockedEmployee}
+                        isUnlocked={unlockedEmployee}
                         employeeId={employeeId} />
                 </Box>
             </Box>

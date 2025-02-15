@@ -18,7 +18,7 @@ interface PopupDetailsProps {
     onClose: () => void;
     employeeId: number | null;
     companyId: number;
-    isLocked: boolean;
+    isUnlocked: boolean;
 }
 
 const TruncatedText: React.FC<{ text: string; limit: number }> = ({ text, limit }) => {
@@ -38,12 +38,12 @@ const TruncatedText: React.FC<{ text: string; limit: number }> = ({ text, limit 
     );
 };
 
-const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, isLocked, companyId, employeeId }) => {
+const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, isUnlocked, companyId, employeeId }) => {
     const [popupData, setPopupData] = useState<any>()
 
     const handleDownload = async () => {
         try {
-            if (!isLocked) {
+            if (isUnlocked) {
                 const response = await axiosInstance.get(`/company/download-employee/${employeeId}?company_id=${companyId}`, {
                     responseType: 'blob'
                 });
@@ -70,13 +70,14 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, isLocked, co
     const handleKeyDown = (event: KeyboardEvent) => {
         if (event.key === 'Escape') {
             onClose();
+            setPopupData(null)
         }
     };
 
     useEffect(() => {
         const fetchEmployees = async () => {
             try {
-                if (employeeId && !isLocked) {
+                if (employeeId && isUnlocked) {
                     const response = await axiosInstance.get(`/company/employees/${employeeId}?company_id=${companyId}`);
                     if (response.status === 200) {
                         setPopupData(response.data);
@@ -89,7 +90,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, isLocked, co
         };
     
         fetchEmployees();
-    }, [companyId, employeeId]);
+    }, [companyId, employeeId, isUnlocked]);
 
     useEffect(() => {
         if (open) {
@@ -118,11 +119,18 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, isLocked, co
 
     return (
         <>
-            <Backdrop open={open} onClick={onClose} sx={{ zIndex: 1200, color: '#fff' }} />
+            <Backdrop open={open} onClick={() => {
+                    onClose()
+                    setPopupData(null)
+                }
+            } sx={{ zIndex: 1200, color: '#fff' }} />
             <Drawer
                 anchor="right"
                 open={open}
-                onClose={onClose}
+                onClose={() => {
+                    onClose()
+                    setPopupData(null)
+                }}
                 variant="persistent"
                 PaperProps={{
                     sx: {
@@ -143,7 +151,11 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, isLocked, co
                             Employee Overview
                         </Typography>
                     </Box>
-                    <IconButton onClick={onClose}>
+                    <IconButton onClick={() => {
+                            onClose()
+                            setPopupData(null)
+                        }
+                    }>
                         <CloseIcon sx={{ color: 'rgba(0, 0, 0, 1)' }} />
                     </IconButton>
                 </Box>
@@ -325,7 +337,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, isLocked, co
                                 Personal email last seen:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {dayjs(popupData?.personal_emails_last_seen).isValid() ? dayjs(popupData?.personal_emails_last_seen).format('M/D/YYYY h:mm:ss A') : '--'}
+                                {popupData?.personal_emails_last_seen ? dayjs(popupData?.personal_emails_last_seen).format('M/D/YYYY h:mm:ss A') : '--'}
                             </Typography>
                         </Box>
 
@@ -334,7 +346,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, isLocked, co
                                 Business email:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {dayjs(popupData?.business_email).isValid() ? dayjs(popupData?.business_email).format('M/D/YYYY h:mm:ss A') : '--'}
+                                {popupData?.business_email ? dayjs(popupData?.business_email).format('M/D/YYYY h:mm:ss A') : '--'}
                             </Typography>
                         </Box>
 
@@ -343,7 +355,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, isLocked, co
                                 Business email last seen:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {dayjs(popupData?.business_emails_last_seen).isValid() ? dayjs(popupData?.business_emails_last_seen).format('M/D/YYYY h:mm:ss A') : '--'}
+                                {popupData?.business_emails_last_seen ? dayjs(popupData?.business_emails_last_seen).format('M/D/YYYY h:mm:ss A') : '--'}
                             </Typography>
                         </Box>
 
@@ -491,7 +503,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, isLocked, co
                                 Company last updated:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {dayjs(popupData?.company_last_updated).isValid() ? dayjs(popupData?.company_last_updated).format('M/D/YYYY h:mm:ss A') : '--'}
+                                {popupData?.company_last_updated ? dayjs(popupData?.company_last_updated).format('M/D/YYYY h:mm:ss A') : '--'}
                             </Typography>
                         </Box>
 

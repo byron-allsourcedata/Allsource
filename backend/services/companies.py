@@ -103,15 +103,15 @@ class CompanyService:
                 'id': employee[0],
                 'first_name': employee[1],
                 'last_name': employee[2],
-                'mobile_phone': self.format_phone_number(employee[3]) if employee[3] else None,
-                'linkedin_url': employee[4],
-                'personal_email': employee[5],
-                'business_email': employee[6],
+                'mobile_phone': self.format_phone_number(employee[3]) if employee[3] and employee[12] else None,
+                'linkedin_url': employee[4] if employee[12] else None,
+                'personal_email': employee[5] if employee[12] else None,
+                'business_email': employee[6] if employee[12] else None,
                 'seniority': employee[7],
                 'department': employee[8],
                 'job_title': employee[9],
-                'city': employee[10],
-                'state': self.convert_state_code_to_name(employee[11], state_dict),
+                'city': employee[10] if employee[12] else None,
+                'state': self.convert_state_code_to_name(employee[11], state_dict) if employee[12] else None,
                 'is_unlocked': employee[12]
             })
 
