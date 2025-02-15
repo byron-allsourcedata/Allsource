@@ -40,18 +40,13 @@ def setup_logging(level):
         datefmt='%Y-%m-%d %H:%M:%S'
     )
 
-def check_correct_data_sync(five_x_five_up_id: str, lead_users_id: int, data_sync_imported_id: int, data_sync_id: int, session: Session):
+def check_correct_data_sync(five_x_five_up_id: str, lead_users_id: int, data_sync_imported_id: int, session: Session):
     data_sync_imported_lead = session.query(DataSyncImportedLeads).filter(DataSyncImportedLeads.id==data_sync_imported_id).first()
     if not data_sync_imported_lead:
         return False
     
     if data_sync_imported_lead.status != DataSyncImportedStatus.SENT.value:
         return False
-    
-    integration_user_sync = session.query(IntegrationUserSync).filter(IntegrationUserSync.id==data_sync_id).first()
-    if not integration_user_sync:
-        return False
-    
     
     if data_sync_imported_lead.five_x_five_up_id != five_x_five_up_id or data_sync_imported_lead.lead_users_id != lead_users_id:
         return False
@@ -112,7 +107,7 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
         lead_users_id = message_body.get('lead_users_id')
         data_sync_imported_id = message_body.get('data_sync_imported_id')
         data_sync_id = message_body.get('data_sync_id')
-        if not check_correct_data_sync(five_x_five_up_id, lead_users_id, data_sync_imported_id, data_sync_id, session):
+        if not check_correct_data_sync(five_x_five_up_id, lead_users_id, data_sync_imported_id, session):
             logging.info(f"Data sync not correct")
             await message.ack()
             return
@@ -129,14 +124,13 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
         
         service = service_map.get(service_name)
         lead_user, five_x_five_user, user_integration, integration_data_sync = get_lead_attributes(session, lead_users_id, data_sync_id)
-        
         if service:
             result = None
             try:
                 result = await service.process_data_sync(five_x_five_user, user_integration, integration_data_sync, lead_user)
             except Exception as e:
                 logging.error(f"Error processing data sync: {e}", exc_info=True)
-                message.reject(requeue=True)
+                await message.ack()
 
             import_status = DataSyncImportedStatus.SENT.value
             match result:
