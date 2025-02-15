@@ -55,6 +55,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
     const [status, setStatus] = useState<string | null>(null);
     const [showSlider, setShowSlider] = useState(false);
+    const [lockedEmployee, setLockedEmployee] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
     const dropdownOpen = Boolean(dropdownEl);
@@ -859,6 +860,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                                     e.stopPropagation();
                                                                     setOpenPopup(true);
                                                                     setEmployeeId(row.id)
+                                                                    setLockedEmployee(row.is_unlocked)
 
                                                                 }}>
                                                                 {(row.first_name || row.last_name)
@@ -1029,6 +1031,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                     <PopupDetails open={openPopup}
                         onClose={handleClosePopup}
                         companyId={companyId}
+                        isLocked={lockedEmployee}
                         employeeId={employeeId} />
                 </Box>
             </Box>

@@ -239,11 +239,7 @@ class CompanyPersistence:
                 .outerjoin(ueb, (ueb.user_id == FiveXFiveUser.id) & (ueb.type == "business"))
                 .outerjoin(ep, uep.email_id == ep.id)
                 .outerjoin(eb, ueb.email_id == eb.id)
-                .outerjoin(
-                    UsersUnlockedFiveXFiveUser,  
-                    UsersUnlockedFiveXFiveUser.five_x_five_up_id == FiveXFiveUser.up_id
-                )
-                .filter(LeadUser.domain_id == domain_id, LeadCompany.id  == company_id, FiveXFiveUser.id == employee_id, UsersUnlockedFiveXFiveUser.five_x_five_up_id.isnot(None))
+                .filter(LeadUser.domain_id == domain_id, LeadCompany.id  == company_id, FiveXFiveUser.id == employee_id)
         )
 
         employees = query.all()

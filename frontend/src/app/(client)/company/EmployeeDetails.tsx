@@ -18,6 +18,7 @@ interface PopupDetailsProps {
     onClose: () => void;
     employeeId: number | null;
     companyId: number;
+    isLocked: boolean;
 }
 
 const TruncatedText: React.FC<{ text: string; limit: number }> = ({ text, limit }) => {
@@ -37,26 +38,28 @@ const TruncatedText: React.FC<{ text: string; limit: number }> = ({ text, limit 
     );
 };
 
-const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, employeeId }) => {
+const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, isLocked, companyId, employeeId }) => {
     const [popupData, setPopupData] = useState<any>()
 
     const handleDownload = async () => {
         try {
-            const response = await axiosInstance.get(`/company/download-employee/${employeeId}?company_id=${companyId}`, {
-                responseType: 'blob'
-            });
+            if (!isLocked) {
+                const response = await axiosInstance.get(`/company/download-employee/${employeeId}?company_id=${companyId}`, {
+                    responseType: 'blob'
+                });
 
-            if (response.status === 200) {
-                const url = window.URL.createObjectURL(new Blob([response.data]));
-                const link = document.createElement('a');
-                link.href = url;
-                link.setAttribute('download', 'data.csv');
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                window.URL.revokeObjectURL(url);
-            } else {
-                showErrorToast(`Error downloading file:${response.statusText}`);
+                if (response.status === 200) {
+                    const url = window.URL.createObjectURL(new Blob([response.data]));
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.setAttribute('download', 'data.csv');
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(url);
+                } else {
+                    showErrorToast(`Error downloading file:${response.statusText}`);
+                }
             }
         } catch (error) {
             showErrorToast(`Error during the download process: ${error}`);
@@ -73,7 +76,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
     useEffect(() => {
         const fetchEmployees = async () => {
             try {
-                if (employeeId) {
+                if (employeeId && !isLocked) {
                     const response = await axiosInstance.get(`/company/employees/${employeeId}?company_id=${companyId}`);
                     if (response.status === 200) {
                         setPopupData(response.data);

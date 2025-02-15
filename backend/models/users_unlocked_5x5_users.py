@@ -19,8 +19,4 @@ class UsersUnlockedFiveXFiveUser(Base):
     five_x_five_up_id = Column(VARCHAR, nullable=False)
     stripe_request_created_at = Column(TIMESTAMP)
 
-    __table_args__ = (
-        Index('users_unlocked_5x5_users_up_id_idx', 'five_x_five_up_id'),
-    )
-
 event.listen(UsersUnlockedFiveXFiveUser, "before_insert", create_timestamps)
