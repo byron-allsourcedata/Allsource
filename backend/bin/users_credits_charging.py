@@ -22,7 +22,7 @@ from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from sqlalchemy.orm import sessionmaker
 from models.users import Users
 from datetime import datetime, timezone
-from models.users_payments_transactions import UsersPaymentsTransactions
+from models.users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
 from services.stripe_service import purchase_product
 from dotenv import load_dotenv
 

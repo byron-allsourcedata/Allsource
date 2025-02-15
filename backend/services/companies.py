@@ -111,7 +111,8 @@ class CompanyService:
                 'department': employee[8],
                 'job_title': employee[9],
                 'city': employee[10],
-                'state': self.convert_state_code_to_name(employee[11], state_dict)
+                'state': self.convert_state_code_to_name(employee[11], state_dict),
+                'is_unlocked': employee[12]
             })
 
         return employees_list, count, max_page

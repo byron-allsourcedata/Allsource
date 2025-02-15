@@ -6,7 +6,7 @@ import pytz
 from urllib.parse import unquote
 from sqlalchemy import and_, or_, desc, asc, Integer, cast, VARCHAR, case
 from sqlalchemy.orm import Session, aliased
-from sqlalchemy.sql import func
+from sqlalchemy.sql import func, case as cs
 from models.five_x_five_emails import FiveXFiveEmails
 from models.leads_users_companies import LeadUserCompany
 from models.five_x_five_locations import FiveXFiveLocations
@@ -23,6 +23,7 @@ from models.leads_users_ordered import LeadsUsersOrdered
 from models.leads_visits import LeadsVisits
 from models.state import States
 from models.lead_company import LeadCompany
+from models.users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
 
 
 logger = logging.getLogger(__name__)
@@ -238,7 +239,11 @@ class CompanyPersistence:
                 .outerjoin(ueb, (ueb.user_id == FiveXFiveUser.id) & (ueb.type == "business"))
                 .outerjoin(ep, uep.email_id == ep.id)
                 .outerjoin(eb, ueb.email_id == eb.id)
-                .filter(LeadUser.domain_id == domain_id, LeadCompany.id  == company_id, FiveXFiveUser.id == employee_id)
+                .outerjoin(
+                    UsersUnlockedFiveXFiveUser,  
+                    UsersUnlockedFiveXFiveUser.five_x_five_up_id == FiveXFiveUser.up_id
+                )
+                .filter(LeadUser.domain_id == domain_id, LeadCompany.id  == company_id, FiveXFiveUser.id == employee_id, UsersUnlockedFiveXFiveUser.five_x_five_up_id.isnot(None))
         )
 
         employees = query.all()
@@ -498,12 +503,16 @@ class CompanyPersistence:
                 FiveXFiveUser.department,
                 FiveXFiveUser.job_title,
                 FiveXFiveUser.personal_city,
-                FiveXFiveUser.personal_state
+                FiveXFiveUser.personal_state,
+                cs(
+                    (func.count(UsersUnlockedFiveXFiveUser.five_x_five_up_id) > 0, True),
+                    else_=False
+                )
             )
                 .select_from(LeadUser)
                 .join(LeadCompany, LeadCompany.id == LeadUser.company_id)
                 .join(FiveXFiveUser, FiveXFiveUser.company_alias == LeadCompany.alias)
-                # .outerjoin(FiveXFiveUser, FiveXFiveUser.up_id == LeadCompany.up_id)
+                .outerjoin(UsersUnlockedFiveXFiveUser, FiveXFiveUser.up_id == UsersUnlockedFiveXFiveUser.five_x_five_up_id)
                 .filter(LeadCompany.id == company_id, LeadUser.domain_id == domain_id)
                 .group_by(
                     FiveXFiveUser.id,
@@ -590,8 +599,8 @@ class CompanyPersistence:
                             FiveXFiveNamesLast.name.like(f'{name_parts[2]} {name_parts[3]}%')
                         ),
                         and_(
-                            FiveXFiveNamesFirst.name.ilike(f'{name_parts[0]}%'),
-                            FiveXFiveNamesLast.name.ilike(f'{name_parts[1]} {name_parts[2]} {name_parts[3]}%')
+                            FiveXFiveNamesFirst.name.like(f'{name_parts[0]}%'),
+                            FiveXFiveNamesLast.name.like(f'{name_parts[1]} {name_parts[2]} {name_parts[3]}%')
                         )
                     )
                 )

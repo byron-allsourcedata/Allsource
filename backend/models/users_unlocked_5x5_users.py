@@ -1,11 +1,11 @@
-from sqlalchemy import Column, ForeignKey, event, Integer, VARCHAR
+from sqlalchemy import Column, ForeignKey, event, Integer, VARCHAR, Index
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 
 from .base import Base, create_timestamps
 
 
-class UsersPaymentsTransactions(Base):
-    __tablename__ = "users_payments_transactions"
+class UsersUnlockedFiveXFiveUser(Base):
+    __tablename__ = "users_unlocked_5x5_users"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
@@ -19,5 +19,8 @@ class UsersPaymentsTransactions(Base):
     five_x_five_up_id = Column(VARCHAR, nullable=False)
     stripe_request_created_at = Column(TIMESTAMP)
 
+    __table_args__ = (
+        Index('users_unlocked_5x5_users_up_id_idx', 'five_x_five_up_id'),
+    )
 
-event.listen(UsersPaymentsTransactions, "before_insert", create_timestamps)
+event.listen(UsersUnlockedFiveXFiveUser, "before_insert", create_timestamps)
