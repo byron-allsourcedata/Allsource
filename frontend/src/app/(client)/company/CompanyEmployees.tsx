@@ -146,7 +146,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
             const searchQuery = selectedFilters.find(filter => filter.label === 'Search')?.value;
             if (searchQuery) {
                 setPage(0)
-                url += `&search_query=${encodeURIComponent(searchQuery)}`;
+                url += `&search_query=${encodeURIComponent(searchQuery.toLowerCase())}`;
             }
 
             if (sortBy) {
@@ -155,16 +155,21 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
             }
 
             // filter with checkbox
-            const processMultiFilter = (label: string, paramName: string) => {
+            const processMultiFilter = (label: string, paramName: string, needTransformToLower = false) => {
                 const filter = selectedFilters.find(filter => filter.label === label)?.value;
                 if (filter) {
                     setPage(0)
-                    url += `&${paramName}=${encodeURIComponent(filter?.split(', ').join(','))}`;
+                    if (needTransformToLower) {
+                        url += `&${paramName}=${encodeURIComponent(filter?.toLowerCase().split(', ').join(','))}`;
+                    }
+                    else {
+                        url += `&${paramName}=${encodeURIComponent(filter?.split(', ').join(','))}`;
+                    }
                 }
             };
 
     
-            processMultiFilter('Regions', 'regions');
+            processMultiFilter('Regions', 'regions', true);
             processMultiFilter('Seniority', 'seniority');
             processMultiFilter('Job Title', 'job_title');
             processMultiFilter('Department', 'department');

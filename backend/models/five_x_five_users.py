@@ -74,5 +74,6 @@ class FiveXFiveUser(Base):
     __table_args__ = (
         Index('5x5_users_department_idx', 'department'),
         Index('5x5_users_job_title_idx', 'job_title'),
-        Index('5x5_users_seniority_level_idx', 'seniority_level')
+        Index('5x5_users_seniority_level_idx', 'seniority_level'),
+        Index('5x5_users_linkedin_url_idx', 'linkedin_url')
     )

@@ -474,30 +474,41 @@ class CompanyPersistence:
         companies = query.all()
         return companies
 
+
     def filter_employees(self, domain_id, company_id, page, per_page, sort_by, sort_order,
                      search_query, job_title, department, seniority, regions):
         
         FiveXFiveNamesFirst = aliased(FiveXFiveNames)
         FiveXFiveNamesLast = aliased(FiveXFiveNames)
+        FiveXFiveUsersEmailPersonal = aliased(FiveXFiveUsersEmails)
+        FiveXFiveUsersEmailBusiness = aliased(FiveXFiveUsersEmails)
+        FiveXFiveEmailPersonal = aliased(FiveXFiveEmails)
+        FiveXFiveEmailBusiness = aliased(FiveXFiveEmails)
 
-        query = self.db.query(
-            FiveXFiveUser.id,
-            FiveXFiveUser.first_name,
-            FiveXFiveUser.last_name,
-            FiveXFiveUser.mobile_phone,
-            FiveXFiveUser.linkedin_url,
-            FiveXFiveUser.personal_emails,
-            FiveXFiveUser.business_email,
-            FiveXFiveUser.seniority_level,
-            FiveXFiveUser.department,
-            FiveXFiveUser.job_title,
-            FiveXFiveUser.personal_city,
-            FiveXFiveUser.personal_state
-        )\
-        .join(LeadCompany, LeadCompany.alias == FiveXFiveUser.company_alias) \
-        .join(FiveXFiveNamesFirst, FiveXFiveNamesFirst.id == FiveXFiveUser.first_name_id) \
-        .join(FiveXFiveNamesLast, FiveXFiveNamesLast.id == FiveXFiveUser.last_name_id)\
-        .filter(LeadCompany.id == company_id)\
+        query = (
+            self.db.query(
+                FiveXFiveUser.id,
+                FiveXFiveUser.first_name,
+                FiveXFiveUser.last_name,
+                FiveXFiveUser.personal_phone,
+                FiveXFiveUser.linkedin_url,
+                FiveXFiveUser.personal_emails,
+                FiveXFiveUser.business_email,
+                FiveXFiveUser.seniority_level,
+                FiveXFiveUser.department,
+                FiveXFiveUser.job_title,
+                FiveXFiveUser.personal_city,
+                FiveXFiveUser.personal_state
+            )
+                .select_from(LeadUser)
+                .join(LeadCompany, LeadCompany.id == LeadUser.company_id)
+                .join(FiveXFiveUser, FiveXFiveUser.company_alias == LeadCompany.alias)
+                # .outerjoin(FiveXFiveUser, FiveXFiveUser.up_id == LeadCompany.up_id)
+                .filter(LeadCompany.id == company_id, LeadUser.domain_id == domain_id)
+                .group_by(
+                    FiveXFiveUser.id,
+                )
+        )
 
         sort_options = {
             'business_email': FiveXFiveUser.business_email,
@@ -515,43 +526,113 @@ class CompanyPersistence:
             query = query.filter(FiveXFiveUser.seniority_level.in_([unquote(i.strip()) for i in seniority.split(',')]))
 
         if regions:
-            region_filters = []
-            for region_data in regions.split(','):
-                city, *state = region_data.split('-')
-                region_filters.append(FiveXFiveLocations.city.ilike(f'{city}%'))
-                if state:
-                    region_filters.append(States.state_name.ilike(f'{state[0]}%'))
-            query = query.filter(or_(*region_filters))
-
-        if search_query:
-            search_query = search_query.replace('+', '').lower()
             query = (
                 query
-                .join(FiveXFiveUsersEmails, FiveXFiveUsersEmails.user_id == FiveXFiveUser.id)
-                .join(FiveXFiveEmails, FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id)
-                .join(FiveXFiveUsersPhones, FiveXFiveUsersPhones.user_id == FiveXFiveUser.id)
-                .join(FiveXFivePhones, FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id)
-                .filter(
+                    .outerjoin(FiveXFiveUsersLocations, FiveXFiveUsersLocations.five_x_five_user_id == FiveXFiveUser.id)
+                    .outerjoin(FiveXFiveLocations, FiveXFiveLocations.id == FiveXFiveUsersLocations.location_id)
+                    .outerjoin(States, States.id == FiveXFiveLocations.state_id)
+            )
+            region_filters = []
+            for region_data in regions.split(','):
+                first_region, *second_region = region_data.split('-')
+                region_filters.append(FiveXFiveLocations.city.like(f'{first_region}%'))
+                if second_region:
+                    region_filters.append(States.state_name.like(f'{second_region[0]}%'))
+                else:
+                    region_filters.append(States.state_name.like(f'{first_region}%'))
+            query = query.filter(or_(*region_filters))
+        
+        if search_query:
+            search_query = search_query.replace('+', '').lower()
+            name_parts = search_query.split()
+
+            filters = []
+
+            if len(name_parts) > 4:
+                name_parts = name_parts[:4]
+
+            if len(name_parts) == 1:
+                filters.append(
                     or_(
-                        FiveXFiveNamesFirst.name.ilike(f'{search_query}%'),
-                        FiveXFiveNamesLast.name.ilike(f'{search_query}%'),
-                        FiveXFiveEmails.email.ilike(f'{search_query}%'),
-                        FiveXFiveEmails.email_host.ilike(f'{search_query}%'),
-                        FiveXFivePhones.number.ilike(f"{search_query}%")
+                        FiveXFiveNamesFirst.name.like(f'{name_parts[0]}%'),
+                        FiveXFiveNamesLast.name.like(f'{name_parts[0]}%'),
                     )
                 )
-                .distinct(FiveXFiveUser.id)
+            elif len(name_parts) == 2:
+                filters.append(
+                    or_(
+                        and_(
+                            FiveXFiveNamesFirst.name.like(f'{name_parts[0]}%'),
+                            FiveXFiveNamesLast.name.like(f'{name_parts[1]}%')
+                        ),
+                        FiveXFiveNamesFirst.name.like(f'{name_parts[0]} {name_parts[1]}%'),
+                        FiveXFiveNamesLast.name.like(f'{name_parts[0]} {name_parts[1]}%')
+                    )
+                )
+            elif len(name_parts) == 3:
+                filters.append(
+                    or_(
+                        and_(
+                            FiveXFiveNamesFirst.name.like(f'{name_parts[0]} {name_parts[1]}%'),
+                            FiveXFiveNamesLast.name.like(f'{name_parts[2]}%')
+                        ),
+                        and_(
+                            FiveXFiveNamesFirst.name.like(f'{name_parts[0]}%'),
+                            FiveXFiveNamesLast.name.like(f'{name_parts[1]} {name_parts[2]}%')
+                        )
+                    )
+                )
+            elif len(name_parts) == 4:
+                filters.append(
+                    or_(
+                        and_(
+                            FiveXFiveNamesFirst.name.like(f'{name_parts[0]} {name_parts[1]}%'),
+                            FiveXFiveNamesLast.name.like(f'{name_parts[2]} {name_parts[3]}%')
+                        ),
+                        and_(
+                            FiveXFiveNamesFirst.name.ilike(f'{name_parts[0]}%'),
+                            FiveXFiveNamesLast.name.ilike(f'{name_parts[1]} {name_parts[2]} {name_parts[3]}%')
+                        )
+                    )
+                )
+
+            filters.extend([
+                FiveXFiveEmailPersonal.email.like(f'{search_query}%'),
+                FiveXFiveEmailPersonal.email_host.like(f'{search_query}%'),
+                FiveXFiveEmailBusiness.email.like(f'{search_query}%'),
+                FiveXFiveEmailBusiness.email_host.like(f'{search_query}%'),
+                FiveXFivePhones.number.like(f"{search_query}%"),
+                FiveXFiveUser.linkedin_url.like(f"{search_query}%"),
+            ])
+                
+            query = (
+                query
+                .outerjoin(FiveXFiveUsersEmailPersonal, (FiveXFiveUsersEmailPersonal.user_id == FiveXFiveUser.id) & (FiveXFiveUsersEmailPersonal.type == "personal"))
+                .outerjoin(FiveXFiveUsersEmailBusiness, (FiveXFiveUsersEmailBusiness.user_id == FiveXFiveUser.id) & (FiveXFiveUsersEmailBusiness.type == "business"))
+                .outerjoin(FiveXFiveEmailPersonal, FiveXFiveUsersEmailPersonal.email_id == FiveXFiveEmailPersonal.id)
+                .outerjoin(FiveXFiveEmailBusiness, FiveXFiveUsersEmailBusiness.email_id == FiveXFiveEmailBusiness.id)
+                .outerjoin(FiveXFiveUsersPhones, (FiveXFiveUsersPhones.user_id == FiveXFiveUser.id) & (FiveXFiveUsersPhones.type == "personal_phone"))
+                .outerjoin(FiveXFivePhones, FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id)
+                .join(FiveXFiveNamesFirst, FiveXFiveNamesFirst.id == FiveXFiveUser.first_name_id)
+                .join(FiveXFiveNamesLast, FiveXFiveNamesLast.id == FiveXFiveUser.last_name_id)
+                .filter(or_(*filters)) 
             )
 
-        count = query.count()
-        max_page = math.ceil(count / per_page)
-        query = query.limit(per_page).offset((page - 1) * per_page)
 
-        employees = query.all()
-        states = None
+        count = 0
+        max_page = 0
+        if per_page:
+            offset = (page - 1) * per_page
+            employees = query.limit(per_page).offset(offset).all()
+            count = query.count()
+            max_page = math.ceil(count / per_page)
+        else:
+            employees = query.limit(self.DOWNLOAD_LIMIT_ROWS).all()
+        
         if employees:
             states = self.db.query(States).all()
         return employees, count, max_page, states
+
 
     def search_location(self, start_letter, domain_id):
         query = (
