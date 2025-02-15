@@ -18,6 +18,7 @@ interface PopupDetailsProps {
     onClose: () => void;
     employeeId: number | null;
     companyId: number;
+    isLocked: boolean;
 }
 
 const TruncatedText: React.FC<{ text: string; limit: number }> = ({ text, limit }) => {
@@ -37,26 +38,28 @@ const TruncatedText: React.FC<{ text: string; limit: number }> = ({ text, limit 
     );
 };
 
-const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, employeeId }) => {
+const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, isLocked, companyId, employeeId }) => {
     const [popupData, setPopupData] = useState<any>()
 
     const handleDownload = async () => {
         try {
-            const response = await axiosInstance.get(`/company/download-employee/${employeeId}?company_id=${companyId}`, {
-                responseType: 'blob'
-            });
+            if (!isLocked) {
+                const response = await axiosInstance.get(`/company/download-employee/${employeeId}?company_id=${companyId}`, {
+                    responseType: 'blob'
+                });
 
-            if (response.status === 200) {
-                const url = window.URL.createObjectURL(new Blob([response.data]));
-                const link = document.createElement('a');
-                link.href = url;
-                link.setAttribute('download', 'data.csv');
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                window.URL.revokeObjectURL(url);
-            } else {
-                showErrorToast(`Error downloading file:${response.statusText}`);
+                if (response.status === 200) {
+                    const url = window.URL.createObjectURL(new Blob([response.data]));
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.setAttribute('download', 'data.csv');
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(url);
+                } else {
+                    showErrorToast(`Error downloading file:${response.statusText}`);
+                }
             }
         } catch (error) {
             showErrorToast(`Error during the download process: ${error}`);
@@ -73,7 +76,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
     useEffect(() => {
         const fetchEmployees = async () => {
             try {
-                if (employeeId) {
+                if (employeeId && !isLocked) {
                     const response = await axiosInstance.get(`/company/employees/${employeeId}?company_id=${companyId}`);
                     if (response.status === 200) {
                         setPopupData(response.data);
@@ -265,118 +268,6 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                             </Box>
                         </Box>
                     </Box>
-                    {/* Company Details */}
-                    <Box sx={companyStyles.box_param}>
-                        <Typography sx={{...companyStyles.title_company, alignItems: "center"}}>
-                            <CorporateFareRoundedIcon width={18} height={18}/>
-                            Company Details
-                        </Typography>
-
-                        <Box sx={companyStyles.rows_pam}>
-                            <Typography sx={{ ...companyStyles.title_text }}>
-                                Company name:
-                            </Typography>
-                            <Typography sx={{ ...companyStyles.text }}>
-                                {popupData?.company_name || '--'}
-                            </Typography>
-                        </Box>
-                        <Box sx={companyStyles.rows_pam}>
-                            <Typography sx={{ ...companyStyles.title_text }}>
-                                Company domain:
-                            </Typography>
-                            <Typography sx={{ ...companyStyles.text }}>
-                                {popupData?.company_domain || '--'}
-                            </Typography>
-                        </Box>
-                        <Box sx={companyStyles.rows_pam}>
-                            <Typography sx={{ ...companyStyles.title_text }}>
-                                Company phone:
-                            </Typography>
-                            <Typography sx={{ ...companyStyles.text }}>
-                                {popupData?.company_phone || '--'}
-                            </Typography>
-                        </Box>
-
-                        <Box sx={companyStyles.rows_pam}>
-                            <Typography sx={{ ...companyStyles.title_text }}>
-                                Company description:
-                            </Typography>
-                            <Typography sx={{ ...companyStyles.text }}>
-                                <TruncatedText text={popupData?.company_description || '--'} limit={100} />
-                            </Typography>
-                        </Box>
-
-                        <Box sx={companyStyles.rows_pam}>
-                            <Typography sx={{ ...companyStyles.title_text }}>
-                                Company address:
-                            </Typography>
-                            <Typography sx={{ ...companyStyles.text }}>
-                                {popupData?.company_address|| '--'}
-                            </Typography>
-                        </Box>
-
-                        <Box sx={companyStyles.rows_pam}>
-                            <Typography sx={{ ...companyStyles.title_text }}>
-                                Company City:
-                            </Typography>
-                            <Typography sx={{ ...companyStyles.text }}>
-                            {popupData?.company_city 
-                                ? [capitalizeTableCell(popupData?.company_city)].filter(Boolean).join(', ')
-                                : '--'
-                            }
-                            </Typography>
-                        </Box>
-
-                        <Box sx={companyStyles.rows_pam}>
-                            <Typography sx={{ ...companyStyles.title_text }}>
-                                Company State:
-                            </Typography>
-                            <Typography sx={{ ...companyStyles.text }}>
-                                {popupData?.company_state || '--'}
-                            </Typography>
-                        </Box>
-
-                        <Box sx={{...companyStyles.rows_pam }}>
-                            <Typography sx={{ ...companyStyles.title_text }}>
-                                Company Zipcode:
-                            </Typography>
-                            <Typography sx={{ ...companyStyles.text }}>
-                                {popupData?.company_zip || '--'}
-                            </Typography>
-                        </Box>
-
-                        <Box sx={{...companyStyles.rows_pam}}>
-                            <Typography sx={{ ...companyStyles.title_text }}>
-                                Company last updated:
-                            </Typography>
-                            <Typography sx={{ ...companyStyles.text }}>
-                                {dayjs(popupData?.company_last_updated).isValid() ? dayjs(popupData?.company_last_updated).format('M/D/YYYY h:mm:ss A') : '--'}
-                            </Typography>
-                        </Box>
-
-                        <Box sx={{...companyStyles.rows_pam, borderBottom: 'none'}}>
-                            <Typography sx={{ ...companyStyles.title_text }}>
-                                Company LinkedIn url:
-                            </Typography>
-                            <Typography sx={{ ...companyStyles.text, color: 'rgba(80, 82, 178, 1)' }}>
-                                {popupData?.company_linkedin_url ? (
-                                    <Link
-                                        href={`https://${popupData?.company_linkedin_url}`}
-                                        underline="none"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        sx={{ ...companyStyles.text, textDecoration: 'none', color: 'rgba(80, 82, 178, 1)', }}
-                                    >
-                                        {popupData?.company_linkedin_url}
-                                    </Link>
-                                ) : (
-                                    <Typography sx={companyStyles.text}> --</Typography>
-                                )}
-                            </Typography>
-                        </Box>
-                        
-
-                    </Box>
                     {/* Personal details */}
                     <Box sx={companyStyles.box_param}>
                         <Typography sx={{...companyStyles.title_company, alignItems: "center"}}>
@@ -514,6 +405,118 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 )}
                             </Typography>
                         </Box>
+                    </Box>
+                    {/* Company Details */}
+                    <Box sx={companyStyles.box_param}>
+                        <Typography sx={{...companyStyles.title_company, alignItems: "center"}}>
+                            <CorporateFareRoundedIcon width={18} height={18}/>
+                            Company Details
+                        </Typography>
+
+                        <Box sx={companyStyles.rows_pam}>
+                            <Typography sx={{ ...companyStyles.title_text }}>
+                                Company name:
+                            </Typography>
+                            <Typography sx={{ ...companyStyles.text }}>
+                                {popupData?.company_name || '--'}
+                            </Typography>
+                        </Box>
+                        <Box sx={companyStyles.rows_pam}>
+                            <Typography sx={{ ...companyStyles.title_text }}>
+                                Company domain:
+                            </Typography>
+                            <Typography sx={{ ...companyStyles.text }}>
+                                {popupData?.company_domain || '--'}
+                            </Typography>
+                        </Box>
+                        <Box sx={companyStyles.rows_pam}>
+                            <Typography sx={{ ...companyStyles.title_text }}>
+                                Company phone:
+                            </Typography>
+                            <Typography sx={{ ...companyStyles.text }}>
+                                {popupData?.company_phone || '--'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={companyStyles.rows_pam}>
+                            <Typography sx={{ ...companyStyles.title_text }}>
+                                Company description:
+                            </Typography>
+                            <Typography sx={{ ...companyStyles.text }}>
+                                <TruncatedText text={popupData?.company_description || '--'} limit={100} />
+                            </Typography>
+                        </Box>
+
+                        <Box sx={companyStyles.rows_pam}>
+                            <Typography sx={{ ...companyStyles.title_text }}>
+                                Company address:
+                            </Typography>
+                            <Typography sx={{ ...companyStyles.text }}>
+                                {popupData?.company_address|| '--'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={companyStyles.rows_pam}>
+                            <Typography sx={{ ...companyStyles.title_text }}>
+                                Company City:
+                            </Typography>
+                            <Typography sx={{ ...companyStyles.text }}>
+                            {popupData?.company_city 
+                                ? [capitalizeTableCell(popupData?.company_city)].filter(Boolean).join(', ')
+                                : '--'
+                            }
+                            </Typography>
+                        </Box>
+
+                        <Box sx={companyStyles.rows_pam}>
+                            <Typography sx={{ ...companyStyles.title_text }}>
+                                Company State:
+                            </Typography>
+                            <Typography sx={{ ...companyStyles.text }}>
+                                {popupData?.company_state || '--'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={{...companyStyles.rows_pam }}>
+                            <Typography sx={{ ...companyStyles.title_text }}>
+                                Company Zipcode:
+                            </Typography>
+                            <Typography sx={{ ...companyStyles.text }}>
+                                {popupData?.company_zip || '--'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={{...companyStyles.rows_pam}}>
+                            <Typography sx={{ ...companyStyles.title_text }}>
+                                Company last updated:
+                            </Typography>
+                            <Typography sx={{ ...companyStyles.text }}>
+                                {dayjs(popupData?.company_last_updated).isValid() ? dayjs(popupData?.company_last_updated).format('M/D/YYYY h:mm:ss A') : '--'}
+                            </Typography>
+                        </Box>
+
+                        <Box sx={{...companyStyles.rows_pam, borderBottom: 'none'}}>
+                            <Typography sx={{ ...companyStyles.title_text }}>
+                                Company LinkedIn url:
+                            </Typography>
+                            <Typography sx={{ ...companyStyles.text, color: 'rgba(80, 82, 178, 1)' }}>
+                                {popupData?.company_linkedin_url ? (
+                                    <Link
+                                        href={`https://${popupData?.company_linkedin_url}`}
+                                        underline="none"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        sx={{ ...companyStyles.text, textDecoration: 'none', color: 'rgba(80, 82, 178, 1)', }}
+                                    >
+                                        {popupData?.company_linkedin_url}
+                                    </Link>
+                                ) : (
+                                    <Typography sx={companyStyles.text}> --</Typography>
+                                )}
+                            </Typography>
+                        </Box>
+                        
+
                     </Box>
                 </Box>
             </Drawer>

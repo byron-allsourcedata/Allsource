@@ -28,6 +28,7 @@ import { useNotification } from '@/context/NotificationContext';
 import { showErrorToast } from '@/components/ToastNotification';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
+import UnlockButton from './UnlockButton';
 
 
 interface FetchDataParams {
@@ -54,6 +55,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
     const [status, setStatus] = useState<string | null>(null);
     const [showSlider, setShowSlider] = useState(false);
+    const [lockedEmployee, setLockedEmployee] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
     const dropdownOpen = Boolean(dropdownEl);
@@ -146,7 +148,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
             const searchQuery = selectedFilters.find(filter => filter.label === 'Search')?.value;
             if (searchQuery) {
                 setPage(0)
-                url += `&search_query=${encodeURIComponent(searchQuery)}`;
+                url += `&search_query=${encodeURIComponent(searchQuery.toLowerCase())}`;
             }
 
             if (sortBy) {
@@ -155,16 +157,21 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
             }
 
             // filter with checkbox
-            const processMultiFilter = (label: string, paramName: string) => {
+            const processMultiFilter = (label: string, paramName: string, needTransformToLower = false) => {
                 const filter = selectedFilters.find(filter => filter.label === label)?.value;
                 if (filter) {
                     setPage(0)
-                    url += `&${paramName}=${encodeURIComponent(filter?.split(', ').join(','))}`;
+                    if (needTransformToLower) {
+                        url += `&${paramName}=${encodeURIComponent(filter?.toLowerCase().split(', ').join(','))}`;
+                    }
+                    else {
+                        url += `&${paramName}=${encodeURIComponent(filter?.split(', ').join(','))}`;
+                    }
                 }
             };
 
     
-            processMultiFilter('Regions', 'regions');
+            processMultiFilter('Regions', 'regions', true);
             processMultiFilter('Seniority', 'seniority');
             processMultiFilter('Job Title', 'job_title');
             processMultiFilter('Department', 'department');
@@ -853,6 +860,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                                     e.stopPropagation();
                                                                     setOpenPopup(true);
                                                                     setEmployeeId(row.id)
+                                                                    setLockedEmployee(row.is_unlocked)
 
                                                                 }}>
                                                                 {(row.first_name || row.last_name)
@@ -869,31 +877,51 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                             <TableCell
                                                                 sx={{ ...companyStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {row.personal_email?.split(',')[0] || '--'}
+                                                                {row.is_unlocked ? (
+                                                                    <UnlockButton onClick={() => {}} label="Unlock personal email" /> 
+                                                                    
+                                                                ) : (
+                                                                    row.personal_email?.split(',')[0] || '--'
+                                                                )}
                                                             </TableCell>
 
                                                             {/* Business Email Column */}
                                                             <TableCell
                                                                 sx={{ ...companyStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {row.business_email || '--'}
+                                                                {row.is_unlocked ? (
+                                                                    <UnlockButton onClick={() => {}} label="Unlock business email" /> 
+                                                                    
+                                                                ) : (
+                                                                    row.business_email || '--'
+                                                                )}
                                                             </TableCell>
 
                                                             {/* Company linkedIn Column */}
                                                             <TableCell sx={{ ...companyStyles.table_array, position: 'relative', color: row.linkedin_url ? 'rgba(80, 82, 178, 1)' : '', cursor: row.linkedin_url ? 'pointer' : 'default' }} onClick={() => { window.open(`https://${row.linkedin_url}`, '_blank') }}>
-                                                                {row.linkedin_url ? (
-                                                                    <>
-                                                                        <Image src="/linkedIn.svg" alt="linkedIn" width={16} height={16} style={{ marginRight: '2px' }} />
-                                                                        /{truncateText(row.linkedin_url.replace('linkedin.com/company/', ''), 20)}
-                                                                    </>
+                                                                {row.is_unlocked ? (
+                                                                    <UnlockButton onClick={() => {}} label="Unlock linkedin link" /> 
+                                                                    
                                                                 ) : (
-                                                                    '--'
+                                                                    row.linkedin_url ? (
+                                                                        <>
+                                                                            <Image src="/linkedIn.svg" alt="linkedIn" width={16} height={16} style={{ marginRight: '2px' }} />
+                                                                            /{truncateText(row.linkedin_url.replace('linkedin.com/company/', ''), 20)}
+                                                                        </>
+                                                                    ) : (
+                                                                        '--'
+                                                                    )
                                                                 )}
                                                             </TableCell>
 
                                                             {/* Mobile phone Column */}
                                                             <TableCell sx={{ ...companyStyles.table_array, position: 'relative' }}>
-                                                                {row.mobile_phone?.split(',')[0] || '--'}
+                                                                {row.is_unlocked ? (
+                                                                    <UnlockButton onClick={() => {}} label="Unlock mobile phone" /> 
+                                                                    
+                                                                ) : (
+                                                                    row.mobile_phone?.split(',')[0] || '--'
+                                                                )}
                                                             </TableCell>
 
                                                             {/* Job Title Column */}
@@ -919,9 +947,14 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                             <TableCell
                                                                 sx={{ ...companyStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {(row.city || row.state)
-                                                                    ? [capitalizeTableCell(row.city), row.state].filter(Boolean).join(', ')
-                                                                    : '--'}
+                                                                {row.is_unlocked ? (
+                                                                    <UnlockButton onClick={() => {}} label="Unlock city and state" /> 
+                                                                    
+                                                                ) : (
+                                                                    (row.city || row.state)
+                                                                        ? [capitalizeTableCell(row.city), row.state].filter(Boolean).join(', ')
+                                                                        : '--'
+                                                                )}
                                                             </TableCell>
 
                                                         </TableRow>
@@ -998,6 +1031,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                     <PopupDetails open={openPopup}
                         onClose={handleClosePopup}
                         companyId={companyId}
+                        isLocked={lockedEmployee}
                         employeeId={employeeId} />
                 </Box>
             </Box>
