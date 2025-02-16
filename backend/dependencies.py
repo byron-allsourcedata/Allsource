@@ -1,12 +1,17 @@
 import logging
+import hmac
+import os
+import time
+import math
+from hashlib import sha256
 from datetime import datetime
 from typing import Optional
-
 from fastapi import Depends, Header, HTTPException, status
 from jose import jwt, JWTError
 from sqlalchemy.orm import Session
 from typing_extensions import Annotated
-
+from starlette.requests import Request
+from starlette.exceptions import HTTPException
 from config.auth import AuthConfig
 from config.aws import get_s3_client
 from config.database import SessionLocal
@@ -74,6 +79,36 @@ def get_db():
     finally:
         db.close()
 
+async def verify_signature(
+    request: Request,
+    x_slack_signature: str = Header(...),
+    x_slack_request_timestamp: str = Header(...),
+):
+
+    logger.debug("Starting verification")
+
+    body = await request.body()
+    to_verify = str.encode("v0:" + str(x_slack_request_timestamp) + ":") + body
+    our_hash = hmac.new(
+        os.environ.get("SLACK_CLIENT_SECRET").encode(), to_verify, sha256
+    ).hexdigest()
+    our_signature = "v0=" + our_hash
+
+    if not hmac.compare_digest(x_slack_signature, our_signature):
+        logger.info("Slack verification failed")
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Forbidden")
+
+    logger.debug("Verification successful")
+
+
+def check_timeout(x_slack_request_timestamp: str = Header(...)):
+    timeout = 60 * 5  # 5 minutes
+    request_timeout_time = int(x_slack_request_timestamp) + timeout
+    current_time = math.ceil(time.time())
+
+    if current_time > request_timeout_time:
+        logger.info("Slack request timestamp reached timeout")
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Forbidden")
 
 def get_partners_asset_persistence(db: Session = Depends(get_db)) -> PartnersAssetPersistence:
     return PartnersAssetPersistence(db)

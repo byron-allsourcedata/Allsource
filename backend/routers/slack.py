@@ -1,37 +1,14 @@
-from fastapi import APIRouter, Depends, Request, HTTPException
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import RedirectResponse
-from dependencies import get_slack_service, check_domain, check_user_authentication
+from dependencies import get_slack_service, check_domain, check_user_authentication, verify_signature, check_timeout
 from services.integrations.slack import SlackService
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from config.slack import SlackConfig
-import time
-import os
-import hmac
+from starlette.status import HTTP_200_OK
 from schemas.integrations.slack import SlackCreateListRequest
 import logging
 
 router = APIRouter()
-
-def verify_slack_signature(request: Request, request_body: bytes):
-    timestamp = request.headers.get('X-Slack-Request-Timestamp')
-    slack_signature = request.headers.get('X-Slack-Signature')
-
-    if not timestamp or not slack_signature:
-        raise HTTPException(status_code=400, detail="Missing Slack headers")
-    
-    if abs(time.time() - int(timestamp)) > 60 * 5:
-        raise HTTPException(status_code=400, detail="Request timestamp is too old")
-
-    sig_basestring = f"v0:{timestamp}:".encode('utf-8') + request_body
-
-    my_signature = 'v0=' + hmac.new(
-        os.getenv('SLACK_CLIENT_SECRET').encode('utf-8'),
-        sig_basestring,
-        'sha256'
-    ).hexdigest()
-        
-    if not hmac.compare_digest(my_signature, slack_signature):
-        raise HTTPException(status_code=400, detail="Invalid Slack signature")
 
 @router.get("/oauth/callback")
 async def slack_oauth_callback(request: Request, slack_service: SlackService = Depends(get_slack_service)):
@@ -74,7 +51,11 @@ async def get_channels(slack_create_List_request: SlackCreateListRequest,
                        slack_service: SlackService = Depends(get_slack_service)):
     return slack_service.create_channel(domain_id = domain.id, channel_name = slack_create_List_request.name)
 
-@router.post("/events")
+@router.post(
+            "/events", 
+            status_code=HTTP_200_OK,
+            dependencies=[Depends(verify_signature), Depends(check_timeout)]
+)
 async def handle_slack_events(request: Request, slack_service: SlackService = Depends(get_slack_service)):
     data = await request.json()
     if "challenge" in data:
