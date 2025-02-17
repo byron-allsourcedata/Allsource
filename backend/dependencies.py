@@ -85,7 +85,8 @@ def get_db():
 async def verify_signature(request: Request):
     logger.debug("Starting verification")
     verifier = SignatureVerifier(os.getenv('SLACK_SIGNING_SECRET'))
-    if verifier.is_valid_request(request.body, request.headers) == False:
+    raw_body = await request.body()
+    if verifier.is_valid_request(raw_body, dict(request.headers)) == False:
         logger.debug("Error verification")
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Forbidden")
 
