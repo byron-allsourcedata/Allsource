@@ -121,10 +121,10 @@ class IntegrationService:
         self.attentive = AttentiveIntegrationsService(self.domain_persistence,
                                                       self.integrations_user_sync_persistence,
                                                       self.client)
-        self.slack = SlackService(self.user_persistence,
-                                self.integration_persistence,
-                                self.integrations_user_sync_persistence,
-                                self.lead_persistence, self.million_verifier_integrations
+        self.slack = SlackService(user_persistence=self.user_persistence,
+                                user_integrations_persistence=self.integration_persistence,
+                                sync_persistence=self.integrations_user_sync_persistence,
+                                lead_persistence=self.lead_persistence, million_verifier_integrations=self.million_verifier_integrations
                                 )
         self.zapier = ZapierIntegrationService(self.lead_persistence, self.domain_persistence, self.integrations_user_sync_persistence, self.integration_persistence, self.client,
                                                self.million_verifier_integrations)
