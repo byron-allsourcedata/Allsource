@@ -125,14 +125,13 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
         
         service = service_map.get(service_name)
         lead_user, five_x_five_user, user_integration, integration_data_sync = get_lead_attributes(session, lead_users_id, data_sync_id)
-        
         if service:
             result = None
             try:
                 result = await service.process_data_sync(five_x_five_user, user_integration, integration_data_sync, lead_user)
             except Exception as e:
                 logging.error(f"Error processing data sync: {e}", exc_info=True)
-                message.reject(requeue=True)
+                await message.ack()
 
             import_status = DataSyncImportedStatus.SENT.value
             match result:

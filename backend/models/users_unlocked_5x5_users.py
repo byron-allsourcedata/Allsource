@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, event, Integer, VARCHAR
+from sqlalchemy import Column, ForeignKey, event, Integer, VARCHAR, Index
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 
 from .base import Base, create_timestamps
@@ -12,12 +12,14 @@ class UsersUnlockedFiveXFiveUser(Base):
     created_at = Column(TIMESTAMP(precision=6))
     updated_at = Column(TIMESTAMP(precision=6))
     transaction_id = Column(VARCHAR, nullable=True, unique=True)
-    status = Column(VARCHAR, nullable=True)
     amount_credits = Column(Integer, nullable=True)
-    type = Column(VARCHAR, nullable=False)
     domain_id = Column(Integer, ForeignKey("users_domains.id"), nullable=True)
     five_x_five_up_id = Column(VARCHAR, nullable=False)
     stripe_request_created_at = Column(TIMESTAMP)
+    
+    __table_args__ = (
+        Index('users_unlocked_5x5_users_domain_id_five_x_five_up_id_idx', 'domain_id', 'five_x_five_up_id'),
+    )
 
 
 event.listen(UsersUnlockedFiveXFiveUser, "before_insert", create_timestamps)

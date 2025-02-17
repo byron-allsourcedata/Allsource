@@ -30,6 +30,7 @@ class LeadUser(Base):
         Index('leads_users_id_domain_id_is_active_is_converted_sales_idx', 'id', 'domain_id', 'is_active', 'is_converted_sales'),
         Index('leads_users_id_domain_id_is_active_is_converted_sales_behavior_', 'id', 'domain_id', 'is_active', 'is_converted_sales', 'behavior_type'),
         Index('leads_users_id_domain_id_idx', 'id', 'domain_id'),
+        Index('leads_users_id_domain_id_idx', 'five_x_five_user_id', 'domain_id'),
     )
 
 

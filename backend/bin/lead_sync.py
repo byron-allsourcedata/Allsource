@@ -21,6 +21,7 @@ from enums import NotificationTitles, PlanAlias
 from persistence.leads_persistence import LeadsPersistence
 from persistence.notification import NotificationPersistence
 from models.plans import SubscriptionPlan
+from utils import create_company_alias
 from models.five_x_five_cookie_sync_file import FiveXFiveCookieSyncFile
 from urllib.parse import urlparse, parse_qs
 from models.leads_requests import LeadsRequests
@@ -66,6 +67,7 @@ LAST_PROCESSED_FILE_PATH = 'tmp/last_processed_leads_sync.txt'
 AMOUNT_CREDITS = 1
 QUEUE_CREDITS_CHARGING = 'credits_charging'
 EMAIL_NOTIFICATIONS = 'email_notifications'
+UNLIMITED = -1
 
 ROOT_BOT_CLIENT_EMAIL = 'master-demo@maximiz.ai'
 ROOT_BOT_CLIENT_DOMAIN = 'demo.com'
@@ -191,33 +193,35 @@ async def notify_missing_plan(notification_persistence, user):
     )
 
 
-async def process_payment_transaction(session, five_x_five_user_up_id, user_domain_id, user, lead_user,
+async def process_payment_unlocked_five_x_five_user(session, five_x_five_user_up_id, user_domain_id, user, lead_user,
                                       leads_persistence, notification_persistence, plan_leads_credits,
                                       plan_lead_credit_price):
-    users_payments_transactions = session.query(UsersUnlockedFiveXFiveUser).filter(
+    users_unlocked_five_x_five_user = session.query(UsersUnlockedFiveXFiveUser).filter(
         UsersUnlockedFiveXFiveUser.five_x_five_up_id == str(five_x_five_user_up_id),
         UsersUnlockedFiveXFiveUser.domain_id == user_domain_id
     ).first()
-    if users_payments_transactions:
-        logging.info(f"users_payments_transactions is already exists with id = {users_payments_transactions.id}")
+    if users_unlocked_five_x_five_user:
+        logging.debug(f"users_unlocked_five_x_five_user is already exists with id = {users_unlocked_five_x_five_user.id}")
         return
-    user_payment_transactions = UsersUnlockedFiveXFiveUser(user_id=user.id, status='success',
-                                                          amount_credits=AMOUNT_CREDITS, type='buy_lead',
+
+    if plan_leads_credits != UNLIMITED and user.leads_credits - AMOUNT_CREDITS < 0:
+        if user.is_leads_auto_charging is False:
+            await handle_inactive_leads_notification(user, leads_persistence, notification_persistence)
+            logging.debug(f"User leads_auto_charging is False")
+        lead_user.is_active = False
+        return
+    
+    users_unlocked_five_x_five_user = UsersUnlockedFiveXFiveUser(user_id=user.id,
+                                                          amount_credits=AMOUNT_CREDITS,
                                                           domain_id=user_domain_id,
                                                           five_x_five_up_id=five_x_five_user_up_id)
 
-    if (user.leads_credits - AMOUNT_CREDITS) < 0:
-        if user.is_leads_auto_charging is False:
-            await handle_inactive_leads_notification(user, leads_persistence, notification_persistence)
-            logging.info(f"User leads_auto_charging is False")
-        lead_user.is_active = False
-        return
-
-    session.add(user_payment_transactions)
-    user.leads_credits -= AMOUNT_CREDITS
+    session.add(users_unlocked_five_x_five_user)
+    if plan_leads_credits != UNLIMITED:
+        user.leads_credits -= AMOUNT_CREDITS
+        await handle_payment_notification(user, notification_persistence, plan_leads_credits, user.leads_credits,
+                                        plan_lead_credit_price)
     session.flush()
-    await handle_payment_notification(user, notification_persistence, plan_leads_credits, user.leads_credits,
-                                      plan_lead_credit_price)
 
 
 def check_certain_urls(page, suppression_rule):
@@ -352,33 +356,27 @@ def create_lead_user_company(session, company_id, lead_user_id):
     session.flush()
  
 def create_company(session: Session, five_x_five_user: FiveXFiveUser, states_dict: dict):
-    if five_x_five_user.company_name:
-        company_name = five_x_five_user.company_name.strip()
-        alias = regex.sub(r'[\p{Z}\s]+', ' ', company_name)
-        alias = company_name.replace(" ", "_")
-        alias = alias.lower()
-        five_x_five_location_id = get_five_x_five_location(session, five_x_five_user.company_city, five_x_five_user.company_state, states_dict)
-        lead_company = LeadCompany(
-                            name=five_x_five_user.company_name,
-                            alias=alias,
-                            domain=five_x_five_user.company_domain,
-                            phone=five_x_five_user.company_phone,
-                            sic=five_x_five_user.company_sic,
-                            address=five_x_five_user.company_address,
-                            five_x_five_location_id=five_x_five_location_id,
-                            zip=five_x_five_user.company_zip,
-                            linkedin_url=five_x_five_user.company_linkedin_url,
-                            revenue=five_x_five_user.company_revenue,
-                            employee_count=five_x_five_user.company_employee_count,
-                            last_updated=five_x_five_user.company_last_updated,
-                            description=five_x_five_user.company_description,
-                            primary_industry=five_x_five_user.primary_industry
-                        )
-        session.add(lead_company)
-        session.flush()
-        return lead_company
-    
-    return None
+    alias = create_company_alias(five_x_five_user.company_name)
+    five_x_five_location_id = get_five_x_five_location(session, five_x_five_user.company_city, five_x_five_user.company_state, states_dict)
+    lead_company = LeadCompany(
+                        name=five_x_five_user.company_name,
+                        alias=alias,
+                        domain=five_x_five_user.company_domain,
+                        phone=five_x_five_user.company_phone,
+                        sic=five_x_five_user.company_sic,
+                        address=five_x_five_user.company_address,
+                        five_x_five_location_id=five_x_five_location_id,
+                        zip=five_x_five_user.company_zip,
+                        linkedin_url=five_x_five_user.company_linkedin_url,
+                        revenue=five_x_five_user.company_revenue,
+                        employee_count=five_x_five_user.company_employee_count,
+                        last_updated=five_x_five_user.company_last_updated,
+                        description=five_x_five_user.company_description,
+                        primary_industry=five_x_five_user.primary_industry
+                    )
+    session.add(lead_company)
+    session.flush()
+    return lead_company
 
 def get_first_lead_user_by_company_and_domain(session, company_id, domain_id):
     return session.query(LeadUser).filter(LeadUser.domain_id==domain_id, LeadUser.company_id==company_id).first()
@@ -513,11 +511,6 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
         session.add(lead_user)
         session.flush()
         if five_x_five_user.company_name:
-            company_name = five_x_five_user.company_name.strip()
-            alias = regex.sub(r'[\p{Z}\s]+', ' ', company_name)
-            alias = company_name.replace(" ", "_")
-            alias = alias.lower()
-            five_x_five_user.company_alias = alias
             company = get_company(session, five_x_five_user)
             if company:
                 if not get_first_lead_user_by_company_and_domain(session, company.id, lead_user.domain_id):
@@ -527,22 +520,19 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
                 create_lead_user_company(session, company.id, lead_user.id)
             lead_user.company_id = company.id
             
-            
-        plan_contact_credits_id = None
-
-        if root_user is None and not subscription_service.is_trial_subscription(user.id):
-            user_subscription = subscription_service.get_user_subscription(user.id)
-            plan_contact_credits_id = session.query(SubscriptionPlan.id).filter(
-                SubscriptionPlan.price == user_subscription.lead_credit_price).scalar()
+        user_subscription = subscription_service.get_user_subscription(user.id)
+        if user_subscription:
             subscription_plan = session.query(SubscriptionPlan).filter(
                 SubscriptionPlan.id == user_subscription.plan_id).first()
-            await process_payment_transaction(session, five_x_five_user.up_id, user_domain_id, user,
-                                              lead_user, leads_persistence, notification_persistence,
-                                              subscription_plan.leads_credits, subscription_plan.lead_credit_price)
+            await process_payment_unlocked_five_x_five_user(session, five_x_five_user.up_id, user_domain_id, user,
+                                                lead_user, leads_persistence, notification_persistence,
+                                                subscription_plan.leads_credits, subscription_plan.lead_credit_price)
 
-        if not lead_user.is_active and user.is_leads_auto_charging:
-            await dispatch_leads_to_rabbitmq(session=session, user=user, rabbitmq_connection=rabbitmq_connection,
-                                             plan_id=plan_contact_credits_id)
+            if not lead_user.is_active and user.is_leads_auto_charging:
+                await dispatch_leads_to_rabbitmq(session=session, user=user, rabbitmq_connection=rabbitmq_connection,
+                                                plan_id=user_subscription.plan_id)
+        else:
+            lead_user.is_active = False
 
     requested_at_str = str(possible_lead['EVENT_DATE'])
     requested_at = datetime.fromisoformat(requested_at_str).replace(tzinfo=None)
