@@ -110,8 +110,8 @@ class CompanyService:
                 'seniority': employee[7],
                 'department': employee[8],
                 'job_title': employee[9],
-                'city': employee[10] if employee[12] else None,
-                'state': self.convert_state_code_to_name(employee[11], state_dict) if employee[12] else None,
+                'city': employee[10],
+                'state': self.convert_state_code_to_name(employee[11], state_dict),
                 'is_unlocked': employee[12]
             })
 
@@ -130,10 +130,10 @@ class CompanyService:
             'id': employee[0],
             'first_name': employee[1],
             'last_name': employee[2],
-            'mobile_phone': self.format_phone_number(employee[3]) if employee[3] else None,
-            'linkedin_url': employee[4],
-            'personal_email': employee[5],
-            'business_email': employee[6],
+            'mobile_phone': self.format_phone_number(employee[3]) if employee[3] and employee[27] else None,
+            'linkedin_url': employee[4] if employee[27] else None,
+            'personal_email': employee[5] if employee[27] else None,
+            'business_email': employee[6] if employee[27] else None,
             'seniority': employee[7],
             'department': employee[8],
             'job_title': employee[9],
@@ -146,14 +146,15 @@ class CompanyService:
             'company_address': employee[16],
             'company_zip': employee[17],
             'company_linkedin_url': employee[18],
-            'business_email_last_seen': employee[19],
-            'personal_emails_last_seen': employee[20],
-            'personal_zip': employee[21],
+            'business_email_last_seen': employee[19] if employee[27] else None,
+            'personal_emails_last_seen': employee[20] if employee[27] else None,
+            'personal_zip': employee[21] if employee[27] else None,
             'company_last_updated': employee[22],
             'company_domain': employee[23],
-            'personal_address': employee[24],
-            'other_personal_emails': employee[25],
-            'company_state': employee[26]
+            'personal_address': employee[24] if employee[27] else None,
+            'other_personal_emails': employee[25] if employee[27] else None,
+            'company_state': employee[26],
+            'is_unlocked': employee[27]
         }
 
         return employee_data

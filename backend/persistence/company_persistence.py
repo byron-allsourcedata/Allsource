@@ -189,27 +189,19 @@ class CompanyPersistence:
 
 
     def get_full_information_employee(self, domain_id, company_id, employee_id):
-        FiveXFiveNamesFirst = aliased(FiveXFiveNames)
-        FiveXFiveNamesLast = aliased(FiveXFiveNames)
-        uep = aliased(FiveXFiveUsersEmails)
-        ueb = aliased(FiveXFiveUsersEmails)
-        ep = aliased(FiveXFiveEmails)
-        eb = aliased(FiveXFiveEmails)
-
-
         query = (
             self.db.query(
                 FiveXFiveUser.id,
-                FiveXFiveNamesFirst.name,
-                FiveXFiveNamesLast.name,
+                FiveXFiveUser.first_name,
+                FiveXFiveUser.last_name,
                 FiveXFiveUser.mobile_phone,
                 FiveXFiveUser.linkedin_url,
-                ep.email,
-                eb.email,
+                FiveXFiveUser.personal_emails,
+                FiveXFiveUser.business_email,
                 FiveXFiveUser.seniority_level,
                 FiveXFiveUser.department,
                 FiveXFiveUser.job_title,
-                FiveXFiveLocations.city,
+                FiveXFiveUser.personal_city,
                 States.state_name,
                 FiveXFiveUser.company_name,
                 FiveXFiveUser.company_city,
@@ -226,6 +218,10 @@ class CompanyPersistence:
                 FiveXFiveUser.personal_address,
                 FiveXFiveUser.additional_personal_emails,
                 FiveXFiveUser.company_state,
+                cs(
+                    (func.count(UsersUnlockedFiveXFiveUser.five_x_five_up_id) > 0, True),
+                    else_=False
+                )
             )
                 .select_from(LeadUser)
                 .join(LeadCompany, LeadCompany.id == LeadUser.company_id) 
@@ -233,13 +229,11 @@ class CompanyPersistence:
                 .outerjoin(FiveXFiveUsersLocations, FiveXFiveUsersLocations.five_x_five_user_id == FiveXFiveUser.id)
                 .outerjoin(FiveXFiveLocations, FiveXFiveLocations.id == FiveXFiveUsersLocations.location_id)
                 .outerjoin(States, States.id == FiveXFiveLocations.state_id)
-                .join(FiveXFiveNamesFirst, FiveXFiveNamesFirst.id == FiveXFiveUser.first_name_id)
-                .join(FiveXFiveNamesLast, FiveXFiveNamesLast.id == FiveXFiveUser.last_name_id)
-                .outerjoin(uep, (uep.user_id == FiveXFiveUser.id) & (uep.type == "personal"))
-                .outerjoin(ueb, (ueb.user_id == FiveXFiveUser.id) & (ueb.type == "business"))
-                .outerjoin(ep, uep.email_id == ep.id)
-                .outerjoin(eb, ueb.email_id == eb.id)
+                .outerjoin(UsersUnlockedFiveXFiveUser, FiveXFiveUser.up_id == UsersUnlockedFiveXFiveUser.five_x_five_up_id)
                 .filter(LeadUser.domain_id == domain_id, LeadCompany.id  == company_id, FiveXFiveUser.id == employee_id)
+                .group_by(
+                    FiveXFiveUser.id, States.state_name
+                )
         )
 
         employees = query.all()

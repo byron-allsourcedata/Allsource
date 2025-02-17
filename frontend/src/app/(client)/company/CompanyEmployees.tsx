@@ -55,7 +55,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
     const [status, setStatus] = useState<string | null>(null);
     const [showSlider, setShowSlider] = useState(false);
-    const [unlockedEmployee, setUnlockedEmployee] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
     const dropdownOpen = Boolean(dropdownEl);
@@ -860,7 +859,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                                     e.stopPropagation();
                                                                     setOpenPopup(true);
                                                                     setEmployeeId(row.id)
-                                                                    setUnlockedEmployee(row.is_unlocked)
 
                                                                 }}>
                                                                 {(row.first_name || row.last_name)
@@ -947,14 +945,11 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                             <TableCell
                                                                 sx={{ ...companyStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {!row.is_unlocked ? (
-                                                                    <UnlockButton onClick={() => {}} label="Unlock city and state" /> 
-                                                                    
-                                                                ) : (
+                                                                {
                                                                     (row.city || row.state)
                                                                         ? [capitalizeTableCell(row.city), row.state].filter(Boolean).join(', ')
                                                                         : '--'
-                                                                )}
+                                                                }
                                                             </TableCell>
 
                                                         </TableRow>
@@ -1031,7 +1026,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                     <PopupDetails open={openPopup}
                         onClose={handleClosePopup}
                         companyId={companyId}
-                        isUnlocked={unlockedEmployee}
                         employeeId={employeeId} />
                 </Box>
             </Box>
