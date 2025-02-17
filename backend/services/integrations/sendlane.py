@@ -158,11 +158,10 @@ class SendlaneIntegrationService:
 
     async def process_data_sync(self, five_x_five_user, user_integration, integration_data_sync, lead_user):
         profile = self.__create_contact(five_x_five_user, user_integration.access_token, integration_data_sync.list_id)
-        if profile == ProccessDataSyncResult.AUTHENTICATION_FAILED.value or profile == ProccessDataSyncResult.INCORRECT_FORMAT.value or profile == ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value:
+        if profile in (ProccessDataSyncResult.AUTHENTICATION_FAILED.value, ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return profile
             
         return ProccessDataSyncResult.SUCCESS.value
-                                    
 
     def __create_contact(self, five_x_five_user, access_token, list_id: int):
         profile = self.__mapped_sendlane_contact(five_x_five_user)
@@ -206,13 +205,16 @@ class SendlaneIntegrationService:
                 if email:
                     emails = extract_first_email(email)
                     for e in emails:
-                        if e and field == 'business_email' and five_x_five_user.business_email_last_seen and five_x_five_user.business_email_last_seen.strftime('%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
-                            return e.strip()
-                        if e and field == 'personal_emails' and five_x_five_user.personal_emails_last_seen and five_x_five_user.personal_emails_last_seen.strftime('%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
-                            return e.strip()
+                        if e and field == 'business_email' and five_x_five_user.business_email_last_seen:
+                            if five_x_five_user.business_email_last_seen.strftime('%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
+                                return e.strip()
+                        if e and field == 'personal_emails' and five_x_five_user.personal_emails_last_seen:
+                            personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime('%Y-%m-%d %H:%M:%S')
+                            if personal_emails_last_seen_str > thirty_days_ago_str:
+                                return e.strip()
                         if e and self.million_verifier_integrations.is_email_verify(email=e.strip()):
                             return e.strip()
-                    verity += 1
+                        verity += 1
             if verity > 0:
                 return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
             return ProccessDataSyncResult.INCORRECT_FORMAT.value

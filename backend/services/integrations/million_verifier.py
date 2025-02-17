@@ -38,9 +38,9 @@ class MillionVerifierIntegrationsService:
             error_text = result.get('error')
             result_error = result.get('result')
             if error_text:
-                logger.error(f"millionverifier error: {error_text}")
+                logger.debug(f"millionverifier error: {error_text}")
             if result_error:
-                logger.error(f"millionverifier error: {result_error}")
+                logger.debug(f"millionverifier error: {result_error}")
             is_verify = False
         
         subresult_value = result.get('subresult', 'other')

@@ -211,13 +211,16 @@ class SlackService:
                 if email:
                     emails = extract_first_email(email)
                     for e in emails:
-                        if e and field == 'business_email' and five_x_five_user.business_email_last_seen and five_x_five_user.business_email_last_seen.strftime('%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
-                            return e.strip()
-                        if e and field == 'personal_emails' and five_x_five_user.personal_emails_last_seen and five_x_five_user.personal_emails_last_seen.strftime('%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
-                            return e.strip()
+                        if e and field == 'business_email' and five_x_five_user.business_email_last_seen:
+                            if five_x_five_user.business_email_last_seen.strftime('%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
+                                return e.strip()
+                        if e and field == 'personal_emails' and five_x_five_user.personal_emails_last_seen:
+                            personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime('%Y-%m-%d %H:%M:%S')
+                            if personal_emails_last_seen_str > thirty_days_ago_str:
+                                return e.strip()
                         if e and self.million_verifier_integrations.is_email_verify(email=e.strip()):
                             return e.strip()
-                    verity += 1
+                        verity += 1
             if verity > 0:
                 return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
@@ -284,7 +287,7 @@ class SlackService:
 
         except SlackApiError as e:
             logger.error(f"Slack API error: {e.response['error']}")
-            return ProccessDataSyncResult.LIST_NOT_EXISTS
+            return ProccessDataSyncResult.LIST_NOT_EXISTS.value
         
     async def create_sync(self, leads_type: str, list_id: str, list_name: str, domain_id: int, created_by: str, data_map: List[DataMap]=None):
         credentials = self.integrations_persistence.get_credentials_for_service(domain_id, SourcePlatformEnum.SLACK.value)
