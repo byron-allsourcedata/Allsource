@@ -243,7 +243,6 @@ const PixelInstallation: React.FC = () => {
                     </>
                   )}
                 </Box>
-                <CustomTooltip title={"Install easily on your CMS for a streamlined integration experience."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2/how-do-i-install-maximiz-pixel-on-shopify-store" />
               </Box>
               {sourcePlatform === 'shopify' ? <Typography className="second-sub-title" sx={{ ...typographyStyles, pt: '9px' }}>Shopify settings</Typography> :
                 <Typography className="second-sub-title" sx={{ ...typographyStyles, pt: '9px' }}>Install on CMS</Typography>}

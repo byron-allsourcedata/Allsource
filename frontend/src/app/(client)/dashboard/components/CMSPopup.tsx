@@ -306,9 +306,57 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
           >
             {headerTitle}
           </Typography>
+          <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 2}}>
+          {selectedCMS === 'Shopify' ? ( <>
+                      <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
+                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store"
+                          target="_blank"
+                          rel="noopener refferer"
+                          sx={{
+                            fontFamily: 'Nunito Sans',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            lineHeight: '20px',
+                            color: '#5052b2',
+                            textDecorationColor: '#5052b2'
+                          }}>Tutorial</Link>
+                      </Box>
+                      </>
+                    ) :
+                    (selectedCMS === 'WordPress' ? ( <>
+                              <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
+                      <Link href="https://wordpress.org/plugins/maximiz/"
+                        target="_blank"
+                        rel="noopener refferer"
+                        sx={{
+                          fontFamily: 'Nunito Sans',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          lineHeight: '20px',
+                          color: '#5052b2',
+                          textDecorationColor: '#5052b2'
+                        }}>Tutorial</Link>
+                    </Box> </>
+                    ) : ( selectedCMS === 'Bigcommerce' && (
+                      <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
+                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/install-the-maximiz-pixel-on-bigcommerce-store"
+                          target="_blank"
+                          rel="noopener refferer"
+                          sx={{
+                            fontFamily: 'Nunito Sans',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            lineHeight: '20px',
+                            color: '#5052b2',
+                            textDecorationColor: '#5052b2'
+                          }}>Tutorial</Link>
+                      </Box>
+                    )))
+                  }
           <IconButton onClick={handleClose}>
             <CloseIcon />
           </IconButton>
+          </Box>
         </Box>
         <Divider />
         <Box sx={{ flex: 1, overflowY: 'auto', }}>
@@ -335,21 +383,6 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                 )}
                 {selectedCMS === 'Shopify' ? (
                   <>
-                    {(sourcePlatform !== 'shopify' || !accessTokenExists) && (
-                      <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store"
-                          target="_blank"
-                          rel="noopener refferer"
-                          sx={{
-                            fontFamily: 'Nunito Sans',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            lineHeight: '20px',
-                            color: '#5052b2',
-                            textDecorationColor: '#5052b2'
-                          }}>Tutorial</Link>
-                      </Box>
-                    )}
                     <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '1em', height: '100%' }}>
                       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: 0, justifyContent: 'start' }}>
                         <Image src='/1.svg' alt='1' width={28} height={28} />
@@ -454,19 +487,6 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                   </>
                 ) : (selectedCMS === 'WordPress' ? (
                   <>
-                    <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                      <Link href="https://wordpress.org/plugins/maximiz/"
-                        target="_blank"
-                        rel="noopener refferer"
-                        sx={{
-                          fontFamily: 'Nunito Sans',
-                          fontSize: '14px',
-                          fontWeight: '600',
-                          lineHeight: '20px',
-                          color: '#5052b2',
-                          textDecorationColor: '#5052b2'
-                        }}>Tutorial</Link>
-                    </Box>
                     <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '2em', }}>
                       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1em 0em 0em 0em', justifyContent: 'start' }}>
                         <Image src='/1.svg' alt='1' width={28} height={28} />
@@ -567,22 +587,6 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                   </>
                 ) : (
                   <>
-                    {(sourcePlatform !== 'big_commerce' || !accessTokenExists) && (
-                      <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-bigcommerce-to-maximiz"
-                          target="_blank"
-                          rel="noopener refferer"
-                          sx={{
-                            fontFamily: 'Nunito Sans',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            lineHeight: '20px',
-                            color: '#5052b2',
-                            textDecorationColor: '#5052b2'
-                          }}>Tutorial</Link>
-                      </Box>
-                    )}
-
                     <Box sx={{ flex: 1, overflowY: 'auto', paddingBottom: '1em', height: '100%' }}>
                       {(sourcePlatform !== 'big_commerce' || !accessTokenExists) && (
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: 0, justifyContent: 'start' }}>
