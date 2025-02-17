@@ -2,9 +2,11 @@ from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.domains import UserDomainsPersistence
+from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from schemas.integrations.integrations import *
 from schemas.integrations.klaviyo import *
 from fastapi import HTTPException
+from datetime import datetime, timedelta
 from schemas.integrations.mailchimp import MailchimpProfile
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
 import json
@@ -18,11 +20,12 @@ class MailchimpIntegrationsService:
 
     def __init__(self, domain_persistence: UserDomainsPersistence, 
                  integrations_persistence: IntegrationsPresistence, leads_persistence: LeadsPersistence,
-                 sync_persistence: IntegrationsUserSyncPersistence):
+                 sync_persistence: IntegrationsUserSyncPersistence, million_verifier_integrations: MillionVerifierIntegrationsService):
         self.domain_persistence = domain_persistence
         self.integrations_persisntece = integrations_persistence
         self.leads_persistence = leads_persistence
         self.sync_persistence = sync_persistence
+        self.million_verifier_integrations = million_verifier_integrations
         self.client = MailchimpMarketing.Client()
 
     def get_credentials(self, domain_id: int):
@@ -178,14 +181,14 @@ class MailchimpIntegrationsService:
 
     async def process_data_sync(self, five_x_five_user, access_token, integration_data_sync, lead_user):
         profile = self.__create_profile(five_x_five_user, access_token, integration_data_sync)
-        if profile == ProccessDataSyncResult.AUTHENTICATION_FAILED.value or profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+        if profile in (ProccessDataSyncResult.AUTHENTICATION_FAILED.value, ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return profile
             
         return ProccessDataSyncResult.SUCCESS.value
 
     def __create_profile(self, five_x_five_user, user_integration, integration_data_sync):
         profile = self.__mapped_member_into_list(five_x_five_user)
-        if profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+        if profile in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return profile
         if integration_data_sync.data_map:
             properties = self.__map_properties(five_x_five_user, integration_data_sync.data_map)
@@ -250,15 +253,39 @@ class MailchimpIntegrationsService:
         return ListFromIntegration(id=list['id'], list_name=list['name'])
     
     def __mapped_member_into_list(self, five_x_five_user: FiveXFiveUser):
-        first_email = (
-            getattr(five_x_five_user, 'business_email') or 
-            getattr(five_x_five_user, 'personal_emails') or 
-            getattr(five_x_five_user, 'additional_personal_emails') or
-            getattr(five_x_five_user, 'programmatic_business_emails', None)
-        )
-        first_email = extract_first_email(first_email) if first_email else None
-        if not first_email:
+        email_fields = [
+            'business_email', 
+            'personal_emails', 
+            'additional_personal_emails',
+        ]
+        
+        def get_valid_email(user) -> str:
+            thirty_days_ago = datetime.now() - timedelta(days=30)
+            thirty_days_ago_str = thirty_days_ago.strftime('%Y-%m-%d %H:%M:%S')
+            verity = 0
+            for field in email_fields:
+                email = getattr(user, field, None)
+                if email:
+                    emails = extract_first_email(email)
+                    for e in emails:
+                        if e and field == 'business_email' and five_x_five_user.business_email_last_seen:
+                            if five_x_five_user.business_email_last_seen.strftime('%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
+                                return e.strip()
+                        if e and field == 'personal_emails' and five_x_five_user.personal_emails_last_seen:
+                            personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime('%Y-%m-%d %H:%M:%S')
+                            if personal_emails_last_seen_str > thirty_days_ago_str:
+                                return e.strip()
+                        if e and self.million_verifier_integrations.is_email_verify(email=e.strip()):
+                            return e.strip()
+                        verity += 1
+            if verity > 0:
+                return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        first_email = get_valid_email(five_x_five_user)
+        
+        if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
+            return first_email
         
         first_phone = (
             getattr(five_x_five_user, 'mobile_phone') or 

@@ -98,7 +98,7 @@ const ZapierConnectPopup = ({ open, handlePopupClose, boxShadow }: ApIkeyPopup) 
     };
 
     const handleLogin = async () => {
-        window.open('https://zapier.com/apps/maximiz-ca218089/integrations', '_blank');
+        window.open(process.env.NEXT_PUBLIC_CONNECT_ZAPIER_URL, '_blank');
     };
 
     if (!open) {

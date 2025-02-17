@@ -8,10 +8,12 @@ from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
 from persistence.domains import UserDomainsPersistence
 import httpx
+from datetime import datetime, timedelta
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
 from facebook_business.adobjects.adaccount import AdAccount
 from facebook_business.api import FacebookAdsApi
 from fastapi import HTTPException
+from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from datetime import datetime
 from utils import extract_first_email
 from schemas.integrations.integrations import IntegrationCredentials, DataMap, ListFromIntegration
@@ -26,11 +28,12 @@ APP_ID = MetaConfig.app_piblic
 class MetaIntegrationsService:
 
     def __init__(self, domain_persistence: UserDomainsPersistence, integrations_persistence: IntegrationsPresistence, leads_persistence: LeadsPersistence,
-                sync_persistence: IntegrationsUserSyncPersistence, client: httpx.Client):
+                sync_persistence: IntegrationsUserSyncPersistence, client: httpx.Client, million_verifier_integrations: MillionVerifierIntegrationsService):
         self.domain_persistence = domain_persistence
         self.integrations_persisntece = integrations_persistence
         self.leads_persistence = leads_persistence
         self.sync_persistence = sync_persistence
+        self.million_verifier_integrations = million_verifier_integrations
         self.client = client
         
     def __handle_request(self, method: str, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None, api_key: str = None):
@@ -223,7 +226,7 @@ class MetaIntegrationsService:
     async def process_data_sync(self, five_x_five_user, user_integration, integration_data_sync, lead_user):
         profile = self.__create_user(five_x_five_user, integration_data_sync.list_id, user_integration.access_token)
         
-        if profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+        if profile in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return profile
         
         if profile.get('error'):
@@ -234,7 +237,7 @@ class MetaIntegrationsService:
 
     def __create_user(self, five_x_five_user, custom_audience_id: str, access_token: str):
         profile = self.__mapped_meta_user(five_x_five_user)
-        if profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+        if profile in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return profile
         
         payload = {
@@ -258,23 +261,46 @@ class MetaIntegrationsService:
 
         return response.json()
 
-    def __mapped_meta_user(self, lead: FiveXFiveUser):
-        first_email = (
-            getattr(lead, 'business_email') or 
-            getattr(lead, 'personal_emails') or 
-            getattr(lead, 'additional_personal_emails') or
-            getattr(lead, 'programmatic_business_emails', None)
-        )
-        first_email = extract_first_email(first_email) if first_email else None
-
-        if not first_email:
+    def __mapped_meta_user(self, five_x_five_user: FiveXFiveUser):
+        email_fields = [
+            'business_email', 
+            'personal_emails', 
+            'additional_personal_emails',
+        ]
+        
+        def get_valid_email(user) -> str:
+            thirty_days_ago = datetime.now() - timedelta(days=30)
+            thirty_days_ago_str = thirty_days_ago.strftime('%Y-%m-%d %H:%M:%S')
+            verity = 0
+            for field in email_fields:
+                email = getattr(user, field, None)
+                if email:
+                    emails = extract_first_email(email)
+                    for e in emails:
+                        if e and field == 'business_email' and five_x_five_user.business_email_last_seen:
+                            if five_x_five_user.business_email_last_seen.strftime('%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
+                                return e.strip()
+                        if e and field == 'personal_emails' and five_x_five_user.personal_emails_last_seen:
+                            personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime('%Y-%m-%d %H:%M:%S')
+                            if personal_emails_last_seen_str > thirty_days_ago_str:
+                                return e.strip()
+                        if e and self.million_verifier_integrations.is_email_verify(email=e.strip()):
+                            return e.strip()
+                        verity += 1
+            if verity > 0:
+                return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        first_email = get_valid_email(five_x_five_user)
+        
+        if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
+            return first_email
         
         first_phone = (
-            getattr(lead, 'mobile_phone') or 
-            getattr(lead, 'personal_phone') or 
-            getattr(lead, 'direct_number') or 
-            getattr(lead, 'company_phone', None)
+            getattr(five_x_five_user, 'mobile_phone') or 
+            getattr(five_x_five_user, 'personal_phone') or 
+            getattr(five_x_five_user, 'direct_number') or 
+            getattr(five_x_five_user, 'company_phone', None)
         )
         first_phone = format_phone_number(first_phone)
 
@@ -283,12 +309,12 @@ class MetaIntegrationsService:
         return [
                 hash_value(first_email),                                               # EMAIL
                 hash_value(first_phone),                                              # PHONE
-                hash_value(lead.gender),                                               # GEN
-                hash_value(lead.last_name),                                            # LN
-                hash_value(lead.first_name),                                           # FN
-                hash_value(lead.personal_state),                                       # ST
-                hash_value(lead.personal_city),                                        # CT
-                hash_value(lead.personal_zip),                                         # ZIP
+                hash_value(five_x_five_user.gender),                                               # GEN
+                hash_value(five_x_five_user.last_name),                                            # LN
+                hash_value(five_x_five_user.first_name),                                           # FN
+                hash_value(five_x_five_user.personal_state),                                       # ST
+                hash_value(five_x_five_user.personal_city),                                        # CT
+                hash_value(five_x_five_user.personal_zip),                                         # ZIP
             ]
             
     def __mapped_meta_list(self, list):

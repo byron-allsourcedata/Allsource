@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import RedirectResponse
-from dependencies import get_slack_service, check_domain, check_user_authentication, verify_signature, check_timeout
+from dependencies import get_slack_service, check_domain, check_user_authentication, verify_signature
 from services.integrations.slack import SlackService
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from config.slack import SlackConfig
@@ -54,7 +54,7 @@ async def get_channels(slack_create_List_request: SlackCreateListRequest,
 @router.post(
             "/events", 
             status_code=HTTP_200_OK,
-            dependencies=[Depends(verify_signature), Depends(check_timeout)]
+            dependencies=[Depends(verify_signature)]
 )
 async def handle_slack_events(request: Request, slack_service: SlackService = Depends(get_slack_service)):
     data = await request.json()

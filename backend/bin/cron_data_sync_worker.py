@@ -23,9 +23,10 @@ from sqlalchemy.orm import sessionmaker, Session
 from aio_pika import IncomingMessage
 from config.rmq_connection import RabbitMQConnection
 from services.integrations.base import IntegrationService
+from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from dependencies import (IntegrationsPresistence, LeadsPersistence, AudiencePersistence, 
                           LeadOrdersPersistence, IntegrationsUserSyncPersistence, 
-                          AWSService, UserDomainsPersistence, SuppressionPersistence, ExternalAppsInstallationsPersistence, UserPersistence)
+                          AWSService, UserDomainsPersistence, SuppressionPersistence, ExternalAppsInstallationsPersistence, UserPersistence, MillionVerifierPersistence)
 
 
 load_dotenv()
@@ -138,6 +139,10 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
                     logging.debug(f"incorrect_format: {service_name}")
                     import_status = DataSyncImportedStatus.INCORRECT_FORMAT.value
                     
+                case ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value:
+                    logging.debug(f"incorrect_format: {service_name}")
+                    import_status = DataSyncImportedStatus.VERIFY_EMAIL_FAILED.value
+                    
                 case ProccessDataSyncResult.SUCCESS.value:
                     logging.debug(f"success: {service_name}")
                     import_status = DataSyncImportedStatus.SUCCESS.value
@@ -203,6 +208,7 @@ async def main():
         )
         Session = sessionmaker(bind=engine)
         session = Session()
+        million_verifier_persistence = MillionVerifierPersistence(session)
         integration_service = IntegrationService(
             db=session,
             integration_persistence=IntegrationsPresistence(session),
@@ -214,7 +220,8 @@ async def main():
             domain_persistence=UserDomainsPersistence(session),
             suppression_persistence=SuppressionPersistence(session),
             epi_persistence=ExternalAppsInstallationsPersistence(session),
-            user_persistence=UserPersistence(session)
+            user_persistence=UserPersistence(session),
+            million_verifier_integrations=MillionVerifierIntegrationsService(million_verifier_persistence)
         )
         with integration_service as service:
             await queue.consume(
