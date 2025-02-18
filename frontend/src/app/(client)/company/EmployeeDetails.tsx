@@ -463,7 +463,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 Company description:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                <TruncatedText text={renderField(popupData?.company_phone)} limit={100} />
+                                <TruncatedText text={renderField(popupData?.company_description)} limit={100} />
                             </Typography>
                         </Box>
 
