@@ -34,6 +34,7 @@ import AttentiveIntegrationPopup from "@/components/AttentiveIntegrationPopup";
 import { useNotification } from "@/context/NotificationContext";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import CloseIcon from '@mui/icons-material/Close';
+import AddIcon from '@mui/icons-material/Add';
 import ZapierConnectPopup from "@/components/ZapierConnectPopup";
 import SlackConnectPopup from "@/components/SlackConnectPopup";
 import { useIntegrationContext } from "@/context/IntegrationContext";
@@ -182,7 +183,7 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
               padding: '11px 10px',
               fontSize: '12px !important',
               fontFamily: 'Nunito Sans',
-
+              
             },
           },
         }}
@@ -205,7 +206,7 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
           '&:hover': {
             boxShadow: is_integrated ? 'none' : '0 0 4px #00000040',
             filter: !is_integrated ? 'none' : 'none',
-            backgroundColor: !is_integrated ? 'transparent' :'rgba(80, 82, 178, 0.1)'
+            backgroundColor: !is_integrated ? 'transparent' :'rgba(80, 82, 178, 0.1)',
           },
           '&:hover .edit-icon': {
             opacity: 1
@@ -262,8 +263,35 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
                 <MoreVertIcon sx={{ height: '20px' }} />
               </Box>
             </Box>
-          )}
-          <Image src={image} width={altImageIntegration.some(int => int == service_name) ? 100 : 32} height={32} alt={service_name} />
+          )},
+          {!is_integrated &&  isHovered && (
+          <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
+            height: '100%',
+            
+          }}
+        >
+            <AddIcon sx={{ color: "#5052B2", fontSize: 45 }} />
+          </Box>
+        )},
+         <Image
+            src={image}
+            width={altImageIntegration.some(int => int == service_name) ? 100 : 32}
+            height={32}
+            alt={service_name}
+            style={{
+              transition: '0.2s',
+              filter: !is_integrated && isHovered ? 'blur(10px)' : 'none',
+            }}
+          />
         </Box>
       </Tooltip>
       <Typography mt={0.5} fontSize={'14px'} fontWeight={500} textAlign={'center'} fontFamily={'Nunito Sans'}>

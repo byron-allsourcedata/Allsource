@@ -111,4 +111,5 @@ export const integrationsStyle: { [key: string]: SxProps<Theme> } = {
           backgroundColor: 'rgba(235, 235, 235, 1)', // Border color
       }
       },
+      
 }
