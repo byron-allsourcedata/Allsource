@@ -19,11 +19,17 @@ interface PopupDetailsProps {
     onClose: () => void;
     employeeId: number | null;
     companyId: number;
+    getStatusCredits: any
+}
+
+interface RenderCeil {
+    value: any;
+    visibility_status: string
 }
 
 const TruncatedText: React.FC<{ text: string; limit: number }> = ({ text, limit }) => {
     const [isExpanded, setIsExpanded] = useState(false);
-    const shouldTruncate = text.length > limit;
+    const shouldTruncate = text?.length > limit;
 
     const handleToggleExpand = () => {
         setIsExpanded(!isExpanded);
@@ -32,13 +38,13 @@ const TruncatedText: React.FC<{ text: string; limit: number }> = ({ text, limit 
     return (
         <Box onClick={handleToggleExpand} sx={{ cursor: shouldTruncate ? 'pointer' : 'default' }}>
             <Typography sx={{ ...companyStyles.text, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis', WebkitLineClamp: isExpanded ? 'none' : 3 }}>
-                {isExpanded ? text : text.substring(0, limit) + (shouldTruncate ? '...' : '')}
+                {isExpanded ? text : text?.substring(0, limit) + (shouldTruncate ? '...' : '')}
             </Typography>
         </Box>
     );
 };
 
-const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, employeeId }) => {
+const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, employeeId, getStatusCredits }) => {
     const [popupData, setPopupData] = useState<any>()
 
     const handleDownload = async () => {
@@ -63,6 +69,19 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
             showErrorToast(`Error during the download process: ${error}`);
         }
     };
+
+    const renderField = (data: RenderCeil, callback: ((value: string) => string) | null = null) => {
+        if (data?.visibility_status === "hidden") {
+            return <UnlockButton onClick={getStatusCredits} label="Unlock contact" />;
+        }
+        if (data?.visibility_status === "missing") {
+            return "--";
+        }
+        if (!data?.value) {
+            return "--";
+        }
+        return callback ? callback(data?.value) : data?.value;
+    }
 
     // Обработчик для закрытия при нажатии на Esc
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -204,7 +223,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                         <Box sx={{ flex: 1, textAlign: 'start' }}>
                             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <Typography variant="body1" gutterBottom sx={{ ...companyStyles.name, pb: 1 }}>
-                                    {[capitalizeTableCell(popupData?.first_name), capitalizeTableCell(popupData?.last_name)].filter(Boolean).join(' ')}
+                                    {[capitalizeTableCell(renderField(popupData?.first_name)), capitalizeTableCell(renderField(popupData?.last_name))].filter(Boolean).join(' ')}
                                 </Typography>
                                 <Button
                                     sx={{
@@ -228,21 +247,19 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 5, '@media (max-width: 600px)': { flexDirection: 'column', gap: 1 }, }}>
                                 <Typography variant="body1" gutterBottom sx={{ ...companyStyles.header_text, display: 'flex', alignItems: "center", flexDirection: 'row', gap: 1 }}>
-                                    {popupData?.personal_email ? (
+                                    {popupData?.personal_email.visibility_status !== "visible" ? (
                                         <Box
                                             sx={{ ...companyStyles.header_text, display: 'flex', alignItems: 'center', gap: 1, color: 'rgba(95, 99, 104, 1)' }}
                                         >
                                             <EmailOutlinedIcon sx={{color: "rgba(95, 99, 104, 1)"}} width={18} height={18}/>
-                                            {!popupData?.is_unlocked 
-                                                ? <UnlockButton onClick={() => {}} label="Unlock personal email" /> 
-                                                : popupData?.personal_email || '--'}
+                                            {!popupData?.is_unlocked.value &&
+                                                <UnlockButton onClick={getStatusCredits} label="Unlock contact" /> 
+                                            }
                                         </Box>
                                     ) : (
                                         <>
                                             <EmailOutlinedIcon sx={{color: "rgba(95, 99, 104, 1)"}} width={18} height={18}/>
-                                            {!popupData?.is_unlocked 
-                                                ? <UnlockButton onClick={() => {}} label="Unlock personal email" /> 
-                                                : <Typography sx={companyStyles.text}>--</Typography>}
+                                            <Typography sx={companyStyles.text}>--</Typography>
                                         </>
                                     )}
                                 </Typography>
@@ -257,9 +274,9 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                         color: 'rgba(80, 82, 178, 1)',
                                     }}
                                 >
-                                    {popupData?.mobile_phone ? (
+                                    {popupData?.mobile_phone.visibility_status !== 'visible' ? (
                                         <Link
-                                            href={`tel:${popupData?.mobile_phone.split(',')[0]}` || '--'}
+                                            href={`tel:${popupData?.mobile_phone.value?.split(',')[0]}` || '--'}
                                             underline="none"
                                             sx={{
                                                 color: 'rgba(80, 82, 178, 1)',
@@ -269,16 +286,14 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                             }}
                                         >
                                             <SmartphoneOutlinedIcon width={18} height={18}/>
-                                            {!popupData?.is_unlocked 
-                                                ? <UnlockButton onClick={() => {}} label="Unlock mobile phone" /> 
-                                                : popupData?.mobile_phone.split(',')[0] || '--'}
+                                            {!popupData?.is_unlocked.value &&
+                                                <UnlockButton onClick={getStatusCredits} label="Unlock contact" />  
+                                            }
                                         </Link>
                                     ) : (
                                         <>
                                             <SmartphoneOutlinedIcon width={18} height={18}/>
-                                            {!popupData?.is_unlocked 
-                                                ? <UnlockButton onClick={() => {}} label="Unlock mobile phone" /> 
-                                                : <Typography sx={companyStyles.text}>--</Typography>}
+                                            <Typography sx={companyStyles.text}>--</Typography>
                                         </>
                                     )}
                                 </Typography>
@@ -298,12 +313,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 Mobile number:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {!popupData?.is_unlocked ? (
-                                    <UnlockButton onClick={() => {}} label="Unlock mobile phone" /> 
-                                    
-                                ) : (
-                                    popupData?.mobile_phone || '--'
-                                )}
+                                {renderField(popupData?.mobile_phone)}
                             </Typography>
                         </Box>
 
@@ -312,7 +322,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 Job Title:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {popupData?.job_title || '--'}
+                                {renderField(popupData?.job_title)}
                             </Typography>
                         </Box>
 
@@ -321,7 +331,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 Seniority Level:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {popupData?.seniority || '--'}
+                                {renderField(popupData?.seniority)}
                             </Typography>
                         </Box>
 
@@ -330,7 +340,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 Department:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {popupData?.department || '--'}
+                                {renderField(popupData?.department)}
                             </Typography>
                         </Box>
 
@@ -339,12 +349,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 Other personal emails:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {!popupData?.is_unlocked ? (
-                                    <UnlockButton onClick={() => {}} label="Unlock personal email" /> 
-                                    
-                                ) : (
-                                    popupData?.other_personal_emails || '--'
-                                )}
+                                {renderField(popupData?.other_personal_emails)}
                             </Typography>
                         </Box>
 
@@ -353,12 +358,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 Personal email last seen:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {!popupData?.is_unlocked ? (
-                                    <UnlockButton onClick={() => {}} label="Unlock personal email" /> 
-                                    
-                                ) : (
-                                    popupData?.personal_emails_last_seen ? dayjs(popupData?.personal_emails_last_seen).format('M/D/YYYY h:mm:ss A') : '--'
-                                )}
+                                {renderField(popupData?.personal_emails_last_seen, (time: string) => dayjs(time).format('M/D/YYYY h:mm:ss A'))}
                             </Typography>
                         </Box>
 
@@ -367,12 +367,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 Business email:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {!popupData?.is_unlocked ? (
-                                    <UnlockButton onClick={() => {}} label="Unlock business email" /> 
-                                    
-                                ) : (
-                                    popupData?.business_email ? dayjs(popupData?.business_email).format('M/D/YYYY h:mm:ss A') : '--'
-                                )}
+                                {renderField(popupData?.business_email, (time: string) => dayjs(time).format('M/D/YYYY h:mm:ss A'))}
                             </Typography>
                         </Box>
 
@@ -381,12 +376,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 Business email last seen:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {!popupData?.is_unlocked ? (
-                                    <UnlockButton onClick={() => {}} label="Unlock business email" /> 
-                                    
-                                ) : (
-                                    popupData?.business_emails_last_seen ? dayjs(popupData?.business_emails_last_seen).format('M/D/YYYY h:mm:ss A') : '--'
-                                )}
+                                {renderField(popupData?.business_emails_last_seen, (time: string) => dayjs(time).format('M/D/YYYY h:mm:ss A'))}
                             </Typography>
                         </Box>
 
@@ -395,12 +385,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 Address:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {!popupData?.is_unlocked ? (
-                                    <UnlockButton onClick={() => {}} label="Unlock personal address" /> 
-                                    
-                                ) : (
-                                    popupData?.personal_address || '--'
-                                )}
+                                {renderField(popupData?.personal_address)}
                             </Typography>
                         </Box>
 
@@ -409,10 +394,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 City:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {popupData?.city 
-                                    ? [capitalizeTableCell(popupData?.city)].filter(Boolean).join(', ')
-                                    : '--'
-                                }
+                                {renderField(popupData?.city, (city: string) => [capitalizeTableCell(city)].filter(Boolean).join(', '))}
                             </Typography>
                         </Box>
 
@@ -421,7 +403,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 State:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {popupData?.state || '--'}
+                                {renderField(popupData?.state)}
                             </Typography>
                         </Box>
                         <Box sx={{...companyStyles.rows_pam}}>
@@ -429,12 +411,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 Zip:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {!popupData?.is_unlocked ? (
-                                    <UnlockButton onClick={() => {}} label="Unlock personal zip" /> 
-                                    
-                                ) : (
-                                    popupData?.personal_zip || '--'
-                                )}
+                                {renderField(popupData?.personal_zip)}
                             </Typography>
                         </Box>
 
@@ -443,24 +420,21 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 Personal LinkedIn url
                             </Typography>
                             <Typography sx={{ ...companyStyles.text, color: 'rgba(80, 82, 178, 1)' }}>
-                                {!popupData?.is_unlocked ? (
-                                    <UnlockButton onClick={() => {}} label="Unlock personal linkedin" /> 
-                                    
-                                ) : (
-                                    popupData?.linkedin_url ? (
-                                        <Link
-                                            href={`https://${popupData?.linkedin_url}`}
-                                            underline="none"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            sx={{ ...companyStyles.text, textDecoration: 'none', color: 'rgba(80, 82, 178, 1)', }}
-                                        >
-                                            {popupData?.linkedin_url}
-                                        </Link>
-                                    ) : (
-                                        <Typography sx={companyStyles.text}> --</Typography>
+                                {popupData?.linkedin_url.value
+                                    ? (!popupData?.is_unlocked.value  
+                                        ? <UnlockButton onClick={getStatusCredits} label="Unlock contact" /> 
+                                        :  <Link
+                                                href={`https://${popupData?.linkedin_url.value}`}
+                                                underline="none"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                sx={{ ...companyStyles.text, textDecoration: 'none', color: 'rgba(80, 82, 178, 1)', }}
+                                            >
+                                                {popupData?.linkedin_url.value}
+                                            </Link>
                                     )
-                                )}
+                                    : '--'
+                                }
                             </Typography>
                         </Box>
                     </Box>
@@ -476,7 +450,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 Company name:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {popupData?.company_name || '--'}
+                                {renderField(popupData?.company_name)}
                             </Typography>
                         </Box>
                         <Box sx={companyStyles.rows_pam}>
@@ -484,7 +458,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 Company domain:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {popupData?.company_domain || '--'}
+                                {renderField(popupData?.company_domain)}
                             </Typography>
                         </Box>
                         <Box sx={companyStyles.rows_pam}>
@@ -492,7 +466,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 Company phone:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {popupData?.company_phone || '--'}
+                                {renderField(popupData?.company_phone)}
                             </Typography>
                         </Box>
 
@@ -501,7 +475,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 Company description:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                <TruncatedText text={popupData?.company_description || '--'} limit={100} />
+                                <TruncatedText text={renderField(popupData?.company_phone)} limit={100} />
                             </Typography>
                         </Box>
 
@@ -510,7 +484,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 Company address:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {popupData?.company_address|| '--'}
+                                {renderField(popupData?.company_address)}
                             </Typography>
                         </Box>
 
@@ -519,10 +493,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 Company City:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                            {popupData?.company_city 
-                                ? [capitalizeTableCell(popupData?.company_city)].filter(Boolean).join(', ')
-                                : '--'
-                            }
+                                {renderField(popupData?.company_city, (city: string) => [capitalizeTableCell(city)].filter(Boolean).join(', '))}
                             </Typography>
                         </Box>
 
@@ -531,7 +502,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 Company State:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {popupData?.company_state || '--'}
+                                {renderField(popupData?.company_state)}
                             </Typography>
                         </Box>
 
@@ -540,7 +511,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 Company Zipcode:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {popupData?.company_zip || '--'}
+                                {renderField(popupData?.company_zip)}
                             </Typography>
                         </Box>
 
@@ -549,7 +520,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 Company last updated:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {popupData?.company_last_updated ? dayjs(popupData?.company_last_updated).format('M/D/YYYY h:mm:ss A') : '--'}
+                                {renderField(popupData?.company_last_updated, (time: string) => dayjs(time).format('M/D/YYYY h:mm:ss A'))}
                             </Typography>
                         </Box>
 
@@ -558,15 +529,15 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 Company LinkedIn url:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text, color: 'rgba(80, 82, 178, 1)' }}>
-                                {popupData?.company_linkedin_url ? (
+                                {popupData?.company_linkedin_url.value ? (
                                     <Link
-                                        href={`https://${popupData?.company_linkedin_url}`}
+                                        href={`https://${popupData?.company_linkedin_url.value}`}
                                         underline="none"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         sx={{ ...companyStyles.text, textDecoration: 'none', color: 'rgba(80, 82, 178, 1)', }}
                                     >
-                                        {popupData?.company_linkedin_url}
+                                        {popupData?.company_linkedin_url.value}
                                     </Link>
                                 ) : (
                                     <Typography sx={companyStyles.text}> --</Typography>

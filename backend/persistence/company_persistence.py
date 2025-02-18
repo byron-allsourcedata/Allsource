@@ -237,7 +237,7 @@ class CompanyPersistence:
         )
 
         employees = query.all()
-        return employees
+        return employees, self.db.query(States).all()
 
 
     def filter_companies(self, domain_id, page, per_page, from_date, to_date, regions, sort_by, sort_order,
