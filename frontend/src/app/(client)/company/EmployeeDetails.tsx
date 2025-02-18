@@ -247,21 +247,12 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 5, '@media (max-width: 600px)': { flexDirection: 'column', gap: 1 }, }}>
                                 <Typography variant="body1" gutterBottom sx={{ ...companyStyles.header_text, display: 'flex', alignItems: "center", flexDirection: 'row', gap: 1 }}>
-                                    {popupData?.personal_email.visibility_status !== "visible" ? (
                                         <Box
                                             sx={{ ...companyStyles.header_text, display: 'flex', alignItems: 'center', gap: 1, color: 'rgba(95, 99, 104, 1)' }}
                                         >
                                             <EmailOutlinedIcon sx={{color: "rgba(95, 99, 104, 1)"}} width={18} height={18}/>
-                                            {!popupData?.is_unlocked.value &&
-                                                <UnlockButton onClick={getStatusCredits} label="Unlock contact" /> 
-                                            }
+                                            {renderField(popupData?.personal_email)}
                                         </Box>
-                                    ) : (
-                                        <>
-                                            <EmailOutlinedIcon sx={{color: "rgba(95, 99, 104, 1)"}} width={18} height={18}/>
-                                            <Typography sx={companyStyles.text}>--</Typography>
-                                        </>
-                                    )}
                                 </Typography>
                                 <Typography
                                     variant="body1"
@@ -273,29 +264,26 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                         gap: 1,
                                         color: 'rgba(80, 82, 178, 1)',
                                     }}
-                                >
-                                    {popupData?.mobile_phone.visibility_status !== 'visible' ? (
-                                        <Link
-                                            href={`tel:${popupData?.mobile_phone.value?.split(',')[0]}` || '--'}
-                                            underline="none"
-                                            sx={{
-                                                color: 'rgba(80, 82, 178, 1)',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: 1
-                                            }}
-                                        >
-                                            <SmartphoneOutlinedIcon width={18} height={18}/>
-                                            {!popupData?.is_unlocked.value &&
-                                                <UnlockButton onClick={getStatusCredits} label="Unlock contact" />  
-                                            }
-                                        </Link>
-                                    ) : (
-                                        <>
-                                            <SmartphoneOutlinedIcon width={18} height={18}/>
-                                            <Typography sx={companyStyles.text}>--</Typography>
-                                        </>
-                                    )}
+                                >   
+                                    <SmartphoneOutlinedIcon width={18} height={18}/>
+                                    {popupData?.mobile_phone.value
+                                        ? (!popupData?.is_unlocked.value  
+                                            ? <UnlockButton onClick={getStatusCredits} label="Unlock contact" /> 
+                                            :  <Link
+                                                    href={`tel:${popupData?.mobile_phone.value?.split(',')[0]}` || '--'}
+                                                    underline="none"
+                                                    sx={{
+                                                        color: 'rgba(80, 82, 178, 1)',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: 1
+                                                    }}
+                                                >
+                                                    {popupData?.mobile_phone.value}
+                                                </Link>
+                                        )
+                                        : '--'
+                                    }
                                 </Typography>
 
                             </Box>
