@@ -102,7 +102,7 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
 
   const openToolTipClick = () => {
     const isMobile = window.matchMedia('(max-width:900px)').matches;
-    if (isMobile && is_integrated) {
+    if (isMobile && !is_integrated) {
       setOpenTooltip(true);
     }
   };
@@ -186,9 +186,9 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
             },
           },
         }}
-        title={is_integrated ? `A ${service_name} account is already integrated. To connect a different account, please remove the existing ${service_name} integration first from Your integration.` : ""}>
+        title={is_integrated ? `A ${service_name} account is already integrated. To connect a different account, please remove the existing ${service_name} integration first.` : ""}>
         <Box sx={{
-          backgroundColor: is_integrated ? 'rgba(0, 0, 0, 0.04)' : active
+          backgroundColor: !is_integrated ? 'rgba(0, 0, 0, 0.04)' : active
             ? 'rgba(80, 82, 178, 0.1)'
             : 'transparent',
           border: active ? '1px solid #5052B2' : '1px solid #E4E4E4',
@@ -198,12 +198,14 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
           cursor: is_integrated ? 'default' : 'pointer',
           width: '8rem',
           height: '8rem',
-          filter: is_integrated ? 'grayscale(1)' : 'none',
+          filter: !is_integrated ? 'grayscale(1)' : 'none',
           justifyContent: 'center',
           alignItems: 'center',
           transition: '0.2s',
           '&:hover': {
-            boxShadow: is_integrated ? 'none' : '0 0 4px #00000040'
+            boxShadow: is_integrated ? 'none' : '0 0 4px #00000040',
+            filter: !is_integrated ? 'none' : 'none',
+            backgroundColor: !is_integrated ? 'transparent' :'rgba(80, 82, 178, 0.1)'
           },
           '&:hover .edit-icon': {
             opacity: 1
@@ -328,24 +330,6 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
   );
 };
 
-const IntegrationAdd = () => (
-  <Box sx={{
-    border: '1px dashed #5052B2',
-    display: 'flex',
-    borderRadius: '4px',
-    width: '8rem',
-    height: '8rem',
-    justifyContent: 'center',
-    alignItems: 'center',
-    transition: '0.2s',
-    '&:hover': { boxShadow: '0 0 4px #00000040' },
-    "@media (max-width: 900px)": {
-      width: '156px'
-    },
-  }}>
-    <Image src={'/add-square.svg'} width={44} height={44} alt={'add'} />
-  </Box>
-);
 
 interface DeletePopupProps {
   service_name: string | null
@@ -515,47 +499,38 @@ interface DataSyncIntegrationsProps {
 
 const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSaveSettings, handleDeleteSettings }: IntegrationsListProps) => {
   const [activeService, setActiveService] = useState<string | null>(null);
-  const [openAvalible, setOpenAvalible] = useState(false)
-  const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false)
-  const [openMetaConnect, setOpenMetaConnect] = useState(false)
-  const [openShopifyConnect, setOpenShopifyConnect] = useState(false)
-  const [openBigcommrceConnect, setOpenBigcommerceConnect] = useState(false)
-  const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false)
-  const [openMailchinpConnect, setOpenMailchimpConnect] = useState(false)
-  const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
-  const [openSlackConnect, setOpenSlackConnect] = useState(false)
-  const [OpenAttentiveConnect, setOpenAttentiveConnect] = useState(false)
-  const [openZapierConnect, setOpenZapierConnect] = useState(false)
-  const [openDeletePopup, setOpenDeletePopup] = useState(false)
+  const [openModal, setOpenModal] = useState<string | null>(null);
+  const [openDeletePopup, setOpenDeletePopup] = useState(false);
+  const [search, setSearch] = useState<string>('');
+
+  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(event.target.value);
+  };
+
   const handleActive = (service: string) => {
     setActiveService(service);
   };
 
-
   const handleClose = () => {
-    setOpenKlaviyoConnect(false)
-    setOpenMetaConnect(false)
-    setOpenShopifyConnect(false)
-    setOpenBigcommerceConnect(false)
-    setOpenOmnisendConnect(false)
-    setOpenMailchimpConnect(false)
-    setOpenSendlaneConnect(false)
-    setOpenAttentiveConnect(false)
-    setOpenZapierConnect(false)
-    setOpenSlackConnect(false)
-  }
+    setOpenModal(null);
+  };
+
+  const handleAddIntegration = (service_name: string) => {
+    const isIntegrated = integrationsCredentials.some(integration_cred => integration_cred.service_name === service_name);
+    if (isIntegrated) return;
+    setOpenModal(service_name);
+  };
 
   const handleDeleteOpen = () => {
-    setOpenDeletePopup(true)
-  }
+    setOpenDeletePopup(true);
+  };
 
   const handleDeleteClose = () => {
-    setOpenDeletePopup(false)
-  }
+    setOpenDeletePopup(false);
+  };
 
   const handleDelete = async () => {
     try {
-
       const response = await axiosInstance.delete('/integrations/', {
         params: {
           service_name: activeService,
@@ -563,307 +538,33 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
       });
 
       if (response.status === 200) {
-        showToast(`Remove ${activeService} Successfully`)
+        showToast(`Remove ${activeService} Successfully`);
         if (handleDeleteSettings && activeService) {
-          handleDeleteSettings(activeService)
-          setActiveService(null)
+          handleDeleteSettings(activeService);
+          setActiveService(null);
         }
       }
     } catch (error) {
-      showErrorToast(`Remove ${activeService} failed`)
+      showErrorToast(`Remove ${activeService} failed`);
     }
   };
 
-
-  return (
-    <>
-      <Box sx={{
-        display: 'flex', gap: 2, flexWrap: 'wrap',
-        "@media (max-width: 900px)": {
-          justifyContent: 'center',
-        }
-      }}>
-        {integrationsCredentials.some(integration => integration.service_name === "shopify") && (
-          <Box onClick={() => handleActive('shopify')}>
-            <IntegrationBox
-              image="/shopify-icon.svg"
-              service_name="shopify"
-              active={activeService === 'shopify'}
-              handleClick={() => setOpenShopifyConnect(true)}
-              handleDelete={handleDeleteOpen}
-              is_failed={integrationsCredentials?.find(integration => integration.service_name === 'shopify')?.is_failed}
-            />
-          </Box>
-        )}
-        {integrationsCredentials.some(integration => integration.service_name === "klaviyo") && (
-          <Box onClick={() => handleActive('klaviyo')}>
-            <IntegrationBox
-              image="/klaviyo.svg"
-              service_name="klaviyo"
-              active={activeService === 'klaviyo'}
-              handleClick={() => setOpenKlaviyoConnect(true)}
-              handleDelete={handleDeleteOpen}
-              is_failed={integrationsCredentials?.find(integration => integration.service_name === 'klaviyo')?.is_failed}
-            />
-          </Box>
-        )}
-        {integrationsCredentials.some(integration => integration.service_name === "meta") && (
-          <Box onClick={() => handleActive('meta')}>
-            <IntegrationBox
-              image="/meta-icon.svg"
-              service_name="meta"
-              active={activeService === 'meta'}
-              handleClick={() => setOpenMetaConnect(true)}
-              handleDelete={handleDeleteOpen}
-              is_failed={integrationsCredentials?.find(integration => integration.service_name === 'meta')?.is_failed}
-            />
-          </Box>
-        )}
-        {integrationsCredentials.some(integration => integration.service_name === "big_commerce") && (
-          <Box onClick={() => handleActive('big_commerce')}>
-            <IntegrationBox
-              image="/bigcommerce-icon.svg"
-              service_name="big_commerce"
-              active={activeService === 'big_commerce'}
-              handleClick={() => setOpenBigcommerceConnect(true)}
-              handleDelete={handleDeleteOpen}
-              is_failed={integrationsCredentials?.find(integration => integration.service_name === 'big_commerce')?.is_failed}
-            />
-          </Box>
-        )}
-        {integrationsCredentials.some(integration => integration.service_name === "omnisend") && (
-          <Box onClick={() => handleActive('omnisend')}>
-            <IntegrationBox
-              image="/omnisend_icon_black.svg"
-              service_name="omnisend"
-              active={activeService === 'omnisend'}
-              handleClick={() => setOpenOmnisendConnect(true)}
-              handleDelete={handleDeleteOpen}
-              is_failed={integrationsCredentials?.find(integration => integration.service_name === 'omnisend')?.is_failed}
-            />
-          </Box>
-        )}
-        {integrationsCredentials.some(integration => integration.service_name === "mailchimp") && (
-          <Box onClick={() => handleActive('mailchimp')}>
-            <IntegrationBox
-              image="/mailchimp-icon.svg"
-              service_name="mailchimp"
-              active={activeService === 'mailchimp'}
-              handleClick={() => setOpenMailchimpConnect(true)}
-              handleDelete={handleDeleteOpen}
-              is_failed={integrationsCredentials?.find(integration => integration.service_name === 'mailchimp')?.is_failed}
-            />
-          </Box>
-        )}
-        {integrationsCredentials.some(integration => integration.service_name === "sendlane") && (
-          <Box onClick={() => handleActive('sendlane')}>
-            <IntegrationBox
-              image="/sendlane-icon.svg"
-              service_name="sendlane"
-              active={activeService === 'sendlane'}
-              handleClick={() => setOpenSendlaneConnect(true)}
-              handleDelete={handleDeleteOpen}
-              is_failed={integrationsCredentials?.find(integration => integration.service_name === 'sendlane')?.is_failed}
-            />
-          </Box>
-        )}
-        {integrationsCredentials.some(integration => integration.service_name === "slack") && (
-          <Box onClick={() => handleActive('slack')}>
-            <IntegrationBox
-              image="/slack-icon.svg"
-              service_name="slack"
-              active={activeService === 'slack'}
-              handleClick={() => setOpenSlackConnect(true)}
-              handleDelete={handleDeleteOpen}
-              is_failed={integrationsCredentials?.find(integration => integration.service_name === 'slack')?.is_failed}
-            />
-          </Box>
-        )}
-        {integrationsCredentials.some(integration => integration.service_name === "attentive") && (
-          <Box onClick={() => handleActive('attentive')}>
-            <IntegrationBox
-              image="/attentive.svg"
-              service_name="attentive"
-              active={activeService === 'attentive'}
-              handleClick={() => setOpenAttentiveConnect(true)}
-              handleDelete={handleDeleteOpen}
-              is_failed={integrationsCredentials?.find(integration => integration.service_name === 'attentive')?.is_failed}
-            />
-          </Box>
-        )}
-        {integrationsCredentials.some(integration => integration.service_name === "zapier") && (
-          <Box onClick={() => handleActive('zapier')}>
-            <IntegrationBox
-              image="/zapier-icon.svg"
-              service_name="zapier"
-              active={activeService === 'zapier'}
-              handleClick={() => setOpenZapierConnect(true)}
-              handleDelete={handleDeleteOpen}
-              is_failed={integrationsCredentials?.find(integration => integration.service_name === 'zapier')?.is_failed}
-            />
-          </Box>
-        )}
-        <Box onClick={() => setOpenAvalible(true)}>
-          <IntegrationAdd />
-        </Box>
-      </Box>
-      <KlaviyoIntegrationPopup
-        open={openKlaviyoConnect}
-        handleClose={handleClose}
-        onSave={handleSaveSettings}
-        initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'klaviyo')?.access_token}
-        boxShadow="rgba(0, 0, 0, 0.1)"
-      />
-      <AttentiveIntegrationPopup
-        open={OpenAttentiveConnect}
-        handleClose={handleClose}
-        onSave={handleSaveSettings}
-        initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'attentive')?.access_token}
-        boxShadow="rgba(0, 0, 0, 0.1)"
-      />
-      <MetaConnectButton
-        open={openMetaConnect}
-        onClose={handleClose}
-        onSave={handleSaveSettings}
-        isEdit={true}
-        boxShadow="rgba(0, 0, 0, 0.1)"
-      />
-      <ShopifySettings
-        open={openShopifyConnect}
-        handleClose={handleClose}
-        onSave={handleSaveSettings}
-        initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'shopify')?.access_token}
-        initShopDomain={integrationsCredentials?.find(integration => integration.service_name === 'shopify')?.shop_domain}
-      />
-      <BCommerceConnect
-        open={openBigcommrceConnect}
-        onClose={handleClose}
-        initShopHash={integrationsCredentials?.find(integration => integration.service_name === 'big_commerce')?.shop_domain}
-        error_message={integrationsCredentials?.find(integration => integration.service_name === 'big_commerce')?.error_message}
-      />
-      {openOmnisendConnect && <OmnisendConnect open={openOmnisendConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'omnisend')?.access_token} boxShadow="rgba(0, 0, 0, 0.1)" />}
-      <MailchimpConnect open={openMailchinpConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'mailchimp')?.access_token} boxShadow="rgba(0, 0, 0, 0.1)" />
-      <SendlaneConnect open={openSendlaneConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'sendlane')?.access_token} boxShadow="rgba(0, 0, 0, 0.1)" />
-      {OpenAttentiveConnect && (
-        <>
-          <AttentiveIntegrationPopup open={OpenAttentiveConnect} handleClose={handleClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'attentive')?.access_token} boxShadow="rgba(0, 0, 0, 0.1)" />
-        </>
-      )
-      }
-      <ZapierConnectPopup open={openZapierConnect} handlePopupClose={handleClose} boxShadow="rgba(0, 0, 0, 0.01)" />
-      <AlivbleIntagrationsSlider
-        isContactSync={false}
-        open={openAvalible}
-        onClose={() => setOpenAvalible(false)}
-        integrations={integrations}
-        integrationsCredentials={integrationsCredentials}
-        handleSaveSettings={handleSaveSettings}
-      />
-      <SlackConnectPopup open={openSlackConnect} handlePopupClose={handleClose} boxShadow="rgba(0, 0, 0, 0.01)" />
-      <Box>
-        {(activeService && activeService != 'shopify' && activeService != 'big_commerce') && (<DataSyncList key={activeService} service_name={activeService} />)}
-      </Box>
-
-      <DeleteIntegrationPopup open={openDeletePopup} onClose={handleDeleteClose} service_name={activeService} handleDelete={handleDelete} />
-    </>
-  );
-};
-
-
-const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSaveSettings }: IntegrationsListProps) => {
-  const [search, setSearch] = useState<string>('');
-  const [openMetaConnect, setOpenMetaConnect] = useState(false)
-  const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false)
-  const [openShopifyConnect, setOpenShopifyConnect] = useState(false)
-  const [openBigcommrceConnect, setOpenBigcommerceConnect] = useState(false)
-  const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false)
-  const [openMailchinpConnect, setOpenmailchimpConnect] = useState(false)
-  const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
-  const [openSlackConnect, setOpenSlackConnect] = useState(false)
-  const [openAttentiveConnect, setOpenAttentiveConnect] = useState(false)
-  const [openZapierConnect, setOpenZapierConnect] = useState(false)
-
-  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(event.target.value);
-  };
-
   const integrationsAvailable = [
-    { image: 'shopify-icon.svg', service_name: 'shopify' },
     { image: 'klaviyo.svg', service_name: 'klaviyo' },
     { image: 'meta-icon.svg', service_name: 'meta' },
-    { image: 'bigcommerce-icon.svg', service_name: 'big_commerce' },
     { image: 'omnisend_icon_black.svg', service_name: 'omnisend' },
     { image: 'mailchimp-icon.svg', service_name: 'mailchimp' },
     { image: 'sendlane-icon.svg', service_name: 'sendlane' },
     { image: 'attentive.svg', service_name: 'attentive' },
-    { image: 'listrak.svg', service_name: 'listark' },
-    { image: 'cordial.svg', service_name: 'cordial' },
     { image: 'zapier-icon.svg', service_name: 'zapier' },
     { image: 'slack-icon.svg', service_name: 'slack' }
   ];
 
-  const handleClose = () => {
-    setOpenMetaConnect(false)
-    setOpenKlaviyoConnect(false)
-    setOpenShopifyConnect(false)
-    setOpenBigcommerceConnect(false)
-    setOpenOmnisendConnect(false)
-    setOpenmailchimpConnect(false)
-    setOpenSendlaneConnect(false)
-    setOpenSlackConnect(false)
-    setOpenAttentiveConnect(false)
-    setOpenZapierConnect(false)
-  }
-
-  const handleAddIntegration = (service_name: string) => {
-    const isIntegrated = integrationsCredentials.some(integration_cred => integration_cred.service_name === service_name);
-    if (isIntegrated) {
-      return
-    }
-    switch (service_name) {
-      case 'klaviyo':
-        setOpenKlaviyoConnect(true);
-        break;
-      case 'attentive':
-        setOpenAttentiveConnect(true);
-        break;
-      case 'shopify':
-        setOpenShopifyConnect(true);
-        break;
-      case 'big_commerce':
-        setOpenBigcommerceConnect(true);
-        break;
-      case 'omnisend':
-        setOpenOmnisendConnect(true);
-        break;
-      case 'mailchimp':
-        setOpenmailchimpConnect(true);
-        break;
-      case 'sendlane':
-        setOpenSendlaneConnect(true);
-        break;
-      case 'meta':
-        setOpenMetaConnect(true);
-        break;
-      case 'zapier':
-        setOpenZapierConnect(true)
-        break;
-      case 'slack':
-        setOpenSlackConnect(true);
-        break;
-      default:
-        break;
-    }
-  }
-
-  const filteredIntegrations = integrations.filter((integration: any) =>
-    integration.service_name.toLowerCase().includes(search.toLowerCase())
-  );
-
+  const integratedServices = integrationsCredentials.map(cred => cred.service_name);
 
   return (
-    <Box>
-      <Box>
+    <Box sx={{width:'100%', height: 'calc(100vh - 10.25rem)', overflow: 'auto'}}>
+      <Box sx={{ overflowX: 'hidden' }}>
         <TextField
           fullWidth
           placeholder="Search integrations"
@@ -872,7 +573,7 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
           id="outlined-start-adornment"
           sx={{
             mb: 3.75,
-            width: '572px',
+            maxWidth: '500px',
             '@media(max-width: 900px)': {
               width: '100%'
             }
@@ -887,52 +588,180 @@ const IntegrationsAvaliable = ({ integrationsCredentials, integrations, handleSa
           variant="outlined"
         />
       </Box>
-      <Box sx={{
-        display: 'flex', gap: 2,
-        flexWrap: 'wrap',
-        width: '100%',
-        "@media (max-width: 600px)": {
-          alignItems: 'start',
-          justifyContent: 'center'
-        }
-      }}>
-        {filteredIntegrations.map((integration: any) => {
-          const isIntegrated = integrationsCredentials.some(integration_cred => integration_cred.service_name === integration.service_name);
-          const imageSrc = integrationsAvailable.find(img => img.service_name === integration.service_name)?.image || '';
-          return (
-            <Box key={integration.service_name}
-              onClick={() => {
-                handleAddIntegration(integration.service_name);
-              }}>
-              <IntegrationBox
-                image={imageSrc}
-                service_name={integration.service_name}
-                is_avalible={true}
-                is_integrated={isIntegrated}
-              />
-            </Box>
-          );
-        })}
+      <Box
+        sx={{
+          display: 'flex',
+          gap: 2,
+          flexWrap: 'wrap',
+          overflowX: 'hidden',
+          "@media (max-width: 900px)": {
+            justifyContent: 'center',
+          },
+        }}
+      >
+        {integrationsAvailable
+          .filter(integration => {
+            if (search) {
+              return integration.service_name.toLowerCase().includes(search.toLowerCase());
+            }
+            return true;
+          })
+          .sort((a, b) => {
+            const isAIntegrated = integratedServices.includes(a.service_name);
+            const isBIntegrated = integratedServices.includes(b.service_name);
+
+            if (isAIntegrated === isBIntegrated) {
+              return a.service_name.localeCompare(b.service_name);
+            }
+            return isAIntegrated ? -1 : 1;
+          })
+          .map((integration) => {
+            const isIntegrated = integratedServices.includes(integration.service_name);
+            const integrationCred = integrationsCredentials.find(cred => cred.service_name === integration.service_name);
+
+            if (isIntegrated) {
+              return (
+                <Box key={integration.service_name} onClick={() => handleActive(integration.service_name)}>
+                  <IntegrationBox
+                    image={`/${integration.image}`}
+                    service_name={integration.service_name}
+                    active={activeService === integration.service_name}
+                    handleClick={() => setOpenModal(integration.service_name)}
+                    is_integrated={true}
+                    handleDelete={handleDeleteOpen}
+                    is_failed={integrationCred?.is_failed}
+                  />
+                </Box>
+              );
+            }
+
+            return (
+              <Box key={integration.service_name} onClick={() => handleAddIntegration(integration.service_name)}>
+                <IntegrationBox
+                  image={`/${integration.image}`}
+                  service_name={integration.service_name}
+                  is_avalible={true}
+                  is_integrated={false}
+                />
+              </Box>
+            );
+          })}
       </Box>
 
-      <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={handleClose} onSave={handleSaveSettings} />
-      <MetaConnectButton
-        open={openMetaConnect}
-        onClose={handleClose}
-        onSave={handleSaveSettings}
-        boxShadow="rgba(0, 0, 0, 0.1)"
+
+      {openModal === 'klaviyo' && (
+        <KlaviyoIntegrationPopup
+          open={true}
+          handleClose={handleClose}
+          onSave={handleSaveSettings}
+          initApiKey={integrationsCredentials.find(integration => integration.service_name === 'klaviyo')?.access_token}
+          boxShadow="rgba(0, 0, 0, 0.1)"
+        />
+      )}
+
+      {openModal === 'attentive' && (
+        <AttentiveIntegrationPopup
+          open={true}
+          handleClose={handleClose}
+          onSave={handleSaveSettings}
+          initApiKey={integrationsCredentials.find(integration => integration.service_name === 'attentive')?.access_token}
+          boxShadow="rgba(0, 0, 0, 0.1)"
+        />
+      )}
+
+      {openModal === 'meta' && (
+        <MetaConnectButton
+          open={true}
+          onClose={handleClose}
+          onSave={handleSaveSettings}
+          isEdit={true}
+          boxShadow="rgba(0, 0, 0, 0.1)"
+        />
+      )}
+
+      {openModal === 'shopify' && (
+        <ShopifySettings
+          open={true}
+          handleClose={handleClose}
+          onSave={handleSaveSettings}
+          initApiKey={integrationsCredentials.find(integration => integration.service_name === 'shopify')?.access_token}
+          initShopDomain={integrationsCredentials.find(integration => integration.service_name === 'shopify')?.shop_domain}
+        />
+      )}
+
+      {openModal === 'big_commerce' && (
+        <BCommerceConnect
+          open={true}
+          onClose={handleClose}
+          initShopHash={integrationsCredentials.find(integration => integration.service_name === 'big_commerce')?.shop_domain}
+          error_message={integrationsCredentials.find(integration => integration.service_name === 'big_commerce')?.error_message}
+        />
+      )}
+
+      {openModal === 'omnisend' && (
+        <OmnisendConnect
+          open={true}
+          handleClose={handleClose}
+          onSave={handleSaveSettings}
+          initApiKey={integrationsCredentials.find(integration => integration.service_name === 'omnisend')?.access_token}
+          boxShadow="rgba(0, 0, 0, 0.1)"
+        />
+      )}
+
+      {openModal === 'mailchimp' && (
+        <MailchimpConnect
+          open={true}
+          handleClose={handleClose}
+          onSave={handleSaveSettings}
+          initApiKey={integrationsCredentials.find(integration => integration.service_name === 'mailchimp')?.access_token}
+          boxShadow="rgba(0, 0, 0, 0.1)"
+        />
+      )}
+
+      {openModal === 'sendlane' && (
+        <SendlaneConnect
+          open={true}
+          handleClose={handleClose}
+          onSave={handleSaveSettings}
+          initApiKey={integrationsCredentials.find(integration => integration.service_name === 'sendlane')?.access_token}
+          boxShadow="rgba(0, 0, 0, 0.1)"
+        />
+      )}
+
+      {openModal === 'zapier' && (
+        <ZapierConnectPopup
+          open={true}
+          handlePopupClose={handleClose}
+          boxShadow="rgba(0, 0, 0, 0.01)"
+        />
+      )}
+
+      {openModal === 'slack' && (
+        <SlackConnectPopup
+          open={true}
+          handlePopupClose={handleClose}
+          boxShadow="rgba(0, 0, 0, 0.01)"
+        />
+      )}
+
+      <Box sx={{pr:2}}>
+        {(activeService && activeService !== 'shopify' && activeService !== 'big_commerce') && (
+          <DataSyncList key={activeService} service_name={activeService} />
+        )}
+      </Box>
+
+      <DeleteIntegrationPopup
+        open={openDeletePopup}
+        onClose={handleDeleteClose}
+        service_name={activeService}
+        handleDelete={handleDelete}
       />
-      <ShopifySettings open={openShopifyConnect} handleClose={handleClose} onSave={handleSaveSettings} />
-      <BCommerceConnect open={openBigcommrceConnect} onClose={handleClose} boxShadow="rgba(0, 0, 0, 0.1)" />
-      {openOmnisendConnect && <OmnisendConnect open={openOmnisendConnect} handleClose={handleClose} onSave={handleSaveSettings} boxShadow="rgba(0, 0, 0, 0.1)" />}
-      <MailchimpConnect open={openMailchinpConnect} handleClose={handleClose} onSave={handleSaveSettings} boxShadow="rgba(0, 0, 0, 0.1)" />
-      <SendlaneConnect open={openSendlaneConnect} handleClose={handleClose} onSave={handleSaveSettings} boxShadow="rgba(0, 0, 0, 0.1)" />
-      <AttentiveIntegrationPopup open={openAttentiveConnect} handleClose={handleClose} onSave={handleSaveSettings} boxShadow="rgba(0, 0, 0, 0.1)" />
-      <ZapierConnectPopup open={openZapierConnect} handlePopupClose={handleClose} boxShadow="rgba(0, 0, 0, 0.1)" />
-      <SlackConnectPopup open={openSlackConnect} handlePopupClose={handleClose} boxShadow="rgba(0, 0, 0, 0.1)" />
     </Box>
   );
 };
+
+
+
 
 
 const PixelManagment = () => {
@@ -943,7 +772,7 @@ const PixelManagment = () => {
     setValue(newValue);
   };
   return (
-    <>
+    <Box sx={{height: 'calc(100vh - 10.25rem)', overflow: 'auto', width:'100%', pr:'12px'}}>
       <TabContext value={value}>
         <TabList
           centered
@@ -973,6 +802,7 @@ const PixelManagment = () => {
             display: "flex",
             flexDirection: "row",
             alignItems: "center",
+            margin:0,
             "@media (max-width: 600px)": { mb: 2 },
           }}>
             {/* Title and Tooltip */}
@@ -1006,8 +836,7 @@ const PixelManagment = () => {
           <RevenueTracking />
         </TabPanel>
       </TabContext>
-
-    </>
+    </Box>
 
   )
 }
@@ -1146,10 +975,9 @@ const Integrations = () => {
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
-            width: "100%",
+            width: "98%",
             mt: 2,
             ml: 1,
-            pr: 1.5,
             "@media (max-width: 900px)": {
               flexDirection: "column",
               display: "flex",
@@ -1201,7 +1029,6 @@ const Integrations = () => {
                   TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
                   sx={{
                     textTransform: 'none',
-                    pt: '8px',
                     minHeight: 0,
                     '& .MuiTabs-indicator': {
                       backgroundColor: 'rgba(80, 82, 178, 1)',
@@ -1215,7 +1042,7 @@ const Integrations = () => {
                   }}
                   onChange={handleTabChange}
                 >
-                  <Tab value="1" label="Your Integrations" className="main-text"
+                  <Tab value="1" label="Integrations" className="main-text"
                     sx={{
                       textTransform: 'none',
                       padding: '4px 10px',
@@ -1240,30 +1067,6 @@ const Integrations = () => {
                       }
                     }}
                   />
-                  <Tab label="Add an Integration" value="2" className="main-text"
-                    sx={{
-                      textTransform: 'none',
-                      padding: '4px 10px',
-                      pb: '10px',
-                      flexGrow: 1,
-                      marginRight: '3em',
-                      minHeight: 'auto',
-                      minWidth: 'auto',
-                      fontSize: '14px',
-                      fontWeight: 700,
-                      lineHeight: '19.1px',
-                      textAlign: 'left',
-                      mr: 2,
-                      '&.Mui-selected': {
-                        color: 'rgba(80, 82, 178, 1)'
-                      },
-                      "@media (max-width: 600px)": {
-                        mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                          backgroundColor: 'rgba(249, 249, 253, 1)',
-                          border: '1px solid rgba(220, 220, 239, 1)'
-                        },
-                      }
-                    }} />
                   <Tab label="Pixel Management" value="3" className="main-text"
                     sx={{
                       textTransform: 'none',
@@ -1341,7 +1144,7 @@ const Integrations = () => {
             </Box>
           ) : (!isLoading && (
             <>
-              <TabPanel value="1" sx={{ mt: 6, "@media (max-width: 600px)": { mt: 10 } }}>
+              <TabPanel value="1" sx={{ mt: 6, overflow: 'auto', padding:0 }}>
                 <UserIntegrationsList
                   integrationsCredentials={integrationsCredentials}
                   changeTab={changeTab}
@@ -1350,15 +1153,8 @@ const Integrations = () => {
                   handleDeleteSettings={handleDeleteSettings}
                 />
               </TabPanel>
-              <TabPanel value="2" sx={{ mt: 6, "@media (max-width: 600px)": { mt: 8 } }}>
-                <IntegrationsAvaliable
-                  integrationsCredentials={integrationsCredentials}
-                  integrations={integrations}
-                  handleSaveSettings={handleSaveSettings}
-                />
-              </TabPanel>
-              <TabPanel value="3" >
-                <Box sx={{ mt: 6, "@media (max-width: 600px)": { mt: 8 } }}>
+              <TabPanel value="3" sx={{width: '100%', padding: '24px 0px'}}>
+                <Box sx={{ mt: 6, overflow: 'auto', padding:0 }}>
                   <PixelManagment />
                 </Box>
               </TabPanel>
