@@ -142,10 +142,6 @@ def update_data_sync_imported_leads(session, status, data_sync_id):
     session.db.commit()
 
 def get_previous_imported_leads(session, data_sync_id):
-    current_date_time = datetime.now(timezone.utc)
-    past_time = current_date_time - timedelta(hours=1)
-    past_date = past_time.date()
-    past_time = past_time.time()
     query = session.query(
         LeadUser.id,
         LeadUser.behavior_type,
@@ -162,9 +158,7 @@ def get_previous_imported_leads(session, data_sync_id):
         DataSyncImportedLeads.data_sync_id == data_sync_id,
         DataSyncImportedLeads.status == DataSyncImportedStatus.SENT.value,
         LeadUser.is_active == True,
-        UserDomains.is_enable == True,
-        LeadsVisits.start_date <= past_date,
-        LeadsVisits.start_time <= past_time
+        UserDomains.is_enable == True
     )
        
     return query.all()
