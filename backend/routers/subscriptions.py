@@ -4,12 +4,13 @@ from fastapi import APIRouter, Depends, Request as fastRequest, HTTPException, s
 
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from dependencies import get_plans_service, get_payments_service, get_webhook, check_user_authentication, \
-    check_user_authorization_without_pixel
+    check_user_authorization_without_pixel, get_subscription_service
 from enums import TeamAccessLevel
 from models.users import Users
 from schemas.subscriptions import UnsubscribeRequest
 from services.payments import PaymentsService
 from services.plans import PlansService
+from services.subscriptions import SubscriptionService
 from services.webhook import WebhookService
 
 QUEUE_CREDITS_CHARGING = 'credits_charging'
@@ -200,3 +201,9 @@ async def shopify_billing_update_webhook(request: fastRequest, webhook_service: 
         finally:
             await rabbitmq_connection.close()
     return "OK"
+
+
+@router.get("/check-credit-status")
+async def get_status_credits(subscription_service: SubscriptionService = Depends(get_subscription_service), 
+                             user: Users = Depends(check_user_authentication)):
+    return await subscription_service.get_status_credits(user)

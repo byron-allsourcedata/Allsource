@@ -18,6 +18,7 @@ import SouthOutlinedIcon from '@mui/icons-material/SouthOutlined';
 import NorthOutlinedIcon from '@mui/icons-material/NorthOutlined';
 import dayjs from 'dayjs';
 import PopupDetails from './EmployeeDetails';
+import PopupChargeCredits from './ChargeCredits'
 import CloseIcon from '@mui/icons-material/Close';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import Tooltip from '@mui/material/Tooltip';
@@ -25,7 +26,7 @@ import CustomToolTip from '@/components/customToolTip';
 import CustomTablePagination from '@/components/CustomTablePagination';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useNotification } from '@/context/NotificationContext';
-import { showErrorToast } from '@/components/ToastNotification';
+import { showErrorToast, showToast } from '@/components/ToastNotification';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import UnlockButton from './UnlockButton';
@@ -77,6 +78,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     const [loading, setLoading] = useState(false);
     const [selectedFilters, setSelectedFilters] = useState<{ label: string, value: string }[]>([]);
     const [openPopup, setOpenPopup] = React.useState(false);
+    const [creditsChargePopup, setCreditsChargePopup] = React.useState(false);
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
     const [openDrawer, setOpenDrawer] = React.useState(false);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -136,8 +138,25 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
         setPage(0);
     };
 
-    const getStatusCredits = () => {
-
+    const getStatusCredits = async () => {
+        setLoading(true);
+        try {
+            const response = await axiosInstance.get(`/subscriptions/check-credit-status`)
+            if (response.data.status === "NO_CREDITS"){
+                showErrorToast("HGHTNGBFGFGF")
+            }
+            if (response.data.status === "UNLIMITED_CREDITS"){
+                showToast("You have a unlimited amount of credits!")
+            }
+            if (response.data.status === "CREDITS_ARE_AVAILABLE"){
+                setCreditsChargePopup(true)
+            }
+        }
+        catch{
+        }
+        finally{ 
+            setLoading(false)
+        }
     }
 
 
@@ -1025,6 +1044,9 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                         employeeId={employeeId}
                         getStatusCredits={getStatusCredits}
                         />
+                    <PopupChargeCredits open={creditsChargePopup}
+                        onClose={() => setCreditsChargePopup(false)}
+                    />
                 </Box>
             </Box>
         </>

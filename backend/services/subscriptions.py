@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session
 import os
 from dateutil.relativedelta import relativedelta
 from dotenv import load_dotenv
+from enums import NotificationTitles, CreditsStatus
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from models.leads_users import LeadUser
 from models.plans import SubscriptionPlan
 from models.subscription_transactions import SubscriptionTransactions
@@ -24,12 +26,16 @@ from services.stripe_service import determine_plan_name_from_product_id
 from urllib.parse import urlencode
 import requests
 from services.referral import ReferralService
+from models.account_notification import AccountNotification
+from models.users_account_notification import UserAccountNotification
 load_dotenv()
 
 logger = logging.getLogger(__name__)
 
 
 class SubscriptionService:
+    AMOUNT_CREDITS = 1
+
     def __init__(self, db: Session, user_persistence_service: UserPersistence, plans_persistence: PlansPersistence, referral_service: ReferralService,
                  partners_persistence: PartnersPersistence):
         self.plans_persistence = plans_persistence
@@ -189,6 +195,48 @@ class SubscriptionService:
                 return False
 
         return True
+    
+    def save_account_notification(self, user_id, title, params=None):
+        account_notification = self.db.query(AccountNotification).filter(AccountNotification.title == title).first()
+        account_notification = UserAccountNotification(
+            user_id=user_id,
+            notification_id=account_notification.id,
+            params=str(params),
+
+        )
+        self.db.add(account_notification)
+        self.db.commit()
+        return account_notification.id
+    
+    async def send_notification_with_error_credits(self, user_id, title, notification_id):
+        account_notification = self.db.query(AccountNotification).filter(AccountNotification.title == title).first()
+        queue_name = f'sse_events_{str(user_id)}'
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+        try:
+            await publish_rabbitmq_message(
+                connection=connection,
+                queue_name=queue_name,
+                message_body={'notification_text': account_notification.text,
+                                'notification_id': notification_id}
+            )
+        except:
+            logging.error('Failed to publish rabbitmq message')
+        finally:
+            await rabbitmq_connection.close()
+
+    async def get_status_credits(self, user):
+        user_id = user.get("id")
+        free_trial_subscription = self.is_trial_subscription(user_id=user_id)
+        if free_trial_subscription:
+            return {"status": CreditsStatus.UNLIMITED_CREDITS}
+        if user.get("leads_credits") - self.AMOUNT_CREDITS > 0:
+            return {"status": CreditsStatus.CREDITS_ARE_AVAILABLE}
+
+        notification_id = self.save_account_notification(user_id, NotificationTitles.NO_CREDITS.value)
+        await self.send_notification_with_error_credits(user_id=user_id, title=NotificationTitles.NO_CREDITS.value, notification_id=notification_id)
+        return {"status": CreditsStatus.NO_CREDITS}
+
 
     def is_trial_subscription(self, user_id):
         user_subscription = self.get_user_subscription(user_id=user_id)

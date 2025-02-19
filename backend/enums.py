@@ -210,6 +210,13 @@ class NotificationTitles(Enum):
     CHOOSE_PLAN = 'choose_plan'
     PAYMENT_SUCCESS = 'payment_success'
     TEAM_MEMBER_ADDED = 'team_member_added'
+    NO_CREDITS = 'no_credits'
+
+
+class CreditsStatus(Enum):
+    UNLIMITED_CREDITS = 'UNLIMITED_CREDITS'
+    CREDITS_ARE_AVAILABLE = 'CREDITS_ARE_AVAILABLE'
+    NO_CREDITS = 'NO_CREDITS'
 
 
 class IntegrationsStatus(Enum):
