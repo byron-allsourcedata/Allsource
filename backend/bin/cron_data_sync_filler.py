@@ -83,8 +83,8 @@ def fetch_leads_by_domain(session: Session, domain_id, limit, last_sent_lead_id,
             LeadUser.id > last_sent_lead_id,
             LeadUser.is_active == True,
             UserDomains.is_enable == True,
-            LeadsVisits.start_date <= past_date,
-            LeadsVisits.start_time <= past_time
+            (LeadsVisits.start_date < past_date) |
+            (LeadsVisits.start_date == past_date and LeadsVisits.start_time <= past_time)
         )
     if data_sync_leads_type != 'allContacts':
 
