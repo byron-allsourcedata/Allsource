@@ -1,12 +1,11 @@
 import logging
 import math
-from datetime import datetime, timedelta
-
+from datetime import datetime
 import pytz
 from urllib.parse import unquote
-from sqlalchemy import and_, or_, desc, asc, Integer, cast, VARCHAR, case
+from sqlalchemy import and_, or_, desc, asc, exists, case
 from sqlalchemy.orm import Session, aliased
-from sqlalchemy.sql import func, case as cs
+from sqlalchemy.sql import func
 from models.five_x_five_emails import FiveXFiveEmails
 from models.leads_users_companies import LeadUserCompany
 from models.five_x_five_locations import FiveXFiveLocations
@@ -16,10 +15,7 @@ from models.five_x_five_users import FiveXFiveUser
 from models.five_x_five_users_emails import FiveXFiveUsersEmails
 from models.five_x_five_users_locations import FiveXFiveUsersLocations
 from models.five_x_five_users_phones import FiveXFiveUsersPhones
-from models.leads import Lead
 from models.leads_users import LeadUser
-from models.leads_users_added_to_cart import LeadsUsersAddedToCart
-from models.leads_users_ordered import LeadsUsersOrdered
 from models.leads_visits import LeadsVisits
 from models.state import States
 from models.lead_company import LeadCompany
@@ -29,7 +25,6 @@ from models.users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
 logger = logging.getLogger(__name__)
 
 class CompanyPersistence:
-    DOWNLOAD_LIMIT_ROWS = 20000
     
     def __init__(self, db: Session):
         self.db = db
@@ -485,7 +480,13 @@ class CompanyPersistence:
         FiveXFiveUsersEmailBusiness = aliased(FiveXFiveUsersEmails)
         FiveXFiveEmailPersonal = aliased(FiveXFiveEmails)
         FiveXFiveEmailBusiness = aliased(FiveXFiveEmails)
-
+        unlocked_subquery = (
+            self.db.query(UsersUnlockedFiveXFiveUser.five_x_five_up_id)
+            .filter(UsersUnlockedFiveXFiveUser.five_x_five_up_id == FiveXFiveUser.up_id)
+            .correlate(FiveXFiveUser)
+            .exists()
+        )
+        
         query = (
             self.db.query(
                 FiveXFiveUser.id,
@@ -500,15 +501,11 @@ class CompanyPersistence:
                 FiveXFiveUser.job_title,
                 FiveXFiveUser.personal_city,
                 FiveXFiveUser.personal_state,
-                cs(
-                    (func.count(UsersUnlockedFiveXFiveUser.five_x_five_up_id) > 0, True),
-                    else_=False
-                )
+                unlocked_subquery.label('is_unlocked')
             )
                 .select_from(LeadUser)
                 .join(LeadCompany, LeadCompany.id == LeadUser.company_id)
                 .join(FiveXFiveUser, FiveXFiveUser.company_alias == LeadCompany.alias)
-                .outerjoin(UsersUnlockedFiveXFiveUser, FiveXFiveUser.up_id == UsersUnlockedFiveXFiveUser.five_x_five_up_id)
                 .filter(LeadCompany.id == company_id, LeadUser.domain_id == domain_id)
                 .group_by(
                     FiveXFiveUser.id,
@@ -623,22 +620,15 @@ class CompanyPersistence:
                 .filter(or_(*filters)) 
             )
 
-
-        count = 0
-        max_page = 0
-        states = 0
-        if per_page:
-            offset = (page - 1) * per_page
-            employees = query.limit(per_page).offset(offset).all()
-            count = query.count()
-            max_page = math.ceil(count / per_page)
-        else:
-            employees = query.limit(self.DOWNLOAD_LIMIT_ROWS).all()
-        
+        states = None
+        offset = (page - 1) * per_page
+        employees = query.limit(per_page).offset(offset).all()
+        count = query.count()
+        max_page = math.ceil(count / per_page)
+            
         if employees:
             states = self.db.query(States).all()
         return employees, count, max_page, states
-
 
     def search_location(self, start_letter, domain_id):
         query = (
