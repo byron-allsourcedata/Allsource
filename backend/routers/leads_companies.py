@@ -76,12 +76,12 @@ async def get_employees(
 @router.get("/employee")
 def get_employees(
     company_id: int = Query(None),
-    employee_id: int = Query(None),
+    id: int = Query(None),
     company_service: CompanyService = Depends(get_companies_service)
 ):
     return company_service.get_employee_by_id(
         company_id=company_id,
-        employee_id=employee_id
+        employee_id=id
     )
 
 

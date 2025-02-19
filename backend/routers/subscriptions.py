@@ -210,7 +210,7 @@ async def get_status_credits(subscription_service: SubscriptionService = Depends
     return await subscription_service.get_status_credits(user)
 
 
-@router.patch("/charge-credit")
+@router.put("/charge-credit")
 def charge_credit(users_service: UsersService = Depends(get_users_service), 
                         user: Users = Depends(check_user_authentication)):
     return users_service.charge_credit(user.get('id'))

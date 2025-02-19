@@ -173,4 +173,5 @@ class UsersService:
         return 'SUCCESS_CONNECT'
 
     def charge_credit(self, user_id: int):
+        print("service", user_id)
         self.user_persistence_service.charge_credit(user_id)

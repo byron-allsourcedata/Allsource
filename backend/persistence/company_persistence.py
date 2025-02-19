@@ -470,7 +470,8 @@ class CompanyPersistence:
         return companies
 
 
-    def get_employee_by_id(self, domain_id, company_id, employee_id):        
+    def get_employee_by_id(self, domain_id, company_id, employee_id):   
+        print("employee_id", employee_id)     
         query = (
             self.db.query(
                 FiveXFiveUser.id,
@@ -495,8 +496,9 @@ class CompanyPersistence:
                 )
         )
 
-        employee = query.first()
-        
+        employee = query.all()
+        states = 0
+
         if employee:
             states = self.db.query(States).all()
         return employee, states
