@@ -136,15 +136,13 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
             if (response.status === 200){
                 const updateEmployee = response.data
                 setData((prevEmployees) => {
-                    console.log({prevEmployees})
                     const index = prevEmployees.findIndex((account) => account.id.value === updateEmployee.id.value);
-                    console.log({index, updateEmployee})
                     if (index !== -1) {
                         const newAccounts = [...prevEmployees];
-                        newAccounts[index] = prevEmployees;
+                        newAccounts[index] = { ...newAccounts[index], ...updateEmployee };
                         return newAccounts;
                     }
-                    return [...prevEmployees, updateEmployee];
+                    return [...prevEmployees, updateEmployee]; 
                 });
             }
         } 
@@ -175,7 +173,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
 
 
     const renderField = (data: RenderCeil, callback: ((value: string) => string) | null = null) => {
-        console.log({data})
         if (data?.visibility_status === "hidden") {
             return <UnlockButton onClick={getStatusCredits} label="Unlock contact" />;
         }

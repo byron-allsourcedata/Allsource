@@ -95,7 +95,6 @@ class CompanyService:
             employee_id=employee_id,
             company_id=company_id,
         )
-        print(employees)
 
         state_dict = {state.state_code: state.state_name for state in states} if states else {}
 
