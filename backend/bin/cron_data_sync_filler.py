@@ -9,8 +9,9 @@ from dotenv import load_dotenv
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 from sqlalchemy import create_engine, select, and_, or_
 from dotenv import load_dotenv
+from models.leads_visits import LeadsVisits
 from sqlalchemy.orm import sessionmaker, Session
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from enums import DataSyncImportedStatus, ProccessDataSyncResult
 from utils import get_utc_aware_date
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
@@ -66,17 +67,24 @@ def update_data_sync_integration(session, data_sync_id):
     session.commit()
 
 def fetch_leads_by_domain(session: Session, domain_id, limit, last_sent_lead_id, data_sync_leads_type):
+    current_date_time = datetime.now(timezone.utc)
+    past_time = current_date_time - timedelta(hours=1)
+    past_date = past_time.date()
+    past_time = past_time.time()
     if last_sent_lead_id is None:
         last_sent_lead_id = 0
 
     query = session.query(LeadUser.id, LeadUser.behavior_type, FiveXFiveUser.up_id) \
         .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id) \
         .join(UserDomains, UserDomains.id == LeadUser.domain_id) \
+        .join(LeadsVisits, LeadsVisits.lead_id == LeadUser.id)\
         .filter(
             LeadUser.domain_id == domain_id,
             LeadUser.id > last_sent_lead_id,
             LeadUser.is_active == True,
-            UserDomains.is_enable == True
+            UserDomains.is_enable == True,
+            LeadsVisits.start_date <= past_date,
+            LeadsVisits.start_time <= past_time
         )
     if data_sync_leads_type != 'allContacts':
 
@@ -99,7 +107,7 @@ def fetch_leads_by_domain(session: Session, domain_id, limit, last_sent_lead_id,
                 )
             )
             
-        elif data_sync_leads_type == 'added_to_cart':
+        elif data_sync_leads_type == 'abandoned_cart':
             query = query.outerjoin(
                 LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id
             ).outerjoin(
@@ -134,6 +142,10 @@ def update_data_sync_imported_leads(session, status, data_sync_id):
     session.db.commit()
 
 def get_previous_imported_leads(session, data_sync_id):
+    current_date_time = datetime.now(timezone.utc)
+    past_time = current_date_time - timedelta(hours=1)
+    past_date = past_time.date()
+    past_time = past_time.time()
     query = session.query(
         LeadUser.id,
         LeadUser.behavior_type,
@@ -144,11 +156,15 @@ def get_previous_imported_leads(session, data_sync_id):
         DataSyncImportedLeads, DataSyncImportedLeads.lead_users_id == LeadUser.id
     ).join(
         UserDomains, UserDomains.id == LeadUser.domain_id
+    ).join(
+        LeadsVisits, LeadsVisits.lead_id == LeadUser.id
     ).filter(
         DataSyncImportedLeads.data_sync_id == data_sync_id,
         DataSyncImportedLeads.status == DataSyncImportedStatus.SENT.value,
         LeadUser.is_active == True,
-        UserDomains.is_enable == True
+        UserDomains.is_enable == True,
+        LeadsVisits.start_date <= past_date,
+        LeadsVisits.start_time <= past_time
     )
        
     return query.all()

@@ -93,8 +93,8 @@ class ZapierIntegrationService:
             lead_type = lead_type.lower()
         if (lead_type == 'visitors'):
             return 'visitor'
-        if (lead_type == 'added to cart'):
-            return 'added_to_cart'
+        if (lead_type == 'Abandoned Cart'):
+            return 'abandoned_cart'
         if (lead_type == 'viewed product'):
             return 'viewed_product'
         if (lead_type == 'converted sales'):
