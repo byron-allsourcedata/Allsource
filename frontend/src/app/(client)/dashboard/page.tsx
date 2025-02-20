@@ -84,7 +84,7 @@ const VerifyPixelIntegration: React.FC = () => {
       }
 
       const hasQuery = url.includes("?");
-      const newUrl = url + (hasQuery ? "&" : "?") + "vge=true" + `&api=${apiUrl}`;
+      const newUrl = url + (hasQuery ? "&" : "?") + "mff=true" + `&api=${apiUrl}`;
       window.open(newUrl, "_blank");
     }
   };

@@ -39,11 +39,8 @@ def format_phone_number(phones):
         return ', '.join(formatted_phones)
 
 def extract_first_email(text: str) -> str:
-        email_regex = r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+"
-        emails = re.findall(email_regex, text)
-        if emails:
-            return emails[0]
-        return None
+    email_regex = r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+"
+    return re.findall(email_regex, text)
 
 def create_company_alias(company_name):
     if company_name:

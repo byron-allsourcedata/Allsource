@@ -2,9 +2,11 @@ from utils import validate_and_format_phone
 from typing import List
 from fastapi import HTTPException
 import httpx
+from datetime import datetime, timedelta
 from utils import format_phone_number
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
 from models.five_x_five_users import FiveXFiveUser
+from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from schemas.integrations.sendlane import SendlaneContact, SendlaneSender
 from schemas.integrations.integrations import DataMap, IntegrationCredentials, ListFromIntegration
 from persistence.domains import UserDomainsPersistence
@@ -16,10 +18,11 @@ from persistence.leads_persistence import LeadsPersistence
 class SendlaneIntegrationService:
 
     def __init__(self, domain_persistence: UserDomainsPersistence, integrations_persistence: IntegrationsPresistence, leads_persistence: LeadsPersistence,
-                 sync_persistence: IntegrationsUserSyncPersistence, client: httpx.Client):
+                 sync_persistence: IntegrationsUserSyncPersistence, client: httpx.Client, million_verifier_integrations: MillionVerifierIntegrationsService):
         self.domain_persistence = domain_persistence
         self.integrations_persisntece = integrations_persistence
         self.leads_persistence = leads_persistence
+        self.million_verifier_integrations = million_verifier_integrations
         self.sync_persistence = sync_persistence
         self.client = client
 
@@ -155,15 +158,14 @@ class SendlaneIntegrationService:
 
     async def process_data_sync(self, five_x_five_user, user_integration, integration_data_sync, lead_user):
         profile = self.__create_contact(five_x_five_user, user_integration.access_token, integration_data_sync.list_id)
-        if profile == ProccessDataSyncResult.AUTHENTICATION_FAILED.value or profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+        if profile in (ProccessDataSyncResult.AUTHENTICATION_FAILED.value, ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return profile
             
         return ProccessDataSyncResult.SUCCESS.value
-                                    
 
     def __create_contact(self, five_x_five_user, access_token, list_id: int):
         profile = self.__mapped_sendlane_contact(five_x_five_user)
-        if profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+        if profile in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return profile
         
         json = {
@@ -188,16 +190,39 @@ class SendlaneIntegrationService:
         )
     
     def __mapped_sendlane_contact(self, five_x_five_user: FiveXFiveUser):
-        first_email = (
-            getattr(five_x_five_user, 'business_email') or 
-            getattr(five_x_five_user, 'personal_emails') or
-            getattr(five_x_five_user, 'additional_personal_emails') or
-            getattr(five_x_five_user, 'programmatic_business_emails', None)
-        )
+        email_fields = [
+            'business_email', 
+            'personal_emails', 
+            'additional_personal_emails',
+        ]
         
-        first_email = extract_first_email(first_email) if first_email else None
-        if not first_email:
+        def get_valid_email(user) -> str:
+            thirty_days_ago = datetime.now() - timedelta(days=30)
+            thirty_days_ago_str = thirty_days_ago.strftime('%Y-%m-%d %H:%M:%S')
+            verity = 0
+            for field in email_fields:
+                email = getattr(user, field, None)
+                if email:
+                    emails = extract_first_email(email)
+                    for e in emails:
+                        if e and field == 'business_email' and five_x_five_user.business_email_last_seen:
+                            if five_x_five_user.business_email_last_seen.strftime('%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
+                                return e.strip()
+                        if e and field == 'personal_emails' and five_x_five_user.personal_emails_last_seen:
+                            personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime('%Y-%m-%d %H:%M:%S')
+                            if personal_emails_last_seen_str > thirty_days_ago_str:
+                                return e.strip()
+                        if e and self.million_verifier_integrations.is_email_verify(email=e.strip()):
+                            return e.strip()
+                        verity += 1
+            if verity > 0:
+                return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        first_email = get_valid_email(five_x_five_user)
+        
+        if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
+            return first_email
         
         first_phone = (
             getattr(five_x_five_user, 'mobile_phone') or 

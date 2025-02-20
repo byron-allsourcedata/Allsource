@@ -15,6 +15,7 @@ from .shopify import ShopifyIntegrationService
 from .sendlane import SendlaneIntegrationService
 from persistence.user_persistence import UserPersistence
 from .slack import SlackService
+from .million_verifier import MillionVerifierIntegrationsService
 from .onimesend import OmnisendIntegrationService
 from .meta import MetaIntegrationsService
 from .mailchimp import MailchimpIntegrationsService
@@ -27,8 +28,8 @@ class IntegrationService:
     def __init__(self, db: Session, integration_persistence: IntegrationsPresistence, 
                  lead_persistence: LeadsPersistence, audience_persistence: AudiencePersistence, 
                  lead_orders_persistence: LeadOrdersPersistence, user_persistence: UserPersistence,
-                 integrations_user_sync_persistence: IntegrationsUserSyncPersistence,
-                 aws_service: AWSService, domain_persistence: UserDomainsPersistence, suppression_persistence: IntegrationsSuppressionPersistence, epi_persistence: ExternalAppsInstallationsPersistence):
+                 integrations_user_sync_persistence: IntegrationsUserSyncPersistence, million_verifier_integrations: MillionVerifierIntegrationsService,
+                 aws_service: AWSService, domain_persistence, suppression_persistence: IntegrationsSuppressionPersistence, epi_persistence: ExternalAppsInstallationsPersistence):
         self.db = db
         self.client = httpx.Client()
         self.integration_persistence = integration_persistence
@@ -38,6 +39,7 @@ class IntegrationService:
         self.lead_orders_persistence = lead_orders_persistence
         self.integrations_user_sync_persistence = integrations_user_sync_persistence
         self.aws_service = aws_service
+        self.million_verifier_integrations = million_verifier_integrations
         self.domain_persistence = domain_persistence
         self.suppression_persistence = suppression_persistence
         self.eai_persistence = epi_persistence
@@ -95,36 +97,37 @@ class IntegrationService:
         self.klaviyo = KlaviyoIntegrationsService(self.domain_persistence, 
                                                 self.integration_persistence,  
                                                 self.lead_persistence,
-                                                self.integrations_user_sync_persistence, self.client)
+                                                self.integrations_user_sync_persistence, self.client, self.million_verifier_integrations)
         self.meta = MetaIntegrationsService(self.domain_persistence, 
                                                 self.integration_persistence,  
                                                 self.lead_persistence,
-                                                self.integrations_user_sync_persistence, self.client)
+                                                self.integrations_user_sync_persistence, self.client, self.million_verifier_integrations)
         self.omnisend = OmnisendIntegrationService(leads_persistence=self.lead_persistence,
                                                    sync_persistence=self.integrations_user_sync_persistence,
                                                    integration_persistence=self.integration_persistence,
                                                    domain_persistence=self.domain_persistence, 
-                                                   client=self.client
+                                                   client=self.client, million_verifier_integrations=self.million_verifier_integrations
                                                    )
-        self.mailchimp = MailchimpIntegrationsService(self.domain_persistence, 
-                                                self.integration_persistence,  
-                                                self.lead_persistence,
-                                                self.integrations_user_sync_persistence,
+        self.mailchimp = MailchimpIntegrationsService(domain_persistence=self.domain_persistence, 
+                                                integrations_persistence=self.integration_persistence,  
+                                                leads_persistence=self.lead_persistence,
+                                                sync_persistence=self.integrations_user_sync_persistence, million_verifier_integrations=self.million_verifier_integrations
                                                 )
         self.sendlane = SendlaneIntegrationService(self.domain_persistence, 
                                                 self.integration_persistence,  
                                                 self.lead_persistence,
                                                 self.integrations_user_sync_persistence,
-                                                self.client)
+                                                self.client, self.million_verifier_integrations)
         self.attentive = AttentiveIntegrationsService(self.domain_persistence,
                                                       self.integrations_user_sync_persistence,
                                                       self.client)
-        self.slack = SlackService(self.user_persistence,
-                                self.integration_persistence,
-                                self.integrations_user_sync_persistence,
-                                self.lead_persistence
+        self.slack = SlackService(user_persistence=self.user_persistence,
+                                user_integrations_persistence=self.integration_persistence,
+                                sync_persistence=self.integrations_user_sync_persistence,
+                                lead_persistence=self.lead_persistence, million_verifier_integrations=self.million_verifier_integrations
                                 )
-        self.zapier = ZapierIntegrationService(self.lead_persistence, self.domain_persistence, self.integrations_user_sync_persistence, self.integration_persistence, self.client)
+        self.zapier = ZapierIntegrationService(self.lead_persistence, self.domain_persistence, self.integrations_user_sync_persistence, self.integration_persistence, self.client,
+                                               self.million_verifier_integrations)
 
         return self
 

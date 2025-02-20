@@ -237,6 +237,7 @@ class DataSyncImportedStatus(Enum):
     SUCCESS = 'success'
     BEHAVIOR_MISS_MATCH = 'behavior_miss_match' 
     INCORRECT_FORMAT='incorrect_format'
+    VERIFY_EMAIL_FAILED = 'verify_email_failed'
 
 class ProccessDataSyncResult(Enum):
     INCORRECT_FORMAT='incorrect_format'
@@ -246,6 +247,7 @@ class ProccessDataSyncResult(Enum):
     LIST_NOT_EXISTS = 'list_not_exists'
     AUTHENTICATION_FAILED = 'authentication_failed'
     TOO_MANY_REQUESTS = 'too_many_requests'
+    VERIFY_EMAIL_FAILED = 'verify_email_failed'
     
 class PlanAlias(Enum):
     PARTNERS = 'partners'

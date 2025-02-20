@@ -139,6 +139,7 @@ class PaymentsService:
         return {'status': get_subscription_status(schedule_downgrade_subscription)}
 
     def cancel_user_subscription(self, user, reason_unsubscribe):
+        subscription_data = {}
         user_subscription = self.plan_persistence.get_user_subscription(user_id=user.get('id'))
         if not user_subscription:
             return SubscriptionStatus.SUBSCRIPTION_NOT_FOUND
@@ -149,9 +150,10 @@ class PaymentsService:
                 if subscription_data['status'] == 'incomplete' or subscription_data['status'] == 'No shopify plan active':
                     return SubscriptionStatus.INCOMPLETE
         else:
-            subscription_data = cancel_subscription_at_period_end(user_subscription.platform_subscription_id)
+            if user_subscription.platform_subscription_id:
+                subscription_data = cancel_subscription_at_period_end(user_subscription.platform_subscription_id)
             
-        if subscription_data['status'] == 'active':
+        if subscription_data.get('status') == 'active':
             cancel_at = subscription_data.get('canceled_at')
             cancel_scheduled_at = datetime.fromtimestamp(cancel_at)
             self.plans_service.save_reason_unsubscribe(reason_unsubscribe, user.get('id'), cancel_scheduled_at)

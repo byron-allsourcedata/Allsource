@@ -211,7 +211,7 @@ function PixelSendFunction(params) {
     const urlParams = new URLSearchParams(window.location.search);
     const apiUrl = urlParams.get('api');
 
-    if (location.href.includes("vge=true")) {
+    if (location.href.includes("mff=true")) {
         showPopup();
         sendPixelClientId(window.pixelClientId, apiUrl);
     }
