@@ -13,20 +13,11 @@ interface PopupDetailsProps {
 
 const PopupChargeCredits: React.FC<PopupDetailsProps> = ({ open, onClose, updateEmployeeCallback, id }) => {
     
-    const handleSubmit = async () => {
-        try {
-            const response = await axiosInstance.put('/subscriptions/charge-credit')
-            console.log({response})
-            if (response.status === 200 && id){
-                console.log({id})
-                updateEmployeeCallback(id)
-            }
-        } 
-        catch {
+    const handleSubmit = () => {
+        if (id) {
+            updateEmployeeCallback(id)
         }
-        finally {
-            onClose()
-        }
+        onClose()
     }
 
     return (

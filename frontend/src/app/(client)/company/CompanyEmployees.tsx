@@ -152,15 +152,35 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
         }
     }
 
-    const getStatusCredits = async () => {
+    const chargeCredit = async (id: number) => {
+        setLoading(true);
+        try {
+            if (id){
+                const response = await axiosInstance.put('/subscriptions/charge-credit', {five_x_five_id: id}, {
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                if (response.status === 200){
+                    getEmployeeById(id)
+                }
+            }
+        } 
+        catch {
+        }
+        finally {
+            setLoading(false);
+        }
+    }
+
+    const getStatusCredits = async (id: number) => {
         setLoading(true);
         try {
             const response = await axiosInstance.get(`/subscriptions/check-credit-status`)
             if (response.data.status === "NO_CREDITS"){
                 setUpgradePlanPopup(true)
             }
-            if (response.data.status === "UNLIMITED_CREDITS"){
+            if (response.data.status === "UNLIMITED_CREDITS" && id){
                 showToast("You have a unlimited amount of credits!")
+                chargeCredit(id)
             }
             if (response.data.status === "CREDITS_ARE_AVAILABLE"){
                 setCreditsChargePopup(true)
@@ -174,9 +194,12 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     }
 
 
-    const renderField = (data: RenderCeil, callback: ((value: string) => string) | null = null) => {
+    const renderField = (data: RenderCeil, id: number, callback: ((value: string) => string) | null = null) => {
         if (data?.visibility_status === "hidden") {
-            return <UnlockButton onClick={getStatusCredits} label="Unlock contact" />;
+            return <UnlockButton onClick={ () => {
+                getStatusCredits(id)
+            }
+        } label="Unlock contact" />;
         }
         if (data?.visibility_status === "missing") {
             return "--";
@@ -915,32 +938,29 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                                     setEmployeeId(row.id.value)
 
                                                                 }}>
-                                                                {truncateText([capitalizeTableCell(renderField(row.first_name)), capitalizeTableCell(renderField(row.last_name))].filter(Boolean).join(' '), 20)}
+                                                                {truncateText([capitalizeTableCell(renderField(row.first_name, row.id.value)), capitalizeTableCell(renderField(row.last_name, row.id.value))].filter(Boolean).join(' '), 20)}
                                                             </TableCell>
 
                                                             {/* Personal Email Column */}
                                                             <TableCell
                                                                 sx={{ ...companyStyles.table_array, position: 'relative' }}
-                                                                onClick={() => setEmployeeId(row.id.value)}
                                                             >
-                                                                {renderField(row.personal_email)}
+                                                                {renderField(row.personal_email, row.id.value)}
                                                             </TableCell>
 
                                                             {/* Business Email Column */}
                                                             <TableCell
                                                                 sx={{ ...companyStyles.table_array, position: 'relative' }}
-                                                                onClick={() => setEmployeeId(row.id.value)}
                                                             >
-                                                                {renderField(row.business_email)}
+                                                                {renderField(row.business_email, row.id.value)}
                                                             </TableCell>
 
                                                             {/* Company linkedIn Column */}
                                                             <TableCell 
                                                                 sx={{ ...companyStyles.table_array, position: 'relative', color: row.linkedin_url?.value ? 'rgba(80, 82, 178, 1)' : '', }}
-                                                                onClick={() => setEmployeeId(row.id.value)}
                                                             >
                                                                 {!row.is_unlocked?.value ? (
-                                                                    <UnlockButton onClick={getStatusCredits} label="Unlock contact" />
+                                                                    <UnlockButton onClick={() => getStatusCredits(row.id.value)} label="Unlock contact" />
                                                                 ) : (
                                                                     row.linkedin_url.value ? (
                                                                         <Box sx={{cursor: row.linkedin_url.value ? 'pointer' : 'default'}} onClick={() => { window.open(`https://${row.linkedin_url.value}`, '_blank') }}>
@@ -956,9 +976,8 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                             {/* Mobile phone Column */}
                                                             <TableCell 
                                                                 sx={{ ...companyStyles.table_array, position: 'relative' }}
-                                                                onClick={() => setEmployeeId(row.id.value)}
                                                             >
-                                                                {renderField(row.mobile_phone, (phones) => phones.split(',')[0] || '--')}
+                                                                {renderField(row.mobile_phone, row.id.value, (phones) => phones.split(',')[0] || '--')}
                                                             </TableCell>
 
                                                             {/* Job Title Column */}
@@ -966,28 +985,28 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                                 sx={{...companyStyles.table_array, position: 'relative', cursor: row.job_title ? "pointer" : "default"}} 
                                                                 onClick={(e) => row.job_title ? handleOpenPopover(e, row.job_title || "--") : ''}
                                                             >
-                                                                {truncateText(renderField(row.department), 20)}
+                                                                {truncateText(renderField(row.department, row.id.value), 20)}
                                                             </TableCell>
 
                                                             {/* Seniority Column */}
                                                             <TableCell
                                                                 sx={{ ...companyStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {renderField(row.seniority)}
+                                                                {renderField(row.seniority, row.id.value)}
                                                             </TableCell>
 
                                                             {/* Department Column */}
                                                             <TableCell
                                                                 sx={{ ...companyStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {renderField(row.department)}
+                                                                {renderField(row.department,row.id.value)}
                                                             </TableCell>
 
                                                             {/* Company location  Column */}
                                                             <TableCell
                                                                 sx={{ ...companyStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {[capitalizeTableCell(renderField(row.city)), capitalizeTableCell(renderField(row.state))].filter(Boolean).join(', ')}
+                                                                {[capitalizeTableCell(renderField(row.city, row.id.value)), capitalizeTableCell(renderField(row.state, row.id.value))].filter(Boolean).join(', ')}
                                                             </TableCell>
 
                                                         </TableRow>
@@ -1064,12 +1083,12 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                     <PopupDetails open={openPopup}
                         onClose={handleClosePopup}
                         companyId={companyId}
+                        updateEmployeeCallback={chargeCredit}
                         employeeId={employeeId}
-                        getStatusCredits={getStatusCredits}
                         />
                     <PopupChargeCredits open={creditsChargePopup}
                         onClose={() => setCreditsChargePopup(false)}
-                        updateEmployeeCallback={getEmployeeById}
+                        updateEmployeeCallback={chargeCredit}
                         id={employeeId}
                     />
                     <UpgradePlanPopup open={upgradePlanPopup}

@@ -197,7 +197,7 @@ class SubscriptionService:
 
         return True
 
-    async def get_status_credits(self, user):
+    def get_status_credits(self, user):
         if user.get("leads_credits") == self.UNLIMITED:
             return {"status": CreditsStatus.UNLIMITED_CREDITS}
         if user.get("leads_credits") - self.AMOUNT_CREDITS > 0:

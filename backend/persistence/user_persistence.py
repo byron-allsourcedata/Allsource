@@ -18,6 +18,8 @@ logger = logging.getLogger(__name__)
 
 
 class UserPersistence:
+    UNLIMITED_CREDITS = -1
+
     def __init__(self, db: Session):
         self.db = db
 
@@ -41,7 +43,7 @@ class UserPersistence:
     def charge_credit(self, user_id: int):
         user = self.db.query(Users).filter(Users.id == user_id).first()
         
-        if user:
+        if user and user.leads_credits != self.UNLIMITED_CREDITS:
             user.leads_credits = user.leads_credits - 1
             self.db.commit()
     

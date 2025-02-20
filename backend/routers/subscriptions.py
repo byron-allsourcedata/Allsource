@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, Depends, Request as fastRequest, HTTPException, status, Response
+from fastapi import APIRouter, Depends, Query, Request as fastRequest, HTTPException, status, Response
 
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from dependencies import get_plans_service, get_payments_service, get_webhook, check_user_authentication, \
@@ -8,6 +8,7 @@ from dependencies import get_plans_service, get_payments_service, get_webhook, c
 from enums import TeamAccessLevel
 from models.users import Users
 from schemas.subscriptions import UnsubscribeRequest
+from schemas.leads import ChargeCreditInfo
 from services.payments import PaymentsService
 from services.users import UsersService
 from services.plans import PlansService
@@ -205,12 +206,13 @@ async def shopify_billing_update_webhook(request: fastRequest, webhook_service: 
 
 
 @router.get("/check-credit-status")
-async def get_status_credits(subscription_service: SubscriptionService = Depends(get_subscription_service), 
+def get_status_credits(subscription_service: SubscriptionService = Depends(get_subscription_service), 
                              user: Users = Depends(check_user_authentication)):
-    return await subscription_service.get_status_credits(user)
+    return subscription_service.get_status_credits(user)
 
 
 @router.put("/charge-credit")
-def charge_credit(users_service: UsersService = Depends(get_users_service), 
-                        user: Users = Depends(check_user_authentication)):
-    return users_service.charge_credit(user.get('id'))
+def charge_credit(
+        payload: ChargeCreditInfo,
+        users_service: UsersService = Depends(get_users_service)):
+    return users_service.charge_credit(payload.five_x_five_id)

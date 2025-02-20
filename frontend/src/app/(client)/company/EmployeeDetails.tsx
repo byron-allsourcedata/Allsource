@@ -18,8 +18,8 @@ interface PopupDetailsProps {
     open: boolean;
     onClose: () => void;
     employeeId: number | null;
+    updateEmployeeCallback: (id: number) => void
     companyId: number;
-    getStatusCredits: any
 }
 
 interface RenderCeil {
@@ -44,8 +44,9 @@ const TruncatedText: React.FC<{ text: string; limit: number }> = ({ text, limit 
     );
 };
 
-const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, employeeId, getStatusCredits }) => {
+const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, employeeId, updateEmployeeCallback }) => {
     const [popupData, setPopupData] = useState<any>()
+    const [isUnlocked, setIsUnlocked] = useState(false);
 
     const handleDownload = async () => {
         try {
@@ -69,6 +70,11 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
             showErrorToast(`Error during the download process: ${error}`);
         }
     };
+
+    const getStatusCredits = () => {
+        updateEmployeeCallback(popupData.id.value)
+        setIsUnlocked(true)
+    }
 
     const renderField = (data: RenderCeil, callback: ((value: string) => string) | null = null) => {
         if (data?.visibility_status === "hidden") {
@@ -107,8 +113,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
 
     useEffect(() => {
         fetchEmployees();
-    // }, [companyId, employeeId, unlocked]);
-    }, [companyId, employeeId]);
+    }, [companyId, employeeId, isUnlocked]);
 
     useEffect(() => {
         if (open) {
@@ -409,10 +414,11 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 Personal LinkedIn url
                             </Typography>
                             <Typography sx={{ ...companyStyles.text, color: 'rgba(80, 82, 178, 1)' }}>
-                                {popupData?.linkedin_url.value
-                                    ? (!popupData?.is_unlocked.value  
-                                        ? <UnlockButton onClick={getStatusCredits} label="Unlock contact" /> 
-                                        :  <Link
+                                 {!popupData?.is_unlocked.value ? (
+                                        <UnlockButton onClick={getStatusCredits} label="Unlock contact" />
+                                    ) : (
+                                        popupData?.linkedin_url.value ? (
+                                            <Link
                                                 href={`https://${popupData?.linkedin_url.value}`}
                                                 underline="none"
                                                 target="_blank"
@@ -421,9 +427,10 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                             >
                                                 {popupData?.linkedin_url.value}
                                             </Link>
-                                    )
-                                    : '--'
-                                }
+                                        ) : (
+                                            '--'
+                                        )
+                                    )}
                             </Typography>
                         </Box>
                     </Box>
