@@ -18,6 +18,7 @@ import SouthOutlinedIcon from '@mui/icons-material/SouthOutlined';
 import NorthOutlinedIcon from '@mui/icons-material/NorthOutlined';
 import dayjs from 'dayjs';
 import PopupDetails from './EmployeeDetails';
+import PopupChargeCredits from './ChargeCredits'
 import CloseIcon from '@mui/icons-material/Close';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import Tooltip from '@mui/material/Tooltip';
@@ -25,10 +26,11 @@ import CustomToolTip from '@/components/customToolTip';
 import CustomTablePagination from '@/components/CustomTablePagination';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useNotification } from '@/context/NotificationContext';
-import { showErrorToast } from '@/components/ToastNotification';
+import { showErrorToast, showToast } from '@/components/ToastNotification';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import UnlockButton from './UnlockButton';
+import { UpgradePlanPopup } from  '../components/UpgradePlanPopup'
 
 
 interface FetchDataParams {
@@ -44,6 +46,11 @@ interface CompanyEmployeesProps {
     companyId: number
 }
 
+interface RenderCeil {
+    value: any;
+    visibility_status: string
+}
+
 
 const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName, companyId }) => {
     const router = useRouter();
@@ -55,37 +62,30 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
     const [status, setStatus] = useState<string | null>(null);
     const [showSlider, setShowSlider] = useState(false);
-    const [unlockedEmployee, setUnlockedEmployee] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
     const dropdownOpen = Boolean(dropdownEl);
     const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(15);
-    const [activeFilter, setActiveFilter] = useState<string>('');
-    const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
-    const [selectedDates, setSelectedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
-    const isCalendarOpen = Boolean(calendarAnchorEl);
-    const [formattedDates, setFormattedDates] = useState<string>('');
     const [filterPopupOpen, setFilterPopupOpen] = useState(false);
-    const [audiencePopupOpen, setAudiencePopupOpen] = useState(false);
-    const [companyEmployeesOpen, setCompanyEmployeesOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [selectedFilters, setSelectedFilters] = useState<{ label: string, value: string }[]>([]);
     const [openPopup, setOpenPopup] = React.useState(false);
-    const [popupData, setPopupData] = React.useState<any>(null);
+    const [creditsChargePopup, setCreditsChargePopup] = React.useState(false);
+    const [upgradePlanPopup, setUpgradePlanPopup] = React.useState(false);
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
-    const [openDrawer, setOpenDrawer] = React.useState(false);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [selectedJobTitle, setSelectedJobTitle] = React.useState<string | null>(null);
     const [departments, setDepartments] = React.useState<string[]>([]);
     const [seniorities, setSeniorities] = React.useState<string[]>([]);
     const [jobTitles, setJobTitles] = React.useState<string[]>([]);
     const [employeeId, setEmployeeId] = useState<number | null>(null)
+    const [employeeisUnlocked, setEmployeeisUnlocked] = useState(false);
 
 
-    const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, industry: string) => {
-        setSelectedJobTitle(industry);
+    const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, jobTitle: string) => {
+        setSelectedJobTitle(jobTitle);
         setAnchorEl(event.currentTarget);
     };
 
@@ -132,6 +132,86 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
         setRowsPerPage(parseInt(event.target.value as string, 10));
         setPage(0);
     };
+
+    const getEmployeeById = async (id: number) => {
+        try {
+            const response = await axiosInstance.get(`/company/employee?id=${id}&company_id=${companyId}`)
+            if (response.status === 200){
+                setEmployeeisUnlocked(true)
+                const updateEmployee = response.data
+                setData((prevEmployees) => {
+                    const index = prevEmployees.findIndex((account) => account.id.value === updateEmployee.id.value);
+                    if (index !== -1) {
+                        const newAccounts = [...prevEmployees];
+                        newAccounts[index] = { ...newAccounts[index], ...updateEmployee };
+                        return newAccounts;
+                    }
+                    return [...prevEmployees, updateEmployee]; 
+                });
+            }
+        } 
+        catch {
+        }
+    }
+
+    const chargeCredit = async (id: number) => {
+        setLoading(true);
+        try {
+            if (id){
+                const response = await axiosInstance.put('/subscriptions/charge-credit', {five_x_five_id: id}, {
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                if (response.status === 200){
+                    getEmployeeById(id)
+                }
+            }
+        } 
+        catch {
+        }
+        finally {
+            setLoading(false);
+        }
+    }
+
+    const getStatusCredits = async (id: number) => {
+        setLoading(true);
+        try {
+            const response = await axiosInstance.get(`/subscriptions/check-credit-status`)
+            if (response.data.status === "NO_CREDITS"){
+                setUpgradePlanPopup(true)
+            }
+            if (response.data.status === "UNLIMITED_CREDITS" && id){
+                showToast("You have a unlimited amount of credits!")
+                chargeCredit(id)
+            }
+            if (response.data.status === "CREDITS_ARE_AVAILABLE"){
+                setCreditsChargePopup(true)
+            }
+        }
+        catch{
+        }
+        finally{ 
+            setLoading(false)
+        }
+    }
+
+
+    const renderField = (data: RenderCeil, id: number, callback: ((value: string) => string) | null = null) => {
+        if (data?.visibility_status === "hidden") {
+            return <UnlockButton onClick={ () => {
+                getStatusCredits(id)
+            }
+        } label="Unlock contact" />;
+        }
+        if (data?.visibility_status === "missing") {
+            return "--";
+        }
+        if (!data?.value) {
+            return "--";
+        }
+        return callback ? callback(data?.value) : data?.value;
+    }
+
 
     
     const fetchEmployeesCompany = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
@@ -428,7 +508,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
         try {
             setIsLoading(true)
             setAppliedDates({ start: null, end: null })
-            setFormattedDates('')
             sessionStorage.removeItem('filters-employee')
             const response = await axiosInstance.get(url);
             const [leads, count] = response.data;
@@ -436,7 +515,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
             setData(Array.isArray(leads) ? leads : []);
             setCount(count || 0);
             setStatus(response.data.status);
-            setSelectedDates({start: null, end: null})
             setSelectedFilters([]);
         } catch (error) {
             console.error('Error fetching leads:', error);
@@ -534,7 +612,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                 <ArrowBackIcon sx={{color: 'rgba(80, 82, 178, 1)'}}/>
                             </IconButton>
                             <Typography className='first-sub-title'>
-                                Employee  {`(${companyName})`}
+                                Employee - {companyName}
                             </Typography>
                             <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
                         </Box>
@@ -839,10 +917,10 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                 {data.map((row) => (
                                                     <>
                                                         <TableRow
-                                                            key={row.id}
-                                                            selected={selectedRows.has(row.id)}
+                                                            key={row.id?.value}
+                                                            // selected={selectedRows.has(row.id.value)}
                                                             sx={{
-                                                                backgroundColor: selectedRows.has(row.id) ? 'rgba(247, 247, 247, 1)' : '#fff',
+                                                                // backgroundColor: selectedRows.has(row.id.value) ? 'rgba(247, 247, 247, 1)' : '#fff',
                                                                 '&:hover': {
                                                                     backgroundColor: 'rgba(247, 247, 247, 1)',
                                                                     '& .sticky-cell': {
@@ -859,55 +937,38 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                                 }} onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     setOpenPopup(true);
-                                                                    setEmployeeId(row.id)
-                                                                    setUnlockedEmployee(row.is_unlocked)
+                                                                    setEmployeeId(row.id.value)
 
                                                                 }}>
-                                                                {(row.first_name || row.last_name)
-                                                                    ? truncateText(
-                                                                        [capitalizeTableCell(row.first_name), capitalizeTableCell(row.last_name)]
-                                                                        .filter(Boolean)
-                                                                        .join(' '),
-                                                                        20
-                                                                    )
-                                                                    : '--'}
+                                                                {truncateText([capitalizeTableCell(renderField(row.first_name, row.id.value)), capitalizeTableCell(renderField(row.last_name, row.id.value))].filter(Boolean).join(' '), 20)}
                                                             </TableCell>
 
                                                             {/* Personal Email Column */}
                                                             <TableCell
                                                                 sx={{ ...companyStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {!row.is_unlocked ? (
-                                                                    <UnlockButton onClick={() => {}} label="Unlock personal email" /> 
-                                                                    
-                                                                ) : (
-                                                                    row.personal_email?.split(',')[0] || '--'
-                                                                )}
+                                                                {renderField(row.personal_email, row.id.value)}
                                                             </TableCell>
 
                                                             {/* Business Email Column */}
                                                             <TableCell
                                                                 sx={{ ...companyStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {!row.is_unlocked ? (
-                                                                    <UnlockButton onClick={() => {}} label="Unlock business email" /> 
-                                                                    
-                                                                ) : (
-                                                                    row.business_email || '--'
-                                                                )}
+                                                                {renderField(row.business_email, row.id.value)}
                                                             </TableCell>
 
                                                             {/* Company linkedIn Column */}
-                                                            <TableCell sx={{ ...companyStyles.table_array, position: 'relative', color: row.linkedin_url ? 'rgba(80, 82, 178, 1)' : '', cursor: row.linkedin_url ? 'pointer' : 'default' }} onClick={() => { window.open(`https://${row.linkedin_url}`, '_blank') }}>
-                                                                {!row.is_unlocked ? (
-                                                                    <UnlockButton onClick={() => {}} label="Unlock linkedin link" /> 
-                                                                    
+                                                            <TableCell 
+                                                                sx={{ ...companyStyles.table_array, position: 'relative', color: row.linkedin_url?.value ? 'rgba(80, 82, 178, 1)' : '', }}
+                                                            >
+                                                                {!row.is_unlocked?.value ? (
+                                                                    <UnlockButton onClick={() => getStatusCredits(row.id.value)} label="Unlock contact" />
                                                                 ) : (
-                                                                    row.linkedin_url ? (
-                                                                        <>
+                                                                    row.linkedin_url.value ? (
+                                                                        <Box sx={{cursor: row.linkedin_url.value ? 'pointer' : 'default'}} onClick={() => { window.open(`https://${row.linkedin_url.value}`, '_blank') }}>
                                                                             <Image src="/linkedIn.svg" alt="linkedIn" width={16} height={16} style={{ marginRight: '2px' }} />
-                                                                            /{truncateText(row.linkedin_url.replace('linkedin.com/company/', ''), 20)}
-                                                                        </>
+                                                                            /{truncateText(row.linkedin_url.value.replace('linkedin.com/company/', ''), 20)}
+                                                                        </Box>
                                                                     ) : (
                                                                         '--'
                                                                     )
@@ -915,46 +976,39 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                             </TableCell>
 
                                                             {/* Mobile phone Column */}
-                                                            <TableCell sx={{ ...companyStyles.table_array, position: 'relative' }}>
-                                                                {!row.is_unlocked ? (
-                                                                    <UnlockButton onClick={() => {}} label="Unlock mobile phone" /> 
-                                                                    
-                                                                ) : (
-                                                                    row.mobile_phone?.split(',')[0] || '--'
-                                                                )}
+                                                            <TableCell 
+                                                                sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                            >
+                                                                {renderField(row.mobile_phone, row.id.value, (phones) => phones.split(',')[0] || '--')}
                                                             </TableCell>
 
                                                             {/* Job Title Column */}
-                                                            <TableCell sx={{...companyStyles.table_array, position: 'relative', cursor: row.job_title ? "pointer" : "default"}} onClick={(e) => row.job_title ? handleOpenPopover(e, row.job_title || "--") : ''}>
-                                                                {row.job_title ? truncateText(row.job_title, 20) : '--'}
+                                                            <TableCell 
+                                                                sx={{...companyStyles.table_array, position: 'relative', cursor: row.job_title.value ? "pointer" : "default"}} 
+                                                                onClick={(e) => row.job_title.value ? handleOpenPopover(e, row.job_title.value || "--") : ''}
+                                                            >
+                                                                {truncateText(renderField(row.department, row.id.value), 20)}
                                                             </TableCell>
 
                                                             {/* Seniority Column */}
                                                             <TableCell
                                                                 sx={{ ...companyStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {row.seniority || '--'}
+                                                                {renderField(row.seniority, row.id.value)}
                                                             </TableCell>
 
                                                             {/* Department Column */}
                                                             <TableCell
                                                                 sx={{ ...companyStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {row.department || '--'}
+                                                                {renderField(row.department,row.id.value)}
                                                             </TableCell>
 
                                                             {/* Company location  Column */}
                                                             <TableCell
                                                                 sx={{ ...companyStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {!row.is_unlocked ? (
-                                                                    <UnlockButton onClick={() => {}} label="Unlock city and state" /> 
-                                                                    
-                                                                ) : (
-                                                                    (row.city || row.state)
-                                                                        ? [capitalizeTableCell(row.city), row.state].filter(Boolean).join(', ')
-                                                                        : '--'
-                                                                )}
+                                                                {[capitalizeTableCell(renderField(row.city, row.id.value)), capitalizeTableCell(renderField(row.state, row.id.value))].filter(Boolean).join(', ')}
                                                             </TableCell>
 
                                                         </TableRow>
@@ -1031,8 +1085,19 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                     <PopupDetails open={openPopup}
                         onClose={handleClosePopup}
                         companyId={companyId}
-                        isUnlocked={unlockedEmployee}
-                        employeeId={employeeId} />
+                        updateEmployeeCallback={chargeCredit}
+                        employeeId={employeeId}
+                        employeeisUnlocked={employeeisUnlocked}
+                        />
+                    <PopupChargeCredits open={creditsChargePopup}
+                        onClose={() => setCreditsChargePopup(false)}
+                        updateEmployeeCallback={chargeCredit}
+                        id={employeeId}
+                    />
+                    <UpgradePlanPopup open={upgradePlanPopup}
+                        handleClose={() => setUpgradePlanPopup(false)}
+                        limitName={"contact credits"}
+                    />
                 </Box>
             </Box>
         </>

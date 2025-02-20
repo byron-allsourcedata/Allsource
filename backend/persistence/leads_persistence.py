@@ -26,6 +26,7 @@ from models.leads_users_ordered import LeadsUsersOrdered
 from models.leads_visits import LeadsVisits
 from models.state import States
 from models.subscription_transactions import SubscriptionTransactions
+from models.users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
 
 logger = logging.getLogger(__name__)
 
@@ -989,3 +990,18 @@ class LeadsPersistence:
             .filter(LeadUser.id == lead_user.id).first()
         return result.page
     
+
+    def add_unlocked_user(self, user_id, domain_id, five_x_five_id):
+        five_x_five_up_id = self.db.query(FiveXFiveUser.up_id).filter(
+            FiveXFiveUser.id == five_x_five_id
+        ).scalar()
+        
+        user = UsersUnlockedFiveXFiveUser(
+            domain_id=domain_id,
+            user_id=user_id,
+            amount_credits=1,
+            five_x_five_up_id=five_x_five_up_id
+        )
+
+        self.db.add(user)
+        self.db.commit()

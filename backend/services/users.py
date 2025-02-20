@@ -11,6 +11,7 @@ from services.jwt_service import get_password_hash
 import requests
 from dotenv import load_dotenv
 from persistence.domains import UserDomainsPersistence
+from persistence.leads_persistence import LeadsPersistence
 from services.subscriptions import SubscriptionService
 from persistence.domains import UserDomainsPersistence, UserDomains
 
@@ -20,13 +21,15 @@ load_dotenv()
 
 
 class UsersService:
-    def __init__(self, user, user_persistence_service: UserPersistence, plan_persistence: PlansPersistence,
-                 subscription_service: SubscriptionService, domain_persistence: UserDomainsPersistence):
+    def __init__(self, user, domain, user_persistence_service: UserPersistence, plan_persistence: PlansPersistence,
+                 subscription_service: SubscriptionService, domain_persistence: UserDomainsPersistence, leads_persistence: LeadsPersistence):
         self.user = user
+        self.domain = domain
         self.user_persistence_service = user_persistence_service
         self.plan_persistence = plan_persistence
         self.subscription_service = subscription_service
         self.domain_persistence = domain_persistence
+        self.leads_persistence = leads_persistence
 
     def update_password(self, update_data: UpdatePassword):
         if update_data.password != update_data.confirm_password:
@@ -171,3 +174,7 @@ class UsersService:
     def add_stripe_account(self, stripe_connected_account_id: str):
         self.user_persistence_service.add_stripe_account(self.user.get('id'), stripe_connected_account_id)
         return 'SUCCESS_CONNECT'
+
+    def charge_credit(self, five_x_five_id):
+        self.user_persistence_service.charge_credit(self.user.get('id'))
+        self.leads_persistence.add_unlocked_user(self.user.get('id'), self.domain.id, five_x_five_id)
