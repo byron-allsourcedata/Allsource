@@ -16,6 +16,9 @@ import FilterPopup from './CompanyFilters';
 import AudiencePopup from '@/components/AudienceSlider';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import SouthOutlinedIcon from '@mui/icons-material/SouthOutlined';
+import SwapVertIcon from '@mui/icons-material/SwapVert';
+import NorthOutlinedIcon from '@mui/icons-material/NorthOutlined';
 import dayjs from 'dayjs';
 import PopupDetails from './CompanyDetails';
 import CloseIcon from '@mui/icons-material/Close';
@@ -570,7 +573,7 @@ const Leads: React.FC = () => {
 
     const capitalizeCity = (city: string) => {
         return city
-            .split(' ')
+            ?.split(' ')
             .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
             .join(' ');
     }
@@ -1066,16 +1069,18 @@ const Leads: React.FC = () => {
                                                             onClick={sortable ? () => handleSortRequest(key) : undefined}
                                                             style={{ cursor: sortable ? 'pointer' : 'default' }}
                                                         >
-                                                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: "space-between" }}>
                                                                 <Typography variant="body2" sx={{ ...companyStyles.table_column, borderRight: '0' }}>{label}</Typography>
-                                                                {sortable && orderBy === key && (
-                                                                    <IconButton size="small" sx={{ ml: 1 }}>
-                                                                        {order === 'asc' ? (
-                                                                            <ArrowUpwardIcon
-                                                                                fontSize="inherit" />
+                                                                {sortable && (
+                                                                    <IconButton size="small">
+                                                                        {orderBy === key ? (
+                                                                            order === 'asc' ? (
+                                                                                <NorthOutlinedIcon fontSize="inherit" />
+                                                                            ) : (
+                                                                                <SouthOutlinedIcon fontSize="inherit" />
+                                                                            )
                                                                         ) : (
-                                                                            <ArrowDownwardIcon
-                                                                                fontSize="inherit" />
+                                                                            <SwapVertIcon fontSize="inherit" />
                                                                         )}
                                                                     </IconButton>
                                                                 )}
