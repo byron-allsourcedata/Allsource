@@ -325,7 +325,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                     ) :
                     (selectedCMS === 'WordPress' ? ( <>
                               <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                      <Link href="https://wordpress.org/plugins/maximiz/"
+                      <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/install-maximiz-pixel-on-wordpress-website"
                         target="_blank"
                         rel="noopener refferer"
                         sx={{

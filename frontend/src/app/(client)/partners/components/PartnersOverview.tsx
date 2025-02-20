@@ -205,7 +205,6 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                 backgroundColor: '#fff',
                 width: '100%',
                 padding: 0,
-                margin: '3rem auto 0rem',
                 '@media (max-width: 600px)': { margin: '0rem auto 0rem' }
             }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', position: 'relative', gap: 2 }}>

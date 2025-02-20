@@ -183,7 +183,7 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
               padding: '11px 10px',
               fontSize: '12px !important',
               fontFamily: 'Nunito Sans',
-              
+
             },
           },
         }}
@@ -206,7 +206,7 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
           '&:hover': {
             boxShadow: is_integrated ? 'none' : '0 0 4px #00000040',
             filter: !is_integrated ? 'none' : 'none',
-            backgroundColor: !is_integrated ? 'transparent' :'rgba(80, 82, 178, 0.1)',
+            backgroundColor: !is_integrated ? 'transparent' : 'rgba(80, 82, 178, 0.1)',
           },
           '&:hover .edit-icon': {
             opacity: 1
@@ -263,26 +263,26 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
                 <MoreVertIcon sx={{ height: '20px' }} />
               </Box>
             </Box>
-          )},
-          {!is_integrated &&  isHovered && (
-          <Box
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '100%',
-            height: '100%',
-            
-          }}
-        >
-            <AddIcon sx={{ color: "#5052B2", fontSize: 45 }} />
-          </Box>
-        )},
-         <Image
+          )}
+          {!is_integrated && isHovered && (
+            <Box
+              sx={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
+                height: '100%',
+
+              }}
+            >
+              <AddIcon sx={{ color: "#5052B2", fontSize: 45 }} />
+            </Box>
+          )}
+          <Image
             src={image}
             width={altImageIntegration.some(int => int == service_name) ? 100 : 32}
             height={32}
@@ -591,7 +591,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
   const integratedServices = integrationsCredentials.map(cred => cred.service_name);
 
   return (
-    <Box sx={{width:'100%', height: 'calc(100vh - 10.25rem)', overflow: 'auto'}}>
+    <Box sx={{ width: '100%', height: 'calc(100vh - 10.25rem)', overflow: 'auto', '@media (max-width: 600px)': { pr: 2, pb: 4 } }}>
       <Box sx={{ overflowX: 'hidden' }}>
         <TextField
           fullWidth
@@ -772,7 +772,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
         />
       )}
 
-      <Box sx={{pr:2}}>
+      <Box>
         {(activeService && activeService !== 'shopify' && activeService !== 'big_commerce') && (
           <DataSyncList key={activeService} service_name={activeService} />
         )}
@@ -800,7 +800,7 @@ const PixelManagment = () => {
     setValue(newValue);
   };
   return (
-    <Box sx={{height: 'calc(100vh - 10.25rem)', overflow: 'auto', width:'100%', pr:'12px'}}>
+    <Box sx={{ height: 'calc(100vh - 10.25rem)', overflow: 'auto', width: '100%', pr: '12px' }}>
       <TabContext value={value}>
         <TabList
           centered
@@ -830,7 +830,7 @@ const PixelManagment = () => {
             display: "flex",
             flexDirection: "row",
             alignItems: "center",
-            margin:0,
+            margin: 0,
             "@media (max-width: 600px)": { mb: 2 },
           }}>
             {/* Title and Tooltip */}
@@ -1003,30 +1003,31 @@ const Integrations = () => {
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
-            width: "98%",
-            mt: 2,
-            ml: 1,
+            width: "100%",
+            ml:1.5,
+            mb:0,
             "@media (max-width: 900px)": {
               flexDirection: "column",
               display: "flex",
               alignItems: "flex-start",
-              marginTop: hasNotification ? '36px' : '16px'
+              marginTop: hasNotification ? '36px' : '0px'
             },
             "@media (max-width: 600px)": {
               flexDirection: "column",
               display: "flex",
+              ml:0,
               alignItems: "flex-start",
-              marginTop: hasNotification ? '36px' : '16px'
+              marginTop: hasNotification ? '36px' : '0px'
             },
             "@media (max-width: 440px)": {
               flexDirection: "column",
               justifyContent: "flex-start",
-              marginTop: hasNotification ? '44px' : '16px'
+              marginTop: hasNotification ? '44px' : '0px'
             },
           }}
         >
-          <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', position: 'fixed', top: hasNotification ? '7.05rem' : '4.25rem', pt: '12px', pb: '12px', left: '9.1rem', pl: '2rem', zIndex: 1200, backgroundColor: '#fff', justifyContent: 'space-between', width: '100%', ml: 0, "@media (max-width: 900px)": { left: 0, zIndex: 50 }, "@media (max-width: 700px)": { flexDirection: 'column', pl: '1.5rem', display: 'flex', alignItems: 'flex-start', zIndex: 50, width: '97%' }, "@media (max-width: 440px)": { flexDirection: 'column', pt: hasNotification ? '3rem' : '0.75rem', top: hasNotification ? '4.5rem' : '', zIndex: 50, justifyContent: 'flex-start' }, "@media (max-width: 400px)": { pt: hasNotification ? '4.25rem' : '', pb: '6px', } }}>
-            <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', width: '10%', gap: 1, "@media (max-width: 600px)": { mb: 2 }, "@media (max-width: 440px)": { mb: 1 }, }}>
+          <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', position: 'sticky', left: 0, zIndex: 1200, backgroundColor: '#fff', mt:'0.75rem', justifyContent: 'space-between', width: '100%', "@media (max-width: 900px)": { left: 0, zIndex: 50, ml: 0, mt: 0 }, "@media (max-width: 700px)": { flexDirection: 'column', display: 'flex', alignItems: 'flex-start', zIndex: 50, width: '100%' }, "@media (max-width: 440px)": { flexDirection: 'column', zIndex: 50, justifyContent: 'flex-start' }, "@media (max-width: 400px)": { pb: '6px', } }}>
+            <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', width: '10%', gap: 1, "@media (max-width: 600px)": { mb: 0 }, "@media (max-width: 440px)": { mb: 1 }, }}>
               <Typography
                 className="first-sub-title"
                 sx={{
@@ -1058,6 +1059,7 @@ const Integrations = () => {
                   sx={{
                     textTransform: 'none',
                     minHeight: 0,
+                    pb:0,
                     '& .MuiTabs-indicator': {
                       backgroundColor: 'rgba(80, 82, 178, 1)',
                       height: '1.4px',
@@ -1095,7 +1097,7 @@ const Integrations = () => {
                       }
                     }}
                   />
-                  <Tab label="Pixel Management" value="3" className="main-text"
+                  <Tab label="Pixel Management" value="2" className="main-text"
                     sx={{
                       textTransform: 'none',
                       padding: '4px 10px',
@@ -1122,72 +1124,23 @@ const Integrations = () => {
                 </TabList>
               )}
             </Box>
-
-            {status !== 'PIXEL_INSTALLATION_NEEDED' && !isLoading && activeTab === "3" && (
-              <Box sx={{
-                border: '1px solid #E4E4E4',
-                mt: 2.5,
-                width: '86%',
-                position: 'fixed',
-                top: '7rem',
-                "@media (max-width: 700px)": { display: 'none' }
-
-              }}></Box>)}
           </Box>
         </Box>
-        <Box sx={{
-          '@media (max-width: 600px)':
-          {
-
-          }
-        }}>
-
-          {status === 'PIXEL_INSTALLATION_NEEDED' && !isLoading ? (
-            <Box sx={centerContainerStyles}>
-              <Typography variant="h5" sx={{ mb: 2, fontSize: '0.9rem' }}>
-                Pixel Integration isn&apos;t completed yet!
-              </Typography>
-              <Image src={'/pixel_installation_needed.svg'} width={300} height={241} alt="pixel installed needed" />
-              <Typography sx={{ mb: 3, color: '#808080', fontSize: '0.8rem', mt: 3 }}>
-                Install the pixel to unlock and gain valuable insights! Start viewing your leads now
-              </Typography>
-              <Button onClick={installPixel} variant="contained" sx={{
-                backgroundColor: '#5052B2',
-                fontFamily: "Nunito Sans",
-                fontSize: '14px',
-                fontWeight: '600',
-                lineHeight: '20px',
-                letterSpacing: 'normal',
-                color: "#fff",
-                textTransform: 'none',
-                padding: '10px 24px',
-                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                '&:hover': {
-                  backgroundColor: '#5052B2'
-                },
-                borderRadius: '4px',
-              }}>
-                Setup Pixel
-              </Button>
+        <Box>
+          <TabPanel value="1" sx={{ mt: 2, overflow: 'auto', padding: 0, ml:1.5, }}>
+            <UserIntegrationsList
+              integrationsCredentials={integrationsCredentials}
+              changeTab={changeTab}
+              integrations={integrations}
+              handleSaveSettings={handleSaveSettings}
+              handleDeleteSettings={handleDeleteSettings}
+            />
+          </TabPanel>
+          <TabPanel value="2" sx={{ width: '100%', padding: '24px 0px' }}>
+            <Box sx={{ mt: 6, overflow: 'auto', padding: 0 }}>
+              <PixelManagment />
             </Box>
-          ) : (!isLoading && (
-            <>
-              <TabPanel value="1" sx={{ mt: 6, overflow: 'auto', padding:0 }}>
-                <UserIntegrationsList
-                  integrationsCredentials={integrationsCredentials}
-                  changeTab={changeTab}
-                  integrations={integrations}
-                  handleSaveSettings={handleSaveSettings}
-                  handleDeleteSettings={handleDeleteSettings}
-                />
-              </TabPanel>
-              <TabPanel value="3" sx={{width: '100%', padding: '24px 0px'}}>
-                <Box sx={{ mt: 6, overflow: 'auto', padding:0 }}>
-                  <PixelManagment />
-                </Box>
-              </TabPanel>
-            </>
-          ))}
+          </TabPanel>
         </Box>
       </TabContext>
       {showSlider && <Slider />}

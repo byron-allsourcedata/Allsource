@@ -196,8 +196,16 @@ const Partners: React.FC = () => {
 
     return (
         <>
-            <Box sx={partnersStyle.mainContent}>
-                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', position: 'fixed', top: hasNotification ? '10vw' : '4.25rem', left: '9.1rem', pl: '2rem', pt: '12px', pb: '16px', zIndex: 1200, backgroundColor: '#fff', justifyContent: 'space-between', width: '90%', ml: 0, "@media (max-width: 900px)": { left: 0, zIndex: 50 }, "@media (max-width: 600px)": { flexDirection: 'column', pl: '1.5rem', display: 'flex', alignItems: 'flex-start', zIndex: 50, width: '97%' }, "@media (max-width: 440px)": { flexDirection: 'column', pt: hasNotification ? '3rem' : '0.75rem', top: hasNotification ? '4.5rem' : '', zIndex: 50, justifyContent: 'flex-start' }, "@media (max-width: 400px)": { pt: hasNotification ? '4.25rem' : '', pb: '6px', } }}>
+            <Box sx={{display: 'flex', flexDirection: 'column', height: 'calc(100vh - 4.25rem)'}}>
+            <Box sx={{ 
+        flexShrink: 0, 
+        position: 'sticky', 
+        top: 0, 
+        zIndex: 1200, 
+        backgroundColor: '#fff', 
+        width: '100%', 
+    }}>
+            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minHeight: '60px', maxHeight:'190px', pt:'12px', pb: '16px', pl: 1.5, pr:2, justifyContent: 'space-between', width: '100%', ml: 0, "@media (max-width: 900px)": { left: 0, zIndex: 50 }, "@media (max-width: 600px)": { pl: 1, pr:1, pt:0, pb:3, flexDirection: 'column', display: 'flex', alignItems: 'flex-start', zIndex: 50, width: '100%' }, "@media (max-width: 440px)": { flexDirection: 'column', zIndex: 50, justifyContent: 'flex-start' }, "@media (max-width: 400px)": { pt: hasNotification ? '4.25rem' : '', pb: '6px', } }}>
                 {loading && <CustomizedProgressBar/>}
 
                     {!rewardsOpen && 
@@ -208,14 +216,14 @@ const Partners: React.FC = () => {
                                 <Typography className="first-sub-title">{isMaster ? "Master Partner" : "Partner"}</Typography>
                                 <Box sx={{ "@media (max-width: 600px)": { display: 'none' } }}><CustomTooltip title={"Collaborate with trusted partners to access exclusive resources and services that drive success."} linkText="Learn more" linkUrl={isMaster ? "https://maximizai.zohodesk.eu/portal/en/kb/articles/master-partner" :"https://maximizai.zohodesk.eu/portal/en/kb/articles/partner"} /></Box>
                             </Box>
-                            {tabIndex === 0 && <IconButton disabled={!isMaster} sx={{
+                            {tabIndex === 0 && <IconButton sx={{
                                 display: "none", cursor: "pointer", "@media (max-width: 600px)": { display: "block" }}} onClick={handleFormOpenPopup}>
                             <Image src='/add.svg' alt="add partner" width={24} height={24}/>
                             </IconButton>
                             }
                         </Box>
                     
-                        <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', width: '51%', pr: tabIndex !== 0 ? "20%" : 0, alignItems: 'center', "@media (max-width: 900px)": { pr: 0, width: '51%' }, "@media (max-width: 600px)": { width: '97%', pr: '0' } }}>
+                        <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', width: '51%', pr: tabIndex !== 0 ? "20%" : 0, alignItems: 'center', "@media (max-width: 900px)": { pr: 0, width: '51%' }, "@media (max-width: 600px)": { width: '100%', pr: '0', pt:0 } }}>
                             <Tabs
                                     value={tabIndex}
                                     onChange={handleTabChange}
@@ -413,7 +421,7 @@ const Partners: React.FC = () => {
                         </Box>}
 
                         {tabIndex === 0 && <IconButton sx={{
-                                display: "none", cursor: "pointer", "@media (max-width: 900px)": { display: "block" }, "@media (max-width: 600px)": { display: "none" }}} disabled={!isMaster} onClick={handleFormOpenPopup}>
+                                display: "none", cursor: "pointer", "@media (max-width: 900px)": { display: "block" }, "@media (max-width: 600px)": { display: "none" }}} onClick={handleFormOpenPopup}>
                             <Image src='/add.svg' alt="add partner" width={24} height={24}/>
                             </IconButton>
                             }
@@ -486,8 +494,10 @@ const Partners: React.FC = () => {
                         
 
                 </Box>
-                
-                    <Box sx={{ width: '100%', padding: 0, "@media (max-width: 600px)": { mt: '4.5rem' }, "@media (max-width: 440px)": { mt: '7.5rem' }, }}>
+                </Box>
+                <Box sx={{ flexGrow: 1, overflowY: 'auto', pb: 0 }}>
+                <Box sx={{width: '100%', overflow: 'auto', pr: '2.5rem', pl: '2.5rem', mt:0, "@media (max-width: 600px)": { pr: 0, pl: 0 }}}>
+                    <Box sx={{ width: '100%', padding: 0, "@media (max-width: 600px)": { mt: '4.5rem' }, "@media (max-width: 440px)": { mt: '0rem' }}}>
                         <TabPanel value={tabIndex} index={0}>
                             <PartnersOverview isMaster={isMaster ?? false}/>
                         </TabPanel>
@@ -507,11 +517,13 @@ const Partners: React.FC = () => {
                             <PartnersRewards loading={loading} partnerId={id} isMaster={isMaster ?? false} setLoading={setLoading} setRewardsOpen={setRewardsOpen}/>
                         </TabPanel>
                     </Box>
-                    <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
+                    <Box sx={{ width: '100%', padding: 0, margin: 0, pb:2 }}>
                         <TabPanel value={tabIndex} index={isMaster ? 4 : 3}>
                             <PartnersAssets />
                         </TabPanel>
                     </Box>
+                </Box>
+                </Box>
             </Box>
         </>
     );

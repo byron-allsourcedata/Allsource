@@ -451,7 +451,6 @@ const SuppressionRules: React.FC = () => {
 
     return (
         <Box>
-            <Box>
                 {loading && (
                     <Box sx={suppressionsStyles.loaderOverlay}>
                         <CustomizedProgressBar />
@@ -1384,7 +1383,7 @@ const SuppressionRules: React.FC = () => {
                     </Box>
 
                 </Box>
-            </Box>
+            
         </Box>
     );
 };

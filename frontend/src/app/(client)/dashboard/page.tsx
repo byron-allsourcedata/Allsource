@@ -418,13 +418,13 @@ const Dashboard: React.FC = () => {
           } else {
             setShowSlider(false);
           }
-        let business_type = 'd2c'
-        const storedMe = localStorage.getItem('account_info');
-        if (storedMe) {
-          const storedData = JSON.parse(storedMe);
-          business_type = storedData.business_type
-          setTypeBusiness(storedData.business_type)
-      }
+          let business_type = 'd2c'
+          const storedMe = localStorage.getItem('account_info');
+          if (storedMe) {
+            const storedData = JSON.parse(storedMe);
+            business_type = storedData.business_type
+            setTypeBusiness(storedData.business_type)
+          }
         } catch (error) {
           if (error instanceof AxiosError && error.response?.status === 403) {
             if (error.response.data.status === "NEED_BOOK_CALL") {
@@ -487,182 +487,82 @@ const Dashboard: React.FC = () => {
   return (
     <Box>
       {showCharts ? (
-        <>
-          <Grid
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
+        <Grid
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          overflowY: 'hidden',
+          maxHeight: 'calc(100vh - 68px)',
+          '@media (max-width: 600px)':{
+            paddingRight: 0
+          }
+        }}
+      >
+        <Box sx={{
+          display: 'flex', 
+          flexDirection: 'row', 
+          alignItems: 'start',
+          pt: hasNotification ? 6.25 : 3.5,
+          pb: 0.75,
+          position: 'fixed',
+          overflowY: 'hidden',
+          top: hasNotification ? '3.95rem' : '3.75rem',
+          right: '0px',
+          left: '170px',
+          background: '#fff',
+          zIndex: '1',
+          paddingLeft: '30px',
+          paddingRight: '65px',
+          '@media (min-width: 1600px)': {
+            paddingLeft: '30px',
+            paddingRight: '90px',
+          },
+          mx: '-24px',
+          "@media (max-width: 900px)": {
+            left: '10px',
+            paddingRight: '90px',
+          },
+          "@media (max-width: 600px)": {
+            flexDirection: 'column',
+            alignItems: 'start',
+            paddingRight: 3,
+            top: '6.3rem',
+            pt:0
+          }
+        }}>
+            <Typography
+              variant="h4"
+              component="h1"
+              className="first-sub-title"
+              sx={{
+                ...dashboardStyles.title, '@media (max-width: 600px)': {
+                  display: 'none',
+                },
+              }}
+            >
+              Dashboard <CustomTooltip title={"Indicates the count of resolved identities and revenue figures for the specified time"} linkText="Learn More" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/dashboard" />
+            </Typography>
             <Box sx={{
-              display: 'flex', flexDirection: 'row', alignItems: 'start',
-              pt: hasNotification ? 6.25 : 3.5,
-              pb: 0.75,
-              position: 'fixed',
-              top: hasNotification ? '3.95rem' : '3.75rem',
-              right: '16px',
-              left: '170px',
-              background: '#fff',
-              zIndex: '1',
-              paddingLeft: '30px',
-              paddingRight: '65px',
-              '@media (min-width: 1600px)': {
-                paddingLeft: '30px',
-                paddingRight: '90px',
-              },
-              mx: '-24px',
-              "@media (max-width: 900px)": {
-                left: '10px',
-                paddingRight: '90px',
-              },
-              "@media (max-width: 600px)": {
-                flexDirection: 'column',
-                alignItems: 'start',
-                paddingRight: 3,
+              display: 'none', width: '100%', justifyContent: 'space-between', alignItems: 'start', '@media (max-width: 600px)': {
+                display: 'flex'
               }
             }}>
               <Typography
                 variant="h4"
                 component="h1"
                 className="first-sub-title"
-                sx={{
-                  ...dashboardStyles.title, '@media (max-width: 600px)': {
-                    display: 'none',
-                  },
-                }}
+                sx={dashboardStyles.title}
               >
-                Dashboard <CustomTooltip title={"Indicates the count of resolved identities and revenue figures for the specified time"} linkText="Learn More" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/dashboard" />
+                Dashboard
               </Typography>
+
               <Box sx={{
-                display: 'none', width: '100%', justifyContent: 'space-between', alignItems: 'start', '@media (max-width: 600px)': {
-                  display: 'flex'
+                display: 'none', justifyContent: 'flex-end', alignItems: 'start', pt: 0.5, gap: 1, '@media (max-width: 600px)': {
+                  display: 'flex',
                 }
               }}>
-                <Typography
-                  variant="h4"
-                  component="h1"
-                  className="first-sub-title"
-                  sx={dashboardStyles.title}
-                >
-                  Dashboard
-                </Typography>
-
-                <Box sx={{
-                  display: 'none', justifyContent: 'flex-end', alignItems: 'start', pt: 0.5, gap: 1, '@media (max-width: 600px)': {
-                    display: 'flex',
-                  }
-                }}>
-                  {/* Calendary picker*/}
-                  <Typography className="second-sub-title">{selectedDateLabel}</Typography>
-                  <Button
-                    aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
-                    aria-haspopup="true"
-                    aria-expanded={isCalendarOpen ? 'true' : undefined}
-                    onClick={handleCalendarClick}
-                    sx={{
-                      textTransform: 'none',
-                      color: 'rgba(128, 128, 128, 1)',
-                      border: '1px solid rgba(184, 184, 184, 1)',
-                      borderRadius: '4px',
-                      padding: '8px',
-                      minWidth: 'auto',
-                    }}
-                  >
-                    <DateRangeIcon fontSize='small' />
-                  </Button>
-                </Box>
-              </Box>
-              {typeBusiness == 'd2c' && (
-                <Box sx={{
-                  flexGrow: 1, display: 'flex', width: '100%', justifyContent: 'center', alignItems: 'start',  '@media (max-width: 600px)': {
-                    width: '100%',
-                    mt: hasNotification ? 1 : 2
-                  }
-                }}>
-                  <Tabs
-                    value={tabIndex}
-                    onChange={handleTabChange}
-                    sx={{
-                      textTransform: 'none',
-                      minHeight: 0,
-                      alignItems: 'start',
-                      '& .MuiTabs-indicator': {
-                        backgroundColor: 'rgba(80, 82, 178, 1)',
-                        height: '1.4px',
-                      },
-                      "@media (max-width: 600px)": {
-                        border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px', width: '100%', '& .MuiTabs-indicator': {
-                          height: '0',
-                        },
-                      }
-                    }}
-                    aria-label="dashboard tabs"
-                  >
-                      <Tab className="main-text"
-                        sx={{
-                          textTransform: 'none',
-                          padding: '4px 10px',
-                          flexGrow: 1,
-                          marginRight: '3em',
-                          minHeight: 'auto',
-                          minWidth: 'auto',
-                          fontSize: '14px',
-                          fontWeight: 700,
-                          lineHeight: '19.1px',
-                          textAlign: 'left',
-                          mr: 2,
-                          '&.Mui-selected': {
-                            color: 'rgba(80, 82, 178, 1)'
-                          },
-                          "@media (max-width: 600px)": {
-                            mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                              backgroundColor: 'rgba(249, 249, 253, 1)',
-                              border: '1px solid rgba(220, 220, 239, 1)'
-                            },
-                          }
-                        }}
-                        label="Revenue"
-                      />
-                    <Tab className="main-text"
-                      sx={{
-                        textTransform: 'none',
-                        padding: '4px 10px',
-                        minHeight: 'auto',
-                        flexGrow: 1,
-                        textAlign: 'center',
-                        fontSize: '14px',
-                        fontWeight: 700,
-                        lineHeight: '19.1px',
-                        minWidth: 'auto',
-                        '&.Mui-selected': {
-                          color: 'rgba(80, 82, 178, 1)'
-                        },
-                        "@media (max-width: 600px)": {
-                          mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                            backgroundColor: 'rgba(249, 249, 253, 1)',
-                            border: '1px solid rgba(220, 220, 239, 1)'
-                          },
-                        }
-                      }}
-                      label="Contacts"
-                    />
-                  </Tabs>
-                </Box>
-              )}
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                  alignItems: 'center',
-                  gap: 2,
-                  width: typeBusiness == 'd2c' ? '' : '100%',
-                  '@media (max-width: 600px)': {
-                    display: 'none',
-                  }
-                }}
-              >
                 {/* Calendary picker*/}
-                <Typography className="second-sub-title">{selectedDateLabel ? selectedDateLabel : ''}</Typography>
+                <Typography className="second-sub-title">{selectedDateLabel}</Typography>
                 <Button
                   aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
                   aria-haspopup="true"
@@ -670,85 +570,199 @@ const Dashboard: React.FC = () => {
                   onClick={handleCalendarClick}
                   sx={{
                     textTransform: 'none',
-                    color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
-                    border: formattedDates ? '1.5px solid rgba(80, 82, 178, 1)' : '1.5px solid rgba(184, 184, 184, 1)',
+                    color: 'rgba(128, 128, 128, 1)',
+                    border: '1px solid rgba(184, 184, 184, 1)',
                     borderRadius: '4px',
                     padding: '8px',
                     minWidth: 'auto',
-                    '@media (max-width: 900px)': {
-                      border: 'none',
-                      padding: 0
-                    },
-                    '&:hover': {
-                      border: '1.5px solid rgba(80, 82, 178, 1)',
-                      '& .MuiSvgIcon-root': {
-                        color: 'rgba(80, 82, 178, 1)'
-                      }
-                    }
                   }}
                 >
-                  <DateRangeIcon
-                    fontSize="medium"
-                    sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }}
-                  />
-                  <Typography variant="body1" sx={{
-                    fontFamily: 'Roboto',
-                    fontSize: '14px',
-                    fontWeight: '400',
-                    color: 'rgba(32, 33, 36, 1)',
-                    lineHeight: '19.6px',
-                    textAlign: 'left'
-                  }}>
-                    {formattedDates}
-                  </Typography>
-                  {formattedDates &&
-                    <Box sx={{ pl: 2, display: 'flex', alignItems: 'center' }}>
-                      <Image src="/arrow_down.svg" alt="arrow down" width={16} height={16} />
-                    </Box>
-                  }
+                  <DateRangeIcon fontSize='small' />
                 </Button>
               </Box>
             </Box>
-            <Box sx={{
-              width: '100%', marginTop: '68px',
+            {typeBusiness == 'd2c' && (
+              <Box sx={{
+                flexGrow: 1, display: 'flex', width: '100%', justifyContent: 'center', alignItems: 'start', '@media (max-width: 600px)': {
+                  width: '100%',
+                  mt: hasNotification ? 1 : 2
+                }
+              }}>
+                <Tabs
+                  value={tabIndex}
+                  onChange={handleTabChange}
+                  sx={{
+                    textTransform: 'none',
+                    minHeight: 0,
+                    alignItems: 'start',
+                    '& .MuiTabs-indicator': {
+                      backgroundColor: 'rgba(80, 82, 178, 1)',
+                      height: '1.4px',
+                    },
+                    "@media (max-width: 600px)": {
+                      border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px', width: '100%', '& .MuiTabs-indicator': {
+                        height: '0',
+                      },
+                    }
+                  }}
+                  aria-label="dashboard tabs"
+                >
+                  <Tab className="main-text"
+                    sx={{
+                      textTransform: 'none',
+                      padding: '4px 10px',
+                      flexGrow: 1,
+                      marginRight: '3em',
+                      minHeight: 'auto',
+                      minWidth: 'auto',
+                      fontSize: '14px',
+                      fontWeight: 700,
+                      lineHeight: '19.1px',
+                      textAlign: 'left',
+                      mr: 2,
+                      '&.Mui-selected': {
+                        color: 'rgba(80, 82, 178, 1)'
+                      },
+                      "@media (max-width: 600px)": {
+                        mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                          backgroundColor: 'rgba(249, 249, 253, 1)',
+                          border: '1px solid rgba(220, 220, 239, 1)'
+                        },
+                      }
+                    }}
+                    label="Revenue"
+                  />
+                  <Tab className="main-text"
+                    sx={{
+                      textTransform: 'none',
+                      padding: '4px 10px',
+                      minHeight: 'auto',
+                      flexGrow: 1,
+                      textAlign: 'center',
+                      fontSize: '14px',
+                      fontWeight: 700,
+                      lineHeight: '19.1px',
+                      minWidth: 'auto',
+                      '&.Mui-selected': {
+                        color: 'rgba(80, 82, 178, 1)'
+                      },
+                      "@media (max-width: 600px)": {
+                        mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                          backgroundColor: 'rgba(249, 249, 253, 1)',
+                          border: '1px solid rgba(220, 220, 239, 1)'
+                        },
+                      }
+                    }}
+                    label="Contacts"
+                  />
+                </Tabs>
+              </Box>
+            )}
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+                gap: 2,
+                width: typeBusiness == 'd2c' ? '' : '100%',
+                '@media (max-width: 600px)': {
+                  display: 'none',
+                }
+              }}
+            >
+              {/* Calendary picker*/}
+              <Typography className="second-sub-title">{selectedDateLabel ? selectedDateLabel : ''}</Typography>
+              <Button
+                aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
+                aria-haspopup="true"
+                aria-expanded={isCalendarOpen ? 'true' : undefined}
+                onClick={handleCalendarClick}
+                sx={{
+                  textTransform: 'none',
+                  color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
+                  border: formattedDates ? '1.5px solid rgba(80, 82, 178, 1)' : '1.5px solid rgba(184, 184, 184, 1)',
+                  borderRadius: '4px',
+                  padding: '8px',
+                  minWidth: 'auto',
+                  '@media (max-width: 900px)': {
+                    border: 'none',
+                    padding: 0
+                  },
+                  '&:hover': {
+                    border: '1.5px solid rgba(80, 82, 178, 1)',
+                    '& .MuiSvgIcon-root': {
+                      color: 'rgba(80, 82, 178, 1)'
+                    }
+                  }
+                }}
+              >
+                <DateRangeIcon
+                  fontSize="medium"
+                  sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }}
+                />
+                <Typography variant="body1" sx={{
+                  fontFamily: 'Roboto',
+                  fontSize: '14px',
+                  fontWeight: '400',
+                  color: 'rgba(32, 33, 36, 1)',
+                  lineHeight: '19.6px',
+                  textAlign: 'left'
+                }}>
+                  {formattedDates}
+                </Typography>
+                {formattedDates &&
+                  <Box sx={{ pl: 2, display: 'flex', alignItems: 'center' }}>
+                    <Image src="/arrow_down.svg" alt="arrow down" width={16} height={16} />
+                  </Box>
+                }
+              </Button>
+            </Box>
+          </Box>
+          <Box sx={{display: 'flex', height: '120px'}}>
+
+          </Box>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              height: '100vh',
+              overflowY: 'auto',
               "@media (max-width: 900px)": {
-                marginTop: '40px'
+                height: 'calc(100vh - 40px)',
               },
               "@media (max-width: 600px)": {
-                marginTop: '100px'
+                height: 'calc(100vh - 100px)',
+                pr:'16px'
               }
-            }}>
-              <TabPanel value={tabIndex} index={0}>
-                <DashboardRevenue appliedDates={appliedDates} />
-              </TabPanel>
-            </Box>
-            <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
-              <TabPanel value={tabIndex} index={1}>
-                {typeBusiness === 'd2c' ? (
-                  <DashboardContactD2C appliedDates={appliedDates} typeBusiness={typeBusiness} />
-                ) : (
-                  <DashboardContactB2B appliedDates={appliedDates} typeBusiness={typeBusiness} />
-                )}
+            }}
+          >
+            <TabPanel value={tabIndex} index={0}>
+              <DashboardRevenue appliedDates={appliedDates} />
+            </TabPanel>
+            <TabPanel value={tabIndex} index={1}>
+              {typeBusiness === 'd2c' ? (
+                <DashboardContactD2C appliedDates={appliedDates} typeBusiness={typeBusiness} />
+              ) : (
+                <DashboardContactB2B appliedDates={appliedDates} typeBusiness={typeBusiness} />
+              )}
+            </TabPanel>
+          </Box>
 
+          <CalendarPopup
+            anchorEl={calendarAnchorEl}
+            open={isCalendarOpen}
+            onClose={handleCalendarClose}
+            onDateChange={handleDateChange}
+            onDateLabelChange={handleDateLabelChange}
+            onApply={handleApply}
+          />
 
-              </TabPanel>
-            </Box>
-
-            <CalendarPopup
-              anchorEl={calendarAnchorEl}
-              open={isCalendarOpen}
-              onClose={handleCalendarClose}
-              onDateChange={handleDateChange}
-              onDateLabelChange={handleDateLabelChange}
-              onApply={handleApply}
-            />
-
-          </Grid>
-        </>
+        </Grid>
       ) : (
         <Grid container sx={{
           height: '100%',
-          pt: 3
+          pt: 3,
+          pr: 2
         }}>
           <Grid item xs={12} sx={{ display: { md: 'none' }, overflow: 'hidden' }}>
             <Typography

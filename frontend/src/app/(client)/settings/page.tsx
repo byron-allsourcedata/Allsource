@@ -49,7 +49,7 @@ const Settings: React.FC = () => {
     };
 
     return (
-        <Box>
+        <Box sx={{height: 'calc(100vh - 4.25rem)', overflow: 'hidden'}}>
             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1, padding: '1rem 0rem 1rem',
                 position: 'fixed',
                 top: '68px',
@@ -129,7 +129,7 @@ const Settings: React.FC = () => {
                         {isLoading ? (
                 <CustomizedProgressBar />
             ) : (
-                <Box sx={{ marginTop: '68px',
+                <Box sx={{ marginTop: '68px', overflow: 'auto', height: 'calc(100vh - 4.25rem)',
                  "@media (max-width: 900px)": {
                     marginTop: hasNotification ? '7rem' :'5rem'
                     }

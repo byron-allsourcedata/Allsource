@@ -585,7 +585,7 @@ export const SettingsBilling: React.FC = () => {
 
 
     return (
-        <Box>
+        <Box sx={{overflow: 'scroll', pr:2}}>
             <Grid container spacing={3} sx={{ mb: 3 }}>
                 <Grid item xs={12} md={6} sx={{ padding: '0px' }}>
                     <Box sx={{ border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', p: 3, height: '100%' }}>

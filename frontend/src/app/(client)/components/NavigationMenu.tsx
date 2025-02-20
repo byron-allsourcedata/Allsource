@@ -23,6 +23,7 @@ import axiosInstance from '@/axios/axiosInterceptorInstance';
 import Slider from "../../../components/Slider";
 import NotificationPopup from '../../../components/NotificationPopup';
 import DomainButtonSelect from './NavigationDomainButton';
+import BusinessIcon from '@mui/icons-material/Business';
 import DnsIcon from '@mui/icons-material/Dns';
 import QuestionMarkOutlinedIcon from '@mui/icons-material/QuestionMarkOutlined';
 
@@ -124,6 +125,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({ NewRequestNotification }) =
   const [showBookSlider, setShowBookSlider] = useState(false);
   const [notificationIconPopupOpen, setNotificationIconPopupOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const isAuthorized = useRef(false);
 
   const toggleDrawer = () => {
     setOpen(!open);
@@ -131,29 +133,42 @@ const NavigationMenu: React.FC<NavigationProps> = ({ NewRequestNotification }) =
 
   const handleNavigation = async (route: string) => {
     try {
-      const response = await axiosInstance.get('/check-user-authorization');
-      if (response.data.status === "NEED_BOOK_CALL") {
-        sessionStorage?.setItem("is_slider_opened", "true");
-        setShowSlider(true);
-      } else {
-        router.push(route)
-        setOpen(false)
-      }
-    }
-    catch (error) {
-      if (error instanceof AxiosError && error.response?.status === 403) {
-        if (error.response.data.status === "NEED_BOOK_CALL") {
-          sessionStorage?.setItem("is_slider_opened", "true");
-          setShowSlider(true);
-          setShowBookSlider(true);
-        } else {
-          setShowSlider(false);
-          setShowBookSlider(false);
-          router.push(route)
+
+        if (isAuthorized.current) {
+            router.push(route);
+            return;
         }
-      }
+
+        const response = await axiosInstance.get('/check-user-authorization');
+        const status = response.data.status;
+
+        if (status === "SUCCESS") {
+            isAuthorized.current = true;
+            router.push(route);
+        } else if (status === "NEED_BOOK_CALL") {
+            sessionStorage.setItem("is_slider_opened", "true");
+            setShowSlider(true);
+        } else {
+            router.push(route);
+        }
+    } catch (error) {
+        if (error instanceof AxiosError) {
+            if (error.response?.status === 403) {
+                if (error.response.data.status === "NEED_BOOK_CALL") {
+                    sessionStorage.setItem("is_slider_opened", "true");
+                    setShowSlider(true);
+                } else {
+                    setShowSlider(false);
+                    router.push(route);
+                }
+            } else {
+            }
+        } else {
+        }
+    } finally {
+      setOpen(false)
     }
-  };
+};
 
   const isActive = (path: string) => pathname === path;
 
@@ -332,6 +347,15 @@ const NavigationMenu: React.FC<NavigationProps> = ({ NewRequestNotification }) =
             <ListItemIcon><PeopleIcon /></ListItemIcon>
             <ListItemText primary="Contacts" />
           </ListItem>
+          <ListItem button onClick={() => handleNavigation('/company')} sx={{
+              ...(isActive('/company') ? navigationmenuStyles.activeItem : {}),
+              ...navigationmenuStyles.mobileDrawerList
+            }}>
+                    <ListItemIcon>
+                        <BusinessIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Company" />
+                </ListItem>
           <ListItem button onClick={() => handleNavigation('/data-sync')}
             sx={{
               ...(isActive('/data-sync') ? navigationmenuStyles.activeItem : {}),

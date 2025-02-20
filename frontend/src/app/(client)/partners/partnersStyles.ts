@@ -6,13 +6,11 @@ export const partnersStyle: { [key: string]: SxProps<Theme> } = {
         flexDirection: 'column',
         width: '100%',
         padding: 0,
+        overflow: 'visible',
         margin: 0,
+        height: '96vh',
         alignItems: 'center',
-        justifyContent: 'center',
-        '@media (min-width: 900px)': {
-            paddingLeft: '0.5rem',
-            paddingRight: '0.5rem',
-        },
+        justifyContent: 'start',
         '@media (max-width: 440px)': {
             marginTop: '-60px',
             padding: '0',

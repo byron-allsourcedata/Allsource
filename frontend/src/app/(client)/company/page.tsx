@@ -732,11 +732,14 @@ const Leads: React.FC = () => {
             }}/>}
             {!companyEmployeesOpen && 
             <Box sx={{
-                display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
+                display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%', pr:'16px',
                 '@media (max-width: 900px)': {
                     paddingRight: 0,
                     minHeight: '100vh'
-
+                },
+                '@media (max-width: 599px)': {
+                    paddingRight: '16px',
+                    marginLeft: 0,
                 }
             }}>
                 <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>

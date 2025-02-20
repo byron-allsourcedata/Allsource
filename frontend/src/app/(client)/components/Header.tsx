@@ -26,7 +26,8 @@ const headerStyles = {
     maxHeight: '4.25rem',
     color: 'rgba(244, 87, 69, 1)',
     borderBottom: `1px solid rgba(228, 228, 228, 1)`,
-    position: 'fixed',
+    position: 'sticky',
+    overflowY: 'hidden',
     top: 0,
     left: 0,
     right: 0,
@@ -150,6 +151,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
   }
   return (
     <>
+    <Box sx={{ display: 'block',  }}>
       <Box sx={{ display: { md: 'none' } }}>
         <SliderProvider><NavigationMenu NewRequestNotification={hasNewNotifications || hasNewNotifications} /></SliderProvider>
       </Box>
@@ -328,6 +330,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
             </MenuItem>
           </Menu>
         </Box>
+      </Box>
       </Box>
       <NotificationPopup open={notificationIconPopupOpen} onClose={handleNotificationIconPopupClose} anchorEl={anchorElNotificate} />
     </>
