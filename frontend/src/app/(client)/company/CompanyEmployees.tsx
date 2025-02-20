@@ -81,6 +81,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     const [seniorities, setSeniorities] = React.useState<string[]>([]);
     const [jobTitles, setJobTitles] = React.useState<string[]>([]);
     const [employeeId, setEmployeeId] = useState<number | null>(null)
+    const [employeeisUnlocked, setEmployeeisUnlocked] = useState(false);
 
 
     const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, jobTitle: string) => {
@@ -136,6 +137,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
         try {
             const response = await axiosInstance.get(`/company/employee?id=${id}&company_id=${companyId}`)
             if (response.status === 200){
+                setEmployeeisUnlocked(true)
                 const updateEmployee = response.data
                 setData((prevEmployees) => {
                     const index = prevEmployees.findIndex((account) => account.id.value === updateEmployee.id.value);
@@ -1085,6 +1087,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                         companyId={companyId}
                         updateEmployeeCallback={chargeCredit}
                         employeeId={employeeId}
+                        employeeisUnlocked={employeeisUnlocked}
                         />
                     <PopupChargeCredits open={creditsChargePopup}
                         onClose={() => setCreditsChargePopup(false)}

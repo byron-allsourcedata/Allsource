@@ -18,6 +18,7 @@ interface PopupDetailsProps {
     open: boolean;
     onClose: () => void;
     employeeId: number | null;
+    employeeisUnlocked: boolean;
     updateEmployeeCallback: (id: number) => void
     companyId: number;
 }
@@ -44,9 +45,8 @@ const TruncatedText: React.FC<{ text: string; limit: number }> = ({ text, limit 
     );
 };
 
-const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, employeeId, updateEmployeeCallback }) => {
+const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, employeeId, employeeisUnlocked, updateEmployeeCallback }) => {
     const [popupData, setPopupData] = useState<any>()
-    const [isUnlocked, setIsUnlocked] = useState(false);
 
     const handleDownload = async () => {
         try {
@@ -73,7 +73,6 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
 
     const getStatusCredits = () => {
         updateEmployeeCallback(popupData.id.value)
-        setIsUnlocked(true)
     }
 
     const renderField = (data: RenderCeil, callback: ((value: string) => string) | null = null) => {
@@ -113,7 +112,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
 
     useEffect(() => {
         fetchEmployees();
-    }, [companyId, employeeId, isUnlocked]);
+    }, [companyId, employeeId, employeeisUnlocked]);
 
     useEffect(() => {
         if (open) {
