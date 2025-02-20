@@ -1,27 +1,31 @@
-import React, { useEffect, useState } from 'react';
-import { Drawer, Backdrop, Box, Typography, IconButton, Button, Divider, Link } from '@mui/material';
+import React from 'react';
+import { Drawer, Backdrop, Box, Typography, IconButton, Button } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { companyStyles } from './companyStyles';
-import Image from 'next/image'
-import DownloadIcon from '@mui/icons-material/Download';
-import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
-import SmartphoneOutlinedIcon from '@mui/icons-material/SmartphoneOutlined';
-import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
-import ApartmentOutlinedIcon from '@mui/icons-material/ApartmentOutlined';
-import axiosInstance from '@/axios/axiosInterceptorInstance';
-import { showErrorToast } from '@/components/ToastNotification';
-import CorporateFareRoundedIcon from '@mui/icons-material/CorporateFareRounded';
-import dayjs from "dayjs";
-import UnlockButton from './UnlockButton';
+import axiosInstance from '../../../axios/axiosInterceptorInstance';
 
 interface PopupDetailsProps {
     open: boolean;
     onClose: () => void;
+    updateEmployeeCallback: (id: number) => void
+    id: number
 }
 
 
-const PopupChargeCredits: React.FC<PopupDetailsProps> = ({ open, onClose }) => {
-    const [popupData, setPopupData] = useState<any>()
+const PopupChargeCredits: React.FC<PopupDetailsProps> = ({ open, onClose, updateEmployeeCallback, id }) => {
+    
+    const handleSubmit = async () => {
+        try {
+            const response = await axiosInstance.patch('/subscription/charge-credit')
+            if (response.status === 200){
+                updateEmployeeCallback(id)
+            }
+        } 
+        catch {
+        }
+        finally {
+            onClose()
+        }
+    }
 
     return (
         <>
@@ -29,54 +33,152 @@ const PopupChargeCredits: React.FC<PopupDetailsProps> = ({ open, onClose }) => {
                     onClose()
                 }
             } sx={{ zIndex: 1200, color: '#fff' }} />
-            <Drawer
-                anchor="right"
-                open={open}
-                onClose={() => {
-                    onClose()
-                }}
-                variant="persistent"
-                PaperProps={{
-                    sx: {
-                        width: '48%',
-                        position: 'fixed',
-                        zIndex: 1301,
-                        top: 0,
-                        bottom: 0,
-                        '@media (max-width: 600px)': {
-                            width: '100%',
-                        }
-                    },
-                }}
-            >
-                <Box sx={{ width: '100%', boxSizing: 'border-box', display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, pb: 1.35, borderBottom: '1px solid #e4e4e4', position: "sticky", top: 0, zIndex: 1400, backgroundColor: "#fff" }}>
-                    <Box sx={{ display: 'flex', gap: 4 }}>
-                        <Typography sx={{ fontSize: '16px', fontFamily: 'Nunito Sans', fontWeight: 600, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)' }}>
-                            Employee Overview
-                        </Typography>
+            <Drawer anchor="right" open={open} onClose={onClose}>
+                <Box
+                    sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "24px",
+                    borderBottom: "1px solid #e4e4e4",
+                    position: "sticky",
+                    top: 0,
+                    zIndex: 9900,
+                    backgroundColor: "#fff",
+                    }}
+                >
+                    <Typography
+                    sx={{
+                        fontFamily: "Nunito Sans",
+                        fontSize: "16px",
+                        fontWeight: "600",
+                        lineHeight: "21.82px",
+                        width: "620px",
+                    }}
+                    >
+                    Unlock Contact Confirmation
+                    </Typography>
+                    <Box sx={{ display: "flex", flexDirection: "row" }}>
+                        <IconButton onClick={onClose}>
+                            <CloseIcon  sx={{ width: "16px", height: "16px" }}/>
+                        </IconButton>
                     </Box>
-                    <IconButton onClick={() => {
-                            onClose()
-                            setPopupData(null)
-                        }
-                    }>
-                        <CloseIcon sx={{ color: 'rgba(0, 0, 0, 1)' }} />
-                    </IconButton>
                 </Box>
-
-                <Box sx={{
-                    width: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'start',
-                    padding: '16px',
-                    boxSizing: 'border-box',
-                    '@media (max-width: 600px)': {
-                        padding: '8px 0px',
-                        width: '100%',
-                    },
-                }}>
+                <Box 
+                    sx={{
+                        padding: "0 32px"
+                    }}>
+                    <Box 
+                        sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "32px"
+                        }}>
+                            <Typography
+                                sx={{
+                                    fontFamily: "Nunito Sans",
+                                    fontSize: "16px",
+                                    fontWeight: "600",
+                                    lineHeight: "21.82px",
+                                    marginTop: "24px"
+                                }}
+                                >
+                                To unlock this contact, 1 credit will be deducted from your account balance. 
+                                <br/>
+                                Please confirm if you wish to proceed with this action.
+                            </Typography>
+                    </Box>
+                </Box>
+                <Box 
+                    sx={{
+                        padding: "0 32px"
+                    }}>
+                    <Box 
+                        sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "32px"
+                        }}>
+                            <Typography
+                                sx={{
+                                    fontFamily: "Nunito Sans",
+                                    fontSize: "16px",
+                                    fontWeight: "600",
+                                    lineHeight: "21.82px",
+                                    marginTop: "24px"
+                                }}
+                                >
+                                Are you sure you want to unlock this contact?
+                            </Typography>
+                    </Box>
+                </Box>
+                <Box
+                    sx={{
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        gap: "16px",
+                        borderTop: "1px solid #e4e4e4",
+                        position: "absolute",
+                        width: "100%",
+                        bottom: 0,
+                        zIndex: 9901,
+                        padding: "20px 1em",
+                    }}
+                >
+                    <Button variant="outlined" onClick={onClose} sx={{
+                        borderColor: "rgba(80, 82, 178, 1)",
+                        width: "67px",
+                        height: "40px",
+                        ":hover": {
+                            borderColor: "rgba(62, 64, 142, 1)"},
+                        ":active": {
+                            borderColor: "rgba(80, 82, 178, 1)"},
+                        ":disabled": {
+                            borderColor: "rgba(80, 82, 178, 1)",
+                            opacity: 0.4,
+                        },
+                    }}>
+                        <Typography
+                            sx={{
+                            textAlign: "center",
+                            color: "rgba(80, 82, 178, 1)",
+                            textTransform: "none",
+                            fontFamily: "Nunito Sans",
+                            fontWeight: "600",
+                            fontSize: "14px",
+                            lineHeight: "19.6px",
+                            }}
+                        >
+                            Cancel
+                        </Typography>
+                    </Button> 
+                    <Button variant="contained" onClick={handleSubmit} sx={{
+                        backgroundColor: "rgba(80, 82, 178, 1)",
+                        width: "70px",
+                        height: "40px",
+                        ":hover": {
+                            backgroundColor: "rgba(62, 64, 142, 1)"},
+                        ":active": {
+                            backgroundColor: "rgba(80, 82, 178, 1)"},
+                        ":disabled": {
+                            backgroundColor: "rgba(80, 82, 178, 1)",
+                            opacity: 0.6,
+                        },
+                    }}>
+                        <Typography
+                            sx={{
+                            textAlign: "center",
+                            color: "rgba(255, 255, 255, 1)",
+                            fontFamily: "Nunito Sans",
+                            textTransform: "none",
+                            fontWeight: "600",
+                            fontSize: "14px",
+                            lineHeight: "19.6px",
+                            }}
+                        >
+                            Unlock
+                        </Typography>
+                    </Button> 
                 </Box>
             </Drawer>
         </>

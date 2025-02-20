@@ -470,6 +470,38 @@ class CompanyPersistence:
         return companies
 
 
+    def get_employee_by_id(self, domain_id, company_id, employee_id):        
+        query = (
+            self.db.query(
+                FiveXFiveUser.id,
+                FiveXFiveUser.first_name,
+                FiveXFiveUser.last_name,
+                FiveXFiveUser.personal_phone,
+                FiveXFiveUser.linkedin_url,
+                FiveXFiveUser.personal_emails,
+                FiveXFiveUser.business_email,
+                FiveXFiveUser.seniority_level,
+                FiveXFiveUser.department,
+                FiveXFiveUser.job_title,
+                FiveXFiveUser.personal_city,
+                FiveXFiveUser.personal_state,
+            )
+                .select_from(LeadUser)
+                .join(LeadCompany, LeadCompany.id == LeadUser.company_id)
+                .join(FiveXFiveUser, FiveXFiveUser.company_alias == LeadCompany.alias)
+                .filter(LeadCompany.id == company_id, LeadUser.domain_id == domain_id, FiveXFiveUser.id == employee_id)
+                .group_by(
+                    FiveXFiveUser.id,
+                )
+        )
+
+        employee = query.first()
+        
+        if employee:
+            states = self.db.query(States).all()
+        return employee, states
+
+
     def filter_employees(self, domain_id, company_id, page, per_page, sort_by, sort_order,
                      search_query, job_title, department, seniority, regions):
         

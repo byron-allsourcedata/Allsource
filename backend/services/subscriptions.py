@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 
 class SubscriptionService:
     AMOUNT_CREDITS = 1
+    UNLIMITED = -1
 
     def __init__(self, db: Session, user_persistence_service: UserPersistence, plans_persistence: PlansPersistence, referral_service: ReferralService,
                  partners_persistence: PartnersPersistence):
@@ -227,8 +228,7 @@ class SubscriptionService:
 
     async def get_status_credits(self, user):
         user_id = user.get("id")
-        free_trial_subscription = self.is_trial_subscription(user_id=user_id)
-        if free_trial_subscription:
+        if user.get("leads_credits") == self.UNLIMITED:
             return {"status": CreditsStatus.UNLIMITED_CREDITS}
         if user.get("leads_credits") - self.AMOUNT_CREDITS > 0:
             return {"status": CreditsStatus.CREDITS_ARE_AVAILABLE}

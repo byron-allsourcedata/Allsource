@@ -171,3 +171,6 @@ class UsersService:
     def add_stripe_account(self, stripe_connected_account_id: str):
         self.user_persistence_service.add_stripe_account(self.user.get('id'), stripe_connected_account_id)
         return 'SUCCESS_CONNECT'
+
+    def charge_credit(self, user_id: int):
+        self.user_persistence_service.charge_credit(user_id)

@@ -91,22 +91,23 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
         }
     };
 
-    useEffect(() => {
-        const fetchEmployees = async () => {
-            try {
-                if (employeeId) {
-                    const response = await axiosInstance.get(`/company/employees/${employeeId}?company_id=${companyId}`);
-                    if (response.status === 200) {
-                        setPopupData(response.data);
-                    } else {
-                        showErrorToast("Error receiving employee data");
-                    }
+    const fetchEmployees = async () => {
+        try {
+            if (employeeId) {
+                const response = await axiosInstance.get(`/company/employees/${employeeId}?company_id=${companyId}`);
+                if (response.status === 200) {
+                    setPopupData(response.data);
+                } else {
+                    showErrorToast("Error receiving employee data");
                 }
-            } catch {
             }
-        };
-    
+        } catch {
+        }
+    };
+
+    useEffect(() => {
         fetchEmployees();
+    // }, [companyId, employeeId, unlocked]);
     }, [companyId, employeeId]);
 
     useEffect(() => {

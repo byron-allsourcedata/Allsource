@@ -87,7 +87,34 @@ class CompanyService:
             })
 
         return company_list, count, max_page
-    
+
+
+    def get_employee_by_id(self, company_id, employee_id):
+        employee, states = self.company_persistence_service.get_employee_by_id(
+            domain_id=self.domain.id,
+            employee_id=employee_id,
+            company_id=company_id,
+        )
+
+        state_dict = {state.state_code: state.state_name for state in states} if states else {}
+
+        employee_data = {
+            'id': {"value": employee[0], "visibility_status": "visible"},
+            'first_name': {"value": employee[1], "visibility_status": "visible"},
+            'last_name': {"value": employee[2], "visibility_status": "visible"},
+            'mobile_phone': self.get_field_with_status(self.format_phone_number(employee[3]), employee[12]),
+            'linkedin_url': self.get_field_with_status(employee[4], employee[12]),
+            'personal_email': self.get_field_with_status(employee[5], employee[12]),
+            'business_email': self.get_field_with_status(employee[6], employee[12]),
+            'seniority': {"value": employee[7], "visibility_status": "visible"},
+            'department': {"value": employee[8], "visibility_status": "visible"},
+            'job_title': {"value": employee[9], "visibility_status": "visible"},
+            'city': {"value": employee[10], "visibility_status": "visible"},
+            'state': {"value": self.convert_state_code_to_name(employee[11], state_dict), "visibility_status": "visible"},
+            'is_unlocked': {"value": employee[12], "visibility_status": "visible"}
+        }
+
+        return employee_data
 
     def get_employees(self, company_id, sort_by, sort_order,
                       search_query, job_title, seniority, regions, department, page, per_page=None):

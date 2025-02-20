@@ -67,20 +67,12 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(15);
-    const [activeFilter, setActiveFilter] = useState<string>('');
-    const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
-    const [selectedDates, setSelectedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
-    const isCalendarOpen = Boolean(calendarAnchorEl);
-    const [formattedDates, setFormattedDates] = useState<string>('');
     const [filterPopupOpen, setFilterPopupOpen] = useState(false);
-    const [audiencePopupOpen, setAudiencePopupOpen] = useState(false);
-    const [companyEmployeesOpen, setCompanyEmployeesOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [selectedFilters, setSelectedFilters] = useState<{ label: string, value: string }[]>([]);
     const [openPopup, setOpenPopup] = React.useState(false);
     const [creditsChargePopup, setCreditsChargePopup] = React.useState(false);
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
-    const [openDrawer, setOpenDrawer] = React.useState(false);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [selectedJobTitle, setSelectedJobTitle] = React.useState<string | null>(null);
     const [departments, setDepartments] = React.useState<string[]>([]);
@@ -137,6 +129,26 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
         setRowsPerPage(parseInt(event.target.value as string, 10));
         setPage(0);
     };
+
+    const getEmployeeById = async (id: number) => {
+        try {
+            const response = await axiosInstance.get(`/company/employee?id=${id}&company_id=${companyId}`)
+            if (response.status === 200){
+                const updateEmployee = response.data
+                setData((prevEmployees) => {
+                    const index = prevEmployees.findIndex((account) => account.id === updateEmployee.id);
+                    if (index !== -1) {
+                        const newAccounts = [...prevEmployees];
+                        newAccounts[index] = prevEmployees;
+                        return newAccounts;
+                    }
+                    return [...prevEmployees, updateEmployee];
+                });
+            }
+        } 
+        catch {
+        }
+    }
 
     const getStatusCredits = async () => {
         setLoading(true);
@@ -469,7 +481,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
         try {
             setIsLoading(true)
             setAppliedDates({ start: null, end: null })
-            setFormattedDates('')
             sessionStorage.removeItem('filters-employee')
             const response = await axiosInstance.get(url);
             const [leads, count] = response.data;
@@ -477,7 +488,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
             setData(Array.isArray(leads) ? leads : []);
             setCount(count || 0);
             setStatus(response.data.status);
-            setSelectedDates({start: null, end: null})
             setSelectedFilters([]);
         } catch (error) {
             console.error('Error fetching leads:', error);
@@ -881,9 +891,9 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                     <>
                                                         <TableRow
                                                             key={row.id.value}
-                                                            selected={selectedRows.has(row.id.value)}
+                                                            // selected={selectedRows.has(row.id.value)}
                                                             sx={{
-                                                                backgroundColor: selectedRows.has(row.id.value) ? 'rgba(247, 247, 247, 1)' : '#fff',
+                                                                // backgroundColor: selectedRows.has(row.id.value) ? 'rgba(247, 247, 247, 1)' : '#fff',
                                                                 '&:hover': {
                                                                     backgroundColor: 'rgba(247, 247, 247, 1)',
                                                                     '& .sticky-cell': {
@@ -901,6 +911,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                                     e.stopPropagation();
                                                                     setOpenPopup(true);
                                                                     setEmployeeId(row.id.value)
+                                                                    setSelectedRows(row.id.value)
 
                                                                 }}>
                                                                 {truncateText([capitalizeTableCell(renderField(row.first_name)), capitalizeTableCell(renderField(row.last_name))].filter(Boolean).join(' '), 20)}
@@ -909,6 +920,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                             {/* Personal Email Column */}
                                                             <TableCell
                                                                 sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                                onClick={() => setSelectedRows(row.id.value)}
                                                             >
                                                                 {renderField(row.personal_email)}
                                                             </TableCell>
@@ -916,20 +928,24 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                             {/* Business Email Column */}
                                                             <TableCell
                                                                 sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                                onClick={() => setSelectedRows(row.id.value)}
                                                             >
                                                                 {renderField(row.business_email)}
                                                             </TableCell>
 
                                                             {/* Company linkedIn Column */}
-                                                            <TableCell sx={{ ...companyStyles.table_array, position: 'relative', color: row.linkedin_url.value ? 'rgba(80, 82, 178, 1)' : '', cursor: row.linkedin_url.value ? 'pointer' : 'default' }} onClick={() => { window.open(`https://${row.linkedin_url.value}`, '_blank') }}>
+                                                            <TableCell 
+                                                                sx={{ ...companyStyles.table_array, position: 'relative', color: row.linkedin_url.value ? 'rgba(80, 82, 178, 1)' : '', }}
+                                                                onClick={() => setSelectedRows(row.id.value)}
+                                                            >
                                                                 {!row.is_unlocked.value ? (
                                                                     <UnlockButton onClick={getStatusCredits} label="Unlock contact" />
                                                                 ) : (
                                                                     row.linkedin_url.value ? (
-                                                                        <>
+                                                                        <Box sx={{cursor: row.linkedin_url.value ? 'pointer' : 'default'}} onClick={() => { window.open(`https://${row.linkedin_url.value}`, '_blank') }}>
                                                                             <Image src="/linkedIn.svg" alt="linkedIn" width={16} height={16} style={{ marginRight: '2px' }} />
                                                                             /{truncateText(row.linkedin_url.value.replace('linkedin.com/company/', ''), 20)}
-                                                                        </>
+                                                                        </Box>
                                                                     ) : (
                                                                         '--'
                                                                     )
@@ -937,12 +953,18 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                             </TableCell>
 
                                                             {/* Mobile phone Column */}
-                                                            <TableCell sx={{ ...companyStyles.table_array, position: 'relative' }}>
+                                                            <TableCell 
+                                                                sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                                onClick={() => setSelectedRows(row.id.value)}
+                                                            >
                                                                 {renderField(row.mobile_phone, (phones) => phones.split(',')[0] || '--')}
                                                             </TableCell>
 
                                                             {/* Job Title Column */}
-                                                            <TableCell sx={{...companyStyles.table_array, position: 'relative', cursor: row.job_title ? "pointer" : "default"}} onClick={(e) => row.job_title ? handleOpenPopover(e, row.job_title || "--") : ''}>
+                                                            <TableCell 
+                                                                sx={{...companyStyles.table_array, position: 'relative', cursor: row.job_title ? "pointer" : "default"}} 
+                                                                onClick={(e) => row.job_title ? handleOpenPopover(e, row.job_title || "--") : ''}
+                                                            >
                                                                 {truncateText(renderField(row.department), 20)}
                                                             </TableCell>
 
@@ -1046,6 +1068,8 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                         />
                     <PopupChargeCredits open={creditsChargePopup}
                         onClose={() => setCreditsChargePopup(false)}
+                        updateEmployeeCallback={getEmployeeById}
+                        id={Array.from(selectedRows)[0]}
                     />
                 </Box>
             </Box>

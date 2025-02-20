@@ -38,6 +38,13 @@ class UserPersistence:
         self.db.commit()
         return user_domain
 
+    def charge_credit(self, user_id: int):
+        user = self.db.query(Users).filter(Users.id == user_id).first()
+
+        if user:
+            user.leads_credits = user.leads_credits - 1
+            self.db.commit()
+    
     def get_team_members(self, user_id: int):
         users = self.db.query(Users).filter(Users.team_owner_id == user_id).all()
         return users
