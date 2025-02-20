@@ -272,7 +272,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
       }
 
       const hasQuery = url.includes("?");
-      const newUrl = url + (hasQuery ? "&" : "?") + "vge=true" + "&api=https://api-dev.maximiz.ai";
+      const newUrl = url + (hasQuery ? "&" : "?") + "mff=true" + "&api=https://api-dev.maximiz.ai";
       window.open(newUrl, "_blank");
     }
   };
