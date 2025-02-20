@@ -263,7 +263,7 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
                 <MoreVertIcon sx={{ height: '20px' }} />
               </Box>
             </Box>
-          )},
+          )}
           {!is_integrated &&  isHovered && (
           <Box
           sx={{
@@ -281,7 +281,7 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
         >
             <AddIcon sx={{ color: "#5052B2", fontSize: 45 }} />
           </Box>
-        )},
+        )}
          <Image
             src={image}
             width={altImageIntegration.some(int => int == service_name) ? 100 : 32}
