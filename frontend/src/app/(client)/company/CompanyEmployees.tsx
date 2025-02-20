@@ -83,8 +83,8 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     const [employeeId, setEmployeeId] = useState<number | null>(null)
 
 
-    const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, industry: string) => {
-        setSelectedJobTitle(industry);
+    const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, jobTitle: string) => {
+        setSelectedJobTitle(jobTitle);
         setAnchorEl(event.currentTarget);
     };
 
@@ -982,8 +982,8 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
 
                                                             {/* Job Title Column */}
                                                             <TableCell 
-                                                                sx={{...companyStyles.table_array, position: 'relative', cursor: row.job_title ? "pointer" : "default"}} 
-                                                                onClick={(e) => row.job_title ? handleOpenPopover(e, row.job_title || "--") : ''}
+                                                                sx={{...companyStyles.table_array, position: 'relative', cursor: row.job_title.value ? "pointer" : "default"}} 
+                                                                onClick={(e) => row.job_title.value ? handleOpenPopover(e, row.job_title.value || "--") : ''}
                                                             >
                                                                 {truncateText(renderField(row.department, row.id.value), 20)}
                                                             </TableCell>
