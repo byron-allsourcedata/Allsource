@@ -105,6 +105,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
 
     const handleClosePopup = () => {
         setOpenPopup(false);
+        setEmployeeisUnlocked(false);
     };
 
 

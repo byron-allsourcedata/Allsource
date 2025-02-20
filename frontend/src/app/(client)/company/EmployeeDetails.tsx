@@ -360,7 +360,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 Business email:
                             </Typography>
                             <Typography sx={{ ...companyStyles.text }}>
-                                {renderField(popupData?.business_email, (time: string) => dayjs(time).format('M/D/YYYY h:mm:ss A'))}
+                                {renderField(popupData?.business_email)}
                             </Typography>
                         </Box>
 
