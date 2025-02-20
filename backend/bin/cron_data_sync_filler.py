@@ -68,7 +68,7 @@ def update_data_sync_integration(session, data_sync_id):
 
 def fetch_leads_by_domain(session: Session, domain_id, limit, last_sent_lead_id, data_sync_leads_type):
     current_date_time = datetime.now(timezone.utc)
-    past_time = current_date_time - timedelta(hours=1)
+    past_time = current_date_time - timedelta(hours=2)
     past_date = past_time.date()
     past_time = past_time.time()
     if last_sent_lead_id is None:
@@ -77,7 +77,7 @@ def fetch_leads_by_domain(session: Session, domain_id, limit, last_sent_lead_id,
     query = session.query(LeadUser.id, LeadUser.behavior_type, FiveXFiveUser.up_id) \
         .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id) \
         .join(UserDomains, UserDomains.id == LeadUser.domain_id) \
-        .join(LeadsVisits, LeadsVisits.lead_id == LeadUser.id)\
+        .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)\
         .filter(
             LeadUser.domain_id == domain_id,
             LeadUser.id > last_sent_lead_id,
