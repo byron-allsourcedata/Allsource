@@ -196,45 +196,13 @@ class SubscriptionService:
                 return False
 
         return True
-    
-    def save_account_notification(self, user_id, title, params=None):
-        account_notification = self.db.query(AccountNotification).filter(AccountNotification.title == title).first()
-        account_notification = UserAccountNotification(
-            user_id=user_id,
-            notification_id=account_notification.id,
-            params=str(params),
-
-        )
-        self.db.add(account_notification)
-        self.db.commit()
-        return account_notification.id
-    
-    async def send_notification_with_error_credits(self, user_id, title, notification_id):
-        account_notification = self.db.query(AccountNotification).filter(AccountNotification.title == title).first()
-        queue_name = f'sse_events_{str(user_id)}'
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        try:
-            await publish_rabbitmq_message(
-                connection=connection,
-                queue_name=queue_name,
-                message_body={'notification_text': account_notification.text,
-                                'notification_id': notification_id}
-            )
-        except:
-            logging.error('Failed to publish rabbitmq message')
-        finally:
-            await rabbitmq_connection.close()
 
     async def get_status_credits(self, user):
-        user_id = user.get("id")
         if user.get("leads_credits") == self.UNLIMITED:
             return {"status": CreditsStatus.UNLIMITED_CREDITS}
         if user.get("leads_credits") - self.AMOUNT_CREDITS > 0:
             return {"status": CreditsStatus.CREDITS_ARE_AVAILABLE}
-
-        notification_id = self.save_account_notification(user_id, NotificationTitles.NO_CREDITS.value)
-        await self.send_notification_with_error_credits(user_id=user_id, title=NotificationTitles.NO_CREDITS.value, notification_id=notification_id)
+        
         return {"status": CreditsStatus.NO_CREDITS}
 
 

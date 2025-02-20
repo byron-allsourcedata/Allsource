@@ -30,6 +30,7 @@ import { showErrorToast, showToast } from '@/components/ToastNotification';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import UnlockButton from './UnlockButton';
+import { UpgradePlanPopup } from  '../components/UpgradePlanPopup'
 
 
 interface FetchDataParams {
@@ -72,6 +73,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     const [selectedFilters, setSelectedFilters] = useState<{ label: string, value: string }[]>([]);
     const [openPopup, setOpenPopup] = React.useState(false);
     const [creditsChargePopup, setCreditsChargePopup] = React.useState(false);
+    const [upgradePlanPopup, setUpgradePlanPopup] = React.useState(false);
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [selectedJobTitle, setSelectedJobTitle] = React.useState<string | null>(null);
@@ -155,7 +157,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
         try {
             const response = await axiosInstance.get(`/subscriptions/check-credit-status`)
             if (response.data.status === "NO_CREDITS"){
-                showErrorToast("HGHTNGBFGFGF")
+                setUpgradePlanPopup(true)
             }
             if (response.data.status === "UNLIMITED_CREDITS"){
                 showToast("You have a unlimited amount of credits!")
@@ -1069,6 +1071,10 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                         onClose={() => setCreditsChargePopup(false)}
                         updateEmployeeCallback={getEmployeeById}
                         id={employeeId}
+                    />
+                    <UpgradePlanPopup open={upgradePlanPopup}
+                        handleClose={() => setUpgradePlanPopup(false)}
+                        limitName={"contact credits"}
                     />
                 </Box>
             </Box>
