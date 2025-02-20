@@ -183,7 +183,7 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
               padding: '11px 10px',
               fontSize: '12px !important',
               fontFamily: 'Nunito Sans',
-
+              
             },
           },
         }}
@@ -264,25 +264,25 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
               </Box>
             </Box>
           )}
-          {!is_integrated && isHovered && (
-            <Box
-              sx={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '100%',
-                height: '100%',
-
-              }}
-            >
-              <AddIcon sx={{ color: "#5052B2", fontSize: 45 }} />
-            </Box>
-          )}
-          <Image
+          {!is_integrated &&  isHovered && (
+          <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
+            height: '100%',
+            
+          }}
+        >
+            <AddIcon sx={{ color: "#5052B2", fontSize: 45 }} />
+          </Box>
+        )}
+         <Image
             src={image}
             width={altImageIntegration.some(int => int == service_name) ? 100 : 32}
             height={32}
@@ -1026,8 +1026,8 @@ const Integrations = () => {
             },
           }}
         >
-          <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', position: 'sticky', left: 0, zIndex: 1200, backgroundColor: '#fff', mt:'0.75rem', justifyContent: 'space-between', width: '100%', "@media (max-width: 900px)": { left: 0, zIndex: 50, ml: 0, mt: 0 }, "@media (max-width: 700px)": { flexDirection: 'column', display: 'flex', alignItems: 'flex-start', zIndex: 50, width: '100%' }, "@media (max-width: 440px)": { flexDirection: 'column', zIndex: 50, justifyContent: 'flex-start' }, "@media (max-width: 400px)": { pb: '6px', } }}>
-            <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', width: '10%', gap: 1, "@media (max-width: 600px)": { mb: 0 }, "@media (max-width: 440px)": { mb: 1 }, }}>
+          <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', position: 'fixed', top: hasNotification ? '7.05rem' : '4.25rem', pt: '12px', pb: '12px', left: '9.1rem', pl: '2rem', zIndex: 1, backgroundColor: '#fff', justifyContent: 'space-between', width: '100%', ml: 0, "@media (max-width: 900px)": { left: 0, zIndex: 50 }, "@media (max-width: 700px)": { flexDirection: 'column', pl: '1.5rem', display: 'flex', alignItems: 'flex-start', zIndex: 50, width: '97%' }, "@media (max-width: 440px)": { flexDirection: 'column', pt: hasNotification ? '3rem' : '0.75rem', top: hasNotification ? '4.5rem' : '', zIndex: 50, justifyContent: 'flex-start' }, "@media (max-width: 400px)": { pt: hasNotification ? '4.25rem' : '', pb: '6px', } }}>
+            <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', width: '10%', gap: 1, "@media (max-width: 600px)": { mb: 2 }, "@media (max-width: 440px)": { mb: 1 }, }}>
               <Typography
                 className="first-sub-title"
                 sx={{
