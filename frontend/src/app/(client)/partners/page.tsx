@@ -201,11 +201,11 @@ const Partners: React.FC = () => {
         flexShrink: 0, 
         position: 'sticky', 
         top: 0, 
-        zIndex: 1200, 
+        zIndex: 1, 
         backgroundColor: '#fff', 
         width: '100%', 
     }}>
-            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minHeight: '60px', maxHeight:'190px', pt:'12px', pb: '16px', pl: 1.5, pr:2, justifyContent: 'space-between', width: '100%', ml: 0, "@media (max-width: 900px)": { left: 0, zIndex: 50 }, "@media (max-width: 600px)": { pl: 1, pr:1, pt:0, pb:3, flexDirection: 'column', display: 'flex', alignItems: 'flex-start', zIndex: 50, width: '100%' }, "@media (max-width: 440px)": { flexDirection: 'column', zIndex: 50, justifyContent: 'flex-start' }, "@media (max-width: 400px)": { pt: hasNotification ? '4.25rem' : '', pb: '6px', } }}>
+            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', minHeight: '60px', maxHeight:'190px', pt:'12px', pb: '16px', pl: 1.5, pr:2, justifyContent: 'space-between', width: '100%', ml: 0, "@media (max-width: 900px)": { left: 0, zIndex: 1 }, "@media (max-width: 600px)": { pl: 1, pr:1, pt:0, pb:3, flexDirection: 'column', display: 'flex', alignItems: 'flex-start', zIndex: 1, width: '100%' }, "@media (max-width: 440px)": { flexDirection: 'column', zIndex: 1, justifyContent: 'flex-start' }, "@media (max-width: 400px)": { pt: hasNotification ? '4.25rem' : '', pb: '6px', } }}>
                 {loading && <CustomizedProgressBar/>}
 
                     {!rewardsOpen && 

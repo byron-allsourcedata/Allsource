@@ -106,29 +106,29 @@ const Suppressions: React.FC = () => {
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
-        position: 'sticky', // Заменяем fixed на sticky
+        position: 'sticky',
         pb: '16px',
-        left: 0, // Убираем, так как sticky не требует left
+        left: 0,
         pl: '0.5rem',
-        zIndex: 1200,
+        zIndex: 1,
         backgroundColor: '#fff',
         justifyContent: 'space-between',
         width: '100%',
         "@media (max-width: 900px)": {
-            zIndex: 50
+            zIndex: 1
         },
         "@media (max-width: 600px)": {
             pt: '4.25rem',
             flexDirection: 'column',
             pl: '0.5rem',
             alignItems: 'flex-start',
-            zIndex: 50,
+            zIndex: 1,
             width: '100%',
             pr: 1.5
         },
         "@media (max-width: 440px)": {
             flexDirection: 'column',
-            zIndex: 50,
+            zIndex: 1,
             justifyContent: 'flex-start'
         },
         "@media (max-width: 400px)": {
@@ -136,7 +136,6 @@ const Suppressions: React.FC = () => {
         }
     }}
 >
-
                 <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', width: '10%', gap: 1, "@media (max-width: 600px)": { mb: 2 }, "@media (max-width: 440px)": { mb: 1 },  }}>
                     <Typography className="first-sub-title">Suppressions</Typography>
                     <Box sx={{"@media (max-width: 600px)": { display: 'none' }}}><CustomTooltip title={"Suppressions help manage and filter out contacts or data points that should not receive communications or updates."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/suppression" /></Box>
