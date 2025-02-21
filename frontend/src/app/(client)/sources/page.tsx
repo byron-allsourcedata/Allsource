@@ -32,6 +32,7 @@ import { useNotification } from '@/context/NotificationContext';
 import { showErrorToast } from '@/components/ToastNotification';
 import SourcesTable from "./SourcesTable"
 import SourcesImport from './SourcesImport';
+import SourcesList from './SourcesList';
 
 
 interface FetchDataParams {
@@ -92,6 +93,7 @@ const Sources: React.FC = () => {
     const { hasNotification } = useNotification();
     const [data, setData] = useState<any>([]);
     const [sources, setSources] = useState<boolean>(true);
+    const [createdSource, setCreatedSource] = useState<boolean>(true);
     const [count_companies, setCount] = useState<number | null>(null);
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
@@ -674,7 +676,10 @@ const Sources: React.FC = () => {
                                     pb: '18px'
                                 }
                             }}>
-                                <SourcesTable setStatus={setStatus} status={status} setData={setData} data={data}/>
+                                {createdSource && 
+                                    <SourcesList />}
+                                {!createdSource &&  
+                                    <SourcesTable setStatus={setStatus} status={status} setData={setData} data={data}/>}
                                 {showSlider && <Slider />}
                             </Box>
                         </Box>

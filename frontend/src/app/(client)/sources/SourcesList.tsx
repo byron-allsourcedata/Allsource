@@ -41,9 +41,6 @@ interface FetchDataParams {
 }
 
 interface CompanyEmployeesProps {
-    onBack: () => void
-    companyName: string
-    companyId: number
 }
 
 interface RenderCeil {
@@ -52,7 +49,7 @@ interface RenderCeil {
 }
 
 
-const SourcesList: React.FC<CompanyEmployeesProps> = ({ onBack, companyName, companyId }) => {
+const SourcesList: React.FC<CompanyEmployeesProps> = ({ }) => {
     const router = useRouter();
     const { hasNotification } = useNotification();
     const [data, setData] = useState<any[]>([]);
@@ -217,7 +214,7 @@ const SourcesList: React.FC<CompanyEmployeesProps> = ({ onBack, companyName, com
         setLoading(true);
         try {
 
-            let url = `/company/download-employees?company_id=${companyId}`;
+            let url = `/company/download-employees?company_id=${5}`;
             let params = [];
 
             if (selectedFilters.some(filter => filter.label === 'Regions')) {
@@ -445,162 +442,7 @@ const SourcesList: React.FC<CompanyEmployeesProps> = ({ onBack, companyName, com
                                 marginTop: hasNotification ? '2rem' : '0rem',
                             },
                         }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
-                            <IconButton onClick={onBack}>
-                                <ArrowBackIcon sx={{color: 'rgba(80, 82, 178, 1)'}}/>
-                            </IconButton>
-                            <Typography className='first-sub-title'>
-                                Employee - {companyName}
-                            </Typography>
-                            <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
-                        </Box>
-                        <Box sx={{
-                            display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px',
-                            '@media (max-width: 900px)': {
-                                gap: '8px'
-                            }
-                        }}>
-                            <Button
-                                aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
-                                aria-haspopup="true"
-                                aria-expanded={dropdownOpen ? 'true' : undefined}
-                                disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
-                                sx={{
-                                    textTransform: 'none',
-                                    color: 'rgba(128, 128, 128, 1)',
-                                    opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
-                                    border: '1px solid rgba(184, 184, 184, 1)',
-                                    borderRadius: '4px',
-                                    padding: '8px',
-                                    minWidth: 'auto',
-                                    '@media (max-width: 900px)': {
-                                        border: 'none',
-                                        padding: 0
-                                    },
-                                    '&:hover': {
-                                        backgroundColor: 'transparent',
-                                        border: '1px solid rgba(80, 82, 178, 1)',
-                                        color: 'rgba(80, 82, 178, 1)',
-                                        '& .MuiSvgIcon-root': {
-                                            color: 'rgba(80, 82, 178, 1)'
-                                        }
-                                    }
-                                }}
-                                onClick={handleDownload}
-                            >
-                                <DownloadIcon fontSize='medium' />
-                            </Button>
-                            <Button
-                                onClick={handleFilterPopupOpen}
-                                disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
-                                aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
-                                aria-haspopup="true"
-                                aria-expanded={dropdownOpen ? 'true' : undefined}
-                                sx={{
-                                    textTransform: 'none',
-                                    color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
-                                    border: selectedFilters.length > 0 ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
-                                    borderRadius: '4px',
-                                    padding: '8px',
-                                    opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
-                                    minWidth: 'auto',
-                                    position: 'relative',
-                                    '@media (max-width: 900px)': {
-                                        border: 'none',
-                                        padding: 0
-                                    },
-                                    '&:hover': {
-                                        backgroundColor: 'transparent',
-                                        border: '1px solid rgba(80, 82, 178, 1)',
-                                        color: 'rgba(80, 82, 178, 1)',
-                                        '& .MuiSvgIcon-root': {
-                                            color: 'rgba(80, 82, 178, 1)'
-                                        }
-                                    }
-                                }}
-                            >
-                                <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }} />
 
-                                {selectedFilters.length > 0 && (
-                                    <Box
-                                        sx={{
-                                            position: 'absolute',
-                                            top: 6,
-                                            right: 8,
-                                            width: '10px',
-                                            height: '10px',
-                                            backgroundColor: 'red',
-                                            borderRadius: '50%',
-                                            '@media (max-width: 900px)': {
-                                                top: -1,
-                                                right: 1
-                                            }
-                                        }}
-                                    />
-                                )}
-                            </Button>
-
-                        </Box>
-                    </Box>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, overflowX: 'auto', "@media (max-width: 600px)": { mb: 1 } }}>
-                        {selectedFilters.length > 0 && (
-                            <Chip
-                                className='second-sub-title'
-                                label="Clear all"
-                                onClick={handleResetFilters}
-                                sx={{ color: '#5052B2 !important', backgroundColor: 'transparent', lineHeight: '20px !important', fontWeight: '400 !important', borderRadius: '4px' }}
-                            />
-                        )}
-                        {selectedFilters.map(filter => {
-                            let displayValue = filter.value;
-                            if (filter.label === 'Department') {
-                                const departments = filter.value.split(', ') || [];
-                                const formattedRegions = departments.map(department => {
-                                    const [name] = department.split('-');
-                                    return name;
-                                });
-                                displayValue = formattedRegions.join(', ');
-                            }
-                            if (filter.label === 'Job Title') {
-                                const jobTitles = filter.value.split(', ') || [];
-                                const formattedRegions = jobTitles.map(jobTitle => {
-                                    const [name] = jobTitle.split('-');
-                                    return name;
-                                });
-                                displayValue = formattedRegions.join(', ');
-                            }
-                            if (filter.label === 'Seniority') {
-                                const seniorities = filter.value.split(', ') || [];
-                                const formattedRegions = seniorities.map(seniority => {
-                                    const [name] = seniority.split('-');
-                                    return name;
-                                });
-                                displayValue = formattedRegions.join(', ');
-                            }
-                            return (
-                                <Chip
-                                    className='paragraph'
-                                    key={filter.label}
-                                    label={`${filter.label}: ${displayValue.charAt(0).toUpperCase() + displayValue.slice(1)}`}
-                                    onDelete={() => handleDeleteFilter(filter)}
-                                    deleteIcon={
-                                        <CloseIcon
-                                            sx={{
-                                                backgroundColor: 'transparent',
-                                                color: '#828282 !important',
-                                                fontSize: '14px !important'
-                                            }}
-                                        />
-                                    }
-                                    sx={{
-                                        borderRadius: '4.5px',
-                                        backgroundColor: 'rgba(80, 82, 178, 0.10)',
-                                        color: '#5F6368 !important',
-                                        lineHeight: '16px !important'
-                                    }}
-                                />
-                            );
-                        })}
                     </Box>
                     <Box sx={{
                         flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px', pb: '20px',
@@ -609,11 +451,102 @@ const SourcesList: React.FC<CompanyEmployeesProps> = ({ onBack, companyName, com
                             pb: '18px'
                         }
                     }}>
-                        <Grid container spacing={1} sx={{ flex: 1 }}>
-                            <Grid item xs={12}>
-                                
-                            </Grid>
-                        </Grid> 
+                        <Box
+                            key={1}
+                            sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                padding: 2,
+                                border: "1px solid #e0e0e0",
+                                borderRadius: 2,
+                                backgroundColor: "#fff",
+                                mb: 3,
+                                '@media (max-width: 600px)': { flexDirection: 'column', justifyContent: 'space-between', width: '100%', alignItems: 'flex-start', gap:2 }
+                            }}
+                            >
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    gap: 5,
+                                    "@media (max-width: 600px)": {
+                                    flexDirection: "column",
+                                    justifyContent: "space-between",
+                                    width: "100%",
+                                    gap: 2,
+                                    },
+                                }}
+                                >
+                            <Box
+                                sx={{
+                                display: "flex",
+                                gap: 6,
+                                "@media (max-width: 900px)": { gap: 3 },
+                                "@media (max-width: 600px)": {
+                                    justifyContent: "space-between",
+                                    width: "100%",
+                                    display: "flex",
+                                    pr: 0.75,
+                                },
+                                }}
+                            >
+                                <Box>
+                                    <Typography variant="body2" className="table-heading">
+                                        Total Payouts
+                                    </Typography>
+                                    <Typography variant="subtitle1" className="table-data">
+                                        {43}
+                                    </Typography>
+                                </Box>
+                                <Box>
+                                    <Typography
+                                        variant="body2"
+                                        className="table-heading"
+                                        sx={{ textAlign: "left" }}
+                                    >
+                                        Payouts paid
+                                    </Typography>
+                                    <Typography variant="subtitle1" className="table-data">
+                                        {24}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                            <Box
+                                sx={{
+                                display: "flex",
+                                gap: 6,
+                                "@media (max-width: 900px)": { gap: 3 },
+                                "@media (max-width: 600px)": {
+                                    justifyContent: "space-between",
+                                    width: "100%",
+                                    display: "flex",
+                                    pr: 1.5,
+                                },
+                                }}
+                            >
+                                <Box>
+                                    <Typography variant="body2" className="table-heading">
+                                        No. of invites
+                                    </Typography>
+                                    <Typography variant="subtitle1" className="table-data">
+                                        {25}
+                                    </Typography>
+                                </Box>
+                                <Box>
+                                    <Typography
+                                        variant="body2"
+                                        className="table-heading"
+                                        sx={{ textAlign: "left" }}
+                                    >
+                                        Payout date
+                                    </Typography>
+                                    <Typography variant="subtitle1" className="table-data">
+                                        {"25.10.1202"}
+                                    </Typography>
+                                </Box>
+                                </Box>
+                            </Box>
+                        </Box>
                         {showSlider && <Slider />}
                     </Box>
                     <Popover
@@ -621,66 +554,32 @@ const SourcesList: React.FC<CompanyEmployeesProps> = ({ onBack, companyName, com
                         anchorEl={anchorEl}
                         onClose={handleClosePopover}
                         anchorOrigin={{
-                            vertical: "bottom",
-                            horizontal: "left",
+                        vertical: 'bottom',
+                        horizontal: 'left',
                         }}
-                        transformOrigin={{
-                            vertical: "top",
-                            horizontal: "left",
-                        }}
-                        PaperProps={{
-                            sx: {
-                                width: "184px",
-                                height: "108px",
-                                borderRadius: "4px 0px 0px 0px",
-                                border: "0.2px solid #ddd",
-                                padding: "8px",
-                                boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
-                            },
-                        }}
-                    >
-                        <Box sx={{ maxHeight: "92px", overflowY: "auto", backgroundColor: 'rgba(255, 255, 255, 1)' }}>
-                            {selectedJobTitle?.split(",").map((part, index) => (
-                                <Typography
-                                    key={index}
-                                    variant="body2"
-                                    className='second-sub-title'
-                                    sx={{
-                                        wordBreak: "break-word",
-                                        backgroundColor: 'rgba(243, 243, 243, 1)',
-                                        borderRadius: '4px',
-                                        color: 'rgba(95, 99, 104, 1) !important',
-                                        marginBottom: index < selectedJobTitle.split(",").length - 1 ? "4px" : 0, // Отступы между строками
-                                    }}
+                        >
+                            <List
+                                sx={{ 
+                                width: '100%', maxWidth: 360}}
                                 >
-                                    {part.trim()}
-                                </Typography>
-                            ))}
-                        </Box>
+                                <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
+                                        handleClosePopover()
+                                    }}>
+                                <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Download"/>
+                                </ListItemButton>
+                                <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
+                                        handleClosePopover()
+                                    }}>
+                                <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Lookalike"/>
+                                </ListItemButton>
+                                <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
+                                        handleClosePopover()
+                                    }}>
+                                <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Remove"/>
+                                </ListItemButton>
+                            </List>
                     </Popover>
 
-                    {/* <FilterPopup open={filterPopupOpen} 
-                        onClose={handleFilterPopupClose} 
-                        onApply={handleApplyFilters} 
-                        jobTitles={jobTitles || []} 
-                        seniorities={seniorities || []} 
-                        departments={departments || []} />
-                    <PopupDetails open={openPopup}
-                        onClose={handleClosePopup}
-                        companyId={companyId}
-                        updateEmployeeCallback={chargeCredit}
-                        employeeId={employeeId}
-                        employeeisUnlocked={employeeisUnlocked}
-                        />
-                    <PopupChargeCredits open={creditsChargePopup}
-                        onClose={() => setCreditsChargePopup(false)}
-                        updateEmployeeCallback={chargeCredit}
-                        id={employeeId}
-                    /> */}
-                    <UpgradePlanPopup open={upgradePlanPopup}
-                        handleClose={() => setUpgradePlanPopup(false)}
-                        limitName={"contact credits"}
-                    />
                 </Box>
             </Box>
         </>
