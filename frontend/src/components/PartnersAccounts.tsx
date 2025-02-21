@@ -321,7 +321,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                 '@media (max-width: 600px)': { margin: '0rem auto 0rem' }
             }}>
                 <Box>
-                    {fromMain && <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 2, mt: 1}}>
+                    {fromMain && <Box sx={{ display: fromMain ? 'flex' : 'none', flexDirection: 'row', alignItems: 'center', gap: 2, mt: 1}}>
                         <IconButton
                             onClick={onBack}
                             sx={{
@@ -361,7 +361,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                                 Master Partners
                             </Typography>
                         </>}
-                    <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', mb: fromAdmin ? 2 : 6, alignItems: 'center', gap: 2 }}>
+                    <Box sx={{ display: fromAdmin ? 'flex' : 'none', width: '100%', justifyContent: 'space-between', mb: fromAdmin ? 2 : 6, alignItems: 'center', gap: 2 }}>
                         {fromAdmin
                             &&
                             <Tabs
@@ -535,13 +535,13 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                                                     ...suppressionsStyles.tableColumn,
                                                     paddingLeft: "16px",
                                                     cursor: sortable ? 'pointer' : 'default',
-                                                    // ...(key === 'account_name' && {
-                                                    //     position: 'sticky',
-                                                    //     left: 0,
-                                                    //     zIndex: 99,
-                                                    //     backgroundColor: '#fff',
+                                                    ...(key === 'account_name' && {
+                                                        position: 'sticky',
+                                                        left: 0,
+                                                        zIndex: 99,
+                                                        backgroundColor: '#fff',
 
-                                                    // })
+                                                    })
                                                 }}
                                                 onClick={sortable ? () => handleSortRequest(key) : undefined}
                                             >

@@ -193,7 +193,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 </Button>
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 5, '@media (max-width: 600px)': { flexDirection: 'column', gap: 1 }, }}>
-                                <Typography variant="body1" gutterBottom sx={{ ...accountStyles.header_text, display: 'flex', flexDirection: 'row', gap: 1 }}>
+                                <Typography variant="body1" component="div" gutterBottom sx={{ ...accountStyles.header_text, display: 'flex', flexDirection: 'row', gap: 1 }}>
                                     {lead.personal_emails || lead.business_email ? (
                                         <Link
                                             href={`mailto:${lead.personal_emails ? lead.personal_emails.split(',')[0] : lead.business_email.split(',')[0]}`}
@@ -213,6 +213,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 <Typography
                                     variant="body1"
                                     gutterBottom
+                                    component="div"
                                     sx={{
                                         ...accountStyles.header_text,
                                         display: 'flex',
@@ -248,7 +249,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                     </Box>
                     {/* Basic Details */}
                     <Box sx={accountStyles.box_param}>
-                        <Typography sx={{ ...accountStyles.title }}>
+                        <Typography component="div" sx={{ ...accountStyles.title }}>
                             <Image src={'/user-square.svg'} width={18} height={18} alt='iphone icon' />
                             Personal Details
                         </Typography>
@@ -494,7 +495,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
 
                     {/* Company Details */}
                     <Box sx={accountStyles.box_param}>
-                        <Typography sx={accountStyles.title}>
+                        <Typography component="div" sx={accountStyles.title}>
                             <Image src={'/company.svg'} width={18} height={18} alt='company icon' />
                             Company Details
                         </Typography>
@@ -568,7 +569,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             <Typography sx={{ ...accountStyles.title_text }}>
                                 Company description:
                             </Typography>
-                            <Typography sx={{ ...accountStyles.text }}>
+                            <Typography component="div" sx={{ ...accountStyles.text }}>
                                 <TruncatedText text={lead.company_description || '--'} limit={100} />
                             </Typography>
                         </Box>
@@ -639,7 +640,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                     </Box>
                     {/* Financial details */}
                     <Box sx={accountStyles.box_param}>
-                        <Typography sx={accountStyles.title}>
+                        <Typography component="div" sx={accountStyles.title}>
                             <Image src={'/fin_details.svg'} width={18} height={18} alt='finance icon' />
                             Financial details
                         </Typography>
@@ -692,7 +693,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                     </Box>
                     {/* Social Connections */}
                     <Box sx={accountStyles.box_param}>
-                        <Typography sx={accountStyles.title}>
+                        <Typography component="div" sx={accountStyles.title}>
                             <Image src={'/social.svg'} width={18} height={18} alt='web icon' />
                             Social Connections
                         </Typography>
@@ -710,7 +711,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             <Typography sx={{ ...accountStyles.title_text }}>
                                 Company LinkedIn url
                             </Typography>
-                            <Typography sx={{ ...accountStyles.text, color: 'rgba(80, 82, 178, 1)' }}>
+                            <Typography component="div" sx={{ ...accountStyles.text, color: 'rgba(80, 82, 178, 1)' }}>
                                 {lead.company_linkedin_url ? (
                                     <Link
                                         href={`https://${lead.company_linkedin_url}`}

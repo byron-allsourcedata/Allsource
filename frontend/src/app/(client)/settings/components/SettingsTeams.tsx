@@ -422,7 +422,7 @@ export const SettingsTeams: React.FC = () => {
     }
 
     return (
-        <Box>
+        <Box sx={{ pr:'16px' }}>
             {pendingInvitations.length > 0 && (
                 <>
                 <Box sx={{ marginBottom: 2 }}>

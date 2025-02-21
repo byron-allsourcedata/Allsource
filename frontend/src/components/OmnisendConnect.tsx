@@ -117,6 +117,9 @@ const OmnisendConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
       };
 
     const handleApiKeyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if(apiKeyError) {
+            setApiKeyError(false)
+        }
         const value = event.target.value;
         setApiKey(value);
         setApiKeyError(!value.trim()); 
@@ -185,11 +188,11 @@ const OmnisendConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
         }
         if(response.data === "CREDENTIALS_INVALID"){
             showErrorToast('Invalid API Key, please, try another')
+            setApiKeyError(true)
         }
     } catch (error) {}
     finally {
      setDisableButton(false)
-     setApiKey('')
      setLoading(false)
     }
     }
@@ -400,7 +403,7 @@ const OmnisendConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
                                 fullWidth
                                 margin="normal"
                                 error={apiKeyError || Invalid_api_key}
-                                helperText={apiKeyError ? 'API Key is required' : ''}
+                                helperText={!apiKey ? 'API Key is required' : apiKeyError ? 'API Key is invalid' : ''}
                                 value={apiKey}
                                 onChange={handleApiKeyChange}
                                 InputLabelProps={{ sx: klaviyoStyles.inputLabel }}

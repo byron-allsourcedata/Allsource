@@ -10,13 +10,30 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow: hidden;
+}
+
 body {
   margin: 0;
   padding: 0;
-  overflow-y: scroll;
+  overflow-y: hidden;
   -ms-overflow-style: none;
   
 }
+
+.page-container {
+  overflow: auto;
+  max-height: calc(100vh - 4.25rem);
+}
+
+@media (max-width: 900px) {
+  .page-container {
+    overflow: hidden;
+    max-height: 100vh;
+  }
+}
+
 /* body::-webkit-scrollbar {
   display: none; 
 } */

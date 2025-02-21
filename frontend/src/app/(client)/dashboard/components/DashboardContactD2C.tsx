@@ -375,7 +375,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates, typeB
     const { aggregatedData, aggregatedSeries } = aggregateData(formattedData, filteredSeries, periodInDays);
 
     return (
-        <>
+        <Box sx={{ width: '100%', '@media (max-width: 900px)': { mt: 0, mb: 2, } }}>
             <Box sx={{ width: '100%', mt: 1, mb: 1, '@media (max-width: 900px)': { mt: 0, mb: 0, } }}>
                 <StatsCard
                     values={{
@@ -641,7 +641,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates, typeB
                 </CardContent>
             </Card>
             {loading && (<CustomizedProgressBar />)}
-        </>
+        </Box>
     )
 }
 

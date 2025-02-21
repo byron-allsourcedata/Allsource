@@ -91,6 +91,7 @@ const CollectionRules: React.FC = () => {
             backgroundColor: '#fff',
             borderRadius: '8px',
             width: '100%',
+            overflow: 'auto',
             padding: 0,
             margin: '0 auto',
             mb: 1,

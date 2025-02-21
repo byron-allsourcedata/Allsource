@@ -157,6 +157,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
 
     const chargeCredit = async (id: number) => {
         setLoading(true);
+        setEmployeeisUnlocked(false)
         try {
             if (id){
                 const response = await axiosInstance.put('/subscriptions/charge-credit', {five_x_five_id: id}, {

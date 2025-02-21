@@ -403,9 +403,11 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
 
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', }}>
             <Box sx={{
                 display: 'flex', flexDirection: 'column', gap: '24px',
+                '@media (max-height: 700px)': {
+                mb:20},
                 '@media (max-width: 899px)': {
                     minWidth: '100%'
                 },

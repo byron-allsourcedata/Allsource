@@ -194,6 +194,8 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
             }
         } catch (err) {
             showErrorToast('Integration Klaviyo error, credentails invalid')
+        } finally {
+            setDisableButton(false)
         }
     };
 

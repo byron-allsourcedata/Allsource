@@ -403,7 +403,7 @@ export const SettingsSubscription: React.FC = () => {
     };
 
     return (
-        <Box sx={{ marginBottom: '36px' }}>
+        <Box sx={{ marginBottom: '12px', pr:'1rem', '@media (max-width: 600px)':{ pr:'16px'} }}>
 
             {/* Plans Section */}
             <Box sx={{ marginBottom: 4 }}>
@@ -507,9 +507,9 @@ export const SettingsSubscription: React.FC = () => {
             )}
             <Divider sx={{
                 borderColor: '#e4e4e4',
+                width: '100%',
                 '@media (max-width: 600px)': {
-                    marginLeft: '-16px',
-                    marginRight: '-16px'
+                    marginRight: '-8px'
                 }
             }} />
 
@@ -542,7 +542,7 @@ export const SettingsSubscription: React.FC = () => {
 
                 <Box sx={{ marginBottom: 3, opacity: 0.6 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3, opacity: 0.6 }}>
-                        <Typography variant="body1" className='third-sub-title' sx={{
+                        <Typography variant="body1" component="span" className='third-sub-title' sx={{
                             fontSize: '20px !important',
                             color: '#4a4a4a !important'
                         }}>
@@ -551,7 +551,7 @@ export const SettingsSubscription: React.FC = () => {
                                 paddingRight: '8px'
                             }}>50K</Typography>
                             Credits/month</Typography>
-                        <Typography variant="body1" className='third-sub-title' sx={{
+                        <Typography variant="body1" component="span" className='third-sub-title' sx={{
                             fontSize: '18px !important',
                             color: '#4a4a4a !important'
                         }}>
@@ -647,7 +647,7 @@ export const SettingsSubscription: React.FC = () => {
                             }}>
                                 Summary
                             </Typography>
-                            <Typography variant="body1" className='first-sub-title' sx={{
+                            <Typography variant="body1" component="span" className='first-sub-title' sx={{
                                 fontWeight: '700 !important',
                                 opacity: 0.6
                             }}>
@@ -658,7 +658,7 @@ export const SettingsSubscription: React.FC = () => {
 
                         </Box>
                         <Box>
-                            <Typography variant="h6" className='heading-text' sx={{
+                            <Typography variant="h6" component="span" className='heading-text' sx={{
                                 fontSize: '40px !important',
                                 fontWeight: '700 !important',
                                 opacity: 0.6
@@ -693,9 +693,9 @@ export const SettingsSubscription: React.FC = () => {
 
             <Divider sx={{
                 borderColor: '#e4e4e4',
+                width: '100%',
                 '@media (max-width: 600px)': {
-                    marginLeft: '-16px',
-                    marginRight: '-16px'
+                    paddingRight: '8px'
                 }
             }} />
 

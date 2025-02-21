@@ -1736,8 +1736,23 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                           ? "rgba(237, 237, 247, 1)"
                           : "rgba(255, 255, 255, 1)",
                         lineHeight: '20px !important',
+                        "@media (max-width: 1250px)": {
+                          whiteSpace: "normal",
+                          flexDirection: "column",
+                          height: "3em",
+                        },
+                        "@media (max-width: 1080px)": {
+                          width: "48%",
+                          whiteSpace: "nowrap",
+                          height: "2em",
+                        },
+                        '@media (max-width:700px)': {
+                          whiteSpace: "normal",
+                          height: "3em",
+                        },
                         '@media (max-width:600px)': {
-                          width: '48%'
+                          whiteSpace: "nowrap",
+                          height: "2em",
                         }
                       }}
                     >

@@ -109,8 +109,7 @@ const DataSync = () => {
             alignItems: "center",
             justifyContent: "space-between",
             width: "100%",
-            ml: 2,
-            pr: 1.5,
+            pr: 2,
             "@media (max-width: 900px)": {
               pt: hasNotification ? 5 : 0,
             },
@@ -125,6 +124,7 @@ const DataSync = () => {
               display: "flex",
               flexDirection: "row",
               alignItems: "center",
+              pl: '0.5rem',
               gap: 1,
               "@media (max-width: 900px)": { mb: 2 },
 
