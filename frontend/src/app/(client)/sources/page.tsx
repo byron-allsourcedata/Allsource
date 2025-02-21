@@ -93,7 +93,7 @@ const Sources: React.FC = () => {
     const { hasNotification } = useNotification();
     const [data, setData] = useState<any>([]);
     const [sources, setSources] = useState<boolean>(true);
-    const [createdSource, setCreatedSource] = useState<boolean>(true);
+    const [createdSource, setCreatedSource] = useState<boolean>(false);
     const [count_companies, setCount] = useState<number | null>(null);
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
