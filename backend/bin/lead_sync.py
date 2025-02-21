@@ -607,7 +607,7 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
                                    platform_order_id=order_detail.get('platform_order_id'),
                                    total_price=order_detail.get('total_price'),
                                    currency_code=order_detail.get('currency'),
-                                   platform_created_at=order_detail['platform_created_at'], created_at=datetime.now()))
+                                   platform_created_at=order_detail.get('platform_created_at'), created_at=datetime.now()))
             existing_record = session.query(LeadsUsersOrdered).filter_by(lead_user_id=lead_user.id).first()
             if existing_record:
                 existing_record.ordered_at = requested_at
