@@ -513,7 +513,7 @@ class CompanyPersistence:
         FiveXFiveEmailPersonal = aliased(FiveXFiveEmails)
         FiveXFiveEmailBusiness = aliased(FiveXFiveEmails)
 
-        query_with_unlock = (
+        query = (
             self.db.query(
                 FiveXFiveUser.id,
                 FiveXFiveUser.first_name,
@@ -541,10 +541,6 @@ class CompanyPersistence:
                     FiveXFiveUser.id,
                 ) 
         )
-
-        is_unlocked = query_with_unlock.first().is_unlocked
-
-        query = query_with_unlock
 
         sort_options = {
             'business_email': FiveXFiveUser.business_email,
@@ -631,16 +627,20 @@ class CompanyPersistence:
                         )
                     )
                 )
+            
+            unlocked_subquery = self.db.query(UsersUnlockedFiveXFiveUser.id).filter(
+                UsersUnlockedFiveXFiveUser.five_x_five_up_id == FiveXFiveUser.up_id
+            ).exists().correlate(FiveXFiveUser)
 
-            if not is_unlocked:
-                filters.extend([
-                    FiveXFiveEmailPersonal.email.like(f'{search_query}%'),
-                    FiveXFiveEmailPersonal.email_host.like(f'{search_query}%'),
-                    FiveXFiveEmailBusiness.email.like(f'{search_query}%'),
-                    FiveXFiveEmailBusiness.email_host.like(f'{search_query}%'),
-                    FiveXFivePhones.number.like(f"{search_query}%"),
-                    FiveXFiveUser.linkedin_url.like(f"{search_query}%"),
-                ])
+
+            additional_filters = [
+                FiveXFiveEmailPersonal.email.like(f'{search_query}%'),
+                FiveXFiveEmailPersonal.email_host.like(f'{search_query}%'),
+                FiveXFiveEmailBusiness.email.like(f'{search_query}%'),
+                FiveXFiveEmailBusiness.email_host.like(f'{search_query}%'),
+                FiveXFivePhones.number.like(f"{search_query}%"),
+                FiveXFiveUser.linkedin_url.like(f"{search_query}%"),
+            ]
                 
             query = (
                 query
@@ -652,9 +652,8 @@ class CompanyPersistence:
                 .outerjoin(FiveXFivePhones, FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id)
                 .join(FiveXFiveNamesFirst, FiveXFiveNamesFirst.id == FiveXFiveUser.first_name_id)
                 .join(FiveXFiveNamesLast, FiveXFiveNamesLast.id == FiveXFiveUser.last_name_id)
-                .filter(or_(*filters)) 
+                .filter(or_(*filters, and_(unlocked_subquery, or_(*additional_filters)))) 
             )
-
 
         count = 0
         max_page = 0
