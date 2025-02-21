@@ -26,7 +26,8 @@ const headerStyles = {
     maxHeight: '4.25rem',
     color: 'rgba(244, 87, 69, 1)',
     borderBottom: `1px solid rgba(228, 228, 228, 1)`,
-    position: 'fixed',
+    position: 'sticky',
+    overflowY: 'hidden',
     top: 0,
     left: 0,
     right: 0,
@@ -150,13 +151,14 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
   }
   return (
     <>
+    <Box sx={{ display: 'block',  }}>
       <Box sx={{ display: { md: 'none' } }}>
         <SliderProvider><NavigationMenu NewRequestNotification={hasNewNotifications || hasNewNotifications} /></SliderProvider>
       </Box>
       <Box sx={{ ...headerStyles.headers, display: { xs: 'none', md: 'flex' } }}>
         <Box sx={headerStyles.logoContainer}>
           <IconButton onClick={handleLogoClick} sx={{ "&:hover": { backgroundColor: 'transparent' } }}>
-            <Image priority={true} src="/logo.svg" alt="logo" height={30} width={50} />
+            <Image priority src="/logo.svg" alt="logo" height={30} width={50} />
           </IconButton>
           {visibleButton && (
             <Button
@@ -328,6 +330,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
             </MenuItem>
           </Menu>
         </Box>
+      </Box>
       </Box>
       <NotificationPopup open={notificationIconPopupOpen} onClose={handleNotificationIconPopupClose} anchorEl={anchorElNotificate} />
     </>

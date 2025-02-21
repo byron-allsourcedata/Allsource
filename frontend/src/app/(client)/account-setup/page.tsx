@@ -1062,7 +1062,7 @@ const AccountSetup = () => {
           }}
         >
           <Box sx={styles.logo}>
-            <Image src="/logo.svg" alt="logo" height={30} width={50} />
+            <Image src="/logo.svg" priority alt="logo" height={30} width={50} />
           </Box>
           {(visibleButton || backButton) && (
             <Button

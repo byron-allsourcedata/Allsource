@@ -68,13 +68,6 @@ const Leads: React.FC = () => {
     const [popupData, setPopupData] = React.useState<any>(null);
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
 
-    useEffect(() => {
-        document.body.style.overflow = 'hidden';
-        return () => {
-            document.body.style.overflow = 'auto';
-        };
-    }, []);
-
     const handleOpenPopup = (row: any) => {
         setPopupData(row);
         setOpenPopup(true);
@@ -908,11 +901,14 @@ const Leads: React.FC = () => {
                 </Box>
             )}
             <Box sx={{
-                display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
+                display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%', pr:'16px',
                 '@media (max-width: 900px)': {
-                    paddingRight: 0,
+                    paddingRight: 2,
                     minHeight: '100vh'
-
+                },
+                '@media (max-width: 599px)': {
+                    paddingRight: '16px',
+                    marginLeft: 0,
                 }
             }}>
                 <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>

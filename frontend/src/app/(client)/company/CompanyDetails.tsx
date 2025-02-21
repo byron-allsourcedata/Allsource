@@ -200,7 +200,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 </Button>
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 5, '@media (max-width: 600px)': { flexDirection: 'column', gap: 1 }, }}>
-                                <Typography variant="body1" gutterBottom sx={{ ...companyStyles.header_text, display: 'flex', flexDirection: 'row', gap: 1 }}>
+                                <Typography component="div" variant="body1" gutterBottom sx={{ ...companyStyles.header_text, display: 'flex', flexDirection: 'row', gap: 1 }}>
                                     {company.domain ? (
                                         <Link
                                             href={`https://${company.domain}`}
@@ -222,6 +222,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 <Typography
                                     variant="body1"
                                     gutterBottom
+                                    component="div"
                                     sx={{
                                         ...companyStyles.header_text,
                                         display: 'flex',
@@ -283,7 +284,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             <Typography sx={{ ...companyStyles.title_text }}>
                                 Company description:
                             </Typography>
-                            <Typography sx={{ ...companyStyles.text }}>
+                            <Typography component="div" sx={{ ...companyStyles.text }}>
                                 <TruncatedText text={company.description || '--'} limit={100} />
                             </Typography>
                         </Box>
@@ -331,7 +332,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             <Typography sx={{ ...companyStyles.title_text }}>
                                 LinkedIn url
                             </Typography>
-                            <Typography sx={{ ...companyStyles.text, color: 'rgba(80, 82, 178, 1)' }}>
+                            <Typography component="div" sx={{ ...companyStyles.text, color: 'rgba(80, 82, 178, 1)' }}>
                                 {company.linkedin_url ? (
                                     <Link
                                         href={`https://${company.linkedin_url}`}

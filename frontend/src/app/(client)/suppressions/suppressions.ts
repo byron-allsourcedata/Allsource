@@ -7,12 +7,9 @@ export const suppressionsStyle: { [key: string]: SxProps<Theme> } = {
         width: '100%',
         padding: 0,
         margin: 0,
+        paddingTop: '0.75rem',
         alignItems: 'center',
         justifyContent: 'center',
-        '@media (min-width: 900px)': {
-            paddingLeft: '2.5rem',
-            paddingRight: '2.5rem'
-        },
         '@media (max-width: 440px)': {
             marginTop: '-60px',
             padding: '0',
