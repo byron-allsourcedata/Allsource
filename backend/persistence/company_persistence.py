@@ -513,7 +513,7 @@ class CompanyPersistence:
         FiveXFiveEmailPersonal = aliased(FiveXFiveEmails)
         FiveXFiveEmailBusiness = aliased(FiveXFiveEmails)
 
-        query = (
+        query_with_unlock = (
             self.db.query(
                 FiveXFiveUser.id,
                 FiveXFiveUser.first_name,
@@ -530,7 +530,7 @@ class CompanyPersistence:
                 cs(
                     (func.count(UsersUnlockedFiveXFiveUser.five_x_five_up_id) > 0, True),
                     else_=False
-                )
+                ).label("is_unlocked")
             )
                 .select_from(LeadUser)
                 .join(LeadCompany, LeadCompany.id == LeadUser.company_id)
@@ -539,8 +539,12 @@ class CompanyPersistence:
                 .filter(LeadCompany.id == company_id, LeadUser.domain_id == domain_id)
                 .group_by(
                     FiveXFiveUser.id,
-                )
+                ) 
         )
+
+        is_unlocked = query_with_unlock.first().is_unlocked
+
+        query = query_with_unlock
 
         sort_options = {
             'business_email': FiveXFiveUser.business_email,
@@ -628,14 +632,15 @@ class CompanyPersistence:
                     )
                 )
 
-            filters.extend([
-                FiveXFiveEmailPersonal.email.like(f'{search_query}%'),
-                FiveXFiveEmailPersonal.email_host.like(f'{search_query}%'),
-                FiveXFiveEmailBusiness.email.like(f'{search_query}%'),
-                FiveXFiveEmailBusiness.email_host.like(f'{search_query}%'),
-                FiveXFivePhones.number.like(f"{search_query}%"),
-                FiveXFiveUser.linkedin_url.like(f"{search_query}%"),
-            ])
+            if not is_unlocked:
+                filters.extend([
+                    FiveXFiveEmailPersonal.email.like(f'{search_query}%'),
+                    FiveXFiveEmailPersonal.email_host.like(f'{search_query}%'),
+                    FiveXFiveEmailBusiness.email.like(f'{search_query}%'),
+                    FiveXFiveEmailBusiness.email_host.like(f'{search_query}%'),
+                    FiveXFivePhones.number.like(f"{search_query}%"),
+                    FiveXFiveUser.linkedin_url.like(f"{search_query}%"),
+                ])
                 
             query = (
                 query
