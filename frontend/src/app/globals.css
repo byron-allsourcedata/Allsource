@@ -27,7 +27,7 @@ body {
   max-height: calc(100vh - 4.25rem);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 900px) {
   .page-container {
     overflow: hidden;
     max-height: 100vh;

@@ -499,36 +499,7 @@ const Dashboard: React.FC = () => {
         }}
       >
         <Box sx={{
-          display: 'flex', 
-          flexDirection: 'row', 
-          alignItems: 'start',
-          pt: hasNotification ? 6.25 : 3.5,
-          pb: 0.75,
-          position: 'fixed',
-          overflowY: 'hidden',
-          top: hasNotification ? '3.95rem' : '3.75rem',
-          right: '0px',
-          left: '170px',
-          background: '#fff',
-          zIndex: '1',
-          paddingLeft: '30px',
-          paddingRight: '65px',
-          '@media (min-width: 1600px)': {
-            paddingLeft: '30px',
-            paddingRight: '90px',
-          },
-          mx: '-24px',
-          "@media (max-width: 900px)": {
-            left: '10px',
-            paddingRight: '90px',
-          },
-          "@media (max-width: 600px)": {
-            flexDirection: 'column',
-            alignItems: 'start',
-            paddingRight: 3,
-            top: '6.3rem',
-            pt:0
-          }
+          display: 'flex', flexDirection: 'row', alignItems: 'center', position: 'sticky', top: 0, pt: '12px', pb: '12px', pl:'8px', zIndex: 1, backgroundColor: '#fff', justifyContent: 'space-between', width: '100%', "@media (max-width: 600px)": { flexDirection: 'column', display: 'flex', alignItems: 'flex-start', zIndex: 1, width: '100%', pr:1.5 }, "@media (max-width: 440px)": { flexDirection: 'column', pt: hasNotification ? '3rem' : '0.75rem', top: hasNotification ? '4.5rem' : '', zIndex: 1, justifyContent: 'flex-start' }, "@media (max-width: 400px)": { pt: hasNotification ? '4.25rem' : '', pb: '6px', }
         }}>
             <Typography
               variant="h4"
@@ -718,21 +689,18 @@ const Dashboard: React.FC = () => {
               </Button>
             </Box>
           </Box>
-          <Box sx={{display: 'flex', height: '120px'}}>
-
-          </Box>
           <Box
             sx={{
               display: 'flex',
               flexDirection: 'column',
               height: '100vh',
               overflowY: 'auto',
+              
               "@media (max-width: 900px)": {
-                height: 'calc(100vh - 40px)',
+                height: 'calc(100vh - 9.5rem)',
               },
               "@media (max-width: 600px)": {
-                height: 'calc(100vh - 100px)',
-                pr:'16px'
+                height: 'calc(100vh - 12.5rem)',
               }
             }}
           >

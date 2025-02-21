@@ -100,7 +100,7 @@ const Suppressions: React.FC = () => {
     }
 
     return (
-        <Box sx={{...suppressionsStyle.mainContent, height: '96vh', overflow: 'hidden',}}>
+        <Box sx={{...suppressionsStyle.mainContent, overflow: 'hidden',}}>
             <Box
     sx={{
         display: 'flex',
@@ -259,13 +259,18 @@ const Suppressions: React.FC = () => {
                     </Button>
                 </Box>
             ) : (
-                <Box sx={{height: '100vh', width: '100%', overflow: 'auto', pr: '2.5rem', pl:'2.5rem', "@media (max-width: 600px)": { pr: 0, pl:0 }, }}>
+                <Box sx={{flexGrow: 1,
+                    overflow: 'auto',
+                    height: 'calc(100vh - 8rem)',
+                    "@media (max-width: 900px)": {
+                        height: 'calc(100vh - 11rem)',
+                    }, width: '100%', pr: '2.5rem', pl:'2.5rem', "@media (max-width: 600px)": { pr: 0, pl:0 }, }}>
                     <Box sx={{ width: '100%' }}>
                         <TabPanel value={tabIndex} index={0}>
                             <SuppressionRules />
                         </TabPanel>
                     </Box>
-                    <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
+                    <Box sx={{ width: '100%',  "@media (max-width: 600px)": { pr:'8px'} }}>
                         <TabPanel value={tabIndex} index={1}>
                             <CollectionRules />
                         </TabPanel>

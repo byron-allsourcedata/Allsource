@@ -583,7 +583,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
     { image: 'omnisend_icon_black.svg', service_name: 'omnisend' },
     { image: 'mailchimp-icon.svg', service_name: 'mailchimp' },
     { image: 'sendlane-icon.svg', service_name: 'sendlane' },
-    { image: 'attentive.svg', service_name: 'attentive' },
+    //{ image: 'attentive.svg', service_name: 'attentive' },
     { image: 'zapier-icon.svg', service_name: 'zapier' },
     { image: 'slack-icon.svg', service_name: 'slack' }
   ];
@@ -591,7 +591,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
   const integratedServices = integrationsCredentials.map(cred => cred.service_name);
 
   return (
-    <Box sx={{ width: '100%', height: 'calc(100vh - 10.25rem)', overflow: 'auto', '@media (max-width: 600px)': { pr: 2, pb: 4 } }}>
+    <Box sx={{ width: '100%', flexGrow: 1, height: 'calc(100vh - 7.75rem)',  overflow: 'auto', pt:2, '@media (max-width: 600px)': { pr: 2, pb: 4, height:'calc(100vh - 11.25rem)', pt:2 } }}>
       <Box sx={{ overflowX: 'hidden' }}>
         <TextField
           fullWidth
@@ -800,7 +800,7 @@ const PixelManagment = () => {
     setValue(newValue);
   };
   return (
-    <Box sx={{ height: 'calc(100vh - 10.25rem)', overflow: 'auto', width: '100%', pr: '12px' }}>
+    <Box sx={{ height: 'calc(100vh - 11rem)', overflow: 'auto', width: '100%', pr: '12px', }}>
       <TabContext value={value}>
         <TabList
           centered
@@ -1004,29 +1004,25 @@ const Integrations = () => {
             alignItems: "center",
             justifyContent: "space-between",
             width: "100%",
-            ml:1.5,
             mb:0,
             "@media (max-width: 900px)": {
               flexDirection: "column",
               display: "flex",
               alignItems: "flex-start",
-              marginTop: hasNotification ? '36px' : '0px'
             },
             "@media (max-width: 600px)": {
               flexDirection: "column",
               display: "flex",
               ml:0,
               alignItems: "flex-start",
-              marginTop: hasNotification ? '36px' : '0px'
             },
             "@media (max-width: 440px)": {
               flexDirection: "column",
               justifyContent: "flex-start",
-              marginTop: hasNotification ? '44px' : '0px'
             },
           }}
         >
-          <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', position: 'fixed', top: hasNotification ? '7.05rem' : '4.25rem', pt: '12px', pb: '12px', left: '9.1rem', pl: '2rem', zIndex: 1, backgroundColor: '#fff', justifyContent: 'space-between', width: '100%', ml: 0, "@media (max-width: 900px)": { left: 0, zIndex: 50 }, "@media (max-width: 700px)": { flexDirection: 'column', pl: '1.5rem', display: 'flex', alignItems: 'flex-start', zIndex: 50, width: '97%' }, "@media (max-width: 440px)": { flexDirection: 'column', pt: hasNotification ? '3rem' : '0.75rem', top: hasNotification ? '4.5rem' : '', zIndex: 50, justifyContent: 'flex-start' }, "@media (max-width: 400px)": { pt: hasNotification ? '4.25rem' : '', pb: '6px', } }}>
+          <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', position: 'sticky', top: 0, pt: '12px', pb: '12px', pl:'8px', zIndex: 1, backgroundColor: '#fff', justifyContent: 'space-between', width: '100%', "@media (max-width: 900px)": { left: 0, zIndex: 1 }, "@media (max-width: 700px)": { flexDirection: 'column', display: 'flex', alignItems: 'flex-start', zIndex: 1, width: '100%' }, "@media (max-width: 440px)": { flexDirection: 'column', pt: hasNotification ? '3rem' : '0.75rem', top: hasNotification ? '4.5rem' : '', zIndex: 1, justifyContent: 'flex-start' }, "@media (max-width: 400px)": { pt: hasNotification ? '4.25rem' : '', pb: '6px', } }}>
             <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', width: '10%', gap: 1, "@media (max-width: 600px)": { mb: 2 }, "@media (max-width: 440px)": { mb: 1 }, }}>
               <Typography
                 className="first-sub-title"
@@ -1127,7 +1123,7 @@ const Integrations = () => {
           </Box>
         </Box>
         <Box>
-          <TabPanel value="1" sx={{ mt: 2, overflow: 'auto', padding: 0, ml:1.5, }}>
+        <TabPanel value="1" sx={{flexGrow: 1, height: "100%", overflowY: "auto", padding: 0, ml: 1.5 }}>
             <UserIntegrationsList
               integrationsCredentials={integrationsCredentials}
               changeTab={changeTab}
@@ -1136,8 +1132,8 @@ const Integrations = () => {
               handleDeleteSettings={handleDeleteSettings}
             />
           </TabPanel>
-          <TabPanel value="2" sx={{ width: '100%', padding: '24px 0px' }}>
-            <Box sx={{ mt: 6, overflow: 'auto', padding: 0 }}>
+          <TabPanel value="2" sx={{ width: '100%', padding: '12px 0px' }}>
+            <Box sx={{overflow: 'auto', padding: 0 }}>
               <PixelManagment />
             </Box>
           </TabPanel>

@@ -585,7 +585,7 @@ export const SettingsBilling: React.FC = () => {
 
 
     return (
-        <Box sx={{overflow: 'scroll', pr:2}}>
+        <Box sx={{pr:2, pt:1}}>
             <Grid container spacing={3} sx={{ mb: 3 }}>
                 <Grid item xs={12} md={6} sx={{ padding: '0px' }}>
                     <Box sx={{ border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', p: 3, height: '100%' }}>
@@ -1323,6 +1323,7 @@ export const SettingsBilling: React.FC = () => {
 
             <Divider sx={{
                 borderColor: '#e4e4e4',
+                maxWidth: '100%',
                 '@media (max-width: 600px)': {
                     marginLeft: '-16px',
                     marginRight: '-16px'
@@ -1444,7 +1445,7 @@ export const SettingsBilling: React.FC = () => {
                     </Table>
                 </TableContainer>
                 {/* Pagination Component */}
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '42px 0 24px' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '42px 0 0px', mb:1 }}>
                     <CustomTablePagination
                         count={totalRows}
                         page={page}

@@ -120,7 +120,8 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
             overflowY: 'hidden',
             marginLeft: '142px',
             '@media (max-width: 899px)': {
-              padding: '0 16px 32px',
+              overflowY: 'hidden',
+              padding: '0 0 16px 16px',
               marginLeft: 0,
             },
             '@media (max-width: 599px)': {

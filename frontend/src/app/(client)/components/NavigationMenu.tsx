@@ -215,7 +215,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({ NewRequestNotification }) =
         </IconButton>
 
         {/* Centered Logo (Adjust src to your logo) */}
-        <Image src="/logo.svg" alt="logo" height={20} width={32} />
+        <Image src="/logo.svg" priority alt="logo" height={20} width={32} />
         </Box>
 
 

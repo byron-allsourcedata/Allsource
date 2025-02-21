@@ -118,7 +118,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
       <Box sx={{ ...headerStyles.headers, display: { xs: 'none', md: 'flex' } }}>
         <Box sx={headerStyles.logoContainer}>
           <IconButton onClick={handleLogoClick} sx={{ "&:hover": { backgroundColor: 'transparent' } }}>
-            <Image src="/logo.svg" alt="logo" height={30} width={50} />
+            <Image src="/logo.svg" alt="logo" height={30} width={50} priority />
           </IconButton>
         </Box>
         <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -197,7 +197,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
               ml: -1
             }}
           >
-            <Box sx={{ paddingTop: 1, paddingLeft: 2, paddingRight: 2, paddingBottom: 1 }}>
+            <MenuItem sx={{ paddingTop: 1, paddingLeft: 2, paddingRight: 2, paddingBottom: 1 }}>
               <Typography
                 variant="h6"
                 sx={{
@@ -224,7 +224,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
               >
                 {email}
               </Typography>
-            </Box>
+            </MenuItem>
             <MenuItem
               sx={{
                 fontFamily: 'Nunito Sans',

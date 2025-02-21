@@ -1213,7 +1213,7 @@ const SuppressionRules: React.FC = () => {
                         </Box>
                     </Box>
                 </Box>
-                <Divider sx={{ pt: '1.5rem' }} />
+                <Divider sx={{ pt: '1rem' }} />
 
                 <Box sx={{ ...suppressionsStyles.suppressionContainer, paddingLeft: 0, pr: 0 }}>
                     <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '0.5rem', mb: '1.25rem' }}>

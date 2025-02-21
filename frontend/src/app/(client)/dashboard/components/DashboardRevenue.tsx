@@ -484,7 +484,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
     }
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', pr: 0 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', pr: 2 }}>
             <Box sx={{
                 display: 'flex',
                 justifyContent: 'flex-start',
@@ -1311,7 +1311,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                                         gap: 2,
                                                     }}
                                                 >
-                                                    <Typography variant="body2" className="paragraph" sx={{
+                                                    <Typography variant="body2" className="paragraph" component="div" sx={{
                                                         lineHeight: '11.72px !important', color: 'rgba(32, 33, 36, 1) !important', textWrap: 'nowrap',  textAlign: 'left', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 0.5,
                                                         '@media (max-width: 460px)': {
                                                             fontSize: '10px !important'
