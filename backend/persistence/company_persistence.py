@@ -5,7 +5,7 @@ import pytz
 from urllib.parse import unquote
 from sqlalchemy import and_, or_, desc, asc, exists, case
 from sqlalchemy.orm import Session, aliased
-from sqlalchemy.sql import func
+from sqlalchemy.sql import func, case as cs
 from models.five_x_five_emails import FiveXFiveEmails
 from models.leads_users_companies import LeadUserCompany
 from models.five_x_five_locations import FiveXFiveLocations
