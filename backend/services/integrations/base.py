@@ -20,6 +20,7 @@ from .onimesend import OmnisendIntegrationService
 from .meta import MetaIntegrationsService
 from .mailchimp import MailchimpIntegrationsService
 from .klaviyo import KlaviyoIntegrationsService
+from .google_ads import GoogleAdsIntegrationsService
 from .bigcommerce import BigcommerceIntegrationsService
 from .zapier import ZapierIntegrationService
 
@@ -95,6 +96,10 @@ class IntegrationService:
                                                           epi_persistence=self.eai_persistence, domain_persistence=self.domain_persistence
                                                           )
         self.klaviyo = KlaviyoIntegrationsService(self.domain_persistence, 
+                                                self.integration_persistence,  
+                                                self.lead_persistence,
+                                                self.integrations_user_sync_persistence, self.client, self.million_verifier_integrations)
+        self.google_ads = GoogleAdsIntegrationsService(self.domain_persistence, 
                                                 self.integration_persistence,  
                                                 self.lead_persistence,
                                                 self.integrations_user_sync_persistence, self.client, self.million_verifier_integrations)

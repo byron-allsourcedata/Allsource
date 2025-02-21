@@ -34,6 +34,7 @@ import MailchimpDatasync from "./MailchimpDatasync";
 import OmnisendDataSync from "./OmnisendDataSync";
 import SendlaneDatasync from "./SendlaneDatasync";
 import SlackDatasync from "./SlackDataSync";
+import GoogleADSDatasync from "./GoogleADSDataSync";
 import CustomTablePagination from "@/components/CustomTablePagination";
 import AttentiveIntegrationPopup from "@/components/AttentiveIntegrationPopup";
 import BCommerceConnect from "@/components/Bcommerce";
@@ -44,6 +45,7 @@ import SendlaneConnect from "@/components/SendlaneConnect";
 import ShopifySettings from "@/components/ShopifySettings";
 import ZapierConnectPopup from "@/components/ZapierConnectPopup";
 import SlackConnectPopup from "@/components/SlackConnectPopup";
+import GoogleADSConnectPopup from "@/components/GoogleADSConnectPopup";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface DataSyncProps {
@@ -79,6 +81,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
   const [sendlaneIconPopupOpen, setOpenSendlaneIconPopup] = useState(false);
   const [slackIconPopupOpen, setOpenSlackIconPopup] = useState(false);
+  const [googleADSIconPopupOpen, setOpenGoogleADSIconPopup] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [isInvalidApiKey, setIsInvalidApiKey] = useState(false);
   const [integrationsCredentials, setIntegrationsCredentials] = useState<
@@ -93,6 +96,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false);
   const [openMailchimpConnect, setOpenMailchimpConnect] = useState(false);
   const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false);
+  const [openGoogleADSConnect, setOpenGoogleADSConnect] = useState(false);
   const [openZapierConnect, setOPenZapierComnect] = useState(false);
   const [openSlackConnect, setOpenSlackConnect] = useState(false);
   const handleCloseIntegrate = () => {
@@ -467,6 +471,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
       } else if (dataSyncPlatform === "slack") {
         setOpenSlackIconPopup(true);
       }
+      else if (dataSyncPlatform === "google_ads") {
+        setOpenGoogleADSIconPopup(true);
+      }
       setIsLoading(false);
       setAnchorEl(null);
     }
@@ -478,6 +485,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 
   const handleSlackIconPopupClose = () => {
     setOpenSlackIconPopup(false);
+  };
+
+  const handleGoogleADSIconPopupClose = () => {
+    setOpenGoogleADSIconPopup(false);
   };
 
   const handleDeleteClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -1138,6 +1149,16 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
             />
           </>
         )}
+        {googleADSIconPopupOpen && isEdit && (
+          <>
+            <GoogleADSDatasync
+              open={googleADSIconPopupOpen}
+              isEdit={isEdit}
+              onClose={handleGoogleADSIconPopupClose}
+              data={data.find((item) => item.id === selectedId)}
+            />
+          </>
+        )}
         {/*
         <AttentiveIntegrationPopup open={openAttentiveConnect} handleClose={() => setOpenShopifyConnect(false)} onSave={saveIntegration}/>
         <ShopifySettings open={openShopifuConnect} handleClose={() => setOpenShopifyConnect(false)} onSave={saveIntegration} />
@@ -1158,9 +1179,14 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
           initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sendlane')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
         />
         <SlackConnectPopup
-          open={openSendlaneConnect}
+          open={openSlackConnect}
           handlePopupClose={() => { setOpenSlackConnect(false), setIsInvalidApiKey(false) }}
           initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'slack')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
+        />
+        <GoogleADSConnectPopup
+          open={openGoogleADSConnect}
+          handlePopupClose={() => { setOpenGoogleADSConnect(false), setIsInvalidApiKey(false) }}
+          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'google_ads')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
         />
         <ZapierConnectPopup
           open={openZapierConnect}

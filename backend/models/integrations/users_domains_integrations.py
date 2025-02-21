@@ -7,6 +7,7 @@ class UserIntegration(Base):
     domain_id = Column(Integer)
     shop_domain = Column(VARCHAR(64))
     access_token = Column(VARCHAR)
+    refresh_token = Column(VARCHAR)
     service_name = Column(VARCHAR(32))
     data_center = Column(VARCHAR)
     is_with_suppression = Column(Boolean)

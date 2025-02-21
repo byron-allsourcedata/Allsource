@@ -23,6 +23,9 @@ class MailchimpCredentials(BaseModel):
     data_center: str
     access_token: str
 
+class GoogleAdsCredentials(BaseModel):
+    code: str
+    scope: str
 
 class MetaCredentials(BaseModel):
     access_token:str 
@@ -41,6 +44,7 @@ class IntegrationCredentials(BaseModel):
     meta: Optional[MetaCredentials] = None
     sendlane: Optional[ApiKeyCredentials] = None
     omnisend: Optional[ApiKeyCredentials] = None
+    google_ads: Optional[GoogleAdsCredentials] = None
     pixel_install: bool = False
     supperssion: bool = False
 

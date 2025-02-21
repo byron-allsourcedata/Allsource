@@ -33,6 +33,7 @@ class SourcePlatformEnum(Enum):
     WORDPRESS = 'wordpress'
     HUBSPOT = 'hubspot'
     SLACK = 'slack'
+    GOOGLE_ADS = 'google_ads'
 
 
 class UserPaymentStatusEnum(Enum):

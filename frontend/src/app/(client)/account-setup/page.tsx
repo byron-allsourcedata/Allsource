@@ -39,6 +39,7 @@ import AttentiveIntegrationPopup from "@/components/AttentiveIntegrationPopup";
 import SendlaneConnect from "@/components/SendlaneConnect";
 import ZapierConnectPopup from "@/components/ZapierConnectPopup";
 import SlackConnectPopup from "@/components/SlackConnectPopup";
+import GoogleADSConnectPopup from "@/components/GoogleADSConnectPopup";
 import EditIcon from '@mui/icons-material/Edit';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
@@ -89,6 +90,7 @@ const AccountSetup = () => {
   const [mailChimpPopupOpen, setMailchimpPopupOpen] = useState(false)
   const [attentivePopupOpen, setAttentivePopupOpen] = useState(false)
   const [slackPopupOpen, setSlackPopupOpen] = useState(false)
+  const [GoogleADSPopupOpen, setGoogleADSPopupOpen] = useState(false)
   const [klaviyoPopupOpen, setKlaviyoPopupOpen] = useState(false)
   const [zapierPopupOpen, setZapierPopupOpen] = useState(false)
   const [omnisendPopupOpen, setOmnisendPopupOpen] = useState(false)
@@ -841,6 +843,7 @@ const AccountSetup = () => {
     { label: "Omnisend", src: "omnisend_icon_black.svg", setState: setOmnisendPopupOpen },
     { label: "Sendlane", src: "sendlane-icon.svg", setState: setSendlanePopupOpen },
     { label: "Slack", src: "slack-icon.svg", setState: setSlackPopupOpen },
+    { label: "GoogleAds", src: "google-ads.svg", setState: setGoogleADSPopupOpen },
     { label: "Zapier", src: "zapier-icon.svg", setState: setZapierPopupOpen },
   ];
   const roles = [
@@ -2832,6 +2835,11 @@ const AccountSetup = () => {
                 <SlackConnectPopup
                   open={slackPopupOpen}
                   handlePopupClose={() => setSlackPopupOpen(false)}
+                  boxShadow="rgba(0, 0, 0, 0.1)"
+                />
+                <GoogleADSConnectPopup
+                  open={GoogleADSPopupOpen}
+                  handlePopupClose={() => setGoogleADSPopupOpen(false)}
                   boxShadow="rgba(0, 0, 0, 0.1)"
                 />
 
