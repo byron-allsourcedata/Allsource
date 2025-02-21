@@ -459,7 +459,7 @@ def check_domain(
     return current_domain[0]
 
 def check_pixel_install_domain(domain: UserDomains = Depends(check_domain)):
-    if not domain.is_pixel_installed:
+    if domain and not domain.is_pixel_installed:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail={'status': UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED.value})
     return domain
