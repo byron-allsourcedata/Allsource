@@ -53,5 +53,5 @@ class MailchimpProfile(BaseModel):
     location: Optional[Any] = None
     status: Optional[str] = None
     email_type: Optional[str] = None
-    time_on_site: Optional[str] = None
-    url_visited: Optional[str] = None
+    time_on_site: Optional[int] = None
+    url_visited: Optional[int] = None

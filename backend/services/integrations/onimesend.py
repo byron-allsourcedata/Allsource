@@ -126,7 +126,6 @@ class OmnisendIntegrationService:
                 return ProccessDataSyncResult.INCORRECT_FORMAT.value
             logging.error("Error response: %s", response.text)
         return response.json()
-    
 
     def __mapped_identifiers(self, five_x_five_user: FiveXFiveUser):
         email_fields = [
@@ -203,7 +202,7 @@ class OmnisendIntegrationService:
             five_x_five_field = mapping.get("type")  
             new_field = mapping.get("value")  
             value_field = getattr(five_x_five_user, five_x_five_field, None)
-            if value_field is not None:
+            if value_field:
                 new_field = new_field.replace(" ", "_")
                 if isinstance(value_field, datetime):
                     properties[new_field] = value_field.strftime("%Y-%m-%d")
@@ -213,7 +212,11 @@ class OmnisendIntegrationService:
                             value_field = value_field[:2048]
                     properties[new_field] = value_field
                     
-        time_on_site, url_visited = self.leads_persistence.get_visit_stats(five_x_five_user.id)
-        properties['time_on_site'] = time_on_site
-        properties['url_visited'] = url_visited
+        mapped_fields = {mapping.get("value") for mapping in data_map}
+        if "Time on site" in mapped_fields or "URL Visited" in mapped_fields:
+            time_on_site, url_visited = self.leads_persistence.get_visit_stats(five_x_five_user.id)
+        if "Time on site" in mapped_fields:
+            properties["Time_on_site"] = time_on_site
+        if "URL Visited" in mapped_fields:
+            properties["URL_Visited"] = url_visited
         return properties

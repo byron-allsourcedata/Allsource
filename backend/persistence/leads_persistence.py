@@ -485,7 +485,8 @@ class LeadsPersistence:
                 LeadsVisits.full_time_sec.label('time_on_site'),
                 recurring_visits_subquery.c.url_visited,
             )
-            .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
+            .select_from(LeadUser)
+            .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)
             .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
             .outerjoin(recurring_visits_subquery, recurring_visits_subquery.c.lead_id == LeadUser.id)
             .filter(FiveXFiveUser.id == five_x_five_user_id)

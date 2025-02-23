@@ -169,8 +169,17 @@ class SendlaneIntegrationService:
             return profile
         
         json = {
-            'contacts': [{**profile.model_dump()}]
+            'contacts': [{
+                **profile.model_dump(),
+                'custom_fields': {
+                    'time_on_site': profile.time_on_site,
+                    'url_visited': profile.url_visited
+                }
+            }]
         }
+        response = self.__handle_request('/customfields', api_key=access_token, method="GET")
+        print(response.text)  # Ищи ID полей
+
         response = self.__handle_request(f'/lists/{list_id}/contacts', api_key=access_token, json=json, method="POST")
         if response.status_code == 401:
             return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
