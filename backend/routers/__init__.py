@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from routers import subscriptions, users, company_info, pixel_installation, admin_customers, dashboard, sse_events, \
     admin_partner, admin_accounts, leads, audience, calendly, integrations, settings, domains, suppressions, data_sync, referral, partners, admin_assets, admin_payouts,\
-    slack, leads_companies
+    slack, leads_companies, webhook_integration, webhook_data_sync
 
 
 main_router = APIRouter()
@@ -25,6 +25,8 @@ main_router.include_router(sse_events.router)
 main_router.include_router(calendly.router, prefix='/calendly')
 main_router.include_router(integrations.router, prefix='/integrations', tags=['Integrations'])
 main_router.include_router(data_sync.router, prefix='/data-sync', tags=['DataSync'])
+main_router.include_router(webhook_integration.router, prefix='/webhook-integration', tags=['WebhookIntegration'])
+main_router.include_router(webhook_data_sync.router, prefix='/webhook-data-sync', tags=['WebhookDataSync'])
 main_router.include_router(settings.router, prefix='/settings')
 main_router.include_router(domains.router, prefix='/domains', tags=['Domains'])
 main_router.include_router(referral.router, prefix='/referral')
