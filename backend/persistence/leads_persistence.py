@@ -942,16 +942,14 @@ class LeadsPersistence:
             {
                 column: (
                     format_phone_number(getattr(user, column, "N/A"))
-                    if "phone" in column and getattr(user, column, None) else
-                    (getattr(user, column, "N/A").lower() if column == "gender" and getattr(user, column) else "N/A")
+                    if "phone" in column else
+                    (getattr(user, column, "N/A").lower() if column == "gender" and getattr(user, column, None) else getattr(user, column, "N/A"))
                 )
                 for column in [
                     "id", "first_name", "mobile_phone", "direct_number", "gender", "personal_phone", 
                     "personal_emails", "last_name", "personal_city", "personal_state", "company_name", 
-                    "company_domain", 
-                    "job_title", "last_updated", "age_min", "age_max", 
-                    "personal_address", "personal_zip",
-                    "married", "children", "income_range", "homeowner", "dpv_code", "time_on_site", "url_visited"
+                    "company_domain", "job_title", "last_updated", "age_min", "age_max", "personal_address", 
+                    "personal_zip", "married", "children", "income_range", "homeowner", "dpv_code", "time_on_site", "url_visited"
                 ]
             }
             for user in five_x_five_users
