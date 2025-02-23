@@ -250,6 +250,8 @@ class MetaIntegrationsService:
                 "ST",
                 "CT",
                 "ZIP",
+                "TIME_ON_SITE",
+                "URL_VISITED"
             ],
             "data": [profile]
         }
@@ -303,6 +305,7 @@ class MetaIntegrationsService:
             getattr(five_x_five_user, 'company_phone', None)
         )
         first_phone = format_phone_number(first_phone)
+        time_on_site, url_visited = self.leads_persistence.get_visit_stats(five_x_five_user.id)
 
         def hash_value(value):
             return hashlib.sha256(value.encode('utf-8')).hexdigest() if value else ""
@@ -315,6 +318,8 @@ class MetaIntegrationsService:
                 hash_value(five_x_five_user.personal_state),                                       # ST
                 hash_value(five_x_five_user.personal_city),                                        # CT
                 hash_value(five_x_five_user.personal_zip),                                         # ZIP
+                hash_value(time_on_site),                                                          # time_on_site
+                hash_value(url_visited),                                                           # url_visited
             ]
             
     def __mapped_meta_list(self, list):

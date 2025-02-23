@@ -85,7 +85,9 @@ class MailchimpIntegrationsService:
             {"name": "Company Description", "tag": "COMPANY_DESC", "type": "text"},
             {"name": "Related Domains", "tag": "RELATED_DOMAINS", "type": "text"},
             {"name": "Social Connections", "tag": "SOCIAL_CONN", "type": "text"},
-            {"name": "DPV Code", "tag": "DPV_CODE", "type": "text"}
+            {"name": "DPV Code", "tag": "DPV_CODE", "type": "text"},
+            {"name": "TIME ON SITE", "tag": "TIME_ON_SITE", "type": "text"},
+            {"name": "URL VISITED", "tag": "URL_VISITED", "type": "text"}
         ]
         try:
             response = self.client.lists.create_list(list_info)
@@ -332,5 +334,8 @@ class MailchimpIntegrationsService:
                             value_field = value_field[:2048]
                     properties[new_field] = value_field
                     
+        time_on_site, url_visited = self.leads_persistence.get_visit_stats(five_x_five_user.id)
+        properties['time_on_site'] = time_on_site
+        properties['url_visited'] = url_visited
         return properties
     
