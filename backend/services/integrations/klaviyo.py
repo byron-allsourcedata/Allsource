@@ -396,7 +396,10 @@ class KlaviyoIntegrationsService:
                 if isinstance(value_field, datetime):
                     properties[new_field] = value_field.isoformat() 
                 else:
-                    properties[new_field] = value_field 
+                    properties[new_field] = value_field
+        time_on_site, url_visited = self.leads_persistence.get_visit_stats(five_x_five_user.id)
+        properties['time_on_site'] = time_on_site
+        properties['url_visited'] = url_visited
         return properties
 
 

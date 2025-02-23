@@ -235,10 +235,12 @@ class SendlaneIntegrationService:
             first_email = first_email.split(',')[-1].strip()
         first_phone = format_phone_number(first_phone)
         phone_number = validate_and_format_phone(first_phone)
-        
+        time_on_site, url_visited = self.leads_persistence.get_visit_stats(five_x_five_user.id)
         return SendlaneContact(
             email=first_email,
             first_name=five_x_five_user.first_name or None,
             last_name=five_x_five_user.last_name or None,
             phone=phone_number.split(', ')[-1] if phone_number else None,
+            time_on_site=time_on_site,
+            url_visited=url_visited
         )

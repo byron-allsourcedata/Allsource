@@ -300,6 +300,7 @@ class MailchimpIntegrationsService:
             "region": getattr(five_x_five_user, 'personal_state') or getattr(five_x_five_user, 'company_state', None),
             "zip": getattr(five_x_five_user, 'personal_zip') or getattr(five_x_five_user, 'company_zip', None),
         }
+        time_on_site, url_visited = self.leads_persistence.get_visit_stats(five_x_five_user.id)
         return MailchimpProfile(
             email=first_email,
             phone_number=format_phone_number(first_phone),
@@ -310,7 +311,9 @@ class MailchimpIntegrationsService:
             job_title=getattr(five_x_five_user, 'job_title', None),
             company_name=getattr(five_x_five_user, 'company_name', None),
             status='subscribed',
-            email_type='text'
+            email_type='text',
+            time_on_site=time_on_site,
+            url_visited=url_visited
             )
         
     def __map_properties(self, five_x_five_user: FiveXFiveUser, data_map: List[DataMap]) -> dict:

@@ -21,4 +21,6 @@ class SendlaneContact(BaseModel):
     last_name: Optional[str] = None
     phone: Optional[str] = None
     email_consent: bool = True
+    time_on_site: Optional[str] = None
+    url_visited: Optional[str] = None
     

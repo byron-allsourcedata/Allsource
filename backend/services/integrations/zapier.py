@@ -6,6 +6,7 @@ from persistence.leads_persistence import LeadsPersistence
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from datetime import datetime, timedelta
+from models.five_x_five_users import FiveXFiveUser
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from fastapi import HTTPException
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
@@ -103,7 +104,7 @@ class ZapierIntegrationService:
             return 'allContacts'
         return 'allContacts'
     
-    def __mapped_lead(self, five_x_five_user):
+    def __mapped_lead(self, five_x_five_user: FiveXFiveUser):
         email_fields = [
             'business_email', 
             'personal_emails', 
@@ -138,6 +139,7 @@ class ZapierIntegrationService:
         if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return first_email
         
+        time_on_site, url_visited = self.leads_persistence.get_visit_stats(five_x_five_user.id)
         lead_dict = {
             "id": five_x_five_user.id,
             "first_name": five_x_five_user.first_name,
@@ -159,8 +161,11 @@ class ZapierIntegrationService:
             "personal_address": five_x_five_user.personal_address or "N/A",
             "married": five_x_five_user.married,
             "homeowner": five_x_five_user.homeowner,
-            "dpv_code": five_x_five_user.dpv_code
+            "dpv_code": five_x_five_user.dpv_code,
+            "children": five_x_five_user.children,
+            "income_range": five_x_five_user.income_range,
+            "time_on_site": time_on_site,
+            "url_visited": url_visited
         }
         
         return {k: v for k, v in lead_dict.items() if v is not None}
-

@@ -213,4 +213,7 @@ class OmnisendIntegrationService:
                             value_field = value_field[:2048]
                     properties[new_field] = value_field
                     
+        time_on_site, url_visited = self.leads_persistence.get_visit_stats(five_x_five_user.id)
+        properties['time_on_site'] = time_on_site
+        properties['url_visited'] = url_visited
         return properties

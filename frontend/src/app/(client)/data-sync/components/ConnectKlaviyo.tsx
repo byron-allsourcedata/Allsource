@@ -86,6 +86,8 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
     { type: 'Company Description', value: 'company_description' },
     { type: 'Related Domains', value: 'related_domains' },
     { type: 'Social Connections', value: 'social_connections' },
+    { type: 'URL Visited', value: 'url_visited' },
+    { type: 'Time on site', value: 'time_on_site' },
     { type: 'DPV Code', value: 'dpv_code' }]);
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
