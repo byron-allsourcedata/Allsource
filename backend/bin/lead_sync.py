@@ -606,11 +606,12 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
             order_platform_order_id = None
             order_total_price = 0
             order_currency_code = None
-            order_platform_created_at = order_detail.get('platform_created_at', requested_at)
+            order_platform_created_at = requested_at
             if order_detail:
                 order_platform_order_id = order_detail.get('platform_order_id')
                 order_total_price = order_detail.get('total_price')
                 order_currency_code = order_detail.get('currency')
+                order_platform_created_at = order_detail.get('platform_created_at', requested_at)
             session.add(LeadOrders(lead_user_id=lead_user.id,
                                    platform_order_id=order_platform_order_id,
                                    total_price=order_total_price,
