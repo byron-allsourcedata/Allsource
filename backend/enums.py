@@ -33,6 +33,7 @@ class SourcePlatformEnum(Enum):
     WORDPRESS = 'wordpress'
     HUBSPOT = 'hubspot'
     SLACK = 'slack'
+    WEBHOOK = 'webhook'
 
 
 class UserPaymentStatusEnum(Enum):

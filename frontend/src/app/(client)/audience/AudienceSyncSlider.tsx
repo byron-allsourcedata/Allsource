@@ -10,6 +10,7 @@ import KlaviyoIntegrationPopup from '@/components/KlaviyoIntegrationPopup';
 import SlackIntegrationPopup from '@/components//SlackIntegrationPopup';
 import MetaConnectButton from '@/components//MetaConnectButton';
 import AlivbleIntagrationsSlider from '@/components//AvalibleIntegrationsSlider';
+import WebhookIntegrationPopup from '@/components//WebhookIntegrationPopup';
 import OmnisendConnect from '@/components//OmnisendConnect';
 import OnmisendDataSync from '@/app/(client)/data-sync/components/OmnisendDataSync';
 import MailchimpConnect from '@/components/MailchimpConnect';
@@ -63,6 +64,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [integrationsCredentials, setIntegrationsCredentials] = useState<IntegrationsCredentials[]>([])
     const [createKlaviyo, setCreateKlaviyo] = useState<boolean>(false)
     const [createSlack, setCreateSlack] = useState<boolean>(false)
+    const [createWebhook, setCreateWebhook] = useState<boolean>(false)
     const [integrations, setIntegrations] = useState<Integrations[]>([])
     const [metaConnectApp, setMetaConnectApp] = useState(false)
     const [openBigcommrceConnect, setOpenBigcommerceConnect] = useState(false)
@@ -172,7 +174,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const handlePlusIconPopupClose = () => {
         setPlusIconPopupOpen(false);
     };
-
+    const handleCreateWebhookClose = () => {
+        setPlusIconPopupOpen(false);
+    };
+    
     const handleKlaviyoIconPopupOpen = () => {
         setKlaviyoIconPopupOpen(true);
     };
@@ -431,6 +436,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
             {/* Add Integration */}
             <AlivbleIntagrationsSlider open={plusIconPopupOpen} onClose={handlePlusIconPopupClose} isContactSync={true} integrations={integrations} integrationsCredentials={integrationsCredentials} handleSaveSettings={handleSaveSettings} />
+            <WebhookIntegrationPopup open={createWebhook} handleClose={handleCreateWebhookClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'webhook')?.access_token} />
             <SlackIntegrationPopup open={createSlack} handleClose={handleCreateSlackClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'slack')?.access_token} />
             <KlaviyoIntegrationPopup open={createKlaviyo} handleClose={handleCreateKlaviyoClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token} />
             <MailchimpConnect onSave={handleSaveSettings} open={openMailchimpConnect} handleClose={handleOpenMailchimpConnectClose} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Mailchimp')?.access_token} />

@@ -9,6 +9,7 @@ import ConnectKlaviyo from '@/app/(client)/data-sync/components/ConnectKlaviyo';
 import ConnectMeta from '@/app/(client)/data-sync/components/ConnectMeta';
 import KlaviyoIntegrationPopup from './KlaviyoIntegrationPopup';
 import SlackIntegrationPopup from './SlackIntegrationPopup';
+import WebhookIntegrationPopup from './WebhookIntegrationPopup';
 import MetaConnectButton from './MetaConnectButton';
 import AlivbleIntagrationsSlider from './AvalibleIntegrationsSlider';
 import OmnisendConnect from './OmnisendConnect';
@@ -18,6 +19,7 @@ import MailchimpDatasync from '../app/(client)/data-sync/components/MailchimpDat
 import SlackDatasync from '../app/(client)/data-sync/components/SlackDataSync';
 import SendlaneConnect from './SendlaneConnect';
 import SendlaneDatasync from '../app/(client)/data-sync/components/SendlaneDatasync';
+import WebhookDatasync from '../app/(client)/data-sync/components/WebhookDatasync';
 import ZapierDataSync from '../app/(client)/data-sync/components/ZapierDataSync';
 
 interface AudiencePopupProps {
@@ -62,6 +64,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [isExportDisabled, setIsExportDisabled] = useState(true);
     const [integrationsCredentials, setIntegrationsCredentials] = useState<IntegrationsCredentials[]>([])
     const [createKlaviyo, setCreateKlaviyo] = useState<boolean>(false)
+    const [createWebhook, setCreateWebhook] = useState<boolean>(false)
     const [createSlack, setCreateSlack] = useState<boolean>(false)
     const [integrations, setIntegrations] = useState<Integrations[]>([])
     const [metaConnectApp, setMetaConnectApp] = useState(false)
@@ -72,6 +75,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [slackIconPopupOpen, setOpenSlackIconPopup] = useState(false)
     const [openMailchimpConnect, setOpenmailchimpConnect] = useState(false)
     const [openSendlaneIconPopupOpen, setOpenSendlaneIconPopupOpen] = useState(false)
+    const [openWebhookIconPopupOpen, setOpenWebhookIconPopupOpen] = useState(false)
     const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
     const [openZapierDataSync, setOpenZapierDataSync] = useState(false)
     const [openZapierConnect, setOpenZapierConnect] = useState(false)
@@ -255,6 +259,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             case 'Slack':
                 handleSlackIconPopupIconOpen()
                 break
+            case 'Webhook':
+                handleWebhookIconPopupOpen()
+                break
         }
     };
 
@@ -262,7 +269,15 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setOpenSendlaneIconPopupOpen(true)
     }
 
+    const handleWebhookIconPopupOpen = () => {
+        setOpenWebhookIconPopupOpen(true)
+    }
+
     const handleSendlaneIconPopupClose = () => {
+        setOpenSendlaneIconPopupOpen(false)
+    }
+
+    const handleWebhookIconPopupClose = () => {
         setOpenSendlaneIconPopupOpen(false)
     }
 
@@ -280,6 +295,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
     const handleCreateKlaviyoClose = () => {
         setCreateKlaviyo(false)
+    }
+
+    const handleCreateWebhookOpen = () => {
+        setCreateWebhook(true)
+    }
+
+    const handleCreateWebhookClose = () => {
+        setCreateWebhook(false)
     }
 
     const handleCreateSlackClose = () => {
@@ -429,6 +452,45 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                                 <Image src="/klaviyo.svg" alt="klaviyo" height={26} width={32} />
                                             </ListItemIcon>
                                             <ListItemText primary="Klaviyo" primaryTypographyProps={{
+                                                sx: {
+                                                    fontFamily: "Nunito Sans",
+                                                    fontSize: "14px",
+                                                    color: "#4a4a4a",
+                                                    fontWeight: "500",
+                                                    lineHeight: "20px",
+                                                },
+                                            }} />
+                                        </ListItemButton>
+                                    </ListItem>
+                                )}
+                                {/* Webhook */}
+                                {integrationsCredentials.some(integration => integration.service_name === 'webhook') && (
+                                    <ListItem sx={{
+                                        p: 0,
+                                        borderRadius: '4px',
+                                        border: selectedIntegration === 'webhook' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                        width: 'auto',
+                                        '@media (max-width:600px)': {
+                                            flexBasis: 'calc(50% - 8px)',
+                                        },
+                                    }}>
+                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'webhook')?.is_failed
+                                            ? handleWebhookIconPopupOpen
+                                            : handleCreateWebhookOpen
+                                        } sx={{
+                                            p: 0,
+                                            flexDirection: 'column',
+                                            px: 3,
+                                            py: 1.5,
+                                            width: '102px',
+                                            height: '72px',
+                                            justifyContent: 'center',
+                                            backgroundColor: selectedIntegration === 'webhook' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
+                                        }}>
+                                            <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                <Image src="/webhook.svg" alt="webhook" height={26} width={32} />
+                                            </ListItemIcon>
+                                            <ListItemText primary="Webhook" primaryTypographyProps={{
                                                 sx: {
                                                     fontFamily: "Nunito Sans",
                                                     fontSize: "14px",
@@ -670,6 +732,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             <ConnectMeta data={null} open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} />
             <OnmisendDataSync open={omnisendIconPopupOpen} onClose={handleOmnisendIconPopupOpenClose} isEdit={false} data={null} />
             <SendlaneDatasync open={openSendlaneIconPopupOpen} onClose={handleSendlaneIconPopupClose} data={null} isEdit={false} />
+            <WebhookDatasync open={openWebhookIconPopupOpen} onClose={handleWebhookIconPopupClose} data={null} isEdit={false} />
             <MailchimpDatasync open={mailchimpIconPopupOpen} onClose={handleMailchimpIconPopupIconClose} data={null} />
             <SlackDatasync open={slackIconPopupOpen} onClose={handleSlackIconPopupIconClose} data={null} isEdit={false} />
             <ZapierDataSync open={openZapierDataSync} handleClose={handleCloseZapierDataSync} />
@@ -677,6 +740,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             {/* Add Integration */}
             <AlivbleIntagrationsSlider open={plusIconPopupOpen} onClose={handlePlusIconPopupClose} isContactSync={true} integrations={integrations} integrationsCredentials={integrationsCredentials} handleSaveSettings={handleSaveSettings} />
             <SlackIntegrationPopup open={createSlack} handleClose={handleCreateSlackClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'slack')?.access_token} />
+            <WebhookIntegrationPopup open={createKlaviyo} handleClose={handleCreateWebhookClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'webhook')?.access_token} />
             <KlaviyoIntegrationPopup open={createKlaviyo} handleClose={handleCreateKlaviyoClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token} />
             <MailchimpConnect onSave={handleSaveSettings} open={openMailchimpConnect} handleClose={handleOpenMailchimpConnectClose} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Mailchimp')?.access_token} />
             <SendlaneConnect open={openSendlaneConnect} handleClose={handleSendlaneConnectClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Sendlane')?.access_token} />

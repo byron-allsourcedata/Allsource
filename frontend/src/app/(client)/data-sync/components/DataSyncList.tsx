@@ -33,6 +33,7 @@ import { datasyncStyle } from "@/app/(client)/data-sync/datasyncStyle";
 import MailchimpDatasync from "./MailchimpDatasync";
 import OmnisendDataSync from "./OmnisendDataSync";
 import SendlaneDatasync from "./SendlaneDatasync";
+import WebhookDatasync from "./WebhookDatasync";
 import SlackDatasync from "./SlackDataSync";
 import CustomTablePagination from "@/components/CustomTablePagination";
 import AttentiveIntegrationPopup from "@/components/AttentiveIntegrationPopup";
@@ -44,6 +45,7 @@ import SendlaneConnect from "@/components/SendlaneConnect";
 import ShopifySettings from "@/components/ShopifySettings";
 import ZapierConnectPopup from "@/components/ZapierConnectPopup";
 import SlackConnectPopup from "@/components/SlackConnectPopup";
+import WebhookConnectPopup from "@/components/WebhookConnectPopup";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface DataSyncProps {
@@ -78,6 +80,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   const [totalRows, setTotalRows] = useState(0);
   const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
   const [sendlaneIconPopupOpen, setOpenSendlaneIconPopup] = useState(false);
+  const [webhookIconPopupOpen, setOpenWebhookIconPopup] = useState(false);
   const [slackIconPopupOpen, setOpenSlackIconPopup] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [isInvalidApiKey, setIsInvalidApiKey] = useState(false);
@@ -95,6 +98,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false);
   const [openZapierConnect, setOPenZapierComnect] = useState(false);
   const [openSlackConnect, setOpenSlackConnect] = useState(false);
+  const [openWebhookConnect, setOpenWebhookConnect] = useState(false);
   const handleCloseIntegrate = () => {
     setOpenMetaConnect(false);
     setOpenKlaviyoConnect(false);
@@ -1128,6 +1132,16 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
             />
           </>
         )}
+        {webhookIconPopupOpen && isEdit && (
+          <>
+            <WebhookDatasync
+              open={webhookIconPopupOpen}
+              isEdit={isEdit}
+              onClose={handleSendlaneIconPopupClose}
+              data={data.find((item) => item.id === selectedId)}
+            />
+          </>
+        )}
         {slackIconPopupOpen && isEdit && (
           <>
             <SlackDatasync
@@ -1158,10 +1172,12 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
           initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sendlane')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
         />
         <SlackConnectPopup
-          open={openSendlaneConnect}
+          open={openSlackConnect}
           handlePopupClose={() => { setOpenSlackConnect(false), setIsInvalidApiKey(false) }}
           initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'slack')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
         />
+        <WebhookConnectPopup open={openWebhookConnect} handleClose={() => { setOpenWebhookConnect(false), setIsInvalidApiKey(false) }}
+          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'webhook')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
         <ZapierConnectPopup
           open={openZapierConnect}
           handlePopupClose={handleCloseIntegrate}
