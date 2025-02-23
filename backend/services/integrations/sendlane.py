@@ -170,16 +170,9 @@ class SendlaneIntegrationService:
         
         json = {
             'contacts': [{
-                **profile.model_dump(),
-                'custom_fields': {
-                    'time_on_site': profile.time_on_site,
-                    'url_visited': profile.url_visited
-                }
+                **profile.model_dump()
             }]
         }
-        response = self.__handle_request('/customfields', api_key=access_token, method="GET")
-        print(response.text)  # Ищи ID полей
-
         response = self.__handle_request(f'/lists/{list_id}/contacts', api_key=access_token, json=json, method="POST")
         if response.status_code == 401:
             return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
@@ -244,12 +237,9 @@ class SendlaneIntegrationService:
             first_email = first_email.split(',')[-1].strip()
         first_phone = format_phone_number(first_phone)
         phone_number = validate_and_format_phone(first_phone)
-        time_on_site, url_visited = self.leads_persistence.get_visit_stats(five_x_five_user.id)
         return SendlaneContact(
             email=first_email,
             first_name=five_x_five_user.first_name or None,
             last_name=five_x_five_user.last_name or None,
-            phone=phone_number.split(', ')[-1] if phone_number else None,
-            time_on_site=time_on_site,
-            url_visited=url_visited
+            phone=phone_number.split(', ')[-1] if phone_number else None
         )

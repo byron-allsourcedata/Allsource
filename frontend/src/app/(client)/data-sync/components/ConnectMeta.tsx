@@ -67,9 +67,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
         'Gender',
         'Age',
         'Job Title',
-        'Location',
-        'URL Visited',
-        'Time on site'
+        'Location'
     ]);
 
     useEffect(() => {
@@ -495,9 +493,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
         { id: 5, type: 'First Name', value: 'First Name' },
         { id: 6, type: 'Personal State', value: 'Personal State' },
         { id: 7, type: 'Personal City', value: 'Personal City' },
-        { id: 8, type: 'Personal Zip', value: 'Personal Zip' },
-        { id: 9, type: 'URL Visited', value: 'URL Visited' },
-        { id: 10, type: 'Time on site', value: 'Time on site' }
+        { id: 8, type: 'Personal Zip', value: 'Personal Zip' }
     ];
     const [rows, setRows] = useState<Row[]>(data?.data_map || defaultRows);
 
