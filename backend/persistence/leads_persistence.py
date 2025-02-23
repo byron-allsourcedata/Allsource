@@ -665,7 +665,6 @@ class LeadsPersistence:
 
         return result_query, self.db.query(States).all(), leads_requests
 
-
     def get_full_user_leads_by_filters(self, domain_id, from_date, to_date, regions, page_visits,
                                    average_time_spent, behavior_type, status, recurring_visits, sort_by, sort_order,
                                    search_query, from_time, to_time):
