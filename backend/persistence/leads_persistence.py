@@ -894,7 +894,7 @@ class LeadsPersistence:
         recurring_visits_subquery = (
             self.db.query(
                 LeadsVisits.lead_id,
-                func.count().label('url_visited')
+                func.count(LeadsVisits.id).label('url_visited')
             )
             .group_by(LeadsVisits.lead_id)
             .subquery()
@@ -928,10 +928,10 @@ class LeadsPersistence:
                 FiveXFiveUser.children,
                 FiveXFiveUser.income_range,
                 LeadsVisits.full_time_sec.label('time_on_site'),
-                recurring_visits_subquery.c.recurring_visits,
+                recurring_visits_subquery.c.url_visited,
             )
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
-            .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
+            .outerjoin(LeadsVisits, LeadsVisits.lead_id == LeadUser.id)
             .outerjoin(recurring_visits_subquery, recurring_visits_subquery.c.lead_id == LeadUser.id)
             .filter(FiveXFiveUser.id.in_(five_x_five_user_ids))
             .all()
@@ -942,7 +942,7 @@ class LeadsPersistence:
                 column: (
                     format_phone_number(getattr(user, column, "N/A"))
                     if "phone" in column and getattr(user, column, None) else
-                    (getattr(user, column, "N/A").lower() if column == "gender" and getattr(user, column, None) else getattr(user, column, "N/A"))
+                    (getattr(user, column, "N/A").lower() if column == "gender" and getattr(user, column) else "N/A")
                 )
                 for column in [
                     "id", "first_name", "mobile_phone", "direct_number", "gender", "personal_phone", 
@@ -950,7 +950,7 @@ class LeadsPersistence:
                     "company_domain", 
                     "job_title", "last_updated", "age_min", "age_max", 
                     "personal_address", "personal_zip",
-                    "married", "children", "income_range", "homeowner", "dpv_code"
+                    "married", "children", "income_range", "homeowner", "dpv_code", "time_on_site", "url_visited"
                 ]
             }
             for user in five_x_five_users
