@@ -190,11 +190,13 @@ class LeadsService:
                 spent_time_sec = int(visit['spent_time_sec'])
                 page_visits_info.append(f"{visit['page']} {spent_time_sec}")
                 page_visits_count += 1
-                if max_spent_time < spent_time_sec:
-                    max_spent_time = spent_time_sec
+                max_spent_time += spent_time_sec
 
             page_visits_str = "\n".join(page_visits_info) if page_visits_info else 'None'
-            
+            max_spent_time_minutes = max_spent_time // 60
+            remaining_seconds = max_spent_time % 60
+            time_in_minutes_and_seconds = f"{max_spent_time_minutes} min {remaining_seconds} sec"
+
             relevant_data = [
                 five_x_five_user.first_name or 'None',
                 five_x_five_user.last_name or 'None',
@@ -237,7 +239,7 @@ class LeadsService:
                 five_x_five_user.company_linkedin_url or 'None',
                 page_visits_str,
                 page_visits_count,
-                max_spent_time
+                time_in_minutes_and_seconds
             ]
             writer.writerow(relevant_data)
 
