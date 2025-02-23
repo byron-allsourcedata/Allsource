@@ -885,7 +885,8 @@ class LeadsPersistence:
     def get_last_leads_for_zapier(self, domain_id: int):
         lead_users = (
             self.db.query(LeadUser)
-            .filter(LeadUser.domain_id == domain_id, LeadUser.personal_emails != None)
+            .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)\
+            .filter(LeadUser.domain_id == domain_id, FiveXFiveUser.personal_emails != None)\
             .order_by(LeadUser.created_at.desc())
             .limit(3)
             .all()
