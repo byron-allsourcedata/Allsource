@@ -16,7 +16,7 @@ interface CreateWebhookProps {
     Invalid_api_key?: boolean;
 }
 
-const WebhookConnect = ({ handleClose, open, onSave, initApiKey, boxShadow }: CreateWebhookProps) => {
+const WebhookConnectPopup = ({ handleClose, open, onSave, initApiKey, boxShadow }: CreateWebhookProps) => {
     const { triggerSync } = useIntegrationContext();
     const [apiKey, setApiKey] = useState('');
     const [loading, setLoading] = useState(false)
@@ -165,4 +165,4 @@ const WebhookConnect = ({ handleClose, open, onSave, initApiKey, boxShadow }: Cr
     );
 }
 
-export default WebhookConnect;
+export default WebhookConnectPopup;

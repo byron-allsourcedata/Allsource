@@ -9,7 +9,7 @@ import ConnectKlaviyo from '@/app/(client)/data-sync/components/ConnectKlaviyo';
 import ConnectMeta from '@/app/(client)/data-sync/components/ConnectMeta';
 import KlaviyoIntegrationPopup from './KlaviyoIntegrationPopup';
 import SlackIntegrationPopup from './SlackIntegrationPopup';
-import WebhookIntegrationPopup from './WebhookIntegrationPopup';
+import WebhookConnectPopup from './WebhookConnectPopup';
 import MetaConnectButton from './MetaConnectButton';
 import AlivbleIntagrationsSlider from './AvalibleIntegrationsSlider';
 import OmnisendConnect from './OmnisendConnect';
@@ -278,7 +278,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     }
 
     const handleWebhookIconPopupClose = () => {
-        setOpenSendlaneIconPopupOpen(false)
+        setOpenWebhookIconPopupOpen(false)
     }
 
     const handleSendlaneConnectOpen = () => {
@@ -474,10 +474,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                             flexBasis: 'calc(50% - 8px)',
                                         },
                                     }}>
-                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'webhook')?.is_failed
-                                            ? handleWebhookIconPopupOpen
-                                            : handleCreateWebhookOpen
-                                        } sx={{
+                                        <ListItemButton onClick={handleWebhookIconPopupOpen} sx={{
                                             p: 0,
                                             flexDirection: 'column',
                                             px: 3,
@@ -488,7 +485,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                             backgroundColor: selectedIntegration === 'webhook' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
                                         }}>
                                             <ListItemIcon sx={{ minWidth: 'auto' }}>
-                                                <Image src="/webhook.svg" alt="webhook" height={26} width={32} />
+                                                <Image src="/webhook-icon.svg" alt="webhook" height={26} width={32} />
                                             </ListItemIcon>
                                             <ListItemText primary="Webhook" primaryTypographyProps={{
                                                 sx: {
@@ -740,7 +737,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             {/* Add Integration */}
             <AlivbleIntagrationsSlider open={plusIconPopupOpen} onClose={handlePlusIconPopupClose} isContactSync={true} integrations={integrations} integrationsCredentials={integrationsCredentials} handleSaveSettings={handleSaveSettings} />
             <SlackIntegrationPopup open={createSlack} handleClose={handleCreateSlackClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'slack')?.access_token} />
-            <WebhookIntegrationPopup open={createKlaviyo} handleClose={handleCreateWebhookClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'webhook')?.access_token} />
+            <WebhookConnectPopup open={createWebhook} handleClose={handleCreateWebhookClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'webhook')?.access_token} />
             <KlaviyoIntegrationPopup open={createKlaviyo} handleClose={handleCreateKlaviyoClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token} />
             <MailchimpConnect onSave={handleSaveSettings} open={openMailchimpConnect} handleClose={handleOpenMailchimpConnectClose} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Mailchimp')?.access_token} />
             <SendlaneConnect open={openSendlaneConnect} handleClose={handleSendlaneConnectClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Sendlane')?.access_token} />

@@ -300,6 +300,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
         return (
           <Image src={"/zapier-icon.svg"} alt="zapier" width={18} height={18} />
         );
+      case "webhook":
+        return (
+          <Image src={"/webhook-icon.svg"} alt="webhook" width={18} height={18} />
+        );
       case "slack":
         return (
           <Image src={"/slack-icon.svg"} alt="slack" width={18} height={18} />
@@ -470,6 +474,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
         setOpenSendlaneIconPopup(true);
       } else if (dataSyncPlatform === "slack") {
         setOpenSlackIconPopup(true);
+      } else if (dataSyncPlatform === "webhook") {
+        setOpenWebhookIconPopup(true);
       }
       setIsLoading(false);
       setAnchorEl(null);
@@ -478,6 +484,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 
   const handleSendlaneIconPopupClose = () => {
     setOpenSendlaneIconPopup(false);
+  };
+
+  const handleWebhookIconPopupClose = () => {
+    setOpenWebhookIconPopup(false);
   };
 
   const handleSlackIconPopupClose = () => {
@@ -1137,7 +1147,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
             <WebhookDatasync
               open={webhookIconPopupOpen}
               isEdit={isEdit}
-              onClose={handleSendlaneIconPopupClose}
+              onClose={handleWebhookIconPopupClose}
               data={data.find((item) => item.id === selectedId)}
             />
           </>

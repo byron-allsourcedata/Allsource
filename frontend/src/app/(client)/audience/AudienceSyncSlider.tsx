@@ -10,11 +10,12 @@ import KlaviyoIntegrationPopup from '@/components/KlaviyoIntegrationPopup';
 import SlackIntegrationPopup from '@/components//SlackIntegrationPopup';
 import MetaConnectButton from '@/components//MetaConnectButton';
 import AlivbleIntagrationsSlider from '@/components//AvalibleIntegrationsSlider';
-import WebhookIntegrationPopup from '@/components//WebhookIntegrationPopup';
+import WebhookConnectPopup from '@/components//WebhookConnectPopup';
 import OmnisendConnect from '@/components//OmnisendConnect';
 import OnmisendDataSync from '@/app/(client)/data-sync/components/OmnisendDataSync';
 import MailchimpConnect from '@/components/MailchimpConnect';
 import MailchimpDatasync from '@/app/(client)/data-sync/components/MailchimpDatasync';
+import WebhookDatasync from '@/app/(client)/data-sync/components/WebhookDatasync';
 import SlackDatasync from '@/app/(client)/data-sync/components/SlackDataSync';
 import SendlaneConnect from '@/components/SendlaneConnect';
 import SendlaneDatasync from '@/app/(client)/data-sync/components/SendlaneDatasync';
@@ -71,6 +72,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false)
     const [omnisendIconPopupOpen, setOpenOmnisendIconPopupOpen] = useState(false)
     const [mailchimpIconPopupOpen, setOpenMailchimpIconPopup] = useState(false)
+    const [webhookIconPopupOpen, setOpenWebhookIconPopup] = useState(false)
     const [slackIconPopupOpen, setOpenSlackIconPopup] = useState(false)
     const [openMailchimpConnect, setOpenmailchimpConnect] = useState(false)
     const [openSendlaneIconPopupOpen, setOpenSendlaneIconPopupOpen] = useState(false)
@@ -174,9 +176,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const handlePlusIconPopupClose = () => {
         setPlusIconPopupOpen(false);
     };
-    const handleCreateWebhookClose = () => {
-        setPlusIconPopupOpen(false);
-    };
     
     const handleKlaviyoIconPopupOpen = () => {
         setKlaviyoIconPopupOpen(true);
@@ -209,6 +208,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setOpenSlackIconPopup(true)
     }
 
+    const handleWebhookIconPopupIconOpen = () => {
+        setOpenWebhookIconPopup(true)
+    }
+
     const handleMailchimpIconPopupIconOpen = () => {
         setOpenMailchimpIconPopup(true)
     }
@@ -219,6 +222,11 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
     const handleMailchimpIconPopupIconClose = () => {
         setOpenMailchimpIconPopup(false)
+        setPlusIconPopupOpen(false)
+    }
+
+    const handleWebhookIconPopupIconClose = () => {
+        setOpenWebhookIconPopup(false)
         setPlusIconPopupOpen(false)
     }
 
@@ -275,6 +283,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             case 'Slack':
                 handleSlackIconPopupIconOpen()
                 break
+            case 'Webhook':
+                handleWebhookIconPopupIconOpen()
+                break  
         }
     };
 
@@ -304,6 +315,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
     const handleCreateSlackClose = () => {
         setCreateSlack(false)
+    }
+
+    const handleCreateWebhookClose = () => {
+        setCreateWebhook(false)
     }
 
     const handleOpenZapierDataSync = () => {
@@ -431,12 +446,13 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             <OnmisendDataSync open={omnisendIconPopupOpen} onClose={handleOmnisendIconPopupOpenClose} isEdit={false} data={null} />
             <SendlaneDatasync open={openSendlaneIconPopupOpen} onClose={handleSendlaneIconPopupClose} data={null} isEdit={false} />
             <MailchimpDatasync open={mailchimpIconPopupOpen} onClose={handleMailchimpIconPopupIconClose} data={null} />
+            <WebhookDatasync open={webhookIconPopupOpen} onClose={handleWebhookIconPopupIconClose} data={null} isEdit={false}/>
             <SlackDatasync open={slackIconPopupOpen} onClose={handleSlackIconPopupIconClose} data={null} isEdit={false} />
             <ZapierDataSync open={openZapierDataSync} handleClose={handleCloseZapierDataSync} />
 
             {/* Add Integration */}
             <AlivbleIntagrationsSlider open={plusIconPopupOpen} onClose={handlePlusIconPopupClose} isContactSync={true} integrations={integrations} integrationsCredentials={integrationsCredentials} handleSaveSettings={handleSaveSettings} />
-            <WebhookIntegrationPopup open={createWebhook} handleClose={handleCreateWebhookClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'webhook')?.access_token} />
+            <WebhookConnectPopup open={createWebhook} handleClose={handleCreateWebhookClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'webhook')?.access_token} />
             <SlackIntegrationPopup open={createSlack} handleClose={handleCreateSlackClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'slack')?.access_token} />
             <KlaviyoIntegrationPopup open={createKlaviyo} handleClose={handleCreateKlaviyoClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token} />
             <MailchimpConnect onSave={handleSaveSettings} open={openMailchimpConnect} handleClose={handleOpenMailchimpConnectClose} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Mailchimp')?.access_token} />
