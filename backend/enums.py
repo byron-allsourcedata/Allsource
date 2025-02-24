@@ -33,6 +33,7 @@ class SourcePlatformEnum(Enum):
     WORDPRESS = 'wordpress'
     HUBSPOT = 'hubspot'
     SLACK = 'slack'
+    WEBHOOK = 'webhook'
 
 
 class UserPaymentStatusEnum(Enum):
@@ -226,6 +227,7 @@ class IntegrationsStatus(Enum):
     SUCCESS = "SUCCESS"
     NOT_MATCHED_EARLIER = "Store Domain does not match the one you specified earlier"
     ALREADY_EXIST = 'ALREADY_EXIST'
+    INVALID_WEBHOOK_URL = 'INVALID_WEBHOOK_URL'
     JOIN_CHANNEL_IS_FAILED = 'JOIN_CHANNEL_IS_FAILED'
 
 

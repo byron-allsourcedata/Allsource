@@ -120,7 +120,8 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
             'mailchimp': integration_service.mailchimp,
             'sendlane': integration_service.sendlane,
             'zapier': integration_service.zapier,
-            'slack': integration_service.slack
+            'slack': integration_service.slack,
+            'webhook': integration_service.webhook
         }
         
         service = service_map.get(service_name)
@@ -212,7 +213,7 @@ async def main():
         integration_service = IntegrationService(
             db=session,
             integration_persistence=IntegrationsPresistence(session),
-            lead_persistence=LeadsPersistence(session),
+            lead_persistence=LeadsPersistence(session, million_verifier_persistence),
             audience_persistence=AudiencePersistence(session),
             lead_orders_persistence=LeadOrdersPersistence(session),
             integrations_user_sync_persistence=IntegrationsUserSyncPersistence(session),

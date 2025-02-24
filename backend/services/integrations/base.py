@@ -21,6 +21,7 @@ from .meta import MetaIntegrationsService
 from .mailchimp import MailchimpIntegrationsService
 from .klaviyo import KlaviyoIntegrationsService
 from .bigcommerce import BigcommerceIntegrationsService
+from .webhook import WebhookIntegrationService
 from .zapier import ZapierIntegrationService
 
 class IntegrationService:
@@ -127,6 +128,8 @@ class IntegrationService:
                                 lead_persistence=self.lead_persistence, million_verifier_integrations=self.million_verifier_integrations
                                 )
         self.zapier = ZapierIntegrationService(self.lead_persistence, self.domain_persistence, self.integrations_user_sync_persistence, self.integration_persistence, self.client,
+                                               self.million_verifier_integrations)
+        self.webhook = WebhookIntegrationService(self.lead_persistence, self.domain_persistence, self.integrations_user_sync_persistence, self.integration_persistence, self.client,
                                                self.million_verifier_integrations)
 
         return self
