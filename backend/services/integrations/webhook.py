@@ -131,6 +131,64 @@ class WebhookIntegrationService:
         if verity > 0:
             return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
         return ProccessDataSyncResult.INCORRECT_FORMAT.value
+    
+    @staticmethod
+    def map_phone_numbers(five_x_five_user, mapped_fields):
+        properties = {}
+
+        if "business_phone" in mapped_fields and "personal_phone" in mapped_fields:
+            direct, personal, mobile = five_x_five_user.direct_number, five_x_five_user.personal_phone, five_x_five_user.mobile_phone
+
+            match (bool(direct), bool(personal), bool(mobile)):
+                case (True, True, True):
+                    properties["business_phone"] = format_phone_number(direct)
+                    properties["personal_phone"] = f"{format_phone_number(personal)}, {format_phone_number(mobile)}"
+                case (True, False, False):
+                    properties["business_phone"] = format_phone_number(direct)
+                    properties["personal_phone"] = None
+                case (False, False, False):
+                    properties["business_phone"] = None
+                    properties["personal_phone"] = None
+                case (True, True, False):
+                    properties["business_phone"] = format_phone_number(direct)
+                    properties["personal_phone"] = format_phone_number(personal)
+                case (True, False, True):
+                    properties["business_phone"] = format_phone_number(direct)
+                    properties["personal_phone"] = format_phone_number(mobile)
+                case (False, True, True):
+                    properties["business_phone"] = format_phone_number(mobile)
+                    properties["personal_phone"] = format_phone_number(personal)
+                case (False, False, True):
+                    properties["business_phone"] = format_phone_number(mobile)
+                    properties["personal_phone"] = format_phone_number(mobile)
+                case (False, True, False):
+                    properties["business_phone"] = None
+                    properties["personal_phone"] = format_phone_number(personal)
+
+        if "business_phone" in mapped_fields and "business_phone" not in properties:
+            direct, personal, mobile = five_x_five_user.direct_number, five_x_five_user.personal_phone, five_x_five_user.mobile_phone
+
+            match (bool(direct), bool(personal), bool(mobile)):
+                case (True, True, True) | (True, True, False) | (True, False, True) | (True, False, False):
+                    properties["business_phone"] = format_phone_number(direct)
+                case (False, True, True) | (False, False, True):
+                    properties["business_phone"] = format_phone_number(mobile)
+                case (False, True, False) | (False, False, False):
+                    properties["business_phone"] = None
+
+        if "personal_phone" in mapped_fields and "personal_phone" not in properties:
+            personal, mobile = five_x_five_user.personal_phone, five_x_five_user.mobile_phone
+
+            match (bool(personal), bool(mobile)):
+                case (True, True):
+                    properties["personal_phone"] = f"{format_phone_number(personal)}, {format_phone_number(mobile)}"
+                case (True, False):
+                    properties["personal_phone"] = format_phone_number(personal)
+                case (False, True):
+                    properties["personal_phone"] = format_phone_number(mobile)
+                case (False, False):
+                    properties["personal_phone"] = None
+        return properties
 
     def __mapped_lead(self, five_x_five_user: FiveXFiveUser, data_map):
         properties = {}
@@ -165,66 +223,8 @@ class WebhookIntegrationService:
         
         if "mobile_phone" in mapped_fields:
             properties["mobile_phone"] = format_phone_number(five_x_five_user.mobile_phone)
-            
-        if "business_phone" in mapped_fields and "personal_phone" in mapped_fields:
-            direct = five_x_five_user.direct_number
-            personal = five_x_five_user.personal_phone
-            mobile = five_x_five_user.mobile_phone
-
-            match (bool(direct), bool(personal), bool(mobile)):
-                case (True, True, True):
-                    properties["business_phone"] = format_phone_number(direct)
-                    properties["personal_phone"] = f"{format_phone_number(personal)} {format_phone_number(mobile)}" 
-                case (True, False, False):
-                    properties["business_phone"] = format_phone_number(direct)
-                    properties["personal_phone"] = None
-                case (False, False, False):
-                    properties["business_phone"] = None
-                    properties["personal_phone"] = None
-                case (True, True, False):
-                    properties["business_phone"] = format_phone_number(direct)
-                    properties["personal_phone"] = format_phone_number(personal)
-                case (True, False, True):
-                    properties["business_phone"] = format_phone_number(direct)
-                    properties["personal_phone"] = format_phone_number(mobile)
-                case (False, True, True):
-                    properties["business_phone"] = format_phone_number(mobile)
-                    properties["personal_phone"] = format_phone_number(personal)
-                case (False, False, True):
-                    properties["business_phone"] = format_phone_number(mobile)
-                    properties["personal_phone"] = format_phone_number(mobile)
-                case (False, True, False):
-                    properties["business_phone"] = None
-                    properties["personal_phone"] = format_phone_number(personal)
         
-        if "business_phone" in mapped_fields:
-            direct = five_x_five_user.direct_number
-            personal = five_x_five_user.personal_phone
-            mobile = five_x_five_user.mobile_phone
-
-            match (bool(direct), bool(personal), bool(mobile)):
-                case (True, True, True) | (True, True, False) | (True, False, True) | (True, False, False):
-                    properties["business_phone"] = format_phone_number(direct)
-                case (False, True, True) | (False, False, True):
-                    properties["business_phone"] = format_phone_number(mobile)
-                case (False, True, False):
-                    properties["business_phone"] = None
-                case (False, False, False):
-                    properties["business_phone"] = None
-        
-        if "personal_phone" in mapped_fields:
-            personal = five_x_five_user.personal_phone
-            mobile = five_x_five_user.mobile_phone
-
-            match (bool(personal), bool(mobile)):
-                case (True, True):
-                    properties["personal_phone"] = f"{format_phone_number(personal)} {format_phone_number(mobile)}"
-                case (True, False):
-                    properties["personal_phone"] = format_phone_number(personal)
-                case (False, True):
-                    properties["personal_phone"] = format_phone_number(mobile)
-                case (False, False):
-                    properties["personal_phone"] = None
+        properties.update(self.map_phone_numbers(five_x_five_user, mapped_fields))
             
         if "personal_email" in mapped_fields:
             email_fields = ['personal_emails', 'additional_personal_emails']
