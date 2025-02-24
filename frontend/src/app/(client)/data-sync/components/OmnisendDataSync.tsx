@@ -72,6 +72,8 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data
     { type: 'Company Description', value: 'company_description' },
     { type: 'Related Domains', value: 'related_domains' },
     { type: 'Social Connections', value: 'social_connections' },
+    { type: 'URL Visited', value: 'url_visited' },
+    { type: 'Time on site', value: 'time_on_site' },
     { type: 'DPV Code', value: 'dpv_code' }]);
     const [customFields, setCustomFields] = useState<{ type: string, value: string }[]>([]);
 
