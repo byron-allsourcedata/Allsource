@@ -100,6 +100,61 @@ class TestMapPhoneNumbers(unittest.TestCase):
         properties = WebhookIntegrationService.map_phone_numbers(self.five_x_five_user, self.mapped_fields)
         
         self.assertIsNone(properties["personal_phone"])
+        
+    def test_personal_phone_not_in_properties(self):
+        self.mapped_fields.remove("personal_phone")
+        self.five_x_five_user.direct_number = "+17639728380, +17634774917"
+        self.five_x_five_user.personal_phone = "+17639728380, +17634774917"
+        self.five_x_five_user.mobile_phone = "+17633558737, +17634775926"
+        
+        properties = WebhookIntegrationService.map_phone_numbers(self.five_x_five_user, self.mapped_fields)
+        
+        self.assertEqual(properties["business_phone"], "+17639728380, +17634774917")
+    
+    def test_personal_phone_not_in_properties_only_direct(self):
+        self.mapped_fields.remove("personal_phone")
+        self.five_x_five_user.direct_number = "+17639728380, +17634774917"
+        
+        properties = WebhookIntegrationService.map_phone_numbers(self.five_x_five_user, self.mapped_fields)
+        
+        self.assertEqual(properties["business_phone"], "+17639728380, +17634774917")
+    
+    def test_personal_phone_not_in_properties_without_phones(self):
+        self.mapped_fields.remove("personal_phone")
+        
+        properties = WebhookIntegrationService.map_phone_numbers(self.five_x_five_user, self.mapped_fields)
+        self.assertIsNone(properties["business_phone"])
+    
+    def test_personal_phone_not_in_properties_only_direct_and_personal(self):
+        self.mapped_fields.remove("personal_phone")
+        self.five_x_five_user.direct_number = "+17639728380, +17634774917"
+        self.five_x_five_user.personal_phone = "+17639728380, +17634774917"
+        
+        properties = WebhookIntegrationService.map_phone_numbers(self.five_x_five_user, self.mapped_fields)
+        self.assertEqual(properties["business_phone"], "+17639728380, +17634774917")
+    
+    def test_personal_phone_not_in_properties_only_direct_and_mobile(self):
+        self.mapped_fields.remove("personal_phone")
+        self.five_x_five_user.direct_number = "+17639728380, +17634774917"
+        self.five_x_five_user.mobile_phone = "+17633558737, +17634775926"
+        
+        properties = WebhookIntegrationService.map_phone_numbers(self.five_x_five_user, self.mapped_fields)
+        self.assertEqual(properties["business_phone"], "+17639728380, +17634774917")
+    
+    def test_personal_phone_not_in_properties_only_personal_and_mobile(self):
+        self.mapped_fields.remove("personal_phone")
+        self.five_x_five_user.personal_phone = "+17639728380, +17634774917"
+        self.five_x_five_user.mobile_phone = "+17633558737, +17634775926"
+        
+        properties = WebhookIntegrationService.map_phone_numbers(self.five_x_five_user, self.mapped_fields)
+        self.assertEqual(properties["business_phone"], "+17633558737, +17634775926")
+    
+    def test_personal_phone_not_in_properties_only_mobile(self):
+        self.mapped_fields.remove("personal_phone")
+        self.five_x_five_user.mobile_phone = "+17633558737, +17634775926"
+        
+        properties = WebhookIntegrationService.map_phone_numbers(self.five_x_five_user, self.mapped_fields)
+        self.assertEqual(properties["business_phone"], "+17633558737, +17634775926")
     
 if __name__ == '__main__':
     unittest.main()
