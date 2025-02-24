@@ -115,14 +115,14 @@ def get_million_verifier_persistence(db: Session = Depends(get_db)):
 def get_referral_payouts_persistence(db: Session = Depends(get_db)):
     return ReferralPayoutsPersistence(db=db)
 
+def get_million_verifier_service(million_verifier_persistence: MillionVerifierPersistence = Depends(get_million_verifier_persistence)):
+    return MillionVerifierIntegrationsService(million_verifier_persistence=million_verifier_persistence)
 
-def get_leads_persistence(db: Session = Depends(get_db)):
-    return LeadsPersistence(db=db)
-
+def get_leads_persistence(db: Session = Depends(get_db), million_verifier_integrations: MillionVerifierIntegrationsService = Depends(get_million_verifier_service)):
+    return LeadsPersistence(db=db, million_verifier_integrations=million_verifier_integrations)
 
 def get_company_persistence(db: Session = Depends(get_db)):
     return CompanyPersistence(db=db)
-
 
 def get_suppression_persistence(db: Session = Depends(get_db)) -> SuppressionPersistence:
     return SuppressionPersistence(db)
@@ -153,8 +153,7 @@ def get_user_integrations_presistence(db: Session = Depends(get_db)) -> Integrat
 
 
 def get_lead_orders_persistence(db: Session = Depends(get_db)) -> LeadsPersistence:
-    return LeadsPersistence(db)
-
+    return LeadOrdersPersistence(db)
 
 def get_integrations_user_sync_persistence(db: Session = Depends(get_db)) -> IntegrationsUserSyncPersistence:
     return IntegrationsUserSyncPersistence(db)
@@ -182,9 +181,6 @@ def get_accounts_service(
 
 def get_aws_service(s3_client=Depends(get_s3_client)) -> AWSService:
     return AWSService(s3_client)
-
-def get_million_verifier_service(million_verifier_persistence: MillionVerifierPersistence = Depends(get_million_verifier_persistence)):
-    return MillionVerifierIntegrationsService(million_verifier_persistence=million_verifier_persistence)
 
 def get_slack_service(
         user_persistence: UserPersistence = Depends(get_user_persistence_service),

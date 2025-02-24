@@ -249,7 +249,7 @@ class MetaIntegrationsService:
                 "FN",
                 "ST",
                 "CT",
-                "ZIP",
+                "ZIP"
             ],
             "data": [profile]
         }
@@ -258,7 +258,6 @@ class MetaIntegrationsService:
             'payload': payload,
             'app_id': APP_ID
             })
-
         return response.json()
 
     def __mapped_meta_user(self, five_x_five_user: FiveXFiveUser):
@@ -307,8 +306,8 @@ class MetaIntegrationsService:
         def hash_value(value):
             return hashlib.sha256(value.encode('utf-8')).hexdigest() if value else ""
         return [
-                hash_value(first_email),                                               # EMAIL
-                hash_value(first_phone),                                              # PHONE
+                hash_value(first_email),                                                           # EMAIL
+                hash_value(first_phone),                                                           # PHONE
                 hash_value(five_x_five_user.gender),                                               # GEN
                 hash_value(five_x_five_user.last_name),                                            # LN
                 hash_value(five_x_five_user.first_name),                                           # FN

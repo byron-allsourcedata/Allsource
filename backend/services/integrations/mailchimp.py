@@ -5,6 +5,7 @@ from persistence.domains import UserDomainsPersistence
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from schemas.integrations.integrations import *
 from schemas.integrations.klaviyo import *
+import hashlib
 from fastapi import HTTPException
 from datetime import datetime, timedelta
 from schemas.integrations.mailchimp import MailchimpProfile
@@ -85,7 +86,9 @@ class MailchimpIntegrationsService:
             {"name": "Company Description", "tag": "COMPANY_DESC", "type": "text"},
             {"name": "Related Domains", "tag": "RELATED_DOMAINS", "type": "text"},
             {"name": "Social Connections", "tag": "SOCIAL_CONN", "type": "text"},
-            {"name": "DPV Code", "tag": "DPV_CODE", "type": "text"}
+            {"name": "DPV Code", "tag": "DPV_CODE", "type": "text"},
+            {"name": "TIME ON SITE", "tag": "TIME_ON_SITE", "type": "text"},
+            {"name": "URL VISITED", "tag": "URL_VISITED", "type": "text"}
         ]
         try:
             response = self.client.lists.create_list(list_info)
@@ -194,6 +197,7 @@ class MailchimpIntegrationsService:
             properties = self.__map_properties(five_x_five_user, integration_data_sync.data_map)
         else:
             properties = {}
+            
         self.client.set_config({
             'api_key': user_integration.access_token,
             'server': user_integration.data_center
@@ -217,11 +221,32 @@ class MailchimpIntegrationsService:
                         **properties
                     },
         }
+        existing_fields = self.client.lists.get_list_merge_fields(integration_data_sync.list_id)
+        existing_field_names = [field['name'] for field in existing_fields['merge_fields']]
+        if "Time on site" not in existing_field_names:
+            self.client.lists.add_list_merge_field(integration_data_sync.list_id, {
+                "name": "Time on site",
+                "type": "number",
+                "tag": "TIMEONSITE"
+            })
+
+        if "URL Visited" not in existing_field_names:
+            self.client.lists.add_list_merge_field(integration_data_sync.list_id, {
+                "name": "URL Visited",
+                "type": "number",
+                "tag": "URLVISITED"
+            })
+            
         try:
             response = self.client.lists.add_list_member(integration_data_sync.list_id, json_data)
         except ApiClientError as error:
             if error.status_code == 400:
-                return "Already exists"
+                try:
+                    subscriber_hash = hashlib.md5(profile.email.lower().encode()).hexdigest()
+                    response = self.client.lists.update_list_member(integration_data_sync.list_id, subscriber_hash, json_data)
+                except ApiClientError as update_error:
+                    return f"Update failed: {update_error.text}"
+                return response
             
             if error.status_code == 403:
                 return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
@@ -300,6 +325,7 @@ class MailchimpIntegrationsService:
             "region": getattr(five_x_five_user, 'personal_state') or getattr(five_x_five_user, 'company_state', None),
             "zip": getattr(five_x_five_user, 'personal_zip') or getattr(five_x_five_user, 'company_zip', None),
         }
+        time_on_site, url_visited = self.leads_persistence.get_visit_stats(five_x_five_user.id)
         return MailchimpProfile(
             email=first_email,
             phone_number=format_phone_number(first_phone),
@@ -310,7 +336,9 @@ class MailchimpIntegrationsService:
             job_title=getattr(five_x_five_user, 'job_title', None),
             company_name=getattr(five_x_five_user, 'company_name', None),
             status='subscribed',
-            email_type='text'
+            email_type='text',
+            time_on_site=time_on_site,
+            url_visited=url_visited
             )
         
     def __map_properties(self, five_x_five_user: FiveXFiveUser, data_map: List[DataMap]) -> dict:
@@ -329,5 +357,12 @@ class MailchimpIntegrationsService:
                             value_field = value_field[:2048]
                     properties[new_field] = value_field
                     
+        mapped_fields = {mapping.get("value") for mapping in data_map}
+        if "Time on site" in mapped_fields or "URL Visited" in mapped_fields:
+            time_on_site, url_visited = self.leads_persistence.get_visit_stats(five_x_five_user.id)
+        if "Time on site" in mapped_fields:
+            properties["TIMEONSITE"] = time_on_site
+        if "URL Visited" in mapped_fields:
+            properties["URLVISITED"] = url_visited
         return properties
     

@@ -67,7 +67,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
         'Gender',
         'Age',
         'Job Title',
-        'Location',
+        'Location'
     ]);
 
     useEffect(() => {
