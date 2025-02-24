@@ -605,6 +605,18 @@ class LeadsPersistence:
 
     def get_lead_data(self, lead_id):
         return self.db.query(FiveXFiveUser).filter(FiveXFiveUser.id == lead_id).first()
+    
+    def get_latest_page_time(self, lead_id):
+        latest_page_time_subquery = (
+            self.db.query(
+                LeadsRequests.page, 
+                func.sum(LeadsRequests.spent_time_sec).label("total_spent_time")
+            )
+            .filter(LeadsRequests.lead_id == lead_id)
+            .group_by(LeadsRequests.page)
+            .all()
+        )
+        return latest_page_time_subquery
 
     def get_inactive_leads_user(self, user_id):
         return (

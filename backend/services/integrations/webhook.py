@@ -91,14 +91,14 @@ class WebhookIntegrationService:
         })
     
     async def process_data_sync(self, five_x_five_user, access_token, integration_data_sync, lead_user):
-        profile = self.__create_profile(five_x_five_user, integration_data_sync)
+        profile = self.__create_profile(five_x_five_user, integration_data_sync, lead_user)
         if profile in (ProccessDataSyncResult.AUTHENTICATION_FAILED.value, ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return profile
             
         return ProccessDataSyncResult.SUCCESS.value
     
-    def __create_profile(self, five_x_five_user, sync: IntegrationUserSync):
-        data = self.__mapped_lead(five_x_five_user, sync.data_map)
+    def __create_profile(self, five_x_five_user, sync: IntegrationUserSync, lead_user):
+        data = self.__mapped_lead(five_x_five_user, sync.data_map, lead_user)
         if data in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return data
         response = self.__handle_request(url=sync.hook_url, method=sync.method, json=data)
@@ -190,7 +190,7 @@ class WebhookIntegrationService:
                     properties["personal_phone"] = None
         return properties
 
-    def __mapped_lead(self, five_x_five_user: FiveXFiveUser, data_map):
+    def __mapped_lead(self, five_x_five_user: FiveXFiveUser, data_map, lead_user):
         properties = {}
         if all(item.get('type') == '' and item.get('value') == '' for item in data_map):
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
@@ -206,6 +206,13 @@ class WebhookIntegrationService:
                     properties[mapping["value"]] = value_field[:2048] if len(value_field) > 2048 else value_field
                 else:
                     properties[mapping["value"]] = value_field
+        
+        if "urls_visited" in mapped_fields:
+            page_time = self.leads_persistence.get_latest_page_time(lead_user.id)
+            page_time_array = [{"page": row.page, "total_spent_time": str(row.total_spent_time)} for row in page_time]
+            for mapping in data_map:
+                if mapping["type"] == "urls_visited":
+                    properties[mapping["value"]] = page_time_array
                     
         if "time_on_site" in mapped_fields or "url_visited" in mapped_fields:
             time_on_site, url_visited = self.leads_persistence.get_visit_stats(five_x_five_user.id)
