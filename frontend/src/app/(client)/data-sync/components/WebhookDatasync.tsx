@@ -55,35 +55,35 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
     const [error, setError] = useState(false);
 
 
-    const [customFieldsList, setCustomFieldsList] = useState([{ type: 'Gender', value: 'gender' },
-    { type: 'First name', value: 'first_name' },
-    { type: 'Last name', value: 'last_name' },
-    { type: 'Mobile phone', value: 'mobile_phone' },
-    { type: 'Direct number', value: 'direct_number' },
-    { type: 'Gender', value: 'gender' },
-    { type: 'Personal phone', value: 'personal_phone' },
-    { type: 'Business phone', value: 'business_phone' },
-    { type: 'Personal email', value: 'personal_email' },
-    { type: 'Personal city', value: 'personal_city' },
-    { type: 'Personal state', value: 'personal_state' },
-    { type: 'Company name', value: 'company_name' },
-    { type: 'Company domain', value: 'company_domain' },
-    { type: 'Job title', value: 'job_title' },
-    { type: 'Last updated', value: 'last_updated' },
-    { type: 'Age min', value: 'age_min' },
-    { type: 'Age max', value: 'age_max' },
-    { type: 'Personal address', value: 'personal_address' },
-    { type: 'Personal zip', value: 'personal_zip' },
-    { type: 'Married', value: 'married' },
-    { type: 'Children', value: 'children' },
-    { type: 'Income range', value: 'income_range' },
-    { type: 'Homeowner', value: 'homeowner' },
-    { type: 'Dpv code', value: 'dpv_code' },
-    { type: 'Time on site', value: 'time_on_site' },
-    { type: 'Url visited', value: 'url_visited' },
-    { type: 'Business phone', value: 'business_phone' },
-    { type: 'Business email', value: 'business_email' },
-    { type: 'Linkedin url', value: 'linkedin_url' }]);
+    const [customFieldsList, setCustomFieldsList] = useState([
+    { type: 'first_name', value: 'first_name' },
+    { type: 'last_name', value: 'last_name' },
+    { type: 'mobile_phone', value: 'mobile_phone' },
+    { type: 'direct_number', value: 'direct_number' },
+    { type: 'gender', value: 'gender' },
+    { type: 'personal_phone', value: 'personal_phone' },
+    { type: 'business_phone', value: 'business_phone' },
+    { type: 'personal_email', value: 'personal_email' },
+    { type: 'personal_city', value: 'personal_city' },
+    { type: 'personal_state', value: 'personal_state' },
+    { type: 'company_name', value: 'company_name' },
+    { type: 'company_domain', value: 'company_domain' },
+    { type: 'job_title', value: 'job_title' },
+    { type: 'last_updated', value: 'last_updated' },
+    { type: 'age_min', value: 'age_min' },
+    { type: 'age_max', value: 'age_max' },
+    { type: 'personal_address', value: 'personal_address' },
+    { type: 'personal_zip', value: 'personal_zip' },
+    { type: 'married', value: 'married' },
+    { type: 'children', value: 'children' },
+    { type: 'income_range', value: 'income_range' },
+    { type: 'homeowner', value: 'homeowner' },
+    { type: 'dpv_code', value: 'dpv_code' },
+    { type: 'time_on_site', value: 'time_on_site' },
+    { type: 'url_visited', value: 'url_visited' },
+    { type: 'business_phone', value: 'business_phone' },
+    { type: 'business_email', value: 'business_email' },
+    { type: 'linkedin_url', value: 'linkedin_url' }]);
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (textFieldRef.current && !textFieldRef.current.contains(event.target as Node)) {
@@ -148,7 +148,6 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
     };
 
     const handleChangeField = (index: number, field: string, value: string) => {
-
         setCustomFields(customFields.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
     };
     useEffect(() => {
@@ -241,7 +240,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                     showToast('Data sync updated successfully');
                 }
             } else {
-                if (!list){
+                if (!list) {
                     return
                 }
                 handleNextTab()
@@ -559,13 +558,13 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                         Connect to Webhook
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href="#" className="main-text" sx={{
+                        {/* <Link href="#" className="main-text" sx={{
                             fontSize: '14px',
                             fontWeight: '600',
                             lineHeight: '20px',
                             color: '#5052b2',
                             textDecorationColor: '#5052b2'
-                        }}>Tutorial</Link>
+                        }}>Tutorial</Link> */}
                         <IconButton onClick={handlePopupClose} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />
                         </IconButton>
@@ -763,9 +762,19 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                                                 <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
                                             </Tooltip>
                                         </Box>
-                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                        <Box sx={{
+                                            display: 'flex', flexDirection: 'column', gap: 2, fontFamily: 'Nunito Sans',
+                                            fontSize: '14px',
+                                            fontWeight: '500',
+                                            color: '#000',
+                                            lineHeight: 'normal',
+                                            '@media (max-width:440px)': {
+                                                fontSize: '12px'
+                                            }
+                                        }}>
+
                                             <TextField
-                                                label="Enter List Name"
+                                                label="Enter Name"
                                                 variant="outlined"
                                                 fullWidth
                                                 value={newListName}
@@ -786,7 +795,6 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                                                 onChange={handleMethodChange}
                                                 aria-label="request method"
                                             >
-                                                <ToggleButton value="GET">GET</ToggleButton>
                                                 <ToggleButton value="POST">POST</ToggleButton>
                                                 <ToggleButton value="PUT">PUT</ToggleButton>
                                             </ToggleButtonGroup>
@@ -815,6 +823,16 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                                             lineHeight: '16px'
                                         }}>
                                             {newListName}
+                                        </Typography>
+                                        <Typography variant='h6' sx={{
+                                            fontFamily: 'Roboto',
+                                            fontSize: '12px',
+                                            fontWeight: '400',
+                                            color: '#5f6368',
+                                            padding: '2px 4px',
+                                            lineHeight: '16px'
+                                        }}>
+                                            Enter the field format as it should be sent
                                         </Typography>
                                     </Box>
 

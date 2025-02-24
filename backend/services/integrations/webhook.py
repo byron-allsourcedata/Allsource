@@ -194,32 +194,36 @@ class WebhookIntegrationService:
         properties = {}
         if all(item.get('type') == '' and item.get('value') == '' for item in data_map):
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
-        
+        error = []
         mapped_fields = {mapping["type"] for mapping in data_map}
         for mapping in data_map:
             five_x_five_field = mapping["type"]
             value_field = getattr(five_x_five_user, five_x_five_field, None)
             if value_field:
                 if isinstance(value_field, datetime):
-                    properties[five_x_five_field] = value_field.strftime("%Y-%m-%d")
+                    properties[mapping["value"]] = value_field.strftime("%Y-%m-%d")
                 elif isinstance(value_field, str):
-                    properties[five_x_five_field] = value_field[:2048] if len(value_field) > 2048 else value_field
+                    properties[mapping["value"]] = value_field[:2048] if len(value_field) > 2048 else value_field
                 else:
-                    properties[five_x_five_field] = value_field
-
+                    properties[mapping["value"]] = value_field
+                    
         if "time_on_site" in mapped_fields or "url_visited" in mapped_fields:
             time_on_site, url_visited = self.leads_persistence.get_visit_stats(five_x_five_user.id)
-            if "time_on_site" in mapped_fields:
-                properties["time_on_site"] = time_on_site
-            if "url_visited" in mapped_fields:
-                properties["url_visited"] = url_visited
+            for mapping in data_map:
+                if mapping["type"] == "time_on_site":
+                    properties[mapping["value"]] = time_on_site
+                if mapping["type"] == "url_visited":
+                    properties[mapping["value"]] = url_visited
 
         if "business_email" in mapped_fields:
             result = self.get_valid_email(five_x_five_user, ['business_email'])
-            if result in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-                properties["business_email"] = None
-            else:
-                properties["business_email"] = result
+            for mapping in data_map:
+                if mapping["type"] == "business_email":
+                    if result in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
+                        properties[mapping["value"]] = None
+                        error.append(result)
+                    else:
+                        properties[mapping["value"]] = result
         
         if "mobile_phone" in mapped_fields:
             properties["mobile_phone"] = format_phone_number(five_x_five_user.mobile_phone)
@@ -229,15 +233,16 @@ class WebhookIntegrationService:
         if "personal_email" in mapped_fields:
             email_fields = ['personal_emails', 'additional_personal_emails']
             result = self.get_valid_email(five_x_five_user, email_fields)
-            if result in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-                properties["personal_email"] = None
-            else:
-                properties["personal_email"] = result
+            for mapping in data_map:
+                if mapping["type"] == "personal_email":
+                    if result in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
+                        properties[mapping["value"]] = None
+                        error.append(result)
+                    else:
+                        properties[mapping["value"]] = result
 
-        if properties.get('business_email') in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value) and properties.get("personal_email") in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-            if properties.get('business_email') in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-                return properties.get('business_email')
-            if properties.get('personal_email') in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-                return properties.get('personal_email')
-            
+        if error and len(error) == 2:
+            error = sorted(error, key=lambda x: x != ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value)
+            return error[0]
+        
         return properties
