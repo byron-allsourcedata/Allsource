@@ -213,7 +213,7 @@ async def main():
         integration_service = IntegrationService(
             db=session,
             integration_persistence=IntegrationsPresistence(session),
-            lead_persistence=LeadsPersistence(session, million_verifier_persistence),
+            lead_persistence=LeadsPersistence(session),
             audience_persistence=AudiencePersistence(session),
             lead_orders_persistence=LeadOrdersPersistence(session),
             integrations_user_sync_persistence=IntegrationsUserSyncPersistence(session),
