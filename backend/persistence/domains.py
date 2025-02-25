@@ -14,7 +14,7 @@ class UserDomainsPersistence:
     def get_domains_by_user(self, user_id: int, domain_substr: str = None):
         query = self.db.query(UserDomains).filter_by(user_id=user_id)
         if domain_substr:
-            query = query.filter(UserDomains.domain.like(f"%{domain_substr}%"))
+            query = query.filter(UserDomains.domain == domain_substr)
         return query.all()
 
     def get_domain_by_filter(self, **filter_by):

@@ -245,6 +245,7 @@ def check_domain(
         if user.get('is_company_details_filled') is False:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={'status': 'FILL_COMPANY_DETAILS'})
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={'status': "DOMAIN_NOT_FOUND"})
+    
     return current_domain[0]
 
 
