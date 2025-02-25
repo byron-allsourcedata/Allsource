@@ -133,7 +133,6 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
                 result = await service.process_data_sync(five_x_five_user, user_integration, integration_data_sync, lead_user)
             except requests.HTTPError as e:
                 logging.error(f"{e}", exc_info=True)
-                await asyncio.sleep(5)
                 await message.ack()
                 return
             except Exception as e:
