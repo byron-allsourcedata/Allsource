@@ -13,6 +13,7 @@ from models.plans import SubscriptionPlan
 from models.subscription_transactions import SubscriptionTransactions
 from models.subscriptions import Subscription, UserSubscriptions
 from models.users import Users, User
+from persistence.leads_persistence import LeadsPersistence
 from persistence.partners_persistence import PartnersPersistence
 from models.users_domains import UserDomains
 from models.users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
@@ -668,3 +669,7 @@ class SubscriptionService:
                 return True
 
         return False
+
+    def charge_credit(self, five_x_five_id, user, leads_persistence, domain):
+        self.user_persistence_service.charge_credit(user.get('id'))
+        leads_persistence.add_unlocked_user(user.get('id'), domain.id, five_x_five_id)
