@@ -56,35 +56,35 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
 
 
     const [customFieldsList, setCustomFieldsList] = useState([
-    { type: 'first_name', value: 'first_name' },
-    { type: 'last_name', value: 'last_name' },
-    { type: 'mobile_phone', value: 'mobile_phone' },
-    { type: 'direct_number', value: 'direct_number' },
-    { type: 'gender', value: 'gender' },
-    { type: 'personal_phone', value: 'personal_phone' },
-    { type: 'business_phone', value: 'business_phone' },
-    { type: 'personal_email', value: 'personal_email' },
-    { type: 'personal_city', value: 'personal_city' },
-    { type: 'personal_state', value: 'personal_state' },
-    { type: 'company_name', value: 'company_name' },
-    { type: 'company_domain', value: 'company_domain' },
-    { type: 'job_title', value: 'job_title' },
-    { type: 'last_updated', value: 'last_updated' },
-    { type: 'age_min', value: 'age_min' },
-    { type: 'age_max', value: 'age_max' },
-    { type: 'personal_address', value: 'personal_address' },
-    { type: 'personal_zip', value: 'personal_zip' },
-    { type: 'married', value: 'married' },
-    { type: 'children', value: 'children' },
-    { type: 'income_range', value: 'income_range' },
-    { type: 'homeowner', value: 'homeowner' },
-    { type: 'dpv_code', value: 'dpv_code' },
-    { type: 'time_on_site', value: 'time_on_site' },
-    { type: 'url_visited', value: 'url_visited' },
-    { type: 'business_phone', value: 'business_phone' },
-    { type: 'business_email', value: 'business_email' },
-    { type: 'urls_visited', value: 'urls_visited' },
-    { type: 'linkedin_url', value: 'linkedin_url' }]);
+        { type: 'first_name', value: 'first_name' },
+        { type: 'last_name', value: 'last_name' },
+        { type: 'mobile_phone', value: 'mobile_phone' },
+        { type: 'direct_number', value: 'direct_number' },
+        { type: 'gender', value: 'gender' },
+        { type: 'personal_phone', value: 'personal_phone' },
+        { type: 'business_phone', value: 'business_phone' },
+        { type: 'personal_email', value: 'personal_email' },
+        { type: 'personal_city', value: 'personal_city' },
+        { type: 'personal_state', value: 'personal_state' },
+        { type: 'company_name', value: 'company_name' },
+        { type: 'company_domain', value: 'company_domain' },
+        { type: 'job_title', value: 'job_title' },
+        { type: 'last_updated', value: 'last_updated' },
+        { type: 'age_min', value: 'age_min' },
+        { type: 'age_max', value: 'age_max' },
+        { type: 'personal_address', value: 'personal_address' },
+        { type: 'personal_zip', value: 'personal_zip' },
+        { type: 'married', value: 'married' },
+        { type: 'children', value: 'children' },
+        { type: 'income_range', value: 'income_range' },
+        { type: 'homeowner', value: 'homeowner' },
+        { type: 'dpv_code', value: 'dpv_code' },
+        { type: 'time_on_site', value: 'time_on_site' },
+        { type: 'url_visited', value: 'url_visited' },
+        { type: 'business_phone', value: 'business_phone' },
+        { type: 'business_email', value: 'business_email' },
+        { type: 'urls_visited', value: 'urls_visited' },
+        { type: 'linkedin_url', value: 'linkedin_url' }]);
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (textFieldRef.current && !textFieldRef.current.contains(event.target as Node)) {
@@ -764,14 +764,8 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                                             </Tooltip>
                                         </Box>
                                         <Box sx={{
-                                            display: 'flex', flexDirection: 'column', gap: 2, fontFamily: 'Nunito Sans',
-                                            fontSize: '14px',
-                                            fontWeight: '500',
-                                            color: '#000',
-                                            lineHeight: 'normal',
-                                            '@media (max-width:440px)': {
-                                                fontSize: '12px'
-                                            }
+                                            display: 'flex', flexDirection: 'column', gap: 2,
+                                            color: 'rgba(17, 17, 19, 0.60)',
                                         }}>
 
                                             <TextField
@@ -780,6 +774,21 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                                                 fullWidth
                                                 value={newListName}
                                                 onChange={handleListNameChange}
+                                                InputLabelProps={{
+                                                    sx: {
+                                                        fontFamily: 'Nunito Sans',
+                                                        fontSize: '12px',
+                                                        lineHeight: '16px',
+                                                        color: 'rgba(17, 17, 19, 0.60)',
+                                                        '&.Mui-focused': {
+                                                            color: '#0000FF',
+                                                            top: 0
+                                                        },
+                                                        '&.MuiInputLabel-shrink': {
+                                                            top: 0
+                                                        }
+                                                    }
+                                                }}
                                             />
                                             <TextField
                                                 label="Enter URL"
@@ -789,6 +798,21 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                                                 onChange={handleUrlChange}
                                                 error={error}
                                                 helperText={error ? "Invalid URL" : ""}
+                                                InputLabelProps={{
+                                                    sx: {
+                                                        fontFamily: 'Nunito Sans',
+                                                        fontSize: '12px',
+                                                        lineHeight: '16px',
+                                                        color: 'rgba(17, 17, 19, 0.60)',
+                                                        '&.Mui-focused': {
+                                                            color: '#0000FF',
+                                                            top: 0
+                                                        },
+                                                        '&.MuiInputLabel-shrink': {
+                                                            top: 0
+                                                        }
+                                                    }
+                                                }}
                                             />
                                             <ToggleButtonGroup
                                                 value={method}
@@ -796,8 +820,8 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                                                 onChange={handleMethodChange}
                                                 aria-label="request method"
                                             >
-                                                <ToggleButton value="POST">POST</ToggleButton>
-                                                <ToggleButton value="PUT">PUT</ToggleButton>
+                                                <ToggleButton value="POST" sx={{ fontSize: '14px', padding: '4px 8px' }}>POST</ToggleButton>
+                                                <ToggleButton value="PUT" sx={{ fontSize: '14px', padding: '4px 8px' }}>PUT</ToggleButton>
                                             </ToggleButtonGroup>
                                         </Box>
                                     </Box>
