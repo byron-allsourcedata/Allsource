@@ -4,9 +4,12 @@ from fastapi import APIRouter, Depends, Query, Request as fastRequest, HTTPExcep
 
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from dependencies import get_plans_service, get_payments_service, get_webhook, check_user_authentication, \
-    check_user_authorization_without_pixel, get_subscription_service, get_users_service
+    check_user_authorization_without_pixel, get_subscription_service, get_users_service, get_leads_persistence, \
+    check_pixel_install_domain
 from enums import TeamAccessLevel
 from models.users import Users
+from models.users_domains import UserDomains
+from persistence.leads_persistence import LeadsPersistence
 from schemas.subscriptions import UnsubscribeRequest
 from schemas.leads import ChargeCreditInfo
 from services.payments import PaymentsService
@@ -214,5 +217,8 @@ def get_status_credits(subscription_service: SubscriptionService = Depends(get_s
 @router.put("/charge-credit")
 def charge_credit(
         payload: ChargeCreditInfo,
-        users_service: UsersService = Depends(get_users_service)):
-    return users_service.charge_credit(payload.five_x_five_id)
+        user: Users = Depends(check_user_authentication),
+        lead_persistence: LeadsPersistence = Depends(get_leads_persistence),
+        domain: UserDomains = Depends(check_pixel_install_domain),
+        subscription_service: SubscriptionService = Depends(get_subscription_service)):
+    return subscription_service.charge_credit(payload.five_x_five_id, user, lead_persistence, domain)
