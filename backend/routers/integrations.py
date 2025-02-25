@@ -396,3 +396,7 @@ async def oauth_shopify_redact(r: Request, integrations_service: IntegrationServ
         service.shopify.oauth_shopify_redact(request_body, shopify_hmac_header)
         return GenericEcommerceResponse(message="Shopify data deleted successfully")
     
+@router.post("/kajabi")
+async def remove_user_callback(request: Request):
+    print('------------')
+    print(request)
