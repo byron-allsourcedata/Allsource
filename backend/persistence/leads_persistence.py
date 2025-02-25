@@ -27,7 +27,6 @@ from models.leads_users_added_to_cart import LeadsUsersAddedToCart
 from models.leads_users_ordered import LeadsUsersOrdered
 from models.leads_visits import LeadsVisits
 from models.state import States
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from models.subscription_transactions import SubscriptionTransactions
 from models.users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
 
@@ -74,9 +73,8 @@ def normalize_profession(profession: str) -> str:
 
 
 class LeadsPersistence:
-    def __init__(self, db: Session, million_verifier_integrations: MillionVerifierIntegrationsService):
+    def __init__(self, db: Session):
         self.db = db
-        self.million_verifier_integrations = million_verifier_integrations
 
     def filter_leads(self, domain_id, page, per_page, from_date, to_date, from_time, to_time, regions, page_visits,
                      average_time_sec, behavior_type, recurring_visits, sort_by, sort_order, search_query, status):
@@ -908,7 +906,6 @@ class LeadsPersistence:
         if not lead_users:
             return None
         
-        valid_users = []
         recurring_visits_subquery = (
             self.db.query(
                 LeadsVisits.lead_id,
@@ -958,78 +955,7 @@ class LeadsPersistence:
             .filter(FiveXFiveUser.id.in_(five_x_five_user_ids))
             .all()
         )
-        for five_x_five_user in five_x_five_users:
-            email_fields = [
-                'business_email', 
-                'personal_emails', 
-                'additional_personal_emails',
-            ]
-            
-            def get_valid_email(user) -> str:
-                thirty_days_ago = datetime.now() - timedelta(days=30)
-                thirty_days_ago_str = thirty_days_ago.strftime('%Y-%m-%d %H:%M:%S')
-                verity = 0
-                for field in email_fields:
-                    email = getattr(user, field, None)
-                    if email:
-                        emails = extract_first_email(email)
-                        for e in emails:
-                            if e and field == 'business_email' and five_x_five_user.business_email_last_seen:
-                                if five_x_five_user.business_email_last_seen.strftime('%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
-                                    return e.strip()
-                            if e and field == 'personal_emails' and five_x_five_user.personal_emails_last_seen:
-                                personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime('%Y-%m-%d %H:%M:%S')
-                                if personal_emails_last_seen_str > thirty_days_ago_str:
-                                    return e.strip()
-                            if e and self.million_verifier_integrations.is_email_verify(email=e.strip()):
-                                return e.strip()
-                            verity += 1
-                if verity > 0:
-                    return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
-                return ProccessDataSyncResult.INCORRECT_FORMAT.value
-
-            first_email = get_valid_email(five_x_five_user)
-            
-            if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-                next
-
-            location = {
-                "address": getattr(five_x_five_user, 'personal_address') or getattr(five_x_five_user, 'company_address', None),
-                "city": getattr(five_x_five_user, 'personal_city') or getattr(five_x_five_user, 'company_city', None),
-                "region": getattr(five_x_five_user, 'personal_state') or getattr(five_x_five_user, 'company_state', None),
-                "zip": getattr(five_x_five_user, 'personal_zip') or getattr(five_x_five_user, 'company_zip', None),
-            }
-            valid_users.append({
-                "id": five_x_five_user.id,
-                "first_name": five_x_five_user.first_name,
-                "mobile_phone": format_phone_number(five_x_five_user.mobile_phone),
-                "direct_number": format_phone_number(five_x_five_user.mobile_phone),
-                "gender": five_x_five_user.gender,
-                "personal_phone": format_phone_number(five_x_five_user.personal_phone),
-                "personal_emails": first_email,
-                "last_name": five_x_five_user.last_name,
-                "personal_city": location.get('city'),
-                "personal_state": location.get('region'),
-                "company_name": five_x_five_user.company_name,
-                "company_domain": five_x_five_user.company_domain,
-                "job_title": five_x_five_user.job_title,
-                "last_updated": five_x_five_user.last_updated,
-                "age_min": five_x_five_user.age_min,
-                "age_max": five_x_five_user.age_max,
-                "personal_address": location.get('address'),
-                "personal_zip": location.get('zip'),
-                "married": five_x_five_user.married,
-                "children": five_x_five_user.children,
-                "income_range": five_x_five_user.income_range,
-                "homeowner": five_x_five_user.homeowner,
-                "dpv_code": five_x_five_user.dpv_code,
-                "time_on_site": five_x_five_user.time_on_site,
-                "url_visited": five_x_five_user.url_visited
-            })
-            if len(valid_users) >= 3:
-                return valid_users
-            
-        return valid_users
+        return five_x_five_users
         
     def search_contact(self, start_letter, domain_id):
         letters = start_letter.split()

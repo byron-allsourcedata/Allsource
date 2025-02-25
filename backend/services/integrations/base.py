@@ -7,11 +7,13 @@ from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.integrations.suppression import IntegrationsSuppressionPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
-from persistence.domains import UserDomainsPersistence
 from persistence.audience_persistence import AudiencePersistence
 from persistence.integrations.external_apps_installations  import ExternalAppsInstallationsPersistence
 from .attentive import AttentiveIntegrationsService
 from .shopify import ShopifyIntegrationService
+from enums import ProccessDataSyncResult
+from datetime import datetime, timedelta
+from utils import extract_first_email, format_phone_number
 from .sendlane import SendlaneIntegrationService
 from persistence.user_persistence import UserPersistence
 from .slack import SlackService
@@ -58,7 +60,78 @@ class IntegrationService:
         return self.integrations_user_sync_persistence.get_data_sync_filter_by(hook_url=hook_url)
     
     def get_leads_for_zapier(self, domain):
-        return self.lead_persistence.get_last_leads_for_zapier(domain.id)
+        five_x_five_users = self.lead_persistence.get_last_leads_for_zapier(domain.id)
+        valid_users = []
+        for five_x_five_user in five_x_five_users:
+                email_fields = [
+                    'business_email', 
+                    'personal_emails', 
+                    'additional_personal_emails',
+                ]
+                
+                def get_valid_email(user) -> str:
+                    thirty_days_ago = datetime.now() - timedelta(days=30)
+                    thirty_days_ago_str = thirty_days_ago.strftime('%Y-%m-%d %H:%M:%S')
+                    verity = 0
+                    for field in email_fields:
+                        email = getattr(user, field, None)
+                        if email:
+                            emails = extract_first_email(email)
+                            for e in emails:
+                                if e and field == 'business_email' and five_x_five_user.business_email_last_seen:
+                                    if five_x_five_user.business_email_last_seen.strftime('%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
+                                        return e.strip()
+                                if e and field == 'personal_emails' and five_x_five_user.personal_emails_last_seen:
+                                    personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime('%Y-%m-%d %H:%M:%S')
+                                    if personal_emails_last_seen_str > thirty_days_ago_str:
+                                        return e.strip()
+                                if e and self.million_verifier_integrations.is_email_verify(email=e.strip()):
+                                    return e.strip()
+                                verity += 1
+                    if verity > 0:
+                        return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
+                    return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+                first_email = get_valid_email(five_x_five_user)
+                
+                if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
+                    next
+
+                location = {
+                    "address": getattr(five_x_five_user, 'personal_address') or getattr(five_x_five_user, 'company_address', None),
+                    "city": getattr(five_x_five_user, 'personal_city') or getattr(five_x_five_user, 'company_city', None),
+                    "region": getattr(five_x_five_user, 'personal_state') or getattr(five_x_five_user, 'company_state', None),
+                    "zip": getattr(five_x_five_user, 'personal_zip') or getattr(five_x_five_user, 'company_zip', None),
+                }
+                valid_users.append({
+                    "id": five_x_five_user.id,
+                    "first_name": five_x_five_user.first_name,
+                    "mobile_phone": format_phone_number(five_x_five_user.mobile_phone),
+                    "direct_number": format_phone_number(five_x_five_user.mobile_phone),
+                    "gender": five_x_five_user.gender,
+                    "personal_phone": format_phone_number(five_x_five_user.personal_phone),
+                    "personal_emails": first_email,
+                    "last_name": five_x_five_user.last_name,
+                    "personal_city": location.get('city'),
+                    "personal_state": location.get('region'),
+                    "company_name": five_x_five_user.company_name,
+                    "company_domain": five_x_five_user.company_domain,
+                    "job_title": five_x_five_user.job_title,
+                    "last_updated": five_x_five_user.last_updated,
+                    "age_min": five_x_five_user.age_min,
+                    "age_max": five_x_five_user.age_max,
+                    "personal_address": location.get('address'),
+                    "personal_zip": location.get('zip'),
+                    "married": five_x_five_user.married,
+                    "children": five_x_five_user.children,
+                    "income_range": five_x_five_user.income_range,
+                    "homeowner": five_x_five_user.homeowner,
+                    "dpv_code": five_x_five_user.dpv_code,
+                    "time_on_site": five_x_five_user.time_on_site,
+                    "url_visited": five_x_five_user.url_visited
+                })
+                if len(valid_users) >= 3:
+                    return valid_users
     
     def get_user_by_shop_domain(self, shop_domain):
         return self.integrations_user_sync_persistence.get_user_by_shop_domain(shop_domain)
