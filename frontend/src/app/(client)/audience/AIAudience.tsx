@@ -684,47 +684,57 @@ const AIAudience: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                         )}
                     </Box>
                     {currentStep === 3 && (
-                        <Box sx={{ display: 'flex', justifyContent: 'end', gap: 2, borderTop: '1px solid rgba(228, 228, 228, 1)', mt: 2, pr: 2, pt: '0.5rem' }}>
-                            <Button
-                                sx={{
+                       <Box sx={{
+                        position: 'fixed',      // Закрепляем компонент
+                        bottom: 0,             // Внизу экрана
+                        left: 0,               // Слева
+                        right: 0,              // Справа
+                        borderTop: '1px solid rgba(228, 228, 228, 1)', 
+                        mt: 2, 
+                        pr: 2, 
+                        pt: '0.5rem',
+                        backgroundColor: 'white',  // Можно задать фон, чтобы не было видно контента за компонентом
+                        zIndex: 9999,              // Чтобы компонент был сверху, если перекрывает другие элементы
+                    }}>
+                        <Button
+                            sx={{
+                                border: '1px #5052B2 solid',
+                                color: '#5052B2',
+                                backgroundColor: '#FFFFFF',
+                                textTransform: 'none',
+                                mt: 1,
+                                '&:hover': {
                                     border: '1px #5052B2 solid',
-                                    color: '#5052B2',
-                                    backgroundColor: '#FFFFFF',
-                                    textTransform: 'none',
-                                    mt: 1,
-                                    '&:hover': {
-                                        border: '1px #5052B2 solid',
-                                        backgroundColor: '#FFFFFF'
-                                    }
-                                }}
-                                variant="outlined"
-                                onClick={handleCancel}
-                            >
-                                <Typography padding={'0.5rem 2rem'} fontSize={'0.8rem'}>Cancel</Typography>
-                            </Button>
-                            <Button
-                                sx={{
+                                    backgroundColor: '#FFFFFF'
+                                }
+                            }}
+                            variant="outlined"
+                            onClick={handleCancel}
+                        >
+                            <Typography padding={'0.5rem 2rem'} fontSize={'0.8rem'}>Cancel</Typography>
+                        </Button>
+                        <Button
+                            sx={{
+                                border: '1px #5052B2 solid',
+                                color: '#FFFFFF',
+                                backgroundColor: '#5052B2',
+                                textTransform: 'none',
+                                gap: 0,
+                                mt: 1,
+                                '&:hover': {
                                     border: '1px #5052B2 solid',
-                                    color: '#FFFFFF',
-                                    backgroundColor: '#5052B2',
-                                    textTransform: 'none',
-                                    gap: 0,
-                                    mt: 1,
-                                    '&:hover': {
-                                        border: '1px #5052B2 solid',
-                                        backgroundColor: '#5052B2'
-                                    }
-                                }}
-                                variant="outlined"
-                                onClick={handleGenerate}
-                            >
-                                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '0.5rem 1rem', gap: 1 }}>
-                                    <Image src={'stars-icon.svg'} alt="Stars" width={15} height={15} />
-                                    <Typography fontSize={'0.8rem'}> Generate Audience</Typography>
-                                </Box>
-
-                            </Button>
-                        </Box>
+                                    backgroundColor: '#5052B2'
+                                }
+                            }}
+                            variant="outlined"
+                            onClick={handleGenerate}
+                        >
+                            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '0.5rem 1rem', gap: 1 }}>
+                                <Image src={'stars-icon.svg'} alt="Stars" width={15} height={15} />
+                                <Typography fontSize={'0.8rem'}> Generate Audience</Typography>
+                            </Box>
+                        </Button>
+                    </Box>
                     )}
                 </Box>
             }
