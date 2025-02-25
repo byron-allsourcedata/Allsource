@@ -4,6 +4,7 @@ import sys
 import asyncio
 import functools
 import json
+import requests
 import os
 import sys
 current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -130,9 +131,15 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
             result = None
             try:
                 result = await service.process_data_sync(five_x_five_user, user_integration, integration_data_sync, lead_user)
+            except requests.HTTPError as e:
+                logging.error(f"{e}", exc_info=True)
+                await asyncio.sleep(5)
+                await message.ack()
+                return
             except Exception as e:
                 logging.error(f"Error processing data sync: {e}", exc_info=True)
                 await message.ack()
+                return
 
             import_status = DataSyncImportedStatus.SENT.value
             match result:

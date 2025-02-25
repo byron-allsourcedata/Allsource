@@ -194,7 +194,7 @@ class WebhookIntegrationService:
         properties = {}
         if all(item.get('type') == '' and item.get('value') == '' for item in data_map):
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
-        error = []
+        
         mapped_fields = {mapping["type"] for mapping in data_map}
         for mapping in data_map:
             five_x_five_field = mapping["type"]
@@ -228,7 +228,6 @@ class WebhookIntegrationService:
                 if mapping["type"] == "business_email":
                     if result in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
                         properties[mapping["value"]] = None
-                        error.append(result)
                     else:
                         properties[mapping["value"]] = result
         
@@ -244,12 +243,7 @@ class WebhookIntegrationService:
                 if mapping["type"] == "personal_email":
                     if result in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
                         properties[mapping["value"]] = None
-                        error.append(result)
                     else:
                         properties[mapping["value"]] = result
-
-        if error and len(error) == 2:
-            error = sorted(error, key=lambda x: x != ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value)
-            return error[0]
         
         return properties
