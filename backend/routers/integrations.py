@@ -398,5 +398,10 @@ async def oauth_shopify_redact(r: Request, integrations_service: IntegrationServ
     
 @router.post("/kajabi")
 async def remove_user_callback(request: Request):
-    print('------------')
-    print(request)
+    print("------------")
+
+    body = await request.json()
+    print("Headers:", request.headers)
+    print("Body:", body)
+
+    return {"message": "Received"}
