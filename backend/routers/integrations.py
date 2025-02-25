@@ -6,6 +6,7 @@ from urllib.parse import urlencode
 from fastapi import APIRouter, Depends, Query, HTTPException, status, Body, Request
 from fastapi.responses import RedirectResponse
 from enums import CreateDataSync
+from utils import normalize_url
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from persistence.settings_persistence import SettingsPersistence
 from dependencies import get_integration_service, IntegrationService, IntegrationsPresistence, \
@@ -397,11 +398,14 @@ async def oauth_shopify_redact(r: Request, integrations_service: IntegrationServ
         return GenericEcommerceResponse(message="Shopify data deleted successfully")
     
 @router.post("/kajabi")
-async def remove_user_callback(request: Request):
-    print("------------")
-
+async def kajabi_webhook(request: Request, domain: str, persistence: IntegrationsPresistence = Depends(get_user_integrations_presistence)):
     body = await request.json()
-    print("Headers:", request.headers)
-    print("Body:", body)
+    event_type = body.get("event")
+    # user_email = body.get("member", {}).get("email")
+    # offer_title = body.get("offer", {}).get("title")
+    # amount_paid = body.get("payment_transaction", {}).get("amount_paid_decimal")
+    # if event_type == "payment.succeeded":
+    persistence.create_kajabi(body)
 
-    return {"message": "Received"}
+    return {"status": "success", "domain": domain, "event": event_type}
+

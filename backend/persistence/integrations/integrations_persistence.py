@@ -1,5 +1,6 @@
 from models.integrations.users_domains_integrations import UserIntegration, Integration
 from models.integrations.external_apps_installations import ExternalAppsInstall
+from models.kajabi import Kajabi
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -14,6 +15,14 @@ class IntegrationsPresistence:
         self.db.add(integration)
         self.db.commit()
         return integration
+    
+    def create_kajabi(self, text):
+        kajabi_model = Kajabi(
+            text=text
+        )
+        self.db.add(kajabi_model)
+        self.db.commit()
+        return kajabi_model
         
     def get_integration_by_shop_id(self, shop_id: str) -> UserIntegration:
         user_integration = (
