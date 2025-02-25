@@ -40,11 +40,24 @@ interface FetchDataParams {
     rowsPerPage: number;
 }
 
+interface Sources {
+    id: number
+    name: string
+    source: string
+    type: string
+    created_date: string
+    updated_date: string
+    created_by: string
+    number_of_customers: number
+    matched_records: number
+}
+
 interface CompanyEmployeesProps {
     setStatus: (status: string) => void
     status: string | null
-    setData: (data: any) => void
-    data: any
+    setData: (data: Sources[]) => void
+    data: Sources[]
+    setSources: (newState: boolean) => void
 }
 
 interface RenderCeil {
@@ -53,7 +66,7 @@ interface RenderCeil {
 }
 
 
-const SourcesTable: React.FC<CompanyEmployeesProps> = ({ status, setStatus, data, setData }) => {
+const SourcesTable: React.FC<CompanyEmployeesProps> = ({ status, setStatus, data, setData, setSources }) => {
     const router = useRouter();
     const { hasNotification } = useNotification();
     const [count_companies, setCount] = useState<number | null>(null);
@@ -142,11 +155,12 @@ const SourcesTable: React.FC<CompanyEmployeesProps> = ({ status, setStatus, data
             // const response = await axiosInstance.get(url);
             // const [employees, count] = response.data;
 
-            const count = 1
-            const employees = [{id: 1, name: "SVO", source: "CSV File", type: "Intent", created_date: "01.01.1020", created_by: "01.01.1020", updated_date: "01.01.1020", number_of_customers: 23, matched_records: 23}]
-
+            // const count = 1
+            const count = 0
+            // const employees = [{id: 1, name: "SVO", source: "CSV File", type: "Intent", created_date: "01.01.1020", created_by: "01.01.1020", updated_date: "01.01.1020", number_of_customers: 23, matched_records: 23}]
+            const employees: Sources[] = [];
     
-            setData(Array.isArray(employees) ? employees : []);
+            setData(employees);
             setCount(count || 0);
             setStatus("");
     
@@ -510,7 +524,7 @@ const SourcesTable: React.FC<CompanyEmployeesProps> = ({ status, setStatus, data
                                 </Typography>
                                 <Button
                                     variant="contained"
-                                    onClick={installPixel}
+                                    onClick={() => setSources(false)}
                                     className='second-sub-title'
                                     sx={{
                                         backgroundColor: 'rgba(80, 82, 178, 1)',

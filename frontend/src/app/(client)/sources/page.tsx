@@ -35,12 +35,16 @@ import SourcesImport from './SourcesImport';
 import SourcesList from './SourcesList';
 
 
-interface FetchDataParams {
-    sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
-    page: number;
-    rowsPerPage: number;
-    appliedDates: { start: Date | null; end: Date | null };
+interface Sources {
+    id: number
+    name: string
+    source: string
+    type: string
+    created_date: string
+    updated_date: string
+    created_by: string
+    number_of_customers: number
+    matched_records: number
 }
 
 interface FilterParams {
@@ -91,7 +95,7 @@ interface FilterParams {
 const Sources: React.FC = () => {
     const router = useRouter();
     const { hasNotification } = useNotification();
-    const [data, setData] = useState<any>([]);
+    const [data, setData] = useState<Sources[]>([]);
     const [sources, setSources] = useState<boolean>(true);
     const [createdSource, setCreatedSource] = useState<boolean>(false);
     const [count_companies, setCount] = useState<number | null>(null);
@@ -580,7 +584,7 @@ const Sources: React.FC = () => {
                                             },
                                         }}
                                         onClick={() => {
-                                            
+                                            setSources(false)
                                         }}
                                     >
                                         Import Source
@@ -679,7 +683,7 @@ const Sources: React.FC = () => {
                                 {createdSource && 
                                     <SourcesList />}
                                 {!createdSource &&  
-                                    <SourcesTable setStatus={setStatus} status={status} setData={setData} data={data}/>}
+                                    <SourcesTable setStatus={setStatus} status={status} setData={setData} data={data} setSources={setSources}/>}
                                 {showSlider && <Slider />}
                             </Box>
                         </Box>

@@ -279,5 +279,9 @@ export const sourcesStyles: { [key: string]: SxProps<Theme> } = {
       width: '100%',
       maxWidth: '93%',
     },
+  },
+  textLink: {
+    color: 'rgba(80, 82, 178, 1)', 
+    textDecorationColor: 'rgba(80, 82, 178, 1)'
   }
 };
