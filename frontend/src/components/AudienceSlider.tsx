@@ -65,6 +65,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [integrationsCredentials, setIntegrationsCredentials] = useState<IntegrationsCredentials[]>([])
     const [createKlaviyo, setCreateKlaviyo] = useState<boolean>(false)
     const [createSlack, setCreateSlack] = useState<boolean>(false)
+    const [createGoogleAds, setCreateGoogleAds] = useState<boolean>(false)
     const [integrations, setIntegrations] = useState<Integrations[]>([])
     const [metaConnectApp, setMetaConnectApp] = useState(false)
     const [openBigcommrceConnect, setOpenBigcommerceConnect] = useState(false)
@@ -72,6 +73,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [omnisendIconPopupOpen, setOpenOmnisendIconPopupOpen] = useState(false)
     const [mailchimpIconPopupOpen, setOpenMailchimpIconPopup] = useState(false)
     const [slackIconPopupOpen, setOpenSlackIconPopup] = useState(false)
+    const [googleAdsIconPopupOpen, setOpenGoogleAdsIconPopup] = useState(false)
     const [openMailchimpConnect, setOpenmailchimpConnect] = useState(false)
     const [openSendlaneIconPopupOpen, setOpenSendlaneIconPopupOpen] = useState(false)
     const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
@@ -191,6 +193,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setOpenSlackIconPopup(true)
     }
 
+    const handleGoogleAdsIconPopupIconOpen = () => {
+        setOpenGoogleAdsIconPopup(true)
+    }
+
     const handleMailchimpIconPopupIconOpen = () => {
         setOpenMailchimpIconPopup(true)
     }
@@ -198,6 +204,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const handleSlackConnectOpen = () => {
         setOpenSlackIconPopup(true)
     }
+
+    const handleGoogleAdsConnectOpen = () => {
+        setOpenGoogleAdsIconPopup(true)
+    }    
 
     const handleMailchimpIconPopupIconClose = () => {
         setOpenMailchimpIconPopup(false)
@@ -208,6 +218,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setOpenSlackIconPopup(false)
         setPlusIconPopupOpen(false)
     }
+    const handleGoogleAdsIconPopupIconClose = () => {
+        setOpenGoogleAdsIconPopup(false)
+        setPlusIconPopupOpen(false)
+    }    
 
     const handleMetaIconPopupOpen = () => {
         setMetaIconPopupOpen(true);
@@ -258,7 +272,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                 handleSlackIconPopupIconOpen()
                 break
             case 'GoogleAds':
-                handleSlackIconPopupIconOpen()
+                handleGoogleAdsIconPopupIconOpen()
                 break
         }
     };
@@ -289,6 +303,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
     const handleCreateSlackClose = () => {
         setCreateSlack(false)
+    }
+
+    const handleCreateGoogleAdsClose = () => {
+        setCreateGoogleAds(false)
     }
 
     const handleOpenZapierDataSync = () => {
@@ -535,8 +553,8 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                         },
                                     }}>
                                         <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'google_ads')?.is_failed
-                                            ? handleSlackIconPopupIconOpen
-                                            : handleSlackConnectOpen
+                                            ? handleGoogleAdsIconPopupIconOpen
+                                            : handleGoogleAdsConnectOpen
                                         } sx={{
                                             p: 0,
                                             flexDirection: 'column',
@@ -716,13 +734,13 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             <SendlaneDatasync open={openSendlaneIconPopupOpen} onClose={handleSendlaneIconPopupClose} data={null} isEdit={false} />
             <MailchimpDatasync open={mailchimpIconPopupOpen} onClose={handleMailchimpIconPopupIconClose} data={null} />
             <SlackDatasync open={slackIconPopupOpen} onClose={handleSlackIconPopupIconClose} data={null} isEdit={false} />
-            <GoogleADSDatasync open={slackIconPopupOpen} onClose={handleSlackIconPopupIconClose} data={null} isEdit={false} />
+            <GoogleADSDatasync open={googleAdsIconPopupOpen} onClose={handleGoogleAdsIconPopupIconClose} data={null} isEdit={false} />
             <ZapierDataSync open={openZapierDataSync} handleClose={handleCloseZapierDataSync} />
 
             {/* Add Integration */}
             <AlivbleIntagrationsSlider open={plusIconPopupOpen} onClose={handlePlusIconPopupClose} isContactSync={true} integrations={integrations} integrationsCredentials={integrationsCredentials} handleSaveSettings={handleSaveSettings} />
             <SlackIntegrationPopup open={createSlack} handleClose={handleCreateSlackClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'slack')?.access_token} />
-            <GoogleADSIntegrationPopup open={createSlack} handleClose={handleCreateSlackClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'slack')?.access_token} />
+            <GoogleADSIntegrationPopup open={createGoogleAds} handleClose={handleCreateGoogleAdsClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'webhook')?.access_token} />
             <KlaviyoIntegrationPopup open={createKlaviyo} handleClose={handleCreateKlaviyoClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token} />
             <MailchimpConnect onSave={handleSaveSettings} open={openMailchimpConnect} handleClose={handleOpenMailchimpConnectClose} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Mailchimp')?.access_token} />
             <SendlaneConnect open={openSendlaneConnect} handleClose={handleSendlaneConnectClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Sendlane')?.access_token} />

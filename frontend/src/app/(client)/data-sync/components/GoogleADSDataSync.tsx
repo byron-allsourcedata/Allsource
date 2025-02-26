@@ -9,7 +9,7 @@ import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from '../../../../components/ToastNotification';
 import { useIntegrationContext } from "@/context/IntegrationContext";
 
-interface ConnectSlackPopupProps {
+interface ConnectGoogleAdsPopupProps {
     open: boolean;
     onClose: () => void;
     data: any;
@@ -27,7 +27,7 @@ interface CustomField {
 }
 
 
-const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, isEdit }) => {
+const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose, data, isEdit }) => {
     const { triggerSync } = useIntegrationContext();
     const [loading, setLoading] = useState(false)
     const [value, setValue] = React.useState('1');
@@ -120,35 +120,35 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         setMapListNameError(false);
     }, [open])
 
-    const getChannelList = async () => {
-        try {
-            setLoading(true)
-            const response = await axiosInstance.get('/slack/get-channels')
-            setSlackList(response.data.channels || [])
-            if (response.data.status !== 'success'){
-                showErrorToast(response.data.message)
-            }
-            const foundItem = response.data?.channel.find((item: any) => item.name === data?.channel.name);
-            if (foundItem) {
-                setUpdateKlaviuo(data.id)
-                setSelectedOption({
-                    id: foundItem.id,
-                    name: foundItem.name
-                });
-            } else {
-                setSelectedOption(null);
-            }
-            setSelectedRadioValue(data?.type);
-        } catch (error) { }
-        finally {
-            setLoading(false)
-        }
-    }
-    useEffect(() => {
-        if (open) {
-            getChannelList()
-        }
-    }, [open])
+    // const getChannelList = async () => {
+    //     try {
+    //         setLoading(true)
+    //         const response = await axiosInstance.get('/slack/get-channels')
+    //         setSlackList(response.data.channels || [])
+    //         if (response.data.status !== 'success'){
+    //             showErrorToast(response.data.message)
+    //         }
+    //         const foundItem = response.data?.channel.find((item: any) => item.name === data?.channel.name);
+    //         if (foundItem) {
+    //             setUpdateKlaviuo(data.id)
+    //             setSelectedOption({
+    //                 id: foundItem.id,
+    //                 name: foundItem.name
+    //             });
+    //         } else {
+    //             setSelectedOption(null);
+    //         }
+    //         setSelectedRadioValue(data?.type);
+    //     } catch (error) { }
+    //     finally {
+    //         setLoading(false)
+    //     }
+    // }
+    // useEffect(() => {
+    //     if (open) {
+    //         getChannelList()
+    //     }
+    // }, [open])
 
     const createNewList = async () => {
         try {
@@ -422,34 +422,6 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         return <>{parts}</>; // Return the array wrapped in a fragment.
     };
 
-    const instructions: any[] = [
-        // { id: 'unique-id-1', text: 'Go to the Klaviyo website and log into your account.' },
-        // { id: 'unique-id-2', text: 'Click on the Settings option located in your Klaviyo account options.' },
-        // { id: 'unique-id-3', text: 'Click Create Private API Key Name to Maximiz.' },
-        // { id: 'unique-id-4', text: 'Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Klaviyo key.' },
-        // { id: 'unique-id-5', text: 'Click Create.' },
-        // { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in Maximiz Klaviyo section.' },
-        // { id: 'unique-id-7', text: 'Click Connect.' },
-        // { id: 'unique-id-8', text: 'Select the existing list or create a new one to integrate with Maximiz.' },
-        // { id: 'unique-id-9', text: 'Click Export.' },
-    ]
-
-    // Define the keywords and their styles
-    const highlightConfig: HighlightConfig = {
-        'Klaviyo': { color: '#5052B2', fontWeight: '500' }, // Blue and bold
-        'Settings': { color: '#707071', fontWeight: '500' }, // Bold only
-        'Create Private API Key': { color: '#707071', fontWeight: '500' }, // Blue and bold
-        'Lists': { color: '#707071', fontWeight: '500' }, // Bold only
-        'Profiles': { color: '#707071', fontWeight: '500' }, // Bold only
-        'Metrics': { color: '#707071', fontWeight: '500' }, // Blue and bold
-        'Events': { color: '#707071', fontWeight: '500' }, // Blue and bold
-        'Templates': { color: '#707071', fontWeight: '500' }, // Blue and bold
-        'Create': { color: '#707071', fontWeight: '500' }, // Blue and bold
-        'API Key': { color: '#707071', fontWeight: '500' }, // Blue and bold
-        'Connect': { color: '#707071', fontWeight: '500' }, // Bold only
-        'Export': { color: '#707071', fontWeight: '500' } // Blue and bold
-    };
-
     // Define buttons for each tab
     const getButton = (tabValue: string) => {
         switch (tabValue) {
@@ -706,16 +678,16 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
             >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                     <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
-                        Connect to Slack
+                        Connect to GoogleAds
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/up" className="main-text" sx={{
+                        {/* <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/up" className="main-text" sx={{
                             fontSize: '14px',
                             fontWeight: '600',
                             lineHeight: '20px',
                             color: '#5052b2',
                             textDecorationColor: '#5052b2'
-                        }}>Tutorial</Link>
+                        }}>Tutorial</Link> */}
                         <IconButton onClick={handlePopupClose} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />
                         </IconButton>
@@ -725,7 +697,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                     <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                         <TabContext value={value}>
                             <Box sx={{ pb: 4 }}>
-                                <TabList centered aria-label="Connect to Slack Tabs"
+                                <TabList centered aria-label="Connect to GoogleAds Tabs"
                                     TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
                                     sx={{
                                         "& .MuiTabs-scroller": {
@@ -1502,4 +1474,4 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         </>
     );
 };
-export default SlackDataSync;
+export default GoogleAdsDataSync;

@@ -115,7 +115,7 @@ class GoogleAdsIntegrationsService:
         response = self.__handle_request(method='POST', url="https://oauth2.googleapis.com/token", json=data)
         token_info = response.json()
         access_token = token_info.get("access_token")
-        refresh_token = token_info.get("refresh_token"),
+        refresh_token = token_info.get("refresh_token")
         if not access_token:
             raise HTTPException(status_code=400, detail="Failed to get access token")
 
