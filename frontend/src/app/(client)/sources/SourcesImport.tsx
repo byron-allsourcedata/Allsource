@@ -250,14 +250,14 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
                 <CustomizedProgressBar/>
             )}
             <Box sx={{
-                display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
+                display: 'flex', flexDirection: 'column', height: '100%',
                 '@media (max-width: 900px)': {
                     paddingRight: 0,
                     minHeight: '100vh'
 
                 }
             }}>
-                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                     <Box sx={{
                         flex: 1, gap: 2, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px', pb: '20px',
                         '@media (max-width: 900px)': {

@@ -528,14 +528,13 @@ const Sources: React.FC = () => {
                 <CustomizedProgressBar/>
             )}
             <Box sx={{
-                display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
+                display: 'flex', flexDirection: 'column', pr: 3, height: '100%',
                 '@media (max-width: 900px)': {
-                    paddingRight: 0,
                     minHeight: '100vh'
 
                 }
             }}>
-                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', }}>
                     {sources && 
                         <Box>
                             <Box
@@ -670,11 +669,11 @@ const Sources: React.FC = () => {
                                     </Button>
                                 </Box>
                             </Box>
-                            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, overflowX: 'auto', "@media (max-width: 600px)": { mb: 1 } }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, "@media (max-width: 600px)": { mb: 1 } }}>
                                     {/* --- CHIPS --- */}
                             </Box>
                             <Box sx={{
-                                flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px', pb: '20px',
+                                flex: 1, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 4.25rem)', overflow: 'auto', maxWidth: '100%',
                                 '@media (max-width: 900px)': {
                                     pt: '2px',
                                     pb: '18px'
@@ -718,7 +717,7 @@ const Sources: React.FC = () => {
                                     {/* --- CHIPS --- */}
                             </Box>
                             <Box sx={{
-                                flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px', pb: '20px',
+                                flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto', height: "calc(100vh - 4.25rem)", maxWidth: '100%', pl: 0, pr: 0, pt: '14px', pb: '20px',
                                 '@media (max-width: 900px)': {
                                     pt: '2px',
                                     pb: '18px'
