@@ -84,6 +84,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
         { type: 'business_phone', value: 'business_phone' },
         { type: 'business_email', value: 'business_email' },
         { type: 'urls_visited', value: 'urls_visited' },
+        { type: 'urls_visited_with_parameters', value: 'urls_visited_with_parameters' },
         { type: 'linkedin_url', value: 'linkedin_url' }]);
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {

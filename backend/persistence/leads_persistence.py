@@ -607,11 +607,12 @@ class LeadsPersistence:
     def get_latest_page_time(self, lead_id):
         latest_page_time_subquery = (
             self.db.query(
-                LeadsRequests.page, 
+                LeadsRequests.page,
+                LeadsRequests.page_parameters,
                 func.sum(LeadsRequests.spent_time_sec).label("total_spent_time")
             )
             .filter(LeadsRequests.lead_id == lead_id)
-            .group_by(LeadsRequests.page)
+            .group_by(LeadsRequests.page, LeadsRequests.page_parameters)
             .all()
         )
         return latest_page_time_subquery
