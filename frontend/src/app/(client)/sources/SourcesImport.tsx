@@ -40,7 +40,6 @@ import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import Fuse from "fuse.js";
 
 interface CompanyEmployeesProps {
-    setSources: (state: boolean) => void
 }
 
 interface Row {
@@ -52,7 +51,7 @@ interface Row {
 }
 
 
-const SourcesImport: React.FC<CompanyEmployeesProps> = ({ setSources }) => {
+const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
     const router = useRouter();
     const [showSlider, setShowSlider] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -713,7 +712,13 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({ setSources }) => {
                         </Box>
                         <Box sx={{display: "flex", gap: 2, flexWrap: "wrap", justifyContent: "flex-end", borderRadius: "6px"}}>
                             <Box sx={{display: "flex", alignItems: "center", gap: 3}}>
-                                <Button variant="outlined" onClick={() => setSources(true)} sx={{
+                                <Button variant="outlined" onClick={() => {
+                                    setSourceMethod(0)
+                                    handleDeleteFile()
+                                    setSourceName('')
+                                    setSourceType('')
+
+                                }} sx={{
                                     borderColor: "rgba(80, 82, 178, 1)",
                                     width: "92px",
                                     height: "40px",

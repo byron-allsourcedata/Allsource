@@ -724,7 +724,7 @@ const Sources: React.FC = () => {
                                     pb: '18px'
                                 }
                             }}>
-                                <SourcesImport setSources={setSources}/>
+                                <SourcesImport/>
                                 {showSlider && <Slider />}
                             </Box>
                         </Box>
