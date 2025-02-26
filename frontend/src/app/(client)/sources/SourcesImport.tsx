@@ -75,14 +75,14 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({ setSources }) => {
     const defaultRows: Row[] = [
         { id: 1, type: 'Email', value: '' },
         { id: 2, type: 'Phone number', value: '' },
-        { id: 3, type: 'Last Name', value: 'Last Name' },
-        { id: 4, type: 'First Name', value: 'First Name' },
-        { id: 5, type: 'Gender', value: 'Gender' },
-        { id: 6, type: 'Age', value: 'Age' },
-        { id: 7, type: 'Order Amount', value: 'Order Amount' },
-        { id: 8, type: 'State', value: 'State' },
-        { id: 9, type: 'City', value: 'City' },
-        { id: 10, type: 'Zip Code', value: 'Zip Code' }
+        { id: 3, type: 'Last Name', value: '' },
+        { id: 4, type: 'First Name', value: '' },
+        { id: 5, type: 'Gender', value: '' },
+        { id: 6, type: 'Age', value: '' },
+        { id: 7, type: 'Order Amount', value: '' },
+        { id: 8, type: 'State', value: '' },
+        { id: 9, type: 'City', value: '' },
+        { id: 10, type: 'Zip Code', value: '' }
     ];
     const [rows, setRows] = useState<Row[]>(defaultRows);
 
@@ -189,8 +189,6 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({ setSources }) => {
                 const lines = content.split("\n");
                 const headers = lines[0]?.split(",").map(header => header.trim());
                 setHeadersinCSV(headers)
-
-                console.log({headers})
         
                 if (!headers) {
                     console.error("No headers found in the file");
@@ -198,21 +196,19 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({ setSources }) => {
                 }
         
                 const fuseOptions = {
-                    threshold: 0.3, // Чем меньше значение, тем строже соответствие
+                    threshold: 0.3, // The lower the value, the stricter the match.
                     includeScore: true,
                 };
         
                 const fuse = new Fuse(headers, fuseOptions);
         
                 const updatedRows = defaultRows.map(row => {
-                    const match = fuse.search(row.value)?.[0];
+                    const match = fuse.search(row.type)?.[0];
         
                     return match && match.score !== undefined && match.score <= 0.3
-                        ? { ...row, hisValue: match.item }
+                        ? { ...row, value: match.item }
                         : row;
                 });
-
-                console.log({updatedRows})
         
                 setRows(updatedRows);
             };
@@ -464,100 +460,6 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({ setSources }) => {
                                         <TextField
                                             fullWidth
                                             variant="outlined"
-                                            disabled={true}
-                                            // label={row.type}
-                                            value={row.type}
-                                            onChange={(e) => handleMapListChange(row.id, 'value', e.target.value)}
-                                            InputLabelProps={{
-                                                sx: {
-                                                    fontFamily: 'Nunito Sans',
-                                                    fontSize: '12px',
-                                                    lineHeight: '16px',
-                                                    color: 'rgba(17, 17, 19, 0.60)',
-                                                    top: '-5px',
-                                                    '&.Mui-focused': {
-                                                        color: '#0000FF',
-                                                        top: 0
-                                                    },
-                                                    '&.MuiInputLabel-shrink': {
-                                                        top: 0
-                                                    }
-                                                }
-                                            }}
-                                            InputProps={{
-
-                                                sx: {
-                                                    '&.MuiOutlinedInput-root': {
-                                                        height: '36px',
-                                                        '& .MuiOutlinedInput-input': {
-                                                            padding: '6.5px 8px',
-                                                            fontFamily: 'Roboto',
-                                                            color: '#202124',
-                                                            fontSize: '12px',
-                                                            fontWeight: '400',
-                                                            lineHeight: '20px'
-                                                        },
-                                                        '& .MuiOutlinedInput-notchedOutline': {
-                                                            borderColor: '#A3B0C2',
-                                                        },
-                                                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                            borderColor: '#A3B0C2',
-                                                        },
-                                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                            borderColor: '#0000FF',
-                                                        },
-                                                    },
-                                                    '&+.MuiFormHelperText-root': {
-                                                        marginLeft: '0',
-                                                    },
-                                                }
-                                            }}
-                                        >
-                                            {headersinCSV.map((item: any) => (
-                                                <MenuItem
-                                                    key={item.value}
-                                                    value={item.value}
-                                                >
-                                                    {item.type}
-                                                </MenuItem>
-                                            ))}
-                                        </TextField>
-                                    </Grid>
-
-                                    {/* Middle Icon Toggle (Right Arrow or Close Icon) */}
-                                    <Grid item xs="auto" sm={0.5} container justifyContent="center">
-                                        {row.selectValue !== undefined ? (
-                                            row.selectValue ? (
-                                                <Image
-                                                    src='/chevron-right-purple.svg'
-                                                    alt='chevron-right-purple'
-                                                    height={18}
-                                                    width={18} // Adjust the size as needed
-                                                />
-
-                                            ) : (
-                                                <Image
-                                                    src='/close-circle.svg'
-                                                    alt='close-circle'
-                                                    height={18}
-                                                    width={18} // Adjust the size as needed
-                                                />
-                                            )
-                                        ) : (
-                                            <Image
-                                                src='/chevron-right-purple.svg'
-                                                alt='chevron-right-purple'
-                                                height={18}
-                                                width={18} // Adjust the size as needed
-                                            /> // For the first two rows, always show the right arrow
-                                        )}
-                                    </Grid>
-                                    
-                                    <Grid item xs="auto" sm={2}>
-                                        <TextField
-                                            fullWidth
-                                            variant="outlined"
-                                            disabled={true}
                                             value={row.type}
                                             InputLabelProps={{
                                                 sx: {
@@ -604,6 +506,86 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({ setSources }) => {
                                                 }
                                             }}
                                         />
+                                    </Grid>
+
+                                    {/* Middle Icon Toggle (Right Arrow or Close Icon) */}
+                                    <Grid item xs="auto" sm={0.5} container justifyContent="center">
+                                        {row.selectValue !== undefined ? (
+                                            row.selectValue ? (
+                                                <Image
+                                                    src='/chevron-right-purple.svg'
+                                                    alt='chevron-right-purple'
+                                                    height={18}
+                                                    width={18} // Adjust the size as needed
+                                                />
+
+                                            ) : (
+                                                <Image
+                                                    src='/close-circle.svg'
+                                                    alt='close-circle'
+                                                    height={18}
+                                                    width={18} // Adjust the size as needed
+                                                />
+                                            )
+                                        ) : (
+                                            <Image
+                                                src='/chevron-right-purple.svg'
+                                                alt='chevron-right-purple'
+                                                height={18}
+                                                width={18} // Adjust the size as needed
+                                            /> // For the first two rows, always show the right arrow
+                                        )}
+                                    </Grid>
+                                    
+                                    <Grid item xs="auto" sm={2}>
+                                        <FormControl fullWidth>
+                                            <Select
+                                                value={row.value || ''}
+                                                onChange={(e) => handleMapListChange(row.id, 'value', e.target.value)}
+                                                displayEmpty
+                                                inputProps={{
+                                                    sx: {
+                                                        fontFamily: 'Nunito Sans',
+                                                        fontSize: '12px',
+                                                        lineHeight: '16px',
+                                                        top: '-5px',
+                                                        '&.Mui-focused': {
+                                                            color: '#0000FF',
+                                                            top: 0
+                                                        },
+                                                        '&.MuiInputLabel-shrink': {
+                                                            top: 0
+                                                        },
+                                                        '&.MuiOutlinedInput-root': {
+                                                            height: '36px',
+                                                            '& .MuiOutlinedInput-input': {
+                                                                padding: '6.5px 8px',
+                                                                fontFamily: 'Roboto',
+                                                                color: '#202124',
+                                                                fontSize: '12px',
+                                                                fontWeight: '400',
+                                                                lineHeight: '20px',
+                                                            },
+                                                            '& .MuiOutlinedInput-notchedOutline': {
+                                                                borderColor: '#A3B0C2',
+                                                            },
+                                                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                borderColor: '#A3B0C2',
+                                                            },
+                                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                borderColor: '#0000FF',
+                                                            },
+                                                        },
+                                                    },
+                                                }}
+                                            >
+                                                {headersinCSV.map((item: string, index: number) => (
+                                                    <MenuItem key={index} value={item}>
+                                                        {item}
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
                                     </Grid>
 
 
