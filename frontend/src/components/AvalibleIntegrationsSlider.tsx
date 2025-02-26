@@ -463,7 +463,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
             <SendlaneConnect open={openSendlaneConnect} handleClose={() => setOpenSendlaneConnect(false)} onSave={saveIntegration} />
             <ZapierConnectPopup open={openZapierConnect} handlePopupClose={handleClose} />
             <SlackConnectPopup open={openSlackConnect} handlePopupClose={() => setOpenSlackConnect(false)} onSave={saveIntegration} />
-            <WebhookConnectPopup open={openWebhookConnect} handleClose={() => setOpenSlackConnect(false)} onSave={saveIntegration} />
+            <WebhookConnectPopup open={openWebhookConnect} handleClose={() => setOpenWebhookConnect(false)} onSave={saveIntegration} />
         </>
     )
 }

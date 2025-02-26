@@ -7,6 +7,7 @@ from services.integrations.million_verifier import MillionVerifierIntegrationsSe
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from datetime import datetime, timedelta
 from typing import List
+import httpx
 from models.five_x_five_users import FiveXFiveUser
 from schemas.integrations.integrations import DataMap, IntegrationCredentials
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
@@ -28,19 +29,23 @@ class WebhookIntegrationService:
         self.client = client
         
     def __handle_request(self, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None, api_key: str = None,  method: str = 'GET'):
-        if not headers:
-            headers = {
-                'Authorization': f'Bearer {api_key}',
-                'accept': 'application/json', 
-                'content-type': 'application/json'
-            }
-        response = self.client.request(method, url, headers=headers, json=json, data=data, params=params)
-
-        if response.is_redirect:
-            redirect_url = response.headers.get('Location')
-            if redirect_url:
-                response = self.client.request(method, redirect_url, headers=headers, json=json, data=data, params=params)
-        return response
+        try:
+            if not headers:
+                headers = {
+                    'Authorization': f'Bearer {api_key}',
+                    'accept': 'application/json', 
+                    'content-type': 'application/json'
+                }
+            response = self.client.request(method, url, headers=headers, json=json, data=data, params=params)
+            if response.is_redirect:
+                redirect_url = response.headers.get('Location')
+                if redirect_url:
+                    response = self.client.request(method, redirect_url, headers=headers, json=json, data=data, params=params)
+            return response
+        except httpx.ConnectError as e:
+            return None
+        except httpx.RequestError as e:
+            return None
     
     def save_integration(self, domain_id: int, user: dict):
         credential = self.integration_persistence.get_credentials_for_service(domain_id=domain_id, service_name=SourcePlatformEnum.WEBHOOK.value)
@@ -67,7 +72,7 @@ class WebhookIntegrationService:
         if not credential:
             raise HTTPException(status_code=403, detail={'status': IntegrationsStatus.CREDENTIALS_NOT_FOUND})
         response = self.__handle_request(url=list.webhook_url, method=list.method)
-        if response.status_code == 404:
+        if not response or response.status_code == 404:
             self.integration_persistence.db.commit()
             return IntegrationsStatus.INVALID_WEBHOOK_URL
         
@@ -102,10 +107,10 @@ class WebhookIntegrationService:
         if data in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return data
         response = self.__handle_request(url=sync.hook_url, method=sync.method, json=data)
+        if not response or response.status_code == 401:
+                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
         if response.status_code == 400:
                 return ProccessDataSyncResult.INCORRECT_FORMAT.value
-        if response.status_code == 401:
-                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
             
         return ProccessDataSyncResult.SUCCESS.value
     
