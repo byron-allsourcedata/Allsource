@@ -1,10 +1,10 @@
 "use client";
-import React, { useState, useEffect, Suspense } from 'react';
-import { Box, Grid, Typography, TextField, Button, FormControl, MenuItem, Select, InputLabel, SelectChangeEvent, Paper, IconButton, Chip, Drawer, List, ListItemText, ListItemButton, Popover } from '@mui/material';
+import React, { ChangeEvent, useState, useEffect, Suspense } from 'react';
+import { Box, Grid, Typography, TextField, Button, FormControl, MenuItem, Select, LinearProgress, SelectChangeEvent, Paper, IconButton, Chip, Drawer, List, ListItemText, ListItemButton, Popover } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '../../../axios/axiosInterceptorInstance';
-import { AxiosError } from 'axios';
+import axios from "axios";
 import { sourcesStyles } from './sourcesStyles';
 import FileUploadRoundedIcon from '@mui/icons-material/FileUploadRounded';
 import LanguageIcon from '@mui/icons-material/Language';
@@ -36,21 +36,11 @@ import SwapVertIcon from '@mui/icons-material/SwapVert';
 import { UpgradePlanPopup } from  '../components/UpgradePlanPopup'
 import { sources } from 'next/dist/compiled/webpack/webpack';
 import Link from '@mui/material/Link';
-
-
-interface FetchDataParams {
-    sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
-    page: number;
-    rowsPerPage: number;
-}
+import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
+import Fuse from "fuse.js";
 
 interface CompanyEmployeesProps {
-}
-
-interface RenderCeil {
-    value: any;
-    visibility_status: string
+    setSources: (state: boolean) => void
 }
 
 interface Row {
@@ -62,37 +52,23 @@ interface Row {
 }
 
 
-const SourcesImport: React.FC<CompanyEmployeesProps> = ({ }) => {
+const SourcesImport: React.FC<CompanyEmployeesProps> = ({ setSources }) => {
     const router = useRouter();
-    const { hasNotification } = useNotification();
-    const [data, setData] = useState<any[]>([]);
-    const [count_companies, setCount] = useState<number | null>(null);
-    const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
-    const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
-    const [status, setStatus] = useState<string | null>(null);
     const [showSlider, setShowSlider] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
-    const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
-    const dropdownOpen = Boolean(dropdownEl);
+    const [isLoading, setIsLoading] = useState(false);
     const [file, setFile] = useState<File | null>(null);
-    const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
-    const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(15);
-    const [filterPopupOpen, setFilterPopupOpen] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [selectedFilters, setSelectedFilters] = useState<{ label: string, value: string }[]>([]);
-    const [openPopup, setOpenPopup] = React.useState(false);
-    const [creditsChargePopup, setCreditsChargePopup] = React.useState(false);
-    const [upgradePlanPopup, setUpgradePlanPopup] = React.useState(false);
-    const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
-    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-    const [selectedJobTitle, setSelectedJobTitle] = React.useState<string | null>(null);
-    const [employeeId, setEmployeeId] = useState<number | null>(null)
     const [sourceType, setSourceType] = useState<string>("");
     const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(null)
     const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
     const [sourceName, setSourceName] = useState<string>("");
+    const [fileSizeStr, setFileSizeStr] = useState<string>("");
+    const [fileName, setFileName] = useState<string>("");
     const [sourceMethod, setSourceMethod] = useState<number>(0);
+    const [dragActive, setDragActive] = useState(false);
+    const [fileSizeError, setFileSizeError] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+    const [headersinCSV, setHeadersinCSV] = useState<any>([]);
 
     const deleteOpen = Boolean(deleteAnchorEl);
     const deleteId = deleteOpen ? 'delete-popover' : undefined;
@@ -138,113 +114,115 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({ }) => {
         }
     };
 
-    const handleOpenPopover = (event: React.MouseEvent<HTMLElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
-
-    const handleClosePopover = () => {
-        setAnchorEl(null);
-        setSelectedJobTitle(null);
-    };
-
-    const isOpen = Boolean(anchorEl);
-
-    const handleClosePopup = () => {
-        setOpenPopup(false);
-    };
-
-
-    const handleFilterPopupOpen = () => {
-        setFilterPopupOpen(true);
-    };
-
-    const handleFilterPopupClose = () => {
-        setFilterPopupOpen(false);
-    };
-
-    const handleSortRequest = (property: string) => {
-        const isAsc = orderBy === property && order === 'asc';
-        setOrder(isAsc ? 'desc' : 'asc');
-        setOrderBy(property);
-    };
-
-
-    const handleChangeRowsPerPage = (event: React.ChangeEvent<{ value: unknown }>) => {
-        setRowsPerPage(parseInt(event.target.value as string, 10));
-        setPage(0);
-    };
-
     const handleDeleteFile = () => {
+        setFile(null);
+        setFileName('')
+        setFileSizeStr('')
+    };
+
+    const processDownloadFile = (uploadedFile: File) => {
+        setFile(uploadedFile)
+        const fileSize = parseFloat((uploadedFile.size / (1024 * 1024)).toFixed(2))
+        setFileSizeStr(fileSize + " MB")
+        setFileName(uploadedFile.name)
+    }
+
+    const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        setDragActive(true);
+    };
+
+    const handleDragLeave = () => {
+        setDragActive(false);
+    };
+
+
+    const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        setDragActive(false);
+        setFileSizeError(false)
+
+        const uploadedFile = event.dataTransfer.files[0];
+        if (uploadedFile) {
+            processDownloadFile(uploadedFile);
+        }
+    };
+
+    const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const formData = new FormData();
+            formData.append("file", file);
+            
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", "/api/upload");
+        
+            xhr.upload.onprogress = (event) => {
+              if (event.lengthComputable) {
+                const percentCompleted = Math.round((event.loaded * 100) / event.total);
+                setUploadProgress(percentCompleted);
+              }
+            };
+        
+            xhr.onload = () => {
+              setUploadProgress(null);
+            };
+        
+            xhr.onerror = () => {
+              setUploadProgress(null);
+            };
+        
+            xhr.send(formData);
+
+            processDownloadFile(file);
+
+            const reader = new FileReader();
+
+            reader.onload = (event) => {
+                const content = event.target?.result as string;
+        
+                if (!content) {
+                    console.error("File is empty or couldn't be read");
+                    return;
+                }
+        
+                const lines = content.split("\n");
+                const headers = lines[0]?.split(",").map(header => header.trim());
+                setHeadersinCSV(headers)
+
+                console.log({headers})
+        
+                if (!headers) {
+                    console.error("No headers found in the file");
+                    return;
+                }
+        
+                const fuseOptions = {
+                    threshold: 0.3, // Чем меньше значение, тем строже соответствие
+                    includeScore: true,
+                };
+        
+                const fuse = new Fuse(headers, fuseOptions);
+        
+                const updatedRows = defaultRows.map(row => {
+                    const match = fuse.search(row.value)?.[0];
+        
+                    return match && match.score !== undefined && match.score <= 0.3
+                        ? { ...row, hisValue: match.item }
+                        : row;
+                });
+
+                console.log({updatedRows})
+        
+                setRows(updatedRows);
+            };
+        
+            reader.readAsText(file);
+        }
+
         
     };
 
-
-    
-    const fetchEmployeesCompany = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
-        try {
-            setIsLoading(true);
-            const accessToken = localStorage.getItem("token");
-            if (!accessToken) {
-                router.push('/signin');
-                return;
-            }
-
-            // let url = `/company/employess?company_id=${companyId}&page=${page + 1}&per_page=${rowsPerPage}`;
-            
-
-    
-            // const response = await axiosInstance.get(url);
-            // const [employees, count] = response.data;
-
-            const count = 1
-            const employees = [{sources: "CSV File", type: "Intent", created_date: "01.01.1020", created_by: "01.01.1020", updated_date: "01.01.1020", number_of_customers: 23, matched_records: 23}]
-
-    
-            setData(Array.isArray(employees) ? employees : []);
-            setCount(count || 0);
-            setStatus("");
-    
-            const options = [15, 30, 50, 100, 200, 500];
-            let RowsPerPageOptions = options.filter(option => option <= count);
-            if (RowsPerPageOptions.length < options.length) {
-                RowsPerPageOptions = [...RowsPerPageOptions, options[RowsPerPageOptions.length]];
-            }
-            setRowsPerPageOptions(RowsPerPageOptions);
-            const selectedValue = RowsPerPageOptions.includes(rowsPerPage) ? rowsPerPage : 15;
-            setRowsPerPage(selectedValue);
-
-        } catch (error) {
-            if (error instanceof AxiosError && error.response?.status === 403) {
-                if (error.response.data.status === 'NEED_BOOK_CALL') {
-                    sessionStorage.setItem('is_slider_opened', 'true');
-                    setShowSlider(true);
-                } else if (error.response.data.status === 'PIXEL_INSTALLATION_NEEDED') {
-                    setStatus(error.response.data.status);
-                } else {
-                    setShowSlider(false);
-                }
-            }
-        } finally {
-            setIsLoading(false);
-        }
-    }
-
-    interface FilterParams {
-        regions: string[];
-        searchQuery: string | null;
-        department: Record<string, boolean>; 
-        seniority: Record<string, boolean>; 
-        jobTitle: Record<string, boolean>; 
-    }
-
-    useEffect(() => {
-        fetchEmployeesCompany({
-            sortBy: orderBy,
-            sortOrder: order,
-            page,
-            rowsPerPage,
-        });
-    }, [orderBy, order, page, rowsPerPage, selectedFilters]);
 
     if (isLoading) {
         return <CustomizedProgressBar />;
@@ -269,136 +247,6 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({ }) => {
         }
     };
 
-
-    const handleChangePage = (event: unknown, newPage: number) => {
-        setPage(newPage);
-    };
-
-    const truncateText = (text: string, maxLength: number) => {
-        return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
-    };
-
-
-
-    const handleApplyFilters = (filters: FilterParams) => {
-        const newSelectedFilters: { label: string; value: string }[] = [];
-
-        const getSelectedValues = (obj: Record<string, boolean>): string => {
-            return Object.entries(obj)
-                .filter(([_, value]) => value)
-                .map(([key]) => key)
-                .join(', ');
-        };
-
-        // Map of filter conditions to their labels
-        const filterMappings: { condition: boolean | string | string[] | number | null, label: string, value: string | ((f: any) => string) }[] = [
-            { condition: filters.regions?.length, label: 'Regions', value: () => filters.regions!.join(', ') },
-            { condition: filters.searchQuery?.trim() !== '', label: 'Search', value: filters.searchQuery || '' },
-            { 
-                condition: filters.seniority && Object.values(filters.seniority).some(Boolean), 
-                label: 'Seniority', 
-                value: () => getSelectedValues(filters.seniority!) 
-            },
-            { 
-                condition: filters.jobTitle && Object.values(filters.jobTitle).some(Boolean), 
-                label: 'Job Title', 
-                value: () => getSelectedValues(filters.jobTitle!) 
-            },
-            { 
-                condition: filters.department && Object.values(filters.department).some(Boolean), 
-                label: 'Department', 
-                value: () => getSelectedValues(filters.department!) 
-            },
-        ];
-
-
-        filterMappings.forEach(({ condition, label, value }) => {
-            if (condition) {
-                newSelectedFilters.push({ label, value: typeof value === 'function' ? value(filters) : value });
-            }
-        });
-
-        setSelectedFilters(newSelectedFilters);
-    };
-
-    const capitalizeTableCell  = (city: string) => {
-        return city
-            ?.split(' ')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-            .join(' ');
-    }
-
-    const handleResetFilters = async () => {
-        const url = `/company`;
-
-        try {
-            setIsLoading(true)
-            sessionStorage.removeItem('filters-employee')
-            const response = await axiosInstance.get(url);
-            const [leads, count] = response.data;
-
-            setData(Array.isArray(leads) ? leads : []);
-            setCount(count || 0);
-            setStatus(response.data.status);
-            setSelectedFilters([]);
-        } catch (error) {
-            console.error('Error fetching leads:', error);
-        }
-        finally {
-            setIsLoading(false)
-        }
-    };
-
-    const handleDeleteFilter = (filterToDelete: { label: string; value: string }) => {
-        const updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
-        setSelectedFilters(updatedFilters);
-        
-        const filters = JSON.parse(sessionStorage.getItem('filters-employee') || '{}');
-        const valuesToDelete = filterToDelete.value.split(',').map(value => value.trim());
-    
-        switch (filterToDelete.label) {
-            case 'Search':
-                filters.searchQuery = '';
-                break;
-            case 'Job Title':
-                Object.keys(filters.jobTitle).forEach(key => {
-                    if (valuesToDelete.includes(key)) {
-                        filters.jobTitle[key] = false;
-                    }
-                });
-                break;
-            case 'Department':
-                Object.keys(filters.department).forEach(key => {
-                    if (valuesToDelete.includes(key)) {
-                        filters.department[key] = false;
-                    }
-                });
-                break;
-            case 'Seniority':
-                Object.keys(filters.seniority).forEach(key => {
-                    if (valuesToDelete.includes(key)) {
-                        filters.seniority[key] = false;
-                    }
-                });
-                break;
-            default:
-                break;
-        }
-        
-        sessionStorage.setItem('filters-employee', JSON.stringify(filters));
-    
-        // Обновляем фильтры для применения
-        const newFilters: FilterParams = {
-            regions: updatedFilters.find(f => f.label === 'Regions') ? updatedFilters.find(f => f.label === 'Regions')!.value.split(', ') : [],
-            searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',
-            department: Object.fromEntries(Object.keys(filters.department).map(key => [key, updatedFilters.some(f => f.label === 'Department' && f.value.includes(key))])),
-            jobTitle: Object.fromEntries(Object.keys(filters.jobTitle).map(key => [key, updatedFilters.some(f => f.label === 'Job Title' && f.value.includes(key))])),
-            seniority: Object.fromEntries(Object.keys(filters.seniority).map(key => [key, updatedFilters.some(f => f.label === 'Seniority' && f.value.includes(key))]))
-        };
-    
-        // Применяем обновленные фильтры
-        handleApplyFilters(newFilters);
-    };
 
 
     return (
@@ -472,7 +320,12 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({ }) => {
                                 </Button>
                             </Box>
                         </Box>
-                        <Box sx={{display: sourceMethod === 0 ? "flex" : "flex", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
+                        <Box sx={{display: sourceMethod === 0 ? "none" : "flex", flexDirection: "column", gap: 2, position: "relative", flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
+                            {uploadProgress !== null && (
+                                            <Box sx={{ width: "100%", position: "absolute", top: 0, left: 0, zIndex: 1200  }}>
+                                                <LinearProgress variant="determinate" value={uploadProgress} sx={{borderRadius: "6px",}} />
+                                            </Box>
+                            )}
                             <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
                                 <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px"}}>Select your Source File</Typography>
                                 <Typography sx={{fontFamily: "Nunito Sans", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Please upload a CSV file containing the list of customers who have successfully completed an order on your website.</Typography>
@@ -499,20 +352,33 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({ }) => {
                                     <MenuItem value={"Intent"}>Intent</MenuItem>
                                 </Select>
                             </FormControl>
-                            {sourceType === "" &&
+                            {sourceType !== "" &&
                                 <Box sx={{
                                     display: "flex",
                                     alignItems: "center",
                                     width: "316px",
-                                    border: "1px dashed rgba(80, 82, 178, 1)",
+                                    border: dragActive
+                                        ? "2px dashed rgba(80, 82, 178, 1)"
+                                        : "1px dashed rgba(80, 82, 178, 1)",
                                     borderRadius: "4px",
                                     padding: "8px 16px",
                                     height: "80px",
-                                    backgroundColor: "rgba(246, 248, 250, 1)",
                                     gap: "16px",
-                                    "@media (max-width: 390px)": { width: "calc(100vw - 74px)" }
-                                }}>
-                                    <Image src="upload.svg" alt="upload" width={40} height={40}/>
+                                    cursor: "pointer",
+                                    backgroundColor: dragActive
+                                        ? "rgba(80, 82, 178, 0.1)"
+                                        : "rgba(246, 248, 250, 1)",
+                                    transition: "background-color 0.3s, border-color 0.3s",
+                                    "@media (max-width: 390px)": { width: "calc(100vw - 74px)" },
+                                }}
+                                    onDragOver={handleDragOver}
+                                    onDragLeave={handleDragLeave}
+                                    onDrop={handleDrop}
+                                    onClick={() => document.getElementById("fileInput")?.click()}>
+                                    <IconButton sx={{ width: "40px", height: "40px", borderRadius: "4px", backgroundColor: "rgba(234, 235, 255, 1)",  }} >
+                                    <FileUploadOutlinedIcon sx={{
+                                        color: "rgba(80, 82, 178, 1)" }} />
+                                    </IconButton>
                                     <Box sx={{ flexGrow: 1 }}>
                                         <Typography
                                         sx={{
@@ -535,8 +401,19 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({ }) => {
                                         CSV.Max 100MB
                                         </Typography>
                                     </Box>
-                                </Box>}
-                            {sourceType === "" &&
+                                    <input
+                                        id="fileInput"
+                                        type="file"
+                                        hidden
+                                        accept=".csv"
+                                        onChange={(event: any) => {
+                                            handleFileUpload(event);
+                                            event.target.value = null;
+                                        }}
+                                    />
+                                </Box>
+                            }
+                            {sourceType !== "" && file &&
                                 <Box sx={{
                                     display: "flex",
                                     alignItems: "center",
@@ -558,7 +435,7 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({ }) => {
                                             color: "rgba(32, 33, 36, 1)"
                                         }}
                                         >
-                                        September
+                                        {fileName}
                                         </Typography>
                                         <Typography
                                         sx={{
@@ -568,7 +445,7 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({ }) => {
                                             color: "rgba(74, 74, 74, 1)",
                                         }}
                                         >
-                                        44MB
+                                        {fileSizeStr}
                                         </Typography>
                                     </Box>
                                     <IconButton onClick={handleDeleteFile}>
@@ -578,12 +455,12 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({ }) => {
                             }
                             <Typography sx={sourcesStyles.text}>Sample doc: <Link href="https://dev.maximiz.ai/integrations" sx={sourcesStyles.textLink}>sample recent customers-list.csv</Link></Typography>
                         </Box>
-                        <Box sx={{display: sourceMethod === 0 || file ? "flex" : "flex", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
+                        <Box sx={{display: sourceMethod !== 0 && file ? "flex" : "none", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
                         {rows.map((row) => (
-                            <Box key={row.id} sx={{ mb: 2 }}>
+                            <Box key={row.id}>
                                 <Grid container spacing={2} alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' } }}>
                                     {/* Left Input Field */}
-                                    <Grid item xs="auto" sm={5}>
+                                    <Grid item xs="auto" sm={2}>
                                         <TextField
                                             fullWidth
                                             variant="outlined"
@@ -635,11 +512,20 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({ }) => {
                                                     },
                                                 }
                                             }}
-                                        />
+                                        >
+                                            {headersinCSV.map((item: any) => (
+                                                <MenuItem
+                                                    key={item.value}
+                                                    value={item.value}
+                                                >
+                                                    {item.type}
+                                                </MenuItem>
+                                            ))}
+                                        </TextField>
                                     </Grid>
 
                                     {/* Middle Icon Toggle (Right Arrow or Close Icon) */}
-                                    <Grid item xs="auto" sm={1} container justifyContent="center">
+                                    <Grid item xs="auto" sm={0.5} container justifyContent="center">
                                         {row.selectValue !== undefined ? (
                                             row.selectValue ? (
                                                 <Image
@@ -667,7 +553,7 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({ }) => {
                                         )}
                                     </Grid>
                                     
-                                    <Grid item xs="auto" sm={5}>
+                                    <Grid item xs="auto" sm={2}>
                                         <TextField
                                             fullWidth
                                             variant="outlined"
@@ -722,7 +608,7 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({ }) => {
 
 
                                     {/* Delete Icon */}
-                                    <Grid item xs="auto" sm={1} container justifyContent="center">
+                                    <Grid item xs="auto" sm={0.5} container justifyContent="center">
                                         <>
                                             <IconButton onClick={(event) => handleClickOpen(event, row.id)}>
                                                 <Image
@@ -808,7 +694,7 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({ }) => {
                             </Box>
                         ))}
                         </Box>
-                        <Box sx={{display: sourceMethod === 0 || file ? "flex" : "flex", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
+                        <Box sx={{display: sourceMethod !== 0 && file ? "flex" : "none", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
                             <Box sx={{display: "flex", alignItems: "center", gap: 2}}>
                                 <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px"}}>Name</Typography>
                                 <TextField
@@ -841,6 +727,64 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({ }) => {
                                     value={sourceName}
                                     onChange={(e) => setSourceName(e.target.value)}
                                     />
+                            </Box>
+                        </Box>
+                        <Box sx={{display: "flex", gap: 2, flexWrap: "wrap", justifyContent: "flex-end", borderRadius: "6px"}}>
+                            <Box sx={{display: "flex", alignItems: "center", gap: 3}}>
+                                <Button variant="outlined" onClick={() => setSources(true)} sx={{
+                                    borderColor: "rgba(80, 82, 178, 1)",
+                                    width: "92px",
+                                    height: "40px",
+                                    ":hover": {
+                                        borderColor: "rgba(62, 64, 142, 1)"},
+                                    ":active": {
+                                        borderColor: "rgba(80, 82, 178, 1)"},
+                                    ":disabled": {
+                                        borderColor: "rgba(80, 82, 178, 1)",
+                                        opacity: 0.4,
+                                    },
+                                }}>
+                                    <Typography
+                                        sx={{
+                                        textAlign: "center",
+                                        color: "rgba(80, 82, 178, 1)",
+                                        textTransform: "none",
+                                        fontFamily: "Nunito Sans",
+                                        fontWeight: "600",
+                                        fontSize: "14px",
+                                        lineHeight: "19.6px",
+                                        }}
+                                    >
+                                        Cancel
+                                    </Typography>
+                                </Button> 
+                                <Button variant="contained" onClick={() => {}} disabled={sourceName.trim() === ""} sx={{
+                                    backgroundColor: "rgba(80, 82, 178, 1)",
+                                    width: "120px",
+                                    height: "40px",
+                                    ":hover": {
+                                        backgroundColor: "rgba(62, 64, 142, 1)"},
+                                    ":active": {
+                                        backgroundColor: "rgba(80, 82, 178, 1)"},
+                                    ":disabled": {
+                                        backgroundColor: "rgba(80, 82, 178, 1)",
+                                        opacity: 0.6,
+                                    },
+                                }}>
+                                    <Typography
+                                        sx={{
+                                        textAlign: "center",
+                                        color: "rgba(255, 255, 255, 1)",
+                                        fontFamily: "Nunito Sans",
+                                        textTransform: "none",
+                                        fontWeight: "600",
+                                        fontSize: "14px",
+                                        lineHeight: "19.6px",
+                                        }}
+                                    >
+                                        Create
+                                    </Typography>
+                                </Button> 
                             </Box>
                         </Box>
                         {showSlider && <Slider />}
