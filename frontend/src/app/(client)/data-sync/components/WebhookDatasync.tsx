@@ -30,7 +30,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedOption, setSelectedOption] = useState<WebhookList | null>(null);
     const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
-    const [newListName, setNewListName] = useState<string>('');
+    const [newListName, setNewListName] = useState<string>(data?.name || '');
     const [tagName, setTagName] = useState<string>('');
     const [isShrunk, setIsShrunk] = useState<boolean>(false);
     const textFieldRef = useRef<HTMLDivElement>(null);
@@ -50,8 +50,8 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
     const [klaviyoList, setKlaviyoList] = useState<WebhookList[]>([])
     const [senders, setSenders] = useState<any[]>([])
     const [listNameErrorMessage, setListNameErrorMessage] = useState('')
-    const [url, setUrl] = useState('');
-    const [method, setMethod] = useState('GET');
+    const [url, setUrl] = useState(data?.hook_url ?? '');
+    const [method, setMethod] = useState(data?.method ?? 'GET');
     const [error, setError] = useState(false);
 
 
@@ -105,8 +105,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
     }, [selectedOption]);
 
 
-    const [customFields, setCustomFields] = useState<{ type: string, value: string }[]>([]);
-
+    const [customFields, setCustomFields] = useState<{ type: string, value: string }[]>(data?.data_map ?? []);
     useEffect(() => {
         if (data?.data_map) {
             setCustomFields(data?.data_map);
@@ -195,7 +194,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
             const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
                 name: newListName,
                 webhook_url: url,
-                method: method
+                method: method,
             }, {
                 params: {
                     service_name: 'webhook'
@@ -226,11 +225,14 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                 return;
             }
             if (isEdit) {
+                if (Number(value) != 3) { handleNextTab(); return }
                 const response = await axiosInstance.put(`/data-sync/sync`, {
+                    integrations_users_sync_id: data.id,
                     list_name: newListName,
                     webhook_url: url,
                     method: method,
-                    data_map: customFields
+                    data_map: customFields,
+                    leads_type: selectedRadioValue
                 }, {
                     params: {
                         service_name: 'webhook'
@@ -239,6 +241,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                 if (response.status === 201 || response.status === 200) {
                     onClose();
                     showToast('Data sync updated successfully');
+                    triggerSync();
                 }
             } else {
                 if (!list) {
