@@ -219,7 +219,7 @@ class WebhookIntegrationService:
         
         if "urls_visited" in mapped_fields:
             page_time = self.leads_persistence.get_latest_page_time(lead_user.id)
-            page_time_array = [{"page": row.page, "total_spent_time": str(row.total_spent_time)} for row in page_time]
+            page_time_array = [{"page": row.page, "total_spent_time": str(row.total_spent_time), "count": row.count} for row in page_time]
             for mapping in data_map:
                 if mapping["type"] == "urls_visited":
                     properties[mapping["value"]] = page_time_array
@@ -229,7 +229,8 @@ class WebhookIntegrationService:
             page_time_array = [
                 {
                     "page": self.build_full_url(row.page, row.page_parameters.replace(', ', '&')), 
-                    "total_spent_time": str(row.total_spent_time)
+                    "total_spent_time": str(row.total_spent_time),
+                    "count": row.count
                 } for row in page_time
             ]
             for mapping in data_map:

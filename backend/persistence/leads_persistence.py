@@ -609,7 +609,8 @@ class LeadsPersistence:
             self.db.query(
                 LeadsRequests.page,
                 LeadsRequests.page_parameters,
-                func.sum(LeadsRequests.spent_time_sec).label("total_spent_time")
+                func.sum(LeadsRequests.spent_time_sec).label("total_spent_time"),
+                func.count().label("count")
             )
             .filter(LeadsRequests.lead_id == lead_id)
             .group_by(LeadsRequests.page, LeadsRequests.page_parameters)
