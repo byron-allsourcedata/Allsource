@@ -1392,7 +1392,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 {[
                   "All Contact",
                   "View Product",
-                  "Add To Cart",
+                  "Abandoned cart",
                   "Visitor"
                 ].map((label) => {
                   const isSelected = selectedListType.includes(label);

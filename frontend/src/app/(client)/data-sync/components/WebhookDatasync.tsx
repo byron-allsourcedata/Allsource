@@ -698,7 +698,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                                                         }
                                                     }}
                                                 />
-                                                <FormControlLabel value="added_to_cart" control={<Radio sx={{
+                                                <FormControlLabel value="abandoned_cart" control={<Radio sx={{
                                                     color: '#e4e4e4',
                                                     '&.Mui-checked': {
                                                         color: '#5052b2', // checked color

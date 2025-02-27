@@ -182,7 +182,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
           const typeMapping: Record<string, string> = {
             "All Contacts": "allContats",
             "View Product": "viewed_product",
-            "Add To Cart": "added_to_cart",
+            "Abandoned cart": "abandoned_cart",
             Visitor: "visitor",
           };
           return Object.values(allData).filter((item) => {
@@ -617,8 +617,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
         return "Converted sales";
       case "visitor":
         return "Visitors";
-      case "added_to_cart":
-        return "Add To Cart";
+      case "abandoned_cart":
+        return "Abandoned cart";
       default:
         return null;
     }
