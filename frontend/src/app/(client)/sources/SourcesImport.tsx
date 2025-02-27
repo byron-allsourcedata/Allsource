@@ -46,6 +46,15 @@ interface Row {
     canDelete?: boolean;
 }
 
+interface Source {
+    id: number;
+    name: string;
+    source_origin: string
+    source_type: string
+    total_records?: number;
+    matched_records?: number;
+}
+
 
 const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
     const router = useRouter();
@@ -64,7 +73,7 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
     const [fileSizeError, setFileSizeError] = useState(false);
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
     const [headersinCSV, setHeadersinCSV] = useState<any>([]);
-    const [createdSource, setCreatedSource] = useState<any>();
+    const [createdSource, setCreatedSource] = useState<Source[]>();
 
     const deleteOpen = Boolean(deleteAnchorEl);
     const deleteId = deleteOpen ? 'delete-popover' : undefined;
@@ -155,7 +164,6 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
         formData.append("source_type", sourceType);
         formData.append("source_origin", sourceMethod === 1 ? "csv" : "pixel");
         formData.append("source_name", sourceName);
-        console.log(sourceType)
         if (file) {
             formData.append("file", file);
             formData.append("file_name", fileName);
