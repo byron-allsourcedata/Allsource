@@ -19,16 +19,38 @@ def get_google_ads_client(client_id, client_secret, refresh_token, developer_tok
     client = GoogleAdsClient(credentials=credentials, developer_token=developer_token)
     return client
 
-def main(client):
+def get_customer_info_and_resource_name(client):
+    googleads_service = client.get_service("GoogleAdsService")
     customer_service = client.get_service("CustomerService")
     accessible_customers = customer_service.list_accessible_customers()
-    
-    result_total = len(accessible_customers.resource_names)
-    print(f"Total results: {result_total}")
-
     resource_names = accessible_customers.resource_names
+    
+    customer_data = []
+
     for resource_name in resource_names:
-        print(f'Customer resource name: "{resource_name}"')
+        customer_id = resource_name.split('/')[-1]
+        if customer_id != '9087286246':
+            continue
+        
+        query = """
+            SELECT
+                customer.id,
+                customer.descriptive_name
+            FROM
+                customer
+        """
+        response = googleads_service.search(customer_id=customer_id, query=query)
+        for row in response:
+            customer_id = row.customer.id
+            customer_name = row.customer.descriptive_name
+            customer_data.append({
+                'customer_id': customer_id,
+                'customer_name': customer_name,
+            })
+    
+    print(f"Customer Data: {customer_data}")
+    return customer_data
+
                     
 if __name__ == "__main__":
     client_id = "1001249123388-16u7qafkkra58hcig94o28mpc1baeqf8.apps.googleusercontent.com"
@@ -39,7 +61,7 @@ if __name__ == "__main__":
     googleads_client = get_google_ads_client(client_id, client_secret, refresh_token, developer_token)
 
     try:
-        main(googleads_client)
+        get_customer_info_and_resource_name(googleads_client)
     except GoogleAdsException as ex:
         print(
             f'Request with ID "{ex.request_id}" failed with status '
