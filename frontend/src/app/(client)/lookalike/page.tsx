@@ -8,9 +8,9 @@ import {
     Button,
 } from "@mui/material";
 import Image from "next/image";
-import Lookalike from "./Lokalike";
-import SourceTableContainer from "./SourceTableContainer";
-import AudienceSizeSelector from "./AudienceSizeSelector";
+import Lookalike from "./create-lookalike/Lokalike";
+import SourceTableContainer from "./create-lookalike/SourceTableContainer";
+import AudienceSizeSelector from "./create-lookalike/SizeSelector";
 
 const audienceSize = [
     {
@@ -120,11 +120,11 @@ const CreateLookalikePage: React.FC = () => {
     return (
         <Box sx={{ width: "100%", backgroundColor: "white" }}>
             {isLookalikeGenerated ? (
-                <Lookalike tableRows={tableRows} /> // Отображаем новый компонент
+                <Lookalike tableRows={tableRows} />
             ) : (
                 <Box>
                     <Box sx={{ width: "100%", padding: 3, color: "#202124" }}>
-                        {/* Заголовок */}
+                        {/* Title */}
                         <Typography
                             variant="h1"
                             sx={{
@@ -140,7 +140,7 @@ const CreateLookalikePage: React.FC = () => {
                             Create Lookalike
                         </Typography>
 
-                        {/* Блок с таблицей Source */}
+                        {/* Block with table Source */}
                         {currentStep >= 1 && (
                             <Box
                                 sx={{
@@ -260,6 +260,7 @@ const CreateLookalikePage: React.FC = () => {
                                 }}
                             >
                                 <Typography
+                                className="first-sub-title"
                                     variant="body1"
                                     sx={{
                                         fontWeight: "bold",
@@ -283,8 +284,14 @@ const CreateLookalikePage: React.FC = () => {
                                         "& .MuiOutlinedInput-root": {
                                             borderRadius: "8px",
                                             paddingLeft: "8px",
-                                            width: "50%",
+                                            width: "300px",
                                             height: "40px",
+                                            "@media (max-width: 1080px)": {
+                                                width: "250px",
+                                            },
+                                            "@media (max-width: 600px)": {
+                                                width: "100%",
+                                            },
                                         },
                                         "& .MuiInputBase-input": {
                                             fontFamily: "Nunito Sans",
