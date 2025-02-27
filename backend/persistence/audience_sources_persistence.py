@@ -3,6 +3,7 @@ from sqlalchemy import desc, asc
 from sqlalchemy.orm import Session
 from models.audience_sources import AudienceSource
 from models.users import Users
+from typing import Optional
 
 
 logger = logging.getLogger(__name__)
@@ -46,3 +47,17 @@ class AudienceSourcesPersistence:
         
         return sources, count
 
+
+    def create_source(self, **creating_data)-> Optional[AudienceSource]:
+        source = AudienceSource(
+            user_id=creating_data.get("user_id"),
+            created_by_user_id=creating_data.get("user_id"),
+            source_type=creating_data.get("source_type"),
+            source_origin=creating_data.get("source_origin"),
+            file_name=creating_data.get("file_name"),
+            name=creating_data.get("source_name"),
+        )
+
+        self.db.add(source)
+        self.db.commit()
+        return source

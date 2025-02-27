@@ -2,6 +2,7 @@ import csv
 import os
 from openai import OpenAI
 import logging
+from fastapi import UploadFile
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -9,12 +10,12 @@ logger = logging.getLogger(__name__)
 
 class AudienceSourceService:
     def __init__(self, audience_sources_persistence: AudienceSourcesPersistence):
-        self.sources_persistence_service = audience_sources_persistence
+        self.audience_sources_persistence = audience_sources_persistence
         self.default_headings = ['Email', 'Phone number', 'Last Name', 'First Name', 'Gender', 'Age', 'Order Amount', 'State', 'City', 'Zip Code']
 
 
     def get_sources(self, page, per_page, sort_by, sort_order):
-        sources, count = self.sources_persistence_service.get_sources(
+        sources, count = self.audience_sources_persistence.get_sources(
             page=page,
             per_page=per_page,
             sort_by=sort_by,
@@ -65,5 +66,20 @@ class AudienceSourceService:
             logger.error("Error with ChatGPT API", exc_info=True)
 
 
+    def create_source(self, user, source_type: str, source_origin: str, source_name: str, file: UploadFile = None, file_name: str = None):
+        creating_data = {
+            "user_id": user.get("id"),
+            "source_type": source_type,
+            "source_origin": source_origin,
+            "source_name": source_name,
+            "file_name": file_name,
+        }
+
+        created_data = self.audience_sources_persistence.create_source(**creating_data)
+
+        if not created_data:
+            logger.debug('Database error during creation')
+
+        return created_data
 
 

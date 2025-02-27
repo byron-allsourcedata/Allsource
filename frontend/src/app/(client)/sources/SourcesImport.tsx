@@ -64,6 +64,7 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
     const [fileSizeError, setFileSizeError] = useState(false);
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
     const [headersinCSV, setHeadersinCSV] = useState<any>([]);
+    const [createdSource, setCreatedSource] = useState<any>();
 
     const deleteOpen = Boolean(deleteAnchorEl);
     const deleteId = deleteOpen ? 'delete-popover' : undefined;
@@ -81,29 +82,33 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
     ];
     const [rows, setRows] = useState<Row[]>(defaultRows);
 
-    const handleMapListChange = (id: number, field: 'value' | 'selectValue', value: string) => {
+    const handleMapListChange = (id: number, value: string) => {
+
         setRows(rows.map(row =>
-            row.id === id ? { ...row, [field]: value } : row
+            row.id === id ? { ...row, value } : row
         ));
     };
 
-    const handleClickOpen = (event: React.MouseEvent<HTMLElement>, id: number) => {
+    const handleDeletePopoverOpen = (event: React.MouseEvent<HTMLElement>, id: number) => {
         setDeleteAnchorEl(event.currentTarget);
         setSelectedRowId(id);
     };
 
-    const handleChange = (event: SelectChangeEvent<string>) => {
+    const handleChangeSourceType = (event: SelectChangeEvent<string>) => {
         setSourceType(event.target.value);
     };
 
     const handleDeleteClose = () => {
         setDeleteAnchorEl(null);
         setSelectedRowId(null);
+        if (deleteAnchorEl) {
+            deleteAnchorEl.focus();
+        }
     };
 
 
     const handleDelete = () => {
-        if (selectedRowId !== null) {
+        if (selectedRowId) {
             setRows(rows.filter(row => row.id !== selectedRowId));
             handleDeleteClose();
         }
@@ -142,6 +147,34 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
             processDownloadFile(uploadedFile);
         }
     };
+
+    const handleSumbit = async () => {
+        setLoading(true)
+
+        const formData = new FormData();
+        formData.append("source_type", sourceType);
+        formData.append("source_origin", sourceMethod === 1 ? "csv" : "pixel");
+        formData.append("source_name", sourceName);
+        console.log(sourceType)
+        if (file) {
+            formData.append("file", file);
+            formData.append("file_name", fileName);
+        }
+        
+        try {
+            const response = await axiosInstance.post(`/audience-sources/create`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            })
+            if (response.status === 200){
+                setCreatedSource(response.data)
+            }
+        } 
+        catch {
+        }
+        finally {
+            setLoading(false)
+        }
+    }
 
     const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -338,7 +371,7 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
                                 >
                                 <Select
                                     value={sourceType}
-                                    onChange={handleChange}
+                                    onChange={handleChangeSourceType}
                                     displayEmpty
                                     sx={{   
                                         ...sourcesStyles.text,
@@ -552,7 +585,7 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
                                             <FormControl fullWidth>
                                                 <Select
                                                     value={row.value || ''}
-                                                    onChange={(e) => handleMapListChange(row.id, 'value', e.target.value)}
+                                                    onChange={(e) => handleMapListChange(row.id, e.target.value)}
                                                     displayEmpty
                                                     inputProps={{
                                                         sx: {
@@ -604,12 +637,12 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
                                         <Grid item xs="auto" sm={0.5} container justifyContent="center">
                                             {row.canDelete && (
                                                 <>
-                                                    <IconButton onClick={(event) => handleClickOpen(event, row.id)}>
+                                                    <IconButton onClick={(event) => handleDeletePopoverOpen(event, row.id)}>
                                                         <Image
                                                             src='/trash-icon-filled.svg'
                                                             alt='trash-icon-filled'
                                                             height={18}
-                                                            width={18} // Adjust the size as needed
+                                                            width={18}
                                                         />
                                                     </IconButton>
                                                     <Popover
@@ -625,6 +658,7 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
                                                             vertical: 'top',
                                                             horizontal: 'right',
                                                         }}
+                                                        disableEnforceFocus
                                                     >
                                                         <Box sx={{
                                                             minWidth: '254px',
@@ -759,7 +793,7 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
                                         Cancel
                                     </Typography>
                                 </Button> 
-                                <Button variant="contained" onClick={() => {}} disabled={sourceName.trim() === ""} sx={{
+                                <Button variant="contained" onClick={handleSumbit} disabled={sourceName.trim() === ""} sx={{
                                     backgroundColor: "rgba(80, 82, 178, 1)",
                                     width: "120px",
                                     height: "40px",
