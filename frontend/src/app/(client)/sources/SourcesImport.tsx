@@ -16,13 +16,10 @@ import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import DownloadIcon from '@mui/icons-material/Download';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import FilterListIcon from '@mui/icons-material/FilterList';
-// import FilterPopup from './CompanyEmployeesFilters';
 import AudiencePopup from '@/components/AudienceSlider';
 import SouthOutlinedIcon from '@mui/icons-material/SouthOutlined';
 import NorthOutlinedIcon from '@mui/icons-material/NorthOutlined';
 import dayjs from 'dayjs';
-// import PopupDetails from './EmployeeDetails';
-// import PopupChargeCredits from './ChargeCredits'
 import CloseIcon from '@mui/icons-material/Close';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import Tooltip from '@mui/material/Tooltip';
@@ -37,7 +34,6 @@ import { UpgradePlanPopup } from  '../components/UpgradePlanPopup'
 import { sources } from 'next/dist/compiled/webpack/webpack';
 import Link from '@mui/material/Link';
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
-import Fuse from "fuse.js";
 
 interface CompanyEmployeesProps {
 }
@@ -72,16 +68,16 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
     const deleteOpen = Boolean(deleteAnchorEl);
     const deleteId = deleteOpen ? 'delete-popover' : undefined;
     const defaultRows: Row[] = [
-        { id: 1, type: 'Email', value: '' },
-        { id: 2, type: 'Phone number', value: '' },
-        { id: 3, type: 'Last Name', value: '' },
-        { id: 4, type: 'First Name', value: '' },
-        { id: 5, type: 'Gender', value: '' },
-        { id: 6, type: 'Age', value: '' },
-        { id: 7, type: 'Order Amount', value: '' },
-        { id: 8, type: 'State', value: '' },
-        { id: 9, type: 'City', value: '' },
-        { id: 10, type: 'Zip Code', value: '' }
+        { id: 1, type: 'Email', value: '', canDelete: false },
+        { id: 2, type: 'Phone number', value: '', canDelete: true },
+        { id: 3, type: 'Last Name', value: '', canDelete: true },
+        { id: 4, type: 'First Name', value: '', canDelete: true },
+        { id: 5, type: 'Gender', value: '', canDelete: true },
+        { id: 6, type: 'Age', value: '', canDelete: true },
+        { id: 7, type: 'Order Amount', value: '', canDelete: true },
+        { id: 8, type: 'State', value: '', canDelete: true },
+        { id: 9, type: 'City', value: '', canDelete: true },
+        { id: 10, type: 'Zip Code', value: '', canDelete: true }
     ];
     const [rows, setRows] = useState<Row[]>(defaultRows);
 
@@ -92,8 +88,8 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
     };
 
     const handleClickOpen = (event: React.MouseEvent<HTMLElement>, id: number) => {
-        setDeleteAnchorEl(event.currentTarget);  // Set the current target as the anchor
-        setSelectedRowId(id);  // Set the ID of the row to delete
+        setDeleteAnchorEl(event.currentTarget);
+        setSelectedRowId(id);
     };
 
     const handleChange = (event: SelectChangeEvent<string>) => {
@@ -194,8 +190,15 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
                     return;
                 }
 
-                const updatedRows = await smartSubstitutionHeaders(headers)
+                const newHeadings = await smartSubstitutionHeaders(headers)
         
+                const updatedRows = defaultRows.map((row, index) => {
+                    return {
+                        ...row,
+                        value: newHeadings[index],
+                    };
+                });
+
                 setRows(updatedRows);
             };
         
@@ -212,7 +215,6 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
                 headers: { 'Content-Type': 'application/json' },
             })
             if (response.status === 200){
-                console.log({response})
                 const updateEmployee = response.data
                 return updateEmployee
             }
@@ -222,23 +224,6 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
         finally {
             setLoading(false)
         }
-
-        // const fuseOptions = {
-        //     threshold: 0.3, // The lower the value, the stricter the match.
-        //     includeScore: true,
-        // };
-
-        // const fuse = new Fuse(headings, fuseOptions);
-
-        // const updatedRows = defaultRows.map(row => {
-        //     const match = fuse.search(row.type)?.[0];
-
-        //     return match && match.score !== undefined && match.score <= 0.3
-        //         ? { ...row, value: match.item }
-        //         : row;
-        // });
-
-        // return updatedRows
     } 
 
 
@@ -474,102 +459,25 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
                             <Typography sx={sourcesStyles.text}>Sample doc: <Link href="https://dev.maximiz.ai/integrations" sx={sourcesStyles.textLink}>sample recent customers-list.csv</Link></Typography>
                         </Box>
                         <Box sx={{display: sourceMethod !== 0 && file ? "flex" : "none", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
-                        {rows?.map((row) => (
-                            <Box key={row.id}>
-                                <Grid container spacing={2} alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' } }}>
-                                    {/* Left Input Field */}
-                                    <Grid item xs="auto" sm={2}>
-                                        <TextField
-                                            fullWidth
-                                            variant="outlined"
-                                            value={row.type}
-                                            InputLabelProps={{
-                                                sx: {
-                                                    fontFamily: 'Nunito Sans',
-                                                    fontSize: '12px',
-                                                    lineHeight: '16px',
-                                                    color: 'rgba(17, 17, 19, 0.60)',
-                                                    top: '-5px',
-                                                    '&.Mui-focused': {
-                                                        color: '#0000FF',
-                                                        top: 0
-                                                    },
-                                                    '&.MuiInputLabel-shrink': {
-                                                        top: 0
-                                                    }
-                                                }
-                                            }}
-                                            InputProps={{
-
-                                                sx: {
-                                                    '&.MuiOutlinedInput-root': {
-                                                        height: '36px',
-                                                        '& .MuiOutlinedInput-input': {
-                                                            padding: '6.5px 8px',
-                                                            fontFamily: 'Roboto',
-                                                            color: '#202124',
-                                                            fontSize: '12px',
-                                                            fontWeight: '400',
-                                                            lineHeight: '20px'
-                                                        },
-                                                        '& .MuiOutlinedInput-notchedOutline': {
-                                                            borderColor: '#A3B0C2',
-                                                        },
-                                                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                            borderColor: '#A3B0C2',
-                                                        },
-                                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                            borderColor: '#0000FF',
-                                                        },
-                                                    },
-                                                    '&+.MuiFormHelperText-root': {
-                                                        marginLeft: '0',
-                                                    },
-                                                }
-                                            }}
-                                        />
-                                    </Grid>
-
-                                    {/* Middle Icon Toggle (Right Arrow or Close Icon) */}
-                                    <Grid item xs="auto" sm={0.5} container justifyContent="center">
-                                        {row.selectValue !== undefined ? (
-                                            row.selectValue ? (
-                                                <Image
-                                                    src='/chevron-right-purple.svg'
-                                                    alt='chevron-right-purple'
-                                                    height={18}
-                                                    width={18} // Adjust the size as needed
-                                                />
-
-                                            ) : (
-                                                <Image
-                                                    src='/close-circle.svg'
-                                                    alt='close-circle'
-                                                    height={18}
-                                                    width={18} // Adjust the size as needed
-                                                />
-                                            )
-                                        ) : (
-                                            <Image
-                                                src='/chevron-right-purple.svg'
-                                                alt='chevron-right-purple'
-                                                height={18}
-                                                width={18} // Adjust the size as needed
-                                            /> // For the first two rows, always show the right arrow
-                                        )}
-                                    </Grid>
-                                    
-                                    <Grid item xs="auto" sm={2}>
-                                        <FormControl fullWidth>
-                                            <Select
-                                                value={row.value || ''}
-                                                onChange={(e) => handleMapListChange(row.id, 'value', e.target.value)}
-                                                displayEmpty
-                                                inputProps={{
+                            <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
+                                <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px"}}>Data Maping</Typography>
+                                <Typography sx={{fontFamily: "Nunito Sans", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Map your Field from your Source to the destination data base.</Typography>
+                            </Box>
+                            {rows?.map((row, index) => (
+                                <Box key={index}>
+                                    <Grid container spacing={2} alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' } }}>
+                                        {/* Left Input Field */}
+                                        <Grid item xs="auto" sm={2}>
+                                            <TextField
+                                                fullWidth
+                                                variant="outlined"
+                                                value={row.type}
+                                                InputLabelProps={{
                                                     sx: {
                                                         fontFamily: 'Nunito Sans',
                                                         fontSize: '12px',
                                                         lineHeight: '16px',
+                                                        color: 'rgba(17, 17, 19, 0.60)',
                                                         top: '-5px',
                                                         '&.Mui-focused': {
                                                             color: '#0000FF',
@@ -577,7 +485,12 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
                                                         },
                                                         '&.MuiInputLabel-shrink': {
                                                             top: 0
-                                                        },
+                                                        }
+                                                    }
+                                                }}
+                                                InputProps={{
+
+                                                    sx: {
                                                         '&.MuiOutlinedInput-root': {
                                                             height: '36px',
                                                             '& .MuiOutlinedInput-input': {
@@ -586,7 +499,7 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
                                                                 color: '#202124',
                                                                 fontSize: '12px',
                                                                 fontWeight: '400',
-                                                                lineHeight: '20px',
+                                                                lineHeight: '20px'
                                                             },
                                                             '& .MuiOutlinedInput-notchedOutline': {
                                                                 borderColor: '#A3B0C2',
@@ -598,105 +511,183 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
                                                                 borderColor: '#0000FF',
                                                             },
                                                         },
-                                                    },
+                                                        '&+.MuiFormHelperText-root': {
+                                                            marginLeft: '0',
+                                                        },
+                                                    }
                                                 }}
-                                            >
-                                                {headersinCSV.map((item: string, index: number) => (
-                                                    <MenuItem key={index} value={item}>
-                                                        {item}
-                                                    </MenuItem>
-                                                ))}
-                                            </Select>
-                                        </FormControl>
-                                    </Grid>
+                                            />
+                                        </Grid>
 
+                                        {/* Middle Icon Toggle (Right Arrow or Close Icon) */}
+                                        <Grid item xs="auto" sm={0.5} container justifyContent="center">
+                                            {row.selectValue !== undefined ? (
+                                                row.selectValue ? (
+                                                    <Image
+                                                        src='/chevron-right-purple.svg'
+                                                        alt='chevron-right-purple'
+                                                        height={18}
+                                                        width={18} // Adjust the size as needed
+                                                    />
 
-                                    {/* Delete Icon */}
-                                    <Grid item xs="auto" sm={0.5} container justifyContent="center">
-                                        <>
-                                            <IconButton onClick={(event) => handleClickOpen(event, row.id)}>
+                                                ) : (
+                                                    <Image
+                                                        src='/close-circle.svg'
+                                                        alt='close-circle'
+                                                        height={18}
+                                                        width={18} // Adjust the size as needed
+                                                    />
+                                                )
+                                            ) : (
                                                 <Image
-                                                    src='/trash-icon-filled.svg'
-                                                    alt='trash-icon-filled'
+                                                    src='/chevron-right-purple.svg'
+                                                    alt='chevron-right-purple'
                                                     height={18}
                                                     width={18} // Adjust the size as needed
-                                                />
-                                            </IconButton>
-                                            <Popover
-                                                id={deleteId}
-                                                open={deleteOpen}
-                                                anchorEl={deleteAnchorEl}
-                                                onClose={handleDeleteClose}
-                                                anchorOrigin={{
-                                                    vertical: 'bottom',
-                                                    horizontal: 'center',
-                                                }}
-                                                transformOrigin={{
-                                                    vertical: 'top',
-                                                    horizontal: 'right',
-                                                }}
-                                            >
-                                                <Box sx={{
-                                                    minWidth: '254px',
-                                                    borderRadius: '4px',
-                                                    border: '0.2px solid #afafaf',
-                                                    background: '#fff',
-                                                    boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
-                                                    padding: '16px 21px 16px 16px'
-                                                }}>
-                                                    <Typography variant="body1" className='first-sub-title' sx={{
-                                                        paddingBottom: '12px'
-                                                    }}>Confirm Deletion</Typography>
-                                                    <Typography variant="body2" sx={{
-                                                        color: '#5f6368',
-                                                        fontFamily: 'Roboto',
-                                                        fontSize: '12px',
-                                                        fontWeight: '400',
-                                                        lineHeight: '16px',
-                                                        paddingBottom: '26px'
-                                                    }}>
-                                                        Are you sure you want to delete this <br /> map data?
-                                                    </Typography>
-                                                    <Box display="flex" justifyContent="flex-end" mt={2}>
-                                                        <Button onClick={handleDeleteClose} sx={{
-                                                            borderRadius: '4px',
-                                                            border: '1px solid #5052b2',
-                                                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                                            color: '#5052b2',
+                                                /> // For the first two rows, always show the right arrow
+                                            )}
+                                        </Grid>
+                                        
+                                        <Grid item xs="auto" sm={2}>
+                                            <FormControl fullWidth>
+                                                <Select
+                                                    value={row.value || ''}
+                                                    onChange={(e) => handleMapListChange(row.id, 'value', e.target.value)}
+                                                    displayEmpty
+                                                    inputProps={{
+                                                        sx: {
                                                             fontFamily: 'Nunito Sans',
-                                                            fontSize: '14px',
-                                                            fontWeight: '600',
-                                                            lineHeight: '20px',
-                                                            marginRight: '16px',
-                                                            textTransform: 'none'
-                                                        }}>
-                                                            Clear
-                                                        </Button>
-                                                        <Button onClick={handleDelete} sx={{
-                                                            background: '#5052B2',
+                                                            fontSize: '12px',
+                                                            lineHeight: '16px',
+                                                            top: '-5px',
+                                                            '&.Mui-focused': {
+                                                                color: '#0000FF',
+                                                                top: 0
+                                                            },
+                                                            '&.MuiInputLabel-shrink': {
+                                                                top: 0
+                                                            },
+                                                            '&.MuiOutlinedInput-root': {
+                                                                height: '36px',
+                                                                '& .MuiOutlinedInput-input': {
+                                                                    padding: '6.5px 8px',
+                                                                    fontFamily: 'Roboto',
+                                                                    color: '#202124',
+                                                                    fontSize: '12px',
+                                                                    fontWeight: '400',
+                                                                    lineHeight: '20px',
+                                                                },
+                                                                '& .MuiOutlinedInput-notchedOutline': {
+                                                                    borderColor: '#A3B0C2',
+                                                                },
+                                                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                    borderColor: '#A3B0C2',
+                                                                },
+                                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                    borderColor: '#0000FF',
+                                                                },
+                                                            },
+                                                        },
+                                                    }}
+                                                >
+                                                    {headersinCSV.map((item: string, index: number) => (
+                                                        <MenuItem key={index} value={item}>
+                                                            {item}
+                                                        </MenuItem>
+                                                    ))}
+                                                </Select>
+                                            </FormControl>
+                                        </Grid>
+
+
+                                        {/* Delete Icon */}
+                                        <Grid item xs="auto" sm={0.5} container justifyContent="center">
+                                            {row.canDelete && (
+                                                <>
+                                                    <IconButton onClick={(event) => handleClickOpen(event, row.id)}>
+                                                        <Image
+                                                            src='/trash-icon-filled.svg'
+                                                            alt='trash-icon-filled'
+                                                            height={18}
+                                                            width={18} // Adjust the size as needed
+                                                        />
+                                                    </IconButton>
+                                                    <Popover
+                                                        id={deleteId}
+                                                        open={deleteOpen}
+                                                        anchorEl={deleteAnchorEl}
+                                                        onClose={handleDeleteClose}
+                                                        anchorOrigin={{
+                                                            vertical: 'bottom',
+                                                            horizontal: 'center',
+                                                        }}
+                                                        transformOrigin={{
+                                                            vertical: 'top',
+                                                            horizontal: 'right',
+                                                        }}
+                                                    >
+                                                        <Box sx={{
+                                                            minWidth: '254px',
                                                             borderRadius: '4px',
-                                                            border: '1px solid #5052b2',
-                                                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                                            color: '#fff',
-                                                            fontFamily: 'Nunito Sans',
-                                                            fontSize: '14px',
-                                                            fontWeight: '600',
-                                                            lineHeight: '20px',
-                                                            textTransform: 'none',
-                                                            '&:hover': {
-                                                                color: '#5052B2'
-                                                            }
+                                                            border: '0.2px solid #afafaf',
+                                                            background: '#fff',
+                                                            boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
+                                                            padding: '16px 21px 16px 16px'
                                                         }}>
-                                                            Delete
-                                                        </Button>
-                                                    </Box>
-                                                </Box>
-                                            </Popover>
-                                        </>
+                                                            <Typography variant="body1" className='first-sub-title' sx={{
+                                                                paddingBottom: '12px'
+                                                            }}>Confirm Deletion</Typography>
+                                                            <Typography variant="body2" sx={{
+                                                                color: '#5f6368',
+                                                                fontFamily: 'Roboto',
+                                                                fontSize: '12px',
+                                                                fontWeight: '400',
+                                                                lineHeight: '16px',
+                                                                paddingBottom: '26px'
+                                                            }}>
+                                                                Are you sure you want to delete this <br /> map data?
+                                                            </Typography>
+                                                            <Box display="flex" justifyContent="flex-end" mt={2}>
+                                                                <Button onClick={handleDeleteClose} sx={{
+                                                                    borderRadius: '4px',
+                                                                    border: '1px solid #5052b2',
+                                                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                                                    color: '#5052b2',
+                                                                    fontFamily: 'Nunito Sans',
+                                                                    fontSize: '14px',
+                                                                    fontWeight: '600',
+                                                                    lineHeight: '20px',
+                                                                    marginRight: '16px',
+                                                                    textTransform: 'none'
+                                                                }}>
+                                                                    Clear
+                                                                </Button>
+                                                                <Button onClick={handleDelete} sx={{
+                                                                    background: '#5052B2',
+                                                                    borderRadius: '4px',
+                                                                    border: '1px solid #5052b2',
+                                                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                                                    color: '#fff',
+                                                                    fontFamily: 'Nunito Sans',
+                                                                    fontSize: '14px',
+                                                                    fontWeight: '600',
+                                                                    lineHeight: '20px',
+                                                                    textTransform: 'none',
+                                                                    '&:hover': {
+                                                                        color: '#5052B2'
+                                                                    }
+                                                                }}>
+                                                                    Delete
+                                                                </Button>
+                                                            </Box>
+                                                        </Box>
+                                                    </Popover>
+                                                </>
+                                            )}
+                                        </Grid>
                                     </Grid>
-                                </Grid>
-                            </Box>
-                        ))}
+                                </Box>
+                            ))}
                         </Box>
                         <Box sx={{display: sourceMethod !== 0 && file ? "flex" : "none", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
                             <Box sx={{display: "flex", alignItems: "center", gap: 2}}>

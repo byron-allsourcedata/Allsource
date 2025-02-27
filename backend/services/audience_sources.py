@@ -1,11 +1,10 @@
 import csv
 import os
 from openai import OpenAI
-
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 import logging
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
 
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 logger = logging.getLogger(__name__)
 
 class AudienceSourceService:
@@ -40,37 +39,18 @@ class AudienceSourceService:
         return source_list, count
 
 
-    def substitution_headings(self, headers):
-        # prompt = (
-        #     "You are given a list of CSV headers. Map these headers to the closest matching default headers. "
-        #     "Default headers: "
-        #     + ", ".join(self.default_headings) + ".\n"
-        #     "Headers to map: " + ", ".join(headers) + ".\n"
-        #     "Return the updated list where each header is replaced by its closest match."
-        # )
-        # prompt = (
-        #     "You are given a list of default headers and a list of CSV headers. "
-        #     "For each default header, find the closest matching CSV header from the provided list. "
-        #     "If no reasonable match exists, keep the default header unchanged. "
-        #     "\n\nDefault headers: "
-        #     f"{', '.join(self.default_headings)}.\n\n"
-        #     f"CSV headers: {', '.join(headers)}.\n\n"
-        #     "Return a JSON object where each default header is mapped to its closest matching CSV header."
-        # )
-
+    def substitution_headings(self, headers): 
         prompt = (
             "You are given a list of CSV headers and a predefined list of default headers. "
-            "For each header in the provided list, find the closest match from the default headers. "
-            # "If there is no close match, keep the original header. "
-            "If there is no close match, return None. "
-            "Use strict matching logic to ensure accuracy. "
-            "Default headers: "
-            + ", ".join(self.default_headings) + ".\n"
+            "Map each header in the default headers to the closest matching header from the provided list. "
+            "If a header is in a different language, translate it before matching. "
+            "If there is no close match, return 'None' for that header. "
+            "Default headers: " + ", ".join(self.default_headings) + ".\n"
             "Headers to map: " + ", ".join(headers) + ".\n"
-            "Return the updated headers as a comma-separated list where each input header "
-            "is replaced by its closest match from the default headers."
+            "The output must be a comma-separated string of exactly 10 values, corresponding strictly to the predefined default headers: "
+            "" + ", ".join(self.default_headings) + ".\n"
+            "Do not include any comments, explanations, or extra information."
         )
-
         try:
             response = client.chat.completions.create(model="gpt-4",
             messages=[
@@ -80,7 +60,6 @@ class AudienceSourceService:
             temperature=0.3)
 
             updated_headers = response.choices[0].message.content
-            print(updated_headers.split(","))
             return [header.strip() for header in updated_headers.split(",")]
         except Exception as e:
             logger.error("Error with ChatGPT API", exc_info=True)
