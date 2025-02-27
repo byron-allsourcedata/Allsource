@@ -8,8 +8,6 @@ import os
 import hashlib
 import uuid
 from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
 from google.oauth2.credentials import Credentials
@@ -145,49 +143,42 @@ class GoogleAdsIntegrationsService:
             
         return ProccessDataSyncResult.SUCCESS.value
     
+    def __add_profile_to_list(self,domain_id, customer_id, user_list_id=None):
+        credential = self.get_credentials(domain_id)
+        client = self.get_google_ads_client(credential.access_token)
+        run_job = True
+        offline_user_data_job_id = None
+        ad_user_data_consent = None
+        ad_personalization_consent = None
+        user_list_resource_name = self.create_customer_match_user_list(client, customer_id)
+        try:
+            googleads_service = client.get_service("GoogleAdsService")
 
-    def __create_profile(self, five_x_five_user, api_key: str, data_map):
-        profile = self.__mapped_klaviyo_profile(five_x_five_user)
-        if profile in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-            return profile
-        
-        if data_map:
-            properties = self.__map_properties(five_x_five_user, data_map)
-        else:
-            properties = {}
+            if not offline_user_data_job_id:
+                user_list_resource_name = googleads_service.user_list_path(
+                    customer_id, user_list_id
+                )
 
-        phone_number = validate_and_format_phone(profile.phone_number)
-
-        json_data = {
-            'data': {
-                'type': 'profile',
-                'attributes': {
-                    'email': profile.email,
-                    'phone_number': phone_number.split(', ')[-1] if phone_number else None,
-                    'first_name': profile.first_name or None,
-                    'last_name': profile.last_name or None,
-                    'organization': profile.organization or None,
-                    'location': profile.location or None,
-                    'title': profile.title or None,
-                    'properties': properties
-                }
-            }
-        }
-        json_data['data']['attributes'] = {k: v for k, v in json_data['data']['attributes'].items() if v is not None}
-        response = self.__handle_request(
-            method='POST',
-            url='https://a.klaviyo.com/api/profiles/',
-            api_key=api_key,
-            json=json_data
-        )
-        if response.status_code == 201:
-                return response.json().get('data')
-        if response.status_code == 400:
-                return ProccessDataSyncResult.INCORRECT_FORMAT.value
-        if response.status_code == 401:
-                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
-        if response.status_code == 409:
-            return {'id': response.json().get('errors')[0].get('meta').get('duplicate_profile_id')}
+            self.add_users_to_customer_match_user_list(
+                client,
+                customer_id,
+                user_list_resource_name,
+                run_job,
+                offline_user_data_job_id,
+                ad_user_data_consent,
+                ad_personalization_consent,
+            )
+        except GoogleAdsException as ex:
+            print(
+                f"Request with ID '{ex.request_id}' failed with status "
+                f"'{ex.error.code().name}' and includes the following errors:"
+            )
+            for error in ex.failure.errors:
+                print(f"\tError with message '{error.message}'.")
+                if error.location:
+                    for field_path_element in error.location.field_path_elements:
+                        print(f"\t\tOn field: {field_path_element.field_name}")
+    
                 
     def set_suppression(self, suppression: bool, domain_id: int):
             credential = self.get_credentials(domain_id)
@@ -196,20 +187,6 @@ class GoogleAdsIntegrationsService:
             credential.suppression = suppression
             self.integrations_persisntece.db.commit()
             return {'message': 'successfuly'}  
-
-    def get_profile(self, domain_id: int, fields: List[ContactFiled], date_last_sync: str = None) -> List[ContactSuppression]:
-        credentials = self.get_credentials(domain_id)
-        if not credentials:
-            raise HTTPException(status_code=403, detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value)
-        params = {
-            'fields[profile]': ','.join(fields),
-        }
-        if date_last_sync:
-            params['filter'] = f'greater-than(created,{date_last_sync})'
-        response = self.__handle_request(method='GET', url='https://a.klaviyo.com/api/profiles/', api_key=credentials.access_token, params=params)
-        if response.status_code != 200:
-            raise HTTPException(status_code=400, detail={'status': "Profiles from Klaviyo could not be retrieved"})
-        return [self.__mapped_profile_from_klaviyo(profile) for profile in response.json().get('data')]
     
     def __mapped_klaviyo_profile(self, five_x_five_user: FiveXFiveUser) -> KlaviyoProfile:
         email_fields = [
@@ -288,72 +265,45 @@ class GoogleAdsIntegrationsService:
             phone_number=profile.get('attributes').get('phone_number')
         )
         
-    def get_google_ads_client(self, client_id, client_secret, refresh_token, developer_token):
+    def get_google_ads_client(self, refresh_token):
         credentials = Credentials(
             None,
             refresh_token=refresh_token,
-            client_id=client_id,
-            client_secret=client_secret,
+            client_id=os.getenv("CLIENT_GOOGLE_ID"),
+            client_secret=os.getenv("CLIENT_GOOGLE_SECRET"),
             token_uri="https://oauth2.googleapis.com/token"
         )
         if credentials and credentials.expired and credentials.refresh_token:
             credentials.refresh(Request())
-
-        client = GoogleAdsClient(credentials=credentials, developer_token=developer_token)
+            
+        client = GoogleAdsClient(credentials=credentials, developer_token=os.getenv("GOOGLE_ADS_TOKEN"))
         return client
     
-    def tmp(self,):
-        client_id = "1001249123388-16u7qafkkra58hcig94o28mpc1baeqf8.apps.googleusercontent.com"
-        client_secret = "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"
-        refresh_token = "1//01uIYj604S14DCgYIARAAGAESNwF-L9IrsOvgM8N4h0xUdQad4Eo3fuHi5yPMaxFtXyqGBXnsmoazHUvTx7oHTVxIqHnzkJxWJx0"
-        developer_token = "yhSD3B-oSsGyHZ3qVkdUBQ"
-        googleads_client = get_google_ads_client(client_id, client_secret, refresh_token, developer_token)
-        customer_id = '9087286246'
-        run_job = True
-        user_list_id = None
-        offline_user_data_job_id = None
-        ad_user_data_consent = None
-        ad_personalization_consent = None
-    
-    def main(self, client, customer_id, run_job, user_list_id, offline_user_data_job_id, ad_user_data_consent, ad_personalization_consent,):
+    def create_list(self, list, domain_id):
         try:
-            googleads_service = client.get_service("GoogleAdsService")
-
-            if not offline_user_data_job_id:
-                if user_list_id:
-                    user_list_resource_name = googleads_service.user_list_path(
-                        customer_id, user_list_id
-                    )
-                else:
-                    user_list_resource_name = create_customer_match_user_list(
-                        client, customer_id
-                    )
-
-            add_users_to_customer_match_user_list(
-                client,
-                customer_id,
-                user_list_resource_name,
-                run_job,
-                offline_user_data_job_id,
-                ad_user_data_consent,
-                ad_personalization_consent,
-            )
+            credential = self.get_credentials(domain_id)
+            client = self.get_google_ads_client(credential.access_token)
+            channel = self.create_customer_match_user_list(client, list.customer_id, list.name)
+            return {'status': IntegrationsStatus.SUCCESS.value, 'channel': channel}
         except GoogleAdsException as ex:
             print(
                 f"Request with ID '{ex.request_id}' failed with status "
                 f"'{ex.error.code().name}' and includes the following errors:"
             )
+            # details = googleads_error.failure.errors[0].message
+            # print(f"Google Ads API error occurred: {googleads_error}")
+            return {'status': IntegrationsStatus.CREDENTAILS_INVALID.value, 'message': str(ex.error.code().name)}
             for error in ex.failure.errors:
                 print(f"\tError with message '{error.message}'.")
                 if error.location:
                     for field_path_element in error.location.field_path_elements:
                         print(f"\t\tOn field: {field_path_element.field_name}")
     
-    def create_customer_match_user_list(self, client, customer_id):
+    def create_customer_match_user_list(self, client, customer_id, list_name):
         user_list_service_client = client.get_service("UserListService")
         user_list_operation = client.get_type("UserListOperation")
         user_list = user_list_operation.create
-        user_list.name = f"Customer Match list #{uuid.uuid4()}"
+        user_list.name = list_name
         user_list.description = (
             "A list of customers that originated from email and physical addresses"
         )
@@ -416,7 +366,7 @@ class GoogleAdsIntegrationsService:
             
         request = client.get_type("AddOfflineUserDataJobOperationsRequest")
         request.resource_name = offline_user_data_job_resource_name
-        request.operations.extend(build_offline_user_data_job_operations(client))
+        request.operations.extend(self.build_offline_user_data_job_operations(client))
         request.enable_partial_failure = True
 
         response = offline_user_data_job_service_client.add_offline_user_data_job_operations(
@@ -477,14 +427,14 @@ class GoogleAdsIntegrationsService:
             user_data = client.get_type("UserData")
             if "email" in record:
                 user_identifier = client.get_type("UserIdentifier")
-                user_identifier.hashed_email = normalize_and_hash(
+                user_identifier.hashed_email = self.normalize_and_hash(
                     record["email"], True
                 )
                 user_data.user_identifiers.append(user_identifier)
                 
             if "phone" in record:
                 user_identifier = client.get_type("UserIdentifier")
-                user_identifier.hashed_phone_number = normalize_and_hash(
+                user_identifier.hashed_phone_number = self.normalize_and_hash(
                     record["phone"], True
                 )
                 user_data.user_identifiers.append(user_identifier)
@@ -501,10 +451,10 @@ class GoogleAdsIntegrationsService:
                 else:
                     user_identifier = client.get_type("UserIdentifier")
                     address_info = user_identifier.address_info
-                    address_info.hashed_first_name = normalize_and_hash(
+                    address_info.hashed_first_name = self.normalize_and_hash(
                         record["first_name"], False
                     )
-                    address_info.hashed_last_name = normalize_and_hash(
+                    address_info.hashed_last_name = self.normalize_and_hash(
                         record["last_name"], False
                     )
                     address_info.country_code = record["country_code"]
@@ -525,36 +475,81 @@ class GoogleAdsIntegrationsService:
             s = s.strip().lower()
 
         return hashlib.sha256(s.encode()).hexdigest()
-        
-    def get_customer_info_and_resource_name(self, client):
-        googleads_service = client.get_service("GoogleAdsService")
-        customer_service = client.get_service("CustomerService")
-        accessible_customers = customer_service.list_accessible_customers()
-        resource_names = accessible_customers.resource_names
-        
-        customer_data = []
-
-        for resource_name in resource_names:
-            customer_id = resource_name.split('/')[-1]
-            if customer_id != '9087286246':
-                continue
-            
+    
+    def get_user_lists(self, domain_id, customer_id):
+        try:
+            credential = self.get_credentials(domain_id)
+            client = self.get_google_ads_client(credential.access_token)
+            googleads_service = client.get_service("GoogleAdsService")
             query = """
                 SELECT
-                    customer.id,
-                    customer.descriptive_name
+                    user_list.id,
+                    user_list.name,
+                    user_list.description
                 FROM
-                    customer
+                    user_list
             """
-            response = googleads_service.search(customer_id=customer_id, query=query)
+
+            response = googleads_service.search(customer_id=str(customer_id), query=query)
+            user_lists = []
             for row in response:
-                customer_id = row.customer.id
-                customer_name = row.customer.descriptive_name
-                customer_data.append({
-                    'customer_id': customer_id,
-                    'customer_name': customer_name,
+                user_list = row.user_list
+                user_lists.append({
+                    'list_id': user_list.id,
+                    'list_name': user_list.name
                 })
+            return {'status': IntegrationsStatus.SUCCESS.value, 'user_lists': user_lists}
         
-        print(f"Customer Data: {customer_data}")
-        return customer_data
+        except GoogleAdsException as googleads_error:
+            details = googleads_error.failure.errors[0].message
+            print(f"Google Ads API error occurred: {googleads_error}")
+            return {'status': IntegrationsStatus.CREDENTAILS_INVALID.value, 'message': str(details)}
+    
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            return {'status': IntegrationsStatus.CREDENTAILS_INVALID.value, 'message': str(e)}
+        
+    def get_customer_info_and_resource_name(self, domain_id):
+        try:
+            credential = self.get_credentials(domain_id)
+            client = self.get_google_ads_client(credential.access_token)
+            googleads_service = client.get_service("GoogleAdsService")
+            customer_service = client.get_service("CustomerService")
+            
+            accessible_customers = customer_service.list_accessible_customers()
+            resource_names = accessible_customers.resource_names
+            
+            customer_data = []
+
+            for resource_name in resource_names:
+                customer_id = resource_name.split('/')[-1]
+                if customer_id != '9087286246':
+                    continue
+                
+                query = """
+                    SELECT
+                        customer.id,
+                        customer.descriptive_name
+                    FROM
+                        customer
+                """
+                response = googleads_service.search(customer_id=customer_id, query=query)
+                
+                for row in response:
+                    customer_id = row.customer.id
+                    customer_name = row.customer.descriptive_name
+                    customer_data.append({
+                        'customer_id': customer_id,
+                        'customer_name': customer_name,
+                    })
+            
+            return {'status': IntegrationsStatus.SUCCESS.value, 'customers': customer_data}
+        except GoogleAdsException as googleads_error:
+            details = googleads_error.failure.errors[0].message
+            print(f"Google Ads API error occurred: {googleads_error}")
+            return {'status': IntegrationsStatus.CREDENTAILS_INVALID.value, 'message': str(details)}
+    
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            return {'status': IntegrationsStatus.CREDENTAILS_INVALID.value, 'message': str(e)}
 

@@ -47,19 +47,48 @@ def get_customer_info_and_resource_name(client):
                 'customer_id': customer_id,
                 'customer_name': customer_name,
             })
+            print(get_user_lists(client, customer_id))
     
     print(f"Customer Data: {customer_data}")
     return customer_data
+
+def get_user_lists(client, customer_id):
+    # Получаем сервисы Google Ads
+    googleads_service = client.get_service("GoogleAdsService")
+    user_list_service = client.get_service("UserListService")
+    
+    # Формируем запрос для получения всех списков пользователей
+    query = """
+        SELECT
+            user_list.id,
+            user_list.name,
+            user_list.description
+        FROM
+            user_list
+    """
+
+    # Выполнение запроса для получения списков пользователей
+    response = googleads_service.search(customer_id=str(customer_id), query=query)
+    
+    user_lists = []
+    
+    for row in response:
+        user_list = row.user_list
+        user_lists.append({
+            'user_list_id': user_list.id,
+            'user_list_name': user_list.name
+        })
+    
+    return user_lists
 
                     
 if __name__ == "__main__":
     client_id = "1001249123388-16u7qafkkra58hcig94o28mpc1baeqf8.apps.googleusercontent.com"
     client_secret = "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"
-    refresh_token = "1//01uIYj604S14DCgYIARAAGAESNwF-L9IrsOvgM8N4h0xUdQad4Eo3fuHi5yPMaxFtXyqGBXnsmoazHUvTx7oHTVxIqHnzkJxWJx0"
+    refresh_token = "1//01doaI9QO6hwJCgYIARAAGAESNwF-L9Irrmb-6LjnJ5RUO4YLOH33i5duOO5eZ2w_AFJ3XS71vr_8wR_Jqxu9CApgW2cdEvfPNL0"
     developer_token = "yhSD3B-oSsGyHZ3qVkdUBQ"
 
     googleads_client = get_google_ads_client(client_id, client_secret, refresh_token, developer_token)
-
     try:
         get_customer_info_and_resource_name(googleads_client)
     except GoogleAdsException as ex:

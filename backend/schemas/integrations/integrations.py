@@ -85,6 +85,7 @@ class SyncCreate(BaseModel):
 
 class CreateListOrTags(BaseModel):
     name: str
+    customer_id: Optional[str] = None
     sender_id: Optional[str] = None
     description: Optional[str] = None
     ad_account_id: Optional[str] = None

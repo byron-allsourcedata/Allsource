@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Drawer, Box, Typography, IconButton, TextField, Divider, FormControlLabel, FormControl, FormLabel, Radio, Button, Link, Tab, Tooltip, RadioGroup, MenuItem, Popover, Menu, ListItemText, ClickAwayListener, InputAdornment, Grid, LinearProgress, Checkbox } from '@mui/material';
+import { Drawer, Box, Typography, IconButton, TextField, Divider, InputLabel, Select, FormControlLabel, FormControl, FormLabel, Radio, Button, Link, Tab, Tooltip, RadioGroup, MenuItem, Popover, Menu, ListItemText, ClickAwayListener, InputAdornment, Grid, LinearProgress, Checkbox } from '@mui/material';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
@@ -17,8 +17,13 @@ interface ConnectGoogleAdsPopupProps {
 }
 
 type ChannelList = {
-    id: string;
-    name: string;
+    list_id: string;
+    list_name: string;
+}
+
+type Customers = {
+    customer_id: string;
+    customer_name: string;
 }
 
 interface CustomField {
@@ -49,7 +54,9 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
     const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
     const [UpdateKlaviuo, setUpdateKlaviuo] = useState<any>(null);
     const [maplistNameError, setMapListNameError] = useState(false);
-    const [slackList, setSlackList] = useState<ChannelList[]>([])
+    const [googleList, setGoogleAdsList] = useState<ChannelList[]>([])
+    const [customersInfo, setCustomersInfo] = useState<Customers[]>([])
+    const [selectedAccountId, setSelectedAccountId] = useState<string>('');
     const [listNameErrorMessage, setListNameErrorMessage] = useState('')
     const [customFieldsList, setCustomFieldsList] = useState<CustomField[]>([]);
     const [savedList, setSavedList] = useState<ChannelList | null>(null);
@@ -58,7 +65,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
         const handleClickOutside = (event: MouseEvent) => {
             if (textFieldRef.current && !textFieldRef.current.contains(event.target as Node)) {
                 // If clicked outside, reset shrink only if there is no input value
-                if (selectedOption?.name === '') {
+                if (selectedOption?.list_name === '') {
                     setIsShrunk(false);
                 }
                 if (isDropdownOpen) {
@@ -120,47 +127,63 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
         setMapListNameError(false);
     }, [open])
 
-    // const getChannelList = async () => {
-    //     try {
-    //         setLoading(true)
-    //         const response = await axiosInstance.get('/slack/get-channels')
-    //         setSlackList(response.data.channels || [])
-    //         if (response.data.status !== 'success'){
-    //             showErrorToast(response.data.message)
-    //         }
-    //         const foundItem = response.data?.channel.find((item: any) => item.name === data?.channel.name);
-    //         if (foundItem) {
-    //             setUpdateKlaviuo(data.id)
-    //             setSelectedOption({
-    //                 id: foundItem.id,
-    //                 name: foundItem.name
-    //             });
-    //         } else {
-    //             setSelectedOption(null);
-    //         }
-    //         setSelectedRadioValue(data?.type);
-    //     } catch (error) { }
-    //     finally {
-    //         setLoading(false)
-    //     }
-    // }
-    // useEffect(() => {
-    //     if (open) {
-    //         getChannelList()
-    //     }
-    // }, [open])
+    const getGoogleAdsList = async () => {
+        try {
+            setLoading(true)
+            const response = await axiosInstance.get('integrations/google-ads/get-channels', {
+                params: {
+                  customer_id: selectedAccountId
+                }
+              });              
+            setGoogleAdsList(response.data.user_lists || [])
+            if (response.data.status !== 'SUCCESS') {
+                showErrorToast(response.data.message)
+            }
+        } catch (error) { }
+        finally {
+            setLoading(false)
+        }
+    }
+    useEffect(() => {
+        if (open) {
+            getGoogleAdsList()
+        }
+    }, [selectedAccountId])
+
+    const getCustomersInfo = async () => {
+        try {
+            setLoading(true)
+            const response = await axiosInstance.get('integrations/google-ads/customers-info')
+            if (response.data.status !== 'SUCCESS') {
+                showErrorToast(response.data.message)
+            } else {
+                setCustomersInfo(response.data.customers || [])
+            }
+        } catch (error) { }
+        finally {
+            setLoading(false)
+        }
+    }
+    useEffect(() => {
+        if (open) {
+            getCustomersInfo()
+        }
+    }, [open])
 
     const createNewList = async () => {
         try {
             setLoading(true)
-            const newListResponse = await axiosInstance.post('/slack/create-channel', {
-                name: selectedOption?.name
-            }
-            );
-            
+            const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
+                name: selectedOption?.list_name,
+                customer_id: String(selectedAccountId)
+            }, {
+                params: {
+                    service_name: 'google_ads'
+                }
+            });
 
             if (newListResponse.data.status !== 'SUCCESS') {
-                showErrorToast('Error when trying to create new list')
+                showErrorToast(newListResponse.data.message)
             }
 
             return newListResponse.data.channel;
@@ -174,8 +197,8 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
         setLoading(true);
         try {
             let list: ChannelList | null = null;
-    
-            if (selectedOption && selectedOption.id === '-1') {
+
+            if (selectedOption && selectedOption.list_id === '-1') {
                 list = await createNewList();
             } else if (selectedOption) {
                 list = selectedOption;
@@ -194,7 +217,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
             setLoading(false);
         }
     };
-    
+
 
 
     const handleSaveSync = async () => {
@@ -202,34 +225,34 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
             showToast('No list data found. Please save the list first.');
             return;
         }
-    
+
         setLoading(true);
         try {
             if (isEdit) {
                 const response = await axiosInstance.put('/data-sync/sync', {
                     integrations_users_sync_id: data.id,
-                    list_id: savedList.id,
-                    name: savedList.name,
+                    list_id: savedList.list_id,
+                    name: savedList.list_name,
                     leads_type: selectedRadioValue,
                     data_map: customFields
                 }, {
-                    params: { service_name: 'slack' }
+                    params: { service_name: 'google_ads' }
                 });
-    
+
                 if (response.status === 201 || response.status === 200) {
                     onClose();
                     showToast('Data sync updated successfully');
                 }
             } else {
                 const response = await axiosInstance.post('/data-sync/sync', {
-                    list_id: savedList.id,
-                    list_name: savedList.name,
+                    list_id: savedList.list_id,
+                    list_name: savedList.list_name,
                     leads_type: selectedRadioValue,
                     data_map: customFields
                 }, {
-                    params: { service_name: 'slack' }
+                    params: { service_name: 'google_ads' }
                 });
-    
+
                 if (response.status === 201 || response.status === 200) {
                     onClose();
                     showToast('Data sync created successfully');
@@ -242,7 +265,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
             setLoading(false);
         }
     };
-    
+
 
 
     // Handle menu open
@@ -283,8 +306,8 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
         } else if (isKlaviyoList(value)) {
             // Проверка, является ли value объектом KlaviyoList
             setSelectedOption({
-                id: value.id,
-                name: value.name,
+                list_id: value.list_id,
+                list_name: value.list_name,
             });
             setIsDropdownValid(true);
             handleClose();
@@ -318,7 +341,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
 
         // If valid, save and close
         if (valid) {
-            const newSlackList = { id: '-1', name: newListName }
+            const newSlackList = { list_id: '-1', list_name: newListName }
             setSelectedOption(newSlackList);
             if (isKlaviyoList(newSlackList)) {
                 setIsDropdownValid(true);
@@ -572,7 +595,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
         const isValid = /^[а-яА-Яa-zA-Z0-9-_]*$/.test(value);
 
         if (isValid) {
-            if (slackList?.some(list => list.name === value)) {
+            if (googleList?.some(list => list.list_name === value)) {
                 setListNameError(true);
                 setListNameErrorMessage('List name must be unique');
             } else {
@@ -878,20 +901,53 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                     <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
-                                            <Image src='/slack-icon.svg' alt='slack' height={26} width={32} />
+                                            <Image src='/google-ads.svg' alt='webhook' height={26} width={32} />
                                             <Typography variant="h6" className='first-sub-title'>Contact sync</Typography>
                                             <Tooltip title="Sync data with list" placement="right">
                                                 <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
                                             </Tooltip>
                                         </Box>
 
-
+                                        <FormControl fullWidth sx={{ mb: 2, mt: 1 }}>
+                                            <InputLabel sx={{
+                                                fontSize: '16px',
+                                                fontWeight: '500',
+                                                color: 'rgba(33, 43, 54, 0.87)',
+                                                '&.Mui-focused': {
+                                                    color: 'rgba(33, 43, 54, 0.87)',
+                                                },
+                                            }}>Select an account</InputLabel>
+                                            <Select
+                                                value={selectedAccountId || ''}
+                                                onChange={(e) => {
+                                                    const selectedValue = e.target.value as string;
+                                                    setSelectedAccountId(selectedValue);
+                                                }}
+                                                label="Account"
+                                                sx={{
+                                                    backgroundColor: '#ffffff',
+                                                    borderRadius: '4px',
+                                                    border: '1px solid rgba(224, 224, 224, 1)',
+                                                    '&:focus': {
+                                                        borderColor: 'rgba(80, 82, 178, 1)',
+                                                        boxShadow: '0 0 0 2px rgba(80, 82, 178, 0.2)',
+                                                    },
+                                                }}
+                                            >
+                                                <MenuItem value="">Select an account</MenuItem>
+                                                {customersInfo?.map(account => (
+                                                    <MenuItem key={account.customer_id} value={account.customer_id}>
+                                                        {account.customer_name}
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
                                         <ClickAwayListener onClickAway={() => { }}>
                                             <Box>
                                                 <TextField
                                                     ref={textFieldRef}
                                                     variant="outlined"
-                                                    value={selectedOption?.name}
+                                                    value={selectedOption?.list_name}
                                                     onClick={handleClick}
                                                     size="small"
                                                     fullWidth
@@ -1104,13 +1160,13 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                     )}
 
                                                     {/* Show static options */}
-                                                    {slackList && slackList?.map((klaviyo) => (
-                                                        <MenuItem key={klaviyo.id} onClick={() => handleSelectOption(klaviyo)} sx={{
+                                                    {googleList && googleList?.map((klaviyo) => (
+                                                        <MenuItem key={klaviyo.list_id} onClick={() => handleSelectOption(klaviyo)} sx={{
                                                             '&:hover': {
                                                                 background: 'rgba(80, 82, 178, 0.10)'
                                                             }
                                                         }}>
-                                                            <ListItemText primary={klaviyo.name} primaryTypographyProps={{
+                                                            <ListItemText primary={klaviyo.list_name} primaryTypographyProps={{
                                                                 sx: {
                                                                     fontFamily: "Nunito Sans",
                                                                     fontSize: "14px",
@@ -1138,19 +1194,19 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                 }}>
                                     <Box sx={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
                                         <Typography variant="h6" className='first-sub-title'>Map list</Typography>
-                                        {selectedOption?.name && 
-                                        <Typography variant='h6' sx={{
-                                            background: '#EDEDF7',
-                                            borderRadius: '3px',
-                                            fontFamily: 'Roboto',
-                                            fontSize: '12px',
-                                            fontWeight: '400',
-                                            color: '#5f6368',
-                                            padding: '2px 4px',
-                                            lineHeight: '16px'
-                                        }}>
-                                            {selectedOption?.name}
-                                        </Typography>}
+                                        {selectedOption?.list_name &&
+                                            <Typography variant='h6' sx={{
+                                                background: '#EDEDF7',
+                                                borderRadius: '3px',
+                                                fontFamily: 'Roboto',
+                                                fontSize: '12px',
+                                                fontWeight: '400',
+                                                color: '#5f6368',
+                                                padding: '2px 4px',
+                                                lineHeight: '16px'
+                                            }}>
+                                                {selectedOption?.list_name}
+                                            </Typography>}
                                     </Box>
 
                                     <Grid container alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' }, marginBottom: '14px' }}>
