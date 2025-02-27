@@ -177,7 +177,7 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
 
             const reader = new FileReader();
 
-            reader.onload = (event) => {
+            reader.onload = async (event) => {
                 const content = event.target?.result as string;
         
                 if (!content) {
@@ -193,21 +193,8 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
                     console.error("No headers found in the file");
                     return;
                 }
-        
-                const fuseOptions = {
-                    threshold: 0.3, // The lower the value, the stricter the match.
-                    includeScore: true,
-                };
-        
-                const fuse = new Fuse(headers, fuseOptions);
-        
-                const updatedRows = defaultRows.map(row => {
-                    const match = fuse.search(row.type)?.[0];
-        
-                    return match && match.score !== undefined && match.score <= 0.3
-                        ? { ...row, value: match.item }
-                        : row;
-                });
+
+                const updatedRows = await smartSubstitutionHeaders(headers)
         
                 setRows(updatedRows);
             };
@@ -217,6 +204,42 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
 
         
     };
+
+    const smartSubstitutionHeaders = async (headings: string[]) => {
+        setLoading(true)
+        try {
+            const response = await axiosInstance.post(`/audience-sources/heading-substitution`, {headings}, {
+                headers: { 'Content-Type': 'application/json' },
+            })
+            if (response.status === 200){
+                console.log({response})
+                const updateEmployee = response.data
+                return updateEmployee
+            }
+        } 
+        catch {
+        }
+        finally {
+            setLoading(false)
+        }
+
+        // const fuseOptions = {
+        //     threshold: 0.3, // The lower the value, the stricter the match.
+        //     includeScore: true,
+        // };
+
+        // const fuse = new Fuse(headings, fuseOptions);
+
+        // const updatedRows = defaultRows.map(row => {
+        //     const match = fuse.search(row.type)?.[0];
+
+        //     return match && match.score !== undefined && match.score <= 0.3
+        //         ? { ...row, value: match.item }
+        //         : row;
+        // });
+
+        // return updatedRows
+    } 
 
 
     if (isLoading) {
@@ -451,7 +474,7 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
                             <Typography sx={sourcesStyles.text}>Sample doc: <Link href="https://dev.maximiz.ai/integrations" sx={sourcesStyles.textLink}>sample recent customers-list.csv</Link></Typography>
                         </Box>
                         <Box sx={{display: sourceMethod !== 0 && file ? "flex" : "none", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
-                        {rows.map((row) => (
+                        {rows?.map((row) => (
                             <Box key={row.id}>
                                 <Grid container spacing={2} alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' } }}>
                                     {/* Left Input Field */}
