@@ -1,6 +1,5 @@
 from pydantic import BaseModel, EmailStr
 import typing as tp
-from datetime import datetime
 
 class KlaviyoCustomer(BaseModel):
     klaviyo_user_id: str
@@ -36,11 +35,3 @@ class KlaviyoProfile(BaseModel):
     title: tp.Optional[str] = None
     location: tp.Optional[tp.Any] = None
     
-class GoogleAdsProfile(BaseModel):
-    email: tp.Optional[EmailStr] = None
-    phone_number: tp.Optional[str] = None
-    first_name: tp.Optional[str] = None
-    last_name: tp.Optional[str] = None
-    organization: tp.Optional[str] = None
-    title: tp.Optional[str] = None
-    location: tp.Optional[tp.Any] = None

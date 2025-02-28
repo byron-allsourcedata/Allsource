@@ -12,7 +12,8 @@ from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
-from schemas.integrations.klaviyo import *
+from models.leads_users import LeadUser
+from schemas.integrations.google_ads import GoogleAdsProfile
 from fastapi import HTTPException
 from datetime import datetime, timedelta
 from utils import extract_first_email
@@ -129,58 +130,19 @@ class GoogleAdsIntegrationsService:
         if tags_id: 
             self.create_tag_relationships_lists(tags_id=tags_id, list_id=list_id, api_key=credentials.access_token)
 
-    async def process_data_sync(self, five_x_five_user, user_integration, data_sync, lead_user):
-        profile = self.__create_profile(five_x_five_user, user_integration.access_token)
+    async def process_data_sync(self, five_x_five_user, user_integration, data_sync, lead_user: LeadUser):
+        profile = self.__mapped_googleads_profile(five_x_five_user, lead_user)
         if profile in (ProccessDataSyncResult.AUTHENTICATION_FAILED.value, ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return profile
 
-        list_response = self.__add_profile_to_list(data_sync.list_id, profile.get('id'), user_integration.access_token)
+        list_response = self.__add_profile_to_list(user_integration.access_token, data_sync.list_id, data_sync.customer_id, profile)
         if list_response.status_code == 404:
             return ProccessDataSyncResult.LIST_NOT_EXISTS.value
             
         return ProccessDataSyncResult.SUCCESS.value
-    
-    def __create_profile(self, five_x_five_user, api_key: str, data_map):
-        profile = self.__mapped_googleads_profile(five_x_five_user)
-        if profile in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-            return profile
-
-        phone_number = validate_and_format_phone(profile.phone_number)
-        build_offline_user_data_job_operations()
-
-        json_data = {
-            'data': {
-                'type': 'profile',
-                'attributes': {
-                    'email': profile.email,
-                    'phone_number': phone_number.split(', ')[-1] if phone_number else None,
-                    'first_name': profile.first_name or None,
-                    'last_name': profile.last_name or None,
-                    'organization': profile.organization or None,
-                    'location': profile.location or None,
-                    'title': profile.title or None,
-                }
-            }
-        }
-        json_data['data']['attributes'] = {k: v for k, v in json_data['data']['attributes'].items() if v is not None}
-        response = self.__handle_request(
-            method='POST',
-            url='https://a.klaviyo.com/api/profiles/',
-            api_key=api_key,
-            json=json_data
-        )
-        if response.status_code == 201:
-                return response.json().get('data')
-        if response.status_code == 400:
-                return ProccessDataSyncResult.INCORRECT_FORMAT.value
-        if response.status_code == 401:
-                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
-        if response.status_code == 409:
-            return {'id': response.json().get('errors')[0].get('meta').get('duplicate_profile_id')}
-    
-    def __add_profile_to_list(self,domain_id, customer_id, user_list_id=None):
-        credential = self.get_credentials(domain_id)
-        client = self.get_google_ads_client(credential.access_token)
+        
+    def __add_profile_to_list(self, access_token, customer_id, user_list_id, profile):
+        client = self.get_google_ads_client(access_token)
         run_job = True
         offline_user_data_job_id = None
         ad_user_data_consent = None
@@ -195,6 +157,7 @@ class GoogleAdsIntegrationsService:
                 )
 
             self.add_users_to_customer_match_user_list(
+                profile,
                 client,
                 customer_id,
                 user_list_resource_name,
@@ -223,7 +186,7 @@ class GoogleAdsIntegrationsService:
             self.integrations_persisntece.db.commit()
             return {'message': 'successfuly'}  
     
-    def __mapped_googleads_profile(self, five_x_five_user: FiveXFiveUser) -> GoogleAdsProfile:
+    def __mapped_googleads_profile(self, five_x_five_user: FiveXFiveUser, lead_user: LeadUser) -> GoogleAdsProfile:
         email_fields = [
             'business_email', 
             'personal_emails', 
@@ -271,14 +234,18 @@ class GoogleAdsIntegrationsService:
             "region": getattr(five_x_five_user, 'personal_state') or getattr(five_x_five_user, 'company_state', None),
             "zip": getattr(five_x_five_user, 'personal_zip') or getattr(five_x_five_user, 'company_zip', None),
         }
+        page_time = self.leads_persistence.get_latest_page_time(lead_user.id)
+        page_time_array = [{"page": row.page, "total_spent_time": str(row.total_spent_time), "count": row.count} for row in page_time]
         return GoogleAdsProfile(
             email=first_email,
-            phone_number=format_phone_number(first_phone),
             first_name=getattr(five_x_five_user, 'first_name', None),
             last_name=getattr(five_x_five_user, 'last_name', None),
-            organization=getattr(five_x_five_user, 'company_name', None),
+            phone= validate_and_format_phone(format_phone_number(first_phone)),
+            gender=getattr(five_x_five_user, 'gender', None),
             location=location,
-            title=getattr(five_x_five_user, 'job_title', None))
+            url_visited=page_time_array,
+            behavior_type=lead_user.behavior_type
+            )
         
     def get_google_ads_client(self, refresh_token):
         credentials = Credentials(
@@ -332,7 +299,7 @@ class GoogleAdsIntegrationsService:
         
         return user_list_resource_name
     
-    def add_users_to_customer_match_user_list(self, client, customer_id, user_list_resource_name, run_job, 
+    def add_users_to_customer_match_user_list(self, profile, client, customer_id, user_list_resource_name, run_job, 
                                               offline_user_data_job_id, 
                                               ad_user_data_consent,
                                               ad_personalization_consent):
@@ -379,7 +346,7 @@ class GoogleAdsIntegrationsService:
             
         request = client.get_type("AddOfflineUserDataJobOperationsRequest")
         request.resource_name = offline_user_data_job_resource_name
-        request.operations.extend(self.build_offline_user_data_job_operations(client))
+        request.operations.extend(self.build_offline_user_data_job_operations(client, profile))
         request.enable_partial_failure = True
 
         response = offline_user_data_job_service_client.add_offline_user_data_job_operations(
@@ -418,26 +385,16 @@ class GoogleAdsIntegrationsService:
             resource_name=offline_user_data_job_resource_name
         )
     
-    def build_offline_user_data_job_operations(self, client):
+    def build_offline_user_data_job_operations(self, client, profile: GoogleAdsProfile):
         raw_record = {
-            "email": "alex.2@example.com",
-            "first_name": "Alex",
-            "last_name": "Quinn",
+            "email": profile.email,
+            "first_name": profile.first_name,
+            "last_name": profile.last_name,
             "country_code": "US",
-            "postal_code": "94045",
-            "phone": "+1 800 5550102",
-            "birth_date": "1990-01-01",  # Пример добавления даты рождения
-            "signup_date": "2023-02-01",  # Дата регистрации
-            "custom_id": "12345abc",      # Уникальный идентификатор клиента
-            "ip_address": "192.168.1.1",  # Пример IP-адреса
-            "gender": "M",                # Пример пола
-            "source": "facebook_ads",     # Источник канала
-            "user_segment": "paid",       # Сегмент пользователей
-            "transaction_id": "txn_67890",# Идентификатор транзакции
-            "interaction_type": "view",   # Тип взаимодействия
-            "interests": "electronics",   # Интересы пользователя
-            "url_visited": "https://example.com/product/123", # URL-страница
-            "device_type": "mobile",      # Тип устройства
+            "phone": profile.phone,
+            "gender": profile.gender,
+            "interaction_type": profile.behavior_type,
+            "url_visited": profile.url_visited
         }
         raw_records = [raw_record]
 
@@ -445,19 +402,15 @@ class GoogleAdsIntegrationsService:
         for record in raw_records:
             user_data = client.get_type("UserData")
 
-            # Обработка email
             if "email" in record:
                 user_identifier = client.get_type("UserIdentifier")
                 user_identifier.hashed_email = self.normalize_and_hash(record["email"], True)
                 user_data.user_identifiers.append(user_identifier)
 
-            # Обработка номера телефона
             if "phone" in record:
                 user_identifier = client.get_type("UserIdentifier")
                 user_identifier.hashed_phone_number = self.normalize_and_hash(record["phone"], True)
                 user_data.user_identifiers.append(user_identifier)
-
-            # Обработка имени и фамилии с адресом
             if "first_name" in record:
                 required_keys = ("last_name", "country_code", "postal_code")
                 if not all(key in record for key in required_keys):
@@ -476,79 +429,22 @@ class GoogleAdsIntegrationsService:
                     address_info.postal_code = record["postal_code"]
                     user_data.user_identifiers.append(user_identifier)
 
-            # Обработка даты рождения
-            if "birth_date" in record:
-                user_identifier = client.get_type("UserIdentifier")
-                user_identifier.hashed_birth_date = self.normalize_and_hash(record["birth_date"], False)
-                user_data.user_identifiers.append(user_identifier)
 
-            # Обработка даты регистрации
-            if "signup_date" in record:
-                user_identifier = client.get_type("UserIdentifier")
-                user_identifier.hashed_signup_date = self.normalize_and_hash(record["signup_date"], False)
-                user_data.user_identifiers.append(user_identifier)
-
-            # Обработка уникального идентификатора клиента
-            if "custom_id" in record:
-                user_identifier = client.get_type("UserIdentifier")
-                user_identifier.custom_id = self.normalize_and_hash(record["custom_id"], False)
-                user_data.user_identifiers.append(user_identifier)
-
-            # Обработка IP-адреса
-            if "ip_address" in record:
-                user_identifier = client.get_type("UserIdentifier")
-                user_identifier.hashed_ip_address = self.normalize_and_hash(record["ip_address"], True)
-                user_data.user_identifiers.append(user_identifier)
-
-            # Обработка пола
             if "gender" in record:
                 user_identifier = client.get_type("UserIdentifier")
                 user_identifier.hashed_gender = self.normalize_and_hash(record["gender"], False)
                 user_data.user_identifiers.append(user_identifier)
 
-            # Обработка источника канала
-            if "source" in record:
-                user_identifier = client.get_type("UserIdentifier")
-                user_identifier.hashed_source = self.normalize_and_hash(record["source"], False)
-                user_data.user_identifiers.append(user_identifier)
-
-            # Обработка сегмента пользователей
-            if "user_segment" in record:
-                user_identifier = client.get_type("UserIdentifier")
-                user_identifier.hashed_user_segment = self.normalize_and_hash(record["user_segment"], False)
-                user_data.user_identifiers.append(user_identifier)
-
-            # Обработка идентификатора транзакции
-            if "transaction_id" in record:
-                user_identifier = client.get_type("UserIdentifier")
-                user_identifier.transaction_id = self.normalize_and_hash(record["transaction_id"], False)
-                user_data.user_identifiers.append(user_identifier)
-
-            # Обработка типа взаимодействия
             if "interaction_type" in record:
                 user_identifier = client.get_type("UserIdentifier")
                 user_identifier.hashed_interaction_type = self.normalize_and_hash(record["interaction_type"], False)
                 user_data.user_identifiers.append(user_identifier)
 
-            # Обработка интересов пользователя
-            if "interests" in record:
-                user_identifier = client.get_type("UserIdentifier")
-                user_identifier.hashed_interests = self.normalize_and_hash(record["interests"], False)
-                user_data.user_identifiers.append(user_identifier)
-
-            # Обработка URL-страницы
             if "url_visited" in record:
                 user_identifier = client.get_type("UserIdentifier")
                 user_identifier.hashed_url_visited = self.normalize_and_hash(record["url_visited"], False)
                 user_data.user_identifiers.append(user_identifier)
 
-            # Обработка типа устройства
-            if "device_type" in record:
-                user_identifier = client.get_type("UserIdentifier")
-                user_identifier.device_type = self.normalize_and_hash(record["device_type"], False)
-                user_data.user_identifiers.append(user_identifier)
-
-            # Если у нас есть идентификаторы пользователей, добавляем операцию
             if user_data.user_identifiers:
                 operation = client.get_type("OfflineUserDataJobOperation")
                 operation.create.CopyFrom(user_data)
