@@ -43,13 +43,13 @@ interface FetchDataParams {
 interface Sources {
     id: number
     name: string
-    source: string
-    type: string
-    created_date: string
-    updated_date: string
+    source_origin: string
+    source_type: string
+    created_date: Date
+    updated_date: Date
     created_by: string
-    number_of_customers: number
-    matched_records: number
+    total_records?: number
+    matched_records?: number
 }
 
 interface CompanyEmployeesProps {
@@ -148,9 +148,15 @@ const SourcesTable: React.FC<CompanyEmployeesProps> = ({ status, setStatus, data
                 return;
             }
 
-            // let url = `/company/employess?company_id=${companyId}&page=${page + 1}&per_page=${rowsPerPage}`;
-            
-            const response = await axiosInstance.get(`/audience-sources`)
+            let url = `/audience-sources?&page=${page + 1}&per_page=${rowsPerPage}`
+
+            if (sortBy) {
+                setPage(0)
+                url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
+            }
+
+            const response = await axiosInstance.get(url)
+
             if (response.status === 200){
                 const [employees, count] = response.data;
                 setData(employees);

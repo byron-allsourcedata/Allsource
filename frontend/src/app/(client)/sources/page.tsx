@@ -38,22 +38,25 @@ import SourcesList from './SourcesList';
 interface Sources {
     id: number
     name: string
-    source: string
-    type: string
-    created_date: string
-    updated_date: string
+    source_origin: string
+    source_type: string
+    created_date: Date
+    updated_date: Date
     created_by: string
-    number_of_customers: number
-    matched_records: number
+    total_records?: number
+    matched_records?: number
 }
 
 interface Source {
-    id: number;
-    name: string;
+    id: number
+    name: string
     source_origin: string
     source_type: string
-    total_records?: number;
-    matched_records?: number;
+    created_date: Date
+    updated_date: Date
+    created_by: string
+    total_records?: number
+    matched_records?: number
 }
 
 interface FilterParams {

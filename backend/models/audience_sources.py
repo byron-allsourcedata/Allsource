@@ -6,12 +6,12 @@ class AudienceSource(Base):
     __tablename__ = 'audience_sources'
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    created_by_user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id', onupdate='SET NULL'), nullable=True)
+    created_by_user_id = Column(Integer, ForeignKey('users.id', onupdate='SET NULL'), nullable=True)
     created_at = Column(TIMESTAMP, nullable=False)
     updated_at = Column(TIMESTAMP, nullable=False)
-    name = Column(VARCHAR(64), nullable=False)
-    file_name = Column(VARCHAR(128), nullable=True)
+    name = Column(VARCHAR(128), nullable=False)
+    file_name = Column(VARCHAR(256), nullable=True)
     source_type = Column(VARCHAR(64), nullable=False)
     source_origin = Column(VARCHAR(64), nullable=False)
     matched_records = Column(Integer, nullable=True)

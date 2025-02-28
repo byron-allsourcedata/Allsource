@@ -50,12 +50,15 @@ interface Row {
 }
 
 interface Source {
-    id: number;
-    name: string;
+    id: number
+    name: string
     source_origin: string
     source_type: string
-    total_records?: number;
-    matched_records?: number;
+    created_date: Date
+    updated_date: Date
+    created_by: string
+    total_records?: number
+    matched_records?: number
 }
 
 
@@ -777,6 +780,7 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                     handleDeleteFile()
                                     setSourceName('')
                                     setSourceType('')
+                                    setSources(true)
 
                                 }} sx={{
                                     borderColor: "rgba(80, 82, 178, 1)",
