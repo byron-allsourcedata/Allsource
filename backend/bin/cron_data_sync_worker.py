@@ -64,7 +64,7 @@ def get_lead_attributes(session, lead_users_id, data_sync_id):
     ) \
     .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id) \
     .join(UserIntegration, UserIntegration.domain_id == LeadUser.domain_id) \
-    .join(IntegrationUserSync, IntegrationUserSync.integration_id == UserIntegration.id) \
+    .join(IntegrationUserSync, IntegrationUserSync.integration_id == UserIntegration.domain_id) \
     .filter(LeadUser.id == lead_users_id, IntegrationUserSync.id == data_sync_id) \
     .first()
 

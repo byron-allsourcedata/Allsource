@@ -148,7 +148,7 @@ class KlaviyoIntegrationsService:
             raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
         return self.__mapped_list(response.json().get('data'))
     
-    def create_and_delete_contact(self, access_token: str):
+    def test_api_key(self, access_token: str):
         json_data = {
             'data': {
                 'type': 'profile',
@@ -171,7 +171,7 @@ class KlaviyoIntegrationsService:
 
     def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
         try:
-            if self.create_and_delete_contact(credentials.klaviyo.api_key) == False:
+            if self.test_api_key(credentials.klaviyo.api_key) == False:
                 raise HTTPException(status_code=400, detail=IntegrationsStatus.CREDENTAILS_INVALID.value)
         except:
             raise HTTPException(status_code=400, detail=IntegrationsStatus.CREDENTAILS_INVALID.value)

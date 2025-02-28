@@ -109,6 +109,8 @@ class WebhookIntegrationService:
         response = self.__handle_request(url=sync.hook_url, method=sync.method, json=data)
         if not response or response.status_code == 401:
                 return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+        if not response or response.status_code == 405:
+                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
         if response.status_code == 400:
                 return ProccessDataSyncResult.INCORRECT_FORMAT.value
             
