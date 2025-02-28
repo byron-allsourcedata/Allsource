@@ -32,7 +32,7 @@ def substitution_headings(
 
 
 @router.post("/create")
-def create_source(
+async def create_source(
         user=Depends(check_user_authorization),
         source_type: str = Form(...),
         source_origin: str = Form(...),
@@ -41,7 +41,7 @@ def create_source(
         file_name: str = Form(None),
         sources_service: AudienceSourceService = Depends(get_audience_sources_service)
 ):
-    return sources_service.create_source(
+    return await sources_service.create_source(
         user=user,
         source_type=source_type,
         source_origin=source_origin,

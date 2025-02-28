@@ -16,6 +16,9 @@ class AudienceSource(Base):
     source_origin = Column(VARCHAR(64), nullable=False)
     matched_records = Column(Integer, nullable=True)
     total_records = Column(Integer, nullable=True)
+    matched_records_status = Column(VARCHAR(16), default='pending', nullable=False)
+    processed_records = Column(Integer, default=0, nullable=False)
+    file_url = Column(VARCHAR(256), nullable=True)
 
     __table_args__ = (
         Index('audience_sources_pkey', 'id'),

@@ -4,6 +4,7 @@ from openai import OpenAI
 import logging
 from fastapi import UploadFile
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 logger = logging.getLogger(__name__)
@@ -67,7 +68,24 @@ class AudienceSourceService:
             logger.error("Error with ChatGPT API", exc_info=True)
 
 
-    def create_source(self, user, source_type: str, source_origin: str, source_name: str, file: UploadFile = None, file_name: str = None):
+    async def send_matching_status(self, user_id):
+        queue_name = 'aud_sources_matching'
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+        try:
+            message_body = {'data': {'source_id': user_id}}
+            await publish_rabbitmq_message(
+                connection=connection,
+                queue_name=queue_name,
+                message_body=message_body
+            )
+        except Exception as e:
+            await rabbitmq_connection.close()
+        finally:
+            await rabbitmq_connection.close()
+
+
+    async def create_source(self, user, source_type: str, source_origin: str, source_name: str, file: UploadFile = None, file_name: str = None):
         creating_data = {
             "user_id": user.get("id"),
             "source_type": source_type,
@@ -77,9 +95,12 @@ class AudienceSourceService:
         }
 
         created_data = self.audience_sources_persistence.create_source(**creating_data)
+        await self.send_matching_status(user.get("id"))
 
         if not created_data:
             logger.debug('Database error during creation')
+
+        setattr(created_data, "created_by", user.get("full_name"))
 
         return created_data
     

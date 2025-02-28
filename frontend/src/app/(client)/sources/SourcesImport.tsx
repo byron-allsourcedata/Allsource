@@ -34,6 +34,7 @@ import { UpgradePlanPopup } from  '../components/UpgradePlanPopup'
 import { sources } from 'next/dist/compiled/webpack/webpack';
 import Link from '@mui/material/Link';
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
+import { styled } from '@mui/material/styles';
 
 interface SourcesImportProps {
     setCreatedSource: (state: Source) => void
@@ -61,11 +62,22 @@ interface Source {
     matched_records?: number
 }
 
+const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
+    height: 4,
+    borderRadius: 0,
+    backgroundColor: '#c6dafc',
+    '& .MuiLinearProgress-bar': {
+      borderRadius: 5,
+      backgroundColor: '#4285f4',
+    },
+  }));
+
 
 const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewSource, setSources}) => {
     const router = useRouter();
     const [showSlider, setShowSlider] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [isChatGPTProcessing, setIsChatGPTProcessing] = useState(false);
     const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const [sourceType, setSourceType] = useState<string>("");
@@ -257,7 +269,7 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
     };
 
     const smartSubstitutionHeaders = async (headings: string[]) => {
-        setLoading(true)
+        setIsChatGPTProcessing(true)
         try {
             const response = await axiosInstance.post(`/audience-sources/heading-substitution`, {headings}, {
                 headers: { 'Content-Type': 'application/json' },
@@ -270,7 +282,7 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
         catch {
         }
         finally {
-            setLoading(false)
+            setIsChatGPTProcessing(false)
         }
     } 
 
@@ -506,7 +518,18 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                             }
                             <Typography sx={sourcesStyles.text}>Sample doc: <Link href="https://dev.maximiz.ai/integrations" sx={sourcesStyles.textLink}>sample recent customers-list.csv</Link></Typography>
                         </Box>
-                        <Box sx={{display: sourceMethod !== 0 && file ? "flex" : "none", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
+                        <Box sx={{display: sourceMethod !== 0 && file ? "flex" : "none", flexDirection: "column", position: 'relative', gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
+                            {isChatGPTProcessing && <Box
+                                sx={{
+                                width: '100%',
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                zIndex: 1200,   
+                                }}
+                            >
+                                <BorderLinearProgress variant="indeterminate" sx={{borderRadius: "6px",}} />
+                            </Box>}
                             <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
                                 <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px"}}>Data Maping</Typography>
                                 <Typography sx={{fontFamily: "Nunito Sans", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Map your Field from your Source to the destination data base.</Typography>
