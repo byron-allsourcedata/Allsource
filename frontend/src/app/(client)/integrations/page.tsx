@@ -39,6 +39,7 @@ import ZapierConnectPopup from "@/components/ZapierConnectPopup";
 import SlackConnectPopup from "@/components/SlackConnectPopup";
 import WebhookConnectPopup from "@/components/WebhookConnectPopup";
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import HubspotIntegrationPopup from "@/components/HubspotIntegrationPopup"
 
 
 interface IntegrationBoxProps {
@@ -427,8 +428,8 @@ const DeleteIntegrationPopup = ({ service_name, open, handleDelete, onClose }: D
             top: 0,
             bottom: 0,
             display: 'flex',
-            flexDirection: 'column', // Flex-контейнер для колонок
-            height: '100vh', // Высота на весь экран
+            flexDirection: 'column',
+            height: '100vh',
             '@media (max-width: 600px)': {
               width: '100%',
             },
@@ -587,7 +588,8 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
     //{ image: 'attentive.svg', service_name: 'attentive' },
     { image: 'zapier-icon.svg', service_name: 'zapier' },
     { image: 'slack-icon.svg', service_name: 'slack' },
-    { image: 'webhook-icon.svg', service_name: 'webhook' }
+    { image: 'webhook-icon.svg', service_name: 'webhook' },
+    {image: 'hubspot.svg', service_name: 'hubspot'}
   ];
 
   const integratedServices = integrationsCredentials.map(cred => cred.service_name);
@@ -777,6 +779,15 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
         <WebhookConnectPopup
           open={true}
           handleClose={handleClose}
+          boxShadow="rgba(0, 0, 0, 0.01)"
+        />
+      )}
+
+      {openModal === 'hubspot' && (
+        <HubspotIntegrationPopup
+          open={true}
+          handleClose={handleClose}
+          initApiKey={integrationsCredentials.find(integration => integration.service_name === 'hubspot')?.access_token}
           boxShadow="rgba(0, 0, 0, 0.01)"
         />
       )}
