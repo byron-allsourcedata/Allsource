@@ -563,6 +563,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
             setOpenOmnisendConnect(true);
           } else if (dataSyncPlatform === "sendlane") {
             setOpenSendlaneConnect(true);
+          } else if (dataSyncPlatform === "webhook") {
+            setOpenWebhookConnect(true);
           }
           setIsLoading(false);
           setAnchorEl(null);
@@ -580,6 +582,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
             setOmnisendIconPopupOpen(true);
           } else if (dataSyncPlatform === "sendlane") {
             setOpenSendlaneIconPopup(true);
+          } else if (dataSyncPlatform === "webhook") {
+            setOpenWebhookIconPopup(true);
           }
           setIsLoading(false);
           setAnchorEl(null);
