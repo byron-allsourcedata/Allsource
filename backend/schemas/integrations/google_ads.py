@@ -1,4 +1,5 @@
 from pydantic import BaseModel, EmailStr
+from typing import List, Optional
 import typing as tp
 
 class GoogleAdsProfile(BaseModel):
@@ -7,6 +8,6 @@ class GoogleAdsProfile(BaseModel):
     last_name: tp.Optional[str] = None
     phone: tp.Optional[str] = None
     gender: tp.Optional[str] = None
-    url_visited: tp.Optional[str] = None
+    url_visited: Optional[List[str]] = None
     behavior_type: tp.Optional[str] = None
     location: tp.Optional[str] = None

@@ -94,7 +94,7 @@ class IntegrationsUserSyncPersistence:
                     'syncStatus': sync.sync_status,
                     'type_error': sync.error_message,
                     'list_id': sync.list_id,
-                    'customer_id': sync.customer_id
+                    'customer_id': sync.customer_id,
                     'hook_url': sync.hook_url,
                     'method': sync.method
                 }
@@ -116,7 +116,7 @@ class IntegrationsUserSyncPersistence:
             'syncStatus': sync.sync_status,
             'type_error': sync.error_message,
             'customer_id': sync.customer_id,
-            'list_id': sync.list_id
+            'list_id': sync.list_id,
             'hook_url': sync.hook_url,
             'method': sync.method
         } for sync in syncs]

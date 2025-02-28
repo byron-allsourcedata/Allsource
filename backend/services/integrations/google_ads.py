@@ -134,7 +134,7 @@ class GoogleAdsIntegrationsService:
         profile = self.__mapped_googleads_profile(five_x_five_user, lead_user)
         if profile in (ProccessDataSyncResult.AUTHENTICATION_FAILED.value, ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return profile
-
+        
         list_response = self.__add_profile_to_list(user_integration.access_token, data_sync.list_id, data_sync.customer_id, profile)
         if list_response.status_code == 404:
             return ProccessDataSyncResult.LIST_NOT_EXISTS.value
@@ -147,7 +147,6 @@ class GoogleAdsIntegrationsService:
         offline_user_data_job_id = None
         ad_user_data_consent = None
         ad_personalization_consent = None
-        user_list_resource_name = self.create_customer_match_user_list(client, customer_id)
         try:
             googleads_service = client.get_service("GoogleAdsService")
 
@@ -217,7 +216,6 @@ class GoogleAdsIntegrationsService:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
         first_email = get_valid_email(five_x_five_user)
-        
         if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return first_email
         
@@ -228,14 +226,16 @@ class GoogleAdsIntegrationsService:
             getattr(five_x_five_user, 'company_phone', None)
         )
 
-        location = {
-            "address1": getattr(five_x_five_user, 'personal_address') or getattr(five_x_five_user, 'company_address', None),
-            "city": getattr(five_x_five_user, 'personal_city') or getattr(five_x_five_user, 'company_city', None),
-            "region": getattr(five_x_five_user, 'personal_state') or getattr(five_x_five_user, 'company_state', None),
-            "zip": getattr(five_x_five_user, 'personal_zip') or getattr(five_x_five_user, 'company_zip', None),
-        }
+        address_parts = [
+            getattr(five_x_five_user, "personal_address") or getattr(five_x_five_user, "company_address", None),
+            getattr(five_x_five_user, "personal_city") or getattr(five_x_five_user, "company_city", None),
+            getattr(five_x_five_user, "personal_state") or getattr(five_x_five_user, "company_state", None),
+            getattr(five_x_five_user, "personal_zip") or getattr(five_x_five_user, "company_zip", None),
+        ]
+        filtered_address = [part for part in address_parts if part]
+        location = ", ".join(filtered_address) if filtered_address else None
         page_time = self.leads_persistence.get_latest_page_time(lead_user.id)
-        page_time_array = [{"page": row.page, "total_spent_time": str(row.total_spent_time), "count": row.count} for row in page_time]
+        page_array = [row.page for row in page_time]
         return GoogleAdsProfile(
             email=first_email,
             first_name=getattr(five_x_five_user, 'first_name', None),
@@ -243,7 +243,7 @@ class GoogleAdsIntegrationsService:
             phone= validate_and_format_phone(format_phone_number(first_phone)),
             gender=getattr(five_x_five_user, 'gender', None),
             location=location,
-            url_visited=page_time_array,
+            url_visited=page_array,
             behavior_type=lead_user.behavior_type
             )
         
@@ -303,6 +303,7 @@ class GoogleAdsIntegrationsService:
                                               offline_user_data_job_id, 
                                               ad_user_data_consent,
                                               ad_personalization_consent):
+        
         offline_user_data_job_service_client = client.get_service(
             "OfflineUserDataJobService"
         )

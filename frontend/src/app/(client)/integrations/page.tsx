@@ -588,7 +588,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
     //{ image: 'attentive.svg', service_name: 'attentive' },
     { image: 'zapier-icon.svg', service_name: 'zapier' },
     { image: 'slack-icon.svg', service_name: 'slack' },
-    { image: 'google-ads.svg', service_name: 'google_ads' }
+    { image: 'google-ads.svg', service_name: 'google_ads' },
     { image: 'webhook-icon.svg', service_name: 'webhook' }
   ];
 
@@ -780,7 +780,8 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
         <GoogleADSConnectPopup
           open={true}
           handlePopupClose={handleClose}
-          )}
+          />
+        )}
   
       {openModal === 'webhook' && (
         <WebhookConnectPopup
