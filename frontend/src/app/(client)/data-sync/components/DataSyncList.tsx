@@ -123,6 +123,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   }, []);
 
   useEffect(() => {
+    console.log(data)
+  }, [data]);
+
+  useEffect(() => {
     if (needsSync) {
       handleIntegrationsSync();
       setNeedsSync(false);
@@ -304,6 +308,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
         return (
           <Image src={"/slack-icon.svg"} alt="slack" width={18} height={18} />
         );
+      case "google_ads":
+        return (
+          <Image src={"/google-ads.svg"} alt="slack" width={18} height={18} />
+        );
       default:
         return null;
     }
@@ -470,8 +478,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
         setOpenSendlaneIconPopup(true);
       } else if (dataSyncPlatform === "slack") {
         setOpenSlackIconPopup(true);
-      }
-      else if (dataSyncPlatform === "google_ads") {
+      } else if (dataSyncPlatform === "google_ads") {
         setOpenGoogleADSIconPopup(true);
       }
       setIsLoading(false);
@@ -560,6 +567,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
             setOpenOmnisendConnect(true);
           } else if (dataSyncPlatform === "sendlane") {
             setOpenSendlaneConnect(true);
+          } else if (dataSyncPlatform === "google_ads") {
+            setOpenGoogleADSConnect(true);
           }
           setIsLoading(false);
           setAnchorEl(null);
@@ -577,6 +586,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
             setOmnisendIconPopupOpen(true);
           } else if (dataSyncPlatform === "sendlane") {
             setOpenSendlaneIconPopup(true);
+          } else if (dataSyncPlatform === "google_ads") {
+            setOpenGoogleADSIconPopup(true);
           }
           setIsLoading(false);
           setAnchorEl(null);

@@ -40,7 +40,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedOption, setSelectedOption] = useState<ChannelList | null>(null);
     const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
-    const [newListName, setNewListName] = useState<string>('');
+    const [newListName, setNewListName] = useState<string>(data?.name ?? '');
     const [isShrunk, setIsShrunk] = useState<boolean>(false);
     const textFieldRef = useRef<HTMLDivElement>(null);
     const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
@@ -52,14 +52,28 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
     const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
     const [newMapListName, setNewMapListName] = useState<string>('');
     const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
-    const [UpdateKlaviuo, setUpdateKlaviuo] = useState<any>(null);
     const [maplistNameError, setMapListNameError] = useState(false);
-    const [googleList, setGoogleAdsList] = useState<ChannelList[]>([])
-    const [customersInfo, setCustomersInfo] = useState<Customers[]>([])
-    const [selectedAccountId, setSelectedAccountId] = useState<string>('');
+    const [googleList, setGoogleAdsList] = useState<ChannelList[]>([
+        {
+            list_id: data?.list_id ?? '',
+            list_name: data?.name ?? '',
+        }
+      ] ?? []);
+
+    const [customersInfo, setCustomersInfo] = useState<Customers[]>([
+        {
+          customer_id: data?.customer_id ?? '',
+          customer_name: data?.customer_id ?? '',
+        }
+      ] ?? []);
+      
+    const [selectedAccountId, setSelectedAccountId] = useState<string>(data?.customer_id ?? '');
     const [listNameErrorMessage, setListNameErrorMessage] = useState('')
     const [customFieldsList, setCustomFieldsList] = useState<CustomField[]>([]);
-    const [savedList, setSavedList] = useState<ChannelList | null>(null);
+    const [savedList, setSavedList] = useState<ChannelList | null>({
+        list_id: data?.list_id ?? '',
+        list_name: data?.name ?? '',
+    } ?? null);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -132,9 +146,9 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
             setLoading(true)
             const response = await axiosInstance.get('integrations/google-ads/get-channels', {
                 params: {
-                  customer_id: selectedAccountId
+                    customer_id: selectedAccountId
                 }
-              });              
+            });
             setGoogleAdsList(response.data.user_lists || [])
             if (response.data.status !== 'SUCCESS') {
                 showErrorToast(response.data.message)
@@ -145,7 +159,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
         }
     }
     useEffect(() => {
-        if (open) {
+        if (open && !data?.name) {
             getGoogleAdsList()
         }
     }, [selectedAccountId])
@@ -165,7 +179,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
         }
     }
     useEffect(() => {
-        if (open) {
+        if (open && !data?.customer_id) {
             getCustomersInfo()
         }
     }, [open])
@@ -232,9 +246,9 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                 const response = await axiosInstance.put('/data-sync/sync', {
                     integrations_users_sync_id: data.id,
                     list_id: savedList.list_id,
+                    list_name: savedList.list_name,
                     name: savedList.list_name,
                     leads_type: selectedRadioValue,
-                    data_map: customFields
                 }, {
                     params: { service_name: 'google_ads' }
                 });
@@ -242,13 +256,15 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                 if (response.status === 201 || response.status === 200) {
                     onClose();
                     showToast('Data sync updated successfully');
+                    triggerSync();
                 }
             } else {
                 const response = await axiosInstance.post('/data-sync/sync', {
-                    list_id: savedList.list_id,
+                    list_id: String(savedList.list_id),
+                    customer_id: String(selectedAccountId),
                     list_name: savedList.list_name,
                     leads_type: selectedRadioValue,
-                    data_map: customFields
+                    data_map: rows
                 }, {
                     params: { service_name: 'google_ads' }
                 });
@@ -304,7 +320,6 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                 setAnchorEl(textFieldRef.current);
             }
         } else if (isKlaviyoList(value)) {
-            // Проверка, является ли value объектом KlaviyoList
             setSelectedOption({
                 list_id: value.list_id,
                 list_name: value.list_name,
@@ -320,8 +335,8 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
     const isKlaviyoList = (value: any): value is ChannelList => {
         return value !== null &&
             typeof value === 'object' &&
-            'id' in value &&
-            'name' in value;
+            'list_id' in value &&
+            'list_name' in value;
     };
 
 
@@ -923,6 +938,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                     const selectedValue = e.target.value as string;
                                                     setSelectedAccountId(selectedValue);
                                                 }}
+                                                disabled={data?.customer_id}
                                                 label="Account"
                                                 sx={{
                                                     backgroundColor: '#ffffff',
@@ -949,6 +965,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                     variant="outlined"
                                                     value={selectedOption?.list_name}
                                                     onClick={handleClick}
+                                                    disabled={data?.name}
                                                     size="small"
                                                     fullWidth
                                                     label={selectedOption ? '' : 'Select or Create new list'}
@@ -1009,12 +1026,13 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                     }}
                                                 >
                                                     {/* Show "Create New List" option */}
-                                                    <MenuItem onClick={() => handleSelectOption('createNew')} sx={{
-                                                        borderBottom: showCreateForm ? "none" : "1px solid #cdcdcd",
-                                                        '&:hover': {
-                                                            background: 'rgba(80, 82, 178, 0.10)'
-                                                        }
-                                                    }}>
+                                                    <MenuItem disabled={data?.name}
+                                                        onClick={() => handleSelectOption('createNew')} sx={{
+                                                            borderBottom: showCreateForm ? "none" : "1px solid #cdcdcd",
+                                                            '&:hover': {
+                                                                background: 'rgba(80, 82, 178, 0.10)'
+                                                            }
+                                                        }}>
                                                         <ListItemText primary={`+ Create new list`} primaryTypographyProps={{
                                                             sx: {
                                                                 fontFamily: "Nunito Sans",
@@ -1377,141 +1395,6 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                             </Grid>
                                         </Box>
                                     ))}
-                                    <Box sx={{ mb: 2 }}>
-                                        {customFields.map((field, index) => (
-                                            <Grid container spacing={2} alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' } }} key={index}>
-                                                <Grid item xs="auto" sm={5} mb={2}>
-                                                    <TextField
-                                                        select
-                                                        fullWidth
-                                                        variant="outlined"
-                                                        label='Custom Field'
-                                                        value={field.type}
-                                                        onChange={(e) => handleChangeField(index, 'type', e.target.value)}
-                                                        InputLabelProps={{
-                                                            sx: {
-                                                                fontFamily: 'Nunito Sans',
-                                                                fontSize: '12px',
-                                                                lineHeight: '16px',
-                                                                color: 'rgba(17, 17, 19, 0.60)',
-                                                                top: '-5px',
-                                                                '&.Mui-focused': {
-                                                                    color: '#0000FF',
-                                                                    top: 0
-                                                                },
-                                                                '&.MuiInputLabel-shrink': {
-                                                                    top: 0
-                                                                }
-                                                            }
-                                                        }}
-                                                        InputProps={{
-                                                            sx: {
-                                                                '&.MuiOutlinedInput-root': {
-                                                                    height: '36px',
-                                                                    '& .MuiOutlinedInput-input': {
-                                                                        padding: '6.5px 8px',
-                                                                        fontFamily: 'Roboto',
-                                                                        color: '#202124',
-                                                                        fontSize: '14px',
-                                                                        fontWeight: '400',
-                                                                        lineHeight: '20px'
-                                                                    },
-                                                                    '& .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: '#A3B0C2',
-                                                                    },
-                                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: '#A3B0C2',
-                                                                    },
-                                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: '#0000FF',
-                                                                    },
-                                                                },
-                                                                '&+.MuiFormHelperText-root': {
-                                                                    marginLeft: '0',
-                                                                },
-                                                            }
-                                                        }}
-                                                    >
-
-                                                        {customFieldsList.map((item) => (
-                                                            <MenuItem
-                                                                key={item.value}
-                                                                value={item.value}
-                                                                disabled={customFields.some(f => f.type === item.value)}
-                                                            >
-                                                                {item.type}
-                                                            </MenuItem>
-                                                        ))}
-                                                    </TextField>
-                                                </Grid>
-                                                <Grid item xs="auto" sm={1} mb={2} container justifyContent="center">
-                                                    <Image
-                                                        src='/chevron-right-purple.svg'
-                                                        alt='chevron-right-purple'
-                                                        height={18}
-                                                        width={18}
-                                                    />
-                                                </Grid>
-                                                <Grid item xs="auto" sm={5} mb={2}>
-                                                    <TextField
-                                                        fullWidth
-                                                        variant="outlined"
-                                                        value={field.value}
-                                                        onChange={(e) => handleChangeField(index, 'value', e.target.value)}
-                                                        placeholder="Enter value"
-                                                        InputLabelProps={{
-                                                            sx: {
-                                                                fontFamily: 'Nunito Sans',
-                                                                fontSize: '12px',
-                                                                lineHeight: '16px',
-                                                                color: 'rgba(17, 17, 19, 0.60)',
-                                                                top: '-5px',
-                                                                '&.Mui-focused': {
-                                                                    color: '#0000FF',
-                                                                    top: 0,
-                                                                },
-                                                                '&.MuiInputLabel-shrink': {
-                                                                    top: 0,
-                                                                },
-                                                            },
-                                                        }}
-                                                        InputProps={{
-                                                            sx: {
-                                                                height: '36px',
-                                                                '& .MuiOutlinedInput-input': {
-                                                                    padding: '6.5px 8px',
-                                                                    fontFamily: 'Roboto',
-                                                                    color: '#202124',
-                                                                    fontSize: '14px',
-                                                                    fontWeight: '400',
-                                                                    lineHeight: '20px',
-                                                                },
-                                                                '& .MuiOutlinedInput-notchedOutline': {
-                                                                    borderColor: '#A3B0C2',
-                                                                },
-                                                                '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                    borderColor: '#A3B0C2',
-                                                                },
-                                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                    borderColor: '#0000FF',
-                                                                },
-                                                            },
-                                                        }}
-                                                    />
-                                                </Grid>
-                                                <Grid item xs="auto" mb={2} sm={1} container justifyContent="center">
-                                                    <IconButton onClick={() => handleDeleteField(index)}>
-                                                        <Image
-                                                            src='/trash-icon-filled.svg'
-                                                            alt='trash-icon-filled'
-                                                            height={18}
-                                                            width={18}
-                                                        />
-                                                    </IconButton>
-                                                </Grid>
-                                            </Grid>
-                                        ))}
-                                    </Box>
                                 </Box>
                             </TabPanel>
                         </TabContext>

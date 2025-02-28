@@ -77,6 +77,7 @@ class DataMap(BaseModel):
 class SyncCreate(BaseModel):
     list_id: Optional[str] = None
     tags_id: Optional[str] = None
+    customer_id: Optional[str] = None
     list_name: Optional[str] = None
     integrations_users_sync_id: Optional[int] = None
     leads_type: Optional[str] = 'allContacts' 

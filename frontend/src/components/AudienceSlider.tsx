@@ -9,7 +9,7 @@ import ConnectKlaviyo from '@/app/(client)/data-sync/components/ConnectKlaviyo';
 import ConnectMeta from '@/app/(client)/data-sync/components/ConnectMeta';
 import KlaviyoIntegrationPopup from './KlaviyoIntegrationPopup';
 import SlackIntegrationPopup from './SlackIntegrationPopup';
-import GoogleADSIntegrationPopup from './GoogleADSIntegrationPopup';
+import GoogleADSConnectPopup from './GoogleADSConnectPopup';
 import MetaConnectButton from './MetaConnectButton';
 import AlivbleIntagrationsSlider from './AvalibleIntegrationsSlider';
 import OmnisendConnect from './OmnisendConnect';
@@ -740,7 +740,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             {/* Add Integration */}
             <AlivbleIntagrationsSlider open={plusIconPopupOpen} onClose={handlePlusIconPopupClose} isContactSync={true} integrations={integrations} integrationsCredentials={integrationsCredentials} handleSaveSettings={handleSaveSettings} />
             <SlackIntegrationPopup open={createSlack} handleClose={handleCreateSlackClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'slack')?.access_token} />
-            <GoogleADSIntegrationPopup open={createGoogleAds} handleClose={handleCreateGoogleAdsClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'webhook')?.access_token} />
+            <GoogleADSConnectPopup open={createGoogleAds} handlePopupClose={handleCreateGoogleAdsClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'google_ads')?.access_token} />
             <KlaviyoIntegrationPopup open={createKlaviyo} handleClose={handleCreateKlaviyoClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token} />
             <MailchimpConnect onSave={handleSaveSettings} open={openMailchimpConnect} handleClose={handleOpenMailchimpConnectClose} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Mailchimp')?.access_token} />
             <SendlaneConnect open={openSendlaneConnect} handleClose={handleSendlaneConnectClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Sendlane')?.access_token} />

@@ -13,6 +13,7 @@ class IntegrationUserSync(Base):
     created_at = Column(TIMESTAMP, default=datetime.now)
     last_sync_date = Column(TIMESTAMP)
     list_id = Column(VARCHAR)
+    customer_id = Column(VARCHAR)
     list_name = Column(VARCHAR)
     data_map = Column(JSON)
     sync_status = Column(Boolean, default=True)

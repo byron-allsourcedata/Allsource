@@ -35,3 +35,12 @@ class KlaviyoProfile(BaseModel):
     organization: tp.Optional[str] = None
     title: tp.Optional[str] = None
     location: tp.Optional[tp.Any] = None
+    
+class GoogleAdsProfile(BaseModel):
+    email: tp.Optional[EmailStr] = None
+    phone_number: tp.Optional[str] = None
+    first_name: tp.Optional[str] = None
+    last_name: tp.Optional[str] = None
+    organization: tp.Optional[str] = None
+    title: tp.Optional[str] = None
+    location: tp.Optional[tp.Any] = None

@@ -120,7 +120,8 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
             'mailchimp': integration_service.mailchimp,
             'sendlane': integration_service.sendlane,
             'zapier': integration_service.zapier,
-            'slack': integration_service.slack
+            'slack': integration_service.slack,
+            'google_ads': integration_service.google_ads
         }
         
         service = service_map.get(service_name)

@@ -71,7 +71,7 @@ class GoogleAdsIntegrationsService:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
         return integartions
 
-    def edit_sync(self, leads_type: str, list_id: str, list_name: str, integrations_users_sync_id: int,  data_map: List[DataMap], domain_id: int, created_by: str,tags_id: str = None):
+    def edit_sync(self, leads_type: str, list_id: str, list_name: str, integrations_users_sync_id: int, domain_id: int, created_by: str, data_map: List[DataMap] = None ,tags_id: str = None):
         credentials = self.get_credentials(domain_id)
         data_syncs = self.sync_persistence.get_filter_by(domain_id=domain_id)
         for sync in data_syncs:
@@ -79,11 +79,8 @@ class GoogleAdsIntegrationsService:
                 return
         sync = self.sync_persistence.edit_sync({
             'integration_id': credentials.id,
-            'list_id': list_id,
-            'list_name': list_name,
             'domain_id': domain_id,
             'leads_type': leads_type,
-            'data_map': data_map,
             'created_by': created_by,
         }, integrations_users_sync_id)
         if tags_id: 
@@ -113,7 +110,7 @@ class GoogleAdsIntegrationsService:
         }
     
     
-    async def create_sync(self, leads_type: str, list_id: str, list_name: str, domain_id: int, created_by: str, tags_id: str = None, data_map: List[DataMap] = []):
+    async def create_sync(self, customer_id: str, leads_type: str, list_id: str, list_name: str, domain_id: int, created_by: str, tags_id: str = None, data_map: List[DataMap] = []):
         credentials = self.get_credentials(domain_id)
         data_syncs = self.sync_persistence.get_filter_by(domain_id=domain_id)
         for sync in data_syncs:
@@ -127,13 +124,13 @@ class GoogleAdsIntegrationsService:
             'leads_type': leads_type,
             'data_map': data_map,
             'created_by': created_by,
+            'customer_id': customer_id
         })
         if tags_id: 
             self.create_tag_relationships_lists(tags_id=tags_id, list_id=list_id, api_key=credentials.access_token)
 
     async def process_data_sync(self, five_x_five_user, user_integration, data_sync, lead_user):
-        data_map = data_sync.data_map if data_sync.data_map else None
-        profile = self.__create_profile(five_x_five_user, user_integration.access_token, data_map)
+        profile = self.__create_profile(five_x_five_user, user_integration.access_token)
         if profile in (ProccessDataSyncResult.AUTHENTICATION_FAILED.value, ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return profile
 
@@ -142,6 +139,44 @@ class GoogleAdsIntegrationsService:
             return ProccessDataSyncResult.LIST_NOT_EXISTS.value
             
         return ProccessDataSyncResult.SUCCESS.value
+    
+    def __create_profile(self, five_x_five_user, api_key: str, data_map):
+        profile = self.__mapped_googleads_profile(five_x_five_user)
+        if profile in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
+            return profile
+
+        phone_number = validate_and_format_phone(profile.phone_number)
+        build_offline_user_data_job_operations()
+
+        json_data = {
+            'data': {
+                'type': 'profile',
+                'attributes': {
+                    'email': profile.email,
+                    'phone_number': phone_number.split(', ')[-1] if phone_number else None,
+                    'first_name': profile.first_name or None,
+                    'last_name': profile.last_name or None,
+                    'organization': profile.organization or None,
+                    'location': profile.location or None,
+                    'title': profile.title or None,
+                }
+            }
+        }
+        json_data['data']['attributes'] = {k: v for k, v in json_data['data']['attributes'].items() if v is not None}
+        response = self.__handle_request(
+            method='POST',
+            url='https://a.klaviyo.com/api/profiles/',
+            api_key=api_key,
+            json=json_data
+        )
+        if response.status_code == 201:
+                return response.json().get('data')
+        if response.status_code == 400:
+                return ProccessDataSyncResult.INCORRECT_FORMAT.value
+        if response.status_code == 401:
+                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+        if response.status_code == 409:
+            return {'id': response.json().get('errors')[0].get('meta').get('duplicate_profile_id')}
     
     def __add_profile_to_list(self,domain_id, customer_id, user_list_id=None):
         credential = self.get_credentials(domain_id)
@@ -188,7 +223,7 @@ class GoogleAdsIntegrationsService:
             self.integrations_persisntece.db.commit()
             return {'message': 'successfuly'}  
     
-    def __mapped_klaviyo_profile(self, five_x_five_user: FiveXFiveUser) -> KlaviyoProfile:
+    def __mapped_googleads_profile(self, five_x_five_user: FiveXFiveUser) -> GoogleAdsProfile:
         email_fields = [
             'business_email', 
             'personal_emails', 
@@ -236,7 +271,7 @@ class GoogleAdsIntegrationsService:
             "region": getattr(five_x_five_user, 'personal_state') or getattr(five_x_five_user, 'company_state', None),
             "zip": getattr(five_x_five_user, 'personal_zip') or getattr(five_x_five_user, 'company_zip', None),
         }
-        return KlaviyoProfile(
+        return GoogleAdsProfile(
             email=first_email,
             phone_number=format_phone_number(first_phone),
             first_name=getattr(five_x_five_user, 'first_name', None),
@@ -244,26 +279,6 @@ class GoogleAdsIntegrationsService:
             organization=getattr(five_x_five_user, 'company_name', None),
             location=location,
             title=getattr(five_x_five_user, 'job_title', None))
-
-    def __map_properties(self, five_x_five_user: FiveXFiveUser, data_map: List[DataMap]) -> dict:
-        properties = {}
-        for mapping in data_map:
-            five_x_five_field = mapping.get("type")  
-            new_field = mapping.get("value")  
-            value_field = getattr(five_x_five_user, five_x_five_field, None)
-            if value_field is not None: 
-                if isinstance(value_field, datetime):
-                    properties[new_field] = value_field.isoformat() 
-                else:
-                    properties[new_field] = value_field 
-        return properties
-    
-    def __mapped_profile_from_klaviyo(self, profile):
-        return ContactSuppression(
-            id=profile.get('id'),
-            email=profile.get('attributes').get('email'),
-            phone_number=profile.get('attributes').get('phone_number')
-        )
         
     def get_google_ads_client(self, refresh_token):
         credentials = Credentials(
@@ -284,7 +299,10 @@ class GoogleAdsIntegrationsService:
             credential = self.get_credentials(domain_id)
             client = self.get_google_ads_client(credential.access_token)
             channel = self.create_customer_match_user_list(client, list.customer_id, list.name)
-            return {'status': IntegrationsStatus.SUCCESS.value, 'channel': channel}
+            if not channel:
+                return {'status': IntegrationsStatus.CREATE_IS_FAILED.value, 'message': 'Create is failed'}
+            
+            return {'status': IntegrationsStatus.SUCCESS.value, 'channel': {'list_id': list.customer_id, 'list_name': list.name}}
         except GoogleAdsException as ex:
             print(
                 f"Request with ID '{ex.request_id}' failed with status "
@@ -293,11 +311,6 @@ class GoogleAdsIntegrationsService:
             # details = googleads_error.failure.errors[0].message
             # print(f"Google Ads API error occurred: {googleads_error}")
             return {'status': IntegrationsStatus.CREDENTAILS_INVALID.value, 'message': str(ex.error.code().name)}
-            for error in ex.failure.errors:
-                print(f"\tError with message '{error.message}'.")
-                if error.location:
-                    for field_path_element in error.location.field_path_elements:
-                        print(f"\t\tOn field: {field_path_element.field_name}")
     
     def create_customer_match_user_list(self, client, customer_id, list_name):
         user_list_service_client = client.get_service("UserListService")
@@ -406,39 +419,45 @@ class GoogleAdsIntegrationsService:
         )
     
     def build_offline_user_data_job_operations(self, client):
-        raw_record_1 = {
-            "email": "dana@example.com",
-            "phone": "+1 800 5550101",
-        }
-        raw_record_2 = {
+        raw_record = {
             "email": "alex.2@example.com",
             "first_name": "Alex",
             "last_name": "Quinn",
             "country_code": "US",
             "postal_code": "94045",
             "phone": "+1 800 5550102",
+            "birth_date": "1990-01-01",  # Пример добавления даты рождения
+            "signup_date": "2023-02-01",  # Дата регистрации
+            "custom_id": "12345abc",      # Уникальный идентификатор клиента
+            "ip_address": "192.168.1.1",  # Пример IP-адреса
+            "gender": "M",                # Пример пола
+            "source": "facebook_ads",     # Источник канала
+            "user_segment": "paid",       # Сегмент пользователей
+            "transaction_id": "txn_67890",# Идентификатор транзакции
+            "interaction_type": "view",   # Тип взаимодействия
+            "interests": "electronics",   # Интересы пользователя
+            "url_visited": "https://example.com/product/123", # URL-страница
+            "device_type": "mobile",      # Тип устройства
         }
-        raw_record_3 = {"email": "charlie@example.com"}
-
-        raw_records = [raw_record_1, raw_record_2, raw_record_3]
+        raw_records = [raw_record]
 
         operations = []
         for record in raw_records:
             user_data = client.get_type("UserData")
+
+            # Обработка email
             if "email" in record:
                 user_identifier = client.get_type("UserIdentifier")
-                user_identifier.hashed_email = self.normalize_and_hash(
-                    record["email"], True
-                )
+                user_identifier.hashed_email = self.normalize_and_hash(record["email"], True)
                 user_data.user_identifiers.append(user_identifier)
-                
+
+            # Обработка номера телефона
             if "phone" in record:
                 user_identifier = client.get_type("UserIdentifier")
-                user_identifier.hashed_phone_number = self.normalize_and_hash(
-                    record["phone"], True
-                )
+                user_identifier.hashed_phone_number = self.normalize_and_hash(record["phone"], True)
                 user_data.user_identifiers.append(user_identifier)
-                
+
+            # Обработка имени и фамилии с адресом
             if "first_name" in record:
                 required_keys = ("last_name", "country_code", "postal_code")
                 if not all(key in record for key in required_keys):
@@ -451,21 +470,90 @@ class GoogleAdsIntegrationsService:
                 else:
                     user_identifier = client.get_type("UserIdentifier")
                     address_info = user_identifier.address_info
-                    address_info.hashed_first_name = self.normalize_and_hash(
-                        record["first_name"], False
-                    )
-                    address_info.hashed_last_name = self.normalize_and_hash(
-                        record["last_name"], False
-                    )
+                    address_info.hashed_first_name = self.normalize_and_hash(record["first_name"], False)
+                    address_info.hashed_last_name = self.normalize_and_hash(record["last_name"], False)
                     address_info.country_code = record["country_code"]
                     address_info.postal_code = record["postal_code"]
                     user_data.user_identifiers.append(user_identifier)
 
+            # Обработка даты рождения
+            if "birth_date" in record:
+                user_identifier = client.get_type("UserIdentifier")
+                user_identifier.hashed_birth_date = self.normalize_and_hash(record["birth_date"], False)
+                user_data.user_identifiers.append(user_identifier)
+
+            # Обработка даты регистрации
+            if "signup_date" in record:
+                user_identifier = client.get_type("UserIdentifier")
+                user_identifier.hashed_signup_date = self.normalize_and_hash(record["signup_date"], False)
+                user_data.user_identifiers.append(user_identifier)
+
+            # Обработка уникального идентификатора клиента
+            if "custom_id" in record:
+                user_identifier = client.get_type("UserIdentifier")
+                user_identifier.custom_id = self.normalize_and_hash(record["custom_id"], False)
+                user_data.user_identifiers.append(user_identifier)
+
+            # Обработка IP-адреса
+            if "ip_address" in record:
+                user_identifier = client.get_type("UserIdentifier")
+                user_identifier.hashed_ip_address = self.normalize_and_hash(record["ip_address"], True)
+                user_data.user_identifiers.append(user_identifier)
+
+            # Обработка пола
+            if "gender" in record:
+                user_identifier = client.get_type("UserIdentifier")
+                user_identifier.hashed_gender = self.normalize_and_hash(record["gender"], False)
+                user_data.user_identifiers.append(user_identifier)
+
+            # Обработка источника канала
+            if "source" in record:
+                user_identifier = client.get_type("UserIdentifier")
+                user_identifier.hashed_source = self.normalize_and_hash(record["source"], False)
+                user_data.user_identifiers.append(user_identifier)
+
+            # Обработка сегмента пользователей
+            if "user_segment" in record:
+                user_identifier = client.get_type("UserIdentifier")
+                user_identifier.hashed_user_segment = self.normalize_and_hash(record["user_segment"], False)
+                user_data.user_identifiers.append(user_identifier)
+
+            # Обработка идентификатора транзакции
+            if "transaction_id" in record:
+                user_identifier = client.get_type("UserIdentifier")
+                user_identifier.transaction_id = self.normalize_and_hash(record["transaction_id"], False)
+                user_data.user_identifiers.append(user_identifier)
+
+            # Обработка типа взаимодействия
+            if "interaction_type" in record:
+                user_identifier = client.get_type("UserIdentifier")
+                user_identifier.hashed_interaction_type = self.normalize_and_hash(record["interaction_type"], False)
+                user_data.user_identifiers.append(user_identifier)
+
+            # Обработка интересов пользователя
+            if "interests" in record:
+                user_identifier = client.get_type("UserIdentifier")
+                user_identifier.hashed_interests = self.normalize_and_hash(record["interests"], False)
+                user_data.user_identifiers.append(user_identifier)
+
+            # Обработка URL-страницы
+            if "url_visited" in record:
+                user_identifier = client.get_type("UserIdentifier")
+                user_identifier.hashed_url_visited = self.normalize_and_hash(record["url_visited"], False)
+                user_data.user_identifiers.append(user_identifier)
+
+            # Обработка типа устройства
+            if "device_type" in record:
+                user_identifier = client.get_type("UserIdentifier")
+                user_identifier.device_type = self.normalize_and_hash(record["device_type"], False)
+                user_data.user_identifiers.append(user_identifier)
+
+            # Если у нас есть идентификаторы пользователей, добавляем операцию
             if user_data.user_identifiers:
                 operation = client.get_type("OfflineUserDataJobOperation")
                 operation.create.CopyFrom(user_data)
                 operations.append(operation)
-            
+
         return operations
     
     def normalize_and_hash(self, s, remove_all_whitespace):
