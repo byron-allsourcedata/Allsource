@@ -40,7 +40,17 @@ interface FetchDataParams {
     rowsPerPage: number;
 }
 
-interface CompanyEmployeesProps {
+interface Source {
+    id: number;
+    name: string;
+    source_origin: string
+    source_type: string
+    total_records?: number;
+    matched_records?: number;
+}
+
+interface SourcesListProps {
+    createdSource: Source | null
 }
 
 interface RenderCeil {
@@ -49,7 +59,7 @@ interface RenderCeil {
 }
 
 
-const SourcesList: React.FC<CompanyEmployeesProps> = ({ }) => {
+const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
     const router = useRouter();
     const { hasNotification } = useNotification();
     const [data, setData] = useState<any[]>([]);

@@ -150,28 +150,32 @@ const SourcesTable: React.FC<CompanyEmployeesProps> = ({ status, setStatus, data
 
             // let url = `/company/employess?company_id=${companyId}&page=${page + 1}&per_page=${rowsPerPage}`;
             
+            const response = await axiosInstance.get(`/audience-sources`)
+            if (response.status === 200){
+                const [employees, count] = response.data;
+                setData(employees);
+                setCount(count || 0);
+            }
 
-    
-            // const response = await axiosInstance.get(url);
-            // const [employees, count] = response.data;
+
 
             // const count = 1
-            const count = 0
+            // const count = 0
             // const employees = [{id: 1, name: "SVO", source: "CSV File", type: "Intent", created_date: "01.01.1020", created_by: "01.01.1020", updated_date: "01.01.1020", number_of_customers: 23, matched_records: 23}]
-            const employees: Sources[] = [];
+            // const employees: Sources[] = [];
     
-            setData(employees);
-            setCount(count || 0);
+            // setData(employees);
+            // setCount(count || 0);
             setStatus("");
     
-            const options = [15, 30, 50, 100, 200, 500];
-            let RowsPerPageOptions = options.filter(option => option <= count);
-            if (RowsPerPageOptions.length < options.length) {
-                RowsPerPageOptions = [...RowsPerPageOptions, options[RowsPerPageOptions.length]];
-            }
-            setRowsPerPageOptions(RowsPerPageOptions);
-            const selectedValue = RowsPerPageOptions.includes(rowsPerPage) ? rowsPerPage : 15;
-            setRowsPerPage(selectedValue);
+            // const options = [15, 30, 50, 100, 200, 500];
+            // let RowsPerPageOptions = options.filter(option => option <= count_companies);
+            // if (RowsPerPageOptions.length < options.length) {
+            //     RowsPerPageOptions = [...RowsPerPageOptions, options[RowsPerPageOptions.length]];
+            // }
+            // setRowsPerPageOptions(RowsPerPageOptions);
+            // const selectedValue = RowsPerPageOptions.includes(rowsPerPage) ? rowsPerPage : 15;
+            // setRowsPerPage(selectedValue);
 
         } catch (error) {
             if (error instanceof AxiosError && error.response?.status === 403) {
@@ -576,7 +580,7 @@ const SourcesTable: React.FC<CompanyEmployeesProps> = ({ status, setStatus, data
                                                         { key: 'created_by', label: 'Created By'},
                                                         { key: 'updated_date', label: 'Update Date'},
                                                         { key: 'number_of_customers', label: 'Number of Customers', sortable: true},
-                                                        { key: 'matched_records', label: 'Matched Records'},
+                                                        { key: 'matched_records', label: 'Matched Records', sortable: true},
                                                         { key: 'actions', label: 'Actions'}
                                                     ].map(({ key, label, sortable = false }) => (
                                                         <TableCell
@@ -635,7 +639,7 @@ const SourcesTable: React.FC<CompanyEmployeesProps> = ({ status, setStatus, data
                                                             {/* Name Column */}
                                                             <TableCell className="sticky-cell"
                                                                 sx={{
-                                                                    ...sourcesStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, color: 'rgba(80, 82, 178, 1)', backgroundColor: '#fff'
+                                                                    ...sourcesStyles.table_array, position: 'sticky', left: '0', zIndex: 9, backgroundColor: '#fff'
 
                                                                 }} onClick={(e) => {
                                                                     e.stopPropagation();
@@ -643,28 +647,28 @@ const SourcesTable: React.FC<CompanyEmployeesProps> = ({ status, setStatus, data
                                                                     setEmployeeId(row.id)
 
                                                                 }}>
-                                                                {row.name}
+                                                                {row.source_name}
                                                             </TableCell>
 
                                                             {/* Source Column */}
                                                             <TableCell
                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative'}}
                                                             >
-                                                                {row.source}
+                                                                {row.source_origin}
                                                             </TableCell>
 
                                                             {/* Type Column */}
                                                             <TableCell
                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative'}}
                                                             >
-                                                                {row.type}
+                                                                {row.source_type}
                                                             </TableCell>
 
                                                             {/* Created date Column */}
                                                             <TableCell 
                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative'}}
                                                             >
-                                                                {row.created_date}
+                                                                {dayjs(row.created_date).isValid() ? dayjs(row.created_date).format('MMM D, YYYY') : '--'}
                                                             </TableCell>
 
                                                             {/* Created By Column */}
@@ -678,21 +682,21 @@ const SourcesTable: React.FC<CompanyEmployeesProps> = ({ status, setStatus, data
                                                             <TableCell
                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {row.updated_date}
+                                                                {dayjs(row.updated_date).isValid() ? dayjs(row.updated_date).format('MMM D, YYYY') : '--'}
                                                             </TableCell>
 
                                                             {/* Number of Customers Column */}
                                                             <TableCell
                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {row.number_of_customers}
+                                                                {row.number_of_customers ?? '--'}
                                                             </TableCell>
 
                                                             {/* Matched Records  Column */}
                                                             <TableCell
                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {row.matched_records}
+                                                                {row.matched_records ?? '--'}
                                                             </TableCell>
 
                                                             <TableCell sx={{ ...sourcesStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>

@@ -35,7 +35,10 @@ import { sources } from 'next/dist/compiled/webpack/webpack';
 import Link from '@mui/material/Link';
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 
-interface CompanyEmployeesProps {
+interface SourcesImportProps {
+    setCreatedSource: (state: Source) => void
+    setNewSource: (state: boolean) => void
+    setSources: (state: boolean) => void
 }
 
 interface Row {
@@ -56,7 +59,7 @@ interface Source {
 }
 
 
-const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
+const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewSource, setSources}) => {
     const router = useRouter();
     const [showSlider, setShowSlider] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -72,8 +75,7 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
     const [dragActive, setDragActive] = useState(false);
     const [fileSizeError, setFileSizeError] = useState(false);
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
-    const [headersinCSV, setHeadersinCSV] = useState<any>([]);
-    const [createdSource, setCreatedSource] = useState<Source[]>();
+    const [headersinCSV, setHeadersinCSV] = useState<string[]>([]);
 
     const deleteOpen = Boolean(deleteAnchorEl);
     const deleteId = deleteOpen ? 'delete-popover' : undefined;
@@ -175,6 +177,8 @@ const SourcesImport: React.FC<CompanyEmployeesProps> = ({}) => {
             })
             if (response.status === 200){
                 setCreatedSource(response.data)
+                setNewSource(true)
+                setSources(true)
             }
         } 
         catch {

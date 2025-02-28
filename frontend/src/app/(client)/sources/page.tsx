@@ -47,6 +47,15 @@ interface Sources {
     matched_records: number
 }
 
+interface Source {
+    id: number;
+    name: string;
+    source_origin: string
+    source_type: string
+    total_records?: number;
+    matched_records?: number;
+}
+
 interface FilterParams {
     from_date: number | null;
     to_date: number | null;
@@ -97,7 +106,7 @@ const Sources: React.FC = () => {
     const { hasNotification } = useNotification();
     const [data, setData] = useState<Sources[]>([]);
     const [sources, setSources] = useState<boolean>(true);
-    const [createdSource, setCreatedSource] = useState<boolean>(false);
+    const [newSource, setNewSource] = useState<boolean>(false);
     const [count_companies, setCount] = useState<number | null>(null);
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
@@ -126,21 +135,7 @@ const Sources: React.FC = () => {
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
     const [openDrawer, setOpenDrawer] = React.useState(false);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-    const [selectedIndustry, setSelectedIndustry] = React.useState<string | null>(null);
-    const [industry, setIndustry] = React.useState<string[]>([]);
-
-
-    const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, industry: string) => {
-        setSelectedIndustry(industry);
-        setAnchorEl(event.currentTarget);
-    };
-
-    const handleClosePopover = () => {
-        setAnchorEl(null);
-        setSelectedIndustry(null);
-    };
-
-    const isOpen = Boolean(anchorEl);
+    const [createdSource, setCreatedSource] = useState<Source | null >(null);
 
     useEffect(() => {
         document.body.style.overflow = 'hidden';
@@ -679,9 +674,9 @@ const Sources: React.FC = () => {
                                     pb: '18px'
                                 }
                             }}>
-                                {createdSource && 
-                                    <SourcesList />}
-                                {!createdSource &&  
+                                {newSource && 
+                                    <SourcesList createdSource={createdSource}/>}
+                                {!newSource &&  
                                     <SourcesTable setStatus={setStatus} status={status} setData={setData} data={data} setSources={setSources}/>}
                                 {showSlider && <Slider />}
                             </Box>
@@ -723,7 +718,7 @@ const Sources: React.FC = () => {
                                     pb: '18px'
                                 }
                             }}>
-                                <SourcesImport/>
+                                <SourcesImport setCreatedSource={setCreatedSource} setNewSource={setNewSource} setSources={setSources} />
                                 {showSlider && <Slider />}
                             </Box>
                         </Box>

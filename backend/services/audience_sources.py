@@ -14,8 +14,9 @@ class AudienceSourceService:
         self.default_headings = ['Email', 'Phone number', 'Last Name', 'First Name', 'Gender', 'Age', 'Order Amount', 'State', 'City', 'Zip Code']
 
 
-    def get_sources(self, page, per_page, sort_by, sort_order):
+    def get_sources(self, user, page, per_page, sort_by, sort_order):
         sources, count = self.audience_sources_persistence.get_sources(
+            user_id=user.get("id"),
             page=page,
             per_page=per_page,
             sort_by=sort_by,
@@ -30,8 +31,8 @@ class AudienceSourceService:
                 'source_name': source[1],
                 'source_origin': source[2],
                 'source_type': source[3],
-                'created_date': source[4],
-                'created_by': source[5],
+                'created_date': source[5],
+                'created_by': source[4],
                 'updated_date': source[6],
                 'total_records': source[7],
                 'matched_records': source[8]
