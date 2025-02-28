@@ -10,6 +10,7 @@ from persistence.integrations.integrations_persistence import IntegrationsPresis
 from persistence.audience_persistence import AudiencePersistence
 from persistence.integrations.external_apps_installations  import ExternalAppsInstallationsPersistence
 from .attentive import AttentiveIntegrationsService
+from .hubspot import HubspotIntegrationsService
 from .shopify import ShopifyIntegrationService
 from enums import ProccessDataSyncResult
 from datetime import datetime, timedelta
@@ -205,6 +206,10 @@ class IntegrationService:
         self.webhook = WebhookIntegrationService(self.lead_persistence, self.domain_persistence, self.integrations_user_sync_persistence, self.integration_persistence, self.client,
                                                self.million_verifier_integrations)
 
+        self.hubspot = HubspotIntegrationsService(self.domain_persistence,
+                                                self.integration_persistence,
+                                                self.lead_persistence,
+                                                self.integrations_user_sync_persistence, self.client, self.million_verifier_integrations)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):

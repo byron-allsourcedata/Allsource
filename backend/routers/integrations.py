@@ -76,7 +76,6 @@ async def create_integration(credentials: IntegrationCredentials, service_name: 
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins and standard only."
             )
-
     with integration_service as service:
         service = getattr(service, service_name.lower())
         if not service:

@@ -18,6 +18,8 @@ class WoocommerceCredentials(BaseModel):
 class ApiKeyCredentials(BaseModel):
     api_key: str 
 
+class HubSpotCredentials(BaseModel):
+    access_token: str
 
 class MailchimpCredentials(BaseModel):
     data_center: str
@@ -41,6 +43,7 @@ class IntegrationCredentials(BaseModel):
     meta: Optional[MetaCredentials] = None
     sendlane: Optional[ApiKeyCredentials] = None
     omnisend: Optional[ApiKeyCredentials] = None
+    hubspot: Optional[HubSpotCredentials] = None
     pixel_install: bool = False
     supperssion: bool = False
 
