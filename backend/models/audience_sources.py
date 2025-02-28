@@ -20,6 +20,8 @@ class AudienceSource(Base):
     __table_args__ = (
         Index('audience_sources_pkey', 'id'),
         Index('audience_sources_user_id_idx', 'user_id'),
+        Index('audience_sources_matched_records_idx', 'matched_records'),
+        Index('audience_sources_total_records_idx', 'total_records'),
     )
 
 event.listen(AudienceSource, "before_insert", create_timestamps)
