@@ -22,3 +22,4 @@ class IntegrationUserSync(Base):
     last_lead_sync_id = Column(VARCHAR(64))
     hook_url = Column(VARCHAR)
     last_sent_lead_id = Column(Integer, nullable=True)
+    method = Column(VARCHAR(8))

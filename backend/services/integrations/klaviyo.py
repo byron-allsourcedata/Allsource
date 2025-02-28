@@ -115,7 +115,7 @@ class KlaviyoIntegrationsService:
             raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
         
     
-    def edit_sync(self, leads_type: str, list_id: str, list_name: str, integrations_users_sync_id: int,  data_map: List[DataMap], domain_id: int, created_by: str,tags_id: str = None):
+    def edit_sync(self, leads_type: str, list_id: str, list_name: str, integrations_users_sync_id: int, domain_id: int, created_by: str, data_map: List[DataMap] = [], tags_id: str = None):
         credentials = self.get_credentials(domain_id)
         data_syncs = self.sync_persistence.get_filter_by(domain_id=domain_id)
         for sync in data_syncs:
@@ -148,7 +148,7 @@ class KlaviyoIntegrationsService:
             raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
         return self.__mapped_list(response.json().get('data'))
     
-    def create_and_delete_contact(self, access_token: str):
+    def test_api_key(self, access_token: str):
         json_data = {
             'data': {
                 'type': 'profile',
@@ -171,7 +171,7 @@ class KlaviyoIntegrationsService:
 
     def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
         try:
-            if self.create_and_delete_contact(credentials.klaviyo.api_key) == False:
+            if self.test_api_key(credentials.klaviyo.api_key) == False:
                 raise HTTPException(status_code=400, detail=IntegrationsStatus.CREDENTAILS_INVALID.value)
         except:
             raise HTTPException(status_code=400, detail=IntegrationsStatus.CREDENTAILS_INVALID.value)
@@ -261,9 +261,8 @@ class KlaviyoIntegrationsService:
             properties = self.__map_properties(five_x_five_user, data_map)
         else:
             properties = {}
-
+    
         phone_number = validate_and_format_phone(profile.phone_number)
-
         json_data = {
             'data': {
                 'type': 'profile',
@@ -280,13 +279,30 @@ class KlaviyoIntegrationsService:
             }
         }
         json_data['data']['attributes'] = {k: v for k, v in json_data['data']['attributes'].items() if v is not None}
-        response = self.__handle_request(
-            method='POST',
-            url='https://a.klaviyo.com/api/profiles/',
-            api_key=api_key,
-            json=json_data
+        email = profile.email
+        check_response = self.__handle_request(
+            method='GET',
+            url=f'https://a.klaviyo.com/api/profiles/?filter=equals(email,"{email}")',
+            api_key=api_key
         )
-        if response.status_code == 201:
+
+        if check_response.status_code == 200 and check_response.json().get("data"):
+            profile_id = check_response.json()["data"][0]["id"]
+            json_data['data']['id'] = profile_id
+            response = self.__handle_request(
+                method='PATCH',
+                url=f'https://a.klaviyo.com/api/profiles/{profile_id}',
+                api_key=api_key,
+                json=json_data
+            )
+        else:
+            response = self.__handle_request(
+                method='POST',
+                url='https://a.klaviyo.com/api/profiles/',
+                api_key=api_key,
+                json=json_data
+            )
+        if response.status_code in (200, 201):
                 return response.json().get('data')
         if response.status_code == 400:
                 return ProccessDataSyncResult.INCORRECT_FORMAT.value
@@ -392,14 +408,21 @@ class KlaviyoIntegrationsService:
             five_x_five_field = mapping.get("type")  
             new_field = mapping.get("value")  
             value_field = getattr(five_x_five_user, five_x_five_field, None)
+            
             if value_field is not None: 
-                if isinstance(value_field, datetime):
-                    properties[new_field] = value_field.isoformat() 
-                else:
-                    properties[new_field] = value_field 
+                properties[new_field] = value_field.isoformat() if isinstance(value_field, datetime) else value_field
+            else:
+                properties[new_field] = None
+
+        mapped_fields = {mapping.get("value") for mapping in data_map}
+        if "Time on site" in mapped_fields or "URL Visited" in mapped_fields:
+            time_on_site, url_visited = self.leads_persistence.get_visit_stats(five_x_five_user.id)
+        if "Time on site" in mapped_fields:
+            properties["Time on site"] = time_on_site
+        if "URL Visited" in mapped_fields:
+            properties["URL Visited"] = url_visited
+            
         return properties
-
-
 
     def __mapped_tags(self, tag: dict):
         return KlaviyoTags(id=tag.get('id'), tag_name=tag.get('attributes').get('name'))

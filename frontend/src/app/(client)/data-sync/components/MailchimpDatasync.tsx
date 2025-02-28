@@ -84,6 +84,8 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
     { type: 'Company Description', value: 'company_description' },
     { type: 'Related Domains', value: 'related_domains' },
     { type: 'Social Connections', value: 'social_connections' },
+    { type: 'URL Visited', value: 'url_visited' },
+    { type: 'Time on site', value: 'time_on_site' },
     { type: 'DPV Code', value: 'dpv_code' }]);
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -872,7 +874,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                                                         }
                                                     }}
                                                 />
-                                                <FormControlLabel value="added_to_cart" control={<Radio sx={{
+                                                <FormControlLabel value="abandoned_cart" control={<Radio sx={{
                                                     color: '#e4e4e4',
                                                     '&.Mui-checked': {
                                                         color: '#5052b2', // checked color

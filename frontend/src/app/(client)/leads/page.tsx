@@ -68,13 +68,6 @@ const Leads: React.FC = () => {
     const [popupData, setPopupData] = React.useState<any>(null);
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
 
-    useEffect(() => {
-        document.body.style.overflow = 'hidden';
-        return () => {
-            document.body.style.overflow = 'auto';
-        };
-    }, []);
-
     const handleOpenPopup = (row: any) => {
         setPopupData(row);
         setOpenPopup(true);
@@ -908,14 +901,17 @@ const Leads: React.FC = () => {
                 </Box>
             )}
             <Box sx={{
-                display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
+                display: 'flex', flexDirection: 'column', height: '100%', pr:'16px',
                 '@media (max-width: 900px)': {
-                    paddingRight: 0,
+                    paddingRight: 2,
                     minHeight: '100vh'
-
+                },
+                '@media (max-width: 599px)': {
+                    paddingRight: '16px',
+                    marginLeft: 0,
                 }
             }}>
-                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', }}>
                     <Box
                         sx={{
                             display: 'flex',
@@ -1114,7 +1110,7 @@ const Leads: React.FC = () => {
                             </Button>
                         </Box>
                     </Box>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, overflowX: 'auto', "@media (max-width: 600px)": { mb: 1 } }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, mb:2, overflowX: 'auto', "@media (max-width: 600px)": { mb: 1 } }}>
                         {selectedFilters.length > 0 && (
                             <Chip
                                 className='second-sub-title'
@@ -1153,14 +1149,14 @@ const Leads: React.FC = () => {
                                         borderRadius: '4.5px',
                                         backgroundColor: 'rgba(80, 82, 178, 0.10)',
                                         color: '#5F6368 !important',
-                                        lineHeight: '16px !important'
+                                        lineHeight: '16px !important',
                                     }}
                                 />
                             );
                         })}
                     </Box>
                     <Box sx={{
-                        flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px', pb: '20px',
+                         display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pb: '20px',
                         '@media (max-width: 900px)': {
                             pt: '2px',
                             pb: '18px'
@@ -1234,7 +1230,7 @@ const Leads: React.FC = () => {
                                 </Typography>
                             </Box>
                         ) : (
-                            <Grid container spacing={1} sx={{ flex: 1 }}>
+                            <Grid container spacing={1} sx={{ }}>
                                 <Grid item xs={12}>
                                     <TableContainer
                                         component={Paper}

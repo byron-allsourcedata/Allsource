@@ -19,6 +19,8 @@ from models.five_x_five_users_emails import FiveXFiveUsersEmails
 from models.five_x_five_users_locations import FiveXFiveUsersLocations
 from models.five_x_five_users_phones import FiveXFiveUsersPhones
 from models.leads import Lead
+from enums import ProccessDataSyncResult
+from utils import extract_first_email
 from models.leads_orders import LeadOrders
 from models.leads_users import LeadUser
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
@@ -469,7 +471,31 @@ class LeadsPersistence:
         )
         
         return query.all()
+    
+    def get_visit_stats(self, five_x_five_user_id: int):
+        recurring_visits_subquery = (
+            self.db.query(
+                LeadsVisits.lead_id,
+                func.count().label('url_visited')
+            )
+            .group_by(LeadsVisits.lead_id)
+            .subquery()
+        )
 
+        result = (
+            self.db.query(
+                LeadsVisits.full_time_sec.label('time_on_site'),
+                recurring_visits_subquery.c.url_visited,
+            )
+            .select_from(LeadUser)
+            .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)
+            .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
+            .outerjoin(recurring_visits_subquery, recurring_visits_subquery.c.lead_id == LeadUser.id)
+            .filter(FiveXFiveUser.id == five_x_five_user_id)
+            .first()
+        )
+
+        return (result.time_on_site, result.url_visited) if result else (0, 0)
     
     def get_page_views_per_day(self, domain_id, start_date, end_date):
         query = (
@@ -577,6 +603,20 @@ class LeadsPersistence:
 
     def get_lead_data(self, lead_id):
         return self.db.query(FiveXFiveUser).filter(FiveXFiveUser.id == lead_id).first()
+    
+    def get_latest_page_time(self, lead_id):
+        latest_page_time_subquery = (
+            self.db.query(
+                LeadsRequests.page,
+                LeadsRequests.page_parameters,
+                func.sum(LeadsRequests.spent_time_sec).label("total_spent_time"),
+                func.count().label("count")
+            )
+            .filter(LeadsRequests.lead_id == lead_id)
+            .group_by(LeadsRequests.page, LeadsRequests.page_parameters)
+            .all()
+        )
+        return latest_page_time_subquery
 
     def get_inactive_leads_user(self, user_id):
         return (
@@ -640,7 +680,6 @@ class LeadsPersistence:
             })
 
         return result_query, self.db.query(States).all(), leads_requests
-
 
     def get_full_user_leads_by_filters(self, domain_id, from_date, to_date, regions, page_visits,
                                    average_time_spent, behavior_type, status, recurring_visits, sort_by, sort_order,
@@ -859,8 +898,27 @@ class LeadsPersistence:
         return self.db.query(LeadUser).filter_by(domain_id=domain_id, **filter_by).all()
     
     def get_last_leads_for_zapier(self, domain_id: int):
-        lead_users = self.db.query(LeadUser).filter_by(domain_id=domain_id).order_by(LeadUser.created_at.desc()).limit(3).all()
+        lead_users = (
+            self.db.query(LeadUser)
+            .filter(LeadUser.domain_id == domain_id)\
+            .order_by(LeadUser.created_at.desc())
+            .limit(10)
+            .all()
+        )
+        if not lead_users:
+            return None
+        
+        recurring_visits_subquery = (
+            self.db.query(
+                LeadsVisits.lead_id,
+                func.count(LeadsVisits.id).label('url_visited')
+            )
+            .group_by(LeadsVisits.lead_id)
+            .subquery()
+        )
+
         five_x_five_user_ids = [user.five_x_five_user_id for user in lead_users]
+
         five_x_five_users = (
             self.db.query(
                 FiveXFiveUser.id,
@@ -870,6 +928,10 @@ class LeadsPersistence:
                 FiveXFiveUser.gender,
                 FiveXFiveUser.personal_phone,
                 FiveXFiveUser.personal_emails,
+                FiveXFiveUser.business_email,
+                FiveXFiveUser.additional_personal_emails,
+                FiveXFiveUser.business_email_last_seen,
+                FiveXFiveUser.personal_emails_last_seen,
                 FiveXFiveUser.last_name,
                 FiveXFiveUser.personal_city,
                 FiveXFiveUser.personal_state,
@@ -883,33 +945,19 @@ class LeadsPersistence:
                 FiveXFiveUser.personal_address,
                 FiveXFiveUser.married,
                 FiveXFiveUser.homeowner,
-                FiveXFiveUser.dpv_code
+                FiveXFiveUser.dpv_code,
+                FiveXFiveUser.children,
+                FiveXFiveUser.income_range,
+                LeadsVisits.full_time_sec.label('time_on_site'),
+                recurring_visits_subquery.c.url_visited,
             )
+            .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
+            .outerjoin(LeadsVisits, LeadsVisits.lead_id == LeadUser.id)
+            .outerjoin(recurring_visits_subquery, recurring_visits_subquery.c.lead_id == LeadUser.id)
             .filter(FiveXFiveUser.id.in_(five_x_five_user_ids))
             .all()
         )
-
-        result = [
-            {
-                column: (
-                    format_phone_number(getattr(user, column, "N/A"))
-                    if "phone" in column else
-                    (getattr(user, column, "N/A").lower() if column == "gender" and getattr(user, column, None) else getattr(user, column, "N/A"))
-                )
-                for column in [
-                    "id", "first_name", "mobile_phone", "direct_number", "gender", "personal_phone", 
-                    "personal_emails", "last_name", "personal_city", "personal_state", "company_name", 
-                    "company_domain", 
-                    "job_title", "last_updated", "age_min", "age_max", 
-                    "personal_address", "personal_zip",
-                    "married", "children", "income_range", "homeowner", "dpv_code"
-                ]
-            }
-            for user in five_x_five_users
-        ]
-        
-        return result
-
+        return five_x_five_users
         
     def search_contact(self, start_letter, domain_id):
         letters = start_letter.split()

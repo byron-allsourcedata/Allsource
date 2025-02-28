@@ -117,7 +117,7 @@ const PartnersAssets: React.FC = () => {
                 backgroundColor: '#fff',
                 width: '100%',
                 padding: 0,
-                margin: '3rem auto 0rem',
+                margin: '0rem auto',
                 display: 'flex',
                 flexDirection: 'column',
                 minHeight: '77vh',

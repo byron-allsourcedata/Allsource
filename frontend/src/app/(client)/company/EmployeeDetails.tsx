@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Drawer, Backdrop, Box, Typography, IconButton, Button, Divider, Link } from '@mui/material';
+import { Drawer, Backdrop, Box, Typography, IconButton, Button, LinearProgress, Link } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { companyStyles } from './companyStyles';
+import { styled } from '@mui/material/styles';
 import Image from 'next/image'
 import DownloadIcon from '@mui/icons-material/Download';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
@@ -45,8 +46,19 @@ const TruncatedText: React.FC<{ text: string; limit: number }> = ({ text, limit 
     );
 };
 
+const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
+    height: 4,
+    borderRadius: 0,
+    backgroundColor: '#c6dafc',
+    '& .MuiLinearProgress-bar': {
+      borderRadius: 5,
+      backgroundColor: '#4285f4',
+    },
+  }));
+
 const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, employeeId, employeeisUnlocked, updateEmployeeCallback }) => {
     const [popupData, setPopupData] = useState<any>()
+    const [processing, setProcessing] = useState(false)
 
     const handleDownload = async () => {
         try {
@@ -72,6 +84,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
     };
 
     const getStatusCredits = () => {
+        setProcessing(true)
         updateEmployeeCallback(popupData.id.value)
     }
 
@@ -97,6 +110,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
     };
 
     const fetchEmployees = async () => {
+        setProcessing(true)
         try {
             if (employeeId) {
                 const response = await axiosInstance.get(`/company/employees/${employeeId}?company_id=${companyId}`);
@@ -107,7 +121,10 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                 }
             }
         } catch {
+        } finally {
+            setProcessing(false)
         }
+        
     };
 
     useEffect(() => {
@@ -167,6 +184,18 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                     },
                 }}
             >
+                {processing && (
+                    <Box
+                        sx={{
+                        width: '100%',
+                        position: 'fixed',
+                        top: '4.2rem',
+                        zIndex: 1200,   
+                        }}
+                    >
+                        <BorderLinearProgress variant="indeterminate" />
+                    </Box>
+                )}
                 <Box sx={{ width: '100%', boxSizing: 'border-box', display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, pb: 1.35, borderBottom: '1px solid #e4e4e4', position: "sticky", top: 0, zIndex: 1400, backgroundColor: "#fff" }}>
                     <Box sx={{ display: 'flex', gap: 4 }}>
                         <Typography sx={{ fontSize: '16px', fontFamily: 'Nunito Sans', fontWeight: 600, lineHeight: '21.82px', color: 'rgba(32, 33, 36, 1)' }}>

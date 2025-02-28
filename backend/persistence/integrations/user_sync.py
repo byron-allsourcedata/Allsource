@@ -63,10 +63,12 @@ class IntegrationsUserSyncPersistence:
             IntegrationUserSync.customer_id,
             IntegrationUserSync.list_name,
             IntegrationUserSync.list_id,
+            IntegrationUserSync.hook_url,
+            IntegrationUserSync.method,
             UserIntegration.service_name,
             UserIntegration.is_with_suppression,
             UserIntegration.platform_user_id,
-            UserIntegration.error_message,
+            UserIntegration.error_message
         ).join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id) \
         .filter(IntegrationUserSync.domain_id == domain_id)
 
@@ -93,6 +95,8 @@ class IntegrationsUserSyncPersistence:
                     'type_error': sync.error_message,
                     'list_id': sync.list_id,
                     'customer_id': sync.customer_id
+                    'hook_url': sync.hook_url,
+                    'method': sync.method
                 }
         syncs = query.order_by(IntegrationUserSync.id).all()
         return [{
@@ -113,6 +117,8 @@ class IntegrationsUserSyncPersistence:
             'type_error': sync.error_message,
             'customer_id': sync.customer_id,
             'list_id': sync.list_id
+            'hook_url': sync.hook_url,
+            'method': sync.method
         } for sync in syncs]
 
     def get_data_sync_filter_by(self, **filter_by):

@@ -603,11 +603,20 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
                 lead_user.is_converted_sales = True
                 session.flush()
             order_detail = partner_uid_dict.get('order_detail')
+            order_platform_order_id = None
+            order_total_price = 0
+            order_currency_code = None
+            order_platform_created_at = requested_at
+            if order_detail:
+                order_platform_order_id = order_detail.get('platform_order_id')
+                order_total_price = order_detail.get('total_price')
+                order_currency_code = order_detail.get('currency')
+                order_platform_created_at = order_detail.get('platform_created_at', requested_at)
             session.add(LeadOrders(lead_user_id=lead_user.id,
-                                   platform_order_id=order_detail.get('platform_order_id'),
-                                   total_price=order_detail.get('total_price'),
-                                   currency_code=order_detail.get('currency'),
-                                   platform_created_at=order_detail['platform_created_at'], created_at=datetime.now()))
+                                   platform_order_id=order_platform_order_id,
+                                   total_price=order_total_price,
+                                   currency_code=order_currency_code,
+                                   platform_created_at=order_platform_created_at))
             existing_record = session.query(LeadsUsersOrdered).filter_by(lead_user_id=lead_user.id).first()
             if existing_record:
                 existing_record.ordered_at = requested_at

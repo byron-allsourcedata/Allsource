@@ -12,6 +12,7 @@ import OmnisendConnect from "./OmnisendConnect"
 import MailchimpConnect from "./MailchimpConnect"
 import SendlaneConnect from "./SendlaneConnect"
 import SlackConnectPopup from "./SlackConnectPopup"
+import WebhookConnectPopup from "./WebhookConnectPopup"
 import ZapierConnectPopup from "./ZapierConnectPopup"
 import GoogleADSConnectPopup from "./GoogleADSConnectPopup"
 
@@ -47,6 +48,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
     const [openZapierConnect, setOPenZapierComnect] = useState(false)
     const [openSlackConnect, setOpenSlackConnect] = useState(false)
     const [openGoogleAdsConnect, setOpenGoogleAdsConnect] = useState(false)
+    const [openWebhookConnect, setOpenWebhookConnect] = useState(false)
     const [searchQuery, setSearchQuery] = useState("");
     const handleClose = () => {
         setOpenMetaConnect(false)
@@ -59,6 +61,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
         setOPenZapierComnect(false)
         setOpenSlackConnect(false)
         setOpenGoogleAdsConnect(false)
+        setOpenWebhookConnect(false)
     }
 
     const saveIntegration = (new_integration: any) => {
@@ -404,6 +407,26 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                             </ListItemButton>
                                         </ListItem>
                                     )}
+                                {filteredIntegrations.some(integration => integration.service_name === 'webhook') && (
+                                    !integrationsCredentials.some(integration => integration.service_name === 'webhook')) && (
+                                        <ListItem sx={{
+                                            p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                            '@media (max-width:600px)': {
+                                                flexBasis: 'calc(50% - 8px)'
+                                            }
+                                        }}>
+                                            <ListItemButton onClick={() => setOpenWebhookConnect(true)} sx={{ p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center' }}>
+                                                <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                    <Image src="/webhook-icon.svg" alt="webhook" height={24} width={24} />
+                                                </ListItemIcon>
+                                                <ListItemText primary="Webhook" primaryTypographyProps={{
+                                                    sx: {
+                                                        ...intergrations.integrate
+                                                    }
+                                                }} />
+                                            </ListItemButton>
+                                        </ListItem>
+                                    )}
                                 {filteredIntegrations.some(integration => integration.service_name === 'slack') && (
                                     !integrationsCredentials.some(integration => integration.service_name === 'slack')) && (
                                         <ListItem sx={{
@@ -463,6 +486,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
             <ZapierConnectPopup open={openZapierConnect} handlePopupClose={handleClose} />
             <SlackConnectPopup open={openSlackConnect} handlePopupClose={() => setOpenSlackConnect(false)} onSave={saveIntegration} />
             <GoogleADSConnectPopup open={openGoogleAdsConnect} handlePopupClose={() => setOpenGoogleAdsConnect(false)} onSave={saveIntegration} />
+            <WebhookConnectPopup open={openWebhookConnect} handleClose={() => setOpenWebhookConnect(false)} onSave={saveIntegration} />
         </>
     )
 }

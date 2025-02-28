@@ -19,7 +19,7 @@ interface ClientLayoutProps {
 
 export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   const pathname = usePathname(); // Get the current path
-  const excludedPaths = ['/signin', '/signup', '/email-verificate', '/account-setup', '/reset-password', '/reset-password/confirm-send', '/choose-plan', '/authentication/verify-token', '/admin/users', '/admin/assets', '/admin/partners', '/forgot-password', '/admin', '/thanks-installed-app'];
+  const excludedPaths = ['/signin', '/signup', '/email-verificate', '/account-setup', '/reset-password', '/reset-password/confirm-send', '/choose-plan', '/authentication/verify-token', '/forgot-password', '/thanks-installed-app'];
   const isAuthenticated = !excludedPaths.includes(pathname);
   const [showSlider, setSlider] = useState(false);
   const { newNotification } = useSSE();
@@ -80,13 +80,11 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
     ) : (
       <> 
       <Header NewRequestNotification={hasNewNotifications} />
-      <Grid container sx={{
+      <Grid container className="page-container" sx={{
         display: 'flex',
         flexWrap: 'nowrap',
         overflowX: 'hidden',
-        paddingRight: '16px',
         border: 'none',
-        paddingTop: '4.25rem',
         '@media (max-width: 899px)': {
           paddingTop: '68px',
           paddingRight: 0,
@@ -119,14 +117,15 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
             flexGrow: 1,
             padding: '0px 0px 0px 24px',
             minWidth: 0,
-            pt: latestNotification || newNotification ? '2.6rem' : '0rem',
+            overflowY: 'hidden',
             marginLeft: '142px',
             '@media (max-width: 899px)': {
-              padding: '0 16px 32px',
+              overflowY: 'hidden',
+              padding: '0 0 16px 16px',
               marginLeft: 0,
             },
             '@media (max-width: 599px)': {
-              padding: '0 16px 16px',
+              padding: '0 0px 16px 16px',
               marginLeft: 0,
             }
           }}>

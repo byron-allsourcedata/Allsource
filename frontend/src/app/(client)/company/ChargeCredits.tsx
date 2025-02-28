@@ -6,17 +6,14 @@ import axiosInstance from '../../../axios/axiosInterceptorInstance';
 interface PopupDetailsProps {
     open: boolean;
     onClose: () => void;
-    updateEmployeeCallback: (id: number) => void
-    id: number | null
+    updateEmployeeCallback: () => void
 }
 
 
-const PopupChargeCredits: React.FC<PopupDetailsProps> = ({ open, onClose, updateEmployeeCallback, id }) => {
+const PopupChargeCredits: React.FC<PopupDetailsProps> = ({ open, onClose, updateEmployeeCallback }) => {
     
-    const handleSubmit = () => {
-        if (id) {
-            updateEmployeeCallback(id)
-        }
+    const handleSubmit = () => {    
+        updateEmployeeCallback()
         onClose()
     }
 

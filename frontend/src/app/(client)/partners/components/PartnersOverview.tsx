@@ -45,7 +45,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
     const [connectedAccountId, setConnectedAccountId] = useState();
     const [referralLink, setReferralLink] = useState('');
     const [discountCodeOptions, setDiscountCodeOptions] = useState<ReferralDiscountCode[]>([]);
-    const [discountCode, setDiscountCode] = useState<ReferralDiscountCode>();
+    const [discountCode, setDiscountCode] = useState<ReferralDiscountCode>(withoutDiscountCode);
     const [initialDiscountCode, setInitialDiscountCode] = useState('');
 
     const handleDiscountCodeChange = async (event: SelectChangeEvent<string>) => {
@@ -159,11 +159,12 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
         setIsLoading(true)
         try {
             const responseOverview = await axiosInstance.get('referral/overview')
+            const responseDetails = await axiosInstance.get(`referral/details`)
             setConnectedAccountId(responseOverview.data.connected_stripe_account_id)
             setStripeConnect(responseOverview.data.is_stripe_connected)
             setCurrentDue(responseOverview.data.stripe_connected_currently_due)
             setStripeEmail(responseOverview.data.stripe_connected_email)
-            const responseDetails = await axiosInstance.get(`referral/details`)
+
             setDiscountCodeOptions(responseDetails.data.discount_codes)
             const fullReferralLink = `${process.env.NEXT_PUBLIC_BASE_URL}/signup?referral=${responseDetails.data.referral_code}`;
             setReferralLink(fullReferralLink);
@@ -205,7 +206,6 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                 backgroundColor: '#fff',
                 width: '100%',
                 padding: 0,
-                margin: '3rem auto 0rem',
                 '@media (max-width: 600px)': { margin: '0rem auto 0rem' }
             }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', position: 'relative', gap: 2 }}>

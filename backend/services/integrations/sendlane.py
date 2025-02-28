@@ -169,7 +169,9 @@ class SendlaneIntegrationService:
             return profile
         
         json = {
-            'contacts': [{**profile.model_dump()}]
+            'contacts': [{
+                **profile.model_dump()
+            }]
         }
         response = self.__handle_request(f'/lists/{list_id}/contacts', api_key=access_token, json=json, method="POST")
         if response.status_code == 401:
@@ -235,10 +237,9 @@ class SendlaneIntegrationService:
             first_email = first_email.split(',')[-1].strip()
         first_phone = format_phone_number(first_phone)
         phone_number = validate_and_format_phone(first_phone)
-        
         return SendlaneContact(
             email=first_email,
             first_name=five_x_five_user.first_name or None,
             last_name=five_x_five_user.last_name or None,
-            phone=phone_number.split(', ')[-1] if phone_number else None,
+            phone=phone_number.split(', ')[-1] if phone_number else None
         )

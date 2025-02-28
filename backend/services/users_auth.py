@@ -54,7 +54,7 @@ class UsersAuth:
         self.domain_persistence = domain_persistence
         self.referral_persistence_service = referral_persistence_service
         self.UNLIMITED = -1
-        self.FREE_TRIAL_DAYS = 14
+        self.FREE_TRIAL_DAYS = 28
 
     def get_utc_aware_date(self):
         return datetime.now(timezone.utc).replace(microsecond=0)

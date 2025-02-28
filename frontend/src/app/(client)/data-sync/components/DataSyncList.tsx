@@ -33,6 +33,7 @@ import { datasyncStyle } from "@/app/(client)/data-sync/datasyncStyle";
 import MailchimpDatasync from "./MailchimpDatasync";
 import OmnisendDataSync from "./OmnisendDataSync";
 import SendlaneDatasync from "./SendlaneDatasync";
+import WebhookDatasync from "./WebhookDatasync";
 import SlackDatasync from "./SlackDataSync";
 import GoogleADSDatasync from "./GoogleADSDataSync";
 import CustomTablePagination from "@/components/CustomTablePagination";
@@ -46,6 +47,7 @@ import ShopifySettings from "@/components/ShopifySettings";
 import ZapierConnectPopup from "@/components/ZapierConnectPopup";
 import SlackConnectPopup from "@/components/SlackConnectPopup";
 import GoogleADSConnectPopup from "@/components/GoogleADSConnectPopup";
+import WebhookConnectPopup from "@/components/WebhookConnectPopup";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface DataSyncProps {
@@ -80,6 +82,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   const [totalRows, setTotalRows] = useState(0);
   const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
   const [sendlaneIconPopupOpen, setOpenSendlaneIconPopup] = useState(false);
+  const [webhookIconPopupOpen, setOpenWebhookIconPopup] = useState(false);
   const [slackIconPopupOpen, setOpenSlackIconPopup] = useState(false);
   const [googleADSIconPopupOpen, setOpenGoogleADSIconPopup] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
@@ -99,6 +102,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   const [openGoogleADSConnect, setOpenGoogleADSConnect] = useState(false);
   const [openZapierConnect, setOPenZapierComnect] = useState(false);
   const [openSlackConnect, setOpenSlackConnect] = useState(false);
+  const [openWebhookConnect, setOpenWebhookConnect] = useState(false);
   const handleCloseIntegrate = () => {
     setOpenMetaConnect(false);
     setOpenKlaviyoConnect(false);
@@ -186,7 +190,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
           const typeMapping: Record<string, string> = {
             "All Contacts": "allContats",
             "View Product": "viewed_product",
-            "Add To Cart": "added_to_cart",
+            "Abandoned cart": "abandoned_cart",
             Visitor: "visitor",
           };
           return Object.values(allData).filter((item) => {
@@ -303,6 +307,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
       case "zapier":
         return (
           <Image src={"/zapier-icon.svg"} alt="zapier" width={18} height={18} />
+        );
+      case "webhook":
+        return (
+          <Image src={"/webhook-icon.svg"} alt="webhook" width={18} height={18} />
         );
       case "slack":
         return (
@@ -480,6 +488,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
         setOpenSlackIconPopup(true);
       } else if (dataSyncPlatform === "google_ads") {
         setOpenGoogleADSIconPopup(true);
+      } else if (dataSyncPlatform === "webhook") {
+        setOpenWebhookIconPopup(true);
       }
       setIsLoading(false);
       setAnchorEl(null);
@@ -488,6 +498,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 
   const handleSendlaneIconPopupClose = () => {
     setOpenSendlaneIconPopup(false);
+  };
+
+  const handleWebhookIconPopupClose = () => {
+    setOpenWebhookIconPopup(false);
   };
 
   const handleSlackIconPopupClose = () => {
@@ -569,6 +583,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
             setOpenSendlaneConnect(true);
           } else if (dataSyncPlatform === "google_ads") {
             setOpenGoogleADSConnect(true);
+          } else if (dataSyncPlatform === "webhook") {
+            setOpenWebhookConnect(true);
           }
           setIsLoading(false);
           setAnchorEl(null);
@@ -588,6 +604,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
             setOpenSendlaneIconPopup(true);
           } else if (dataSyncPlatform === "google_ads") {
             setOpenGoogleADSIconPopup(true);
+          } else if (dataSyncPlatform === "webhook") {
+            setOpenWebhookIconPopup(true);
           }
           setIsLoading(false);
           setAnchorEl(null);
@@ -625,8 +643,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
         return "Converted sales";
       case "visitor":
         return "Visitors";
-      case "added_to_cart":
-        return "Add To Cart";
+      case "abandoned_cart":
+        return "Abandoned cart";
       default:
         return null;
     }
@@ -1150,6 +1168,16 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
             />
           </>
         )}
+        {webhookIconPopupOpen && isEdit && (
+          <>
+            <WebhookDatasync
+              open={webhookIconPopupOpen}
+              isEdit={isEdit}
+              onClose={handleWebhookIconPopupClose}
+              data={data.find((item) => item.id === selectedId)}
+            />
+          </>
+        )}
         {slackIconPopupOpen && isEdit && (
           <>
             <SlackDatasync
@@ -1199,6 +1227,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
           handlePopupClose={() => { setOpenGoogleADSConnect(false), setIsInvalidApiKey(false) }}
           initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'google_ads')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
         />
+        <WebhookConnectPopup open={openWebhookConnect} handleClose={() => { setOpenWebhookConnect(false), setIsInvalidApiKey(false) }}
+          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'webhook')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
         <ZapierConnectPopup
           open={openZapierConnect}
           handlePopupClose={handleCloseIntegrate}

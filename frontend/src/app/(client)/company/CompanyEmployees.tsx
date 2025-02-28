@@ -135,6 +135,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     };
 
     const getEmployeeById = async (id: number) => {
+        setLoading(true)
         try {
             const response = await axiosInstance.get(`/company/employee?id=${id}&company_id=${companyId}`)
             if (response.status === 200){
@@ -153,10 +154,14 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
         } 
         catch {
         }
+        finally {
+            setLoading(false)
+        }
     }
 
-    const chargeCredit = async (id: number) => {
+    const chargeCredit = async (id: number | null) => {
         setLoading(true);
+        setEmployeeisUnlocked(false)
         try {
             if (id){
                 const response = await axiosInstance.put('/subscriptions/charge-credit', {five_x_five_id: id}, {
@@ -168,8 +173,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
             }
         } 
         catch {
-        }
-        finally {
             setLoading(false);
         }
     }
@@ -201,6 +204,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
         if (data?.visibility_status === "hidden") {
             return <UnlockButton onClick={ () => {
                 getStatusCredits(id)
+                setEmployeeId(id)
             }
         } label="Unlock contact" />;
         }
@@ -1092,8 +1096,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                         />
                     <PopupChargeCredits open={creditsChargePopup}
                         onClose={() => setCreditsChargePopup(false)}
-                        updateEmployeeCallback={chargeCredit}
-                        id={employeeId}
+                        updateEmployeeCallback={() => chargeCredit(employeeId)}
                     />
                     <UpgradePlanPopup open={upgradePlanPopup}
                         handleClose={() => setUpgradePlanPopup(false)}

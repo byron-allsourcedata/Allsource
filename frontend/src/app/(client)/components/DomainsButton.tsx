@@ -329,7 +329,7 @@ const DomainButton: React.FC = () => {
         sx={{ '& .MuiMenu-list': { padding: '2px' } }}
       >
         {sourcePlatform !== 'shopify' && (
-          <React.Fragment>
+          <Box>
             <MenuItem onClick={() => setDomainPopup(true)}>
               <Typography className='second-sub-title' sx={{ color: '#5052B2 ' }}> + Add new domain</Typography>
             </MenuItem>
@@ -338,7 +338,7 @@ const DomainButton: React.FC = () => {
               handleClose={() => setDomainPopup(false)}
               handleSave={handleSave}
             />
-          </React.Fragment>
+          </Box>
         )}
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginTop: '0.5rem' }}>
           <span style={{ border: '1px solid #CDCDCD', marginBottom: '0.5rem', width: '100%' }}></span>
