@@ -61,3 +61,8 @@ class AudienceSourcesPersistence:
         self.db.add(source)
         self.db.commit()
         return source
+    
+
+    def delete_source(self, source_id):
+        self.db.query(AudienceSource).filter(AudienceSource.id == source_id).delete()
+        self.db.commit()

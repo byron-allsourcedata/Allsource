@@ -82,5 +82,8 @@ class AudienceSourceService:
             logger.debug('Database error during creation')
 
         return created_data
+    
 
-
+    def delete_source(self, id):
+        self.audience_sources_persistence.delete_source(id)
+        return True

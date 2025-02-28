@@ -52,10 +52,10 @@ interface Sources {
     matched_records?: number
 }
 
-interface CompanyEmployeesProps {
+interface SourceTableProps {
     setStatus: (status: string) => void
     status: string | null
-    setData: (data: Sources[]) => void
+    setData: (data: Sources[] | ((prevData: Sources[]) => Sources[])) => void;
     data: Sources[]
     setSources: (newState: boolean) => void
 }
@@ -66,7 +66,7 @@ interface RenderCeil {
 }
 
 
-const SourcesTable: React.FC<CompanyEmployeesProps> = ({ status, setStatus, data, setData, setSources }) => {
+const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, setData, setSources }) => {
     const router = useRouter();
     const { hasNotification } = useNotification();
     const [count_companies, setCount] = useState<number | null>(null);
@@ -89,10 +89,12 @@ const SourcesTable: React.FC<CompanyEmployeesProps> = ({ status, setStatus, data
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [selectedJobTitle, setSelectedJobTitle] = React.useState<string | null>(null);
     const [employeeId, setEmployeeId] = useState<number | null>(null)
+    const [selectedRowData, setSelectedRowData] = useState<Sources | null>(null);
 
 
-    const handleOpenPopover = (event: React.MouseEvent<HTMLElement>) => {
+    const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, rowData: Sources) => {
         setAnchorEl(event.currentTarget);
+        setSelectedRowData(rowData);
     };
 
     const handleClosePopover = () => {
@@ -136,6 +138,25 @@ const SourcesTable: React.FC<CompanyEmployeesProps> = ({ status, setStatus, data
         setRowsPerPage(parseInt(event.target.value as string, 10));
         setPage(0);
     };
+
+
+    const handleDeleteSource = async () => {
+        setIsLoading(true);
+        try {
+            if (selectedRowData && selectedRowData.id){
+                const response = await axiosInstance.delete(`/audience-sources/${selectedRowData.id}`)
+                if (response.status === 200){
+                    showToast("Source successfully deleted!")
+                    setData((prevAccounts: Sources[]) =>
+                        prevAccounts.filter((item: Sources) => item.id !== selectedRowData.id)
+                    );
+                }
+            }
+        } catch {
+        } finally {
+            setIsLoading(false);
+        }
+    }
 
 
     
@@ -706,7 +727,7 @@ const SourcesTable: React.FC<CompanyEmployeesProps> = ({ status, setStatus, data
                                                             </TableCell>
 
                                                             <TableCell sx={{ ...sourcesStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
-                                                                <IconButton onClick={(event) => handleOpenPopover(event)} sx={{ ':hover': { backgroundColor: 'transparent' }}} >
+                                                                <IconButton onClick={(event) => handleOpenPopover(event, row)} sx={{ ':hover': { backgroundColor: 'transparent' }}} >
                                                                     <Image src='/more_horizontal.svg' alt='more' height={16.18} width={22.91} />
                                                                 </IconButton>
 
@@ -735,6 +756,7 @@ const SourcesTable: React.FC<CompanyEmployeesProps> = ({ status, setStatus, data
                                                                         </ListItemButton>
                                                                         <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
                                                                                 handleClosePopover()
+                                                                                handleDeleteSource()
                                                                         }}>
                                                                             <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Remove"/>
                                                                         </ListItemButton>

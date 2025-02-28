@@ -71,7 +71,7 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
     const [status, setStatus] = useState<string | null>(null);
     const [showSlider, setShowSlider] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
     const dropdownOpen = Boolean(dropdownEl);
     const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());

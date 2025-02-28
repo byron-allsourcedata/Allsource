@@ -393,7 +393,7 @@ def parse_jwt_data(Authorization: Annotated[str, Header()]) -> Token:
         raise InvalidToken
 
 
-def check_user_authorization(request: Request, Authorization: Annotated[str, Header()],
+def check_user_authorization(Authorization: Annotated[str, Header()],
                              user_persistence_service: UserPersistence = Depends(
                                  get_user_persistence_service), users_auth_service: UsersAuth = Depends(
             get_users_auth_service)) -> Token:
@@ -411,7 +411,6 @@ def check_user_authorization(request: Request, Authorization: Annotated[str, Hea
             status_code=status.HTTP_403_FORBIDDEN,
             detail={'status': auth_status.value}
         )
-    request.state.user = user
     return user
 
 
