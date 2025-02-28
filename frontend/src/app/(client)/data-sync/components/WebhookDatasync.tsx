@@ -81,7 +81,6 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
         { type: 'dpv_code', value: 'dpv_code' },
         { type: 'time_on_site', value: 'time_on_site' },
         { type: 'url_visited', value: 'url_visited' },
-        { type: 'business_phone', value: 'business_phone' },
         { type: 'business_email', value: 'business_email' },
         { type: 'urls_visited', value: 'urls_visited' },
         { type: 'urls_visited_with_parameters', value: 'urls_visited_with_parameters' },
