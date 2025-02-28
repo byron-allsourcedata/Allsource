@@ -66,7 +66,8 @@ class IntegrationsUserSyncPersistence:
             UserIntegration.service_name,
             UserIntegration.is_with_suppression,
             UserIntegration.platform_user_id,
-            UserIntegration.error_message
+            UserIntegration.error_message,
+            UserIntegration.is_failed
         ).join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id) \
         .filter(IntegrationUserSync.domain_id == domain_id)
 
@@ -89,7 +90,7 @@ class IntegrationsUserSyncPersistence:
                     'createdBy': sync.created_by,
                     'accountId': sync.platform_user_id,
                     'data_map': sync.data_map,
-                    'syncStatus': sync.sync_status,
+                    'syncStatus': False if sync.is_failed == True else sync.sync_status,
                     'type_error': sync.error_message,
                     'hook_url': sync.hook_url,
                     'method': sync.method
@@ -109,7 +110,7 @@ class IntegrationsUserSyncPersistence:
             'createdBy': sync.created_by,
             'accountId': sync.platform_user_id,
             'data_map': sync.data_map,
-            'syncStatus': sync.sync_status,
+            'syncStatus': False if sync.is_failed == True else sync.sync_status,
             'type_error': sync.error_message,
             'hook_url': sync.hook_url,
             'method': sync.method

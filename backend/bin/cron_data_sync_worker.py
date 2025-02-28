@@ -89,7 +89,8 @@ def update_users_integrations(session, status, integration_data_sync_id, service
                 'is_failed': True,
                 'error_message': status
                 })
-        session.query(IntegrationUserSync).filter(IntegrationUserSync.id == integration_data_sync_id).update({
+            
+        session.query(IntegrationUserSync).filter(IntegrationUserSync.integration_id == user_domain_integration_id).update({
             'sync_status': False,
             })
         session.commit()
