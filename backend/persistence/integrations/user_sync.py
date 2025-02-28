@@ -91,6 +91,7 @@ class IntegrationsUserSyncPersistence:
                     'accountId': sync.platform_user_id,
                     'data_map': sync.data_map,
                     'syncStatus': False if sync.is_failed == True else sync.sync_status,
+                    'integration_is_failed': sync.is_failed,
                     'type_error': sync.error_message,
                     'hook_url': sync.hook_url,
                     'method': sync.method
@@ -111,6 +112,7 @@ class IntegrationsUserSyncPersistence:
             'accountId': sync.platform_user_id,
             'data_map': sync.data_map,
             'syncStatus': False if sync.is_failed == True else sync.sync_status,
+            'integration_is_failed': sync.is_failed,
             'type_error': sync.error_message,
             'hook_url': sync.hook_url,
             'method': sync.method
