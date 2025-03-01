@@ -11,7 +11,7 @@ export async function POST(req) {
     const fileName = `audience_sources/${currentTime}`;
 
     const s3Client = new S3Client({
-      region: "us-east-2",
+      region: "eu-west-1",
       credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
