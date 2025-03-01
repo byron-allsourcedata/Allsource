@@ -254,7 +254,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                     resetToDefaultValues();
                     onClose();
                     showToast('Data sync updated successfully');
-                    //triggerSync();
+                    triggerSync();
                 }
             } else {
                 const response = await axiosInstance.post('/data-sync/sync', {

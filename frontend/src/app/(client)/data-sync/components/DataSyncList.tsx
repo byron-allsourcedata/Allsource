@@ -550,7 +550,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
       }
       const foundItem = data.find((item) => item.id === selectedId);
       const dataSyncPlatform = foundItem ? foundItem.platform : null;
-      if (foundItem.type_error === "Invalid API Key") {
+      if (foundItem.type_error === "Invalid API Key" || foundItem.integration_is_failed) {
         setIsInvalidApiKey(true)
         if (dataSyncPlatform) {
           if (dataSyncPlatform === "klaviyo") {
@@ -563,6 +563,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
             setOpenOmnisendConnect(true);
           } else if (dataSyncPlatform === "sendlane") {
             setOpenSendlaneConnect(true);
+          } else if (dataSyncPlatform === "webhook") {
+            setOpenWebhookConnect(true);
           }
           setIsLoading(false);
           setAnchorEl(null);
@@ -580,6 +582,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
             setOmnisendIconPopupOpen(true);
           } else if (dataSyncPlatform === "sendlane") {
             setOpenSendlaneIconPopup(true);
+          } else if (dataSyncPlatform === "webhook") {
+            setOpenWebhookIconPopup(true);
           }
           setIsLoading(false);
           setAnchorEl(null);
@@ -860,7 +864,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                               justifyContent: "center",
                             }}
                           >
-                            {statusIcon(row.syncStatus) || "--"}
+                            {statusIcon(row.integration_is_failed ? false : row.syncStatus) || "--"}
+
                           </Box>
                         </TableCell>
                         <TableCell sx={datasyncStyle.table_array}>

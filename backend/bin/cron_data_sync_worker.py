@@ -14,7 +14,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import PendingRollbackError
 from dotenv import load_dotenv
 from config.aws import get_s3_client
-from enums import ProccessDataSyncResult, DataSyncImportedStatus
+from enums import ProccessDataSyncResult, DataSyncImportedStatus, SourcePlatformEnum
 from models.data_sync_imported_leads import DataSyncImportedLeads
 from models.leads_users import LeadUser
 from models.integrations.integrations_users_sync import IntegrationUserSync
@@ -64,7 +64,7 @@ def get_lead_attributes(session, lead_users_id, data_sync_id):
     ) \
     .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id) \
     .join(UserIntegration, UserIntegration.domain_id == LeadUser.domain_id) \
-    .join(IntegrationUserSync, IntegrationUserSync.integration_id == UserIntegration.id) \
+    .join(IntegrationUserSync, IntegrationUserSync.integration_id == UserIntegration.domain_id) \
     .filter(LeadUser.id == lead_users_id, IntegrationUserSync.id == data_sync_id) \
     .first()
 
@@ -74,7 +74,7 @@ def get_lead_attributes(session, lead_users_id, data_sync_id):
     else:
         return None, None, None, None
 
-def update_users_integrations(session, status, integration_data_sync_id, user_domain_integration_id = None):
+def update_users_integrations(session, status, integration_data_sync_id, service_name, user_domain_integration_id = None):
     if status == ProccessDataSyncResult.LIST_NOT_EXISTS.value:
         logging.info(f"List not exists for  integration_data_sync_id {integration_data_sync_id}")
         session.query(IntegrationUserSync).filter(IntegrationUserSync.id == integration_data_sync_id).update({
@@ -84,12 +84,13 @@ def update_users_integrations(session, status, integration_data_sync_id, user_do
         
     if status == ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
         logging.info(f"Authentication failed for  user_domain_integration_id {user_domain_integration_id}")
-        session.query(UserIntegration).filter(UserIntegration.id == user_domain_integration_id).update({
-            'is_failed': True,
-            'error_message': status
-            })
-        
-        session.query(IntegrationUserSync).filter(IntegrationUserSync.id == integration_data_sync_id).update({
+        if service_name != SourcePlatformEnum.WEBHOOK.value:
+            session.query(UserIntegration).filter(UserIntegration.id == user_domain_integration_id).update({
+                'is_failed': True,
+                'error_message': status
+                })
+            
+        session.query(IntegrationUserSync).filter(IntegrationUserSync.integration_id == user_domain_integration_id).update({
             'sync_status': False,
             })
         session.commit()
@@ -135,7 +136,7 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
                 logging.error(f"{e}", exc_info=True)
                 await message.ack()
                 return
-            except Exception as e:
+            except BaseException as e:
                 logging.error(f"Error processing data sync: {e}", exc_info=True)
                 await message.ack()
                 return
@@ -156,12 +157,12 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
                     
                 case ProccessDataSyncResult.LIST_NOT_EXISTS.value:
                     logging.debug(f"list_not_exists: {service_name}")
-                    update_users_integrations(session, ProccessDataSyncResult.LIST_NOT_EXISTS.value, integration_data_sync.id)
+                    update_users_integrations(session, ProccessDataSyncResult.LIST_NOT_EXISTS.value, service_name, integration_data_sync.id)
                     
                 case ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
                     logging.debug(f"authentication_failed: {service_name}")
-                    update_users_integrations(session, ProccessDataSyncResult.AUTHENTICATION_FAILED.value, integration_data_sync.id, integration_data_sync.integration_id)
-                    
+                    update_users_integrations(session, ProccessDataSyncResult.AUTHENTICATION_FAILED.value, integration_data_sync.id, service_name, integration_data_sync.integration_id)
+                
             if import_status != DataSyncImportedStatus.SENT.value:
                 update_data_sync_imported_leads(session, import_status, data_sync_imported_id)
                 
