@@ -6,5 +6,5 @@ def get_s3_client():
                 's3',
                 aws_access_key_id=os.getenv('S3_KEY_ID'),
                 aws_secret_access_key=os.getenv('S3_KEY_SECRET'),
-                region_name='us-west-2'
+                region_name='us-east-2'
             )
