@@ -206,11 +206,21 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
     const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
-            const formData = new FormData();
-            formData.append("file", file);
+            
+            const response = await fetch("/api/upload", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ fileType: file.type }),
+              });
+          
+              const { url } = await response.json();
+              if (!url) {
+                console.error("Failed to get presigned URL");
+                return;
+            }
             
             const xhr = new XMLHttpRequest();
-            xhr.open("POST", "/api/upload");
+            xhr.open("PUT", url);
         
             xhr.upload.onprogress = (event) => {
               if (event.lengthComputable) {
@@ -227,7 +237,9 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
               setUploadProgress(null);
             };
         
-            xhr.send(formData);
+
+            xhr.setRequestHeader("Content-Type", file.type);
+            xhr.send(file);
 
             processDownloadFile(file);
 

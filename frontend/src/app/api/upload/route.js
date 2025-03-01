@@ -1,38 +1,37 @@
-import fs from "fs";
-import path from "path";
+import { S3Client } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { NextResponse } from "next/server";
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+export async function POST(req) {
+  try {
+    const { fileType } = await req.json();
 
-export default async function handler(req, res) {
-    if (req.method === "POST") {
-      const chunks = [];
-      req.on("data", (chunk) => {
-        chunks.push(chunk);
-      });
-  
-      req.on("end", () => {
-        const buffer = Buffer.concat(chunks);
-        const uploadsDir = path.join(process.cwd(), "/public/uploads");
-  
-        if (!fs.existsSync(uploadsDir)) {
-          fs.mkdirSync(uploadsDir, { recursive: true });
-        }
-  
-        const filePath = path.join(uploadsDir, `uploaded_file_${Date.now()}.csv`);
-        fs.writeFileSync(filePath, buffer);
-  
-        res.status(200).json({ message: "Файл загружен", filePath });
-      });
-  
-      req.on("error", (err) => {
-        console.error(err);
-        res.status(500).json({ message: "Ошибка загрузки файла" });
-      });
-    } else {
-      res.status(405).json({ message: "Метод не разрешен" });
-    }
+    const currentTime = new Date().toISOString().replace(/[:.]/g, "-");
+    const fileName = `audience_sources/${currentTime}`;
+
+    const s3Client = new S3Client({
+      region: "us-east-2",
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      },
+    });
+
+    const params = {
+      Bucket: "maximiz-data",
+      Key: fileName,
+      ContentType: fileType,
+    };
+
+    const command = new PutObjectCommand(params);
+
+    const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 60 });
+
+    console.log({presignedUrl})
+
+    return NextResponse.json({ url: presignedUrl }, { status: 200 });
+  } catch {
+    return NextResponse.json({ error: "Failed to generate presigned URL" }, { status: 500 });
   }
+}
