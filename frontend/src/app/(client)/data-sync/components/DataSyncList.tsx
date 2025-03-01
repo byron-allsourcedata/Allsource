@@ -47,6 +47,7 @@ import ZapierConnectPopup from "@/components/ZapierConnectPopup";
 import SlackConnectPopup from "@/components/SlackConnectPopup";
 import WebhookConnectPopup from "@/components/WebhookConnectPopup";
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import HubspotDataSync from "./HubspotDataSync";
 
 interface DataSyncProps {
   service_name?: string | null;
@@ -81,6 +82,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
   const [sendlaneIconPopupOpen, setOpenSendlaneIconPopup] = useState(false);
   const [webhookIconPopupOpen, setOpenWebhookIconPopup] = useState(false);
+  const [hubspotIconPopupOpen, setOpenHubspotIconPopup] = useState(false);
   const [slackIconPopupOpen, setOpenSlackIconPopup] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [isInvalidApiKey, setIsInvalidApiKey] = useState(false);
@@ -308,6 +310,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
         return (
           <Image src={"/slack-icon.svg"} alt="slack" width={18} height={18} />
         );
+      case "hubspot":
+      return (
+        <Image src={"/hubspot.svg"} alt="hubspot" width={18} height={18} />
+      );
       default:
         return null;
     }
@@ -476,6 +482,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
         setOpenSlackIconPopup(true);
       } else if (dataSyncPlatform === "webhook") {
         setOpenWebhookIconPopup(true);
+      } else if (dataSyncPlatform === "hubspot") {
+        setOpenHubspotIconPopup(true);
       }
       setIsLoading(false);
       setAnchorEl(null);
@@ -488,6 +496,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 
   const handleWebhookIconPopupClose = () => {
     setOpenWebhookIconPopup(false);
+  };
+
+  const handleHubspotIconPopupClose = () => {
+    setOpenHubspotIconPopup(false);
   };
 
   const handleSlackIconPopupClose = () => {
@@ -565,6 +577,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
             setOpenSendlaneConnect(true);
           } else if (dataSyncPlatform === "webhook") {
             setOpenWebhookConnect(true);
+          } else if (dataSyncPlatform === "hubspot") {
+            setOpenWebhookConnect(true);
           }
           setIsLoading(false);
           setAnchorEl(null);
@@ -584,6 +598,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
             setOpenSendlaneIconPopup(true);
           } else if (dataSyncPlatform === "webhook") {
             setOpenWebhookIconPopup(true);
+          } else if (dataSyncPlatform === "hubspot") {
+            setOpenWebhookConnect(true);
           }
           setIsLoading(false);
           setAnchorEl(null);
@@ -1153,6 +1169,16 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
               open={webhookIconPopupOpen}
               isEdit={isEdit}
               onClose={handleWebhookIconPopupClose}
+              data={data.find((item) => item.id === selectedId)}
+            />
+          </>
+        )}
+        {hubspotIconPopupOpen && isEdit && (
+          <>
+            <HubspotDataSync
+              open={hubspotIconPopupOpen}
+              isEdit={isEdit}
+              onClose={handleHubspotIconPopupClose}
               data={data.find((item) => item.id === selectedId)}
             />
           </>

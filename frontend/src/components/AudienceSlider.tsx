@@ -21,6 +21,9 @@ import SendlaneConnect from './SendlaneConnect';
 import SendlaneDatasync from '../app/(client)/data-sync/components/SendlaneDatasync';
 import WebhookDatasync from '../app/(client)/data-sync/components/WebhookDatasync';
 import ZapierDataSync from '../app/(client)/data-sync/components/ZapierDataSync';
+import ConnectHubspot from '../app/(client)/data-sync/components/HubspotDataSync';
+import HubspotDataSync from '../app/(client)/data-sync/components/HubspotDataSync';
+import HubspotIntegrationPopup from './HubspotIntegrationPopup';
 
 interface AudiencePopupProps {
     open: boolean;
@@ -64,13 +67,13 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [isExportDisabled, setIsExportDisabled] = useState(true);
     const [integrationsCredentials, setIntegrationsCredentials] = useState<IntegrationsCredentials[]>([])
     const [createKlaviyo, setCreateKlaviyo] = useState<boolean>(false)
+    const [createHubspot, setCreateHubspot] = useState<boolean>(false)
     const [createWebhook, setCreateWebhook] = useState<boolean>(false)
     const [createSlack, setCreateSlack] = useState<boolean>(false)
     const [integrations, setIntegrations] = useState<Integrations[]>([])
     const [metaConnectApp, setMetaConnectApp] = useState(false)
     const [openBigcommrceConnect, setOpenBigcommerceConnect] = useState(false)
-    const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false)
-    const [omnisendIconPopupOpen, setOpenOmnisendIconPopupOpen] = useState(false)
+
     const [mailchimpIconPopupOpen, setOpenMailchimpIconPopup] = useState(false)
     const [slackIconPopupOpen, setOpenSlackIconPopup] = useState(false)
     const [openMailchimpConnect, setOpenmailchimpConnect] = useState(false)
@@ -79,6 +82,11 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
     const [openZapierDataSync, setOpenZapierDataSync] = useState(false)
     const [openZapierConnect, setOpenZapierConnect] = useState(false)
+    const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false)
+    const [omnisendIconPopupOpen, setOpenOmnisendIconPopupOpen] = useState(false)
+    const [openHubspotConnect, setOpenHubspotConnect] = useState(false)
+    const [hubspotIconPopupOpen, setOpenHubspotIconPopupOpen] = useState(false)
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -111,6 +119,11 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const handleOmnisendIconPopupOpenClose = () => {
         setOpenOmnisendConnect(false)
         setOpenOmnisendIconPopupOpen(false)
+    }
+
+    const handleHubspotIconPopupOpenClose = () => {
+        setOpenHubspotConnect(false)
+        setOpenHubspotIconPopupOpen(false)
     }
 
     const toggleFormVisibility = () => {
@@ -170,6 +183,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setOpenOmnisendConnect(true)
     }
 
+    const handleHubspotConnectOpen = () => {
+        setOpenHubspotConnect(true)
+    }
+
     const handleOmnisendConnectClose = () => {
         setOpenOmnisendConnect(false)
         handleOmnisendIconPopupOpen()
@@ -177,6 +194,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
     const handleOmnisendIconPopupOpen = () => {
         setOpenOmnisendIconPopupOpen(true);
+    };
+
+    const handleHubspotIconPopupOpen = () => {
+        setOpenHubspotIconPopupOpen(true);
     };
 
     const handleKlaviyoIconPopupClose = () => {
@@ -262,6 +283,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             case 'Webhook':
                 handleWebhookIconPopupOpen()
                 break
+            case 'Hubspot':
+                handleHubspotIconPopupOpen()
+                break
         }
     };
 
@@ -291,6 +315,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
     const handleCreateKlaviyoOpen = () => {
         setCreateKlaviyo(true)
+    }
+
+    const handleCreateHubspotOpen = () => {
+        setCreateHubspot(true)
     }
 
     const handleCreateKlaviyoClose = () => {
@@ -405,14 +433,23 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                             flexBasis: 'calc(50% - 8px)'
                                         }
                                     }}>
-                                        <ListItemButton sx={{
-                                            p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center',
-                                            backgroundColor: selectedIntegration === 'hubSpot' ? 'rgba(80, 82, 178, 0.10)' : 'transparent'
+                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'hubspot')?.is_failed
+                                            ? handleHubspotIconPopupOpen
+                                            : handleCreateHubspotOpen
+                                        } sx={{
+                                            p: 0,
+                                            flexDirection: 'column',
+                                            px: 3,
+                                            py: 1.5,
+                                            width: '102px',
+                                            height: '72px',
+                                            justifyContent: 'center',
+                                            backgroundColor: selectedIntegration === 'hubspot' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
                                         }}>
                                             <ListItemIcon sx={{ minWidth: 'auto' }}>
                                                 <Image src="/hubspot.svg" alt="hubspot" height={28} width={27} />
                                             </ListItemIcon>
-                                            <ListItemText primary="HubSpot" primaryTypographyProps={{
+                                            <ListItemText primary="hubspot" primaryTypographyProps={{
                                                 sx: {
                                                     fontFamily: "Nunito Sans",
                                                     fontSize: "14px",
@@ -728,6 +765,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             <ConnectKlaviyo data={null} open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose} />
             <ConnectMeta data={null} open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} />
             <OnmisendDataSync open={omnisendIconPopupOpen} onClose={handleOmnisendIconPopupOpenClose} isEdit={false} data={null} />
+            <HubspotDataSync open={hubspotIconPopupOpen} onClose={handleHubspotIconPopupOpenClose} isEdit={false} data={null} />
             <SendlaneDatasync open={openSendlaneIconPopupOpen} onClose={handleSendlaneIconPopupClose} data={null} isEdit={false} />
             <WebhookDatasync open={openWebhookIconPopupOpen} onClose={handleWebhookIconPopupClose} data={null} isEdit={false} />
             <MailchimpDatasync open={mailchimpIconPopupOpen} onClose={handleMailchimpIconPopupIconClose} data={null} />
@@ -742,6 +780,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             <MailchimpConnect onSave={handleSaveSettings} open={openMailchimpConnect} handleClose={handleOpenMailchimpConnectClose} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Mailchimp')?.access_token} />
             <SendlaneConnect open={openSendlaneConnect} handleClose={handleSendlaneConnectClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Sendlane')?.access_token} />
             <OmnisendConnect open={openOmnisendConnect} handleClose={() => setOpenOmnisendConnect(false)} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Omnisend')?.access_token} />
+            <HubspotIntegrationPopup open={createHubspot} handleClose={() => setOpenHubspotConnect(false)} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'hubspot')?.access_token} />
             <MetaConnectButton open={metaConnectApp} onClose={handleCloseMetaConnectApp} onSave={handleSaveSettings} />
         </>
     );
