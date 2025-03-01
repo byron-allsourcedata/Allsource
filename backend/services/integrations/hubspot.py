@@ -6,6 +6,8 @@ from persistence.leads_persistence import LeadsPersistence
 import httpx
 from fastapi import HTTPException
 
+from typing import List
+from schemas.integrations.integrations import DataMap
 from schemas.integrations.integrations import IntegrationCredentials
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 
@@ -93,3 +95,18 @@ class HubspotIntegrationsService:
             'integartions': integartions,
             'status': IntegrationsStatus.SUCCESS.value
         }
+
+    async def create_sync(self, domain_id: int, created_by: str, data_map: List[DataMap] = None, leads_type: str = None, list_id: str = None, list_name: str = None,):
+        credentials = self.get_credentials(domain_id)
+        data_syncs = self.sync_persistence.get_filter_by(domain_id=domain_id)
+        for sync in data_syncs:
+            if sync.get('integration_id') == credentials.id and sync.get('leads_type') == leads_type:
+                return
+        sync = self.sync_persistence.create_sync({
+            'integration_id': credentials.id,
+            'domain_id': domain_id,
+            'leads_type': leads_type,
+            'data_map': data_map,
+            'created_by': created_by,
+        })
+
