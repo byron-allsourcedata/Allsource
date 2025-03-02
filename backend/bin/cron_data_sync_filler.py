@@ -26,7 +26,7 @@ from models.leads_users import LeadUser
 
 load_dotenv()
 
-CRON_DATA_SYNC_LEADS = 'cron_data_sync_leads_test'
+CRON_DATA_SYNC_LEADS = 'cron_data_sync_leads'
 BATCH_SIZE = 200
 SLEEP_INTERVAL = 60 * 10
 
@@ -167,8 +167,6 @@ def get_previous_imported_leads(session, data_sync_id):
 async def send_leads_to_rmq(session, rmq_connection, lead_users, data_sync, user_integrations_service_name):
     last_lead_id = None
     for lead in lead_users:
-        if user_integrations_service_name == 'hubspot':
-            continue
         last_lead_id = lead.id
         data_sync_imported_leads = (
             insert(DataSyncImportedLeads)
