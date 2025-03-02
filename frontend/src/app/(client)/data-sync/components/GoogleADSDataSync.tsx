@@ -559,14 +559,10 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
     }
 
     const defaultRows: Row[] = [
-        { id: 1, type: 'LinkedIn URL', value: 'LinkedIn URL' },
-        { id: 2, type: 'Full name', value: 'Full name' },
-        { id: 3, type: 'Title', value: 'Title (Job Title)' },
-        { id: 4, type: 'Company', value: 'Company' },
-        { id: 5, type: 'Detail', value: 'Detail (They show company detail Number of Employee| Revenue| Industry)' },
-        { id: 6, type: 'Email', value: 'Email (Business email)' },
-        { id: 7, type: 'Visited URL', value: 'Visited URL (Which page user visited on the user website)' },
-        { id: 8, type: 'Location', value: 'Location' }
+        { id: 1, type: 'Email', value: 'email' },
+        { id: 2, type: 'Full name', value: 'full_name' },
+        { id: 3, type: 'Phone', value: 'phone' },
+        { id: 4, type: 'Address', value: 'address' }
     ];
 
     const [rows, setRows] = useState<Row[]>(defaultRows);
@@ -606,22 +602,14 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
 
     const handleNewListChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-
-        const isValid = /^[а-яА-Яa-zA-Z0-9-_]*$/.test(value);
-
-        if (isValid) {
-            if (googleList?.some(list => list.list_name === value)) {
-                setListNameError(true);
-                setListNameErrorMessage('List name must be unique');
-            } else {
-                setListNameError(false);
-                setListNameErrorMessage('');
-            }
-            setNewListName(value);
-        } else {
+        if (googleList?.some(list => list.list_name === value)) {
             setListNameError(true);
-            setListNameErrorMessage('Only alphanumeric characters are allowed and no spaces.');
+            setListNameErrorMessage('List name must be unique');
+        } else {
+            setListNameError(false);
+            setListNameErrorMessage('');
         }
+        setNewListName(value);
 
         if (!value) {
             setListNameError(true);

@@ -7,7 +7,6 @@ class GoogleAdsProfile(BaseModel):
     first_name: tp.Optional[str] = None
     last_name: tp.Optional[str] = None
     phone: tp.Optional[str] = None
-    gender: tp.Optional[str] = None
-    url_visited: Optional[List[str]] = None
-    behavior_type: tp.Optional[str] = None
-    location: tp.Optional[str] = None
+    city: tp.Optional[str] = None
+    state: tp.Optional[str] = None
+    address: tp.Optional[str] = None

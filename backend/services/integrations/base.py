@@ -174,8 +174,7 @@ class IntegrationService:
                                                 self.lead_persistence,
                                                 self.integrations_user_sync_persistence, self.client, self.million_verifier_integrations)
         self.google_ads = GoogleAdsIntegrationsService(self.domain_persistence, 
-                                                self.integration_persistence,  
-                                                self.lead_persistence,
+                                                self.integration_persistence,
                                                 self.integrations_user_sync_persistence, self.client, self.million_verifier_integrations)
         self.meta = MetaIntegrationsService(self.domain_persistence, 
                                                 self.integration_persistence,  
