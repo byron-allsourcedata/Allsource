@@ -35,6 +35,7 @@ import OmnisendDataSync from "./OmnisendDataSync";
 import SendlaneDatasync from "./SendlaneDatasync";
 import WebhookDatasync from "./WebhookDatasync";
 import SlackDatasync from "./SlackDataSync";
+import GoogleADSDatasync from "./GoogleADSDataSync";
 import CustomTablePagination from "@/components/CustomTablePagination";
 import AttentiveIntegrationPopup from "@/components/AttentiveIntegrationPopup";
 import BCommerceConnect from "@/components/Bcommerce";
@@ -45,6 +46,7 @@ import SendlaneConnect from "@/components/SendlaneConnect";
 import ShopifySettings from "@/components/ShopifySettings";
 import ZapierConnectPopup from "@/components/ZapierConnectPopup";
 import SlackConnectPopup from "@/components/SlackConnectPopup";
+import GoogleADSConnectPopup from "@/components/GoogleADSConnectPopup";
 import WebhookConnectPopup from "@/components/WebhookConnectPopup";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 
@@ -82,6 +84,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   const [sendlaneIconPopupOpen, setOpenSendlaneIconPopup] = useState(false);
   const [webhookIconPopupOpen, setOpenWebhookIconPopup] = useState(false);
   const [slackIconPopupOpen, setOpenSlackIconPopup] = useState(false);
+  const [googleADSIconPopupOpen, setOpenGoogleADSIconPopup] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [isInvalidApiKey, setIsInvalidApiKey] = useState(false);
   const [integrationsCredentials, setIntegrationsCredentials] = useState<
@@ -96,6 +99,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false);
   const [openMailchimpConnect, setOpenMailchimpConnect] = useState(false);
   const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false);
+  const [openGoogleADSConnect, setOpenGoogleADSConnect] = useState(false);
   const [openZapierConnect, setOPenZapierComnect] = useState(false);
   const [openSlackConnect, setOpenSlackConnect] = useState(false);
   const [openWebhookConnect, setOpenWebhookConnect] = useState(false);
@@ -121,6 +125,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
     handleIntegrationsSync();
     setLoading(false)
   }, []);
+
+  useEffect(() => {
+    console.log(data)
+  }, [data]);
 
   useEffect(() => {
     if (needsSync) {
@@ -308,6 +316,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
         return (
           <Image src={"/slack-icon.svg"} alt="slack" width={18} height={18} />
         );
+      case "google_ads":
+        return (
+          <Image src={"/google-ads.svg"} alt="slack" width={18} height={18} />
+        );
       default:
         return null;
     }
@@ -474,6 +486,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
         setOpenSendlaneIconPopup(true);
       } else if (dataSyncPlatform === "slack") {
         setOpenSlackIconPopup(true);
+      } else if (dataSyncPlatform === "google_ads") {
+        setOpenGoogleADSIconPopup(true);
       } else if (dataSyncPlatform === "webhook") {
         setOpenWebhookIconPopup(true);
       }
@@ -492,6 +506,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 
   const handleSlackIconPopupClose = () => {
     setOpenSlackIconPopup(false);
+  };
+
+  const handleGoogleADSIconPopupClose = () => {
+    setOpenGoogleADSIconPopup(false);
   };
 
   const handleDeleteClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -563,6 +581,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
             setOpenOmnisendConnect(true);
           } else if (dataSyncPlatform === "sendlane") {
             setOpenSendlaneConnect(true);
+          } else if (dataSyncPlatform === "google_ads") {
+            setOpenGoogleADSConnect(true);
           } else if (dataSyncPlatform === "webhook") {
             setOpenWebhookConnect(true);
           }
@@ -582,6 +602,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
             setOmnisendIconPopupOpen(true);
           } else if (dataSyncPlatform === "sendlane") {
             setOpenSendlaneIconPopup(true);
+          } else if (dataSyncPlatform === "google_ads") {
+            setOpenGoogleADSIconPopup(true);
           } else if (dataSyncPlatform === "webhook") {
             setOpenWebhookIconPopup(true);
           }
@@ -1167,6 +1189,16 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
             />
           </>
         )}
+        {googleADSIconPopupOpen && isEdit && (
+          <>
+            <GoogleADSDatasync
+              open={googleADSIconPopupOpen}
+              isEdit={isEdit}
+              onClose={handleGoogleADSIconPopupClose}
+              data={data.find((item) => item.id === selectedId)}
+            />
+          </>
+        )}
         {/*
         <AttentiveIntegrationPopup open={openAttentiveConnect} handleClose={() => setOpenShopifyConnect(false)} onSave={saveIntegration}/>
         <ShopifySettings open={openShopifuConnect} handleClose={() => setOpenShopifyConnect(false)} onSave={saveIntegration} />
@@ -1190,6 +1222,11 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
           open={openSlackConnect}
           handlePopupClose={() => { setOpenSlackConnect(false), setIsInvalidApiKey(false) }}
           initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'slack')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
+        />
+        <GoogleADSConnectPopup
+          open={openGoogleADSConnect}
+          handlePopupClose={() => { setOpenGoogleADSConnect(false), setIsInvalidApiKey(false) }}
+          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'google_ads')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
         />
         <WebhookConnectPopup open={openWebhookConnect} handleClose={() => { setOpenWebhookConnect(false), setIsInvalidApiKey(false) }}
           initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'webhook')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
