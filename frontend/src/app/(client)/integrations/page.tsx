@@ -16,6 +16,7 @@ import Slider from '../../../components/Slider';
 import { SliderProvider } from "@/context/SliderContext";
 import MetaConnectButton from "@/components/MetaConnectButton";
 import KlaviyoIntegrationPopup from "@/components/KlaviyoIntegrationPopup";
+import SalesForceIntegrationPopup from "@/components/SalesForceIntegrationPopup";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
@@ -589,7 +590,8 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
     { image: 'zapier-icon.svg', service_name: 'zapier' },
     { image: 'slack-icon.svg', service_name: 'slack' },
     { image: 'google-ads.svg', service_name: 'google_ads' },
-    { image: 'webhook-icon.svg', service_name: 'webhook' }
+    { image: 'webhook-icon.svg', service_name: 'webhook' },
+    { image: 'salesforce-icon.svg', service_name: 'sales_force' }
   ];
 
   const integratedServices = integrationsCredentials.map(cred => cred.service_name);
@@ -687,6 +689,15 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
           handleClose={handleClose}
           onSave={handleSaveSettings}
           initApiKey={integrationsCredentials.find(integration => integration.service_name === 'klaviyo')?.access_token}
+          boxShadow="rgba(0, 0, 0, 0.1)"
+        />
+      )}
+      {openModal === 'sales_force' && (
+        <SalesForceIntegrationPopup
+          open={true}
+          handleClose={handleClose}
+          onSave={handleSaveSettings}
+          initApiKey={integrationsCredentials.find(integration => integration.service_name === 'sales_force')?.access_token}
           boxShadow="rgba(0, 0, 0, 0.1)"
         />
       )}

@@ -33,6 +33,7 @@ import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import PersonIcon from '@mui/icons-material/Person';
 import MetaConnectButton from "@/components/MetaConnectButton";
 import KlaviyoIntegrationPopup from "@/components/KlaviyoIntegrationPopup";
+import SalesForceIntegrationPopup from "@/components/SalesForceIntegrationPopup";
 import OmnisendConnect from "@/components/OmnisendConnect";
 import MailchimpConnect from "@/components/MailchimpConnect";
 import AttentiveIntegrationPopup from "@/components/AttentiveIntegrationPopup";
@@ -92,6 +93,7 @@ const AccountSetup = () => {
   const [slackPopupOpen, setSlackPopupOpen] = useState(false)
   const [GoogleADSPopupOpen, setGoogleADSPopupOpen] = useState(false)
   const [klaviyoPopupOpen, setKlaviyoPopupOpen] = useState(false)
+  const [salesForcePopupOpen, setSalesForcePopupOpen] = useState(false)
   const [zapierPopupOpen, setZapierPopupOpen] = useState(false)
   const [omnisendPopupOpen, setOmnisendPopupOpen] = useState(false)
   const [metaPopupOpen, setMetaPopupOpen] = useState(false)
@@ -838,6 +840,7 @@ const AccountSetup = () => {
   ];
   const integrations = [
     { label: "Klaviyo", src: "klaviyo.svg", setState: setKlaviyoPopupOpen },
+    { label: "SalesForce", sr: "salesforce-icon.svg", setState: setSalesForcePopupOpen },
     { label: "Mailchimp", src: "mailchimp-icon.svg", setState: setMailchimpPopupOpen },
     { label: "Meta", src: "meta-icon.svg", setState: setMetaPopupOpen },
     { label: "Omnisend", src: "omnisend_icon_black.svg", setState: setOmnisendPopupOpen },
@@ -2800,6 +2803,13 @@ const AccountSetup = () => {
                   onSave={handleSaveSettings}
                   boxShadow="rgba(0, 0, 0, 0.1)"
                   initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'klaviyo')?.access_token}
+                />
+                <SalesForceIntegrationPopup
+                  open={salesForcePopupOpen}
+                  handleClose={() => setSalesForcePopupOpen(false)}
+                  onSave={handleSaveSettings}
+                  boxShadow="rgba(0, 0, 0, 0.1)"
+                  initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'sales_force')?.access_token}
                 />
                 <AttentiveIntegrationPopup
                   open={attentivePopupOpen}
