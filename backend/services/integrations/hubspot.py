@@ -1,14 +1,20 @@
-from enums import SourcePlatformEnum, IntegrationsStatus
+import logging
+
+from enums import SourcePlatformEnum, IntegrationsStatus, ProccessDataSyncResult
 from persistence.domains import UserDomainsPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
 import httpx
+from datetime import datetime, timedelta
 from fastapi import HTTPException
 
 from typing import List
+
+from schemas.integrations.hubspot import HubspotProfile
 from schemas.integrations.integrations import DataMap
 from schemas.integrations.integrations import IntegrationCredentials
+from services.integrations.commonIntegration import get_valid_email, get_valid_phone
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 
 
@@ -109,4 +115,149 @@ class HubspotIntegrationsService:
             'data_map': data_map,
             'created_by': created_by,
         })
+
+    def edit_sync(self, leads_type: str, integrations_users_sync_id: int,
+                 domain_id: int, created_by: str,  data_map: List[DataMap] = None):
+        credentials = self.get_credentials(domain_id)
+        sync = self.sync_persistence.edit_sync({
+            'integration_id': credentials.id,
+            'domain_id': domain_id,
+            'leads_type': leads_type,
+            'data_map': data_map,
+            'created_by': created_by,
+        }, integrations_users_sync_id)
+
+        return sync
+
+    async def process_data_sync(self, five_x_five_user, user_integration, data_sync, lead_user):
+        profile = self.__create_profile(five_x_five_user, user_integration.access_token, data_sync.data_map)
+
+        if profile in (
+                ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
+                ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
+        ):
+            return profile
+
+        return ProccessDataSyncResult.SUCCESS.value
+
+    def __create_profile(self, five_x_five_user, access_token, data_map):
+        profile = self.__mapped_profile(five_x_five_user)
+
+        if isinstance(profile, str):
+            return profile
+
+        email = profile.email
+        if not email:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        properties = self.__map_properties(five_x_five_user, data_map) if data_map else {}
+
+        json_data = {
+            "properties": {
+                "email": profile.email,
+                "firstname": profile.firstname,
+                "lastname": profile.lastname,
+                "phone": profile.phone,
+                "address": profile.address,
+                "city": profile.city,
+                "state": profile.state,
+                "zip": profile.zip,
+                "gender": profile.gender,
+                "company": profile.company,
+                "jobtitle": profile.jobtitle,
+                "website": profile.website,
+                "lifecyclestage": profile.lifecyclestage,
+                "industry": profile.industry,
+                "annualrevenue": profile.annualrevenue,
+                "twitterhandle": profile.twitterhandle,
+                "linkedinbio": profile.linkedinbio,
+                **properties
+            }
+        }
+
+        json_data["properties"] = {k: v for k, v in json_data["properties"].items() if v is not None}
+
+        print("TOKEN: " + access_token)
+        print("DATA: " + str(json_data))
+
+        response = self.__handle_request(
+            url="https://api.hubapi.com/crm/v3/objects/contacts",
+            method="POST",
+            access_token=access_token,
+            json=json_data
+        )
+
+        if response.status_code not in (200, 201):
+            if response.status_code in (403, 401):
+                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+            if response.status_code == 400:
+                return ProccessDataSyncResult.INCORRECT_FORMAT.value
+            logging.error("Error response: %s", response.text)
+            return None
+
+        return response.json()
+
+    def __mapped_profile(self, five_x_five_user) -> HubspotProfile:
+        email_fields = ['business_email', 'personal_emails', 'additional_personal_emails']
+        email_last_seen_fields = {
+            'business_email': 'business_email_last_seen',
+            'personal_emails': 'personal_emails_last_seen',
+        }
+
+        first_email = get_valid_email(
+            five_x_five_user,
+            email_fields,
+            email_last_seen_fields,
+            self.million_verifier_integrations
+        )
+        if first_email in (
+        ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
+            return first_email
+
+        first_phone = get_valid_phone(five_x_five_user)
+
+        return HubspotProfile(
+            email=first_email,
+            phone=first_phone,
+            firstname=getattr(five_x_five_user, 'first_name', None),
+            lastname=getattr(five_x_five_user, 'last_name', None),
+            company=getattr(five_x_five_user, 'company_name', None),
+            website=getattr(five_x_five_user, 'company_domain', None),
+            lifecyclestage=None,
+            address=getattr(five_x_five_user, 'personal_address', None),
+            jobtitle=getattr(five_x_five_user, 'job_title', None),
+            industry=getattr(five_x_five_user, 'primary_industry', None),
+            annualrevenue=getattr(five_x_five_user, 'company_revenue', None),
+            twitterhandle=None,
+            linkedinbio=getattr(five_x_five_user, 'linkedin_url', None),
+            city=getattr(five_x_five_user, 'personal_city', None),
+            state=getattr(five_x_five_user, 'personal_state', None),
+            zip=getattr(five_x_five_user, 'personal_zip', None),
+            gender=getattr(five_x_five_user, 'gender', None),
+        )
+
+    def __mapped_identifiers(self, five_x_five_user):
+        email_fields = ['business_email', 'personal_emails', 'additional_personal_emails']
+
+        def get_valid_email():
+            for field in email_fields:
+                email = getattr(five_x_five_user, field, None)
+                if email and self.million_verifier_integrations.is_email_verify(email.strip()):
+                    return email.strip()
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        return get_valid_email()
+
+    def __map_properties(self, five_x_five_user, data_map: List[DataMap]) -> dict:
+        properties = {}
+        for mapping in data_map:
+            five_x_five_field = mapping.get("type")
+            new_field = mapping.get("value")
+            value_field = getattr(five_x_five_user, five_x_five_field, None)
+
+            if value_field is not None:
+                properties[new_field] = value_field.isoformat() if isinstance(value_field, datetime) else value_field
+
+        return properties
 
