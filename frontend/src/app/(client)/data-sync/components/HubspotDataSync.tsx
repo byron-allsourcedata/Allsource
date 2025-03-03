@@ -45,43 +45,44 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
     const [UpdateKlaviuo, setUpdateKlaviuo] = useState<any>(null);
     const [maplistNameError, setMapListNameError] = useState(false);
     const [customFieldsList, setCustomFieldsList] = useState([
-    { type: 'Company Name', value: 'company_name' },
-    { type: 'Company Domain', value: 'company_domain' },
-    { type: 'Company SIC', value: 'company_sic' },
-    { type: 'Company LinkedIn URL', value: 'company_linkedin_url' },
-    { type: 'Company Revenue', value: 'company_revenue' },
-    { type: 'Company Employee Count', value: 'company_employee_count' },
-    { type: 'Net Worth', value: 'net_worth' },
-    { type: 'Last Updated', value: 'last_updated' },
-    { type: 'Personal Emails Last Seen', value: 'personal_emails_last_seen' },
-    { type: 'Company Last Updated', value: 'company_last_updated' },
-    { type: 'Job Title Last Updated', value: 'job_title_last_updated' },
-    { type: 'Age Min', value: 'age_min' },
-    { type: 'Age Max', value: 'age_max' },
-    { type: 'Additional Personal Emails', value: 'additional_personal_emails' },
-    { type: 'LinkedIn URL', value: 'linkedin_url' },
-    { type: 'Married', value: 'married' },
-    { type: 'Children', value: 'children' },
-    { type: 'Income Range', value: 'income_range' },
-    { type: 'Homeowner', value: 'homeowner' },
-    { type: 'Seniority Level', value: 'seniority_level' },
-    { type: 'Department', value: 'department' },
-    { type: 'Primary Industry', value: 'primary_industry' },
-    { type: 'Work History', value: 'work_history' },
-    { type: 'Education History', value: 'education_history' },
-    { type: 'Company Description', value: 'company_description' },
-    { type: 'Related Domains', value: 'related_domains' },
-    { type: 'Social Connections', value: 'social_connections' },
-    { type: 'URL Visited', value: 'url_visited' },
-    { type: 'Time on site', value: 'time_on_site' },
-    { type: 'DPV Code', value: 'dpv_code' }]);
+    // { type: 'Company Name', value: 'company_name' },
+    // { type: 'Company Domain', value: 'company_domain' },
+    // { type: 'Company SIC', value: 'company_sic' },
+    // { type: 'Company LinkedIn URL', value: 'company_linkedin_url' },
+    // { type: 'Company Revenue', value: 'company_revenue' },
+    // { type: 'Company Employee Count', value: 'company_employee_count' },
+    // { type: 'Net Worth', value: 'net_worth' },
+    // { type: 'Last Updated', value: 'last_updated' },
+    // { type: 'Personal Emails Last Seen', value: 'personal_emails_last_seen' },
+    // { type: 'Company Last Updated', value: 'company_last_updated' },
+    // { type: 'Job Title Last Updated', value: 'job_title_last_updated' },
+    // { type: 'Age Min', value: 'age_min' },
+    // { type: 'Age Max', value: 'age_max' },
+    // { type: 'Additional Personal Emails', value: 'additional_personal_emails' },
+    // { type: 'LinkedIn URL', value: 'linkedin_url' },
+    // { type: 'Married', value: 'married' },
+    // { type: 'Children', value: 'children' },
+    // { type: 'Income Range', value: 'income_range' },
+    // { type: 'Homeowner', value: 'homeowner' },
+    // { type: 'Seniority Level', value: 'seniority_level' },
+    // { type: 'Department', value: 'department' },
+    // { type: 'Primary Industry', value: 'primary_industry' },
+    // { type: 'Work History', value: 'work_history' },
+    // { type: 'Education History', value: 'education_history' },
+    // { type: 'Company Description', value: 'company_description' },
+    // { type: 'Related Domains', value: 'related_domains' },
+    // { type: 'Social Connections', value: 'social_connections' },
+    // { type: 'URL Visited', value: 'url_visited' },
+    // { type: 'Time on site', value: 'time_on_site' },
+    // { type: 'DPV Code', value: 'dpv_code' }
+]);
     const [customFields, setCustomFields] = useState<{ type: string, value: string }[]>([]);
 
     useEffect(() => {
         if (data?.data_map) {
             setCustomFields(data?.data_map);
         } else {
-            setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
+            // setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
         }
     }, [open])
 
@@ -138,7 +139,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
                 const response = await axiosInstance.put(`/data-sync/sync`, {
                     integrations_users_sync_id: data.id,
                     leads_type: selectedRadioValue,
-                    data_map: customFields
+                    // data_map: customFields
                 }, {
                     params: {
                         service_name: 'hubspot'
@@ -451,10 +452,10 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
 
     const defaultRows: Row[] = [
         { id: 1, type: 'Email', value: 'Email' },
-        { id: 3, type: 'First name', value: 'First name' },
-        { id: 4, type: 'Second name', value: 'Second name' },
-        { id: 5, type: 'Job Title', value: 'Job Title' },
-        { id: 6, type: 'Location', value: 'Location' },
+        { id: 3, type: 'First Name', value: 'First Name' },
+        { id: 4, type: 'Last Name', value: 'Last Name' },
+        { id: 5, type: 'Phone Number', value: 'Phone Number' },
+        { id: 6, type: 'City', value: 'City' },
         { id: 7, type: 'Gender', value: 'Gender' }
     ];
 
@@ -1133,7 +1134,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
                                                         }}
                                                     >
 
-                                                        {customFieldsList.map((item) => (
+                                                        {/* {customFieldsList.map((item) => (
                                                             <MenuItem
                                                                 key={item.value}
                                                                 value={item.value}
@@ -1141,7 +1142,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
                                                             >
                                                                 {item.type}
                                                             </MenuItem>
-                                                        ))}
+                                                        ))} */}
                                                     </TextField>
                                                 </Grid>
                                                 <Grid item xs="auto" sm={1} mb={2} container justifyContent="center">
@@ -1212,7 +1213,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
                                             </Grid>
                                         ))}
                                         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 6, mr: 6 }}>
-                                            <Button
+                                            {/* <Button
                                                 onClick={handleAddField}
                                                 aria-haspopup="true"
                                                 sx={{
@@ -1237,7 +1238,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
                                                 }}>
                                                     Add
                                                 </Typography>
-                                            </Button>
+                                            </Button> */}
                                         </Box>
                                     </Box>
                                 </Box>
