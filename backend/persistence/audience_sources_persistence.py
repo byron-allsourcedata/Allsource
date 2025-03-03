@@ -54,7 +54,7 @@ class AudienceSourcesPersistence:
             created_by_user_id=creating_data.get("user_id"),
             source_type=creating_data.get("source_type"),
             source_origin=creating_data.get("source_origin"),
-            file_name=creating_data.get("file_name"),
+            file_url=creating_data.get("file_url"),
             name=creating_data.get("source_name"),
         )
 

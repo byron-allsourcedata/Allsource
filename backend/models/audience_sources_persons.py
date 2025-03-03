@@ -2,8 +2,8 @@ from sqlalchemy import Column, event, Integer, TIMESTAMP, JSON, ForeignKey, Inde
 from .base import Base, create_timestamps, update_timestamps
 
 
-class AudienceSourcesPerson(Base):
-    __tablename__ = 'audience_sources_persons'
+class AudienceSourcesMatchedPerson(Base):
+    __tablename__ = 'audience_sources_matched_persons'
 
     id = Column(Integer, primary_key=True)
     source_id = Column(Integer, ForeignKey('audience_sources.id'), nullable=False)
@@ -16,5 +16,5 @@ class AudienceSourcesPerson(Base):
         Index('audience_sources_persons_pkey', 'id'),
     )
 
-event.listen(AudienceSourcesPerson, "before_insert", create_timestamps)
-event.listen(AudienceSourcesPerson, "before_update", update_timestamps)
+event.listen(AudienceSourcesMatchedPerson, "before_insert", create_timestamps)
+event.listen(AudienceSourcesMatchedPerson, "before_update", update_timestamps)

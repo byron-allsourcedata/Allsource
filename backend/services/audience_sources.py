@@ -85,13 +85,13 @@ class AudienceSourceService:
             await rabbitmq_connection.close()
 
 
-    async def create_source(self, user, source_type: str, source_origin: str, source_name: str, file: UploadFile = None, file_name: str = None):
+    async def create_source(self, user, source_type: str, source_origin: str, source_name: str, file_url: str = None):
         creating_data = {
             "user_id": user.get("id"),
             "source_type": source_type,
             "source_origin": source_origin,
             "source_name": source_name,
-            "file_name": file_name,
+            "file_url": file_url,
         }
 
         created_data = self.audience_sources_persistence.create_source(**creating_data)

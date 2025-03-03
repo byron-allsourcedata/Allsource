@@ -86,6 +86,7 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
     const [sourceName, setSourceName] = useState<string>("");
     const [fileSizeStr, setFileSizeStr] = useState<string>("");
     const [fileName, setFileName] = useState<string>("");
+    const [fileUrl, setFileUrl] = useState<string>("");
     const [sourceMethod, setSourceMethod] = useState<number>(0);
     const [dragActive, setDragActive] = useState(false);
     const [fileSizeError, setFileSizeError] = useState(false);
@@ -177,18 +178,16 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
     const handleSumbit = async () => {
         setLoading(true)
 
-        const formData = new FormData();
-        formData.append("source_type", sourceType);
-        formData.append("source_origin", sourceMethod === 1 ? "csv" : "pixel");
-        formData.append("source_name", sourceName);
-        if (file) {
-            formData.append("file", file);
-            formData.append("file_name", fileName);
+        const newSource = {
+            source_type: sourceType,
+            source_origin: sourceMethod === 1 ? "csv" : "pixel",
+            source_name: sourceName,
+            file_url: fileUrl
         }
         
         try {
-            const response = await axiosInstance.post(`/audience-sources/create`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
+            const response = await axiosInstance.post(`/audience-sources/create`, newSource, {
+                headers: { 'Content-Type': 'application/json' },
             })
             if (response.status === 200){
                 setCreatedSource(response.data)
@@ -213,11 +212,13 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                 body: JSON.stringify({ fileType: file.type }),
               });
           
-              const { url } = await response.json();
-              if (!url) {
-                console.error("Failed to get presigned URL");
-                return;
+            const { url } = await response.json();
+            if (!url) {
+                showErrorToast("Error at upload file!")
+                return
             }
+
+            setFileUrl(url)
             
             const xhr = new XMLHttpRequest();
             xhr.open("PUT", url);
