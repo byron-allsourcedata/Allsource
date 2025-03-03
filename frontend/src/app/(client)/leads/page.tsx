@@ -1156,7 +1156,7 @@ const Leads: React.FC = () => {
                         })}
                     </Box>
                     <Box sx={{
-                         display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pb: '20px',
+                         display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0,
                         '@media (max-width: 900px)': {
                             pt: '2px',
                             pb: '18px'

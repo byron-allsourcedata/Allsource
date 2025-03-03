@@ -57,8 +57,10 @@ const CustomNotification: React.FC<CustomNotificationProps> = ({ id, message, sh
         <Box
             sx={{
                 display: 'flex',
+                mt:0.5,
+                mb:0.5,
                 top: '4.25rem',
-                position: 'fixed',
+                position: 'sticky',
                 alignItems: 'center',
                 border: '1px solid rgba(248, 70, 75, 1)',
                 borderRadius: '6px',
@@ -66,7 +68,6 @@ const CustomNotification: React.FC<CustomNotificationProps> = ({ id, message, sh
                 width: 'calc(100% - 20px)',
                 marginLeft: '10px',
                 maxHeight: '34px',
-                zIndex: 1200,
                 '@media (max-width: 900px)': { top: '4.75rem', zIndex: 60,},
                 '@media (max-width: 600px)': { padding: '0.25rem 0.5rem', top: '4.75rem', maxHeight: '56px'},
                 backgroundColor: '#fff',

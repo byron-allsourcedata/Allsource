@@ -710,9 +710,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
             sx={{
               border: "1px solid rgba(235, 235, 235, 1)",
               overflowY: "auto",
+              height: '73vh'
             }}
           >
-            <Table>
+            <Table stickyHeader aria-label="datasync table" >
               <TableHead>
                 <TableRow>
                   {[
@@ -736,7 +737,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                       sx={{
                         ...datasyncStyle.table_column,
                         backgroundColor: "#fff",
-                        position: "relative",
                         ...(key === "list_name" && {
                           position: "sticky",
                           left: 0,
@@ -810,7 +810,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                             ...datasyncStyle.table_array,
                             position: "sticky",
                             left: "0",
-                            zIndex: 99,
+                            zIndex: 9,
                             backgroundColor: "#fff",
                           }}
                         >

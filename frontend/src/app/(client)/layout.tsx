@@ -66,9 +66,6 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
     }
   }, [isAuthenticated]);
 
-  const handleNotificationDismiss = () => {
-    setLatestNotification(null);
-  };
 
 
   return (
@@ -105,7 +102,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
           minWidth: '142px',
           maxWidth: '142px',
           position: 'fixed',
-          top: latestNotification || newNotification ? 'calc(6.85rem)' : '4.25rem',
+          top: latestNotification || newNotification ? 'calc(7.125rem)' : '4.25rem',
         }}>
           <SliderProvider>
             <Sidebar setShowSlider={setSlider} setLoading={setIsLoading} hasNotification={Boolean(latestNotification || newNotification)} />
@@ -137,14 +134,6 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
             {children}
           </Grid>
         </NotificationProvider>
-        {latestNotification && (
-          <CustomNotification
-            id={latestNotification.id}
-            message={latestNotification.text}
-            showDismiss={true}
-            onDismiss={handleNotificationDismiss}
-          />
-        )}
       </Grid>
     </>
     )}
