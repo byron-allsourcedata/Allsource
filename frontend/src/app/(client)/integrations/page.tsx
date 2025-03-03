@@ -40,6 +40,7 @@ import SlackConnectPopup from "@/components/SlackConnectPopup";
 import WebhookConnectPopup from "@/components/WebhookConnectPopup";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import HubspotIntegrationPopup from "@/components/HubspotIntegrationPopup"
+import GoogleADSConnectPopup from "@/components/GoogleADSConnectPopup";
 
 
 interface IntegrationBoxProps {
@@ -589,7 +590,8 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
     { image: 'zapier-icon.svg', service_name: 'zapier' },
     { image: 'slack-icon.svg', service_name: 'slack' },
     { image: 'webhook-icon.svg', service_name: 'webhook' },
-    {image: 'hubspot.svg', service_name: 'hubspot'}
+    { image: 'hubspot.svg', service_name: 'hubspot' },
+    { image: 'google-ads.svg', service_name: 'google_ads' },
   ];
 
   const integratedServices = integrationsCredentials.map(cred => cred.service_name);
@@ -775,6 +777,14 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
           boxShadow="rgba(0, 0, 0, 0.01)"
         />
       )}
+
+      {openModal === 'google_ads' && (
+        <GoogleADSConnectPopup
+          open={true}
+          handlePopupClose={handleClose}
+          />
+        )}
+
       {openModal === 'webhook' && (
         <WebhookConnectPopup
           open={true}

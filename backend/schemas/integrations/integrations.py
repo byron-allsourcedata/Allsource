@@ -25,6 +25,9 @@ class MailchimpCredentials(BaseModel):
     data_center: str
     access_token: str
 
+class GoogleAdsCredentials(BaseModel):
+    code: str
+    scope: str
 
 class MetaCredentials(BaseModel):
     access_token:str 
@@ -44,6 +47,7 @@ class IntegrationCredentials(BaseModel):
     sendlane: Optional[ApiKeyCredentials] = None
     omnisend: Optional[ApiKeyCredentials] = None
     hubspot: Optional[HubSpotCredentials] = None
+    google_ads: Optional[GoogleAdsCredentials] = None
     pixel_install: bool = False
     supperssion: bool = False
 
@@ -76,6 +80,7 @@ class DataMap(BaseModel):
 class SyncCreate(BaseModel):
     list_id: Optional[str] = None
     tags_id: Optional[str] = None
+    customer_id: Optional[str] = None
     list_name: Optional[str] = None
     webhook_url: Optional[str] = None
     method: Optional[str] = None
@@ -86,6 +91,7 @@ class SyncCreate(BaseModel):
 
 class CreateListOrTags(BaseModel):
     name: str
+    customer_id: Optional[str] = None
     webhook_url: Optional[str] = None
     method: Optional[str] = None
     sender_id: Optional[str] = None

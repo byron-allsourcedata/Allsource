@@ -15,6 +15,7 @@ import SlackConnectPopup from "./SlackConnectPopup"
 import WebhookConnectPopup from "./WebhookConnectPopup"
 import ZapierConnectPopup from "./ZapierConnectPopup"
 import HubspotIntegrationPopup from "./HubspotIntegrationPopup"
+import GoogleADSConnectPopup from "./GoogleADSConnectPopup"
 
 
 interface AvailableIntegrationsSliderProps {
@@ -48,10 +49,9 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
     const [openZapierConnect, setOPenZapierComnect] = useState(false)
     const [openSlackConnect, setOpenSlackConnect] = useState(false)
     const [openHubspotConnect, setOpenHubspotConnect] = useState(false)
-    
+    const [openGoogleAdsConnect, setOpenGoogleAdsConnect] = useState(false)
     const [openWebhookConnect, setOpenWebhookConnect] = useState(false)
     const [searchQuery, setSearchQuery] = useState("");
-
     const handleClose = () => {
         setOpenMetaConnect(false)
         setOpenKlaviyoConnect(false)
@@ -63,6 +63,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
         setOPenZapierComnect(false)
         setOpenSlackConnect(false)
         setOpenHubspotConnect(false)
+        setOpenGoogleAdsConnect(false)
         setOpenWebhookConnect(false)
     }
 
@@ -469,6 +470,26 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                             </ListItemButton>
                                         </ListItem>
                                     )}
+                                    {filteredIntegrations.some(integration => integration.service_name === 'google_ads') && (
+                                    !integrationsCredentials.some(integration => integration.service_name === 'google_ads')) && (
+                                        <ListItem sx={{
+                                            p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                            '@media (max-width:600px)': {
+                                                flexBasis: 'calc(50% - 8px)'
+                                            }
+                                        }}>
+                                            <ListItemButton onClick={() => setOpenGoogleAdsConnect(true)} sx={{ p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center' }}>
+                                                <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                    <Image src="/google-ads.svg" alt="google_ads" height={24} width={24} />
+                                                </ListItemIcon>
+                                                <ListItemText primary="GoogleAds" primaryTypographyProps={{
+                                                    sx: {
+                                                        ...intergrations.integrate
+                                                    }
+                                                }} />
+                                            </ListItemButton>
+                                        </ListItem>
+                                    )}
                             </List>
                         </Box>
                     </Box>
@@ -488,6 +509,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
             <ZapierConnectPopup open={openZapierConnect} handlePopupClose={handleClose} />
             <SlackConnectPopup open={openSlackConnect} handlePopupClose={() => setOpenSlackConnect(false)} onSave={saveIntegration} />
             <HubspotIntegrationPopup open={openHubspotConnect} handleClose={handleClose} onSave={saveIntegration} />
+            <GoogleADSConnectPopup open={openGoogleAdsConnect} handlePopupClose={() => setOpenGoogleAdsConnect(false)} onSave={saveIntegration} />
             <WebhookConnectPopup open={openWebhookConnect} handleClose={() => setOpenWebhookConnect(false)} onSave={saveIntegration} />
         </>
     )

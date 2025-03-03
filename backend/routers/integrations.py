@@ -396,6 +396,21 @@ async def oauth_shopify_redact(r: Request, integrations_service: IntegrationServ
         service.shopify.oauth_shopify_redact(request_body, shopify_hmac_header)
         return GenericEcommerceResponse(message="Shopify data deleted successfully")
     
+@router.get("/google-ads/customers-info")
+def oauth_shopify_callback(user = Depends(check_user_authentication), 
+                           domain = Depends(check_domain), 
+                           integration_service: IntegrationService = Depends(get_integration_service)):
+    with integration_service as service:
+        return service.google_ads.get_customer_info_and_resource_name(domain.id)
+
+@router.get("/google-ads/get-channels")
+def oauth_shopify_callback(customer_id: str,
+                           user = Depends(check_user_authentication), 
+                           domain = Depends(check_domain), 
+                           integration_service: IntegrationService = Depends(get_integration_service)):
+    with integration_service as service:
+        return service.google_ads.get_user_lists(domain.id, customer_id)
+      
 @router.post("/kajabi")
 async def kajabi_webhook(request: Request, domain: str, persistence: IntegrationsPresistence = Depends(get_user_integrations_presistence)):
     body = await request.json()
