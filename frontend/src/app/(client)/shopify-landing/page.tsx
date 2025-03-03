@@ -39,7 +39,7 @@ const ShopifyLanding = () => {
           showErrorToast(msg);
         }
       } catch (error) {
-        console.error('Ошибка при запросе Shopify Landing:', error);
+        console.error('Shopify Landing:', error);
       }
     };
 

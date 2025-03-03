@@ -254,7 +254,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                     resetToDefaultValues();
                     onClose();
                     showToast('Data sync updated successfully');
-                    //triggerSync();
+                    triggerSync();
                 }
             } else {
                 const response = await axiosInstance.post('/data-sync/sync', {
@@ -887,7 +887,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                         }
                                                     }}
                                                 />
-                                                <FormControlLabel value="added_to_cart" control={<Radio sx={{
+                                                <FormControlLabel value="abandoned_cart" control={<Radio sx={{
                                                     color: '#e4e4e4',
                                                     '&.Mui-checked': {
                                                         color: '#5052b2', // checked color

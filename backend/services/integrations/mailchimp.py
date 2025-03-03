@@ -258,10 +258,6 @@ class MailchimpIntegrationsService:
     def edit_sync(self, leads_type: str, list_id: str, list_name: str, integrations_users_sync_id: int,
                   data_map: List[DataMap], domain_id: int, created_by: str):
         credentials = self.get_credentials(domain_id)
-        data_syncs = self.sync_persistence.get_filter_by(domain_id=domain_id)
-        for sync in data_syncs:
-            if sync.get('integration_id') == credentials.id and sync.get('leads_type') == leads_type:
-                return
         sync = self.sync_persistence.edit_sync({
             'integration_id': credentials.id,
             'list_id': list_id,
