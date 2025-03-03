@@ -7,60 +7,15 @@ import {
     TextField,
     Button,
 } from "@mui/material";
+import Lookalike from "./components/Lokalike";
 import Image from "next/image";
-import Lookalike from "./create-lookalike/Lokalike";
-import SourceTableContainer from "./create-lookalike/SourceTableContainer";
-import AudienceSizeSelector from "./create-lookalike/SizeSelector";
+import DownloadIcon from '@mui/icons-material/Download';
+import DateRangeIcon from '@mui/icons-material/DateRange';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import CreateLookalikeForm from "./components/CreateLookalikeForm";
+import CustomToolTip from "@/components/customToolTip";
+import Link from "next/link"
 
-const audienceSize = [
-    {
-        id: "almost",
-        label: "Almost identical",
-        text: "Lookalike size 0-3%",
-        min_value: 0,
-        max_value: 3,
-    },
-    {
-        id: "extremely",
-        label: "Extremely Similar",
-        text: "Lookalike size 0-7%",
-        min_value: 0,
-        max_value: 7,
-    },
-    {
-        id: "very",
-        label: "Very similar",
-        text: "Lookalike size 0-10%",
-        min_value: 0,
-        max_value: 10,
-    },
-    {
-        id: "quite",
-        label: "Quite similar",
-        text: "Lookalike size 0-15%",
-        min_value: 0,
-        max_value: 15,
-    },
-    {
-        id: "broad",
-        label: "Broad",
-        text: "Lookalike size 0-20%",
-        min_value: 0,
-        max_value: 20,
-    },
-];
-
-const tableData = [
-    {
-        name: "My Orders",
-        source: "CSV File",
-        type: "Customer Conversions",
-        createdDate: "Oct 01, 2024",
-        createdBy: "Mikhail Sofin",
-        numberOfCustomers: "10,000",
-        matchedRecords: "7,523",
-    },
-];
 
 const tableRows = [
     {
@@ -75,317 +30,283 @@ const tableRows = [
 ];
 
 const CreateLookalikePage: React.FC = () => {
-    const [selectedSize, setSelectedSize] = useState<string>("");
-    const [sliderValue, setSliderValue] = useState<number[]>([0, 0]);
-    const [currentStep, setCurrentStep] = useState(1);
-    const [inputText, setInputText] = useState("");
     const [isLookalikeGenerated, setIsLookalikeGenerated] = useState(false);
+    const [formattedDates, setFormattedDates] = useState<string>('');
+    const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
+    const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
+    const [selectedDates, setSelectedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
+    const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
+    const isCalendarOpen = Boolean(calendarAnchorEl);
+    const dropdownOpen = Boolean(dropdownEl);
+    const [filterPopupOpen, setFilterPopupOpen] = useState(false);
 
-    const handleSelectSize = (
-        id: string,
-        min_value: number,
-        max_value: number
-    ) => {
-        setSelectedSize(id);
-        setSliderValue([min_value, max_value]);
-        handleNext();
+    const handleFilterPopupOpen = () => {
+        setFilterPopupOpen(true);
     };
 
-    const handleGenerateClick = () => {
-        if (inputText.trim() !== "") {
-            setIsLookalikeGenerated(true);
+    const handleFilterPopupClose = () => {
+        setFilterPopupOpen(false);
+    };
+
+    const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setCalendarAnchorEl(event.currentTarget);
+    };
+
+    const handleCalendarClose = () => {
+        setCalendarAnchorEl(null);
+    };
+
+    const handleDateChange = (dates: { start: Date | null; end: Date | null }) => {
+        setSelectedDates(dates);
+        const { start, end } = dates;
+        if (start && end) {
+            setFormattedDates(`${start.toLocaleDateString()} - ${end.toLocaleDateString()}`);
+        } else if (start) {
+            setFormattedDates(`${start.toLocaleDateString()}`);
+        } else {
+            setFormattedDates('');
         }
     };
 
-    const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setInputText(event.target.value);
+    const handleApply = (dates: { start: Date | null; end: Date | null }) => {
+        if (dates.start && dates.end) {
+            const formattedStart = dates.start.toLocaleDateString();
+            const formattedEnd = dates.end.toLocaleDateString();
+
+            const dateRange = `${formattedStart} - ${formattedEnd}`;
+
+            setAppliedDates(dates);
+            setCalendarAnchorEl(null);
+
+            handleCalendarClose();
+        }
     };
 
-    const handleSliderChange = (newValue: number | number[]) => {
-        const value = newValue as number[];
-        setSliderValue(value);
-        
-    };
-
-    const handleCancel = () => {
-        setSelectedSize("");
-        setSliderValue([0, 20]);
-        setCurrentStep(1);
-    };
-
-    const handleNext = () => {
-        setCurrentStep((prev) => prev + 1);
-    };
 
     return (
-        <Box sx={{ width: "100%", backgroundColor: "white" }}>
-            {isLookalikeGenerated ? (
-                <Lookalike tableRows={tableRows} />
-            ) : (
-                <Box>
-                    <Box sx={{ width: "100%", padding: 3, color: "#202124" }}>
-                        {/* Title */}
-                        <Typography
-                            variant="h1"
-                            sx={{
-                                fontFamily: "Nunito Sans",
-                                fontWeight: 700,
-                                fontSize: "19px",
-                                lineHeight: "25.92px",
-                                letterSpacing: "0%",
-                                marginBottom: 2,
-                                textAlign: "left",
-                            }}
-                        >
-                            Create Lookalike
+        <Box sx={{ width: "100%", pr: 2 }}>
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, }}>
+                <Box
+                    sx={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        flexWrap: 'wrap',
+                        pl: '0.5rem',
+                        mb: 2,
+                        gap: '15px',
+                    }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1, pt:2 }}>
+                        <Typography className='first-sub-title'>
+                            Lookalikes
                         </Typography>
-
-                        {/* Block with table Source */}
-                        {currentStep >= 1 && (
-                            <Box
-                                sx={{
-                                    textAlign: "left",
-                                    padding: "16px 20px 20px 20px",
-                                    borderRadius: "6px",
-                                    border: "1px solid #E4E4E4",
-                                    backgroundColor: "white",
-                                }}
-                            >
-                                <Typography
-                                    variant="h6"
-                                    sx={{
-                                        fontFamily: "Nunito Sans",
-                                        fontWeight: 500,
-                                        fontSize: "16px",
-                                        lineHeight: "22.5px",
-                                        marginBottom: 2,
-                                    }}
-                                >
-                                    Source
-                                </Typography>
-
-                                <SourceTableContainer tableData={tableData} />
-                            </Box>
-                        )}
-                        <Box
-                            sx={{
-                                width: "100%",
-                                display: "flex",
-                                justifyContent: "end",
-                                gap: 2,
-                            }}
-                        >
-                            {currentStep === 1 && (
-                                <Box
-                                    sx={{
-                                        width: "100%",
-                                        display: "flex",
-                                        justifyContent: "end",
-                                        gap: 2,
-                                        mt: 2,
-                                    }}
-                                >
-                                    <Button
-                                        variant="outlined"
-                                        sx={{
-                                            marginRight: "16px",
-                                            textTransform: "none",
-                                            color: "#5052B2",
-                                            height: "40px",
-                                            borderColor: "#5052B2",
-                                            backgroundColor: "#FFFFFF",
-                                            fontFamily: "Nunito Sans",
-                                            fontWeight: 500,
-                                            fontSize: "14px",
-                                            lineHeight: "19.6px",
-                                            letterSpacing: "0%",
-                                        }}
-                                    >
-                                        Add another Source
-                                    </Button>
-
-                                    <Button
-                                        sx={{
-                                            border: "1px #5052B2 solid",
-                                            color: "#FFFFFF",
-                                            backgroundColor: "#5052B2",
-                                            textTransform: "none",
-                                            height: "40px",
-                                            fontFamily: "Nunito Sans",
-                                            fontWeight: 600,
-                                            fontSize: "14px",
-                                            lineHeight: "19.6px",
-                                            letterSpacing: "0%",
-                                            "&:hover": {
-                                                border: "1px #5052B2 solid",
-                                                backgroundColor: "#5052B2",
-                                            },
-                                        }}
-                                        variant="outlined"
-                                        onClick={handleNext}
-                                    >
-                                        <Typography
-                                            padding={"0.5rem 2rem"}
-                                            fontSize={"0.8rem"}
-                                        >
-                                            Create lookalike
-                                        </Typography>
-                                    </Button>
-                                </Box>
-                            )}
-                        </Box>
-
-                        {currentStep >= 2 && (
-                            <AudienceSizeSelector
-                                audienceSize={audienceSize}
-                                min={0}
-                                max={20}
-                                onSliderChange={handleSliderChange}
-                                onSelectSize={handleSelectSize}
-                                selectedSize={selectedSize}
-                                sliderValue={sliderValue}
-                            />
-                        )}
-
-                        {currentStep >= 3 && (
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    borderRadius: "6px",
-                                    border: "1px solid #E4E4E4",
-                                    backgroundColor: "white",
-                                    padding: "24px 20px",
-                                    mt: 2,
-                                }}
-                            >
-                                <Typography
-                                className="first-sub-title"
-                                    variant="body1"
-                                    sx={{
-                                        fontWeight: "bold",
-                                        fontSize: "19px",
-                                        fontFamily: "Nunito Sans",
-                                        letterSpacing: "0%",
-                                        paddingRight: "20px",
-                                        color: "#000000",
-                                        whiteSpace: "nowrap",
-                                    }}
-                                >
-                                    Create Name
-                                </Typography>
-                                <TextField
-                                    fullWidth
-                                    variant="outlined"
-                                    placeholder="name"
-                                    value={inputText}
-                                    onChange={handleInputChange}
-                                    sx={{
-                                        "& .MuiOutlinedInput-root": {
-                                            borderRadius: "8px",
-                                            paddingLeft: "8px",
-                                            width: "300px",
-                                            height: "40px",
-                                            "@media (max-width: 1080px)": {
-                                                width: "250px",
-                                            },
-                                            "@media (max-width: 600px)": {
-                                                width: "100%",
-                                            },
-                                        },
-                                        "& .MuiInputBase-input": {
-                                            fontFamily: "Nunito Sans",
-                                            fontWeight: 400,
-                                            fontSize: "14px",
-                                            lineHeight: "20px",
-                                        },
-                                    }}
-                                />
-                            </Box>
-                        )}
                     </Box>
-                    {currentStep >= 2 && (
-                        <Box
-                            sx={{
-                                display: "flex",
-                                justifyContent: "end",
-                                gap: 2,
-                                borderTop: "1px solid rgba(228, 228, 228, 1)",
-                                mt: 2,
-                                pr: 2,
-                                pt: "0.5rem",
-                            }}
-                        >
-                            <Button
-                                sx={{
-                                    border: "1px #5052B2 solid",
-                                    color: "#5052B2",
-                                    backgroundColor: "#FFFFFF",
-                                    textTransform: "none",
-                                    mt: 1,
-                                    "&:hover": {
-                                        border: "1px #5052B2 solid",
-                                        backgroundColor: "#FFFFFF",
-                                    },
-                                }}
-                                variant="outlined"
-                                onClick={handleCancel}
-                            >
-                                <Typography
-                                    padding={"0.5rem 2rem"}
-                                    fontSize={"0.8rem"}
-                                >
-                                    Cancel
-                                </Typography>
-                            </Button>
-                            <Button
-                                sx={{
-                                    border: "1px #5052B2 solid",
-                                    color: "#FFFFFF",
-                                    backgroundColor: "#5052B2",
-                                    textTransform: "none",
-                                    gap: 0,
-                                    mt: 1,
-                                    opacity: inputText.trim() === "" ? 0.6 : 1,
-                                    "&:hover": {
-                                        border: "1px #5052B2 solid",
-                                        backgroundColor: "#5052B2",
-                                    },
-                                    "&.Mui-disabled": {
-                                        color: "#FFFFFF",
-                                        border: "1px #5052B2 solid",
-                                        backgroundColor: "#5052B2",
-                                        opacity: 0.6,
-                                    },
-                                }}
-                                variant="outlined"
-                                disabled={inputText.trim() === ""}
-                                onClick={handleGenerateClick}
-                            >
-                                <Box
+                    <Box sx={{
+                        display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px',
+                        '@media (max-width: 900px)': {
+                            gap: '8px'
+                        }
+                    }}>
+                        {isLookalikeGenerated &&
+                            <Box>
+                                <Button
+                                    aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
+                                    aria-haspopup="true"
+                                    aria-expanded={dropdownOpen ? 'true' : undefined}
+                                    disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
                                     sx={{
-                                        display: "flex",
-                                        flexDirection: "row",
-                                        alignItems: "center",
-                                        padding: "0.5rem 1rem",
-                                        gap: 1,
+                                        textTransform: 'none',
+                                        color: 'rgba(128, 128, 128, 1)',
+                                        opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
+                                        border: '1px solid rgba(184, 184, 184, 1)',
+                                        borderRadius: '4px',
+                                        padding: '8px',
+                                        minWidth: 'auto',
+                                        '@media (max-width: 900px)': {
+                                            border: 'none',
+                                            padding: 0
+                                        },
+                                        '&:hover': {
+                                            backgroundColor: 'transparent',
+                                            border: '1px solid rgba(80, 82, 178, 1)',
+                                            color: 'rgba(80, 82, 178, 1)',
+                                            '& .MuiSvgIcon-root': {
+                                                color: 'rgba(80, 82, 178, 1)'
+                                            }
+                                        }
+                                    }}
+                                //onClick={handleDownload}
+                                >
+                                    <DownloadIcon fontSize='medium' />
+                                </Button>
+                                <Button
+                                    onClick={handleFilterPopupOpen}
+                                    disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
+                                    aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
+                                    aria-haspopup="true"
+                                    aria-expanded={dropdownOpen ? 'true' : undefined}
+                                    sx={{
+                                        textTransform: 'none',
+                                        // color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
+                                        // border: selectedFilters.length > 0 ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
+                                        color: 'rgba(128, 128, 128, 1)',
+                                        border: '1px solid rgba(184, 184, 184, 1)',
+                                        borderRadius: '4px',
+                                        padding: '8px',
+                                        opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
+                                        minWidth: 'auto',
+                                        position: 'relative',
+                                        '@media (max-width: 900px)': {
+                                            border: 'none',
+                                            padding: 0
+                                        },
+                                        '&:hover': {
+                                            backgroundColor: 'transparent',
+                                            border: '1px solid rgba(80, 82, 178, 1)',
+                                            color: 'rgba(80, 82, 178, 1)',
+                                            '& .MuiSvgIcon-root': {
+                                                color: 'rgba(80, 82, 178, 1)'
+                                            }
+                                        }
                                     }}
                                 >
-                                    <Image
-                                        src={"stars-icon.svg"}
-                                        alt="Stars"
-                                        width={15}
-                                        height={15}
+                                    <FilterListIcon fontSize='medium' sx={{
+                                        //color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' 
+                                        color: 'rgba(128, 128, 128, 1)'
+                                    }} />
+
+                                    {/* {selectedFilters.length > 0 && (
+                                    <Box
+                                        sx={{
+                                            position: 'absolute',
+                                            top: 6,
+                                            right: 8,
+                                            width: '10px',
+                                            height: '10px',
+                                            backgroundColor: 'red',
+                                            borderRadius: '50%',
+                                            '@media (max-width: 900px)': {
+                                                top: -1,
+                                                right: 1
+                                            }
+                                        }}
                                     />
-                                    <Typography fontSize={"0.8rem"}>
-                                        Generate lookalike
+                                )} */}
+                                </Button>
+
+                                <Button
+                                    aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
+                                    aria-haspopup="true"
+                                    disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
+                                    aria-expanded={isCalendarOpen ? 'true' : undefined}
+                                    onClick={handleCalendarClick}
+                                    sx={{
+                                        textTransform: 'none',
+                                        color: 'rgba(128, 128, 128, 1)',
+                                        border: formattedDates ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
+                                        borderRadius: '4px',
+                                        opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
+                                        padding: '8px',
+                                        minWidth: 'auto',
+                                        '@media (max-width: 900px)': {
+                                            border: 'none',
+                                            padding: 0
+                                        },
+                                        '&:hover': {
+                                            backgroundColor: 'transparent',
+                                            border: '1px solid rgba(80, 82, 178, 1)',
+                                            color: 'rgba(80, 82, 178, 1)',
+                                            '& .MuiSvgIcon-root': {
+                                                color: 'rgba(80, 82, 178, 1)'
+                                            }
+                                        }
+                                    }}
+                                >
+                                    <DateRangeIcon fontSize='medium' sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)', }} />
+                                    <Typography variant="body1" sx={{
+                                        fontFamily: 'Nunito Sans',
+                                        fontSize: '14px',
+                                        fontWeight: '600',
+                                        lineHeight: '19.6px',
+                                        textAlign: 'left',
+
+                                        "@media (max-width: 600px)": {
+                                            display: 'none'
+                                        },
+                                    }}>
                                     </Typography>
-                                </Box>
-                            </Button>
+                                </Button>
+                            </Box>
+                        }
+                    </Box>
+                </Box>
+                <Box>
+                    {isLookalikeGenerated ? (
+                        <Lookalike tableRows={tableRows} />
+                    ) : (
+                        <Box sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            border: '1px solid rgba(235, 235, 235, 1)',
+                            borderRadius: 2,
+                            padding: 3,
+                            boxSizing: 'border-box',
+                            width: '100%',
+                            textAlign: 'center',
+                            flex: 1,
+                            '& img': {
+                                width: 'auto',
+                                height: 'auto',
+                                maxWidth: '100%'
+                            }
+                        }}>
+                            <Typography variant="h5" className='first-sub-title' sx={{
+                                mb: 3,
+                                fontFamily: 'Nunito Sans',
+                                fontSize: "20px",
+                                color: "#4a4a4a",
+                                fontWeight: "600",
+                                lineHeight: "28px"
+                            }}>
+                                Generate Your First Lookalike on Source Page
+                            </Typography>
+                            <Image src='/pixel_installation_needed.svg' alt='Need Pixel Install'
+                                height={250} width={300} />
+                            <Typography variant="body1" className='table-data' sx={{
+                                mt: 3,
+                                fontFamily: 'Nunito Sans',
+                                fontSize: "14px",
+                                color: "#808080",
+                                fontWeight: "600",
+                                lineHeight: "20px"
+                            }}>
+                                To generate your first Lookalike go to Source page and start creating.
+                            </Typography>
+                            <Link href="/sources" passHref>
+                                <Button
+                                    variant="contained"
+                                    className="second-sub-title"
+                                    sx={{
+                                        backgroundColor: "rgba(80, 82, 178, 1)",
+                                        textTransform: "none",
+                                        padding: "10px 24px",
+                                        mt: 3,
+                                        color: "#fff !important",
+                                        ":hover": {
+                                            backgroundColor: "rgba(80, 82, 178, 1)",
+                                        },
+                                    }}
+                                >
+                                    Go to Source Page
+                                </Button>
+                            </Link>
                         </Box>
                     )}
                 </Box>
-            )}
+            </Box>
         </Box>
     );
 };

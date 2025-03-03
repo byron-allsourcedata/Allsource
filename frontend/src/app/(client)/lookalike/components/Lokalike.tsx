@@ -19,47 +19,7 @@ interface LookalikeProps {
 
 const Lookalike: React.FC<LookalikeProps> = ({ tableRows }) => {
     return (
-        <Box sx={{ width: "100%", backgroundColor: "white" }}>
-            <Box sx={{ width: "100%", padding: 3, color: "#202124" }}>
-                {/* Заголовок */}
-                <Typography
-                    variant="h1"
-                    sx={{
-                        fontFamily: "Nunito Sans",
-                        fontWeight: 700,
-                        fontSize: "19px",
-                        lineHeight: "25.92px",
-                        marginBottom: 2,
-                        textAlign: "left",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                    }}
-                >
-                    Lookalike
-                    {/* Иконка с бордером, расположенная справа */}
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            border: "1px solid #B1B1B1",
-                            borderRadius: "4px",
-                            padding: "4px",
-                            marginLeft: "auto",
-                            width: "40px",
-                            height: "40px",
-                        }}
-                    >
-                        <GetAppIcon
-                            sx={{
-                                width: "24px",
-                                height: "24px",
-                                color: "#808080",
-                            }}
-                        />
-                    </Box>
-                </Typography>
+        <Box sx={{ width: "100%", display: 'flex', flexDirection: 'column', gap:2 }}>
                 <Box
                     sx={{
                         textAlign: "left",
@@ -281,8 +241,6 @@ const Lookalike: React.FC<LookalikeProps> = ({ tableRows }) => {
                         </Box>
                     ))}
                 </Box>
-            </Box>
-
             <Box
                 sx={{
                     width: "100%",
