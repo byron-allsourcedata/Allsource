@@ -28,8 +28,6 @@ export async function POST(req) {
 
     const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 60 });
 
-    console.log({presignedUrl})
-
     return NextResponse.json({ url: presignedUrl }, { status: 200 });
   } catch {
     return NextResponse.json({ error: "Failed to generate presigned URL" }, { status: 500 });
