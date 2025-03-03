@@ -4,9 +4,7 @@ import Image from "next/image";
 import TabPanel from '@mui/lab/TabPanel';
 import TabList from '@mui/lab/TabList';
 import TabContext from '@mui/lab/TabContext';
-import { useEffect, useState } from 'react';
-import axiosInstance from '@/axios/axiosInterceptorInstance';
-import { ContentCopy } from '@mui/icons-material';
+import { useState } from 'react';
 import CustomizedProgressBar from "@/components/ProgressBar";
 
 
@@ -71,26 +69,8 @@ interface GoogleADSConnectProps {
 }
 
 const GoogleADSConnectPopup = ({ open, handlePopupClose, boxShadow }: GoogleADSConnectProps) => {
-    const [authorizeUrl, setAuthorizeUrl] = useState('')
     const [value, setValue] = useState('1')
     const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        const fetchApiKey = async () => {
-            setLoading(true);
-            try {
-                const response = await axiosInstance.get('slack/authorize-url')
-                if (response.status === 200) {
-                    setAuthorizeUrl(response.data)
-                }
-            } catch (err) {
-            } finally {
-                setLoading(false);
-            }
-        }
-        fetchApiKey()
-    }, [])
-
 
     const handleChangeTab = (event: React.SyntheticEvent, newValue: string) => {
         setValue(newValue);

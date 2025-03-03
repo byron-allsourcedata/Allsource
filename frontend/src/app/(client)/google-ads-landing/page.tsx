@@ -38,12 +38,9 @@ const GoogleAdsLanding = () => {
           showInfoToast('Connect to GoogleAds success!')
           router.push(`/integrations`);
         } 
-        else if (response.data.status == 'ERROR_GOOGLEADS_TOKEN') {
-          showErrorToast('Error connect to GoogleAds');
-          router.push(`/integrations`);
-        }
       } catch (error) {
-        console.error('GoogleAds Landing:', error);
+        showErrorToast(`Error connect to GoogleAds ${error}`);
+        router.push(`/integrations`);
       }
     };
 
