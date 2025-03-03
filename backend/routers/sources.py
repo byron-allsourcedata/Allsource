@@ -43,6 +43,7 @@ async def create_source(
         source_origin=payload.source_origin,
         source_name=payload.source_name,
         file_url=payload.file_url,
+        rows=payload.rows,
     )
 
 

@@ -1,8 +1,11 @@
 import csv
 import os
+import json
 from openai import OpenAI
 import logging
 from fastapi import UploadFile
+from typing import List
+from schemas.audience import Row
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
@@ -85,13 +88,14 @@ class AudienceSourceService:
             await rabbitmq_connection.close()
 
 
-    async def create_source(self, user, source_type: str, source_origin: str, source_name: str, file_url: str = None):
+    async def create_source(self, user, source_type: str, source_origin: str, source_name: str, rows: List[Row], file_url: str = None):
         creating_data = {
             "user_id": user.get("id"),
             "source_type": source_type,
             "source_origin": source_origin,
             "source_name": source_name,
             "file_url": file_url,
+            "rows": json.dumps([row.dict() for row in rows])
         }
 
         created_data = self.audience_sources_persistence.create_source(**creating_data)

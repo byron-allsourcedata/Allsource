@@ -10,11 +10,16 @@ class AudienceRequest(BaseModel):
 class HeadingSubstitutionRequest(BaseModel):
     headings: List[str]
 
+class Row(BaseModel):
+    type: str
+    value: str
+
 class NewSource(BaseModel):
     source_type: str
     source_origin: str
     source_name: str
     file_url: str
+    rows: List[Row]
 
 class AudienceResponse(BaseModel):
     id: int

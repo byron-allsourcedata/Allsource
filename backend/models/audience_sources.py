@@ -1,4 +1,4 @@
-from sqlalchemy import Column, event, Integer, TIMESTAMP, VARCHAR, ForeignKey, Index
+from sqlalchemy import Column, event, Integer, TIMESTAMP, JSON, VARCHAR, ForeignKey, Index
 from .base import Base, create_timestamps, update_timestamps
 
 
@@ -18,6 +18,7 @@ class AudienceSource(Base):
     matched_records_status = Column(VARCHAR(16), default='pending', nullable=False)
     processed_records = Column(Integer, default=0, nullable=False)
     file_url = Column(VARCHAR(256), nullable=True)
+    mapped_fields = Column(JSON, nullable=True)
 
     __table_args__ = (
         Index('audience_sources_pkey', 'id'),

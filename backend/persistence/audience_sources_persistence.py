@@ -56,6 +56,7 @@ class AudienceSourcesPersistence:
             source_origin=creating_data.get("source_origin"),
             file_url=creating_data.get("file_url"),
             name=creating_data.get("source_name"),
+            mapped_fields=creating_data.get("rows"),
         )
 
         self.db.add(source)

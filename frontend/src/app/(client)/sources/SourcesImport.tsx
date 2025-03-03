@@ -178,11 +178,14 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
     const handleSumbit = async () => {
         setLoading(true)
 
+        const rowsToSubmit = rows.map(({ id, canDelete, ...rest }) => rest);
+
         const newSource = {
             source_type: sourceType,
             source_origin: sourceMethod === 1 ? "csv" : "pixel",
             source_name: sourceName,
-            file_url: fileUrl
+            file_url: fileUrl,
+            rows: rowsToSubmit
         }
         
         try {
