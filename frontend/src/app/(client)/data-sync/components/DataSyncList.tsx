@@ -41,6 +41,7 @@ import CustomTablePagination from "@/components/CustomTablePagination";
 import AttentiveIntegrationPopup from "@/components/AttentiveIntegrationPopup";
 import BCommerceConnect from "@/components/Bcommerce";
 import KlaviyoIntegrationPopup from "@/components/KlaviyoIntegrationPopup";
+import SalesForceIntegrationPopup from "@/components/SalesForceIntegrationPopup";
 import MailchimpConnect from "@/components/MailchimpConnect";
 import OmnisendConnect from "@/components/OmnisendConnect";
 import SendlaneConnect from "@/components/SendlaneConnect";
@@ -95,6 +96,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 
   const [openMetaConnect, setOpenMetaConnect] = useState(false);
   const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false);
+  const [openSalesForceConnect, setOpenSalesForceConnect] = useState(false);
   const [openAttentiveConnect, setAttentiveConnect] = useState(false);
   const [openShopifuConnect, setOpenShopifyConnect] = useState(false);
   const [openBigcommrceConnect, setOpenBigcommerceConnect] = useState(false);
@@ -108,6 +110,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   const handleCloseIntegrate = () => {
     setOpenMetaConnect(false);
     setOpenKlaviyoConnect(false);
+    setOpenSalesForceConnect(false)
     setOpenShopifyConnect(false);
     setAttentiveConnect(false);
     setOpenBigcommerceConnect(false);
@@ -612,6 +615,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
             setOpenGoogleADSConnect(true);
           } else if (dataSyncPlatform === "webhook") {
             setOpenWebhookConnect(true);
+          } else if (dataSyncPlatform === "sales_force") {
+            setOpenSalesForceConnect(true);
           }
           setIsLoading(false);
           setAnchorEl(null);
@@ -1251,8 +1256,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
           initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'mailchimp')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
         <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={() => { setOpenKlaviyoConnect(false), setIsInvalidApiKey(false) }}
           initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
-        <SalesForceIntegrationPopup open={openKlaviyoConnect} handleClose={() => { setOpenKlaviyoConnect(false), setIsInvalidApiKey(false) }}
-        initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
+        <SalesForceIntegrationPopup open={openSalesForceConnect} handleClose={() => { setOpenSalesForceConnect(false), setIsInvalidApiKey(false) }}
+        initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sales_force')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
         <OmnisendConnect open={openOmnisendConnect} handleClose={() => { setOpenOmnisendConnect(false), setIsInvalidApiKey(false) }}
           initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'omnisend')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
         <SendlaneConnect

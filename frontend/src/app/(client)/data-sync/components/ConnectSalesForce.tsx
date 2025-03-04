@@ -23,13 +23,6 @@ type KlaviyoList = {
     list_name: string
 }
 
-type KlaviyoTags = {
-    id: string
-    tags_name: string
-}
-
-
-
 const ConnectSalesForce: React.FC<ConnectSalesForcePopupProps> = ({ open, onClose, data, isEdit }) => {
     const { triggerSync } = useIntegrationContext();
     const [loading, setLoading] = useState(false)
@@ -163,7 +156,7 @@ const ConnectSalesForce: React.FC<ConnectSalesForcePopupProps> = ({ open, onClos
         setLoading(true)
         const response = await axiosInstance.get('/integrations/sync/list/', {
             params: {
-                service_name: 'Klaviyo'
+                service_name: 'sales_force'
             }
         })
         setKlaviyoList(response.data)
@@ -194,7 +187,7 @@ const ConnectSalesForce: React.FC<ConnectSalesForcePopupProps> = ({ open, onClos
             name: selectedOption?.list_name
         }, {
             params: {
-                service_name: 'klaviyo'
+                service_name: 'sales_force'
             }
         });
 
@@ -210,7 +203,7 @@ const ConnectSalesForce: React.FC<ConnectSalesForcePopupProps> = ({ open, onClos
             name: tagName
         }, {
             params: {
-                service_name: 'klaviyo'
+                service_name: 'sales_force'
             }
         })
         if (newTagsResponse.status !== 201 && newTagsResponse.status !== 200) {
@@ -751,7 +744,7 @@ const ConnectSalesForce: React.FC<ConnectSalesForcePopupProps> = ({ open, onClos
         >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                 <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
-                    Connect to Klaviyo
+                    Connect to SalesForce
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
                     <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-the-maximiz-contact-sync-work" target="_blank" rel="noopener referrer" className="main-text" sx={{
@@ -770,7 +763,7 @@ const ConnectSalesForce: React.FC<ConnectSalesForcePopupProps> = ({ open, onClos
                 <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                 <TabContext value={value}>
                     <Box sx={{pb: 4}}>
-                        <TabList centered aria-label="Connect to Klaviyo Tabs"
+                        <TabList centered aria-label="Connect to SalesForce Tabs"
                         TabIndicatorProps={{sx: {backgroundColor: "#5052b2" } }} 
                         sx={{
                             "& .MuiTabs-scroller": {

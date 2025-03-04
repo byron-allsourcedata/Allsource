@@ -35,6 +35,7 @@ class SourcePlatformEnum(Enum):
     SLACK = 'slack'
     GOOGLE_ADS = 'google_ads'
     WEBHOOK = 'webhook'
+    SALES_FORCE = 'sales_force'
 
 
 class UserPaymentStatusEnum(Enum):

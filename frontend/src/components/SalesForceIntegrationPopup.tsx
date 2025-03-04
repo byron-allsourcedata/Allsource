@@ -83,8 +83,8 @@ const klaviyoStyles = {
                 borderColor: '#0000FF',
             },
             '&.Mui-error .MuiOutlinedInput-notchedOutline': {
-            borderColor: 'red',
-        },
+                borderColor: 'red',
+            },
         },
         '&+.MuiFormHelperText-root': {
             marginLeft: '0',
@@ -200,10 +200,10 @@ const SalesForceIntegrationPopup = ({ handleClose, open, onSave, initApiKey, box
     };
 
     const handleLogin = async () => {
-        const CLIENT_ID = "your_client_id";
-        const REDIRECT_URI = "http://your-redirect-uri.com";
-        const AUTH_URL = `https://login.salesforce.com/services/oauth2/authorize?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;
-        window.open(authorizeUrl, '_blank');
+        const client_id = process.env.NEXT_PUBLIC_SALES_FORCE_TOKEN;
+        const redirect_uri = `${process.env.NEXT_PUBLIC_BASE_URL}/sales-force-landing`;
+        const auth_url = `https://login.salesforce.com/services/oauth2/authorize?response_type=code&client_id=${client_id}&redirect_uri=${encodeURIComponent(redirect_uri)}`;
+        window.open(auth_url, '_blank');
     };
 
     const handleNextTab = async () => {
@@ -228,7 +228,7 @@ const SalesForceIntegrationPopup = ({ handleClose, open, onSave, initApiKey, box
                 shop_domain: ''
             })
         }
-            handleClose()
+        handleClose()
     }
 
     const getButton = (tabValue: string) => {
@@ -291,27 +291,27 @@ const SalesForceIntegrationPopup = ({ handleClose, open, onSave, initApiKey, box
 
     return (
         <>
-        {loading && (
-            <Box
-                sx={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'rgba(0, 0, 0, 0.2)',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    zIndex: 1400,
-                    overflow: 'hidden'
-                }}
-            >
-            <Box sx={{width: '100%', top: 0, height: '100vh'}}>
-                <LinearProgress />
-            </Box>
-            </Box>
-        )}
+            {loading && (
+                <Box
+                    sx={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0, 0, 0, 0.2)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 1400,
+                        overflow: 'hidden'
+                    }}
+                >
+                    <Box sx={{ width: '100%', top: 0, height: '100vh' }}>
+                        <LinearProgress />
+                    </Box>
+                </Box>
+            )}
             <Drawer
                 anchor="right"
                 open={open}
@@ -404,46 +404,46 @@ const SalesForceIntegrationPopup = ({ handleClose, open, onSave, initApiKey, box
 
                             </Box>
                             <TabPanel value="1" sx={{ p: 0 }}>
-                            <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }} mt={2} mb={2}>
-                                    <Image src='/salesforce-icon.svg' alt='salesforce' height={24} width={24} />
-                                    <Typography variant="h6" sx={{
-                                        fontFamily: 'Nunito Sans',
-                                        fontSize: '16px',
-                                        fontWeight: '600',
-                                        color: '#202124',
-                                        lineHeight: 'normal'
-                                    }}>
-                                        Login to your SalesForce
-                                    </Typography>
-                                </Box>
-                                <Box>
-                                    <Button
-                                        fullWidth
-                                        onClick={handleLogin}
-                                        variant="contained"
-                                        startIcon={<Image src='/salesforce-icon.svg' alt='salesforce' height={24} width={24} />}
-                                        sx={{
-                                            backgroundColor: '#f24e1e',
-                                            fontFamily: "Nunito Sans",
-                                            fontSize: '14px',
+                                <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }} mt={2} mb={2}>
+                                        <Image src='/salesforce-icon.svg' alt='salesforce' height={24} width={24} />
+                                        <Typography variant="h6" sx={{
+                                            fontFamily: 'Nunito Sans',
+                                            fontSize: '16px',
                                             fontWeight: '600',
-                                            lineHeight: '17px',
-                                            letterSpacing: '0.25px',
-                                            color: "#fff",
-                                            textTransform: 'none',
-                                            padding: '14.5px 24px',
-                                            '&:hover': {
-                                                backgroundColor: '#f24e1e'
-                                            },
-                                            borderRadius: '6px',
-                                            border: '1px solid #f24e1e',
-                                        }}
-                                    >
-                                        Connect to Slack
-                                    </Button>
+                                            color: '#202124',
+                                            lineHeight: 'normal'
+                                        }}>
+                                            Login to your SalesForce
+                                        </Typography>
+                                    </Box>
+                                    <Box>
+                                        <Button
+                                            fullWidth
+                                            onClick={handleLogin}
+                                            variant="contained"
+                                            startIcon={<Image src='/salesforce-icon.svg' alt='salesforce' height={24} width={24} />}
+                                            sx={{
+                                                backgroundColor: '#f24e1e',
+                                                fontFamily: "Nunito Sans",
+                                                fontSize: '14px',
+                                                fontWeight: '600',
+                                                lineHeight: '17px',
+                                                letterSpacing: '0.25px',
+                                                color: "#fff",
+                                                textTransform: 'none',
+                                                padding: '14.5px 24px',
+                                                '&:hover': {
+                                                    backgroundColor: '#f24e1e'
+                                                },
+                                                borderRadius: '6px',
+                                                border: '1px solid #f24e1e',
+                                            }}
+                                        >
+                                            Connect to Slack
+                                        </Button>
+                                    </Box>
                                 </Box>
-                            </Box>
                             </TabPanel>
                             <TabPanel value="2" sx={{ p: 0 }}>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
