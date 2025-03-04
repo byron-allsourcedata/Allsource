@@ -40,7 +40,20 @@ interface FetchDataParams {
     rowsPerPage: number;
 }
 
-interface CompanyEmployeesProps {
+interface Source {
+    id: number
+    name: string
+    source_origin: string
+    source_type: string
+    created_date: Date
+    updated_date: Date
+    created_by: string
+    total_records?: number
+    matched_records?: number
+}
+
+interface SourcesListProps {
+    createdSource: Source | null
 }
 
 interface RenderCeil {
@@ -49,7 +62,7 @@ interface RenderCeil {
 }
 
 
-const SourcesList: React.FC<CompanyEmployeesProps> = ({ }) => {
+const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
     const router = useRouter();
     const { hasNotification } = useNotification();
     const [data, setData] = useState<any[]>([]);
@@ -58,7 +71,7 @@ const SourcesList: React.FC<CompanyEmployeesProps> = ({ }) => {
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
     const [status, setStatus] = useState<string | null>(null);
     const [showSlider, setShowSlider] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
     const dropdownOpen = Boolean(dropdownEl);
     const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
@@ -86,106 +99,6 @@ const SourcesList: React.FC<CompanyEmployeesProps> = ({ }) => {
     };
 
     const isOpen = Boolean(anchorEl);
-
-    useEffect(() => {
-        document.body.style.overflow = 'hidden';
-        return () => {
-            document.body.style.overflow = 'auto';
-        };
-    }, []);
-
-    const handleClosePopup = () => {
-        setOpenPopup(false);
-    };
-
-
-    const handleFilterPopupOpen = () => {
-        setFilterPopupOpen(true);
-    };
-
-    const handleFilterPopupClose = () => {
-        setFilterPopupOpen(false);
-    };
-
-    const handleSortRequest = (property: string) => {
-        const isAsc = orderBy === property && order === 'asc';
-        setOrder(isAsc ? 'desc' : 'asc');
-        setOrderBy(property);
-    };
-
-
-    const handleChangeRowsPerPage = (event: React.ChangeEvent<{ value: unknown }>) => {
-        setRowsPerPage(parseInt(event.target.value as string, 10));
-        setPage(0);
-    };
-
-
-    
-    const fetchEmployeesCompany = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
-        try {
-            setIsLoading(true);
-            const accessToken = localStorage.getItem("token");
-            if (!accessToken) {
-                router.push('/signin');
-                return;
-            }
-
-            // let url = `/company/employess?company_id=${companyId}&page=${page + 1}&per_page=${rowsPerPage}`;
-            
-
-    
-            // const response = await axiosInstance.get(url);
-            // const [employees, count] = response.data;
-
-            const count = 1
-            const employees = [{sources: "CSV File", type: "Intent", created_date: "01.01.1020", created_by: "01.01.1020", updated_date: "01.01.1020", number_of_customers: 23, matched_records: 23}]
-
-    
-            setData(Array.isArray(employees) ? employees : []);
-            setCount(count || 0);
-            setStatus("");
-    
-            const options = [15, 30, 50, 100, 200, 500];
-            let RowsPerPageOptions = options.filter(option => option <= count);
-            if (RowsPerPageOptions.length < options.length) {
-                RowsPerPageOptions = [...RowsPerPageOptions, options[RowsPerPageOptions.length]];
-            }
-            setRowsPerPageOptions(RowsPerPageOptions);
-            const selectedValue = RowsPerPageOptions.includes(rowsPerPage) ? rowsPerPage : 15;
-            setRowsPerPage(selectedValue);
-
-        } catch (error) {
-            if (error instanceof AxiosError && error.response?.status === 403) {
-                if (error.response.data.status === 'NEED_BOOK_CALL') {
-                    sessionStorage.setItem('is_slider_opened', 'true');
-                    setShowSlider(true);
-                } else if (error.response.data.status === 'PIXEL_INSTALLATION_NEEDED') {
-                    setStatus(error.response.data.status);
-                } else {
-                    setShowSlider(false);
-                }
-            }
-        } finally {
-            setIsLoading(false);
-        }
-    }
-
-    interface FilterParams {
-        regions: string[];
-        searchQuery: string | null;
-        department: Record<string, boolean>; 
-        seniority: Record<string, boolean>; 
-        jobTitle: Record<string, boolean>; 
-    }
-
-    useEffect(() => {
-        fetchEmployeesCompany({
-            sortBy: orderBy,
-            sortOrder: order,
-            page,
-            rowsPerPage,
-        });
-    }, [orderBy, order, page, rowsPerPage, selectedFilters]);
 
     if (isLoading) {
         return <CustomizedProgressBar />;
@@ -280,55 +193,8 @@ const SourcesList: React.FC<CompanyEmployeesProps> = ({ }) => {
     };
 
 
-    const handleChangePage = (event: unknown, newPage: number) => {
-        setPage(newPage);
-    };
-
     const truncateText = (text: string, maxLength: number) => {
         return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
-    };
-
-
-
-    const handleApplyFilters = (filters: FilterParams) => {
-        const newSelectedFilters: { label: string; value: string }[] = [];
-
-        const getSelectedValues = (obj: Record<string, boolean>): string => {
-            return Object.entries(obj)
-                .filter(([_, value]) => value)
-                .map(([key]) => key)
-                .join(', ');
-        };
-
-        // Map of filter conditions to their labels
-        const filterMappings: { condition: boolean | string | string[] | number | null, label: string, value: string | ((f: any) => string) }[] = [
-            { condition: filters.regions?.length, label: 'Regions', value: () => filters.regions!.join(', ') },
-            { condition: filters.searchQuery?.trim() !== '', label: 'Search', value: filters.searchQuery || '' },
-            { 
-                condition: filters.seniority && Object.values(filters.seniority).some(Boolean), 
-                label: 'Seniority', 
-                value: () => getSelectedValues(filters.seniority!) 
-            },
-            { 
-                condition: filters.jobTitle && Object.values(filters.jobTitle).some(Boolean), 
-                label: 'Job Title', 
-                value: () => getSelectedValues(filters.jobTitle!) 
-            },
-            { 
-                condition: filters.department && Object.values(filters.department).some(Boolean), 
-                label: 'Department', 
-                value: () => getSelectedValues(filters.department!) 
-            },
-        ];
-
-
-        filterMappings.forEach(({ condition, label, value }) => {
-            if (condition) {
-                newSelectedFilters.push({ label, value: typeof value === 'function' ? value(filters) : value });
-            }
-        });
-
-        setSelectedFilters(newSelectedFilters);
     };
 
     const capitalizeTableCell  = (city: string) => {
@@ -338,77 +204,7 @@ const SourcesList: React.FC<CompanyEmployeesProps> = ({ }) => {
             .join(' ');
     }
 
-    const handleResetFilters = async () => {
-        const url = `/company`;
 
-        try {
-            setIsLoading(true)
-            sessionStorage.removeItem('filters-employee')
-            const response = await axiosInstance.get(url);
-            const [leads, count] = response.data;
-
-            setData(Array.isArray(leads) ? leads : []);
-            setCount(count || 0);
-            setStatus(response.data.status);
-            setSelectedFilters([]);
-        } catch (error) {
-            console.error('Error fetching leads:', error);
-        }
-        finally {
-            setIsLoading(false)
-        }
-    };
-
-    const handleDeleteFilter = (filterToDelete: { label: string; value: string }) => {
-        const updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
-        setSelectedFilters(updatedFilters);
-        
-        const filters = JSON.parse(sessionStorage.getItem('filters-employee') || '{}');
-        const valuesToDelete = filterToDelete.value.split(',').map(value => value.trim());
-    
-        switch (filterToDelete.label) {
-            case 'Search':
-                filters.searchQuery = '';
-                break;
-            case 'Job Title':
-                Object.keys(filters.jobTitle).forEach(key => {
-                    if (valuesToDelete.includes(key)) {
-                        filters.jobTitle[key] = false;
-                    }
-                });
-                break;
-            case 'Department':
-                Object.keys(filters.department).forEach(key => {
-                    if (valuesToDelete.includes(key)) {
-                        filters.department[key] = false;
-                    }
-                });
-                break;
-            case 'Seniority':
-                Object.keys(filters.seniority).forEach(key => {
-                    if (valuesToDelete.includes(key)) {
-                        filters.seniority[key] = false;
-                    }
-                });
-                break;
-            default:
-                break;
-        }
-        
-        sessionStorage.setItem('filters-employee', JSON.stringify(filters));
-    
-        // Обновляем фильтры для применения
-        const newFilters: FilterParams = {
-            regions: updatedFilters.find(f => f.label === 'Regions') ? updatedFilters.find(f => f.label === 'Regions')!.value.split(', ') : [],
-            searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',
-            department: Object.fromEntries(Object.keys(filters.department).map(key => [key, updatedFilters.some(f => f.label === 'Department' && f.value.includes(key))])),
-            jobTitle: Object.fromEntries(Object.keys(filters.jobTitle).map(key => [key, updatedFilters.some(f => f.label === 'Job Title' && f.value.includes(key))])),
-            seniority: Object.fromEntries(Object.keys(filters.seniority).map(key => [key, updatedFilters.some(f => f.label === 'Seniority' && f.value.includes(key))]))
-        };
-    
-        // Применяем обновленные фильтры
-        handleApplyFilters(newFilters);
-    };
 
 
     return (
@@ -492,10 +288,10 @@ const SourcesList: React.FC<CompanyEmployeesProps> = ({ }) => {
                             >
                                 <Box>
                                     <Typography variant="body2" className="table-heading">
-                                        Total Payouts
+                                        Name
                                     </Typography>
                                     <Typography variant="subtitle1" className="table-data">
-                                        {43}
+                                        {createdSource?.name}
                                     </Typography>
                                 </Box>
                                 <Box>
@@ -504,10 +300,10 @@ const SourcesList: React.FC<CompanyEmployeesProps> = ({ }) => {
                                         className="table-heading"
                                         sx={{ textAlign: "left" }}
                                     >
-                                        Payouts paid
+                                        Source
                                     </Typography>
                                     <Typography variant="subtitle1" className="table-data">
-                                        {24}
+                                        {createdSource?.source_origin}
                                     </Typography>
                                 </Box>
                             </Box>
@@ -526,10 +322,10 @@ const SourcesList: React.FC<CompanyEmployeesProps> = ({ }) => {
                             >
                                 <Box>
                                     <Typography variant="body2" className="table-heading">
-                                        No. of invites
+                                        Type
                                     </Typography>
                                     <Typography variant="subtitle1" className="table-data">
-                                        {25}
+                                        {createdSource?.source_type}
                                     </Typography>
                                 </Box>
                                 <Box>
@@ -538,15 +334,83 @@ const SourcesList: React.FC<CompanyEmployeesProps> = ({ }) => {
                                         className="table-heading"
                                         sx={{ textAlign: "left" }}
                                     >
-                                        Payout date
+                                        Created By
                                     </Typography>
                                     <Typography variant="subtitle1" className="table-data">
-                                        {"25.10.1202"}
+                                        {createdSource?.created_by}
                                     </Typography>
                                 </Box>
+                            </Box>
+                            <Box
+                                sx={{
+                                display: "flex",
+                                gap: 6,
+                                "@media (max-width: 900px)": { gap: 3 },
+                                "@media (max-width: 600px)": {
+                                    justifyContent: "space-between",
+                                    width: "100%",
+                                    display: "flex",
+                                    pr: 1.5,
+                                },
+                                }}
+                            >
+                                <Box>
+                                    <Typography variant="body2" className="table-heading">
+                                        Created Date
+                                    </Typography>
+                                    <Typography variant="subtitle1" className="table-data">
+                                        {dayjs(createdSource?.created_date).isValid() ? dayjs(createdSource?.created_date).format('MMM D, YYYY') : '--'}
+                                    </Typography>
+                                </Box>
+                                <Box>
+                                    <Typography
+                                        variant="body2"
+                                        className="table-heading"
+                                        sx={{ textAlign: "left" }}
+                                    >
+                                        Updated Date
+                                    </Typography>
+                                    <Typography variant="subtitle1" className="table-data">
+                                        {dayjs(createdSource?.updated_date).isValid() ? dayjs(createdSource?.updated_date).format('MMM D, YYYY') : '--'}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                            <Box
+                                sx={{
+                                display: "flex",
+                                gap: 6,
+                                "@media (max-width: 900px)": { gap: 3 },
+                                "@media (max-width: 600px)": {
+                                    justifyContent: "space-between",
+                                    width: "100%",
+                                    display: "flex",
+                                    pr: 1.5,
+                                },
+                                }}
+                            >
+                                <Box>
+                                    <Typography variant="body2" className="table-heading">
+                                        Number of Customers
+                                    </Typography>
+                                    <Typography variant="subtitle1" className="table-data">
+                                        {createdSource?.total_records}
+                                    </Typography>
+                                </Box>
+                                <Box>
+                                    <Typography
+                                        variant="body2"
+                                        className="table-heading"
+                                        sx={{ textAlign: "left" }}
+                                    >
+                                        Matched Records
+                                    </Typography>
+                                    <Typography variant="subtitle1" className="table-data">
+                                        {createdSource?.matched_records}
+                                    </Typography>
                                 </Box>
                             </Box>
                         </Box>
+                    </Box>
                         {showSlider && <Slider />}
                     </Box>
                     <Popover

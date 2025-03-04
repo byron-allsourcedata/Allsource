@@ -19,6 +19,7 @@ from config.database import SessionLocal
 from enums import DomainStatus, UserAuthorizationStatus, TeamAccessLevel
 from exceptions import InvalidToken
 from models.users import Users as User
+from persistence.audience_sources_persistence import AudienceSourcesPersistence
 from persistence.company_persistence import CompanyPersistence
 from persistence.lookalikes import LookalikesPersistence
 from persistence.referral_user import ReferralUserPersistence
@@ -47,6 +48,7 @@ from persistence.user_persistence import UserPersistence
 from persistence.integrations.external_apps_installations import ExternalAppsInstallationsPersistence
 from persistence.referral_discount_code_persistence import ReferralDiscountCodesPersistence
 from schemas.auth_token import Token
+from services.audience_sources import AudienceSourceService
 from services.accounts import AccountsService
 from services.admin_customers import AdminCustomersService
 from services.audience import AudienceService
@@ -91,6 +93,9 @@ async def verify_signature(request: Request):
     if verifier.is_valid_request(raw_body, dict(request.headers)) == False:
         logger.debug("Error verification")
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Forbidden")
+
+def get_audience_sources_persistence(db: Session = Depends(get_db)):
+    return AudienceSourcesPersistence(db)
 
 def get_partners_asset_persistence(db: Session = Depends(get_db)) -> PartnersAssetPersistence:
     return PartnersAssetPersistence(db)
@@ -186,6 +191,11 @@ def get_accounts_service(
 
 def get_aws_service(s3_client=Depends(get_s3_client)) -> AWSService:
     return AWSService(s3_client)
+
+
+def get_audience_sources_service(audience_sources_persistence: AudienceSourcesPersistence = Depends(get_audience_sources_persistence)):
+    return AudienceSourceService(audience_sources_persistence=audience_sources_persistence)
+
 
 def get_slack_service(
         user_persistence: UserPersistence = Depends(get_user_persistence_service),

@@ -1,22 +1,35 @@
-export async function POST(req, res) {
-  if (req.method === "POST") {
-    const chunks = [];
-    req.on("data", (chunk) => {
-      chunks.push(chunk);
+import { S3Client } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { NextResponse } from "next/server";
+
+export async function POST(req) {
+  try {
+    const { fileType } = await req.json();
+
+    const currentTime = new Date().toISOString().replace(/[:.]/g, "-");
+    const fileName = `audience_sources/${currentTime}`;
+
+    const s3Client = new S3Client({
+      region: "us-east-2",
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      },
     });
 
-    req.on("end", () => {
-      const buffer = Buffer.concat(chunks);
-      const filePath = "your/file/path";
+    const params = {
+      Bucket: "maximiz-data",
+      Key: fileName,
+      ContentType: fileType,
+    };
 
-      res.status(200).json({ message: "Файл загружен", filePath });
-    });
+    const command = new PutObjectCommand(params);
 
-    req.on("error", (err) => {
-      console.error(err);
-      res.status(500).json({ message: "Ошибка загрузки файла" });
-    });
-  } else {
-    res.status(405).json({ message: "Метод не разрешен" });
+    const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 60 });
+
+    return NextResponse.json({ url: presignedUrl }, { status: 200 });
+  } catch {
+    return NextResponse.json({ error: "Failed to generate presigned URL" }, { status: 500 });
   }
 }

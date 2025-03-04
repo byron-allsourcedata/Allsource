@@ -43,19 +43,19 @@ interface FetchDataParams {
 interface Sources {
     id: number
     name: string
-    source: string
-    type: string
-    created_date: string
-    updated_date: string
+    source_origin: string
+    source_type: string
+    created_date: Date
+    updated_date: Date
     created_by: string
-    number_of_customers: number
-    matched_records: number
+    total_records?: number
+    matched_records?: number
 }
 
-interface CompanyEmployeesProps {
+interface SourceTableProps {
     setStatus: (status: string) => void
     status: string | null
-    setData: (data: Sources[]) => void
+    setData: (data: Sources[] | ((prevData: Sources[]) => Sources[])) => void;
     data: Sources[]
     setSources: (newState: boolean) => void
 }
@@ -66,7 +66,7 @@ interface RenderCeil {
 }
 
 
-const SourcesTable: React.FC<CompanyEmployeesProps> = ({ status, setStatus, data, setData, setSources }) => {
+const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, setData, setSources }) => {
     const router = useRouter();
     const { hasNotification } = useNotification();
     const [count_companies, setCount] = useState<number | null>(null);
@@ -89,10 +89,12 @@ const SourcesTable: React.FC<CompanyEmployeesProps> = ({ status, setStatus, data
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [selectedJobTitle, setSelectedJobTitle] = React.useState<string | null>(null);
     const [employeeId, setEmployeeId] = useState<number | null>(null)
+    const [selectedRowData, setSelectedRowData] = useState<Sources | null>(null);
 
 
-    const handleOpenPopover = (event: React.MouseEvent<HTMLElement>) => {
+    const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, rowData: Sources) => {
         setAnchorEl(event.currentTarget);
+        setSelectedRowData(rowData);
     };
 
     const handleClosePopover = () => {
@@ -138,6 +140,25 @@ const SourcesTable: React.FC<CompanyEmployeesProps> = ({ status, setStatus, data
     };
 
 
+    const handleDeleteSource = async () => {
+        setIsLoading(true);
+        try {
+            if (selectedRowData && selectedRowData.id){
+                const response = await axiosInstance.delete(`/audience-sources/${selectedRowData.id}`)
+                if (response.status === 200){
+                    showToast("Source successfully deleted!")
+                    setData((prevAccounts: Sources[]) =>
+                        prevAccounts.filter((item: Sources) => item.id !== selectedRowData.id)
+                    );
+                }
+            }
+        } catch {
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+
     
     const fetchEmployeesCompany = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
         try {
@@ -148,30 +169,40 @@ const SourcesTable: React.FC<CompanyEmployeesProps> = ({ status, setStatus, data
                 return;
             }
 
-            // let url = `/company/employess?company_id=${companyId}&page=${page + 1}&per_page=${rowsPerPage}`;
-            
+            let url = `/audience-sources?&page=${page + 1}&per_page=${rowsPerPage}`
 
-    
-            // const response = await axiosInstance.get(url);
-            // const [employees, count] = response.data;
+            if (sortBy) {
+                setPage(0)
+                url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
+            }
+
+            const response = await axiosInstance.get(url)
+
+            if (response.status === 200){
+                const [employees, count] = response.data;
+                setData(employees);
+                setCount(count || 0);
+            }
+
+
 
             // const count = 1
-            const count = 0
+            // const count = 0
             // const employees = [{id: 1, name: "SVO", source: "CSV File", type: "Intent", created_date: "01.01.1020", created_by: "01.01.1020", updated_date: "01.01.1020", number_of_customers: 23, matched_records: 23}]
-            const employees: Sources[] = [];
+            // const employees: Sources[] = [];
     
-            setData(employees);
-            setCount(count || 0);
+            // setData(employees);
+            // setCount(count || 0);
             setStatus("");
     
-            const options = [15, 30, 50, 100, 200, 500];
-            let RowsPerPageOptions = options.filter(option => option <= count);
-            if (RowsPerPageOptions.length < options.length) {
-                RowsPerPageOptions = [...RowsPerPageOptions, options[RowsPerPageOptions.length]];
-            }
-            setRowsPerPageOptions(RowsPerPageOptions);
-            const selectedValue = RowsPerPageOptions.includes(rowsPerPage) ? rowsPerPage : 15;
-            setRowsPerPage(selectedValue);
+            // const options = [15, 30, 50, 100, 200, 500];
+            // let RowsPerPageOptions = options.filter(option => option <= count_companies);
+            // if (RowsPerPageOptions.length < options.length) {
+            //     RowsPerPageOptions = [...RowsPerPageOptions, options[RowsPerPageOptions.length]];
+            // }
+            // setRowsPerPageOptions(RowsPerPageOptions);
+            // const selectedValue = RowsPerPageOptions.includes(rowsPerPage) ? rowsPerPage : 15;
+            // setRowsPerPage(selectedValue);
 
         } catch (error) {
             if (error instanceof AxiosError && error.response?.status === 403) {
@@ -576,7 +607,7 @@ const SourcesTable: React.FC<CompanyEmployeesProps> = ({ status, setStatus, data
                                                         { key: 'created_by', label: 'Created By'},
                                                         { key: 'updated_date', label: 'Update Date'},
                                                         { key: 'number_of_customers', label: 'Number of Customers', sortable: true},
-                                                        { key: 'matched_records', label: 'Matched Records'},
+                                                        { key: 'matched_records', label: 'Matched Records', sortable: true},
                                                         { key: 'actions', label: 'Actions'}
                                                     ].map(({ key, label, sortable = false }) => (
                                                         <TableCell
@@ -635,7 +666,7 @@ const SourcesTable: React.FC<CompanyEmployeesProps> = ({ status, setStatus, data
                                                             {/* Name Column */}
                                                             <TableCell className="sticky-cell"
                                                                 sx={{
-                                                                    ...sourcesStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, color: 'rgba(80, 82, 178, 1)', backgroundColor: '#fff'
+                                                                    ...sourcesStyles.table_array, position: 'sticky', left: '0', zIndex: 9, backgroundColor: '#fff'
 
                                                                 }} onClick={(e) => {
                                                                     e.stopPropagation();
@@ -643,28 +674,28 @@ const SourcesTable: React.FC<CompanyEmployeesProps> = ({ status, setStatus, data
                                                                     setEmployeeId(row.id)
 
                                                                 }}>
-                                                                {row.name}
+                                                                {row.source_name}
                                                             </TableCell>
 
                                                             {/* Source Column */}
                                                             <TableCell
                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative'}}
                                                             >
-                                                                {row.source}
+                                                                {row.source_origin}
                                                             </TableCell>
 
                                                             {/* Type Column */}
                                                             <TableCell
                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative'}}
                                                             >
-                                                                {row.type}
+                                                                {row.source_type}
                                                             </TableCell>
 
                                                             {/* Created date Column */}
                                                             <TableCell 
                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative'}}
                                                             >
-                                                                {row.created_date}
+                                                                {dayjs(row.created_date).isValid() ? dayjs(row.created_date).format('MMM D, YYYY') : '--'}
                                                             </TableCell>
 
                                                             {/* Created By Column */}
@@ -678,25 +709,25 @@ const SourcesTable: React.FC<CompanyEmployeesProps> = ({ status, setStatus, data
                                                             <TableCell
                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {row.updated_date}
+                                                                {dayjs(row.updated_date).isValid() ? dayjs(row.updated_date).format('MMM D, YYYY') : '--'}
                                                             </TableCell>
 
                                                             {/* Number of Customers Column */}
                                                             <TableCell
                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {row.number_of_customers}
+                                                                {row.number_of_customers ?? '--'}
                                                             </TableCell>
 
                                                             {/* Matched Records  Column */}
                                                             <TableCell
                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {row.matched_records}
+                                                                {row.matched_records ?? '--'}
                                                             </TableCell>
 
                                                             <TableCell sx={{ ...sourcesStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
-                                                                <IconButton onClick={(event) => handleOpenPopover(event)} sx={{ ':hover': { backgroundColor: 'transparent' }}} >
+                                                                <IconButton onClick={(event) => handleOpenPopover(event, row)} sx={{ ':hover': { backgroundColor: 'transparent' }}} >
                                                                     <Image src='/more_horizontal.svg' alt='more' height={16.18} width={22.91} />
                                                                 </IconButton>
 
@@ -725,6 +756,7 @@ const SourcesTable: React.FC<CompanyEmployeesProps> = ({ status, setStatus, data
                                                                         </ListItemButton>
                                                                         <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
                                                                                 handleClosePopover()
+                                                                                handleDeleteSource()
                                                                         }}>
                                                                             <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Remove"/>
                                                                         </ListItemButton>

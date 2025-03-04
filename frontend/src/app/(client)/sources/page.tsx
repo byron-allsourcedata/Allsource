@@ -38,13 +38,25 @@ import SourcesList from './SourcesList';
 interface Sources {
     id: number
     name: string
-    source: string
-    type: string
-    created_date: string
-    updated_date: string
+    source_origin: string
+    source_type: string
+    created_date: Date
+    updated_date: Date
     created_by: string
-    number_of_customers: number
-    matched_records: number
+    total_records?: number
+    matched_records?: number
+}
+
+interface Source {
+    id: number
+    name: string
+    source_origin: string
+    source_type: string
+    created_date: Date
+    updated_date: Date
+    created_by: string
+    total_records?: number
+    matched_records?: number
 }
 
 interface FilterParams {
@@ -97,7 +109,7 @@ const Sources: React.FC = () => {
     const { hasNotification } = useNotification();
     const [data, setData] = useState<Sources[]>([]);
     const [sources, setSources] = useState<boolean>(true);
-    const [createdSource, setCreatedSource] = useState<boolean>(false);
+    const [newSource, setNewSource] = useState<boolean>(false);
     const [count_companies, setCount] = useState<number | null>(null);
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
@@ -126,21 +138,7 @@ const Sources: React.FC = () => {
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
     const [openDrawer, setOpenDrawer] = React.useState(false);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-    const [selectedIndustry, setSelectedIndustry] = React.useState<string | null>(null);
-    const [industry, setIndustry] = React.useState<string[]>([]);
-
-
-    const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, industry: string) => {
-        setSelectedIndustry(industry);
-        setAnchorEl(event.currentTarget);
-    };
-
-    const handleClosePopover = () => {
-        setAnchorEl(null);
-        setSelectedIndustry(null);
-    };
-
-    const isOpen = Boolean(anchorEl);
+    const [createdSource, setCreatedSource] = useState<Source | null >(null);
 
     useEffect(() => {
         document.body.style.overflow = 'hidden';
@@ -528,14 +526,13 @@ const Sources: React.FC = () => {
                 <CustomizedProgressBar/>
             )}
             <Box sx={{
-                display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
+                display: 'flex', flexDirection: 'column', pr: 3, height: '100%',
                 '@media (max-width: 900px)': {
-                    paddingRight: 0,
                     minHeight: '100vh'
 
                 }
             }}>
-                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', }}>
                     {sources && 
                         <Box>
                             <Box
@@ -670,19 +667,19 @@ const Sources: React.FC = () => {
                                     </Button>
                                 </Box>
                             </Box>
-                            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, overflowX: 'auto', "@media (max-width: 600px)": { mb: 1 } }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, "@media (max-width: 600px)": { mb: 1 } }}>
                                     {/* --- CHIPS --- */}
                             </Box>
                             <Box sx={{
-                                flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px', pb: '20px',
+                                flex: 1, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 4.25rem)', overflow: 'auto', maxWidth: '100%',
                                 '@media (max-width: 900px)': {
                                     pt: '2px',
                                     pb: '18px'
                                 }
                             }}>
-                                {createdSource && 
-                                    <SourcesList />}
-                                {!createdSource &&  
+                                {newSource && 
+                                    <SourcesList createdSource={createdSource}/>}
+                                {!newSource &&  
                                     <SourcesTable setStatus={setStatus} status={status} setData={setData} data={data} setSources={setSources}/>}
                                 {showSlider && <Slider />}
                             </Box>
@@ -718,13 +715,13 @@ const Sources: React.FC = () => {
                                     {/* --- CHIPS --- */}
                             </Box>
                             <Box sx={{
-                                flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px', pb: '20px',
+                                flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto', height: "calc(100vh - 4.25rem)", maxWidth: '100%', pl: 0, pr: 0, pt: '14px', pb: '20px',
                                 '@media (max-width: 900px)': {
                                     pt: '2px',
                                     pb: '18px'
                                 }
                             }}>
-                                <SourcesImport/>
+                                <SourcesImport setCreatedSource={setCreatedSource} setNewSource={setNewSource} setSources={setSources} />
                                 {showSlider && <Slider />}
                             </Box>
                         </Box>
