@@ -1,12 +1,24 @@
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, List, Dict
 
 from enums import ProccessDataSyncResult
 from models.five_x_five_users import FiveXFiveUser
+from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from utils import extract_first_email
 
+EMAIL_FIELDS_EXAMPLE: List[str] = ['business_email', 'personal_emails', 'additional_personal_emails']
 
-def get_valid_email(user, email_fields, email_last_seen_fields, email_verifier) -> str:
+EMAIL_LAST_SEEN_EXAMPLE:  Dict[str, str] = {
+    'business_email': 'business_email_last_seen',
+    'personal_emails': 'personal_emails_last_seen',
+}
+
+def get_valid_email(
+    user: FiveXFiveUser,
+    email_verifier: MillionVerifierIntegrationsService,
+    email_fields: List[str] = EMAIL_FIELDS_EXAMPLE,
+    email_last_seen_fields: Dict[str, str] = EMAIL_LAST_SEEN_EXAMPLE
+) -> str:
     thirty_days_ago = datetime.now() - timedelta(days=30)
     thirty_days_ago_str = thirty_days_ago.strftime('%Y-%m-%d %H:%M:%S')
     verity = 0
@@ -28,7 +40,6 @@ def get_valid_email(user, email_fields, email_last_seen_fields, email_verifier) 
     if verity > 0:
         return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
     return ProccessDataSyncResult.INCORRECT_FORMAT.value
-
 
 def get_valid_phone(user: FiveXFiveUser) -> Optional[str]:
     return (

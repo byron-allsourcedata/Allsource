@@ -1,5 +1,7 @@
 import logging
 
+from pydantic import EmailStr
+
 from enums import SourcePlatformEnum, IntegrationsStatus, ProccessDataSyncResult
 from persistence.domains import UserDomainsPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
@@ -14,7 +16,7 @@ from typing import List
 from schemas.integrations.hubspot import HubspotProfile
 from schemas.integrations.integrations import DataMap
 from schemas.integrations.integrations import IntegrationCredentials
-from services.integrations.commonIntegration import get_valid_email, get_valid_phone
+from services.integrations.commonIntegration import get_valid_email, get_valid_phone, get_valid_location
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 
 
@@ -152,26 +154,27 @@ class HubspotIntegrationsService:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
         properties = self.__map_properties(five_x_five_user, data_map) if data_map else {}
-
+        print(self.__map_properties(five_x_five_user, data_map))
         json_data = {
             "properties": {
                 "email": profile.email,
                 "firstname": profile.firstname,
                 "lastname": profile.lastname,
                 "phone": profile.phone,
-                "address": profile.address,
                 "city": profile.city,
-                "state": profile.state,
-                "zip": profile.zip,
                 "gender": profile.gender,
-                "company": profile.company,
-                "jobtitle": profile.jobtitle,
-                "website": profile.website,
-                "lifecyclestage": profile.lifecyclestage,
-                "industry": profile.industry,
-                "annualrevenue": profile.annualrevenue,
                 "twitterhandle": profile.twitterhandle,
-                "linkedinbio": profile.linkedinbio,
+
+                # "address": profile.address,
+                # "state": profile.state,
+                # "zip": profile.zip,
+                # "company": profile.company,
+                # "jobtitle": profile.jobtitle,
+                # "website": profile.website,
+                # "lifecyclestage": profile.lifecyclestage,
+                # "industry": profile.industry,
+                # "annualrevenue": profile.annualrevenue,
+                # "hs_linkedin_url": profile.hs_linkedin_url,
                 **properties
             }
         }
@@ -199,55 +202,38 @@ class HubspotIntegrationsService:
         return response.json()
 
     def __mapped_profile(self, five_x_five_user) -> HubspotProfile:
-        email_fields = ['business_email', 'personal_emails', 'additional_personal_emails']
-        email_last_seen_fields = {
-            'business_email': 'business_email_last_seen',
-            'personal_emails': 'personal_emails_last_seen',
-        }
-
         first_email = get_valid_email(
             five_x_five_user,
-            email_fields,
-            email_last_seen_fields,
             self.million_verifier_integrations
         )
+
         if first_email in (
         ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return first_email
 
         first_phone = get_valid_phone(five_x_five_user)
+        location = get_valid_location(five_x_five_user)
 
         return HubspotProfile(
             email=first_email,
             phone=first_phone,
+            lifecyclestage=None,
+            twitterhandle=None,
+            address=location[0],
+            city=location[1],
+            state=location[2],
+            zip=location[3],
             firstname=getattr(five_x_five_user, 'first_name', None),
             lastname=getattr(five_x_five_user, 'last_name', None),
             company=getattr(five_x_five_user, 'company_name', None),
             website=getattr(five_x_five_user, 'company_domain', None),
-            lifecyclestage=None,
-            address=getattr(five_x_five_user, 'personal_address', None),
             jobtitle=getattr(five_x_five_user, 'job_title', None),
             industry=getattr(five_x_five_user, 'primary_industry', None),
             annualrevenue=getattr(five_x_five_user, 'company_revenue', None),
-            twitterhandle=None,
-            linkedinbio=getattr(five_x_five_user, 'linkedin_url', None),
-            city=getattr(five_x_five_user, 'personal_city', None),
-            state=getattr(five_x_five_user, 'personal_state', None),
-            zip=getattr(five_x_five_user, 'personal_zip', None),
-            gender=getattr(five_x_five_user, 'gender', None),
+            hs_linkedin_url=getattr(five_x_five_user, 'linkedin_url', None),
+            gender=getattr(five_x_five_user, 'gender', None)
         )
 
-    def __mapped_identifiers(self, five_x_five_user):
-        email_fields = ['business_email', 'personal_emails', 'additional_personal_emails']
-
-        def get_valid_email():
-            for field in email_fields:
-                email = getattr(five_x_five_user, field, None)
-                if email and self.million_verifier_integrations.is_email_verify(email.strip()):
-                    return email.strip()
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
-
-        return get_valid_email()
 
     def __map_properties(self, five_x_five_user, data_map: List[DataMap]) -> dict:
         properties = {}
