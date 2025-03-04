@@ -72,12 +72,12 @@ class AudienceSourceService:
             logger.error("Error with ChatGPT API", exc_info=True)
 
 
-    async def send_matching_status(self, user_id, emailField):
+    async def send_matching_status(self, source_id, user_id, emailField):
         queue_name = QueueName.AUDIENCE_SOURCES_READER.value
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
         try:
-            message_body = {'data': {'source_id': user_id, 'email': emailField}}
+            message_body = {'data': {'source_id': source_id, 'email': emailField, 'user_id': user_id}}
             await publish_rabbitmq_message(
                 connection=connection,
                 queue_name=queue_name,
@@ -99,7 +99,7 @@ class AudienceSourceService:
             "rows": json.dumps([row.dict() for row in rows])
         }
         created_data = self.audience_sources_persistence.create_source(**creating_data)
-        await self.send_matching_status(user.get("id"), rows[0].value)
+        await self.send_matching_status(created_data.id, user.get("id"), rows[0].value)
 
         if not created_data:
             logger.debug('Database error during creation')

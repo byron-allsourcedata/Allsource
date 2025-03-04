@@ -7,30 +7,40 @@ import json
 import io
 import csv
 import boto3
-from datetime import datetime
-from typing import Dict, List, Optional
-from collections import defaultdict
-import aiohttp
-import requests
-from aio_pika import IncomingMessage, Message
+import aioboto3
+from aio_pika import IncomingMessage, Message, Connection
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 
-from models.audience import Audience
+current_dir = os.path.dirname(os.path.realpath(__file__))
+parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
+sys.path.append(parent_dir)
 from models.five_x_five_emails import FiveXFiveEmails
 from models.five_x_five_users_emails import FiveXFiveUsersEmails
 from models.audience_sources import AudienceSource
+from models.users import Users
+from models.five_x_five_users import FiveXFiveUser
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from config.rmq_connection import RabbitMQConnection
-from bigcommerce.api import BigcommerceApi
-from utils import get_utc_aware_date
 
 load_dotenv()
 
 AUDIENCE_SOURCES_MATCHING= 'aud_sources_matching'
 AUDIENCE_SOURCES_READER= 'aud_sources_reader'
 S3_BUCKET_NAME = "maximiz-data"
+
+
+async def publish_rabbitmq_message(channel, queue_name: str, message_body: dict):
+    try:
+        json_data = json.dumps(message_body).encode("utf-8")
+        message = Message(
+            body=json_data
+        )
+        await channel.default_exchange.publish(message, routing_key=queue_name)
+    except Exception as e:
+        logging.error(f"Failed to publish message: {e}")
+
 
 def setup_logging(level):
     logging.basicConfig(
@@ -39,7 +49,23 @@ def setup_logging(level):
         datefmt='%Y-%m-%d %H:%M:%S'
     )
 
-async def aud_sources_reader(message, session: Session):
+def create_sts_client(key_id, key_secret):
+    return boto3.client(
+        'sts',
+        aws_access_key_id=key_id,
+        aws_secret_access_key=key_secret,
+        region_name='us-east-2'
+    )
+
+def assume_role(role_arn, sts_client):
+    credentials = sts_client.assume_role(
+        RoleArn=role_arn,
+        RoleSessionName="create-use-assume-role-scenario"
+    )['Credentials']
+    logging.info(f"Assumed role '{role_arn}', got temporary credentials.")
+    return credentials
+
+async def aud_sources_reader(message: IncomingMessage, db_session: Session, s3_session, channel):
     try:
         message_body = json.loads(message.body)
         data = message_body.get('data')
@@ -49,11 +75,11 @@ async def aud_sources_reader(message, session: Session):
             return
         
         source_id = data.get('source_id')
+        user_id = data.get('user_id') 
         email_field = data.get('email') 
-        logging.info(f"Processing AudienceSource with ID: {source_id}")
+        logging.info(f"Processing AudienceSource with ID: {source_id}")#ydalit
 
-
-        source = session.query(AudienceSource).filter_by(id=source_id).first()
+        source = db_session.query(AudienceSource).filter_by(id=source_id).first()
         if not source:
             logging.warning(f"AudienceSource with ID {source_id} not found.")
             await message.ack()
@@ -65,48 +91,50 @@ async def aud_sources_reader(message, session: Session):
             await message.ack()
             return
 
+        sts_client = create_sts_client(os.getenv('S3_KEY_ID'), os.getenv('S3_KEY_SECRET'))
+        credentials = assume_role(os.getenv('S3_ROLE_ARN'), sts_client)
         key = extract_key_from_url(file_url)
-        s3_client = boto3.client("s3")
-        response = s3_client.get_object(Bucket=S3_BUCKET_NAME, Key=key)
-        csv_file = io.StringIO(response["Body"].read().decode("utf-8"))
+        async with s3_session.client(
+                's3',
+                region_name='us-east-2',
+                aws_access_key_id=credentials['AccessKeyId'],
+                aws_secret_access_key=credentials['SecretAccessKey'],
+                aws_session_token=credentials['SessionToken']
+        ) as s3:
+            s3_obj = await s3.get_object(Bucket=S3_BUCKET_NAME, Key=key)
+            s3_obj = await s3.get_object(Bucket=S3_BUCKET_NAME, Key=key)
+            body = await s3_obj['Body'].read()
 
-        csv_reader = csv.DictReader(csv_file)
-        total_rows = 0
+            csv_file = io.StringIO(body.decode("utf-8"))
+            csv_reader = csv.DictReader(csv_file)
+        
+        total_rows = sum(1 for _ in csv_reader) - 1
+        csv_file.seek(0)
         processed_rows = 0
 
-        # connect to RabbitMQ for send in queue matching
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        channel = await connection.channel()
-        await channel.set_qos(prefetch_count=1)
-
-        queue = await channel.declare_queue(
-            name=AUDIENCE_SOURCES_MATCHING,
-            durable=True,
-        )
+        # async with db_session.begin():  # Open a transaction
+        source.total_records = total_rows
+        db_session.add(source)
 
         for row in csv_reader:
-            total_rows += 1
             email = row.get(email_field)
             if email:
-                # send email in the second queue
-                await queue.publish(
-                    Message(body=json.dumps({data: {"email": email, "source_id": source_id, 'row': row}}).encode())
+                # Send email to the matching queue
+                await publish_rabbitmq_message(
+                    channel=channel,
+                    queue_name=AUDIENCE_SOURCES_MATCHING,
+                    message_body={
+                        "data": {"email": email, "source_id": source_id, "row": row}
+                    }
                 )
+                processed_rows += 1
 
-        # update total
-        source = session.query(AudienceSource).filter_by(id=source_id).first()
-        if source:
-            source.total = total_rows
-            session.commit()
-
-        # send SSE with progress
-        await send_sse({"source_id": source_id, "total": total_rows, "processed": processed_rows})
-
-        # susbscribe queue result 
-        # await channel.consume(
-        #     functools.partial(aud_sources_results_handler, session=session)
-        # )
+                source.processed_records = processed_rows
+                if processed_rows == total_rows:
+                    source.matched_records_status = "complete"
+                db_session.add(source)
+                await send_sse(channel, user_id, {"source_id": source_id, "total": total_rows, "processed": processed_rows})
+                db_session.commit()
 
         await message.ack()
 
@@ -115,39 +143,7 @@ async def aud_sources_reader(message, session: Session):
         await message.nack()
 
 
-# async def aud_sources_results_handler(message, session: Session):
-#     try:
-#         message_body = json.loads(message.body)
-        
-#         source_id = message_body.get("source_id")
-#         result_data = message_body.get("result_data")
-
-#         if not source_id or not result_data:
-#             logging.warning("Invalid message format: Missing source_id or result_data.")
-#             await message.ack()
-#             return
-        
-#         logging.info(f"Received results for AudienceSource ID: {source_id}")
-        
-#         # сhanging status AudienceSource in DB
-#         audience_source = session.query(AudienceSource).filter_by(id=source_id).first()
-#         if audience_source:
-#             audience_source.status = "processed"
-#             audience_source.result_data = json.dumps(result_data)
-#             session.commit()
-        
-#         # send SSE with result
-#         # await send_sse_update(source_id, result_data)
-
-#         await message.ack()
-
-    except Exception as e:
-        logging.error(f"Error in aud_sources_results_handler: {e}", exc_info=True)
-        await message.nack(requeue=False)
-
-
-
-async def aud_sources_matching(message, session: Session):
+async def aud_sources_matching(message: IncomingMessage, db_session: Session):
     try:
         message_body = json.loads(message.body)
         data = message_body.get('data')
@@ -160,19 +156,19 @@ async def aud_sources_matching(message, session: Session):
         row = data.get("row")
         source_id = data.get("source_id")
 
-        logging.info(f"Processing AudienceSource with ID: {source_id}")
+        logging.info(f"Processing AudienceSourceMatching with ID: {source_id}")#ydalit
 
-        email_record = session.query(FiveXFiveEmails).filter_by(email=email).first()
+        email_record = db_session.query(FiveXFiveEmails).filter_by(email=email).first()
         if email_record:
-            user_id = session.query(FiveXFiveUsersEmails.user_id).filter_by(email_id=email_record.id).scalar()
+            user_id = db_session.query(FiveXFiveUsersEmails.user_id).filter_by(email_id=email_record.id).scalar()
 
             matched_person = AudienceSourcesMatchedPerson(
                 source_id=source_id,
                 five_x_five_user_id=user_id,
                 mapped_fields=json.dumps(row),
             )
-            session.add(matched_person)
-            session.commit()
+            db_session.add(matched_person)
+            db_session.commit()
 
         await message.ack()
 
@@ -181,22 +177,27 @@ async def aud_sources_matching(message, session: Session):
         await message.nack()
 
 
-
 def extract_key_from_url(s3_url: str):
     parsed_url = s3_url.split("amazonaws.com/", 1)
     if len(parsed_url) != 2:
         raise ValueError(f"Invalid S3 URL format: {s3_url}")
     return parsed_url[1].split("?", 1)[0]
 
-async def send_sse(data):
+
+async def send_sse(channel, user_id: int, data):
     # {"source_id": int, "total": int, "processed": int}
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.post("http://your-sse-endpoint", json=data) as resp:
-                if resp.status != 200:
-                    logging.warning(f"Failed to send SSE: {resp.status}")
+        logging.info(f"SSE: {data, user_id}")
+        await publish_rabbitmq_message(
+                    channel=channel,
+                    queue_name=f'sse_events_{user_id}',
+                    message_body={
+                        "data": data
+                    }
+                )
     except Exception as e:
         logging.error(f"Error sending SSE: {e}")
+
 
 async def main():
     log_level = logging.INFO
@@ -214,8 +215,8 @@ async def main():
     db_name = os.getenv('DB_NAME')
 
     try:
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
+        rmq_connection = RabbitMQConnection()
+        connection = await rmq_connection.connect()
         channel = await connection.channel()
         await channel.set_qos(prefetch_count=1)
 
@@ -223,19 +224,20 @@ async def main():
             f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}", pool_pre_ping=True
         )
         Session = sessionmaker(bind=engine)
-        session = Session()
+        db_session = Session()
+        s3_session = aioboto3.Session()
         
         reader_queue = await channel.declare_queue(
             name=AUDIENCE_SOURCES_READER,
             durable=True,
         )
-        await reader_queue.consume(functools.partial(aud_sources_reader, session=session))
+        await reader_queue.consume(functools.partial(aud_sources_reader, db_session=db_session, s3_session=s3_session, channel=channel))
 
         matching_queue = await channel.declare_queue(
             name=AUDIENCE_SOURCES_MATCHING,
             durable=True,
         )
-        await matching_queue.consume(functools.partial(aud_sources_matching, session=session))
+        await matching_queue.consume(functools.partial(aud_sources_matching, db_session=db_session))
 
         await asyncio.Future()
 
@@ -243,12 +245,12 @@ async def main():
         logging.error('Unhandled Exception:', exc_info=True)
 
     finally:
-        if session:
+        if db_session:
             logging.info("Closing the database session...")
-            session.close()
-        if rabbitmq_connection:
+            db_session.close()
+        if rmq_connection:
             logging.info("Closing RabbitMQ connection...")
-            await rabbitmq_connection.close()
+            await rmq_connection.close()
         logging.info("Shutting down...")
 
 if __name__ == "__main__":

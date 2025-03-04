@@ -7,7 +7,7 @@ class AudienceSourcesMatchedPerson(Base):
 
     id = Column(Integer, primary_key=True)
     source_id = Column(Integer, ForeignKey('audience_sources.id'), nullable=False)
-    five_x_five_user_id = Column(Integer, ForeignKey('five_x_five_users.id'), nullable=False)
+    five_x_five_user_id = Column(Integer, nullable=False)
     mapped_fields = Column(JSON, nullable=False)
     created_at = Column(TIMESTAMP, nullable=False)
     updated_at = Column(TIMESTAMP, nullable=False)
