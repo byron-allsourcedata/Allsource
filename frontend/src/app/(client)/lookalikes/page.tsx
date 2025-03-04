@@ -12,7 +12,6 @@ import Image from "next/image";
 import DownloadIcon from '@mui/icons-material/Download';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import CreateLookalikeForm from "./components/CreateLookalikeForm";
 import CustomToolTip from "@/components/customToolTip";
 import Link from "next/link"
 

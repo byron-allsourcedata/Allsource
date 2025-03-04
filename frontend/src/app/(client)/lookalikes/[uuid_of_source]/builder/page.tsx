@@ -1,8 +1,14 @@
-import { Box, Typography, Button, TextField } from "@mui/material";
-import AudienceSizeSelector from "./SizeSelector";
-import SourceTableContainer from "./SourceTableContainer";
-import { useState } from "react";
+'use client'
+import React, { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import Image from "next/image";
+import { Box, Typography, Button, TextField } from "@mui/material";
+import AudienceSizeSelector from "@/app/(client)/lookalikes/components/SizeSelector";
+import SourceTableContainer from "@/app/(client)/lookalikes/components/SourceTableContainer";
+import useAxios from "axios-hooks";
+import CustomizedProgressBar from "@/components/CustomizedProgressBar";
+import axiosInstance from "@/axios/axiosInterceptorInstance";
+
 
 const audienceSize = [
     {
@@ -42,6 +48,15 @@ const audienceSize = [
     },
 ];
 
+interface TableData {
+    name: string;
+    source: string;
+    type: string;
+    createdDate: string;
+    createdBy: string;
+    numberOfCustomers: string;
+    matchedRecords: string;
+  }
 const tableData = [
     {
         name: "My Orders",
@@ -54,12 +69,13 @@ const tableData = [
     },
 ];
 
-const CreateLookalikeForm: React.FC = ({}) => {
+const CreateLookalikePage: React.FC = () => {
+    const params = useParams();
     const [selectedSize, setSelectedSize] = useState<string>("");
     const [sliderValue, setSliderValue] = useState<number[]>([0, 0]);
     const [currentStep, setCurrentStep] = useState(1);
-    const [inputText, setInputText] = useState("");
-    const [isLookalikeGenerated, setIsLookalikeGenerated] = useState(false);
+    const [sourceName, setSourceName] = useState("");
+    const [sourceData, setSourceData] = useState<TableData>();
 
     const handleSelectSize = (
         id: string,
@@ -71,14 +87,18 @@ const CreateLookalikeForm: React.FC = ({}) => {
         handleNext();
     };
 
-    const handleGenerateClick = () => {
-        if (inputText.trim() !== "") {
-            setIsLookalikeGenerated(true);
-        }
-    };
+    // const handleGenerateClick = () => {
+    //     if (sourceName.trim() !== "") {
+    //         setIsLookalikeGenerated(true);
+    //     }
+    // };
 
+    // const handleSourceData = async () => {
+    //     const data = await axiosInstance.get(`lookalike/builder?uuid_of_source=${params.uuid_of_source}`)
+    //     setSourceData(data)
+    // }
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setInputText(event.target.value);
+        setSourceName(event.target.value);
     };
 
     const handleSliderChange = (newValue: number | number[]) => {
@@ -97,10 +117,21 @@ const CreateLookalikeForm: React.FC = ({}) => {
         setCurrentStep((prev) => prev + 1);
     };
 
+    const handleGenerateLookalike = async () => {
+        const response = await axiosInstance.post('/lookalike/builder', {uuid_of_source: params.uuid_of_source, size: selectedSize, name: sourceName})
+    }
+
+    // useEffect(()=> {
+    //     handleSourceData();
+    // }, [params]);
+
 
     return (
+        <Box sx={{ width: "100%", pr: 2 }}>
+            
 
-<Box>
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+                <Box>
                     <Box sx={{ width: "100%", padding: 3, color: "#202124" }}>
                         {/* Title */}
                         <Typography
@@ -142,7 +173,9 @@ const CreateLookalikeForm: React.FC = ({}) => {
                                     Source
                                 </Typography>
 
-                                <SourceTableContainer tableData={tableData} />
+                                <SourceTableContainer tableData={tableData}
+                                 // tableData={sourceData} 
+                                 />
                             </Box>
                         )}
                         <Box
@@ -256,7 +289,7 @@ const CreateLookalikeForm: React.FC = ({}) => {
                                     fullWidth
                                     variant="outlined"
                                     placeholder="name"
-                                    value={inputText}
+                                    value={sourceName}
                                     onChange={handleInputChange}
                                     sx={{
                                         "& .MuiOutlinedInput-root": {
@@ -324,7 +357,7 @@ const CreateLookalikeForm: React.FC = ({}) => {
                                     textTransform: "none",
                                     gap: 0,
                                     mt: 1,
-                                    opacity: inputText.trim() === "" ? 0.6 : 1,
+                                    opacity: sourceName.trim() === "" ? 0.6 : 1,
                                     "&:hover": {
                                         border: "1px #5052B2 solid",
                                         backgroundColor: "#5052B2",
@@ -337,8 +370,8 @@ const CreateLookalikeForm: React.FC = ({}) => {
                                     },
                                 }}
                                 variant="outlined"
-                                disabled={inputText.trim() === ""}
-                                onClick={handleGenerateClick}
+                                disabled={sourceName.trim() === ""}
+                                onClick={handleGenerateLookalike}
                             >
                                 <Box
                                     sx={{
@@ -350,7 +383,7 @@ const CreateLookalikeForm: React.FC = ({}) => {
                                     }}
                                 >
                                     <Image
-                                        src={"stars-icon.svg"}
+                                        src={"/stars-icon.svg"}
                                         alt="Stars"
                                         width={15}
                                         height={15}
@@ -362,6 +395,10 @@ const CreateLookalikeForm: React.FC = ({}) => {
                             </Button>
                         </Box>
                     )}
-                </Box> )}
+                </Box>
+            </Box>
+        </Box>
+    );
+};
 
-export default CreateLookalikeForm;
+export default CreateLookalikePage;
