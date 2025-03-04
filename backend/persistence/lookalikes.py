@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from models.source import Source
+from models.audience_sources import AudienceSource
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from fastapi import HTTPException
@@ -11,4 +11,4 @@ class LookalikesPersistence:
         self.db = db
 
     def get_source_info(self, uuid_of_source, user):
-        return self.db.query(Source).where(Source.uuid == uuid_of_source).first()
+        return self.db.query(AudienceSource).where(AudienceSource.uuid == uuid_of_source).first()
