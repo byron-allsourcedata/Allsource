@@ -526,13 +526,13 @@ const Sources: React.FC = () => {
                 <CustomizedProgressBar/>
             )}
             <Box sx={{
-                display: 'flex', flexDirection: 'column', pr: 3, height: '100%',
+                display: 'flex', flexDirection: 'column', height: '100%',
                 '@media (max-width: 900px)': {
                     minHeight: '100vh'
 
                 }
             }}>
-                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', }}>
+                <Box sx={{ flex: 1, display: 'flex', pr: 2, flexDirection: 'column', }}>
                     {sources && 
                         <Box>
                             <Box
@@ -715,7 +715,7 @@ const Sources: React.FC = () => {
                                     {/* --- CHIPS --- */}
                             </Box>
                             <Box sx={{
-                                flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto', height: "calc(100vh - 4.25rem)", maxWidth: '100%', pl: 0, pr: 0, pt: '14px', pb: '20px',
+                                flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto', height: "calc(100vh - 7rem)", maxWidth: '100%', pl: 0, pr: 0, pt: '14px',
                                 '@media (max-width: 900px)': {
                                     pt: '2px',
                                     pb: '18px'

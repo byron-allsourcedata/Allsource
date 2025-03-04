@@ -334,9 +334,8 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                 <CustomizedProgressBar/>
             )}
             <Box sx={{
-                display: 'flex', flexDirection: 'column', height: '100%',
+                display: 'flex', flexDirection: 'column', pr: 2,
                 '@media (max-width: 900px)': {
-                    paddingRight: 0,
                     minHeight: '100vh'
 
                 }

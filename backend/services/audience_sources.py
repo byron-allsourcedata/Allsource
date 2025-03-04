@@ -8,6 +8,7 @@ from typing import List
 from schemas.audience import Row
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from enums import QueueName
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 logger = logging.getLogger(__name__)
@@ -71,12 +72,12 @@ class AudienceSourceService:
             logger.error("Error with ChatGPT API", exc_info=True)
 
 
-    async def send_matching_status(self, user_id):
-        queue_name = 'aud_sources_matching'
+    async def send_matching_status(self, user_id, emailField):
+        queue_name = QueueName.AUDIENCE_SOURCES_READER.value
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
         try:
-            message_body = {'data': {'source_id': user_id}}
+            message_body = {'data': {'source_id': user_id, 'email': emailField}}
             await publish_rabbitmq_message(
                 connection=connection,
                 queue_name=queue_name,
@@ -97,9 +98,8 @@ class AudienceSourceService:
             "file_url": file_url,
             "rows": json.dumps([row.dict() for row in rows])
         }
-
         created_data = self.audience_sources_persistence.create_source(**creating_data)
-        await self.send_matching_status(user.get("id"))
+        await self.send_matching_status(user.get("id"), rows[0].value)
 
         if not created_data:
             logger.debug('Database error during creation')
