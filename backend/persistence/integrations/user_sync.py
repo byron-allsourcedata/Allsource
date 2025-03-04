@@ -55,16 +55,21 @@ class IntegrationsUserSyncPersistence:
             IntegrationUserSync.is_active, 
             IntegrationUserSync.last_sync_date,
             IntegrationUserSync.leads_type,
-            IntegrationUserSync.list_name,
             IntegrationUserSync.integration_id,
             IntegrationUserSync.sync_status,
             IntegrationUserSync.no_of_contacts,
             IntegrationUserSync.created_by,
             IntegrationUserSync.data_map,
+            IntegrationUserSync.customer_id,
+            IntegrationUserSync.list_name,
+            IntegrationUserSync.list_id,
+            IntegrationUserSync.hook_url,
+            IntegrationUserSync.method,
             UserIntegration.service_name,
             UserIntegration.is_with_suppression,
             UserIntegration.platform_user_id,
             UserIntegration.error_message,
+            UserIntegration.is_failed
         ).join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id) \
         .filter(IntegrationUserSync.domain_id == domain_id)
 
@@ -87,8 +92,13 @@ class IntegrationsUserSyncPersistence:
                     'createdBy': sync.created_by,
                     'accountId': sync.platform_user_id,
                     'data_map': sync.data_map,
-                    'syncStatus': sync.sync_status,
-                    'type_error': sync.error_message
+                    'syncStatus': False if sync.is_failed == True else sync.sync_status,
+                    'integration_is_failed': sync.is_failed,
+                    'type_error': sync.error_message,
+                    'list_id': sync.list_id,
+                    'customer_id': sync.customer_id,
+                    'hook_url': sync.hook_url,
+                    'method': sync.method
                 }
         syncs = query.order_by(IntegrationUserSync.id).all()
         return [{
@@ -105,8 +115,13 @@ class IntegrationsUserSyncPersistence:
             'createdBy': sync.created_by,
             'accountId': sync.platform_user_id,
             'data_map': sync.data_map,
-            'syncStatus': sync.sync_status,
+            'syncStatus': False if sync.is_failed == True else sync.sync_status,
+            'integration_is_failed': sync.is_failed,
             'type_error': sync.error_message,
+            'customer_id': sync.customer_id,
+            'list_id': sync.list_id,
+            'hook_url': sync.hook_url,
+            'method': sync.method
         } for sync in syncs]
 
     def get_data_sync_filter_by(self, **filter_by):

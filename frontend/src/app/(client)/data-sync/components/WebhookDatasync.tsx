@@ -30,7 +30,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedOption, setSelectedOption] = useState<WebhookList | null>(null);
     const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
-    const [newListName, setNewListName] = useState<string>('');
+    const [newListName, setNewListName] = useState<string>(data?.name || '');
     const [tagName, setTagName] = useState<string>('');
     const [isShrunk, setIsShrunk] = useState<boolean>(false);
     const textFieldRef = useRef<HTMLDivElement>(null);
@@ -50,8 +50,8 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
     const [klaviyoList, setKlaviyoList] = useState<WebhookList[]>([])
     const [senders, setSenders] = useState<any[]>([])
     const [listNameErrorMessage, setListNameErrorMessage] = useState('')
-    const [url, setUrl] = useState('');
-    const [method, setMethod] = useState('GET');
+    const [url, setUrl] = useState(data?.hook_url ?? '');
+    const [method, setMethod] = useState(data?.method ?? 'GET');
     const [error, setError] = useState(false);
 
 
@@ -81,9 +81,9 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
         { type: 'dpv_code', value: 'dpv_code' },
         { type: 'time_on_site', value: 'time_on_site' },
         { type: 'url_visited', value: 'url_visited' },
-        { type: 'business_phone', value: 'business_phone' },
         { type: 'business_email', value: 'business_email' },
         { type: 'urls_visited', value: 'urls_visited' },
+        { type: 'urls_visited_with_parameters', value: 'urls_visited_with_parameters' },
         { type: 'linkedin_url', value: 'linkedin_url' }]);
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -105,8 +105,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
     }, [selectedOption]);
 
 
-    const [customFields, setCustomFields] = useState<{ type: string, value: string }[]>([]);
-
+    const [customFields, setCustomFields] = useState<{ type: string, value: string }[]>(data?.data_map ?? []);
     useEffect(() => {
         if (data?.data_map) {
             setCustomFields(data?.data_map);
@@ -195,7 +194,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
             const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
                 name: newListName,
                 webhook_url: url,
-                method: method
+                method: method,
             }, {
                 params: {
                     service_name: 'webhook'
@@ -226,11 +225,14 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                 return;
             }
             if (isEdit) {
+                if (Number(value) != 3) { handleNextTab(); return }
                 const response = await axiosInstance.put(`/data-sync/sync`, {
+                    integrations_users_sync_id: data.id,
                     list_name: newListName,
                     webhook_url: url,
                     method: method,
-                    data_map: customFields
+                    data_map: customFields,
+                    leads_type: selectedRadioValue
                 }, {
                     params: {
                         service_name: 'webhook'
@@ -239,6 +241,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                 if (response.status === 201 || response.status === 200) {
                     onClose();
                     showToast('Data sync updated successfully');
+                    triggerSync();
                 }
             } else {
                 if (!list) {
@@ -694,7 +697,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                                                         }
                                                     }}
                                                 />
-                                                <FormControlLabel value="added_to_cart" control={<Radio sx={{
+                                                <FormControlLabel value="abandoned_cart" control={<Radio sx={{
                                                     color: '#e4e4e4',
                                                     '&.Mui-checked': {
                                                         color: '#5052b2', // checked color

@@ -134,7 +134,7 @@ const WebhookConnectPopup = ({ handleClose, open, onSave, initApiKey, boxShadow 
                         Connect to Webhook
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href={initApiKey ?
+                        {/* <Link href={initApiKey ?
                             "" :
                             "https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-mailchimp-to-maximiz"
                         }
@@ -147,7 +147,7 @@ const WebhookConnectPopup = ({ handleClose, open, onSave, initApiKey, boxShadow 
                                 lineHeight: '20px',
                                 color: '#5052b2',
                                 textDecorationColor: '#5052b2'
-                            }}>Tutorial</Link>
+                            }}>Tutorial</Link> */}
                         <IconButton onClick={handleClose} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />
                         </IconButton>

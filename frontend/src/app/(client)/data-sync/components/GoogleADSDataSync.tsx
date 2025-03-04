@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Drawer, Box, Typography, IconButton, TextField, Divider, FormControlLabel, FormControl, FormLabel, Radio, Button, Link, Tab, Tooltip, RadioGroup, MenuItem, Popover, Menu, ListItemText, ClickAwayListener, InputAdornment, Grid, LinearProgress, Checkbox } from '@mui/material';
+import { Drawer, Box, Typography, IconButton, TextField, Divider, InputLabel, Select, FormControlLabel, FormControl, FormLabel, Radio, Button, Link, Tab, Tooltip, RadioGroup, MenuItem, Popover, Menu, ListItemText, ClickAwayListener, InputAdornment, Grid, LinearProgress, Checkbox } from '@mui/material';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
@@ -9,7 +9,7 @@ import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from '../../../../components/ToastNotification';
 import { useIntegrationContext } from "@/context/IntegrationContext";
 
-interface ConnectSlackPopupProps {
+interface ConnectGoogleAdsPopupProps {
     open: boolean;
     onClose: () => void;
     data: any;
@@ -17,8 +17,13 @@ interface ConnectSlackPopupProps {
 }
 
 type ChannelList = {
-    id: string;
-    name: string;
+    list_id: string;
+    list_name: string;
+}
+
+type Customers = {
+    customer_id: string;
+    customer_name: string;
 }
 
 interface CustomField {
@@ -27,7 +32,7 @@ interface CustomField {
 }
 
 
-const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, isEdit }) => {
+const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose, data, isEdit }) => {
     const { triggerSync } = useIntegrationContext();
     const [loading, setLoading] = useState(false)
     const [value, setValue] = React.useState('1');
@@ -35,7 +40,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedOption, setSelectedOption] = useState<ChannelList | null>(null);
     const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
-    const [newListName, setNewListName] = useState<string>('');
+    const [newListName, setNewListName] = useState<string>(data?.name ?? '');
     const [isShrunk, setIsShrunk] = useState<boolean>(false);
     const textFieldRef = useRef<HTMLDivElement>(null);
     const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
@@ -47,18 +52,34 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
     const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
     const [newMapListName, setNewMapListName] = useState<string>('');
     const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
-    const [UpdateKlaviuo, setUpdateKlaviuo] = useState<any>(null);
     const [maplistNameError, setMapListNameError] = useState(false);
-    const [slackList, setSlackList] = useState<ChannelList[]>([])
+    const [googleList, setGoogleAdsList] = useState<ChannelList[]>([
+        {
+            list_id: data?.list_id ?? '',
+            list_name: data?.name ?? '',
+        }
+      ] ?? []);
+
+    const [customersInfo, setCustomersInfo] = useState<Customers[]>([
+        {
+          customer_id: data?.customer_id ?? '',
+          customer_name: data?.customer_id ?? '',
+        }
+      ] ?? []);
+      
+    const [selectedAccountId, setSelectedAccountId] = useState<string>(data?.customer_id ?? '');
     const [listNameErrorMessage, setListNameErrorMessage] = useState('')
     const [customFieldsList, setCustomFieldsList] = useState<CustomField[]>([]);
-    const [savedList, setSavedList] = useState<ChannelList | null>(null);
+    const [savedList, setSavedList] = useState<ChannelList | null>({
+        list_id: data?.list_id ?? '',
+        list_name: data?.name ?? '',
+    } ?? null);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (textFieldRef.current && !textFieldRef.current.contains(event.target as Node)) {
                 // If clicked outside, reset shrink only if there is no input value
-                if (selectedOption?.name === '') {
+                if (selectedOption?.list_name === '') {
                     setIsShrunk(false);
                 }
                 if (isDropdownOpen) {
@@ -120,47 +141,63 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         setMapListNameError(false);
     }, [open])
 
-    const getChannelList = async () => {
+    const getGoogleAdsList = async () => {
         try {
             setLoading(true)
-            const response = await axiosInstance.get('/slack/get-channels')
-            setSlackList(response.data.channels || [])
-            if (response.data.status !== 'success'){
+            const response = await axiosInstance.get('integrations/google-ads/get-channels', {
+                params: {
+                    customer_id: selectedAccountId
+                }
+            });
+            setGoogleAdsList(response.data.user_lists || [])
+            if (response.data.status !== 'SUCCESS') {
                 showErrorToast(response.data.message)
             }
-            const foundItem = response.data?.channel.find((item: any) => item.name === data?.channel.name);
-            if (foundItem) {
-                setUpdateKlaviuo(data.id)
-                setSelectedOption({
-                    id: foundItem.id,
-                    name: foundItem.name
-                });
-            } else {
-                setSelectedOption(null);
-            }
-            setSelectedRadioValue(data?.type);
         } catch (error) { }
         finally {
             setLoading(false)
         }
     }
     useEffect(() => {
-        if (open) {
-            getChannelList()
+        if (open && !data?.name) {
+            getGoogleAdsList()
+        }
+    }, [selectedAccountId])
+
+    const getCustomersInfo = async () => {
+        try {
+            setLoading(true)
+            const response = await axiosInstance.get('integrations/google-ads/customers-info')
+            if (response.data.status !== 'SUCCESS') {
+                showErrorToast(response.data.message)
+            } else {
+                setCustomersInfo(response.data.customers || [])
+            }
+        } catch (error) { }
+        finally {
+            setLoading(false)
+        }
+    }
+    useEffect(() => {
+        if (open && !data?.customer_id) {
+            getCustomersInfo()
         }
     }, [open])
 
     const createNewList = async () => {
         try {
             setLoading(true)
-            const newListResponse = await axiosInstance.post('/slack/create-channel', {
-                name: selectedOption?.name
-            }
-            );
-            
+            const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
+                name: selectedOption?.list_name,
+                customer_id: String(selectedAccountId)
+            }, {
+                params: {
+                    service_name: 'google_ads'
+                }
+            });
 
             if (newListResponse.data.status !== 'SUCCESS') {
-                showErrorToast('Error when trying to create new list')
+                showErrorToast(newListResponse.data.message)
             }
 
             return newListResponse.data.channel;
@@ -174,8 +211,8 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         setLoading(true);
         try {
             let list: ChannelList | null = null;
-    
-            if (selectedOption && selectedOption.id === '-1') {
+
+            if (selectedOption && selectedOption.list_id === '-1') {
                 list = await createNewList();
             } else if (selectedOption) {
                 list = selectedOption;
@@ -194,7 +231,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
             setLoading(false);
         }
     };
-    
+
 
 
     const handleSaveSync = async () => {
@@ -202,34 +239,36 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
             showToast('No list data found. Please save the list first.');
             return;
         }
-    
+
         setLoading(true);
         try {
             if (isEdit) {
                 const response = await axiosInstance.put('/data-sync/sync', {
                     integrations_users_sync_id: data.id,
-                    list_id: savedList.id,
-                    name: savedList.name,
+                    list_id: savedList.list_id,
+                    list_name: savedList.list_name,
+                    name: savedList.list_name,
                     leads_type: selectedRadioValue,
-                    data_map: customFields
                 }, {
-                    params: { service_name: 'slack' }
+                    params: { service_name: 'google_ads' }
                 });
-    
+
                 if (response.status === 201 || response.status === 200) {
                     onClose();
                     showToast('Data sync updated successfully');
+                    triggerSync();
                 }
             } else {
                 const response = await axiosInstance.post('/data-sync/sync', {
-                    list_id: savedList.id,
-                    list_name: savedList.name,
+                    list_id: String(savedList.list_id),
+                    customer_id: String(selectedAccountId),
+                    list_name: savedList.list_name,
                     leads_type: selectedRadioValue,
-                    data_map: customFields
+                    data_map: rows
                 }, {
-                    params: { service_name: 'slack' }
+                    params: { service_name: 'google_ads' }
                 });
-    
+
                 if (response.status === 201 || response.status === 200) {
                     onClose();
                     showToast('Data sync created successfully');
@@ -242,7 +281,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
             setLoading(false);
         }
     };
-    
+
 
 
     // Handle menu open
@@ -281,10 +320,9 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                 setAnchorEl(textFieldRef.current);
             }
         } else if (isKlaviyoList(value)) {
-            // Проверка, является ли value объектом KlaviyoList
             setSelectedOption({
-                id: value.id,
-                name: value.name,
+                list_id: value.list_id,
+                list_name: value.list_name,
             });
             setIsDropdownValid(true);
             handleClose();
@@ -297,8 +335,8 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
     const isKlaviyoList = (value: any): value is ChannelList => {
         return value !== null &&
             typeof value === 'object' &&
-            'id' in value &&
-            'name' in value;
+            'list_id' in value &&
+            'list_name' in value;
     };
 
 
@@ -318,7 +356,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
 
         // If valid, save and close
         if (valid) {
-            const newSlackList = { id: '-1', name: newListName }
+            const newSlackList = { list_id: '-1', list_name: newListName }
             setSelectedOption(newSlackList);
             if (isKlaviyoList(newSlackList)) {
                 setIsDropdownValid(true);
@@ -422,34 +460,6 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         return <>{parts}</>; // Return the array wrapped in a fragment.
     };
 
-    const instructions: any[] = [
-        // { id: 'unique-id-1', text: 'Go to the Klaviyo website and log into your account.' },
-        // { id: 'unique-id-2', text: 'Click on the Settings option located in your Klaviyo account options.' },
-        // { id: 'unique-id-3', text: 'Click Create Private API Key Name to Maximiz.' },
-        // { id: 'unique-id-4', text: 'Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Klaviyo key.' },
-        // { id: 'unique-id-5', text: 'Click Create.' },
-        // { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in Maximiz Klaviyo section.' },
-        // { id: 'unique-id-7', text: 'Click Connect.' },
-        // { id: 'unique-id-8', text: 'Select the existing list or create a new one to integrate with Maximiz.' },
-        // { id: 'unique-id-9', text: 'Click Export.' },
-    ]
-
-    // Define the keywords and their styles
-    const highlightConfig: HighlightConfig = {
-        'Klaviyo': { color: '#5052B2', fontWeight: '500' }, // Blue and bold
-        'Settings': { color: '#707071', fontWeight: '500' }, // Bold only
-        'Create Private API Key': { color: '#707071', fontWeight: '500' }, // Blue and bold
-        'Lists': { color: '#707071', fontWeight: '500' }, // Bold only
-        'Profiles': { color: '#707071', fontWeight: '500' }, // Bold only
-        'Metrics': { color: '#707071', fontWeight: '500' }, // Blue and bold
-        'Events': { color: '#707071', fontWeight: '500' }, // Blue and bold
-        'Templates': { color: '#707071', fontWeight: '500' }, // Blue and bold
-        'Create': { color: '#707071', fontWeight: '500' }, // Blue and bold
-        'API Key': { color: '#707071', fontWeight: '500' }, // Blue and bold
-        'Connect': { color: '#707071', fontWeight: '500' }, // Bold only
-        'Export': { color: '#707071', fontWeight: '500' } // Blue and bold
-    };
-
     // Define buttons for each tab
     const getButton = (tabValue: string) => {
         switch (tabValue) {
@@ -549,14 +559,10 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
     }
 
     const defaultRows: Row[] = [
-        { id: 1, type: 'LinkedIn URL', value: 'LinkedIn URL' },
-        { id: 2, type: 'Full name', value: 'Full name' },
-        { id: 3, type: 'Title', value: 'Title (Job Title)' },
-        { id: 4, type: 'Company', value: 'Company' },
-        { id: 5, type: 'Detail', value: 'Detail (They show company detail Number of Employee| Revenue| Industry)' },
-        { id: 6, type: 'Email', value: 'Email (Business email)' },
-        { id: 7, type: 'Visited URL', value: 'Visited URL (Which page user visited on the user website)' },
-        { id: 8, type: 'Location', value: 'Location' }
+        { id: 1, type: 'Email', value: 'email' },
+        { id: 2, type: 'Full name', value: 'full_name' },
+        { id: 3, type: 'Phone', value: 'phone' },
+        { id: 4, type: 'Address', value: 'address' }
     ];
 
     const [rows, setRows] = useState<Row[]>(defaultRows);
@@ -596,22 +602,14 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
 
     const handleNewListChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-
-        const isValid = /^[а-яА-Яa-zA-Z0-9-_]*$/.test(value);
-
-        if (isValid) {
-            if (slackList?.some(list => list.name === value)) {
-                setListNameError(true);
-                setListNameErrorMessage('List name must be unique');
-            } else {
-                setListNameError(false);
-                setListNameErrorMessage('');
-            }
-            setNewListName(value);
-        } else {
+        if (googleList?.some(list => list.list_name === value)) {
             setListNameError(true);
-            setListNameErrorMessage('Only alphanumeric characters are allowed and no spaces.');
+            setListNameErrorMessage('List name must be unique');
+        } else {
+            setListNameError(false);
+            setListNameErrorMessage('');
         }
+        setNewListName(value);
 
         if (!value) {
             setListNameError(true);
@@ -706,16 +704,16 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
             >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                     <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
-                        Connect to Slack
+                        Connect to GoogleAds
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/up" className="main-text" sx={{
+                        {/* <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/up" className="main-text" sx={{
                             fontSize: '14px',
                             fontWeight: '600',
                             lineHeight: '20px',
                             color: '#5052b2',
                             textDecorationColor: '#5052b2'
-                        }}>Tutorial</Link>
+                        }}>Tutorial</Link> */}
                         <IconButton onClick={handlePopupClose} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />
                         </IconButton>
@@ -725,7 +723,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                     <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                         <TabContext value={value}>
                             <Box sx={{ pb: 4 }}>
-                                <TabList centered aria-label="Connect to Slack Tabs"
+                                <TabList centered aria-label="Connect to GoogleAds Tabs"
                                     TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
                                     sx={{
                                         "& .MuiTabs-scroller": {
@@ -843,7 +841,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                                         }
                                                     }}
                                                 />
-                                                <FormControlLabel value="abandoned_cart" control={<Radio sx={{
+                                                <FormControlLabel value="added_to_cart" control={<Radio sx={{
                                                     color: '#e4e4e4',
                                                     '&.Mui-checked': {
                                                         color: '#5052b2', // checked color
@@ -906,21 +904,56 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                     <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
-                                            <Image src='/slack-icon.svg' alt='slack' height={26} width={32} />
+                                            <Image src='/google-ads.svg' alt='webhook' height={26} width={32} />
                                             <Typography variant="h6" className='first-sub-title'>Contact sync</Typography>
                                             <Tooltip title="Sync data with list" placement="right">
                                                 <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
                                             </Tooltip>
                                         </Box>
 
-
+                                        <FormControl fullWidth sx={{ mb: 2, mt: 1 }}>
+                                            <InputLabel sx={{
+                                                fontSize: '16px',
+                                                fontWeight: '500',
+                                                color: 'rgba(33, 43, 54, 0.87)',
+                                                '&.Mui-focused': {
+                                                    color: 'rgba(33, 43, 54, 0.87)',
+                                                },
+                                            }}>Select an account</InputLabel>
+                                            <Select
+                                                value={selectedAccountId || ''}
+                                                onChange={(e) => {
+                                                    const selectedValue = e.target.value as string;
+                                                    setSelectedAccountId(selectedValue);
+                                                }}
+                                                disabled={data?.customer_id}
+                                                label="Account"
+                                                sx={{
+                                                    backgroundColor: '#ffffff',
+                                                    borderRadius: '4px',
+                                                    border: '1px solid rgba(224, 224, 224, 1)',
+                                                    '&:focus': {
+                                                        borderColor: 'rgba(80, 82, 178, 1)',
+                                                        boxShadow: '0 0 0 2px rgba(80, 82, 178, 0.2)',
+                                                    },
+                                                }}
+                                            >
+                                                <MenuItem value="">Select an account</MenuItem>
+                                                {customersInfo?.map(account => (
+                                                    <MenuItem key={account.customer_id} value={account.customer_id}>
+                                                        {account.customer_name}
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
                                         <ClickAwayListener onClickAway={() => { }}>
                                             <Box>
                                                 <TextField
                                                     ref={textFieldRef}
                                                     variant="outlined"
-                                                    value={selectedOption?.name}
+                                                    value={selectedOption?.list_name}
                                                     onClick={handleClick}
+                                                    disabled={data?.name}
                                                     size="small"
                                                     fullWidth
                                                     label={selectedOption ? '' : 'Select or Create new list'}
@@ -981,12 +1014,13 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                                     }}
                                                 >
                                                     {/* Show "Create New List" option */}
-                                                    <MenuItem onClick={() => handleSelectOption('createNew')} sx={{
-                                                        borderBottom: showCreateForm ? "none" : "1px solid #cdcdcd",
-                                                        '&:hover': {
-                                                            background: 'rgba(80, 82, 178, 0.10)'
-                                                        }
-                                                    }}>
+                                                    <MenuItem disabled={data?.name}
+                                                        onClick={() => handleSelectOption('createNew')} sx={{
+                                                            borderBottom: showCreateForm ? "none" : "1px solid #cdcdcd",
+                                                            '&:hover': {
+                                                                background: 'rgba(80, 82, 178, 0.10)'
+                                                            }
+                                                        }}>
                                                         <ListItemText primary={`+ Create new list`} primaryTypographyProps={{
                                                             sx: {
                                                                 fontFamily: "Nunito Sans",
@@ -1132,13 +1166,13 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                                     )}
 
                                                     {/* Show static options */}
-                                                    {slackList && slackList?.map((klaviyo) => (
-                                                        <MenuItem key={klaviyo.id} onClick={() => handleSelectOption(klaviyo)} sx={{
+                                                    {googleList && googleList?.map((klaviyo) => (
+                                                        <MenuItem key={klaviyo.list_id} onClick={() => handleSelectOption(klaviyo)} sx={{
                                                             '&:hover': {
                                                                 background: 'rgba(80, 82, 178, 0.10)'
                                                             }
                                                         }}>
-                                                            <ListItemText primary={klaviyo.name} primaryTypographyProps={{
+                                                            <ListItemText primary={klaviyo.list_name} primaryTypographyProps={{
                                                                 sx: {
                                                                     fontFamily: "Nunito Sans",
                                                                     fontSize: "14px",
@@ -1166,19 +1200,19 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                 }}>
                                     <Box sx={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
                                         <Typography variant="h6" className='first-sub-title'>Map list</Typography>
-                                        {selectedOption?.name && 
-                                        <Typography variant='h6' sx={{
-                                            background: '#EDEDF7',
-                                            borderRadius: '3px',
-                                            fontFamily: 'Roboto',
-                                            fontSize: '12px',
-                                            fontWeight: '400',
-                                            color: '#5f6368',
-                                            padding: '2px 4px',
-                                            lineHeight: '16px'
-                                        }}>
-                                            {selectedOption?.name}
-                                        </Typography>}
+                                        {selectedOption?.list_name &&
+                                            <Typography variant='h6' sx={{
+                                                background: '#EDEDF7',
+                                                borderRadius: '3px',
+                                                fontFamily: 'Roboto',
+                                                fontSize: '12px',
+                                                fontWeight: '400',
+                                                color: '#5f6368',
+                                                padding: '2px 4px',
+                                                lineHeight: '16px'
+                                            }}>
+                                                {selectedOption?.list_name}
+                                            </Typography>}
                                     </Box>
 
                                     <Grid container alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' }, marginBottom: '14px' }}>
@@ -1349,141 +1383,6 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                             </Grid>
                                         </Box>
                                     ))}
-                                    <Box sx={{ mb: 2 }}>
-                                        {customFields.map((field, index) => (
-                                            <Grid container spacing={2} alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' } }} key={index}>
-                                                <Grid item xs="auto" sm={5} mb={2}>
-                                                    <TextField
-                                                        select
-                                                        fullWidth
-                                                        variant="outlined"
-                                                        label='Custom Field'
-                                                        value={field.type}
-                                                        onChange={(e) => handleChangeField(index, 'type', e.target.value)}
-                                                        InputLabelProps={{
-                                                            sx: {
-                                                                fontFamily: 'Nunito Sans',
-                                                                fontSize: '12px',
-                                                                lineHeight: '16px',
-                                                                color: 'rgba(17, 17, 19, 0.60)',
-                                                                top: '-5px',
-                                                                '&.Mui-focused': {
-                                                                    color: '#0000FF',
-                                                                    top: 0
-                                                                },
-                                                                '&.MuiInputLabel-shrink': {
-                                                                    top: 0
-                                                                }
-                                                            }
-                                                        }}
-                                                        InputProps={{
-                                                            sx: {
-                                                                '&.MuiOutlinedInput-root': {
-                                                                    height: '36px',
-                                                                    '& .MuiOutlinedInput-input': {
-                                                                        padding: '6.5px 8px',
-                                                                        fontFamily: 'Roboto',
-                                                                        color: '#202124',
-                                                                        fontSize: '14px',
-                                                                        fontWeight: '400',
-                                                                        lineHeight: '20px'
-                                                                    },
-                                                                    '& .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: '#A3B0C2',
-                                                                    },
-                                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: '#A3B0C2',
-                                                                    },
-                                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: '#0000FF',
-                                                                    },
-                                                                },
-                                                                '&+.MuiFormHelperText-root': {
-                                                                    marginLeft: '0',
-                                                                },
-                                                            }
-                                                        }}
-                                                    >
-
-                                                        {customFieldsList.map((item) => (
-                                                            <MenuItem
-                                                                key={item.value}
-                                                                value={item.value}
-                                                                disabled={customFields.some(f => f.type === item.value)}
-                                                            >
-                                                                {item.type}
-                                                            </MenuItem>
-                                                        ))}
-                                                    </TextField>
-                                                </Grid>
-                                                <Grid item xs="auto" sm={1} mb={2} container justifyContent="center">
-                                                    <Image
-                                                        src='/chevron-right-purple.svg'
-                                                        alt='chevron-right-purple'
-                                                        height={18}
-                                                        width={18}
-                                                    />
-                                                </Grid>
-                                                <Grid item xs="auto" sm={5} mb={2}>
-                                                    <TextField
-                                                        fullWidth
-                                                        variant="outlined"
-                                                        value={field.value}
-                                                        onChange={(e) => handleChangeField(index, 'value', e.target.value)}
-                                                        placeholder="Enter value"
-                                                        InputLabelProps={{
-                                                            sx: {
-                                                                fontFamily: 'Nunito Sans',
-                                                                fontSize: '12px',
-                                                                lineHeight: '16px',
-                                                                color: 'rgba(17, 17, 19, 0.60)',
-                                                                top: '-5px',
-                                                                '&.Mui-focused': {
-                                                                    color: '#0000FF',
-                                                                    top: 0,
-                                                                },
-                                                                '&.MuiInputLabel-shrink': {
-                                                                    top: 0,
-                                                                },
-                                                            },
-                                                        }}
-                                                        InputProps={{
-                                                            sx: {
-                                                                height: '36px',
-                                                                '& .MuiOutlinedInput-input': {
-                                                                    padding: '6.5px 8px',
-                                                                    fontFamily: 'Roboto',
-                                                                    color: '#202124',
-                                                                    fontSize: '14px',
-                                                                    fontWeight: '400',
-                                                                    lineHeight: '20px',
-                                                                },
-                                                                '& .MuiOutlinedInput-notchedOutline': {
-                                                                    borderColor: '#A3B0C2',
-                                                                },
-                                                                '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                    borderColor: '#A3B0C2',
-                                                                },
-                                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                    borderColor: '#0000FF',
-                                                                },
-                                                            },
-                                                        }}
-                                                    />
-                                                </Grid>
-                                                <Grid item xs="auto" mb={2} sm={1} container justifyContent="center">
-                                                    <IconButton onClick={() => handleDeleteField(index)}>
-                                                        <Image
-                                                            src='/trash-icon-filled.svg'
-                                                            alt='trash-icon-filled'
-                                                            height={18}
-                                                            width={18}
-                                                        />
-                                                    </IconButton>
-                                                </Grid>
-                                            </Grid>
-                                        ))}
-                                    </Box>
                                 </Box>
                             </TabPanel>
                         </TabContext>
@@ -1502,4 +1401,4 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         </>
     );
 };
-export default SlackDataSync;
+export default GoogleAdsDataSync;

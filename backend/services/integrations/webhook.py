@@ -7,6 +7,7 @@ from services.integrations.million_verifier import MillionVerifierIntegrationsSe
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from datetime import datetime, timedelta
 from typing import List
+import httpx
 from models.five_x_five_users import FiveXFiveUser
 from schemas.integrations.integrations import DataMap, IntegrationCredentials
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
@@ -28,19 +29,23 @@ class WebhookIntegrationService:
         self.client = client
         
     def __handle_request(self, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None, api_key: str = None,  method: str = 'GET'):
-        if not headers:
-            headers = {
-                'Authorization': f'Bearer {api_key}',
-                'accept': 'application/json', 
-                'content-type': 'application/json'
-            }
-        response = self.client.request(method, url, headers=headers, json=json, data=data, params=params)
-
-        if response.is_redirect:
-            redirect_url = response.headers.get('Location')
-            if redirect_url:
-                response = self.client.request(method, redirect_url, headers=headers, json=json, data=data, params=params)
-        return response
+        try:
+            if not headers:
+                headers = {
+                    'Authorization': f'Bearer {api_key}',
+                    'accept': 'application/json', 
+                    'content-type': 'application/json'
+                }
+            response = self.client.request(method, url, headers=headers, json=json, data=data, params=params)
+            if response.is_redirect:
+                redirect_url = response.headers.get('Location')
+                if redirect_url:
+                    response = self.client.request(method, redirect_url, headers=headers, json=json, data=data, params=params)
+            return response
+        except httpx.ConnectError as e:
+            return None
+        except httpx.RequestError as e:
+            return None
     
     def save_integration(self, domain_id: int, user: dict):
         credential = self.integration_persistence.get_credentials_for_service(domain_id=domain_id, service_name=SourcePlatformEnum.WEBHOOK.value)
@@ -67,7 +72,7 @@ class WebhookIntegrationService:
         if not credential:
             raise HTTPException(status_code=403, detail={'status': IntegrationsStatus.CREDENTIALS_NOT_FOUND})
         response = self.__handle_request(url=list.webhook_url, method=list.method)
-        if response.status_code == 404:
+        if not response or response.status_code == 404:
             self.integration_persistence.db.commit()
             return IntegrationsStatus.INVALID_WEBHOOK_URL
         
@@ -102,10 +107,12 @@ class WebhookIntegrationService:
         if data in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return data
         response = self.__handle_request(url=sync.hook_url, method=sync.method, json=data)
+        if not response or response.status_code == 401:
+                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+        if not response or response.status_code == 405:
+                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
         if response.status_code == 400:
                 return ProccessDataSyncResult.INCORRECT_FORMAT.value
-        if response.status_code == 401:
-                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
             
         return ProccessDataSyncResult.SUCCESS.value
     
@@ -131,6 +138,11 @@ class WebhookIntegrationService:
         if verity > 0:
             return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
         return ProccessDataSyncResult.INCORRECT_FORMAT.value
+    
+    def build_full_url(self, page, page_parameters):
+        if page_parameters:
+            return f"{page}?{page_parameters}".rstrip("&")
+        return page
     
     @staticmethod
     def map_phone_numbers(five_x_five_user, mapped_fields):
@@ -209,9 +221,22 @@ class WebhookIntegrationService:
         
         if "urls_visited" in mapped_fields:
             page_time = self.leads_persistence.get_latest_page_time(lead_user.id)
-            page_time_array = [{"page": row.page, "total_spent_time": str(row.total_spent_time)} for row in page_time]
+            page_time_array = [{"page": row.page, "total_spent_time": str(row.total_spent_time), "count": row.count} for row in page_time]
             for mapping in data_map:
                 if mapping["type"] == "urls_visited":
+                    properties[mapping["value"]] = page_time_array
+        
+        if "urls_visited_with_parameters" in mapped_fields:
+            page_time = self.leads_persistence.get_latest_page_time(lead_user.id)
+            page_time_array = [
+                {
+                    "page": self.build_full_url(row.page, row.page_parameters.replace(', ', '&')), 
+                    "total_spent_time": str(row.total_spent_time),
+                    "count": row.count
+                } for row in page_time
+            ]
+            for mapping in data_map:
+                if mapping["type"] == "urls_visited_with_parameters":
                     properties[mapping["value"]] = page_time_array
                     
         if "time_on_site" in mapped_fields or "url_visited" in mapped_fields:
@@ -245,5 +270,18 @@ class WebhookIntegrationService:
                         properties[mapping["value"]] = None
                     else:
                         properties[mapping["value"]] = result
-        
+                        
         return properties
+                    
+    def edit_sync(self, list_name: str, webhook_url: str, method: str, data_map: List[DataMap], integrations_users_sync_id, leads_type: str, domain_id: int, created_by: str):
+        sync = self.sync_persistence.edit_sync({
+            'list_name': list_name,
+            'domain_id': domain_id,
+            'leads_type': leads_type,
+            'hook_url': webhook_url,
+            'method': method,
+            'created_by': created_by,
+            'data_map': data_map
+        }, integrations_users_sync_id)
+
+        return sync
