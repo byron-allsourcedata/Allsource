@@ -15,6 +15,7 @@ import { useSSE } from "../../../context/SSEContext";
 import QuestionMarkOutlinedIcon from '@mui/icons-material/QuestionMarkOutlined';
 import PersonIcon from '@mui/icons-material/Person';
 import { fetchUserData } from "@/services/meService";
+import CustomNotification from "@/components/CustomNotification";
 
 const headerStyles = {
   headers: {
@@ -63,6 +64,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
   const [hasNewNotifications, setHasNewNotifications] = useState<boolean>(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [visibleButton, setVisibleButton] = useState(false)
+  const [latestNotification, setLatestNotification] = useState<{ text: string; id: number } | null>(null);
   const [shouldRerender, setShouldRerender] = useState(false);
   const handleSignOut = () => {
     localStorage.clear();
@@ -70,6 +72,16 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
     resetUserData();
     resetTrialData();
     window.location.href = "/signin";
+  };
+
+    useEffect(() => {
+      if (newNotification) {
+        setHasNewNotifications(true);
+      }
+    }, [newNotification]);
+
+  const handleNotificationDismiss = () => {
+    setLatestNotification(null);
   };
 
   useEffect(() => {
@@ -150,7 +162,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
     setHasNotification(false);
   }
   return (
-    <>
+    <Box sx={{display: 'flex', width: '100%', flexDirection: 'column',  }}>
     <Box sx={{ display: 'block',  }}>
       <Box sx={{ display: { md: 'none' } }}>
         <SliderProvider><NavigationMenu NewRequestNotification={hasNewNotifications || hasNewNotifications} /></SliderProvider>
@@ -333,7 +345,15 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
       </Box>
       </Box>
       <NotificationPopup open={notificationIconPopupOpen} onClose={handleNotificationIconPopupClose} anchorEl={anchorElNotificate} />
-    </>
+      {latestNotification && (
+          <CustomNotification
+            id={123}
+            message={'latestNotification.text'}
+            showDismiss={true}
+            onDismiss={handleNotificationDismiss}
+          />
+        )}
+    </Box>
   );
 };
 

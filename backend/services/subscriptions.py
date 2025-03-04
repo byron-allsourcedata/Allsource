@@ -6,11 +6,14 @@ from sqlalchemy.orm import Session
 import os
 from dateutil.relativedelta import relativedelta
 from dotenv import load_dotenv
+from enums import NotificationTitles, CreditsStatus
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from models.leads_users import LeadUser
 from models.plans import SubscriptionPlan
 from models.subscription_transactions import SubscriptionTransactions
 from models.subscriptions import Subscription, UserSubscriptions
 from models.users import Users, User
+from persistence.leads_persistence import LeadsPersistence
 from persistence.partners_persistence import PartnersPersistence
 from models.users_domains import UserDomains
 from models.users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
@@ -24,12 +27,17 @@ from services.stripe_service import determine_plan_name_from_product_id
 from urllib.parse import urlencode
 import requests
 from services.referral import ReferralService
+from models.account_notification import AccountNotification
+from models.users_account_notification import UserAccountNotification
 load_dotenv()
 
 logger = logging.getLogger(__name__)
 
 
 class SubscriptionService:
+    AMOUNT_CREDITS = 1
+    UNLIMITED = -1
+
     def __init__(self, db: Session, user_persistence_service: UserPersistence, plans_persistence: PlansPersistence, referral_service: ReferralService,
                  partners_persistence: PartnersPersistence):
         self.plans_persistence = plans_persistence
@@ -189,6 +197,15 @@ class SubscriptionService:
                 return False
 
         return True
+
+    def get_status_credits(self, user):
+        if user.get("leads_credits") == self.UNLIMITED:
+            return {"status": CreditsStatus.UNLIMITED_CREDITS}
+        if user.get("leads_credits") - self.AMOUNT_CREDITS > 0:
+            return {"status": CreditsStatus.CREDITS_ARE_AVAILABLE}
+        
+        return {"status": CreditsStatus.NO_CREDITS}
+
 
     def is_trial_subscription(self, user_id):
         user_subscription = self.get_user_subscription(user_id=user_id)
@@ -652,3 +669,7 @@ class SubscriptionService:
                 return True
 
         return False
+
+    def charge_credit(self, five_x_five_id, user, leads_persistence, domain):
+        self.user_persistence_service.charge_credit(user.get('id'))
+        leads_persistence.add_unlocked_user(user.get('id'), domain.id, five_x_five_id)

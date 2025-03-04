@@ -1392,7 +1392,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 {[
                   "All Contact",
                   "View Product",
-                  "Add To Cart",
+                  "Abandoned cart",
                   "Visitor"
                 ].map((label) => {
                   const isSelected = selectedListType.includes(label);
@@ -1425,9 +1425,15 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                           ? "rgba(237, 237, 247, 1)"
                           : "rgba(255, 255, 255, 1)",
                         lineHeight: '20px !important',
+                        '@media (max-width:1100px)': {
+                          width: '48%',
+                          height: 'auto',
+                          maxHeight: '0.5em'
+                        },
                         '@media (max-width:600px)': {
                           width: '48%'
                         }
+                        
                       }}
                     >
                       {label}
@@ -1512,6 +1518,11 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                           ? "rgba(237, 237, 247, 1)"
                           : "rgba(255, 255, 255, 1)",
                         lineHeight: '20px !important',
+                        '@media (max-width:1100px)': {
+                          width: '48%',
+                          height: 'auto',
+                          maxHeight: '0.5em'
+                        },
                         '@media (max-width:600px)': {
                           width: '48%'
                         }

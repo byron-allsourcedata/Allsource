@@ -11,6 +11,7 @@ from services.jwt_service import get_password_hash
 import requests
 from dotenv import load_dotenv
 from persistence.domains import UserDomainsPersistence
+from persistence.leads_persistence import LeadsPersistence
 from services.subscriptions import SubscriptionService
 from persistence.domains import UserDomainsPersistence, UserDomains
 
@@ -21,12 +22,13 @@ load_dotenv()
 
 class UsersService:
     def __init__(self, user, user_persistence_service: UserPersistence, plan_persistence: PlansPersistence,
-                 subscription_service: SubscriptionService, domain_persistence: UserDomainsPersistence):
+                 subscription_service: SubscriptionService, domain_persistence: UserDomainsPersistence, leads_persistence: LeadsPersistence):
         self.user = user
         self.user_persistence_service = user_persistence_service
         self.plan_persistence = plan_persistence
         self.subscription_service = subscription_service
         self.domain_persistence = domain_persistence
+        self.leads_persistence = leads_persistence
 
     def update_password(self, update_data: UpdatePassword):
         if update_data.password != update_data.confirm_password:

@@ -11,23 +11,33 @@ class CompanyService:
         self.domain = domain
 
     def format_phone_number(self, phones):
-        phone_list = phones.split(',')
-        formatted_phones = []
-        for phone in phone_list:
-            phone_str = phone.strip()
-            if phone_str.endswith(".0"):
-                phone_str = phone_str[:-2]
-            if not phone_str.startswith("+"):
-                phone_str = f"+{phone_str}"
-            formatted_phones.append(phone_str)
+        if phones:
+            phone_list = phones.split(',')
+            formatted_phones = []
+            for phone in phone_list:
+                phone_str = phone.strip()
+                if phone_str.endswith(".0"):
+                    phone_str = phone_str[:-2]
+                if not phone_str.startswith("+"):
+                    phone_str = f"+{phone_str}"
+                formatted_phones.append(phone_str)
+            return ', '.join(formatted_phones)
+        else:
+            return None
 
-        return ', '.join(formatted_phones)
 
 
     def convert_state_code_to_name(self, state_code, state_dict):
         if state_code:
             return state_dict.get(state_code.lower(), None)
         return None
+    
+    def get_field_with_status(self, field_value, is_unlocked):
+        if field_value is None:
+            return {"value": None, "visibility_status": "missing"}
+        if not is_unlocked:
+            return {"value": None, "visibility_status": "hidden"}
+        return {"value": field_value, "visibility_status": "visible"}
 
 
     def get_companies(self, page, per_page, from_date, to_date, regions, sort_by, sort_order,
@@ -77,7 +87,36 @@ class CompanyService:
             })
 
         return company_list, count, max_page
-    
+
+
+    def get_employee_by_id(self, company_id, employee_id):
+        employees, states = self.company_persistence_service.get_employee_by_id(
+            domain_id=self.domain.id,
+            employee_id=employee_id,
+            company_id=company_id,
+        )
+
+        state_dict = {state.state_code: state.state_name for state in states} if states else {}
+
+        employee = employees[0]
+
+        employee_data = {
+            'id': {"value": employee[0], "visibility_status": "visible"},
+            'first_name': {"value": employee[1], "visibility_status": "visible"},
+            'last_name': {"value": employee[2], "visibility_status": "visible"},
+            'mobile_phone': {"value": self.format_phone_number(employee[3]), "visibility_status": "visible"},
+            'linkedin_url': {"value": employee[4], "visibility_status": "visible"},
+            'personal_email': {"value": employee[5], "visibility_status": "visible"},
+            'business_email': {"value": employee[6], "visibility_status": "visible"},
+            'seniority': {"value": employee[7], "visibility_status": "visible"},
+            'department': {"value": employee[8], "visibility_status": "visible"},
+            'job_title': {"value": employee[9], "visibility_status": "visible"},
+            'city': {"value": employee[10], "visibility_status": "visible"},
+            'state': {"value": self.convert_state_code_to_name(employee[11], state_dict), "visibility_status": "visible"},
+            'is_unlocked': {"value": True, "visibility_status": "visible"}
+        }
+
+        return employee_data
 
     def get_employees(self, company_id, sort_by, sort_order,
                       search_query, job_title, seniority, regions, department, page, per_page=None):
@@ -100,60 +139,62 @@ class CompanyService:
         for employee in employees:
 
             employees_list.append({
-                'id': employee[0],
-                'first_name': employee[1],
-                'last_name': employee[2],
-                'mobile_phone': self.format_phone_number(employee[3]) if employee[3] and employee[12] else None,
-                'linkedin_url': employee[4] if employee[12] else None,
-                'personal_email': employee[5] if employee[12] else None,
-                'business_email': employee[6] if employee[12] else None,
-                'seniority': employee[7],
-                'department': employee[8],
-                'job_title': employee[9],
-                'city': employee[10] if employee[12] else None,
-                'state': self.convert_state_code_to_name(employee[11], state_dict) if employee[12] else None,
-                'is_unlocked': employee[12]
+                'id': {"value": employee[0], "visibility_status": "visible"},
+                'first_name': {"value": employee[1], "visibility_status": "visible"},
+                'last_name': {"value": employee[2], "visibility_status": "visible"},
+                'mobile_phone': self.get_field_with_status(self.format_phone_number(employee[3]), employee[12]),
+                'linkedin_url': self.get_field_with_status(employee[4], employee[12]),
+                'personal_email': self.get_field_with_status(employee[5], employee[12]),
+                'business_email': self.get_field_with_status(employee[6], employee[12]),
+                'seniority': {"value": employee[7], "visibility_status": "visible"},
+                'department': {"value": employee[8], "visibility_status": "visible"},
+                'job_title': {"value": employee[9], "visibility_status": "visible"},
+                'city': {"value": employee[10], "visibility_status": "visible"},
+                'state': {"value": self.convert_state_code_to_name(employee[11], state_dict), "visibility_status": "visible"},
+                'is_unlocked': {"value": employee[12], "visibility_status": "visible"}
             })
 
         return employees_list, count, max_page
     
 
     def get_full_information_employee(self, company_id, employee_id):
-        employees = self.company_persistence_service.get_full_information_employee(
+        employees, states = self.company_persistence_service.get_full_information_employee(
             company_id=company_id,
             employee_id=employee_id,
             domain_id=self.domain.id,
         )
 
         employee = employees[0]
+        state_dict = {state.state_code: state.state_name for state in states} if states else {}
         employee_data = {
-            'id': employee[0],
-            'first_name': employee[1],
-            'last_name': employee[2],
-            'mobile_phone': self.format_phone_number(employee[3]) if employee[3] else None,
-            'linkedin_url': employee[4],
-            'personal_email': employee[5],
-            'business_email': employee[6],
-            'seniority': employee[7],
-            'department': employee[8],
-            'job_title': employee[9],
-            'city': employee[10],
-            'state': employee[11],
-            'company_name': employee[12],
-            'company_city': employee[13],
-            'company_phone': employee[14],
-            'company_description': employee[15],
-            'company_address': employee[16],
-            'company_zip': employee[17],
-            'company_linkedin_url': employee[18],
-            'business_email_last_seen': employee[19],
-            'personal_emails_last_seen': employee[20],
-            'personal_zip': employee[21],
-            'company_last_updated': employee[22],
-            'company_domain': employee[23],
-            'personal_address': employee[24],
-            'other_personal_emails': employee[25],
-            'company_state': employee[26]
+            'id': {"value": employee[0], "visibility_status": "visible"},
+            'first_name': {"value": employee[1], "visibility_status": "visible"},
+            'last_name': {"value": employee[2], "visibility_status": "visible"},
+            'mobile_phone': self.get_field_with_status(self.format_phone_number(employee[3]), employee[27]),
+            'linkedin_url': self.get_field_with_status(employee[4], employee[27]),
+            'personal_email': self.get_field_with_status(employee[5], employee[27]),
+            'business_email': self.get_field_with_status(employee[6], employee[27]),
+            'seniority': {"value": employee[7], "visibility_status": "visible"},
+            'department': {"value": employee[8], "visibility_status": "visible"},
+            'job_title': {"value": employee[9], "visibility_status": "visible"},
+            'city': {"value": employee[10], "visibility_status": "visible"},
+            'state': {"value": employee[11], "visibility_status": "visible"},
+            'company_name': {"value": employee[12], "visibility_status": "visible"},
+            'company_city': {"value": employee[13], "visibility_status": "visible"},
+            'company_phone': {"value": employee[14], "visibility_status": "visible"},
+            'company_description': {"value": employee[15], "visibility_status": "visible"},
+            'company_address': {"value": employee[16], "visibility_status": "visible"},
+            'company_zip': {"value": employee[17], "visibility_status": "visible"},
+            'company_linkedin_url': {"value": employee[18], "visibility_status": "visible"},
+            'business_email_last_seen': self.get_field_with_status(employee[19], employee[27]),
+            'personal_emails_last_seen': self.get_field_with_status(employee[20], employee[27]),
+            'personal_zip': self.get_field_with_status(employee[21], employee[27]),
+            'company_last_updated': {"value": employee[22], "visibility_status": "visible"},
+            'company_domain': {"value": employee[23], "visibility_status": "visible"},
+            'personal_address': self.get_field_with_status(employee[24], employee[27]),
+            'other_personal_emails': self.get_field_with_status(employee[25], employee[27]),
+            'company_state': {"value": self.convert_state_code_to_name(employee[26], state_dict), "visibility_status": "visible"},
+            'is_unlocked': {"value": employee[27], "visibility_status": "visible"}
         }
 
         return employee_data
@@ -238,21 +279,30 @@ class CompanyService:
         ])
         for employee in employees_list:
             writer.writerow([
-                employee['first_name'].capitalize() or 'None',
-                employee['last_name'].capitalize() or 'None',
-                employee['mobile_phone'] or 'None',
-                employee['linkedin_url'] or 'None',
-                employee['personal_email'] or 'None',
-                employee['business_email'] or 'None',
-                employee['seniority'] or 'None',
-                employee['department'] or 'None',
-                employee['job_title'] or 'None',
-                employee.get('city', 'None').capitalize() if isinstance(employee.get('city'), str) else 'None',
-                employee['state'] or 'None',
+                self.process_field(employee.get('first_name')),
+                self.process_field(employee.get('last_name')),
+                self.process_field(employee.get('mobile_phone')),
+                self.process_field(employee.get('linkedin_url')),
+                self.process_field(employee.get('personal_email')),
+                self.process_field(employee.get('business_email')),
+                self.process_field(employee.get('seniority')),
+                self.process_field(employee.get('department')),
+                self.process_field(employee.get('job_title')),
+                self.process_field(employee.get('city')),
+                self.process_field(employee.get('state')),
             ])
 
         output.seek(0)
         return output
+
+
+    def process_field(self, field):
+        formatted_str = ""
+        status = field.get("visibility_status")
+        value = field.get("value")
+        if status == "visible":
+            return value.capitalize() if isinstance(value, str) and '@' not in value else value
+        return formatted_str
 
 
     def download_employee(self, employee_id, company_id):
@@ -289,17 +339,24 @@ class CompanyService:
             ('Company state', 'company_state'),
         ]
 
-        values = [employee.get(key, 'None') for _, key in headers_mapping]
-
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow(['Column', 'Value'])
 
-        for i, (header, _) in enumerate(headers_mapping):
-            writer.writerow([header, values[i].capitalize() if isinstance(values[i], str) and '@' not in values[i] else values[i]])
+        for header, key in headers_mapping:
+            field = employee.get(key, {"value": None, "visibility_status": "missing"})
+            value = field.get("value")
+            status = field.get("visibility_status", "missing")
+            formatted_value = ""
+            
+            if status == "visible":
+                formatted_value = value.capitalize() if isinstance(value, str) and '@' not in value else value
+
+            writer.writerow([header, formatted_value])
 
         output.seek(0)
         return output
+
 
 
     def download_companies(self, from_date=None, to_date=None, regions=None, search_query=None, companies_ids=0, timezone_offset=None):

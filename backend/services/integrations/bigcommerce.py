@@ -68,15 +68,7 @@ class BigcommerceIntegrationsService:
         'context': f'stores/{store_hash}',
         "redirect_uri": BigcommerceConfig.redirect_uri,
         "response_type": "code",
-        "scope": (
-            "store_content_checkout "
-            "store_v2_content "
-            "store_v2_default "
-            "store_v2_information_read_only "
-            "store_v2_orders_read_only "
-            "store_v2_customers_read "
-            "store_v2_checkouts_read"
-        ),
+        "scope": "store_v2_orders_read_only store_v2_products_read_only store_v2_customers_read_only store_v2_content store_content_checkout store_v2_information_read_only",
         'state': f'{user.get("id")}:{domain.id}:{is_pixel_install}'
         }
         query_string = urlencode(params, safe=':/')

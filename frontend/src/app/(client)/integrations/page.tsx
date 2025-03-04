@@ -37,7 +37,9 @@ import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import ZapierConnectPopup from "@/components/ZapierConnectPopup";
 import SlackConnectPopup from "@/components/SlackConnectPopup";
+import WebhookConnectPopup from "@/components/WebhookConnectPopup";
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import GoogleADSConnectPopup from "@/components/GoogleADSConnectPopup";
 
 
 interface IntegrationBoxProps {
@@ -585,7 +587,9 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
     { image: 'sendlane-icon.svg', service_name: 'sendlane' },
     //{ image: 'attentive.svg', service_name: 'attentive' },
     { image: 'zapier-icon.svg', service_name: 'zapier' },
-    { image: 'slack-icon.svg', service_name: 'slack' }
+    { image: 'slack-icon.svg', service_name: 'slack' },
+    { image: 'google-ads.svg', service_name: 'google_ads' },
+    { image: 'webhook-icon.svg', service_name: 'webhook' }
   ];
 
   const integratedServices = integrationsCredentials.map(cred => cred.service_name);
@@ -768,6 +772,21 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
         <SlackConnectPopup
           open={true}
           handlePopupClose={handleClose}
+          boxShadow="rgba(0, 0, 0, 0.01)"
+        />
+      )}
+      
+      {openModal === 'google_ads' && (
+        <GoogleADSConnectPopup
+          open={true}
+          handlePopupClose={handleClose}
+          />
+        )}
+  
+      {openModal === 'webhook' && (
+        <WebhookConnectPopup
+          open={true}
+          handleClose={handleClose}
           boxShadow="rgba(0, 0, 0, 0.01)"
         />
       )}

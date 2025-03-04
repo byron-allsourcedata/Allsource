@@ -67,10 +67,6 @@ class SendlaneIntegrationService:
     
     def edit_sync(self, leads_type: str, list_id: str, list_name: str, integrations_users_sync_id: int, domain_id: int, created_by: str):
         credentials = self.get_credentials(domain_id)
-        data_syncs = self.sync_persistence.get_filter_by(domain_id=domain_id)
-        for sync in data_syncs:
-            if sync.get('integration_id') == credentials.id and sync.get('leads_type') == leads_type:
-                return
         sync = self.sync_persistence.edit_sync({
             'integration_id': credentials.id,
             'list_id': list_id,
@@ -169,7 +165,9 @@ class SendlaneIntegrationService:
             return profile
         
         json = {
-            'contacts': [{**profile.model_dump()}]
+            'contacts': [{
+                **profile.model_dump()
+            }]
         }
         response = self.__handle_request(f'/lists/{list_id}/contacts', api_key=access_token, json=json, method="POST")
         if response.status_code == 401:
@@ -235,10 +233,9 @@ class SendlaneIntegrationService:
             first_email = first_email.split(',')[-1].strip()
         first_phone = format_phone_number(first_phone)
         phone_number = validate_and_format_phone(first_phone)
-        
         return SendlaneContact(
             email=first_email,
             first_name=five_x_five_user.first_name or None,
             last_name=five_x_five_user.last_name or None,
-            phone=phone_number.split(', ')[-1] if phone_number else None,
+            phone=phone_number.split(', ')[-1] if phone_number else None
         )

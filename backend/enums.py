@@ -33,6 +33,8 @@ class SourcePlatformEnum(Enum):
     WORDPRESS = 'wordpress'
     HUBSPOT = 'hubspot'
     SLACK = 'slack'
+    GOOGLE_ADS = 'google_ads'
+    WEBHOOK = 'webhook'
 
 
 class UserPaymentStatusEnum(Enum):
@@ -210,6 +212,13 @@ class NotificationTitles(Enum):
     CHOOSE_PLAN = 'choose_plan'
     PAYMENT_SUCCESS = 'payment_success'
     TEAM_MEMBER_ADDED = 'team_member_added'
+    NO_CREDITS = 'no_credits'
+
+
+class CreditsStatus(Enum):
+    UNLIMITED_CREDITS = 'UNLIMITED_CREDITS'
+    CREDITS_ARE_AVAILABLE = 'CREDITS_ARE_AVAILABLE'
+    NO_CREDITS = 'NO_CREDITS'
 
 
 class IntegrationsStatus(Enum):
@@ -219,6 +228,7 @@ class IntegrationsStatus(Enum):
     SUCCESS = "SUCCESS"
     NOT_MATCHED_EARLIER = "Store Domain does not match the one you specified earlier"
     ALREADY_EXIST = 'ALREADY_EXIST'
+    INVALID_WEBHOOK_URL = 'INVALID_WEBHOOK_URL'
     JOIN_CHANNEL_IS_FAILED = 'JOIN_CHANNEL_IS_FAILED'
 
 

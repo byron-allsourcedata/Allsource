@@ -24,8 +24,10 @@ class MillionVerifierIntegrationsService:
             response = requests.get(API_URL, params=params)
             response.raise_for_status()
             return response.json()
-        except requests.exceptions.RequestException as e:
-            return {'error': str(e)}
+        except requests.HTTPError as e:
+            raise e
+        except Exception as e:
+            raise e
     
     def is_email_verify(self, email: str):
         is_verify = False
@@ -43,7 +45,7 @@ class MillionVerifierIntegrationsService:
                 logger.debug(f"millionverifier error: {result_error}")
             is_verify = False
         
-        subresult_value = result.get('subresult', 'other')
+        subresult_value = result.get('subresult')
         
         if subresult_value in ('ok', 'unknown', 'greylisted'):
             is_verify = True

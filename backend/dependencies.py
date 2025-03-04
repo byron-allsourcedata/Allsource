@@ -115,14 +115,14 @@ def get_million_verifier_persistence(db: Session = Depends(get_db)):
 def get_referral_payouts_persistence(db: Session = Depends(get_db)):
     return ReferralPayoutsPersistence(db=db)
 
+def get_million_verifier_service(million_verifier_persistence: MillionVerifierPersistence = Depends(get_million_verifier_persistence)):
+    return MillionVerifierIntegrationsService(million_verifier_persistence=million_verifier_persistence)
 
 def get_leads_persistence(db: Session = Depends(get_db)):
     return LeadsPersistence(db=db)
 
-
 def get_company_persistence(db: Session = Depends(get_db)):
     return CompanyPersistence(db=db)
-
 
 def get_suppression_persistence(db: Session = Depends(get_db)) -> SuppressionPersistence:
     return SuppressionPersistence(db)
@@ -153,8 +153,7 @@ def get_user_integrations_presistence(db: Session = Depends(get_db)) -> Integrat
 
 
 def get_lead_orders_persistence(db: Session = Depends(get_db)) -> LeadsPersistence:
-    return LeadsPersistence(db)
-
+    return LeadOrdersPersistence(db)
 
 def get_integrations_user_sync_persistence(db: Session = Depends(get_db)) -> IntegrationsUserSyncPersistence:
     return IntegrationsUserSyncPersistence(db)
@@ -183,9 +182,6 @@ def get_accounts_service(
 def get_aws_service(s3_client=Depends(get_s3_client)) -> AWSService:
     return AWSService(s3_client)
 
-def get_million_verifier_service(million_verifier_persistence: MillionVerifierPersistence = Depends(get_million_verifier_persistence)):
-    return MillionVerifierIntegrationsService(million_verifier_persistence=million_verifier_persistence)
-
 def get_slack_service(
         user_persistence: UserPersistence = Depends(get_user_persistence_service),
         lead_persistence: LeadsPersistence = Depends(get_leads_persistence),
@@ -210,6 +206,55 @@ def get_referral_service(
                            user_persistence=user_persistence,
                            stripe_service=stripe_service, referral_payouts_persistence=referral_payouts_persistence,
                            referral_persistence_service=referral_user_persistence)
+
+
+def check_user_authentication(Authorization: Annotated[str, Header()],
+                              user_persistence_service: UserPersistence = Depends(
+                                  get_user_persistence_service)) -> Token:
+    user_data = parse_jwt_data(Authorization)
+    user = user_persistence_service.get_user_by_id(user_data.id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                'status': 'NOT_FOUND'
+            }
+        )
+    if hasattr(user_data, 'team_member_id') and user_data.team_member_id:
+        team_memer = user_persistence_service.get_user_team_member_by_id(user_data.team_member_id)
+        if team_memer.get('team_owner_id') is None or team_memer.get('team_owner_id') != user.get('id'):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={'status': UserAuthorizationStatus.TEAM_TOKEN_EXPIRED.value}
+            )
+        user['team_member'] = team_memer
+    return user
+
+
+def check_domain(
+        CurrentDomain: Optional[str] = Header(None),
+        user=Depends(check_user_authentication),
+        domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)
+) -> UserDomains:
+    current_domain = domain_persistence.get_domains_by_user(user.get('id'), domain_substr=CurrentDomain)
+    if not CurrentDomain:
+        return None
+    if not current_domain or len(current_domain) == 0:
+        if user.get('is_email_confirmed') is False and user.get('is_with_card') is False:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={'status': 'NEED_CONFIRM_EMAIL'})
+        if user.get('is_company_details_filled') is False:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={'status': 'FILL_COMPANY_DETAILS'})
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={'status': "DOMAIN_NOT_FOUND"})
+    
+    return current_domain[0]
+
+
+
+def check_pixel_install_domain(domain: UserDomains = Depends(check_domain)):
+    if domain and not domain.is_pixel_installed:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail={'status': UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED.value})
+    return domain
 
 
 def get_subscription_service(db: Session = Depends(get_db),
@@ -406,27 +451,7 @@ def check_user_partner(Authorization: Annotated[str, Header()],
         )
     return user
 
-def check_user_authentication(Authorization: Annotated[str, Header()],
-                              user_persistence_service: UserPersistence = Depends(
-                                  get_user_persistence_service)) -> Token:
-    user_data = parse_jwt_data(Authorization)
-    user = user_persistence_service.get_user_by_id(user_data.id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={
-                'status': 'NOT_FOUND'
-            }
-        )
-    if hasattr(user_data, 'team_member_id') and user_data.team_member_id:
-        team_memer = user_persistence_service.get_user_team_member_by_id(user_data.team_member_id)
-        if team_memer.get('team_owner_id') is None or team_memer.get('team_owner_id') != user.get('id'):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail={'status': UserAuthorizationStatus.TEAM_TOKEN_EXPIRED.value}
-            )
-        user['team_member'] = team_memer
-    return user
+
 
 def check_team_access_standard_user(user: dict = Depends(check_user_authentication)):
     if user.get('team_member'):
@@ -442,38 +467,17 @@ def check_team_access_standard_user(user: dict = Depends(check_user_authenticati
             )
     return user
 
+
+
 def get_users_service(user=Depends(check_user_authentication),
                       user_persistence: UserPersistence = Depends(get_user_persistence_service),
                       plan_persistence: PlansPersistence = Depends(get_plans_persistence),
                       subscription_service: SubscriptionService = Depends(get_subscription_service),
-                      domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)
+                      domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence),
+                      leads_persistence: LeadsPersistence = Depends(get_lead_orders_persistence)
                       ):
     return UsersService(user=user, user_persistence_service=user_persistence, plan_persistence=plan_persistence,
-                        subscription_service=subscription_service, domain_persistence=domain_persistence)
-
-
-def check_domain(
-        CurrentDomain: Optional[str] = Header(None),
-        user=Depends(check_user_authentication),
-        domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)
-) -> UserDomains:
-    current_domain = domain_persistence.get_domains_by_user(user.get('id'), domain_substr=CurrentDomain)
-    if not CurrentDomain:
-        return None
-    if not current_domain or len(current_domain) == 0:
-        if user.get('is_email_confirmed') is False and user.get('is_with_card') is False:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={'status': 'NEED_CONFIRM_EMAIL'})
-        if user.get('is_company_details_filled') is False:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={'status': 'FILL_COMPANY_DETAILS'})
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={'status': "DOMAIN_NOT_FOUND"})
-    return current_domain[0]
-
-
-def check_pixel_install_domain(domain: UserDomains = Depends(check_domain)):
-    if not domain.is_pixel_installed:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail={'status': UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED.value})
-    return domain
+                        subscription_service=subscription_service, domain_persistence=domain_persistence, leads_persistence=leads_persistence)
 
 
 def get_notification_service(notification_persistence: NotificationPersistence = Depends(get_notification_persistence),
