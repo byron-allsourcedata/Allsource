@@ -207,6 +207,8 @@ class DomainStatus(Enum):
 
 class NotificationTitles(Enum):
     PLAN_LIMIT_EXCEEDED = 'plan_limit_exceeded'
+    AUTHENTICATION_INTEGRATION_FAILED = 'authentication_integration_failed'
+    DATA_SYNC_ERROR = 'data_sync_error'
     PAYMENT_FAILED = 'payment_failed'
     CONTACT_LIMIT_APPROACHING = 'contact_limit_approaching'
     CHOOSE_PLAN = 'choose_plan'
