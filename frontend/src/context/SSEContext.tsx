@@ -42,7 +42,6 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
     evtSource.onmessage = (event) => {
       if (event.data) {
         const data = JSON.parse(event.data);
-        console.log(data)
         if (data.status === "PIXEL_CODE_PARSE_FAILED") {
           showErrorToast("Could not find pixel code on your site")
         }
@@ -67,11 +66,25 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
         else if(data.status == 'PIXEL_CODE_INSTALLED' && data.need_reload_page) {
           showToast("Pixel code is installed successfully!");
         }
-        else if(window.location.pathname == "/sources") {
-          console.log(data)
-          const [total, processed] = data
-          sessionStorage.setItem(`sourceProgress_${data.source_id}`, JSON.stringify({total, processed}));
-        }
+        else if (window.location.pathname === "/sources") {
+          console.log(data);
+          const { total, processed, source_id } = data.data;
+          if (!source_id) {
+              console.error("source_id is undefined");
+              return;
+          }
+      
+          const key = `sourceProgress_${source_id}`;
+          const existingData = sessionStorage.getItem(key);
+      
+          if (existingData) {
+              const parsedData = JSON.parse(existingData);
+              parsedData.processed = processed;
+              sessionStorage.setItem(key, JSON.stringify(parsedData));
+          } else {
+              sessionStorage.setItem(key, JSON.stringify({ total, processed }));
+          }
+      }
         else {
           showToast("Pixel code is installed successfully!");
           if (data.percent) {

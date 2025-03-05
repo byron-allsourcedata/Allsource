@@ -77,7 +77,7 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, s3_s
         source_id = data.get('source_id')
         user_id = data.get('user_id') 
         email_field = data.get('email') 
-        logging.info(f"Processing AudienceSource with ID: {source_id}")#ydalit
+        logging.info(f"Processing AudienceSource with ID: {source_id}")
 
         source = db_session.query(AudienceSource).filter_by(id=source_id).first()
         if not source:
@@ -102,39 +102,39 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, s3_s
                 aws_session_token=credentials['SessionToken']
         ) as s3:
             s3_obj = await s3.get_object(Bucket=S3_BUCKET_NAME, Key=key)
-            s3_obj = await s3.get_object(Bucket=S3_BUCKET_NAME, Key=key)
             body = await s3_obj['Body'].read()
 
             csv_file = io.StringIO(body.decode("utf-8"))
             csv_reader = csv.DictReader(csv_file)
         
-        total_rows = sum(1 for _ in csv_reader) - 1
+        total_rows = sum(1 for _ in csv_reader)
         csv_file.seek(0)
         processed_rows = 0
 
         # async with db_session.begin():  # Open a transaction
+        logging.info(f"Total row in CSV file: {total_rows}")
         source.total_records = total_rows
         db_session.add(source)
 
         for row in csv_reader:
             email = row.get(email_field)
-            if email:
-                # Send email to the matching queue
-                await publish_rabbitmq_message(
-                    channel=channel,
-                    queue_name=AUDIENCE_SOURCES_MATCHING,
-                    message_body={
-                        "data": {"email": email, "source_id": source_id, "row": row}
-                    }
-                )
-                processed_rows += 1
-
-                source.processed_records = processed_rows
-                if processed_rows == total_rows:
-                    source.matched_records_status = "complete"
-                db_session.add(source)
-                await send_sse(channel, user_id, {"source_id": source_id, "total": total_rows, "processed": processed_rows})
-                db_session.commit()
+            # Send email to the matching queue
+            await publish_rabbitmq_message(
+                channel=channel,
+                queue_name=AUDIENCE_SOURCES_MATCHING,
+                message_body={
+                    "data": {"email": email, "source_id": source_id, "row": row}
+                }
+            )
+            source.processed_records = processed_rows
+            if processed_rows == total_rows:
+                source.matched_records_status = "complete"
+            db_session.add(source)
+            db_session.flush()
+            await send_sse(channel, user_id, {"source_id": source_id, "total": total_rows, "processed": processed_rows})
+            processed_rows += 1
+        
+        db_session.commit()
 
         await message.ack()
 
@@ -156,7 +156,7 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session):
         row = data.get("row")
         source_id = data.get("source_id")
 
-        logging.info(f"Processing AudienceSourceMatching with ID: {source_id}")#ydalit
+        logging.info(f"Processing AudienceSourceMatching with ID: {source_id}")
 
         email_record = db_session.query(FiveXFiveEmails).filter_by(email=email).first()
         if email_record:
@@ -168,7 +168,13 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session):
                 mapped_fields=json.dumps(row),
             )
             db_session.add(matched_person)
-            db_session.commit()
+
+            audience_source = db_session.query(AudienceSource).filter_by(id=source_id).first()
+            if audience_source:
+                audience_source.matched_records += 1
+                db_session.flush()
+        
+        db_session.commit()
 
         await message.ack()
 
@@ -185,12 +191,11 @@ def extract_key_from_url(s3_url: str):
 
 
 async def send_sse(channel, user_id: int, data):
-    # {"source_id": int, "total": int, "processed": int}
     try:
-        logging.info(f"SSE: {data, user_id}")
+        logging.info(f"send client throught SSE: {data, user_id}")
         await publish_rabbitmq_message(
                     channel=channel,
-                    queue_name=f'sse_events_{user_id}',
+                    queue_name=f'sse_events_{str(user_id)}',
                     message_body={
                         "data": data
                     }

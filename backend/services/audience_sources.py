@@ -1,9 +1,7 @@
-import csv
 import os
 import json
 from openai import OpenAI
 import logging
-from fastapi import UploadFile
 from typing import List
 from schemas.audience import Row
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
