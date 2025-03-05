@@ -26,7 +26,7 @@ from models.leads_users import LeadUser
 
 load_dotenv()
 
-CRON_DATA_SYNC_LEADS = 'cron_data_sync_leads_test'
+CRON_DATA_SYNC_LEADS = 'cron_data_sync_leads'
 BATCH_SIZE = 200
 SLEEP_INTERVAL = 60 * 10
 
