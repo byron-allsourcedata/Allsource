@@ -38,7 +38,8 @@ class AudienceSourceService:
                 'created_by': source[4],
                 'updated_date': source[6],
                 'total_records': source[7],
-                'matched_records': source[8]
+                'matched_records': source[8],
+                'matched_records_status': source[9],
             })
 
         return source_list, count

@@ -26,10 +26,12 @@ class AudienceSourcesPersistence:
                 AudienceSource.updated_at,
                 AudienceSource.total_records,
                 AudienceSource.matched_records,
+                AudienceSource.matched_records_status,
 
             )
                 .join(Users, Users.id == AudienceSource.created_by_user_id)
                 .filter(AudienceSource.user_id == user_id)
+                .order_by(AudienceSource.created_at.asc())
         )
 
         sort_options = {

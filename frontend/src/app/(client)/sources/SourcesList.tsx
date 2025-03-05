@@ -31,6 +31,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import { UpgradePlanPopup } from  '../components/UpgradePlanPopup'
 import { sources } from 'next/dist/compiled/webpack/webpack';
+import { useSSE } from '../../../context/SSEContext';
 
 
 interface FetchDataParams {
@@ -67,6 +68,7 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
     const { hasNotification } = useNotification();
     const [data, setData] = useState<any[]>([]);
     const [count_companies, setCount] = useState<number | null>(null);
+    const [progress, setProgress] = useState<any>(null);
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
     const [status, setStatus] = useState<string | null>(null);
@@ -87,6 +89,7 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [selectedJobTitle, setSelectedJobTitle] = React.useState<string | null>(null);
     const [employeeId, setEmployeeId] = useState<number | null>(null)
+    const { sourceProgress } = useSSE();
 
 
     const handleOpenPopover = (event: React.MouseEvent<HTMLElement>) => {
@@ -204,8 +207,11 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
             .join(' ');
     }
 
-
-
+    useEffect(() => {
+        if (createdSource) {
+            setProgress(sourceProgress[createdSource.id]);
+        }
+    }, [createdSource, sourceProgress]);
 
     return (
         <>
@@ -393,7 +399,7 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
                                         Number of Customers
                                     </Typography>
                                     <Typography variant="subtitle1" className="table-data">
-                                        {createdSource?.total_records}
+                                        {progress?.total ?? 'loading'}
                                     </Typography>
                                 </Box>
                                 <Box>
@@ -405,7 +411,7 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
                                         Matched Records
                                     </Typography>
                                     <Typography variant="subtitle1" className="table-data">
-                                        {createdSource?.matched_records}
+                                        {`${((progress?.processed / progress?.total) * 100).toFixed(2)}%`}
                                     </Typography>
                                 </Box>
                             </Box>

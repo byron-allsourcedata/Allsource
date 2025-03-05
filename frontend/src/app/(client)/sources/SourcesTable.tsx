@@ -31,6 +31,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import { UpgradePlanPopup } from  '../components/UpgradePlanPopup'
 import { sources } from 'next/dist/compiled/webpack/webpack';
+import { useSSE } from '../../../context/SSEContext';
 
 
 interface FetchDataParams {
@@ -90,6 +91,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
     const [selectedJobTitle, setSelectedJobTitle] = React.useState<string | null>(null);
     const [employeeId, setEmployeeId] = useState<number | null>(null)
     const [selectedRowData, setSelectedRowData] = useState<Sources | null>(null);
+    const { sourceProgress } = useSSE();
 
 
     const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, rowData: Sources) => {
@@ -648,8 +650,9 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
                                                 </TableRow>
                                             </TableHead>
                                             <TableBody>
-                                                {data.map((row: any) => (
-                                                    <>
+                                                {data.map((row: any) => {
+                                                    const progress = sourceProgress[row.id];
+                                                    return (
                                                         <TableRow
                                                             key={row.id}
                                                             selected={selectedRows.has(row.id)}
@@ -716,14 +719,19 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
                                                             <TableCell
                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {row.number_of_customers ?? '--'}
+                                                                {row.matched_records_status === "pending" 
+                                                                ? progress?.total ??  "loading"
+                                                                : row.total_records ?? "--"
+                                                                }
                                                             </TableCell>
 
                                                             {/* Matched Records  Column */}
                                                             <TableCell
                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {row.matched_records ?? '--'}
+                                                                {row.matched_records_status === "pending" 
+                                                                ? `${((progress?.processed / progress?.total) * 100).toFixed(2)}%`
+                                                                : row.matched_records ?? '--'}
                                                             </TableCell>
 
                                                             <TableCell sx={{ ...sourcesStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
@@ -765,8 +773,8 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
                                                             </TableCell>
 
                                                         </TableRow>
-                                                    </>
-                                                ))}
+                                                    )
+                                                })}
                                             </TableBody>
                                         </Table>
                                     </TableContainer>

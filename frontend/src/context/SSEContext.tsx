@@ -10,6 +10,7 @@ interface Data {
 interface SSEContextType {
   data: Data | null;
   newNotification: boolean;
+  sourceProgress: Record<number, { total: number; processed: number }>
 }
 
 interface SSEProviderProps {
@@ -22,6 +23,14 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   const [data, setData] = useState<Data | null>(null);
   const [newNotification, setNewNotifications] = useState(false);
   const [latestNotification, setLatestNotification] = useState<{ id: number; text: string } | null>(null);
+  const [sourceProgress, setSourceProgress] = useState<Record<number, { total: number; processed: number }>>({});
+
+  const updateSourceProgress = (source_id: number, total: number, processed: number) => {
+    setSourceProgress((prev) => ({
+      ...prev,
+      [source_id]: { total, processed },
+    }));
+  };
 
   const url = process.env.NEXT_PUBLIC_API_BASE_URL;
   const handleNotificationDismiss = () => {
@@ -74,16 +83,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
               return;
           }
       
-          const key = `sourceProgress_${source_id}`;
-          const existingData = sessionStorage.getItem(key);
-      
-          if (existingData) {
-              const parsedData = JSON.parse(existingData);
-              parsedData.processed = processed;
-              sessionStorage.setItem(key, JSON.stringify(parsedData));
-          } else {
-              sessionStorage.setItem(key, JSON.stringify({ total, processed }));
-          }
+          updateSourceProgress(source_id, total, processed);
       }
         else {
           showToast("Pixel code is installed successfully!");
@@ -109,7 +109,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   }, [url]);
 
   return (
-    <SSEContext.Provider value={{ data, newNotification }}>
+    <SSEContext.Provider value={{ data, newNotification, sourceProgress }}>
       {children}
       {latestNotification && (
         <CustomNotification 
