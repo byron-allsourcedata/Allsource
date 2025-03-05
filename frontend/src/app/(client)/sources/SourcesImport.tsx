@@ -1,37 +1,15 @@
 "use client";
-import React, { ChangeEvent, useState, useEffect, Suspense } from 'react';
-import { Box, Grid, Typography, TextField, Button, FormControl, MenuItem, Select, LinearProgress, SelectChangeEvent, Paper, IconButton, Chip, Drawer, List, ListItemText, ListItemButton, Popover } from '@mui/material';
+import React, { ChangeEvent, useState, useEffect } from 'react';
+import { Box, Grid, Typography, TextField, Button, FormControl, MenuItem, Select, LinearProgress, SelectChangeEvent, IconButton, Popover } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '../../../axios/axiosInterceptorInstance';
 import axios from "axios";
 import { sourcesStyles } from './sourcesStyles';
-import FileUploadRoundedIcon from '@mui/icons-material/FileUploadRounded';
-import LanguageIcon from '@mui/icons-material/Language';
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import Slider from '../../../components/Slider';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
-import { SliderProvider } from '../../../context/SliderContext';
-import { ChevronLeft, ChevronRight } from '@mui/icons-material';
-import DownloadIcon from '@mui/icons-material/Download';
-import DateRangeIcon from '@mui/icons-material/DateRange';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import AudiencePopup from '@/components/AudienceSlider';
-import SouthOutlinedIcon from '@mui/icons-material/SouthOutlined';
-import NorthOutlinedIcon from '@mui/icons-material/NorthOutlined';
-import dayjs from 'dayjs';
-import CloseIcon from '@mui/icons-material/Close';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
-import Tooltip from '@mui/material/Tooltip';
-import CustomToolTip from '@/components/customToolTip';
-import CustomTablePagination from '@/components/CustomTablePagination';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import { useNotification } from '@/context/NotificationContext';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import SwapVertIcon from '@mui/icons-material/SwapVert';
-import { UpgradePlanPopup } from  '../components/UpgradePlanPopup'
-import { sources } from 'next/dist/compiled/webpack/webpack';
 import Link from '@mui/material/Link';
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import { styled } from '@mui/material/styles';
@@ -110,7 +88,6 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
     const [rows, setRows] = useState<Row[]>(defaultRows);
 
     const handleMapListChange = (id: number, value: string) => {
-
         setRows(rows.map(row =>
             row.id === id ? { ...row, value } : row
         ));
@@ -307,25 +284,6 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
         return <CustomizedProgressBar />;
     }
 
-    const centerContainerStyles = {
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        border: '1px solid rgba(235, 235, 235, 1)',
-        borderRadius: 2,
-        padding: 3,
-        boxSizing: 'border-box',
-        width: '100%',
-        textAlign: 'center',
-        flex: 1,
-        '& img': {
-            width: 'auto',
-            height: 'auto',
-            maxWidth: '100%'
-        }
-    };
-
 
 
     return (
@@ -371,7 +329,10 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                             backgroundColor: "rgba(236, 238, 241, 1)"
                                         },
                                     }}
-                                    onClick={() => setSourceMethod(1)}
+                                    onClick={() => {
+                                        setSourceMethod(1)
+                                        handleDeleteFile()
+                                    }}
                                     >
                                     Manually upload
                                 </Button>
@@ -392,7 +353,10 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                             backgroundColor: "rgba(236, 238, 241, 1)"
                                         },
                                     }}
-                                    onClick={() => setSourceMethod(2)}
+                                    onClick={() => {
+                                        setSourceMethod(2)
+                                        handleDeleteFile()
+                                    }}
                                     >
                                     Website - Pixel
                                 </Button>
@@ -430,7 +394,7 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                     <MenuItem value={"Intent"}>Intent</MenuItem>
                                 </Select>
                             </FormControl>
-                            {sourceType !== "" &&
+                            {sourceType !== "" && !file &&
                                 <Box sx={{
                                     display: "flex",
                                     alignItems: "center",

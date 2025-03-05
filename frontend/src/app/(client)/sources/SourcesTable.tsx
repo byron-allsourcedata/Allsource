@@ -8,7 +8,7 @@ import { AxiosError } from 'axios';
 import { sourcesStyles } from './sourcesStyles';
 import Slider from '../../../components/Slider';
 import { SliderProvider } from '../../../context/SliderContext';
-import { ChevronLeft, ChevronRight } from '@mui/icons-material';
+import { ChevronLeft, ChevronRight, MoreVert } from '@mui/icons-material';
 import DownloadIcon from '@mui/icons-material/Download';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -736,7 +736,8 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
 
                                                             <TableCell sx={{ ...sourcesStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
                                                                 <IconButton onClick={(event) => handleOpenPopover(event, row)} sx={{ ':hover': { backgroundColor: 'transparent' }}} >
-                                                                    <Image src='/more_horizontal.svg' alt='more' height={16.18} width={22.91} />
+                                                                    {/* <Image src='/more_horizontal.svg' alt='more' height={16.18} width={22.91} /> */}
+                                                                    <MoreVert sx={{color: "rgba(32, 33, 36, 1)"}} height={8} width={24}/>
                                                                 </IconButton>
 
                                                                 <Popover
@@ -759,6 +760,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
                                                                         </ListItemButton>
                                                                         <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
                                                                                 handleClosePopover()
+                                                                                router.push(`/lookalikes/${row.id}/builder`)
                                                                         }}>
                                                                             <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Lookalike"/>
                                                                         </ListItemButton>
