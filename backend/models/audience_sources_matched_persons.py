@@ -1,12 +1,12 @@
-from sqlalchemy import Column, event, Integer, TIMESTAMP, JSON, ForeignKey, Index
+from sqlalchemy import Column, event, Integer, TIMESTAMP, JSON, ForeignKey, Index, UUID
 from .base import Base, create_timestamps, update_timestamps
 
 
 class AudienceSourcesMatchedPerson(Base):
     __tablename__ = 'audience_sources_matched_persons'
 
-    id = Column(Integer, primary_key=True)
-    source_id = Column(Integer, ForeignKey('audience_sources.id'), nullable=False)
+    id = Column(UUID(as_uuid=True), primary_key=True, unique=True, nullable=False, server_default="gen_random_uuid()")
+    source_id = Column(UUID(as_uuid=True), ForeignKey('audience_sources.id'), nullable=False)
     five_x_five_user_id = Column(Integer, ForeignKey('5x5_users.id'), nullable=False)
     mapped_fields = Column(JSON, nullable=False)
     created_at = Column(TIMESTAMP, nullable=False)

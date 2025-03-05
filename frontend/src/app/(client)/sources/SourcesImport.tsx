@@ -29,7 +29,7 @@ interface Row {
 }
 
 interface Source {
-    id: number
+    id: string
     name: string
     source_origin: string
     source_type: string

@@ -36,7 +36,7 @@ import SourcesList from './SourcesList';
 
 
 interface Sources {
-    id: number
+    id: string
     name: string
     source_origin: string
     source_type: string
@@ -48,7 +48,7 @@ interface Sources {
 }
 
 interface Source {
-    id: number
+    id: string
     name: string
     source_origin: string
     source_type: string

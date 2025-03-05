@@ -1,6 +1,7 @@
 from typing import List, Optional
 from pydantic import BaseModel
 from datetime import datetime
+from uuid import UUID
 
 class AudienceRequest(BaseModel):
     data_source: str
@@ -22,7 +23,7 @@ class NewSource(BaseModel):
     rows: List[Row]
 
 class AudienceResponse(BaseModel):
-    id: int
+    id: UUID
     domain_id: int
     data_source: str
     audience_type: str

@@ -71,12 +71,12 @@ class AudienceSourceService:
             logger.error("Error with ChatGPT API", exc_info=True)
 
 
-    async def send_matching_status(self, source_id, user_id, emailField):
+    async def send_matching_status(self, source_id, user_id, email_field):
         queue_name = QueueName.AUDIENCE_SOURCES_READER.value
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
         try:
-            message_body = {'data': {'source_id': source_id, 'email': emailField, 'user_id': user_id}}
+            message_body = {'data': {'source_id': str(source_id), 'email': email_field, 'user_id': user_id}}
             await publish_rabbitmq_message(
                 connection=connection,
                 queue_name=queue_name,

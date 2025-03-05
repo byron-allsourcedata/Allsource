@@ -74,7 +74,7 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, s3_s
             await message.ack()
             return
         
-        source_id = data.get('source_id')
+        source_id = str(data.get('source_id'))
         user_id = data.get('user_id') 
         email_field = data.get('email') 
         logging.info(f"Processing AudienceSource with ID: {source_id}")
@@ -101,8 +101,13 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, s3_s
                 aws_secret_access_key=credentials['SecretAccessKey'],
                 aws_session_token=credentials['SessionToken']
         ) as s3:
-            s3_obj = await s3.get_object(Bucket=S3_BUCKET_NAME, Key=key)
-            body = await s3_obj['Body'].read()
+            try:
+                s3_obj = await s3.get_object(Bucket=S3_BUCKET_NAME, Key=key)
+                body = await s3_obj['Body'].read()
+            except Exception as s3_error:
+                logging.error(f"Error reading S3 object: {s3_error}")
+                await message.nack()
+                return
 
             csv_file = io.StringIO(body.decode("utf-8"))
             csv_reader = csv.DictReader(csv_file)

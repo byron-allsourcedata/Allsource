@@ -10,7 +10,7 @@ interface Data {
 interface SSEContextType {
   data: Data | null;
   newNotification: boolean;
-  sourceProgress: Record<number, { total: number; processed: number }>
+  sourceProgress: Record<string, { total: number; processed: number }>
 }
 
 interface SSEProviderProps {
@@ -23,9 +23,9 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   const [data, setData] = useState<Data | null>(null);
   const [newNotification, setNewNotifications] = useState(false);
   const [latestNotification, setLatestNotification] = useState<{ id: number; text: string } | null>(null);
-  const [sourceProgress, setSourceProgress] = useState<Record<number, { total: number; processed: number }>>({});
+  const [sourceProgress, setSourceProgress] = useState<Record<string, { total: number; processed: number }>>({});
 
-  const updateSourceProgress = (source_id: number, total: number, processed: number) => {
+  const updateSourceProgress = (source_id: string, total: number, processed: number) => {
     setSourceProgress((prev) => ({
       ...prev,
       [source_id]: { total, processed },

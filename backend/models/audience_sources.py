@@ -1,11 +1,11 @@
-from sqlalchemy import Column, event, Integer, TIMESTAMP, JSON, VARCHAR, ForeignKey, Index
+from sqlalchemy import Column, event, Integer, TIMESTAMP, JSON, VARCHAR, ForeignKey, Index, UUID
 from .base import Base, create_timestamps, update_timestamps
 
 
 class AudienceSource(Base):
     __tablename__ = 'audience_sources'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, unique=True, nullable=False, server_default="gen_random_uuid()")
     user_id = Column(Integer, ForeignKey('users.id', onupdate='SET NULL'), nullable=True)
     created_by_user_id = Column(Integer, ForeignKey('users.id', onupdate='SET NULL'), nullable=True)
     created_at = Column(TIMESTAMP, nullable=False)

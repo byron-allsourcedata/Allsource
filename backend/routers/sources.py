@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Query, UploadFile, File, Form
 from dependencies import get_audience_sources_service, check_user_authorization
 from services.audience_sources import AudienceSourceService
 from schemas.audience import HeadingSubstitutionRequest, NewSource
+from uuid import UUID
 
 router = APIRouter(dependencies=[Depends(check_user_authorization)])
 
@@ -49,7 +50,7 @@ async def create_source(
 
 @router.delete("/{id}")
 def delete_source(
-        id: int,
+        id: UUID,
         sources_service: AudienceSourceService = Depends(get_audience_sources_service)
 ):
     return sources_service.delete_source(
