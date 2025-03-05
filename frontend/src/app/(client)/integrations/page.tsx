@@ -187,7 +187,7 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
               padding: '11px 10px',
               fontSize: '12px !important',
               fontFamily: 'Nunito Sans',
-              
+
             },
           },
         }}
@@ -268,25 +268,25 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
               </Box>
             </Box>
           )}
-          {!is_integrated &&  isHovered && (
-          <Box
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '100%',
-            height: '100%',
-            
-          }}
-        >
-            <AddIcon sx={{ color: "#5052B2", fontSize: 45 }} />
-          </Box>
-        )}
-         <Image
+          {!is_integrated && isHovered && (
+            <Box
+              sx={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
+                height: '100%',
+
+              }}
+            >
+              <AddIcon sx={{ color: "#5052B2", fontSize: 45 }} />
+            </Box>
+          )}
+          <Image
             src={image}
             width={altImageIntegration.some(int => int == service_name) ? 100 : 32}
             height={32}
@@ -525,10 +525,6 @@ interface IntegrationsListProps {
 
 }
 
-interface DataSyncIntegrationsProps {
-  service_name: string | null
-}
-
 const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSaveSettings, handleDeleteSettings }: IntegrationsListProps) => {
   const [activeService, setActiveService] = useState<string | null>(null);
   const [openModal, setOpenModal] = useState<string | null>(null);
@@ -593,14 +589,13 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
     { image: 'webhook-icon.svg', service_name: 'webhook' },
     { image: 'hubspot.svg', service_name: 'hubspot' },
     { image: 'google-ads.svg', service_name: 'google_ads' },
-    { image: 'webhook-icon.svg', service_name: 'webhook' },
     { image: 'salesforce-icon.svg', service_name: 'sales_force' }
   ];
 
   const integratedServices = integrationsCredentials.map(cred => cred.service_name);
 
   return (
-    <Box sx={{ width: '100%', flexGrow: 1, height: 'calc(100vh - 7.75rem)',  overflow: 'auto', pt:2, '@media (max-width: 600px)': { pr: 2, pb: 4, height:'calc(100vh - 11.25rem)', pt:2 } }}>
+    <Box sx={{ width: '100%', flexGrow: 1, height: 'calc(100vh - 7.75rem)', overflow: 'auto', pt: 2, '@media (max-width: 600px)': { pr: 2, pb: 4, height: 'calc(100vh - 11.25rem)', pt: 2 } }}>
       <Box sx={{ overflowX: 'hidden' }}>
         <TextField
           fullWidth
@@ -684,7 +679,6 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
             );
           })}
       </Box>
-
 
       {openModal === 'klaviyo' && (
         <KlaviyoIntegrationPopup
@@ -794,8 +788,8 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
         <GoogleADSConnectPopup
           open={true}
           handlePopupClose={handleClose}
-          />
-        )}
+        />
+      )}
 
       {openModal === 'webhook' && (
         <WebhookConnectPopup
@@ -829,10 +823,6 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
     </Box>
   );
 };
-
-
-
-
 
 const PixelManagment = () => {
   const [value, setValue] = useState('1')
@@ -929,10 +919,6 @@ const Integrations = () => {
     setActiveTab(newValue)
   };
 
-  const installPixel = () => {
-    router.push('/dashboard');
-  };
-
   useEffect(() => {
     const code = searchParams.get('code');
     const scope = searchParams.get('scope');
@@ -954,23 +940,6 @@ const Integrations = () => {
     newSearchParams.delete('message');
     router.replace(`?${newSearchParams.toString()}`);
   }, [statusIntegrate])
-
-  const centerContainerStyles = {
-    mt: 3,
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    border: '1px solid rgba(235, 235, 235, 1)',
-    borderRadius: 2,
-    padding: 3,
-    pb: 0,
-    width: '100%',
-    textAlign: 'center',
-    flex: 1,
-    fontFamily: 'Nunito Sans',
-    overflowY: 'auto',
-  };
 
   useEffect(() => {
     const fetchIntegrationCredentials = async () => {
@@ -1046,7 +1015,7 @@ const Integrations = () => {
             alignItems: "center",
             justifyContent: "space-between",
             width: "100%",
-            mb:0,
+            mb: 0,
             "@media (max-width: 900px)": {
               flexDirection: "column",
               display: "flex",
@@ -1055,7 +1024,7 @@ const Integrations = () => {
             "@media (max-width: 600px)": {
               flexDirection: "column",
               display: "flex",
-              ml:0,
+              ml: 0,
               alignItems: "flex-start",
             },
             "@media (max-width: 440px)": {
@@ -1064,7 +1033,7 @@ const Integrations = () => {
             },
           }}
         >
-          <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', position: 'sticky', top: 0, pt: '12px', pb: '12px', pl:'8px', zIndex: 1, backgroundColor: '#fff', justifyContent: 'space-between', width: '100%', "@media (max-width: 900px)": { left: 0, zIndex: 1 }, "@media (max-width: 700px)": { flexDirection: 'column', display: 'flex', alignItems: 'flex-start', zIndex: 1, width: '100%' }, "@media (max-width: 440px)": { flexDirection: 'column', pt: hasNotification ? '3rem' : '0.75rem', top: hasNotification ? '4.5rem' : '', zIndex: 1, justifyContent: 'flex-start' }, "@media (max-width: 400px)": { pt: hasNotification ? '4.25rem' : '', pb: '6px', } }}>
+          <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', position: 'sticky', top: 0, pt: '12px', pb: '12px', pl: '8px', zIndex: 1, backgroundColor: '#fff', justifyContent: 'space-between', width: '100%', "@media (max-width: 900px)": { left: 0, zIndex: 1 }, "@media (max-width: 700px)": { flexDirection: 'column', display: 'flex', alignItems: 'flex-start', zIndex: 1, width: '100%' }, "@media (max-width: 440px)": { flexDirection: 'column', pt: hasNotification ? '3rem' : '0.75rem', top: hasNotification ? '4.5rem' : '', zIndex: 1, justifyContent: 'flex-start' }, "@media (max-width: 400px)": { pt: hasNotification ? '4.25rem' : '', pb: '6px', } }}>
             <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', width: '10%', gap: 1, "@media (max-width: 600px)": { mb: 2 }, "@media (max-width: 440px)": { mb: 1 }, }}>
               <Typography
                 className="first-sub-title"
@@ -1097,7 +1066,7 @@ const Integrations = () => {
                   sx={{
                     textTransform: 'none',
                     minHeight: 0,
-                    pb:0,
+                    pb: 0,
                     '& .MuiTabs-indicator': {
                       backgroundColor: 'rgba(80, 82, 178, 1)',
                       height: '1.4px',
@@ -1165,7 +1134,7 @@ const Integrations = () => {
           </Box>
         </Box>
         <Box>
-        <TabPanel value="1" sx={{flexGrow: 1, height: "100%", overflowY: "auto", padding: 0, ml: 1.5 }}>
+          <TabPanel value="1" sx={{ flexGrow: 1, height: "100%", overflowY: "auto", padding: 0, ml: 1.5 }}>
             <UserIntegrationsList
               integrationsCredentials={integrationsCredentials}
               changeTab={changeTab}
@@ -1175,7 +1144,7 @@ const Integrations = () => {
             />
           </TabPanel>
           <TabPanel value="2" sx={{ width: '100%', padding: '12px 0px' }}>
-            <Box sx={{overflow: 'auto', padding: 0 }}>
+            <Box sx={{ overflow: 'auto', padding: 0 }}>
               <PixelManagment />
             </Box>
           </TabPanel>
