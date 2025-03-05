@@ -2785,7 +2785,7 @@ const AccountSetup = () => {
                       onMouseDown={() => handleIntegration(range.label)}
                       sx={{ ...getButtonRolesStyles(selectedIntegration === range.label), gap: "8px", justifyContent: "flex-start", p: "12px" }}
                     >
-                      <Image src={range.src} alt="Integration item" width={24} height={24} />
+                      <Image src={range.src as string} alt="Integration item" width={24} height={24} />
                       <Typography className="form-input" style={{ color: "rgba(112, 112, 113, 1)", lineHeight: "19.6px" }}>{range.label}</Typography>
                     </Button>
                   ))}
