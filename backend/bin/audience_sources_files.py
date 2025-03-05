@@ -8,7 +8,7 @@ import io
 import csv
 import boto3
 import aioboto3
-from aio_pika import IncomingMessage, Message, Connection
+from aio_pika import IncomingMessage, Message, Channel
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
@@ -65,7 +65,7 @@ def assume_role(role_arn, sts_client):
     logging.info(f"Assumed role '{role_arn}', got temporary credentials.")
     return credentials
 
-async def aud_sources_reader(message: IncomingMessage, db_session: Session, s3_session, channel):
+async def aud_sources_reader(message: IncomingMessage, db_session: Session, s3_session, channel: Channel):
     try:
         message_body = json.loads(message.body)
         data = message_body.get('data')
@@ -190,7 +190,7 @@ def extract_key_from_url(s3_url: str):
     return parsed_url[1].split("?", 1)[0]
 
 
-async def send_sse(channel, user_id: int, data):
+async def send_sse(channel, user_id: int, data: dict):
     try:
         logging.info(f"send client throught SSE: {data, user_id}")
         await publish_rabbitmq_message(
