@@ -32,7 +32,7 @@ from dependencies import (IntegrationsPresistence, LeadsPersistence, AudiencePer
 
 load_dotenv()
 
-CRON_DATA_SYNC_LEADS = 'cron_data_sync_leads'
+CRON_DATA_SYNC_LEADS = 'cron_data_sync_leads_test'
 
 
 def setup_logging(level):
@@ -124,7 +124,8 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
             'zapier': integration_service.zapier,
             'slack': integration_service.slack,
             'google_ads': integration_service.google_ads,
-            'webhook': integration_service.webhook
+            'webhook': integration_service.webhook,
+            'sales_force': integration_service.sales_force
         }
         
         service = service_map.get(service_name)

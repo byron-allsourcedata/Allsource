@@ -16,6 +16,7 @@ class UserIntegration(Base):
     last_access_token_update = Column(TIMESTAMP)
     expire_access_token = Column(Integer)
     error_message = Column(VARCHAR(64))
+    instance_url = Column(VARCHAR(64))
     is_failed = Column(Boolean, default=False)
     shop_id = Column(VARCHAR(32))
     slack_team_id = Column(VARCHAR(32))
