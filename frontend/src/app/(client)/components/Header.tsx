@@ -45,9 +45,11 @@ const headerStyles = {
 
 interface HeaderProps {
   NewRequestNotification: boolean;
+  NotificationData: { text: string; id: number } | null;
+  onDismissNotification: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
+const Header: React.FC<HeaderProps> = ({ NewRequestNotification, NotificationData, onDismissNotification }) => {
   const [hasNotification, setHasNotification] = useState(NewRequestNotification);
   const router = useRouter();
   const { newNotification } = useSSE();
@@ -64,8 +66,6 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
   const [hasNewNotifications, setHasNewNotifications] = useState<boolean>(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [visibleButton, setVisibleButton] = useState(false)
-  const [latestNotification, setLatestNotification] = useState<{ text: string; id: number } | null>(null);
-  const [shouldRerender, setShouldRerender] = useState(false);
   const handleSignOut = () => {
     localStorage.clear();
     sessionStorage.clear();
@@ -80,9 +80,6 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
       }
     }, [newNotification]);
 
-  const handleNotificationDismiss = () => {
-    setLatestNotification(null);
-  };
 
   useEffect(() => {
     let token = localStorage.getItem('parent_token')
@@ -111,7 +108,6 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
         }, 0);
       });
 
-      setShouldRerender((prev) => !prev);
     }
 
     router.push("/partners");
@@ -345,12 +341,12 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
       </Box>
       </Box>
       <NotificationPopup open={notificationIconPopupOpen} onClose={handleNotificationIconPopupClose} anchorEl={anchorElNotificate} />
-      {latestNotification && (
+      {NotificationData && (
           <CustomNotification
-            id={123}
-            message={'latestNotification.text'}
+            id={NotificationData.id}
+            message={NotificationData.text}
             showDismiss={true}
-            onDismiss={handleNotificationDismiss}
+            onDismiss={onDismissNotification}
           />
         )}
     </Box>

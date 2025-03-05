@@ -10,6 +10,7 @@ interface Data {
 interface SSEContextType {
   data: Data | null;
   newNotification: boolean;
+  NotificationData: { id: number; text: string } | null;
 }
 
 interface SSEProviderProps {
@@ -21,13 +22,9 @@ const SSEContext = createContext<SSEContextType | undefined>(undefined);
 export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   const [data, setData] = useState<Data | null>(null);
   const [newNotification, setNewNotifications] = useState(false);
-  const [latestNotification, setLatestNotification] = useState<{ id: number; text: string } | null>(null);
+  const [NotificationData, setLatestNotification] = useState<{ id: number; text: string } | null>(null);
 
   const url = process.env.NEXT_PUBLIC_API_BASE_URL;
-  const handleNotificationDismiss = () => {
-    setNewNotifications(false);
-    setLatestNotification(null);
-  };
 
   if (!url) {
     throw new Error("NEXT_PUBLIC_API_BASE_URL is not defined");
@@ -90,16 +87,8 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   }, [url]);
 
   return (
-    <SSEContext.Provider value={{ data, newNotification }}>
+    <SSEContext.Provider value={{ data, newNotification, NotificationData }}>
       {children}
-      {latestNotification && (
-        <CustomNotification 
-          id={latestNotification.id} 
-          message={latestNotification.text} 
-          showDismiss={true}
-          onDismiss={handleNotificationDismiss} 
-        />
-      )}
     </SSEContext.Provider>
   );
 };

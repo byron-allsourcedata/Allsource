@@ -22,18 +22,24 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   const excludedPaths = ['/signin', '/signup', '/email-verificate', '/account-setup', '/reset-password', '/reset-password/confirm-send', '/choose-plan', '/authentication/verify-token', '/forgot-password', '/thanks-installed-app'];
   const isAuthenticated = !excludedPaths.includes(pathname);
   const [showSlider, setSlider] = useState(false);
-  const { newNotification } = useSSE();
+  const { newNotification, NotificationData } = useSSE();
   const [hasNewNotifications, setHasNewNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [latestNotification, setLatestNotification] = useState<{ text: string; id: number } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-
   useEffect(() => {
-    if (isAuthenticated && newNotification) {
+    if (!isAuthenticated) return;
+  
+    if (newNotification) {
       setHasNewNotifications(true);
     }
-  }, [isAuthenticated, newNotification]);
+  
+    if (NotificationData) {
+      setLatestNotification(NotificationData);
+    }
+  }, [isAuthenticated, newNotification, NotificationData]);
+  
 
 
   useEffect(() => {
@@ -66,6 +72,9 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
     }
   }, [isAuthenticated]);
 
+  const handleDismissNotification = () => {
+    setLatestNotification(null);
+  };
 
 
   return (
@@ -76,7 +85,11 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
       </NotificationProvider>
     ) : (
       <> 
-      <Header NewRequestNotification={hasNewNotifications} />
+      <Header 
+        NewRequestNotification={hasNewNotifications}
+        NotificationData={latestNotification}
+        onDismissNotification={handleDismissNotification}
+      />
       <Grid container className="page-container" sx={{
         display: 'flex',
         flexWrap: 'nowrap',
