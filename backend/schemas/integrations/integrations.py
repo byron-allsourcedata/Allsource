@@ -29,6 +29,9 @@ class GoogleAdsCredentials(BaseModel):
     code: str
     scope: str
 
+class SalesForceCredentials(BaseModel):
+    code: str
+
 class MetaCredentials(BaseModel):
     access_token:str 
 
@@ -48,6 +51,7 @@ class IntegrationCredentials(BaseModel):
     omnisend: Optional[ApiKeyCredentials] = None
     hubspot: Optional[HubSpotCredentials] = None
     google_ads: Optional[GoogleAdsCredentials] = None
+    sales_force: Optional[SalesForceCredentials] = None
     pixel_install: bool = False
     supperssion: bool = False
 

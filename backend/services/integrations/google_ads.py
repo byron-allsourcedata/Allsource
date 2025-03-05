@@ -98,7 +98,7 @@ class GoogleAdsIntegrationsService:
             "client_secret": client_secret,
             "code": credentials.google_ads.code,
             "grant_type": "authorization_code",
-            "redirect_uri": f"{os.getenv("SITE_HOST_URL")}/google-ads-landing",
+            "redirect_uri": f"{os.getenv('SITE_HOST_URL')}/google-ads-landing",
         }
         response = self.__handle_request(method='POST', url="https://oauth2.googleapis.com/token", json=data)
         token_info = response.json()

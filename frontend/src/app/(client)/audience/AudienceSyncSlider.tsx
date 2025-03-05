@@ -5,8 +5,10 @@ import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from '@/components//ToastNotification';
 import Image from 'next/image';
 import ConnectKlaviyo from '@/app/(client)/data-sync/components/ConnectKlaviyo';
+import ConnectSalesForce from '@/app/(client)/data-sync/components/ConnectSalesForce';
 import ConnectMeta from './SyncMetaSlider';
 import KlaviyoIntegrationPopup from '@/components/KlaviyoIntegrationPopup';
+import SalesForceIntegrationPopup from '@/components/SalesForceIntegrationPopup';
 import SlackIntegrationPopup from '@/components//SlackIntegrationPopup';
 import GoogleADSConnectPopup from '@/components//GoogleADSConnectPopup';
 import MetaConnectButton from '@/components//MetaConnectButton';
@@ -61,11 +63,13 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [listName, setListName] = useState<string>('');
     const [plusIconPopupOpen, setPlusIconPopupOpen] = useState(false);
     const [klaviyoIconPopupOpen, setKlaviyoIconPopupOpen] = useState(false);
+    const [salesForceIconPopupOpen, setSalesForceIconPopupOpen] = useState(false);
     const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
     const [selectedIntegration, setSelectedIntegration] = useState<string | null>(null);
     const [isExportDisabled, setIsExportDisabled] = useState(true);
     const [integrationsCredentials, setIntegrationsCredentials] = useState<IntegrationsCredentials[]>([])
     const [createKlaviyo, setCreateKlaviyo] = useState<boolean>(false)
+    const [createSalesForce, setCreateSalesForce] = useState<boolean>(false)
     const [createSlack, setCreateSlack] = useState<boolean>(false)
     const [createGoogleADS, setCreateGoogleADS] = useState<boolean>(false)
     const [createWebhook, setCreateWebhook] = useState<boolean>(false)
@@ -204,6 +208,11 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setPlusIconPopupOpen(false)
     };
 
+    const handleSalesForceIconPopupClose = () => {
+        setSalesForceIconPopupOpen(false);
+        setPlusIconPopupOpen(false)
+    };
+
     const handleOpenMailchimpConnect = () => {
         setOpenmailchimpConnect(true)
     }
@@ -327,6 +336,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
     const handleCreateKlaviyoClose = () => {
         setCreateKlaviyo(false)
+    }
+
+    const handleCreateSalesForceClose = () => {
+        setCreateSalesForce(false)
     }
 
     const handleCreateSlackClose = () => {
@@ -462,6 +475,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
             {/* Data Sync */}
             <ConnectKlaviyo data={null} open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose} />
+            <ConnectSalesForce data={null} open={salesForceIconPopupOpen} onClose={handleSalesForceIconPopupClose} />
             <ConnectMeta data={null} open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} />
             <OnmisendDataSync open={omnisendIconPopupOpen} onClose={handleOmnisendIconPopupOpenClose} isEdit={false} data={null} />
             <SendlaneDatasync open={openSendlaneIconPopupOpen} onClose={handleSendlaneIconPopupClose} data={null} isEdit={false} />
@@ -477,6 +491,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             <SlackIntegrationPopup open={createSlack} handleClose={handleCreateSlackClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'slack')?.access_token} />
             <GoogleADSConnectPopup open={createGoogleADS} handlePopupClose={handleCreateADSClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'google_ads')?.access_token} />
             <KlaviyoIntegrationPopup open={createKlaviyo} handleClose={handleCreateKlaviyoClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token} />
+            <SalesForceIntegrationPopup open={createSalesForce} handleClose={handleCreateSalesForceClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sales_force')?.access_token} />
             <MailchimpConnect onSave={handleSaveSettings} open={openMailchimpConnect} handleClose={handleOpenMailchimpConnectClose} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Mailchimp')?.access_token} />
             <SendlaneConnect open={openSendlaneConnect} handleClose={handleSendlaneConnectClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Sendlane')?.access_token} />
             <OmnisendConnect open={openOmnisendConnect} handleClose={() => setOpenOmnisendConnect(false)} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Omnisend')?.access_token} />

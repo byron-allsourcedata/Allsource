@@ -2,6 +2,7 @@ import { Box, Button, Drawer, IconButton, InputAdornment, List, ListItem, ListIt
 import Image from "next/image"
 import MetaConnectButton from "./MetaConnectButton"
 import KlaviyoIntegrationPopup from "./KlaviyoIntegrationPopup"
+import SalesForceIntegrationPopup from "./SalesForceIntegrationPopup"
 import AttentiveIntegrationPopup from "./AttentiveIntegrationPopup"
 import { useState } from "react"
 import SearchIcon from '@mui/icons-material/Search';
@@ -497,6 +498,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
             </Drawer>
             <MetaConnectButton open={openMetaConnect} onClose={handleClose} onSave={saveIntegration} />
             <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={handleClose} onSave={saveIntegration} />
+            <SalesForceIntegrationPopup open={openKlaviyoConnect} handleClose={handleClose} onSave={saveIntegration} />
             <AttentiveIntegrationPopup open={openAttentiveConnect} handleClose={handleClose} onSave={saveIntegration} />
             <ShopifySettings open={openShopifuConnect} handleClose={handleClose} onSave={saveIntegration} />
             <BCommerceConnect
