@@ -40,6 +40,7 @@ import ZapierConnectPopup from "@/components/ZapierConnectPopup";
 import SlackConnectPopup from "@/components/SlackConnectPopup";
 import WebhookConnectPopup from "@/components/WebhookConnectPopup";
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import HubspotIntegrationPopup from "@/components/HubspotIntegrationPopup"
 import GoogleADSConnectPopup from "@/components/GoogleADSConnectPopup";
 
 
@@ -429,8 +430,8 @@ const DeleteIntegrationPopup = ({ service_name, open, handleDelete, onClose }: D
             top: 0,
             bottom: 0,
             display: 'flex',
-            flexDirection: 'column', // Flex-контейнер для колонок
-            height: '100vh', // Высота на весь экран
+            flexDirection: 'column',
+            height: '100vh',
             '@media (max-width: 600px)': {
               width: '100%',
             },
@@ -589,6 +590,8 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
     //{ image: 'attentive.svg', service_name: 'attentive' },
     { image: 'zapier-icon.svg', service_name: 'zapier' },
     { image: 'slack-icon.svg', service_name: 'slack' },
+    { image: 'webhook-icon.svg', service_name: 'webhook' },
+    { image: 'hubspot.svg', service_name: 'hubspot' },
     { image: 'google-ads.svg', service_name: 'google_ads' },
     { image: 'webhook-icon.svg', service_name: 'webhook' },
     { image: 'salesforce-icon.svg', service_name: 'sales_force' }
@@ -786,18 +789,27 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
           boxShadow="rgba(0, 0, 0, 0.01)"
         />
       )}
-      
+
       {openModal === 'google_ads' && (
         <GoogleADSConnectPopup
           open={true}
           handlePopupClose={handleClose}
           />
         )}
-  
+
       {openModal === 'webhook' && (
         <WebhookConnectPopup
           open={true}
           handleClose={handleClose}
+          boxShadow="rgba(0, 0, 0, 0.01)"
+        />
+      )}
+
+      {openModal === 'hubspot' && (
+        <HubspotIntegrationPopup
+          open={true}
+          handleClose={handleClose}
+          initApiKey={integrationsCredentials.find(integration => integration.service_name === 'hubspot')?.access_token}
           boxShadow="rgba(0, 0, 0, 0.01)"
         />
       )}
