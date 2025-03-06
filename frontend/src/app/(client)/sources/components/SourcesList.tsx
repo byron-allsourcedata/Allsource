@@ -177,11 +177,6 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
             .join(' ');
     }
 
-    useEffect(() => {
-        if (createdSource) {
-            setProgress(sourceProgress[createdSource.id]);
-        }
-    }, [createdSource, sourceProgress]);
 
     return (
         <>
