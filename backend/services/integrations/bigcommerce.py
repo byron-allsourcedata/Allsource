@@ -242,16 +242,31 @@ class BigcommerceIntegrationsService:
         if response_event.status_code == 200:
             return {'message': 'Successfully'}
 
-
     def __get_orders(self, store_hash: str, access_token: str):
-        date = datetime.now() - timedelta(hours=24)
+        date = (datetime.now() - timedelta(days=30)).isoformat()
         url = f'{store_hash}/v2/orders'
-        params = {
-            'status_id': 10
-        }
-        response = self.__handle_request(url, method='GET', access_token=access_token, params=params)
-        return response.json()
+        orders = []
+        page = 1
+        limit = 50
 
+        while True:
+            params = {
+                'status_id': 10,
+                'min_date_created': date,
+                'limit': limit,
+                'page': page
+            }
+            response = self.__handle_request(url, method='GET', access_token=access_token, params=params)
+            if response.status_code == 204:
+                break
+            data = response.json()
+            if not data:
+                break
+            
+            orders.extend(data)
+            page += 1
+
+        return orders
 
     def order_sync(self, domain_id: int):
         credential = self.get_credentials(domain_id)
@@ -271,8 +286,6 @@ class BigcommerceIntegrationsService:
                         'platfrom_email': order.email
                     })
             except: pass
-        
-
 
     def __mapped_info(self, json):
         return BigCommerceInfo(
