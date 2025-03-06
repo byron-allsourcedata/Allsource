@@ -353,6 +353,7 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                     onClick={() => {
                                         setSourceMethod(1)
                                         handleDeleteFile()
+                                        setSourceType('')
                                     }}
                                     >
                                     Manually upload
@@ -377,6 +378,7 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                     onClick={() => {
                                         setSourceMethod(2)
                                         handleDeleteFile()
+                                        setSourceType('')
                                     }}
                                     >
                                     Website - Pixel

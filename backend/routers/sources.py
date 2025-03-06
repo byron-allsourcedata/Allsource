@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, Query
 from dependencies import get_audience_sources_service, check_user_authorization
 from services.audience_sources import AudienceSourceService
 from schemas.audience import HeadingSubstitutionRequest, NewSource, SourcesObjectResponse, SourceResponse
-from models.users import User
 from uuid import UUID
 from typing import Optional, List
 from fastapi.responses import FileResponse
@@ -66,8 +65,7 @@ def delete_source(
 
 
 @router.get("/sample-customers-list")
-def get_sample_customers_list(sources_service: AudienceSourceService = Depends(get_audience_sources_service),
-                                user: User = Depends(check_user_authorization)):
+def get_sample_customers_list(sources_service: AudienceSourceService = Depends(get_audience_sources_service)):
     file_path = sources_service.get_sample_customers_list()
     return FileResponse(file_path, media_type="text/csv",
                         headers={"Content-Disposition": "attachment; filename=sample-customers-list.csv"})
