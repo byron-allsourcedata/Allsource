@@ -34,12 +34,12 @@ class AudienceResponse(BaseModel):
 
 class SourceResponse(BaseModel):
     id: UUID
-    source_name: str
+    name: str
     source_origin: str
     source_type: str
-    created_date: datetime
+    created_at: datetime
     created_by: str
-    updated_date: datetime
+    updated_at: datetime
     total_records: Optional[int] = None
     matched_records: int
     matched_records_status: str

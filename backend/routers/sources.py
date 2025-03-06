@@ -16,13 +16,17 @@ def get_sources(
         sort_order: str = Query(None, description="Field to sort by: 'asc' or 'desc'"),
         sources_service: AudienceSourceService = Depends(get_audience_sources_service)
 ):
-    return sources_service.get_sources(
+    source_list, count = sources_service.get_sources(
         user=user,
         sort_by=sort_by,
         sort_order=sort_order,
         page=page,
         per_page=per_page,
     )
+    return {
+        "source_list": source_list,
+        "count": count
+    }
 
 
 @router.post("/heading-substitution", response_model=Optional[List[str]])

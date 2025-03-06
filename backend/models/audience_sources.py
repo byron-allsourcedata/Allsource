@@ -6,7 +6,7 @@ class AudienceSource(Base):
     __tablename__ = 'audience_sources'
 
     id = Column(UUID(as_uuid=True), primary_key=True, unique=True, nullable=False, server_default="gen_random_uuid()")
-    user_id = Column(Integer, ForeignKey('users.id', onupdate='SET NULL'), nullable=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=True)
     created_by_user_id = Column(Integer, ForeignKey('users.id', onupdate='SET NULL'), nullable=True)
     created_at = Column(TIMESTAMP, nullable=False)
     updated_at = Column(TIMESTAMP, nullable=False)

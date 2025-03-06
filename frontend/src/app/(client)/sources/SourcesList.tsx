@@ -33,21 +33,13 @@ import { UpgradePlanPopup } from  '../components/UpgradePlanPopup'
 import { sources } from 'next/dist/compiled/webpack/webpack';
 import { useSSE } from '../../../context/SSEContext';
 
-
-interface FetchDataParams {
-    sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
-    page: number;
-    rowsPerPage: number;
-}
-
 interface Source {
     id: string
     name: string
     source_origin: string
     source_type: string
-    created_date: Date
-    updated_date: Date
+    created_at: Date
+    updated_at: Date
     created_by: string
     total_records?: number
     matched_records?: number
@@ -365,7 +357,7 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
                                         Created Date
                                     </Typography>
                                     <Typography variant="subtitle1" className="table-data">
-                                        {dayjs(createdSource?.created_date).isValid() ? dayjs(createdSource?.created_date).format('MMM D, YYYY') : '--'}
+                                        {dayjs(createdSource?.created_at).isValid() ? dayjs(createdSource?.created_at).format('MMM D, YYYY') : '--'}
                                     </Typography>
                                 </Box>
                                 <Box>
@@ -377,7 +369,7 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
                                         Updated Date
                                     </Typography>
                                     <Typography variant="subtitle1" className="table-data">
-                                        {dayjs(createdSource?.updated_date).isValid() ? dayjs(createdSource?.updated_date).format('MMM D, YYYY') : '--'}
+                                        {dayjs(createdSource?.updated_at).isValid() ? dayjs(createdSource?.updated_at).format('MMM D, YYYY') : '--'}
                                     </Typography>
                                 </Box>
                             </Box>

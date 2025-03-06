@@ -6,7 +6,7 @@ class AudienceSourcesMatchedPerson(Base):
     __tablename__ = 'audience_sources_matched_persons'
 
     id = Column(UUID(as_uuid=True), primary_key=True, unique=True, nullable=False, server_default="gen_random_uuid()")
-    source_id = Column(UUID(as_uuid=True), ForeignKey('audience_sources.id'), nullable=False)
+    source_id = Column(UUID(as_uuid=True), ForeignKey('audience_sources.id', ondelete='cascade'), nullable=False)
     five_x_five_user_id = Column(Integer, ForeignKey('5x5_users.id'), nullable=False)
     mapped_fields = Column(JSON, nullable=False)
     created_at = Column(TIMESTAMP, nullable=False)

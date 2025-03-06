@@ -31,12 +31,12 @@ class AudienceSourceService:
 
             source_list.append({
                 'id': source[0],
-                'source_name': source[1],
+                'name': source[1],
                 'source_origin': source[2],
                 'source_type': source[3],
-                'created_date': source[5],
+                'created_at': source[5],
                 'created_by': source[4],
-                'updated_date': source[6],
+                'updated_at': source[6],
                 'total_records': source[7],
                 'matched_records': source[8],
                 'matched_records_status': source[9],
@@ -110,6 +110,6 @@ class AudienceSourceService:
         return response
     
 
-    def delete_source(self, id):
-        self.audience_sources_persistence.delete_source(id)
-        return True
+    def delete_source(self, id) -> bool:
+        count_deleted = self.audience_sources_persistence.delete_source(id)
+        return count_deleted > 0

@@ -3,7 +3,8 @@ from sqlalchemy import desc, asc
 from sqlalchemy.orm import Session
 from models.audience_sources import AudienceSource
 from models.users import Users
-from typing import Optional
+from typing import Optional, Tuple, List
+from sqlalchemy.engine.row import Row
 
 
 logger = logging.getLogger(__name__)
@@ -13,7 +14,14 @@ class AudienceSourcesPersistence:
         self.db = db
 
 
-    def get_sources(self, user_id, page, per_page, sort_by, sort_order):
+    def get_sources(
+        self, 
+        user_id: int, 
+        page: int, 
+        per_page: int, 
+        sort_by: Optional[str] = None, 
+        sort_order: Optional[str] = None
+    ) -> Tuple[List[Row], int]:
 
         query = (
             self.db.query(
@@ -66,6 +74,9 @@ class AudienceSourcesPersistence:
         return source
     
 
-    def delete_source(self, source_id):
-        self.db.query(AudienceSource).filter(AudienceSource.id == source_id).delete()
+    def delete_source(self, source_id: int) -> int:
+        deleted_count = self.db.query(AudienceSource).filter(
+            AudienceSource.id == source_id
+        ).delete()
         self.db.commit()
+        return deleted_count
