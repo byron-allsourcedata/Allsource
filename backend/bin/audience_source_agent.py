@@ -17,6 +17,7 @@ sys.path.append(parent_dir)
 from models.five_x_five_emails import FiveXFiveEmails
 from models.five_x_five_users_emails import FiveXFiveUsersEmails
 from models.audience_sources import AudienceSource
+from models.five_x_five_users import FiveXFiveUser
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from config.rmq_connection import RabbitMQConnection
 
@@ -91,9 +92,11 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         email_records = db_session.query(FiveXFiveEmails).filter(FiveXFiveEmails.email.in_(emails)).all()
         user_ids = []
         if email_records:
+            logging.info(f"email_records find")
             email_ids = [record.id for record in email_records]
             user_ids = db_session.query(FiveXFiveUsersEmails.user_id).filter(FiveXFiveUsersEmails.email_id.in_(email_ids)).all()
             user_ids = [user_id[0] for user_id in user_ids]
+            logging.info(f"user_ids find {len(user_ids)} for source_id {source_id}")
             for user_id in user_ids:
                 matched_person = AudienceSourcesMatchedPerson(
                     source_id=source_id,
@@ -101,15 +104,19 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
                 )
                 db_session.add(matched_person)
 
-            updated_value, total_records = db_session.execute(
+            total_records, processed_records = db_session.execute(
                 update(AudienceSource)
                 .where(AudienceSource.id == source_id)
-                .values(matched_records=AudienceSource.matched_records + len(email_records))
-                .returning(AudienceSource.matched_records, AudienceSource.total_records)
+                .values(
+                    matched_records=AudienceSource.matched_records + len(user_ids),
+                    processed_records=AudienceSource.processed_records + len(emails)
+                )
+                .returning(AudienceSource.total_records, AudienceSource.processed_records)
             ).fetchone()
+
             
             db_session.flush()
-            if updated_value == total_records:
+            if processed_records == total_records:
                 db_session.execute(
                     update(AudienceSource)
                     .where(AudienceSource.id == source_id)
@@ -117,8 +124,9 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
                 )
 
             db_session.commit()
-            await send_sse(connection, user_id, {"source_id": source_id, "total": total_records, "processed": updated_value})
-
+            #await send_sse(connection, user_id, {"source_id": source_id, "total": total_records, "processed": processed_records})
+            
+        logging.info(f"ack")
         await message.ack()
 
     except Exception as e:

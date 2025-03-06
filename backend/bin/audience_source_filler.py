@@ -30,7 +30,7 @@ load_dotenv()
 AUDIENCE_SOURCES_READER = 'aud_sources_files'
 AUDIENCE_SOURCES_MATCHING = 'aud_sources_matching'
 S3_BUCKET_NAME = "maximiz-data"
-SELECTED_ROW_COUNT = 5000
+SELECTED_ROW_COUNT = 10
 
 
 async def publish_rabbitmq_message(channel, queue_name: str, message_body: dict):
@@ -143,7 +143,6 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, s3_s
 
             await publish_rabbitmq_message(channel=channel, queue_name=AUDIENCE_SOURCES_MATCHING, message_body=message_body)
             send_rows += SELECTED_ROW_COUNT
-
         
         db_session.commit()
 
