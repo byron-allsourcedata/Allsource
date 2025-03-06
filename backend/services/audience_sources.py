@@ -7,6 +7,7 @@ from schemas.audience import Row, SourcesObjectResponse, SourceResponse
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from enums import QueueName
+from models.users import User
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 logger = logging.getLogger(__name__)
@@ -17,7 +18,14 @@ class AudienceSourceService:
         self.default_headings = ['Email', 'Phone number', 'Last Name', 'First Name', 'Gender', 'Age', 'Order Amount', 'State', 'City', 'Zip Code']
 
 
-    def get_sources(self, user, page, per_page, sort_by, sort_order) -> SourcesObjectResponse:
+    def get_sources(
+            self, 
+            user: User, 
+            page: int, 
+            per_page: int, 
+            sort_by: Optional[str] = None, 
+            sort_order: Optional[str] = None
+        ) -> SourcesObjectResponse:
         sources, count = self.audience_sources_persistence.get_sources(
             user_id=user.get("id"),
             page=page,
@@ -113,3 +121,7 @@ class AudienceSourceService:
     def delete_source(self, id) -> bool:
         count_deleted = self.audience_sources_persistence.delete_source(id)
         return count_deleted > 0
+    
+    
+    def get_sample_customers_list(self):
+        return os.path.join(os.getcwd(), "data/sample-source-list.csv")

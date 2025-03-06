@@ -182,6 +182,27 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
         }
     }
 
+    const downloadSampleFile = async () => {
+        try {
+            setLoading(true)
+            const response = await axiosInstance.get('/audience-sources/sample-customers-list', {
+                responseType: 'blob',
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'sample-customers-list.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+        } catch (error) {
+            showErrorToast('Error downloading the file.');
+        } finally {
+            setLoading(false)
+        }
+    };
+
     const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
@@ -495,7 +516,11 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                     </IconButton>
                                 </Box>
                             }
-                            <Typography sx={sourcesStyles.text}>Sample doc: <Link href="https://dev.maximiz.ai/integrations" sx={sourcesStyles.textLink}>sample recent customers-list.csv</Link></Typography>
+                            <Typography className="main-text" component="div"
+                                    sx={{ ...sourcesStyles.text, gap: 0.25, pt: 1, "@media (max-width: 700px)": { mb: 1 } }}
+                                >
+                                    Sample doc: <Typography onClick={downloadSampleFile} component="span" sx={{ ...sourcesStyles.text, color: 'rgba(80, 82, 178, 1)', cursor: 'pointer', fontWeight: 400 }}>sample recent customers-list.csv</Typography>
+                                </Typography>
                         </Box>
                         <Box sx={{display: sourceMethod !== 0 && file ? "flex" : "none", flexDirection: "column", position: 'relative', gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
                             {isChatGPTProcessing && <Box

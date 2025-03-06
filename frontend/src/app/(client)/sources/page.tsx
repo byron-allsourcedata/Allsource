@@ -35,25 +35,13 @@ import SourcesImport from './SourcesImport';
 import SourcesList from './SourcesList';
 
 
-interface Sources {
-    id: string
-    name: string
-    source_origin: string
-    source_type: string
-    created_date: Date
-    updated_date: Date
-    created_by: string
-    total_records?: number
-    matched_records?: number
-}
-
 interface Source {
     id: string
     name: string
     source_origin: string
     source_type: string
-    created_date: Date
-    updated_date: Date
+    created_at: Date
+    updated_at: Date
     created_by: string
     total_records?: number
     matched_records?: number
@@ -107,7 +95,7 @@ interface FilterParams {
 const Sources: React.FC = () => {
     const router = useRouter();
     const { hasNotification } = useNotification();
-    const [data, setData] = useState<Sources[]>([]);
+    const [data, setData] = useState<Source[]>([]);
     const [sources, setSources] = useState<boolean>(true);
     const [newSource, setNewSource] = useState<boolean>(false);
     const [count_companies, setCount] = useState<number | null>(null);
