@@ -32,6 +32,7 @@ import SwapVertIcon from '@mui/icons-material/SwapVert';
 import { UpgradePlanPopup } from  '../components/UpgradePlanPopup'
 import { sources } from 'next/dist/compiled/webpack/webpack';
 import { useSSE } from '../../../context/SSEContext';
+import ThreeDotsLoader from './ThreeDotsLoader';
 
 
 interface FetchDataParams {
@@ -710,7 +711,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                             >
                                                                 {row.matched_records_status === "pending" 
-                                                                ? progress?.total ??  "loading"
+                                                                ? progress?.total ??  <ThreeDotsLoader/>
                                                                 : row.total_records ?? "--"
                                                                 }
                                                             </TableCell>

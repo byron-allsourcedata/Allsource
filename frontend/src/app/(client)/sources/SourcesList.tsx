@@ -21,6 +21,7 @@ import dayjs from 'dayjs';
 // import PopupChargeCredits from './ChargeCredits'
 import CloseIcon from '@mui/icons-material/Close';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
+import ThreeDotsLoader from './ThreeDotsLoader';
 import Tooltip from '@mui/material/Tooltip';
 import CustomToolTip from '@/components/customToolTip';
 import CustomTablePagination from '@/components/CustomTablePagination';
@@ -391,7 +392,7 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
                                         Number of Customers
                                     </Typography>
                                     <Typography variant="subtitle1" className="table-data">
-                                        {progress?.total ?? 'loading'}
+                                        {progress?.total ?? <ThreeDotsLoader />}
                                     </Typography>
                                 </Box>
                                 <Box>
