@@ -33,6 +33,7 @@ import { UpgradePlanPopup } from  '../components/UpgradePlanPopup'
 import { sources } from 'next/dist/compiled/webpack/webpack';
 import { useSSE } from '../../../context/SSEContext';
 import ThreeDotsLoader from './ThreeDotsLoader';
+import ProgressBar from './ProgressLoader';
 
 
 interface FetchDataParams {
@@ -721,7 +722,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                             >
                                                                 {row.matched_records_status === "pending" 
-                                                                ? `${((progress?.processed / progress?.total) * 100).toFixed(2)}%`
+                                                                ? <ProgressBar progress={progress} />
                                                                 : row.matched_records ?? '--'}
                                                             </TableCell>
 

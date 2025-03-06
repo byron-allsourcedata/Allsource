@@ -33,6 +33,7 @@ import SwapVertIcon from '@mui/icons-material/SwapVert';
 import { UpgradePlanPopup } from  '../components/UpgradePlanPopup'
 import { sources } from 'next/dist/compiled/webpack/webpack';
 import { useSSE } from '../../../context/SSEContext';
+import ProgressBar from './ProgressLoader';
 
 interface Source {
     id: string
@@ -404,7 +405,7 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
                                         Matched Records
                                     </Typography>
                                     <Typography variant="subtitle1" className="table-data">
-                                        {`${((progress?.processed / progress?.total) * 100).toFixed(2)}%`}
+                                        <ProgressBar progress={progress} />
                                     </Typography>
                                 </Box>
                             </Box>
