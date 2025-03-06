@@ -8,7 +8,7 @@ router = APIRouter()
 
 @router.get('/sync')
 async def get_sync(service_name: str | None = Query(None), integrations_users_sync_id: int | None = Query(None),
-                   integration_service: IntegrationService = Depends(get_integration_service),
+                    integration_service: IntegrationService = Depends(get_integration_service),
                    user = Depends(check_user_authorization), domain = Depends(check_domain)):
     return integration_service.get_sync_domain(domain.id, service_name, integrations_users_sync_id)
 

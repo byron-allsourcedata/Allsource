@@ -6,8 +6,10 @@ import { showErrorToast, showToast } from './ToastNotification';
 import Image from 'next/image';
 import SearchIcon from '@mui/icons-material/Search';
 import ConnectKlaviyo from '@/app/(client)/data-sync/components/ConnectKlaviyo';
+import ConnectSalesForce from '@/app/(client)/data-sync/components/ConnectSalesForce';
 import ConnectMeta from '@/app/(client)/data-sync/components/ConnectMeta';
 import KlaviyoIntegrationPopup from './KlaviyoIntegrationPopup';
+import SalesForceIntegrationPopup from './SalesForceIntegrationPopup';
 import SlackIntegrationPopup from './SlackIntegrationPopup';
 import GoogleADSConnectPopup from './GoogleADSConnectPopup';
 import WebhookConnectPopup from './WebhookConnectPopup';
@@ -23,6 +25,9 @@ import SendlaneConnect from './SendlaneConnect';
 import SendlaneDatasync from '../app/(client)/data-sync/components/SendlaneDatasync';
 import WebhookDatasync from '../app/(client)/data-sync/components/WebhookDatasync';
 import ZapierDataSync from '../app/(client)/data-sync/components/ZapierDataSync';
+import ConnectHubspot from '../app/(client)/data-sync/components/HubspotDataSync';
+import HubspotDataSync from '../app/(client)/data-sync/components/HubspotDataSync';
+import HubspotIntegrationPopup from './HubspotIntegrationPopup';
 
 interface AudiencePopupProps {
     open: boolean;
@@ -61,19 +66,21 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [listName, setListName] = useState<string>('');
     const [plusIconPopupOpen, setPlusIconPopupOpen] = useState(false);
     const [klaviyoIconPopupOpen, setKlaviyoIconPopupOpen] = useState(false);
+    const [salesForceIconPopupOpen, setSalesForceIconPopupOpen] = useState(false);
     const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
     const [selectedIntegration, setSelectedIntegration] = useState<string | null>(null);
     const [isExportDisabled, setIsExportDisabled] = useState(true);
     const [integrationsCredentials, setIntegrationsCredentials] = useState<IntegrationsCredentials[]>([])
     const [createKlaviyo, setCreateKlaviyo] = useState<boolean>(false)
+    const [createHubspot, setCreateHubspot] = useState<boolean>(false)
+    const [createSalesForce, setCreateSalesForce] = useState<boolean>(false)
     const [createWebhook, setCreateWebhook] = useState<boolean>(false)
     const [createSlack, setCreateSlack] = useState<boolean>(false)
     const [createGoogleAds, setCreateGoogleAds] = useState<boolean>(false)
     const [integrations, setIntegrations] = useState<Integrations[]>([])
     const [metaConnectApp, setMetaConnectApp] = useState(false)
     const [openBigcommrceConnect, setOpenBigcommerceConnect] = useState(false)
-    const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false)
-    const [omnisendIconPopupOpen, setOpenOmnisendIconPopupOpen] = useState(false)
+
     const [mailchimpIconPopupOpen, setOpenMailchimpIconPopup] = useState(false)
     const [slackIconPopupOpen, setOpenSlackIconPopup] = useState(false)
     const [googleAdsIconPopupOpen, setOpenGoogleAdsIconPopup] = useState(false)
@@ -83,6 +90,11 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
     const [openZapierDataSync, setOpenZapierDataSync] = useState(false)
     const [openZapierConnect, setOpenZapierConnect] = useState(false)
+    const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false)
+    const [omnisendIconPopupOpen, setOpenOmnisendIconPopupOpen] = useState(false)
+    const [openHubspotConnect, setOpenHubspotConnect] = useState(false)
+    const [hubspotIconPopupOpen, setOpenHubspotIconPopupOpen] = useState(false)
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -111,10 +123,15 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             fetchData()
         }
     }, [open])
-    
+
     const handleOmnisendIconPopupOpenClose = () => {
         setOpenOmnisendConnect(false)
         setOpenOmnisendIconPopupOpen(false)
+    }
+
+    const handleHubspotIconPopupOpenClose = () => {
+        setOpenHubspotConnect(false)
+        setOpenHubspotIconPopupOpen(false)
     }
 
     const toggleFormVisibility = () => {
@@ -170,8 +187,16 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setKlaviyoIconPopupOpen(true);
     };
 
+    const handleSalesForceIconPopupOpen = () => {
+        setSalesForceIconPopupOpen(true);
+    };
+
     const handleOmnisendConnectOpen = () => {
         setOpenOmnisendConnect(true)
+    }
+
+    const handleHubspotConnectOpen = () => {
+        setOpenHubspotConnect(true)
     }
 
     const handleOmnisendConnectClose = () => {
@@ -183,9 +208,18 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setOpenOmnisendIconPopupOpen(true);
     };
 
+    const handleHubspotIconPopupOpen = () => {
+        setOpenHubspotIconPopupOpen(true);
+    };
+
     const handleKlaviyoIconPopupClose = () => {
         setKlaviyoIconPopupOpen(false);
         setOpenOmnisendConnect(false)
+        setPlusIconPopupOpen(false)
+    };
+
+    const handleSalesForceIconPopupClose = () => {
+        setSalesForceIconPopupOpen(false);
         setPlusIconPopupOpen(false)
     };
 
@@ -211,7 +245,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
     const handleGoogleAdsConnectOpen = () => {
         setOpenGoogleAdsIconPopup(true)
-    }    
+    }
 
     const handleMailchimpIconPopupIconClose = () => {
         setOpenMailchimpIconPopup(false)
@@ -225,7 +259,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const handleGoogleAdsIconPopupIconClose = () => {
         setOpenGoogleAdsIconPopup(false)
         setPlusIconPopupOpen(false)
-    }    
+    }
 
     const handleMetaIconPopupOpen = () => {
         setMetaIconPopupOpen(true);
@@ -280,6 +314,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             case 'Webhook':
                 handleWebhookIconPopupOpen()
                 break
+            case 'Hubspot':
+                handleHubspotIconPopupOpen()
+                break
         }
     };
 
@@ -311,8 +348,20 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setCreateKlaviyo(true)
     }
 
+    const handleCreateHubspotOpen = () => {
+        setCreateHubspot(true)
+    }
+    
+    const handleCreateSalesForceOpen = () => {
+        setCreateSalesForce(true)
+    }
+
     const handleCreateKlaviyoClose = () => {
         setCreateKlaviyo(false)
+    }
+
+    const handleCreateSalesForceClose = () => {
+        setCreateSalesForce(false)
     }
 
     const handleCreateWebhookOpen = () => {
@@ -427,14 +476,23 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                             flexBasis: 'calc(50% - 8px)'
                                         }
                                     }}>
-                                        <ListItemButton sx={{
-                                            p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center',
-                                            backgroundColor: selectedIntegration === 'hubSpot' ? 'rgba(80, 82, 178, 0.10)' : 'transparent'
+                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'hubspot')?.is_failed
+                                            ? handleHubspotIconPopupOpen
+                                            : handleCreateHubspotOpen
+                                        } sx={{
+                                            p: 0,
+                                            flexDirection: 'column',
+                                            px: 3,
+                                            py: 1.5,
+                                            width: '102px',
+                                            height: '72px',
+                                            justifyContent: 'center',
+                                            backgroundColor: selectedIntegration === 'hubspot' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
                                         }}>
                                             <ListItemIcon sx={{ minWidth: 'auto' }}>
                                                 <Image src="/hubspot.svg" alt="hubspot" height={28} width={27} />
                                             </ListItemIcon>
-                                            <ListItemText primary="HubSpot" primaryTypographyProps={{
+                                            <ListItemText primary="hubspot" primaryTypographyProps={{
                                                 sx: {
                                                     fontFamily: "Nunito Sans",
                                                     fontSize: "14px",
@@ -474,6 +532,45 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                                 <Image src="/klaviyo.svg" alt="klaviyo" height={26} width={32} />
                                             </ListItemIcon>
                                             <ListItemText primary="Klaviyo" primaryTypographyProps={{
+                                                sx: {
+                                                    fontFamily: "Nunito Sans",
+                                                    fontSize: "14px",
+                                                    color: "#4a4a4a",
+                                                    fontWeight: "500",
+                                                    lineHeight: "20px",
+                                                },
+                                            }} />
+                                        </ListItemButton>
+                                    </ListItem>
+                                )}
+                                {/* SalesForce */}
+                                {integrationsCredentials.some(integration => integration.service_name === 'sales_force') && (
+                                    <ListItem sx={{
+                                        p: 0,
+                                        borderRadius: '4px',
+                                        border: selectedIntegration === 'sales_force' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                        width: 'auto',
+                                        '@media (max-width:600px)': {
+                                            flexBasis: 'calc(50% - 8px)',
+                                        },
+                                    }}>
+                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'sales_force')?.is_failed
+                                            ? handleSalesForceIconPopupOpen
+                                            : handleCreateSalesForceOpen
+                                        } sx={{
+                                            p: 0,
+                                            flexDirection: 'column',
+                                            px: 3,
+                                            py: 1.5,
+                                            width: '102px',
+                                            height: '72px',
+                                            justifyContent: 'center',
+                                            backgroundColor: selectedIntegration === 'sales_force' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
+                                        }}>
+                                            <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                <Image src="/salesforce-icon.svg" alt="salesforse" height={26} width={32} />
+                                            </ListItemIcon>
+                                            <ListItemText primary="SalesForce" primaryTypographyProps={{
                                                 sx: {
                                                     fontFamily: "Nunito Sans",
                                                     fontSize: "14px",
@@ -787,8 +884,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
             {/* Data Sync */}
             <ConnectKlaviyo data={null} open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose} />
+            <ConnectSalesForce data={null} open={salesForceIconPopupOpen} onClose={handleSalesForceIconPopupClose} />
             <ConnectMeta data={null} open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} />
             <OnmisendDataSync open={omnisendIconPopupOpen} onClose={handleOmnisendIconPopupOpenClose} isEdit={false} data={null} />
+            <HubspotDataSync open={hubspotIconPopupOpen} onClose={handleHubspotIconPopupOpenClose} isEdit={false} data={null} />
             <SendlaneDatasync open={openSendlaneIconPopupOpen} onClose={handleSendlaneIconPopupClose} data={null} isEdit={false} />
             <WebhookDatasync open={openWebhookIconPopupOpen} onClose={handleWebhookIconPopupClose} data={null} isEdit={false} />
             <MailchimpDatasync open={mailchimpIconPopupOpen} onClose={handleMailchimpIconPopupIconClose} data={null} />
@@ -802,9 +901,11 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             <GoogleADSConnectPopup open={createGoogleAds} handlePopupClose={handleCreateGoogleAdsClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'google_ads')?.access_token} />
             <WebhookConnectPopup open={createWebhook} handleClose={handleCreateWebhookClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'webhook')?.access_token} />
             <KlaviyoIntegrationPopup open={createKlaviyo} handleClose={handleCreateKlaviyoClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token} />
+            <SalesForceIntegrationPopup open={createSalesForce} handleClose={handleCreateSalesForceClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sales_force')?.access_token} />
             <MailchimpConnect onSave={handleSaveSettings} open={openMailchimpConnect} handleClose={handleOpenMailchimpConnectClose} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Mailchimp')?.access_token} />
             <SendlaneConnect open={openSendlaneConnect} handleClose={handleSendlaneConnectClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Sendlane')?.access_token} />
             <OmnisendConnect open={openOmnisendConnect} handleClose={() => setOpenOmnisendConnect(false)} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Omnisend')?.access_token} />
+            <HubspotIntegrationPopup open={createHubspot} handleClose={() => setOpenHubspotConnect(false)} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'hubspot')?.access_token} />
             <MetaConnectButton open={metaConnectApp} onClose={handleCloseMetaConnectApp} onSave={handleSaveSettings} />
         </>
     );

@@ -22,18 +22,24 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   const excludedPaths = ['/signin', '/signup', '/email-verificate', '/account-setup', '/reset-password', '/reset-password/confirm-send', '/choose-plan', '/authentication/verify-token', '/forgot-password', '/thanks-installed-app'];
   const isAuthenticated = !excludedPaths.includes(pathname);
   const [showSlider, setSlider] = useState(false);
-  const { newNotification } = useSSE();
+  const { newNotification, NotificationData } = useSSE();
   const [hasNewNotifications, setHasNewNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [latestNotification, setLatestNotification] = useState<{ text: string; id: number } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-
   useEffect(() => {
-    if (isAuthenticated && newNotification) {
+    if (!isAuthenticated) return;
+  
+    if (newNotification) {
       setHasNewNotifications(true);
     }
-  }, [isAuthenticated, newNotification]);
+  
+    if (NotificationData) {
+      setLatestNotification(NotificationData);
+    }
+  }, [isAuthenticated, newNotification, NotificationData]);
+  
 
 
   useEffect(() => {
@@ -66,7 +72,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
     }
   }, [isAuthenticated]);
 
-  const handleNotificationDismiss = () => {
+  const handleDismissNotification = () => {
     setLatestNotification(null);
   };
 
@@ -79,7 +85,11 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
       </NotificationProvider>
     ) : (
       <> 
-      <Header NewRequestNotification={hasNewNotifications} />
+      <Header 
+        NewRequestNotification={hasNewNotifications}
+        NotificationData={latestNotification}
+        onDismissNotification={handleDismissNotification}
+      />
       <Grid container className="page-container" sx={{
         display: 'flex',
         flexWrap: 'nowrap',
@@ -105,7 +115,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
           minWidth: '142px',
           maxWidth: '142px',
           position: 'fixed',
-          top: latestNotification || newNotification ? 'calc(6.85rem)' : '4.25rem',
+          top: latestNotification || newNotification ? 'calc(7.125rem)' : '4.25rem',
         }}>
           <SliderProvider>
             <Sidebar setShowSlider={setSlider} setLoading={setIsLoading} hasNotification={Boolean(latestNotification || newNotification)} />
@@ -137,14 +147,6 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
             {children}
           </Grid>
         </NotificationProvider>
-        {latestNotification && (
-          <CustomNotification
-            id={latestNotification.id}
-            message={latestNotification.text}
-            showDismiss={true}
-            onDismiss={handleNotificationDismiss}
-          />
-        )}
       </Grid>
     </>
     )}
