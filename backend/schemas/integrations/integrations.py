@@ -18,6 +18,8 @@ class WoocommerceCredentials(BaseModel):
 class ApiKeyCredentials(BaseModel):
     api_key: str 
 
+class HubSpotCredentials(BaseModel):
+    access_token: str
 
 class MailchimpCredentials(BaseModel):
     data_center: str
@@ -26,6 +28,9 @@ class MailchimpCredentials(BaseModel):
 class GoogleAdsCredentials(BaseModel):
     code: str
     scope: str
+
+class SalesForceCredentials(BaseModel):
+    code: str
 
 class MetaCredentials(BaseModel):
     access_token:str 
@@ -44,7 +49,9 @@ class IntegrationCredentials(BaseModel):
     meta: Optional[MetaCredentials] = None
     sendlane: Optional[ApiKeyCredentials] = None
     omnisend: Optional[ApiKeyCredentials] = None
+    hubspot: Optional[HubSpotCredentials] = None
     google_ads: Optional[GoogleAdsCredentials] = None
+    sales_force: Optional[SalesForceCredentials] = None
     pixel_install: bool = False
     supperssion: bool = False
 
@@ -107,7 +114,7 @@ class ContactFiled(Enum):
 
 class OrderAPI(BaseModel):
     platform_order_id: Optional[int] = None
-    platform_user_id: Optional[str] = None
+    platform_user_id: Optional[int] = None
     platform_created_at: Optional[str] = None
     total_price: Optional[float] = None
     email: Optional[EmailStr] = None

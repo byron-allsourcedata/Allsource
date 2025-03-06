@@ -184,7 +184,7 @@ class MailchimpIntegrationsService:
 
     async def process_data_sync(self, five_x_five_user, access_token, integration_data_sync, lead_user):
         profile = self.__create_profile(five_x_five_user, access_token, integration_data_sync)
-        if profile in (ProccessDataSyncResult.AUTHENTICATION_FAILED.value, ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
+        if profile in (ProccessDataSyncResult.AUTHENTICATION_FAILED.value, ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value, ProccessDataSyncResult.LIST_NOT_EXISTS.value):
             return profile
             
         return ProccessDataSyncResult.SUCCESS.value
@@ -221,22 +221,25 @@ class MailchimpIntegrationsService:
                         **properties
                     },
         }
-        existing_fields = self.client.lists.get_list_merge_fields(integration_data_sync.list_id)
-        existing_field_names = [field['name'] for field in existing_fields['merge_fields']]
-        if "Time on site" not in existing_field_names:
-            self.client.lists.add_list_merge_field(integration_data_sync.list_id, {
-                "name": "Time on site",
-                "type": "number",
-                "tag": "TIMEONSITE"
-            })
+        try:
+            existing_fields = self.client.lists.get_list_merge_fields(integration_data_sync.list_id)
+            existing_field_names = [field['name'] for field in existing_fields['merge_fields']]
+            if "Time on site" not in existing_field_names:
+                self.client.lists.add_list_merge_field(integration_data_sync.list_id, {
+                    "name": "Time on site",
+                    "type": "number",
+                    "tag": "TIMEONSITE"
+                })
 
-        if "URL Visited" not in existing_field_names:
-            self.client.lists.add_list_merge_field(integration_data_sync.list_id, {
-                "name": "URL Visited",
-                "type": "number",
-                "tag": "URLVISITED"
-            })
-            
+            if "URL Visited" not in existing_field_names:
+                self.client.lists.add_list_merge_field(integration_data_sync.list_id, {
+                    "name": "URL Visited",
+                    "type": "number",
+                    "tag": "URLVISITED"
+                })
+        except ApiClientError as error:
+            if error.status_code == 404:
+                return ProccessDataSyncResult.LIST_NOT_EXISTS.value
         try:
             response = self.client.lists.add_list_member(integration_data_sync.list_id, json_data)
         except ApiClientError as error:

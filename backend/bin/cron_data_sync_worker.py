@@ -13,8 +13,9 @@ sys.path.append(parent_dir)
 from sqlalchemy import create_engine
 from sqlalchemy.exc import PendingRollbackError
 from dotenv import load_dotenv
+from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 from config.aws import get_s3_client
-from enums import ProccessDataSyncResult, DataSyncImportedStatus, SourcePlatformEnum
+from enums import ProccessDataSyncResult, DataSyncImportedStatus, SourcePlatformEnum, NotificationTitles
 from models.data_sync_imported_leads import DataSyncImportedLeads
 from models.leads_users import LeadUser
 from models.integrations.integrations_users_sync import IntegrationUserSync
@@ -27,7 +28,7 @@ from services.integrations.base import IntegrationService
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from dependencies import (IntegrationsPresistence, LeadsPersistence, AudiencePersistence, 
                           LeadOrdersPersistence, IntegrationsUserSyncPersistence, 
-                          AWSService, UserDomainsPersistence, SuppressionPersistence, ExternalAppsInstallationsPersistence, UserPersistence, MillionVerifierPersistence)
+                          AWSService, UserDomainsPersistence, SuppressionPersistence, ExternalAppsInstallationsPersistence, UserPersistence, MillionVerifierPersistence, NotificationPersistence)
 
 
 load_dotenv()
@@ -100,8 +101,26 @@ def update_data_sync_imported_leads(session, status, data_sync_id):
             'status': status
             })
     session.commit()
+    
+async def send_error_msg(user_id: int, service_name: str, notification_persistence: NotificationPersistence, title: str):
+    rabbitmq_connection = RabbitMQConnection()
+    connection = await rabbitmq_connection.connect()
+    queue_name = f"sse_events_{str(user_id)}"
+    account_notification = notification_persistence.get_account_notification_by_title(title)
+    notification_text = account_notification.text.format(service_name)
+    save_account_notification = notification_persistence.save_account_notification(user_id=user_id, account_notification_id=account_notification.id, params=service_name)
+    try:
+        await publish_rabbitmq_message(
+            connection=connection,
+            queue_name=queue_name,
+            message_body={'notification_text': notification_text, 'notification_id': save_account_notification.id}
+        )
+    except:
+        logging.error('Failed to publish rabbitmq message')
+    finally:
+        await rabbitmq_connection.close()
 
-async def ensure_integration(message: IncomingMessage, integration_service: IntegrationService, session: Session):
+async def ensure_integration(message: IncomingMessage, integration_service: IntegrationService, session: Session, notification_persistence: NotificationPersistence):
     try:
         logging.info(f"Start ensure integration")
         message_body = json.loads(message.body)
@@ -124,7 +143,9 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
             'zapier': integration_service.zapier,
             'slack': integration_service.slack,
             'google_ads': integration_service.google_ads,
-            'webhook': integration_service.webhook
+            'webhook': integration_service.webhook,
+            'hubspot': integration_service.hubspot,
+            'sales_force': integration_service.sales_force
         }
         
         service = service_map.get(service_name)
@@ -158,11 +179,13 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
                     
                 case ProccessDataSyncResult.LIST_NOT_EXISTS.value:
                     logging.debug(f"list_not_exists: {service_name}")
-                    update_users_integrations(session, ProccessDataSyncResult.LIST_NOT_EXISTS.value, service_name, integration_data_sync.id)
+                    update_users_integrations(session=session, status=ProccessDataSyncResult.LIST_NOT_EXISTS.value,integration_data_sync_id=integration_data_sync.id,  service_name=service_name)
+                    await send_error_msg(lead_user.user_id, service_name, notification_persistence, NotificationTitles.DATA_SYNC_ERROR.value)
                     
                 case ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
                     logging.debug(f"authentication_failed: {service_name}")
                     update_users_integrations(session, ProccessDataSyncResult.AUTHENTICATION_FAILED.value, integration_data_sync.id, service_name, integration_data_sync.integration_id)
+                    await send_error_msg(lead_user.user_id, service_name, notification_persistence, NotificationTitles.AUTHENTICATION_INTEGRATION_FAILED.value)
                 
             if import_status != DataSyncImportedStatus.SENT.value:
                 update_data_sync_imported_leads(session, import_status, data_sync_imported_id)
@@ -218,6 +241,7 @@ async def main():
         Session = sessionmaker(bind=engine)
         session = Session()
         million_verifier_persistence = MillionVerifierPersistence(session)
+        notification_persistence = NotificationPersistence(session)
         integration_service = IntegrationService(
             db=session,
             integration_persistence=IntegrationsPresistence(session),
@@ -234,7 +258,7 @@ async def main():
         )
         with integration_service as service:
             await queue.consume(
-                functools.partial(ensure_integration, integration_service=service, session=session)
+                functools.partial(ensure_integration, integration_service=service, session=session, notification_persistence=notification_persistence)
             )
             await asyncio.Future()
 

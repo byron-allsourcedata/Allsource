@@ -5,6 +5,7 @@ import hashlib
 from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+from services.integrations.commonIntegration import get_valid_email, get_valid_phone, get_valid_location
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from persistence.domains import UserDomainsPersistence
 from schemas.integrations.integrations import *
@@ -97,7 +98,7 @@ class GoogleAdsIntegrationsService:
             "client_secret": client_secret,
             "code": credentials.google_ads.code,
             "grant_type": "authorization_code",
-            "redirect_uri": f"{os.getenv("SITE_HOST_URL")}/google-ads-landing",
+            "redirect_uri": f"{os.getenv('SITE_HOST_URL')}/google-ads-landing",
         }
         response = self.__handle_request(method='POST', url="https://oauth2.googleapis.com/token", json=data)
         token_info = response.json()
@@ -213,52 +214,15 @@ class GoogleAdsIntegrationsService:
             return {'message': 'successfuly'}  
     
     def __mapped_googleads_profile(self, five_x_five_user: FiveXFiveUser, lead_user: LeadUser) -> GoogleAdsProfile:
-        email_fields = [
-            'business_email', 
-            'personal_emails', 
-            'additional_personal_emails',
-        ]
-        
-        def get_valid_email(user) -> str:
-            thirty_days_ago = datetime.now() - timedelta(days=30)
-            thirty_days_ago_str = thirty_days_ago.strftime('%Y-%m-%d %H:%M:%S')
-            verity = 0
-            for field in email_fields:
-                email = getattr(user, field, None)
-                if email:
-                    emails = extract_first_email(email)
-                    for e in emails:
-                        if e and field == 'business_email' and five_x_five_user.business_email_last_seen:
-                            if five_x_five_user.business_email_last_seen.strftime('%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
-                                return e.strip()
-                        if e and field == 'personal_emails' and five_x_five_user.personal_emails_last_seen:
-                            personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime('%Y-%m-%d %H:%M:%S')
-                            if personal_emails_last_seen_str > thirty_days_ago_str:
-                                return e.strip()
-                        if e and self.million_verifier_integrations.is_email_verify(email=e.strip()):
-                            return e.strip()
-                        verity += 1
-            if verity > 0:
-                return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
-        first_email = get_valid_email(five_x_five_user)
+        first_email = get_valid_email(five_x_five_user, self.million_verifier_integrations)
+
         if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return first_email
         
-        first_phone = (
-            getattr(five_x_five_user, 'mobile_phone') or 
-            getattr(five_x_five_user, 'personal_phone') or 
-            getattr(five_x_five_user, 'direct_number') or 
-            getattr(five_x_five_user, 'company_phone', None)
-        )
+        first_phone = get_valid_phone(five_x_five_user)
 
-        address_parts = [
-            getattr(five_x_five_user, "personal_address") or getattr(five_x_five_user, "company_address", None),
-            getattr(five_x_five_user, "personal_city") or getattr(five_x_five_user, "company_city", None),
-            getattr(five_x_five_user, "personal_state") or getattr(five_x_five_user, "company_state", None),
-            getattr(five_x_five_user, "personal_zip") or getattr(five_x_five_user, "company_zip", None),
-        ]
+        address_parts = get_valid_location(five_x_five_user)
         
         return GoogleAdsProfile(
             email=first_email,

@@ -14,10 +14,11 @@ from sqlalchemy.orm import sessionmaker
 from aio_pika import connect, IncomingMessage
 
 from config.rmq_connection import RabbitMQConnection
+from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from services.integrations.base import IntegrationService
 from dependencies import (IntegrationsPresistence, LeadsPersistence, AudiencePersistence, 
                           LeadOrdersPersistence, IntegrationsUserSyncPersistence, 
-                          AWSService, UserDomainsPersistence, SuppressionPersistence)
+                          AWSService, UserDomainsPersistence, SuppressionPersistence, ExternalAppsInstallationsPersistence, UserPersistence, MillionVerifierPersistence)
 from dotenv import load_dotenv
 import time
 load_dotenv()
@@ -34,7 +35,8 @@ if __name__ == '__main__':
     
     rmq_connection = RabbitMQConnection()
     
-    with Session() as session: 
+    with Session() as session:
+        million_verifier_persistence = MillionVerifierPersistence(session)
         integration_service = IntegrationService(
             db=session,
             integration_persistence=IntegrationsPresistence(session),
@@ -44,13 +46,18 @@ if __name__ == '__main__':
             integrations_user_sync_persistence=IntegrationsUserSyncPersistence(session),
             aws_service=AWSService(get_s3_client()),
             domain_persistence=UserDomainsPersistence(session),
-            suppression_persistence=SuppressionPersistence(session)
+            suppression_persistence=SuppressionPersistence(session),
+            epi_persistence=ExternalAppsInstallationsPersistence(session),
+            user_persistence=UserPersistence(session),
+            million_verifier_integrations=MillionVerifierIntegrationsService(million_verifier_persistence)
         )
         while True:
             with integration_service as service:
-                for platforn in PLATFORMS:
-                    integrations = service.integration_persistence.get_all_integrations_filter_by(service_name=platforn)
-                    for integration in integrations: 
-                        integration_platform = getattr(integration_service, platforn.lower())
-                        integration_platform.order_sync(integration.domain_id)
+                for platform in PLATFORMS:
+                    if platform == 'big_commerce':
+                        integrations = service.integration_persistence.get_all_integrations_filter_by(service_name=platform, domain_id=783)
+                        platform = 'bigcommerce'
+                        for integration in integrations:
+                            integration_platform = getattr(integration_service, platform.lower())
+                            integration_platform.order_sync(integration.domain_id)
             time.sleep(60*60*2)
