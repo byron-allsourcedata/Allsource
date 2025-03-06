@@ -10,7 +10,7 @@ interface Data {
 interface SSEContextType {
   data: Data | null;
   newNotification: boolean;
-  NotificationData: { id: number; text: string } | null;
+  sourceProgress: Record<string, { total: number; processed: number }>
 }
 
 interface SSEProviderProps {
@@ -22,9 +22,21 @@ const SSEContext = createContext<SSEContextType | undefined>(undefined);
 export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   const [data, setData] = useState<Data | null>(null);
   const [newNotification, setNewNotifications] = useState(false);
-  const [NotificationData, setLatestNotification] = useState<{ id: number; text: string } | null>(null);
+  const [latestNotification, setLatestNotification] = useState<{ id: number; text: string } | null>(null);
+  const [sourceProgress, setSourceProgress] = useState<Record<string, { total: number; processed: number }>>({});
+
+  const updateSourceProgress = (source_id: string, total: number, processed: number) => {
+    setSourceProgress((prev) => ({
+      ...prev,
+      [source_id]: { total, processed },
+    }));
+  };
 
   const url = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const handleNotificationDismiss = () => {
+    setNewNotifications(false);
+    setLatestNotification(null);
+  };
 
   if (!url) {
     throw new Error("NEXT_PUBLIC_API_BASE_URL is not defined");
@@ -63,6 +75,16 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
         else if(data.status == 'PIXEL_CODE_INSTALLED' && data.need_reload_page) {
           showToast("Pixel code is installed successfully!");
         }
+        else if (window.location.pathname === "/sources") {
+          console.log(data);
+          const { total, processed, source_id } = data.data;
+          if (!source_id) {
+              console.error("source_id is undefined");
+              return;
+          }
+      
+          updateSourceProgress(source_id, total, processed);
+      }
         else {
           showToast("Pixel code is installed successfully!");
           if (data.percent) {
@@ -87,8 +109,16 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   }, [url]);
 
   return (
-    <SSEContext.Provider value={{ data, newNotification, NotificationData }}>
+    <SSEContext.Provider value={{ data, newNotification, sourceProgress }}>
       {children}
+      {latestNotification && (
+        <CustomNotification 
+          id={latestNotification.id} 
+          message={latestNotification.text} 
+          showDismiss={true}
+          onDismiss={handleNotificationDismiss} 
+        />
+      )}
     </SSEContext.Provider>
   );
 };

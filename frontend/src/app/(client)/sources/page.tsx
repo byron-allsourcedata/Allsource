@@ -30,21 +30,21 @@ import CustomTablePagination from '@/components/CustomTablePagination';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useNotification } from '@/context/NotificationContext';
 import { showErrorToast } from '@/components/ToastNotification';
-import SourcesTable from "./SourcesTable"
+import SourcesTable from "./components/SourcesTable"
 import SourcesImport from './SourcesImport';
-import SourcesList from './SourcesList';
+import SourcesList from './components/SourcesList';
 
 
-interface Sources {
-    id: number
+interface Source {
+    id: string
     name: string
-    source: string
-    type: string
-    created_date: string
-    updated_date: string
+    source_origin: string
+    source_type: string
+    created_at: Date
+    updated_at: Date
     created_by: string
-    number_of_customers: number
-    matched_records: number
+    total_records?: number
+    matched_records?: number
 }
 
 interface FilterParams {
@@ -95,9 +95,9 @@ interface FilterParams {
 const Sources: React.FC = () => {
     const router = useRouter();
     const { hasNotification } = useNotification();
-    const [data, setData] = useState<Sources[]>([]);
+    const [data, setData] = useState<Source[]>([]);
     const [sources, setSources] = useState<boolean>(true);
-    const [createdSource, setCreatedSource] = useState<boolean>(false);
+    const [newSource, setNewSource] = useState<boolean>(false);
     const [count_companies, setCount] = useState<number | null>(null);
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
@@ -126,21 +126,7 @@ const Sources: React.FC = () => {
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
     const [openDrawer, setOpenDrawer] = React.useState(false);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-    const [selectedIndustry, setSelectedIndustry] = React.useState<string | null>(null);
-    const [industry, setIndustry] = React.useState<string[]>([]);
-
-
-    const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, industry: string) => {
-        setSelectedIndustry(industry);
-        setAnchorEl(event.currentTarget);
-    };
-
-    const handleClosePopover = () => {
-        setAnchorEl(null);
-        setSelectedIndustry(null);
-    };
-
-    const isOpen = Boolean(anchorEl);
+    const [createdSource, setCreatedSource] = useState<Source | null >(null);
 
     useEffect(() => {
         document.body.style.overflow = 'hidden';
@@ -528,14 +514,13 @@ const Sources: React.FC = () => {
                 <CustomizedProgressBar/>
             )}
             <Box sx={{
-                display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
+                display: 'flex', flexDirection: 'column', height: '100%',
                 '@media (max-width: 900px)': {
-                    paddingRight: 0,
                     minHeight: '100vh'
 
                 }
             }}>
-                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <Box sx={{ flex: 1, display: 'flex', pr: 2, flexDirection: 'column', }}>
                     {sources && 
                         <Box>
                             <Box
@@ -559,7 +544,7 @@ const Sources: React.FC = () => {
                                     <Typography className='first-sub-title'>
                                         Sources
                                     </Typography>
-                                    <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
+                                    <CustomToolTip title={'Here you can view your active sources and upload new ones to expand your data.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
                                 </Box>
                                 <Box sx={{
                                     display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px',
@@ -670,19 +655,19 @@ const Sources: React.FC = () => {
                                     </Button>
                                 </Box>
                             </Box>
-                            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, overflowX: 'auto', "@media (max-width: 600px)": { mb: 1 } }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, "@media (max-width: 600px)": { mb: 1 } }}>
                                     {/* --- CHIPS --- */}
                             </Box>
                             <Box sx={{
-                                flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px', pb: '20px',
+                                flex: 1, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 4.25rem)', overflow: 'auto', maxWidth: '100%',
                                 '@media (max-width: 900px)': {
                                     pt: '2px',
                                     pb: '18px'
                                 }
                             }}>
-                                {createdSource && 
-                                    <SourcesList />}
-                                {!createdSource &&  
+                                {newSource && 
+                                    <SourcesList createdSource={createdSource}/>}
+                                {!newSource &&  
                                     <SourcesTable setStatus={setStatus} status={status} setData={setData} data={data} setSources={setSources}/>}
                                 {showSlider && <Slider />}
                             </Box>
@@ -718,13 +703,13 @@ const Sources: React.FC = () => {
                                     {/* --- CHIPS --- */}
                             </Box>
                             <Box sx={{
-                                flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px', pb: '20px',
+                                flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto', height: "calc(100vh - 7rem)", maxWidth: '100%', pl: 0, pr: 0, pt: '14px',
                                 '@media (max-width: 900px)': {
                                     pt: '2px',
                                     pb: '18px'
                                 }
                             }}>
-                                <SourcesImport/>
+                                <SourcesImport setCreatedSource={setCreatedSource} setNewSource={setNewSource} setSources={setSources} />
                                 {showSlider && <Slider />}
                             </Box>
                         </Box>
