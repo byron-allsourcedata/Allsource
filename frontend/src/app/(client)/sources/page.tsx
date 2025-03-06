@@ -140,12 +140,6 @@ const Sources: React.FC = () => {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [createdSource, setCreatedSource] = useState<Source | null >(null);
 
-    useEffect(() => {
-        document.body.style.overflow = 'hidden';
-        return () => {
-            document.body.style.overflow = 'auto';
-        };
-    }, []);
 
     const handleOpenPopup = (row: any) => {
         setPopupData(row);

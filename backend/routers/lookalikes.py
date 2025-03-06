@@ -1,7 +1,16 @@
 from fastapi import APIRouter, Depends, Query
 
-from dependencies import get_lookalikes_service, check_user_authentication
+from dependencies import get_lookalikes_service, check_user_authorization_without_pixel
 from services.lookalikes import LookalikesService
+from pydantic import BaseModel
+from models.users import User
+
+
+class LookalikeCreateRequest(BaseModel):
+    uuid_of_source: str
+    lookalike_size: str
+    lookalike_name: str
+
 
 router = APIRouter()
 
@@ -10,15 +19,26 @@ router = APIRouter()
 async def get_source(
         uuid_of_source: str = Query(None, description="UUID of source"),
         lookalike_service: LookalikesService = Depends(get_lookalikes_service),
-        user: dict = Depends(check_user_authentication)
 ):
-    return lookalike_service.get_source_info(uuid_of_source, user)
+    return lookalike_service.get_source_info(uuid_of_source)
 
-# @router.post("/download_leads")
-# async def download_leads(leads_request: LeadsRequest,
-#                          leads_service: LeadsService = Depends(get_leads_service)):
-#     result = leads_service.download_leads(leads_ids=leads_request.leads_ids)
-#     if result:
-#         return StreamingResponse(result, media_type="text/csv",
-#                                  headers={"Content-Disposition": "attachment; filename=data.csv"})
-#     return BaseEnum.FAILURE
+
+@router.post("/builder")
+async def create_lookalike(
+    request: LookalikeCreateRequest,
+    lookalike_service: LookalikesService = Depends(get_lookalikes_service),
+    user: dict = Depends(check_user_authorization_without_pixel)
+):
+    created_by_user_id = user.get('team_member', {}).get('id', user.get('user_id'))
+    print(request.uuid_of_source)
+    print(request.lookalike_size)
+
+    lookalike = lookalike_service.create_lookalike(
+        uuid_of_source=request.uuid_of_source,
+        lookalike_size=request.lookalike_size,
+        lookalike_name=request.lookalike_name,
+        created_by_user_id=created_by_user_id
+    )
+
+    return lookalike
+

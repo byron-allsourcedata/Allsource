@@ -6,11 +6,12 @@ from datetime import datetime, timedelta
 
 
 class LookalikesService:
-    def __init__(self, lookalikes_persistence_service: LookalikesPersistence ):
+    def __init__(self, user, lookalikes_persistence_service: LookalikesPersistence):
+        self.user = user
         self.lookalikes_persistence_service = lookalikes_persistence_service
 
-    def get_source_info(self, uuid_of_source, user):
-        source_info = self.lookalikes_persistence_service.get_source_info(uuid_of_source, user)
+    def get_source_info(self, uuid_of_source):
+        source_info = self.lookalikes_persistence_service.get_source_info(uuid_of_source, self.user.get('id'))
         if source_info:
             return {
                 'name': source_info.name,
@@ -22,3 +23,8 @@ class LookalikesService:
                 'matched_records': source_info.matched_records,
             }
         return {}
+
+    def create_lookalike(self, uuid_of_source, lookalike_size, lookalike_name, created_by_user_id):
+        self.lookalikes_persistence_service.create_lookalike(uuid_of_source, self.user.get('id'),
+                                                             lookalike_size, lookalike_name, created_by_user_id)
+        return "OK"

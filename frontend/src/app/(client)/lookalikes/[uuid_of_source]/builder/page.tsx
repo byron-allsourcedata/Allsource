@@ -93,10 +93,12 @@ const CreateLookalikePage: React.FC = () => {
     //     }
     // };
 
-    // const handleSourceData = async () => {
-    //     const data = await axiosInstance.get(`lookalike/builder?uuid_of_source=${params.uuid_of_source}`)
-    //     setSourceData(data)
-    // }
+    const handleSourceData = async () => {
+        const response = await axiosInstance.get(`lookalike/builder?uuid_of_source=${params.uuid_of_source}`)
+        if (response.data){
+            setSourceData(response.data)
+        }
+    }
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSourceName(event.target.value);
     };
@@ -118,12 +120,12 @@ const CreateLookalikePage: React.FC = () => {
     };
 
     const handleGenerateLookalike = async () => {
-        const response = await axiosInstance.post('/lookalike/builder', {uuid_of_source: params.uuid_of_source, size: selectedSize, name: sourceName})
+        const response = await axiosInstance.post('/lookalike/builder', {uuid_of_source: params.uuid_of_source, lookalike_size: selectedSize, lookalike_name: sourceName})
     }
 
-    // useEffect(()=> {
-    //     handleSourceData();
-    // }, [params]);
+    useEffect(()=> {
+        handleSourceData();
+    }, [params]);
 
 
     return (
