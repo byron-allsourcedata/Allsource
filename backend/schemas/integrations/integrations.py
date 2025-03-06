@@ -114,7 +114,7 @@ class ContactFiled(Enum):
 
 class OrderAPI(BaseModel):
     platform_order_id: Optional[int] = None
-    platform_user_id: Optional[str] = None
+    platform_user_id: Optional[int] = None
     platform_created_at: Optional[str] = None
     total_price: Optional[float] = None
     email: Optional[EmailStr] = None

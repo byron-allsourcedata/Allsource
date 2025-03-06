@@ -303,7 +303,7 @@ class BigcommerceIntegrationsService:
     def __mapped_order(self, json):
         return OrderAPI(
             platform_order_id=json.get('id'),
-            platform_user_id=json.get('cutomer_id'),
+            platform_user_id=json.get('customer_id'),
             email=json.get('billing_address').get('email'),
             total_price=json.get('total_inc_tax'),
             platform_created_at=json.get('date_created'),
