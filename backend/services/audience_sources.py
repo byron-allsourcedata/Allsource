@@ -2,8 +2,8 @@ import os
 import json
 from openai import OpenAI
 import logging
-from typing import List
-from schemas.audience import Row
+from typing import List, Optional
+from schemas.audience import Row, SourcesObjectResponse, SourceResponse
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from enums import QueueName
@@ -17,7 +17,7 @@ class AudienceSourceService:
         self.default_headings = ['Email', 'Phone number', 'Last Name', 'First Name', 'Gender', 'Age', 'Order Amount', 'State', 'City', 'Zip Code']
 
 
-    def get_sources(self, user, page, per_page, sort_by, sort_order):
+    def get_sources(self, user, page, per_page, sort_by, sort_order) -> SourcesObjectResponse:
         sources, count = self.audience_sources_persistence.get_sources(
             user_id=user.get("id"),
             page=page,
@@ -45,7 +45,7 @@ class AudienceSourceService:
         return source_list, count
 
 
-    def substitution_headings(self, headers): 
+    def substitution_headings(self, headers: List[str]) -> Optional[List[str]]: 
         prompt = (
             "You are given a list of CSV headers and a predefined list of default headers. "
             "Map each header in the default headers to the closest matching header from the provided list. "
@@ -69,6 +69,7 @@ class AudienceSourceService:
             return [header.strip() for header in updated_headers.split(",")]
         except Exception as e:
             logger.error("Error with ChatGPT API", exc_info=True)
+            return None
 
 
     async def send_matching_status(self, source_id, user_id, email_field):
@@ -88,7 +89,7 @@ class AudienceSourceService:
             await rabbitmq_connection.close()
 
 
-    async def create_source(self, user, source_type: str, source_origin: str, source_name: str, rows: List[Row], file_url: str = None):
+    async def create_source(self, user, source_type: str, source_origin: str, source_name: str, rows: List[Row], file_url: str = None) -> SourceResponse:
         creating_data = {
             "user_id": user.get("id"),
             "source_type": source_type,
@@ -105,7 +106,8 @@ class AudienceSourceService:
 
         setattr(created_data, "created_by", user.get("full_name"))
 
-        return created_data
+        response = SourceResponse.model_validate(created_data)
+        return response
     
 
     def delete_source(self, id):

@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends, Query, UploadFile, File, Form
+from fastapi import APIRouter, Depends, Query
 from dependencies import get_audience_sources_service, check_user_authorization
 from services.audience_sources import AudienceSourceService
-from schemas.audience import HeadingSubstitutionRequest, NewSource
+from schemas.audience import HeadingSubstitutionRequest, NewSource, SourcesObjectResponse, SourceResponse
 from uuid import UUID
+from typing import Optional, List
 
 router = APIRouter(dependencies=[Depends(check_user_authorization)])
 
-@router.get("")
+@router.get("", response_model=SourcesObjectResponse)
 def get_sources(
         user=Depends(check_user_authorization),
         page: int = Query(1, alias="page", ge=1, description="Page number"),
@@ -24,7 +25,7 @@ def get_sources(
     )
 
 
-@router.post("/heading-substitution")
+@router.post("/heading-substitution", response_model=Optional[List[str]])
 def substitution_headings(
         payload: HeadingSubstitutionRequest,
         sources_service: AudienceSourceService = Depends(get_audience_sources_service)
@@ -32,7 +33,7 @@ def substitution_headings(
     return sources_service.substitution_headings(payload.headings)
 
 
-@router.post("/create")
+@router.post("/create", response_model=SourceResponse)
 async def create_source(
         payload: NewSource,
         user=Depends(check_user_authorization),
@@ -48,7 +49,7 @@ async def create_source(
     )
 
 
-@router.delete("/{id}")
+@router.delete("/{id}", response_model=bool)
 def delete_source(
         id: UUID,
         sources_service: AudienceSourceService = Depends(get_audience_sources_service)

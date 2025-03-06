@@ -50,7 +50,7 @@ class AudienceSourcesPersistence:
         return sources, count
 
 
-    def create_source(self, **creating_data)-> Optional[AudienceSource]:
+    def create_source(self, **creating_data) -> Optional[AudienceSource]:
         source = AudienceSource(
             user_id=creating_data.get("user_id"),
             created_by_user_id=creating_data.get("user_id"),

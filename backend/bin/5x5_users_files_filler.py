@@ -43,7 +43,7 @@ async def process_files(sts_client, rmq_conn):
                                 aws_session_token=credentials['SessionToken']) as s3:
         bucket = await s3.Bucket(BUCKET_NAME)
         async for s3_object in bucket.objects.filter(Prefix=FILE_PATH):
-            await _rabbitmq_message(
+            await publish_rabbitmq_message(
                 connection=rmq_conn,
                 queue_name=QUEUE_USERS_FILES,
                 message_body={'file_name': s3_object.key}

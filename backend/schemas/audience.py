@@ -32,3 +32,23 @@ class AudienceResponse(BaseModel):
     created_at: datetime
     exported_on: Optional[datetime] = None
 
+class SourceResponse(BaseModel):
+    id: UUID
+    source_name: str
+    source_origin: str
+    source_type: str
+    created_date: datetime
+    created_by: str
+    updated_date: datetime
+    total_records: Optional[int] = None
+    matched_records: int
+    matched_records_status: str
+
+    model_config = {
+        "from_attributes": True
+    }
+
+
+class SourcesObjectResponse(BaseModel):
+    source_list: List[SourceResponse]
+    count: int
