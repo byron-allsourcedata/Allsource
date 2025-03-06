@@ -178,10 +178,10 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
     }
 
     useEffect(() => {
-        if (createdSource) {
-            setProgress(sourceProgress[createdSource.id]);
-        }
+        if (!createdSource) return;
+        setProgress(sourceProgress[createdSource.id]);
     }, [createdSource, sourceProgress]);
+
 
     return (
         <>
