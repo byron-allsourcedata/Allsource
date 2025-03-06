@@ -1,52 +1,23 @@
 "use client";
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Chip, Drawer, List, ListItemText, ListItemButton, Popover } from '@mui/material';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import axiosInstance from '../../../axios/axiosInterceptorInstance';
-import { AxiosError } from 'axios';
-import { sourcesStyles } from './sourcesStyles';
-import Slider from '../../../components/Slider';
-import { SliderProvider } from '../../../context/SliderContext';
-import { ChevronLeft, ChevronRight } from '@mui/icons-material';
-import DownloadIcon from '@mui/icons-material/Download';
-import DateRangeIcon from '@mui/icons-material/DateRange';
-import FilterListIcon from '@mui/icons-material/FilterList';
-// import FilterPopup from './CompanyEmployeesFilters';
-import AudiencePopup from '@/components/AudienceSlider';
-import SouthOutlinedIcon from '@mui/icons-material/SouthOutlined';
-import NorthOutlinedIcon from '@mui/icons-material/NorthOutlined';
+import axiosInstance from '@/axios/axiosInterceptorInstance';
 import dayjs from 'dayjs';
-// import PopupDetails from './EmployeeDetails';
-// import PopupChargeCredits from './ChargeCredits'
 import CloseIcon from '@mui/icons-material/Close';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
-import Tooltip from '@mui/material/Tooltip';
-import CustomToolTip from '@/components/customToolTip';
-import CustomTablePagination from '@/components/CustomTablePagination';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import ThreeDotsLoader from './ThreeDotsLoader';
 import { useNotification } from '@/context/NotificationContext';
-import { showErrorToast, showToast } from '@/components/ToastNotification';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import SwapVertIcon from '@mui/icons-material/SwapVert';
-import { UpgradePlanPopup } from  '../components/UpgradePlanPopup'
-import { sources } from 'next/dist/compiled/webpack/webpack';
-
-
-interface FetchDataParams {
-    sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
-    page: number;
-    rowsPerPage: number;
-}
+import { useSSE } from '@/context/SSEContext';
+import ProgressBar from './ProgressLoader';
 
 interface Source {
-    id: number
+    id: string
     name: string
     source_origin: string
     source_type: string
-    created_date: Date
-    updated_date: Date
+    created_at: Date
+    updated_at: Date
     created_by: string
     total_records?: number
     matched_records?: number
@@ -67,6 +38,7 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
     const { hasNotification } = useNotification();
     const [data, setData] = useState<any[]>([]);
     const [count_companies, setCount] = useState<number | null>(null);
+    const [progress, setProgress] = useState<any>(null);
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
     const [status, setStatus] = useState<string | null>(null);
@@ -87,6 +59,7 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [selectedJobTitle, setSelectedJobTitle] = React.useState<string | null>(null);
     const [employeeId, setEmployeeId] = useState<number | null>(null)
+    const { sourceProgress } = useSSE();
 
 
     const handleOpenPopover = (event: React.MouseEvent<HTMLElement>) => {
@@ -204,8 +177,11 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
             .join(' ');
     }
 
-
-
+    useEffect(() => {
+        if (createdSource) {
+            setProgress(sourceProgress[createdSource.id]);
+        }
+    }, [createdSource, sourceProgress]);
 
     return (
         <>
@@ -359,7 +335,7 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
                                         Created Date
                                     </Typography>
                                     <Typography variant="subtitle1" className="table-data">
-                                        {dayjs(createdSource?.created_date).isValid() ? dayjs(createdSource?.created_date).format('MMM D, YYYY') : '--'}
+                                        {dayjs(createdSource?.created_at).isValid() ? dayjs(createdSource?.created_at).format('MMM D, YYYY') : '--'}
                                     </Typography>
                                 </Box>
                                 <Box>
@@ -371,7 +347,7 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
                                         Updated Date
                                     </Typography>
                                     <Typography variant="subtitle1" className="table-data">
-                                        {dayjs(createdSource?.updated_date).isValid() ? dayjs(createdSource?.updated_date).format('MMM D, YYYY') : '--'}
+                                        {dayjs(createdSource?.updated_at).isValid() ? dayjs(createdSource?.updated_at).format('MMM D, YYYY') : '--'}
                                     </Typography>
                                 </Box>
                             </Box>
@@ -393,7 +369,7 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
                                         Number of Customers
                                     </Typography>
                                     <Typography variant="subtitle1" className="table-data">
-                                        {createdSource?.total_records}
+                                        {progress?.total ?? <ThreeDotsLoader />}
                                     </Typography>
                                 </Box>
                                 <Box>
@@ -405,13 +381,12 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
                                         Matched Records
                                     </Typography>
                                     <Typography variant="subtitle1" className="table-data">
-                                        {createdSource?.matched_records}
+                                        <ProgressBar progress={progress} />
                                     </Typography>
                                 </Box>
                             </Box>
                         </Box>
                     </Box>
-                        {showSlider && <Slider />}
                     </Box>
                     <Popover
                         open={isOpen}

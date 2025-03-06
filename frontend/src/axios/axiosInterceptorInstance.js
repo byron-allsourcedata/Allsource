@@ -1,6 +1,6 @@
 "use client";
 import axios from "axios";
-import { showErrorToast } from "@/components/ToastNotification";
+import { showErrorToast, showToast } from "@/components/ToastNotification";
 
 const axiosInterceptorInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
@@ -97,7 +97,8 @@ axiosInterceptorInstance.interceptors.response.use(
           }
           break;
         case 404:
-          navigateTo('/not_found')
+          // navigateTo('/not_found')
+          showToast("404")
           break;
         case 500:
           // Handle 500 Internal Server Error

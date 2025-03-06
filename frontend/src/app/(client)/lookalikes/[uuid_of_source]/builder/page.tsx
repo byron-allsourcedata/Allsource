@@ -8,6 +8,7 @@ import SourceTableContainer from "@/app/(client)/lookalikes/components/SourceTab
 import useAxios from "axios-hooks";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
+import { showErrorToast, showToast } from "@/components/ToastNotification";
 
 
 const audienceSize = [
@@ -52,10 +53,10 @@ interface TableData {
     name: string;
     source: string;
     type: string;
-    createdDate: string;
-    createdBy: string;
-    numberOfCustomers: string;
-    matchedRecords: string;
+    created_date: string;
+    created_by: string;
+    number_of_customers: string;
+    matched_records: string;
   }
 const tableData = [
     {
@@ -75,7 +76,10 @@ const CreateLookalikePage: React.FC = () => {
     const [sliderValue, setSliderValue] = useState<number[]>([0, 0]);
     const [currentStep, setCurrentStep] = useState(1);
     const [sourceName, setSourceName] = useState("");
-    const [sourceData, setSourceData] = useState<TableData>();
+    const [sourceData, setSourceData] = useState<TableData[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [isLookalikeCreated, setIsLookalikeCreated] = useState(false);
+
 
     const handleSelectSize = (
         id: string,
@@ -87,17 +91,21 @@ const CreateLookalikePage: React.FC = () => {
         handleNext();
     };
 
-    // const handleGenerateClick = () => {
-    //     if (sourceName.trim() !== "") {
-    //         setIsLookalikeGenerated(true);
-    //     }
-    // };
-
     const handleSourceData = async () => {
+        try{
+            setLoading(true)
         const response = await axiosInstance.get(`lookalike/builder?uuid_of_source=${params.uuid_of_source}`)
         if (response.data){
-            setSourceData(response.data)
+            setSourceData(Array.isArray(response.data) ? response.data : [response.data]);
         }
+        }
+        catch {
+            showErrorToast('An error occurred while uploading the sources. Please try again later.')
+        }
+        finally{
+            setLoading(false)
+        }  
+
     }
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSourceName(event.target.value);
@@ -107,11 +115,18 @@ const CreateLookalikePage: React.FC = () => {
         const value = newValue as number[];
         setSliderValue(value);
         
+        const selectedRange = audienceSize.find(
+            (size) => value[1] >= size.min_value && value[1] <= size.max_value
+        );
+        
+        if (selectedRange) {
+            setSelectedSize(selectedRange.id);
+        }
     };
 
     const handleCancel = () => {
         setSelectedSize("");
-        setSliderValue([0, 20]);
+        setSliderValue([0, 0]);
         setCurrentStep(1);
     };
 
@@ -120,19 +135,35 @@ const CreateLookalikePage: React.FC = () => {
     };
 
     const handleGenerateLookalike = async () => {
-        const response = await axiosInstance.post('/lookalike/builder', {uuid_of_source: params.uuid_of_source, lookalike_size: selectedSize, lookalike_name: sourceName})
+        try{
+            setLoading(true);
+            const response = await axiosInstance.post('/lookalike/builder', {uuid_of_source: params.uuid_of_source, lookalike_size: selectedSize, lookalike_name: sourceName})
+            if (response.data.status === "SUCCESS"){
+                showToast('Lookalike was created successfully!');
+                setIsLookalikeCreated(true);
+            }
+        }
+        catch{
+            showErrorToast('An error occurred while creating a new lookalike. Please try again later.')
+        }
+        finally {
+         setLoading(false)   
+        }
     }
 
     useEffect(()=> {
         handleSourceData();
     }, [params]);
 
+    if(loading){
+        return <CustomizedProgressBar/>
+    }
 
     return (
         <Box sx={{ width: "100%", pr: 2 }}>
-            
-
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+            {!isLookalikeCreated ? (
+                <>
                 <Box>
                     <Box sx={{ width: "100%", padding: 3, color: "#202124" }}>
                         {/* Title */}
@@ -174,81 +205,12 @@ const CreateLookalikePage: React.FC = () => {
                                 >
                                     Source
                                 </Typography>
-
-                                <SourceTableContainer tableData={tableData}
-                                 // tableData={sourceData} 
-                                 />
+                                
+                                {sourceData && <SourceTableContainer tableData={sourceData}
+                                 />}
                             </Box>
                         )}
-                        <Box
-                            sx={{
-                                width: "100%",
-                                display: "flex",
-                                justifyContent: "end",
-                                gap: 2,
-                            }}
-                        >
-                            {currentStep === 1 && (
-                                <Box
-                                    sx={{
-                                        width: "100%",
-                                        display: "flex",
-                                        justifyContent: "end",
-                                        gap: 2,
-                                        mt: 2,
-                                    }}
-                                >
-                                    <Button
-                                        variant="outlined"
-                                        sx={{
-                                            marginRight: "16px",
-                                            textTransform: "none",
-                                            color: "#5052B2",
-                                            height: "40px",
-                                            borderColor: "#5052B2",
-                                            backgroundColor: "#FFFFFF",
-                                            fontFamily: "Nunito Sans",
-                                            fontWeight: 500,
-                                            fontSize: "14px",
-                                            lineHeight: "19.6px",
-                                            letterSpacing: "0%",
-                                        }}
-                                    >
-                                        Add another Source
-                                    </Button>
-
-                                    <Button
-                                        sx={{
-                                            border: "1px #5052B2 solid",
-                                            color: "#FFFFFF",
-                                            backgroundColor: "#5052B2",
-                                            textTransform: "none",
-                                            height: "40px",
-                                            fontFamily: "Nunito Sans",
-                                            fontWeight: 600,
-                                            fontSize: "14px",
-                                            lineHeight: "19.6px",
-                                            letterSpacing: "0%",
-                                            "&:hover": {
-                                                border: "1px #5052B2 solid",
-                                                backgroundColor: "#5052B2",
-                                            },
-                                        }}
-                                        variant="outlined"
-                                        onClick={handleNext}
-                                    >
-                                        <Typography
-                                            padding={"0.5rem 2rem"}
-                                            fontSize={"0.8rem"}
-                                        >
-                                            Create lookalike
-                                        </Typography>
-                                    </Button>
-                                </Box>
-                            )}
-                        </Box>
-
-                        {currentStep >= 2 && (
+                        {currentStep >= 1 && (
                             <AudienceSizeSelector
                                 audienceSize={audienceSize}
                                 min={0}
@@ -260,7 +222,7 @@ const CreateLookalikePage: React.FC = () => {
                             />
                         )}
 
-                        {currentStep >= 3 && (
+                        {currentStep >= 2 && (
                             <Box
                                 sx={{
                                     display: "flex",
@@ -386,7 +348,7 @@ const CreateLookalikePage: React.FC = () => {
                                 >
                                     <Image
                                         src={"/stars-icon.svg"}
-                                        alt="Stars"
+                                        alt="Stars icon"
                                         width={15}
                                         height={15}
                                     />
@@ -398,6 +360,36 @@ const CreateLookalikePage: React.FC = () => {
                         </Box>
                     )}
                 </Box>
+                </>
+            ) : (
+                <Box>
+                    <Box sx={{ width: "100%", padding: 3, color: "#202124" }}>
+                        {/* Title */}
+                        <Typography
+                            variant="h1"
+                            sx={{
+                                fontFamily: "Nunito Sans",
+                                fontWeight: 700,
+                                fontSize: "19px",
+                                lineHeight: "25.92px",
+                                letterSpacing: "0%",
+                                marginBottom: 2,
+                                textAlign: "left",
+                            }}
+                        >
+                            Lookalikes
+                        </Typography>
+
+                        {/* Block with table Source */}
+                  
+                             
+                                {sourceData && <SourceTableContainer tableData={sourceData}
+                                 />}
+
+                    </Box>
+                </Box>
+            )}
+                
             </Box>
         </Box>
     );

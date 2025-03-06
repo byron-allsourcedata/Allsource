@@ -29,16 +29,14 @@ async def create_lookalike(
     lookalike_service: LookalikesService = Depends(get_lookalikes_service),
     user: dict = Depends(check_user_authorization_without_pixel)
 ):
-    created_by_user_id = user.get('team_member', {}).get('id', user.get('user_id'))
-    print(request.uuid_of_source)
-    print(request.lookalike_size)
+    if user.get('team_member'):
+        user_id = user.get('team_member').get('id')
+    else:
+        user_id = user.get('id')
 
-    lookalike = lookalike_service.create_lookalike(
+    return lookalike_service.create_lookalike(
         uuid_of_source=request.uuid_of_source,
         lookalike_size=request.lookalike_size,
         lookalike_name=request.lookalike_name,
-        created_by_user_id=created_by_user_id
+        created_by_user_id=user_id
     )
-
-    return lookalike
-

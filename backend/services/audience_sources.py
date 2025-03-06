@@ -1,10 +1,12 @@
-import csv
 import os
+import json
 from openai import OpenAI
 import logging
-from fastapi import UploadFile
+from typing import List, Optional
+from schemas.audience import Row, SourcesObjectResponse, SourceResponse
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from enums import QueueName
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 logger = logging.getLogger(__name__)
@@ -15,7 +17,7 @@ class AudienceSourceService:
         self.default_headings = ['Email', 'Phone number', 'Last Name', 'First Name', 'Gender', 'Age', 'Order Amount', 'State', 'City', 'Zip Code']
 
 
-    def get_sources(self, user, page, per_page, sort_by, sort_order):
+    def get_sources(self, user, page, per_page, sort_by, sort_order) -> SourcesObjectResponse:
         sources, count = self.audience_sources_persistence.get_sources(
             user_id=user.get("id"),
             page=page,
@@ -29,20 +31,21 @@ class AudienceSourceService:
 
             source_list.append({
                 'id': source[0],
-                'source_name': source[1],
+                'name': source[1],
                 'source_origin': source[2],
                 'source_type': source[3],
-                'created_date': source[5],
+                'created_at': source[5],
                 'created_by': source[4],
-                'updated_date': source[6],
+                'updated_at': source[6],
                 'total_records': source[7],
-                'matched_records': source[8]
+                'matched_records': source[8],
+                'matched_records_status': source[9],
             })
 
         return source_list, count
 
 
-    def substitution_headings(self, headers): 
+    def substitution_headings(self, headers: List[str]) -> Optional[List[str]]: 
         prompt = (
             "You are given a list of CSV headers and a predefined list of default headers. "
             "Map each header in the default headers to the closest matching header from the provided list. "
@@ -66,14 +69,15 @@ class AudienceSourceService:
             return [header.strip() for header in updated_headers.split(",")]
         except Exception as e:
             logger.error("Error with ChatGPT API", exc_info=True)
+            return None
 
 
-    async def send_matching_status(self, user_id):
-        queue_name = 'aud_sources_matching'
+    async def send_matching_status(self, source_id, user_id, email_field):
+        queue_name = QueueName.AUDIENCE_SOURCES_READER.value
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
         try:
-            message_body = {'data': {'source_id': user_id}}
+            message_body = {'data': {'source_id': str(source_id), 'email': email_field, 'user_id': user_id}}
             await publish_rabbitmq_message(
                 connection=connection,
                 queue_name=queue_name,
@@ -85,26 +89,27 @@ class AudienceSourceService:
             await rabbitmq_connection.close()
 
 
-    async def create_source(self, user, source_type: str, source_origin: str, source_name: str, file_url: str = None):
+    async def create_source(self, user, source_type: str, source_origin: str, source_name: str, rows: List[Row], file_url: str = None) -> SourceResponse:
         creating_data = {
             "user_id": user.get("id"),
             "source_type": source_type,
             "source_origin": source_origin,
             "source_name": source_name,
             "file_url": file_url,
+            "rows": json.dumps([row.dict() for row in rows])
         }
-
         created_data = self.audience_sources_persistence.create_source(**creating_data)
-        await self.send_matching_status(user.get("id"))
+        await self.send_matching_status(created_data.id, user.get("id"), rows[0].value)
 
         if not created_data:
             logger.debug('Database error during creation')
 
         setattr(created_data, "created_by", user.get("full_name"))
 
-        return created_data
+        response = SourceResponse.model_validate(created_data)
+        return response
     
 
-    def delete_source(self, id):
-        self.audience_sources_persistence.delete_source(id)
-        return True
+    def delete_source(self, id) -> bool:
+        count_deleted = self.audience_sources_persistence.delete_source(id)
+        return count_deleted > 0

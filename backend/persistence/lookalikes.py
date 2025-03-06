@@ -14,37 +14,34 @@ class LookalikesPersistence:
         self.db = db
 
     def get_source_info(self, uuid_of_source, user_id):
-        return self.db.query(AudienceSource).where(AudienceSource.uuid == uuid_of_source,
-                                                   AudienceSource.user_id == user_id).first()
+        source = self.db.query(AudienceSource, Users.full_name).join(Users, Users.id == AudienceSource.created_by_user_id) \
+            .filter(AudienceSource.id == uuid_of_source, AudienceSource.user_id == user_id).first()
 
-    def get_user_name(self, user_id):
-        user = self.db.query(Users).filter(Users.id == user_id).first()
-        return user.name if user else None
+        return source
 
     def create_lookalike(self, uuid_of_source, user_id, lookalike_size, lookalike_name, created_by_user_id):
-        source = self.get_source_info(uuid_of_source, user_id)
-        if not source:
+        source_info = self.get_source_info(uuid_of_source, user_id)
+        if not source_info:
             raise HTTPException(status_code=404, detail="Source not found or access denied")
+
+        sources, created_by = source_info
 
         lookalike = Lookalikes(
             name=lookalike_name,
-            source=source.source_origin,
-            source_type=source.source_type,
             lookalike_size=lookalike_size,
             user_id=user_id,
+            created_date=datetime.utcnow(),
             created_by_user_id=created_by_user_id,
+            source_uuid=uuid_of_source,
         )
         self.db.add(lookalike)
         self.db.commit()
-        self.db.refresh(lookalike)
-
-        created_by_name = self.get_user_name(created_by_user_id)
 
         return {
             "name": lookalike.name,
-            "source": lookalike.source,
-            "source_type": lookalike.source_type,
+            "source": sources.source_origin,
+            "source_type": sources.source_type,
             "lookalike_size": lookalike.lookalike_size,
             "created_date": lookalike.created_date,
-            "created_by": created_by_name
+            "created_by": created_by,
         }

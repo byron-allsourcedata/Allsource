@@ -8,7 +8,7 @@ import { AxiosError } from 'axios';
 import { sourcesStyles } from './sourcesStyles';
 import Slider from '../../../components/Slider';
 import { SliderProvider } from '../../../context/SliderContext';
-import { ChevronLeft, ChevronRight } from '@mui/icons-material';
+import { ChevronLeft, ChevronRight, MoreVert } from '@mui/icons-material';
 import DownloadIcon from '@mui/icons-material/Download';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -31,6 +31,9 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import { UpgradePlanPopup } from  '../components/UpgradePlanPopup'
 import { sources } from 'next/dist/compiled/webpack/webpack';
+import { useSSE } from '../../../context/SSEContext';
+import ThreeDotsLoader from './ThreeDotsLoader';
+import ProgressBar from './ProgressLoader';
 
 
 interface FetchDataParams {
@@ -40,13 +43,13 @@ interface FetchDataParams {
     rowsPerPage: number;
 }
 
-interface Sources {
-    id: number
+interface Source {
+    id: string
     name: string
     source_origin: string
     source_type: string
-    created_date: Date
-    updated_date: Date
+    created_at: Date
+    updated_at: Date
     created_by: string
     total_records?: number
     matched_records?: number
@@ -55,8 +58,8 @@ interface Sources {
 interface SourceTableProps {
     setStatus: (status: string) => void
     status: string | null
-    setData: (data: Sources[] | ((prevData: Sources[]) => Sources[])) => void;
-    data: Sources[]
+    setData: (data: Source[] | ((prevData: Source[]) => Source[])) => void;
+    data: Source[]
     setSources: (newState: boolean) => void
 }
 
@@ -89,10 +92,11 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [selectedJobTitle, setSelectedJobTitle] = React.useState<string | null>(null);
     const [employeeId, setEmployeeId] = useState<number | null>(null)
-    const [selectedRowData, setSelectedRowData] = useState<Sources | null>(null);
+    const [selectedRowData, setSelectedRowData] = useState<Source | null>(null);
+    const { sourceProgress } = useSSE();
 
 
-    const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, rowData: Sources) => {
+    const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, rowData: Source) => {
         setAnchorEl(event.currentTarget);
         setSelectedRowData(rowData);
     };
@@ -145,10 +149,10 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
         try {
             if (selectedRowData && selectedRowData.id){
                 const response = await axiosInstance.delete(`/audience-sources/${selectedRowData.id}`)
-                if (response.status === 200){
+                if (response.status === 200 && response.data){
                     showToast("Source successfully deleted!")
-                    setData((prevAccounts: Sources[]) =>
-                        prevAccounts.filter((item: Sources) => item.id !== selectedRowData.id)
+                    setData((prevAccounts: Source[]) =>
+                        prevAccounts.filter((item: Source) => item.id !== selectedRowData.id)
                     );
                 }
             }
@@ -179,20 +183,10 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
             const response = await axiosInstance.get(url)
 
             if (response.status === 200){
-                const [employees, count] = response.data;
-                setData(employees);
+                const {source_list, count} = response.data;
+                setData(source_list);
                 setCount(count || 0);
             }
-
-
-
-            // const count = 1
-            // const count = 0
-            // const employees = [{id: 1, name: "SVO", source: "CSV File", type: "Intent", created_date: "01.01.1020", created_by: "01.01.1020", updated_date: "01.01.1020", number_of_customers: 23, matched_records: 23}]
-            // const employees: Sources[] = [];
-    
-            // setData(employees);
-            // setCount(count || 0);
             setStatus("");
     
             // const options = [15, 30, 50, 100, 200, 500];
@@ -648,8 +642,9 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
                                                 </TableRow>
                                             </TableHead>
                                             <TableBody>
-                                                {data.map((row: any) => (
-                                                    <>
+                                                {data.map((row: any) => {
+                                                    const progress = sourceProgress[row.id];
+                                                    return (
                                                         <TableRow
                                                             key={row.id}
                                                             selected={selectedRows.has(row.id)}
@@ -674,7 +669,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
                                                                     setEmployeeId(row.id)
 
                                                                 }}>
-                                                                {row.source_name}
+                                                                {row.name}
                                                             </TableCell>
 
                                                             {/* Source Column */}
@@ -695,7 +690,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
                                                             <TableCell 
                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative'}}
                                                             >
-                                                                {dayjs(row.created_date).isValid() ? dayjs(row.created_date).format('MMM D, YYYY') : '--'}
+                                                                {dayjs(row.created_at).isValid() ? dayjs(row.created_at).format('MMM D, YYYY') : '--'}
                                                             </TableCell>
 
                                                             {/* Created By Column */}
@@ -709,26 +704,32 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
                                                             <TableCell
                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {dayjs(row.updated_date).isValid() ? dayjs(row.updated_date).format('MMM D, YYYY') : '--'}
+                                                                {dayjs(row.updated_at).isValid() ? dayjs(row.updated_at).format('MMM D, YYYY') : '--'}
                                                             </TableCell>
 
                                                             {/* Number of Customers Column */}
                                                             <TableCell
                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {row.number_of_customers ?? '--'}
+                                                                {row.matched_records_status === "pending" 
+                                                                ? progress?.total ??  <ThreeDotsLoader/>
+                                                                : row.total_records ?? "--"
+                                                                }
                                                             </TableCell>
 
                                                             {/* Matched Records  Column */}
                                                             <TableCell
                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {row.matched_records ?? '--'}
+                                                                {row.matched_records_status === "pending" 
+                                                                ? <ProgressBar progress={progress} />
+                                                                : row.matched_records ?? '--'}
                                                             </TableCell>
 
                                                             <TableCell sx={{ ...sourcesStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
                                                                 <IconButton onClick={(event) => handleOpenPopover(event, row)} sx={{ ':hover': { backgroundColor: 'transparent' }}} >
-                                                                    <Image src='/more_horizontal.svg' alt='more' height={16.18} width={22.91} />
+                                                                    {/* <Image src='/more_horizontal.svg' alt='more' height={16.18} width={22.91} /> */}
+                                                                    <MoreVert sx={{color: "rgba(32, 33, 36, 1)"}} height={8} width={24}/>
                                                                 </IconButton>
 
                                                                 <Popover
@@ -751,6 +752,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
                                                                         </ListItemButton>
                                                                         <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
                                                                                 handleClosePopover()
+                                                                                router.push(`/lookalikes/${row.id}/builder`)
                                                                         }}>
                                                                             <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Lookalike"/>
                                                                         </ListItemButton>
@@ -765,8 +767,8 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
                                                             </TableCell>
 
                                                         </TableRow>
-                                                    </>
-                                                ))}
+                                                    )
+                                                })}
                                             </TableBody>
                                         </Table>
                                     </TableContainer>

@@ -1,37 +1,15 @@
 "use client";
-import React, { ChangeEvent, useState, useEffect, Suspense } from 'react';
-import { Box, Grid, Typography, TextField, Button, FormControl, MenuItem, Select, LinearProgress, SelectChangeEvent, Paper, IconButton, Chip, Drawer, List, ListItemText, ListItemButton, Popover } from '@mui/material';
+import React, { ChangeEvent, useState, useEffect } from 'react';
+import { Box, Grid, Typography, TextField, Button, FormControl, MenuItem, Select, LinearProgress, SelectChangeEvent, IconButton, Popover } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '../../../axios/axiosInterceptorInstance';
 import axios from "axios";
 import { sourcesStyles } from './sourcesStyles';
-import FileUploadRoundedIcon from '@mui/icons-material/FileUploadRounded';
-import LanguageIcon from '@mui/icons-material/Language';
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import Slider from '../../../components/Slider';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
-import { SliderProvider } from '../../../context/SliderContext';
-import { ChevronLeft, ChevronRight } from '@mui/icons-material';
-import DownloadIcon from '@mui/icons-material/Download';
-import DateRangeIcon from '@mui/icons-material/DateRange';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import AudiencePopup from '@/components/AudienceSlider';
-import SouthOutlinedIcon from '@mui/icons-material/SouthOutlined';
-import NorthOutlinedIcon from '@mui/icons-material/NorthOutlined';
-import dayjs from 'dayjs';
-import CloseIcon from '@mui/icons-material/Close';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
-import Tooltip from '@mui/material/Tooltip';
-import CustomToolTip from '@/components/customToolTip';
-import CustomTablePagination from '@/components/CustomTablePagination';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import { useNotification } from '@/context/NotificationContext';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import SwapVertIcon from '@mui/icons-material/SwapVert';
-import { UpgradePlanPopup } from  '../components/UpgradePlanPopup'
-import { sources } from 'next/dist/compiled/webpack/webpack';
 import Link from '@mui/material/Link';
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import { styled } from '@mui/material/styles';
@@ -42,24 +20,24 @@ interface SourcesImportProps {
     setSources: (state: boolean) => void
 }
 
+interface Source {
+    id: string
+    name: string
+    source_origin: string
+    source_type: string
+    created_at: Date
+    updated_at: Date
+    created_by: string
+    total_records?: number
+    matched_records?: number
+}
+
 interface Row {
     id: number;
     type: string;
     value: string;
     selectValue?: string;
     canDelete?: boolean;
-}
-
-interface Source {
-    id: number
-    name: string
-    source_origin: string
-    source_type: string
-    created_date: Date
-    updated_date: Date
-    created_by: string
-    total_records?: number
-    matched_records?: number
 }
 
 const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
@@ -110,7 +88,6 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
     const [rows, setRows] = useState<Row[]>(defaultRows);
 
     const handleMapListChange = (id: number, value: string) => {
-
         setRows(rows.map(row =>
             row.id === id ? { ...row, value } : row
         ));
@@ -178,11 +155,14 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
     const handleSumbit = async () => {
         setLoading(true)
 
+        const rowsToSubmit = rows.map(({ id, canDelete, ...rest }) => rest);
+
         const newSource = {
             source_type: sourceType,
             source_origin: sourceMethod === 1 ? "csv" : "pixel",
             source_name: sourceName,
-            file_url: fileUrl
+            file_url: fileUrl,
+            rows: rowsToSubmit
         }
         
         try {
@@ -304,25 +284,6 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
         return <CustomizedProgressBar />;
     }
 
-    const centerContainerStyles = {
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        border: '1px solid rgba(235, 235, 235, 1)',
-        borderRadius: 2,
-        padding: 3,
-        boxSizing: 'border-box',
-        width: '100%',
-        textAlign: 'center',
-        flex: 1,
-        '& img': {
-            width: 'auto',
-            height: 'auto',
-            maxWidth: '100%'
-        }
-    };
-
 
 
     return (
@@ -331,9 +292,8 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                 <CustomizedProgressBar/>
             )}
             <Box sx={{
-                display: 'flex', flexDirection: 'column', height: '100%',
+                display: 'flex', flexDirection: 'column', pr: 2,
                 '@media (max-width: 900px)': {
-                    paddingRight: 0,
                     minHeight: '100vh'
 
                 }
@@ -369,7 +329,10 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                             backgroundColor: "rgba(236, 238, 241, 1)"
                                         },
                                     }}
-                                    onClick={() => setSourceMethod(1)}
+                                    onClick={() => {
+                                        setSourceMethod(1)
+                                        handleDeleteFile()
+                                    }}
                                     >
                                     Manually upload
                                 </Button>
@@ -390,7 +353,10 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                             backgroundColor: "rgba(236, 238, 241, 1)"
                                         },
                                     }}
-                                    onClick={() => setSourceMethod(2)}
+                                    onClick={() => {
+                                        setSourceMethod(2)
+                                        handleDeleteFile()
+                                    }}
                                     >
                                     Website - Pixel
                                 </Button>
@@ -428,7 +394,7 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                     <MenuItem value={"Intent"}>Intent</MenuItem>
                                 </Select>
                             </FormControl>
-                            {sourceType !== "" &&
+                            {sourceType !== "" && !file &&
                                 <Box sx={{
                                     display: "flex",
                                     alignItems: "center",
@@ -573,7 +539,6 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                                     }
                                                 }}
                                                 InputProps={{
-
                                                     sx: {
                                                         '&.MuiOutlinedInput-root': {
                                                             height: '36px',
@@ -633,43 +598,33 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                         </Grid>
                                         
                                         <Grid item xs="auto" sm={2}>
-                                            <FormControl fullWidth>
+                                            <FormControl fullWidth sx={{ height: '36px' }}>
                                                 <Select
                                                     value={row.value || ''}
                                                     onChange={(e) => handleMapListChange(row.id, e.target.value)}
                                                     displayEmpty
                                                     inputProps={{
                                                         sx: {
-                                                            fontFamily: 'Nunito Sans',
+                                                            height: '36px',
+                                                            padding: '6.5px 8px',
+                                                            fontFamily: 'Roboto',
                                                             fontSize: '12px',
-                                                            lineHeight: '16px',
-                                                            top: '-5px',
-                                                            '&.Mui-focused': {
-                                                                color: '#0000FF',
-                                                                top: 0
+                                                            fontWeight: '400',
+                                                            color: '#202124',
+                                                            lineHeight: '20px',
+                                                        },
+                                                    }}
+                                                    sx={{
+                                                        '&.MuiOutlinedInput-root': {
+                                                            height: '36px',
+                                                            '& .MuiOutlinedInput-notchedOutline': {
+                                                                borderColor: '#A3B0C2',
                                                             },
-                                                            '&.MuiInputLabel-shrink': {
-                                                                top: 0
+                                                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                borderColor: '#A3B0C2',
                                                             },
-                                                            '&.MuiOutlinedInput-root': {
-                                                                height: '36px',
-                                                                '& .MuiOutlinedInput-input': {
-                                                                    padding: '6.5px 8px',
-                                                                    fontFamily: 'Roboto',
-                                                                    color: '#202124',
-                                                                    fontSize: '12px',
-                                                                    fontWeight: '400',
-                                                                    lineHeight: '20px',
-                                                                },
-                                                                '& .MuiOutlinedInput-notchedOutline': {
-                                                                    borderColor: '#A3B0C2',
-                                                                },
-                                                                '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                    borderColor: '#A3B0C2',
-                                                                },
-                                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                    borderColor: '#0000FF',
-                                                                },
+                                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                borderColor: '#0000FF',
                                                             },
                                                         },
                                                     }}
@@ -682,7 +637,6 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                                 </Select>
                                             </FormControl>
                                         </Grid>
-
 
                                         {/* Delete Icon */}
                                         <Grid item xs="auto" sm={0.5} container justifyContent="center">

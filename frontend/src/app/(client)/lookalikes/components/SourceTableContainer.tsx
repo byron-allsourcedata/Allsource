@@ -1,14 +1,15 @@
 import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableRow, Paper, TableContainer, Box } from "@mui/material";
+import dayjs from "dayjs";
 
 interface TableData {
   name: string;
   source: string;
   type: string;
-  createdDate: string;
-  createdBy: string;
-  numberOfCustomers: string;
-  matchedRecords: string;
+  created_date: string;
+  created_by: string;
+  number_of_customers: string;
+  matched_records: string;
 }
 
 interface TableContainerProps {
@@ -80,10 +81,10 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
               <TableCell>{row.name}</TableCell>
               <TableCell>{row.source}</TableCell>
               <TableCell>{row.type}</TableCell>
-              <TableCell>{row.createdDate}</TableCell>
-              <TableCell>{row.createdBy}</TableCell>
-              <TableCell>{row.numberOfCustomers}</TableCell>
-              <TableCell>{row.matchedRecords}</TableCell>
+              <TableCell>{dayjs(row.created_date).format('MMM D, YYYY')}</TableCell>
+              <TableCell>{row.created_by}</TableCell>
+              <TableCell>{row.number_of_customers}</TableCell>
+              <TableCell>{row.matched_records}</TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -109,10 +110,10 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
             <Box>Name: {row.name}</Box>
               <Box> Source: {row.source}</Box>
               <Box> Type:  {row.type}</Box>
-              <Box> Created Date:  {row.createdDate}</Box>
-              <Box> Created By:  {row.createdBy}</Box>
-              <Box> Number of Customers:  {row.numberOfCustomers}</Box>
-              <Box> Matched Records:  {row.matchedRecords}</Box>
+              <Box> Created Date:  {row.created_date}</Box>
+              <Box> Created By:  {row.created_by}</Box>
+              <Box> Number of Customers:  {row.number_of_customers}</Box>
+              <Box> Matched Records:  {row.matched_records}</Box>
             </Box>
           </Box>
         ))}

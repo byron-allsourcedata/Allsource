@@ -8,7 +8,8 @@ export async function POST(req) {
     const { fileType } = await req.json();
 
     const currentTime = new Date().toISOString().replace(/[:.]/g, "-");
-    const fileName = `audience_sources/${currentTime}`;
+    const type = fileType.split('/')[1]
+    const fileName = `audience_sources/${currentTime}.${type}`;
 
     const s3Client = new S3Client({
       region: "us-east-2",
@@ -26,7 +27,7 @@ export async function POST(req) {
 
     const command = new PutObjectCommand(params);
 
-    const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 60 });
+    const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 300 });
 
     return NextResponse.json({ url: presignedUrl }, { status: 200 });
   } catch {
