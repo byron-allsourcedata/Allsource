@@ -30,9 +30,9 @@ import CustomTablePagination from '@/components/CustomTablePagination';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useNotification } from '@/context/NotificationContext';
 import { showErrorToast } from '@/components/ToastNotification';
-import SourcesTable from "./SourcesTable"
+import SourcesTable from "./components/SourcesTable"
 import SourcesImport from './SourcesImport';
-import SourcesList from './SourcesList';
+import SourcesList from './components/SourcesList';
 
 
 interface Source {
