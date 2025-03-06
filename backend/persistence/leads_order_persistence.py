@@ -8,8 +8,7 @@ class LeadOrdersPersistence:
 
     def create_lead_order(self, data: dict):
         lead_order = self.db.query(LeadOrders).filter(LeadOrders.platform_order_id == data.get('order_id'), 
-                                            LeadOrders.lead_user_id == data.get('leads_id'), 
-                                            LeadOrders.platform_user_id == data.get('platform_user_id')).first()
+                                            LeadOrders.lead_user_id == data.get('leads_id')).first()
         if lead_order:
             lead_order.platform_created_at = data.get('platform_created_at')
             lead_order.total_price = data.get('total_price')
