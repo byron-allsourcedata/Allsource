@@ -210,7 +210,7 @@ class WebhookIntegrationService:
         mapped_fields = {mapping["type"] for mapping in data_map}
         for mapping in data_map:
             five_x_five_field = mapping["type"]
-            value_field = getattr(five_x_five_user, five_x_five_field, None)
+            value_field = getattr(five_x_five_user, five_x_five_field, "")
             if value_field:
                 if isinstance(value_field, datetime):
                     properties[mapping["value"]] = value_field.strftime("%Y-%m-%d")
@@ -218,6 +218,8 @@ class WebhookIntegrationService:
                     properties[mapping["value"]] = value_field[:2048] if len(value_field) > 2048 else value_field
                 else:
                     properties[mapping["value"]] = value_field
+            else:
+                properties[mapping["value"]] = ""
         
         if "urls_visited" in mapped_fields:
             page_time = self.leads_persistence.get_latest_page_time(lead_user.id)

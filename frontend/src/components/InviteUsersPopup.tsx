@@ -336,7 +336,7 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({ open, onClos
             InputLabelProps={{
                 className: "third-sub-title",
                 sx: {
-                    lineHeight: "16px !important",
+                    lineHeight: "18px !important",
                     color: "rgba(17, 17, 19, 0.60) !important",
                     "&.Mui-focused": {
                         color: "#0000FF",
@@ -347,7 +347,6 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({ open, onClos
                 maxWidth: "454px",
                 "& .MuiOutlinedInput-root": {
                     height: 'auto !important',
-                    minHeight: "48px !important",
                     padding: "5px 16px 4px 16px",
                 },
                 "& .MuiInputBase-input": {

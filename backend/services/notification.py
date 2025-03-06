@@ -23,7 +23,7 @@ class Notification:
             try:
                 converted_params = [float(param) if '.' in param else int(param) for param in params]
             except ValueError:
-                converted_params = []
+                converted_params = [str(param) for param in params]
 
             text = notification.text.format(*converted_params) if converted_params else notification.text
 

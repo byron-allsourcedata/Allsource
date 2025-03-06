@@ -15,6 +15,7 @@ import { useSSE } from "../../../context/SSEContext";
 import QuestionMarkOutlinedIcon from '@mui/icons-material/QuestionMarkOutlined';
 import PersonIcon from '@mui/icons-material/Person';
 import { fetchUserData } from "@/services/meService";
+import CustomNotification from "@/components/CustomNotification";
 
 const headerStyles = {
   headers: {
@@ -44,9 +45,11 @@ const headerStyles = {
 
 interface HeaderProps {
   NewRequestNotification: boolean;
+  NotificationData: { text: string; id: number } | null;
+  onDismissNotification: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
+const Header: React.FC<HeaderProps> = ({ NewRequestNotification, NotificationData, onDismissNotification }) => {
   const [hasNotification, setHasNotification] = useState(NewRequestNotification);
   const router = useRouter();
   const { newNotification } = useSSE();
@@ -63,7 +66,6 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
   const [hasNewNotifications, setHasNewNotifications] = useState<boolean>(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [visibleButton, setVisibleButton] = useState(false)
-  const [shouldRerender, setShouldRerender] = useState(false);
   const handleSignOut = () => {
     localStorage.clear();
     sessionStorage.clear();
@@ -71,6 +73,13 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
     resetTrialData();
     window.location.href = "/signin";
   };
+
+    useEffect(() => {
+      if (newNotification) {
+        setHasNewNotifications(true);
+      }
+    }, [newNotification]);
+
 
   useEffect(() => {
     let token = localStorage.getItem('parent_token')
@@ -99,7 +108,6 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
         }, 0);
       });
 
-      setShouldRerender((prev) => !prev);
     }
 
     router.push("/partners");
@@ -150,7 +158,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
     setHasNotification(false);
   }
   return (
-    <>
+    <Box sx={{display: 'flex', width: '100%', flexDirection: 'column',  }}>
     <Box sx={{ display: 'block',  }}>
       <Box sx={{ display: { md: 'none' } }}>
         <SliderProvider><NavigationMenu NewRequestNotification={hasNewNotifications || hasNewNotifications} /></SliderProvider>
@@ -333,7 +341,15 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
       </Box>
       </Box>
       <NotificationPopup open={notificationIconPopupOpen} onClose={handleNotificationIconPopupClose} anchorEl={anchorElNotificate} />
-    </>
+      {NotificationData && (
+          <CustomNotification
+            id={NotificationData.id}
+            message={NotificationData.text}
+            showDismiss={true}
+            onDismiss={onDismissNotification}
+          />
+        )}
+    </Box>
   );
 };
 

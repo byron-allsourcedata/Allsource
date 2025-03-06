@@ -47,6 +47,7 @@ async def process_data_sync(message_body, integration_service: IntegrationServic
     await integration_service.mailchimp.process_data_sync(message_body)
     await integration_service.sendlane.process_data_sync(message_body)
     await integration_service.zapier.process_data_sync(message_body)
+    await integration_service.hubspot.process_data_sync(message_body)
 
 async def main():
     logging.info("Started")

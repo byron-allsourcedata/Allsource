@@ -1235,7 +1235,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                 minWidth: '196px'
                                             }
                                         }}>
-                                            <Image src='/slack-icon.svg' alt='slack' height={20} width={24} />
+                                            <Image src='/google-ads.svg' alt='googleAds' height={20} width={24} />
                                         </Grid>
                                         <Grid item xs="auto" sm={1}>&nbsp;</Grid>
                                     </Grid>

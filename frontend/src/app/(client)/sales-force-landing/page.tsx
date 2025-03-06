@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Typography, Box, Link } from "@mui/material";
 import { useRouter, useSearchParams } from 'next/navigation';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
-import { shopifyLandingStyle } from "./googleAds-landing";
+import { shopifyLandingStyle } from "./salesForce-landing";
 import { showErrorToast, showInfoToast } from '../../../components/ToastNotification';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 
@@ -12,7 +12,6 @@ const GoogleAdsLanding = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const code = searchParams.get('code');
-  const scope = searchParams.get('scope');
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -22,25 +21,27 @@ const GoogleAdsLanding = () => {
         const response = await axiosInstance.post(
           '/integrations/',
           {
-            google_ads: {
-              code: code,
-              scope: scope
+            sales_force: {
+              code: code
             },
           },
           {
             params: {
-              service_name: 'google_ads',
+              service_name: 'sales_force',
             },
           }
         );
 
         if (response.data.status == 'SUCCESS') {
-          showInfoToast('Connect to GoogleAds success!')
+          showInfoToast('Connect to SalesForce success!')
           router.push(`/integrations`);
-        } 
+        }
+        else if (response.data.status == 'ERROR_GOOGLEADS_TOKEN') {
+          showErrorToast('Error connect to SalesForce');
+          router.push(`/integrations`);
+        }
       } catch (error) {
-        showErrorToast(`Error connect to GoogleAds ${error}`);
-        router.push(`/integrations`);
+        console.error('SalesForce Landing:', error);
       }
     };
 

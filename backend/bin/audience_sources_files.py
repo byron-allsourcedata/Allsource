@@ -173,11 +173,11 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, s3_s
 
         email_record = db_session.query(FiveXFiveEmails).filter_by(email=email).first()
         if email_record:
-            user_id = db_session.query(FiveXFiveUsersEmails.user_id).filter_by(email_id=email_record.id).first()
+            user = db_session.query(FiveXFiveUsersEmails.user_id).filter_by(email_id=email_record.id).first()
 
             matched_person = AudienceSourcesMatchedPerson(
                 source_id=source_id,
-                five_x_five_user_id=user_id.user_id,
+                five_x_five_user_id=user.user_id,
                 mapped_fields=json.dumps(row),
             )
             db_session.add(matched_person)
