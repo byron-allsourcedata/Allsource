@@ -15,6 +15,7 @@ class LeadOrdersPersistence:
             lead_order.total_price = data.get('total_price')
             lead_order.currency_code = data.get('currency_code')
             lead_order.platfrom_email = data.get('platfrom_email')
+            lead_order.platform_user_id = data.get('platform_user_id')
             lead_order.created_at = datetime.now(timezone.utc)
             self.db.add(lead_order)
             self.db.commit()
