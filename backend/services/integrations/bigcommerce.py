@@ -5,6 +5,7 @@ from urllib.parse import urlencode
 from jose import JWTError
 from config.bigcommerce import BigcommerceConfig
 from models.users_domains import UserDomains
+from dateutil.relativedelta import relativedelta
 from enums import IntegrationsStatus, SourcePlatformEnum
 from schemas.integrations.integrations import IntegrationCredentials, OrderAPI
 from schemas.integrations.bigcommerce import BigCommerceInfo
@@ -15,7 +16,7 @@ from persistence.domains import UserDomainsPersistence
 from bigcommerce.api import BigcommerceApi
 from httpx import Client
 from fastapi import HTTPException, status
-from datetime import datetime, timedelta
+from datetime import datetime
 from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.integrations.external_apps_installations import ExternalAppsInstallationsPersistence
 
@@ -243,7 +244,7 @@ class BigcommerceIntegrationsService:
             return {'message': 'Successfully'}
 
     def __get_orders(self, store_hash: str, access_token: str):
-        date = (datetime.now() - timedelta(days=30)).isoformat()
+        date = (datetime.now() - relativedelta(months=1)).isoformat() + 'Z'
         url = f'{store_hash}/v2/orders'
         orders = []
         page = 1
@@ -251,7 +252,6 @@ class BigcommerceIntegrationsService:
 
         while True:
             params = {
-                'status_id': 10,
                 'min_date_created': date,
                 'limit': limit,
                 'page': page
@@ -259,13 +259,14 @@ class BigcommerceIntegrationsService:
             response = self.__handle_request(url, method='GET', access_token=access_token, params=params)
             if response.status_code == 204:
                 break
-            data = response.json()
-            if not data:
+            elif response.status_code != 200:
                 break
             
-            orders.extend(data)
+            data = response.json()
+            paid_orders = [order for order in data if order['status_id'] not in {0, 4, 5}]
+            orders.extend(paid_orders)
             page += 1
-
+            
         return orders
 
     def order_sync(self, domain_id: int):
@@ -274,12 +275,12 @@ class BigcommerceIntegrationsService:
         for order in orders:
             try:
                 lead_user = self.lead_persistence.get_leads_user_filter_by_email(domain_id, order.email)
-                if lead_user and len(lead_user) > 0: 
+                if lead_user: 
                     self.lead_orders_persistence.create_lead_order({
                         'platform': 'Bigcommerce',
                         'platform_user_id': order.platform_user_id,
                         'platform_order_id': order.platform_order_id,
-                        'lead_user_id': lead_user[0].id,
+                        'lead_user_id': lead_user.id,
                         'platform_created_at': order.platform_created_at,
                         'total_price': order.total_price,
                         'currency_code': order.currency_code,
