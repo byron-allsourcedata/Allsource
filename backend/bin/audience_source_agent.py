@@ -19,23 +19,11 @@ from models.five_x_five_users_emails import FiveXFiveUsersEmails
 from models.audience_sources import AudienceSource
 from models.five_x_five_users import FiveXFiveUser
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
-from config.rmq_connection import RabbitMQConnection
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 load_dotenv()
 
 AUDIENCE_SOURCES_MATCHING= 'aud_sources_matching'
-
-
-async def publish_rabbitmq_message(channel, queue_name: str, message_body: dict):
-    try:
-        json_data = json.dumps(message_body).encode("utf-8")
-        message = Message(
-            body=json_data
-        )
-        await channel.default_exchange.publish(message, routing_key=queue_name)
-    except Exception as e:
-        logging.error(f"Failed to publish message: {e}")
-
 
 def setup_logging(level):
     logging.basicConfig(
@@ -62,6 +50,7 @@ def assume_role(role_arn, sts_client):
 
 async def send_sse(connection, user_id: int, data: dict):
     try:
+        print(f"userd_id = {user_id}")
         logging.info(f"send client throught SSE: {data, user_id}")
         await publish_rabbitmq_message(
                     connection=connection,
@@ -90,17 +79,16 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         logging.info(f"Processing AudienceSourceMatching with ID: {source_id}")
         emails = [p['email'] for p in persons]
         email_records = db_session.query(FiveXFiveEmails).filter(FiveXFiveEmails.email.in_(emails)).all()
-        user_ids = []
         if email_records:
             logging.info(f"email_records find")
             email_ids = [record.id for record in email_records]
-            user_ids = db_session.query(FiveXFiveUsersEmails.user_id).filter(FiveXFiveUsersEmails.email_id.in_(email_ids)).all()
-            user_ids = [user_id[0] for user_id in user_ids]
-            logging.info(f"user_ids find {len(user_ids)} for source_id {source_id}")
-            for user_id in user_ids:
+            five_x_five_users = db_session.query(FiveXFiveUsersEmails.user_id).filter(FiveXFiveUsersEmails.email_id.in_(email_ids)).all()
+            five_x_five_user_ids = [five_x_five_user[0] for five_x_five_user in five_x_five_users]
+            logging.info(f"user_ids find {len(five_x_five_user_ids)} for source_id {source_id}")
+            for five_x_five_user_id in five_x_five_user_ids:
                 matched_person = AudienceSourcesMatchedPerson(
                     source_id=source_id,
-                    five_x_five_user_id=user_id
+                    five_x_five_user_id=five_x_five_user_id
                 )
                 db_session.add(matched_person)
 
@@ -108,12 +96,11 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
                 update(AudienceSource)
                 .where(AudienceSource.id == source_id)
                 .values(
-                    matched_records=AudienceSource.matched_records + len(user_ids),
+                    matched_records=AudienceSource.matched_records + len(five_x_five_user_ids),
                     processed_records=AudienceSource.processed_records + len(emails)
                 )
                 .returning(AudienceSource.total_records, AudienceSource.processed_records)
             ).fetchone()
-
             
             db_session.flush()
             if processed_records == total_records:
@@ -124,7 +111,7 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
                 )
 
             db_session.commit()
-            #await send_sse(connection, user_id, {"source_id": source_id, "total": total_records, "processed": processed_records})
+            await send_sse(connection, user_id, {"source_id": source_id, "total": total_records, "processed": processed_records})
             
         logging.info(f"ack")
         await message.ack()
