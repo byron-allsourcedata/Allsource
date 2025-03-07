@@ -112,14 +112,6 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   return (
     <SSEContext.Provider value={{ data, newNotification, NotificationData, sourceProgress }}>
       {children}
-      {NotificationData  && (
-        <CustomNotification 
-          id={NotificationData.id} 
-          message={NotificationData.text} 
-          showDismiss={true}
-          onDismiss={handleNotificationDismiss} 
-        />
-      )}
     </SSEContext.Provider>
   );
 };
