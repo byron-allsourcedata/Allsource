@@ -79,7 +79,6 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
           showToast("Pixel code is installed successfully!");
         }
         else if (window.location.pathname === "/sources") {
-          console.log(data);
           const { total, processed, source_id } = data.data;
           if (!source_id) {
               console.error("source_id is undefined");
@@ -97,7 +96,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
             sessionStorage.setItem('me', JSON.stringify(meData));
           }
           setData(data);
-          // window.location.reload();
+          window.location.reload();
         }
       }
     };
