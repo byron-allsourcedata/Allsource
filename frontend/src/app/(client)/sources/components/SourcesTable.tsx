@@ -194,21 +194,19 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
 
             const response = await axiosInstance.get(url)
 
-            if (response.status === 200) {
-                const { source_list, count } = response.data;
-                setData(source_list);
-                setCount(count || 0);
-            }
+            const { source_list, count } = response.data;
+            setData(source_list);
+            setCount(count || 0);
             setStatus("");
 
-            // const options = [15, 30, 50, 100, 200, 500];
-            // let RowsPerPageOptions = options.filter(option => option <= count_companies);
-            // if (RowsPerPageOptions.length < options.length) {
-            //     RowsPerPageOptions = [...RowsPerPageOptions, options[RowsPerPageOptions.length]];
-            // }
-            // setRowsPerPageOptions(RowsPerPageOptions);
-            // const selectedValue = RowsPerPageOptions.includes(rowsPerPage) ? rowsPerPage : 15;
-            // setRowsPerPage(selectedValue);
+            const options = [10, 20, 50, 100, 300, 500];
+            let RowsPerPageOptions = options.filter(option => option <= count);
+            if (RowsPerPageOptions.length < options.length) {
+                RowsPerPageOptions = [...RowsPerPageOptions, options[RowsPerPageOptions.length]];
+            }
+            setRowsPerPageOptions(RowsPerPageOptions);
+            const selectedValue = RowsPerPageOptions.includes(rowsPerPage) ? rowsPerPage : 10;
+            setRowsPerPage(selectedValue);
 
         } catch (error) {
             if (error instanceof AxiosError && error.response?.status === 403) {

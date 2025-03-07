@@ -680,33 +680,17 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                 </Box>
                             ))}
                             {rows.some(row => row.isHidden) && (
-                                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, mr: 6 }}>
-                                    <Button
-                                        onClick={handleAdd}
-                                        aria-haspopup="true"
-                                        sx={{
-                                            textTransform: 'none',
-                                            border: '1px solid rgba(80, 82, 178, 1)',
-                                            borderRadius: '4px',
-                                            padding: '9px 16px',
-                                            minWidth: 'auto',
-                                            '@media (max-width: 900px)': {
-                                                display: 'none'
-                                            }
-                                        }}
-                                    >
+                                <Box sx={{ display: 'flex', justifyContent: 'flex-start'}} onClick={handleAdd}>
                                         <Typography sx={{
-                                            marginRight: '0.5em',
                                             fontFamily: 'Nunito Sans',
                                             lineHeight: '22.4px',
-                                            fontSize: '16px',
-                                            textAlign: 'left',
-                                            fontWeight: '500',
-                                            color: '#5052B2'
+                                            fontSize: '14px',
+                                            fontWeight: '600',
+                                            color: 'rgba(80, 82, 178, 1)',
+                                            cursor: 'pointer'
                                         }}>
-                                            Add
+                                            + Add more
                                         </Typography>
-                                    </Button>
                                 </Box>
                             )}
                         </Box>
