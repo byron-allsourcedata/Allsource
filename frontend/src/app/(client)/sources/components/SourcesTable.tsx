@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, Suspense } from 'react';
-import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Chip, Drawer, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText } from '@mui/material';
+import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Chip, Drawer, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText, LinearProgress } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '../../../../axios/axiosInterceptorInstance';
@@ -76,14 +76,14 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
     const [showSlider, setShowSlider] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
     const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
     const dropdownOpen = Boolean(dropdownEl);
     const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(15);
     const [filterPopupOpen, setFilterPopupOpen] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const [loadingPage, setLoadingPage] = useState(false);
+    const [loaderForTable, setLoaderForTable] = useState(false);
     const [selectedFilters, setSelectedFilters] = useState<{ label: string, value: string }[]>([]);
     const [openPopup, setOpenPopup] = React.useState(false);
     const [creditsChargePopup, setCreditsChargePopup] = React.useState(false);
@@ -146,7 +146,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
 
 
     const handleDeleteSource = async () => {
-        setIsLoading(true);
+        setLoaderForTable(true);
         try {
             if (selectedRowData?.id) {
                 const response = await axiosInstance.delete(`/audience-sources/${selectedRowData.id}`);
@@ -160,7 +160,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
         } catch (error) {
             console.error("Error deleting source:", error);
         } finally {
-            setIsLoading(false);
+            setLoaderForTable(false);
             handleClosePopover();
             handleCloseConfirmDialog();
         }
@@ -178,7 +178,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
 
     const fetchEmployeesCompany = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
         try {
-            setIsLoading(true);
+            setLoadingPage(true);
             const accessToken = localStorage.getItem("token");
             if (!accessToken) {
                 router.push('/signin');
@@ -220,7 +220,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
                 }
             }
         } finally {
-            setIsLoading(false);
+            setLoadingPage(false);
         }
     }
 
@@ -240,10 +240,6 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
             rowsPerPage,
         });
     }, [orderBy, order, page, rowsPerPage, selectedFilters]);
-
-    if (isLoading) {
-        return <CustomizedProgressBar />;
-    }
 
     const centerContainerStyles = {
         display: 'flex',
@@ -265,7 +261,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
     };
 
     const handleDownload = async () => {
-        setLoading(true);
+        setLoadingPage(true);
         try {
 
             // let url = `/company/download-employees?company_id=${companyId}`;
@@ -329,7 +325,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
         } catch (error) {
             console.error('Error during the download process:', error);
         } finally {
-            setLoading(false);
+            setLoadingPage(false);
         }
     };
 
@@ -396,7 +392,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
         const url = `/company`;
 
         try {
-            setIsLoading(true)
+            setLoaderForTable(true)
             sessionStorage.removeItem('filters-employee')
             const response = await axiosInstance.get(url);
             const [leads, count] = response.data;
@@ -409,7 +405,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
             console.error('Error fetching leads:', error);
         }
         finally {
-            setIsLoading(false)
+            setLoaderForTable(false)
         }
     };
 
@@ -467,7 +463,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
 
     return (
         <>
-            {loading && (
+            {loadingPage && (
                 <CustomizedProgressBar />
             )}
             <Box sx={{
@@ -651,6 +647,8 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
                                                     ))}
                                                 </TableRow>
                                             </TableHead>
+                                            {loaderForTable && 
+                                                <LinearProgress variant="determinate" /> }
                                             <TableBody>
                                                 {data.map((row: any) => {
                                                     const progress = sourceProgress[row.id];
