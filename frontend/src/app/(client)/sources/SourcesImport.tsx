@@ -36,8 +36,8 @@ interface Row {
     id: number;
     type: string;
     value: string;
-    selectValue?: string;
-    canDelete?: boolean;
+    canDelete: boolean;
+    isHidden: boolean
 }
 
 const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
@@ -59,31 +59,27 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
     const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const [sourceType, setSourceType] = useState<string>("");
-    const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(null)
-    const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
     const [sourceName, setSourceName] = useState<string>("");
     const [fileSizeStr, setFileSizeStr] = useState<string>("");
     const [fileName, setFileName] = useState<string>("");
     const [fileUrl, setFileUrl] = useState<string>("");
     const [sourceMethod, setSourceMethod] = useState<number>(0);
     const [dragActive, setDragActive] = useState(false);
-    const [fileSizeError, setFileSizeError] = useState(false);
+    const [emailNotSubstitution, setEmailNotSubstitution] = useState(false);
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
     const [headersinCSV, setHeadersinCSV] = useState<string[]>([]);
 
-    const deleteOpen = Boolean(deleteAnchorEl);
-    const deleteId = deleteOpen ? 'delete-popover' : undefined;
     const defaultRows: Row[] = [
-        { id: 1, type: 'Email', value: '', canDelete: false },
-        { id: 2, type: 'Phone number', value: '', canDelete: true },
-        { id: 3, type: 'Last Name', value: '', canDelete: true },
-        { id: 4, type: 'First Name', value: '', canDelete: true },
-        { id: 5, type: 'Gender', value: '', canDelete: true },
-        { id: 6, type: 'Age', value: '', canDelete: true },
-        { id: 7, type: 'Order Amount', value: '', canDelete: true },
-        { id: 8, type: 'State', value: '', canDelete: true },
-        { id: 9, type: 'City', value: '', canDelete: true },
-        { id: 10, type: 'Zip Code', value: '', canDelete: true }
+        { id: 1, type: 'Email', value: '', canDelete: false, isHidden: false },
+        { id: 2, type: 'Phone number', value: '', canDelete: true, isHidden: false },
+        { id: 3, type: 'Last Name', value: '', canDelete: true, isHidden: false },
+        { id: 4, type: 'First Name', value: '', canDelete: true, isHidden: false },
+        { id: 5, type: 'Gender', value: '', canDelete: true, isHidden: false },
+        { id: 6, type: 'Age', value: '', canDelete: true, isHidden: false },
+        { id: 7, type: 'Order Amount', value: '', canDelete: true, isHidden: false },
+        { id: 8, type: 'State', value: '', canDelete: true, isHidden: false },
+        { id: 9, type: 'City', value: '', canDelete: true, isHidden: false },
+        { id: 10, type: 'Zip Code', value: '', canDelete: true, isHidden: false }
     ];
     const [rows, setRows] = useState<Row[]>(defaultRows);
 
@@ -93,43 +89,28 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
         ));
     };
 
-    const handleDeletePopoverOpen = (event: React.MouseEvent<HTMLElement>, id: number) => {
-        setDeleteAnchorEl(event.currentTarget);
-        setSelectedRowId(id);
-    };
-
     const handleChangeSourceType = (event: SelectChangeEvent<string>) => {
         setSourceType(event.target.value);
     };
 
-    const handleDeleteClose = () => {
-        setDeleteAnchorEl(null);
-        setSelectedRowId(null);
-        if (deleteAnchorEl) {
-            deleteAnchorEl.focus();
-        }
+
+    const handleDelete = (id: number) => {
+        setRows(rows.map(row => (row.id === id ? { ...row, isHidden: true } : row)));
     };
 
-
-    const handleDelete = () => {
-        if (selectedRowId) {
-            setRows(rows.filter(row => row.id !== selectedRowId));
-            handleDeleteClose();
+    const handleAdd = () => {
+        const hiddenRowIndex = rows.findIndex(row => row.isHidden);
+        if (hiddenRowIndex !== -1) {
+            const updatedRows = [...rows];
+            updatedRows[hiddenRowIndex].isHidden = false;
+            setRows(updatedRows);
         }
     };
 
     const handleDeleteFile = () => {
         setFile(null);
         setFileName('')
-        setFileSizeStr('')
     };
-
-    const processDownloadFile = (uploadedFile: File) => {
-        setFile(uploadedFile)
-        const fileSize = parseFloat((uploadedFile.size / (1024 * 1024)).toFixed(2))
-        setFileSizeStr(fileSize + " MB")
-        setFileName(uploadedFile.name)
-    }
 
     const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault();
@@ -144,18 +125,17 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
     const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault();
         setDragActive(false);
-        setFileSizeError(false)
 
         const uploadedFile = event.dataTransfer.files[0];
         if (uploadedFile) {
-            processDownloadFile(uploadedFile);
+            handleFileUpload(uploadedFile)
         }
     };
 
     const handleSumbit = async () => {
         setLoading(true)
 
-        const rowsToSubmit = rows.map(({ id, canDelete, ...rest }) => rest);
+        const rowsToSubmit = rows.map(({ id, canDelete, isHidden, ...rest }) => rest);
 
         const newSource = {
             source_type: sourceType,
@@ -203,10 +183,16 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
         }
     };
 
-    const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
+    const handleFileUpload = async (file: File) => {
         if (file) {
-            
+
+            const fileSize = parseFloat((file.size / (1024 * 1024)).toFixed(2))
+            if (fileSize > 100) {
+                handleDeleteFile()
+                showErrorToast("The uploaded CSV file exceeds the 100MB limit. Please reduce the file size and try again.")
+                return
+            }
+
             const response = await fetch("/api/upload", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -243,7 +229,9 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
             xhr.setRequestHeader("Content-Type", file.type);
             xhr.send(file);
 
-            processDownloadFile(file);
+            setFile(file)
+            setFileSizeStr(fileSize + " MB")
+            setFileName(file.name)
 
             const reader = new FileReader();
 
@@ -471,9 +459,12 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                         type="file"
                                         hidden
                                         accept=".csv"
-                                        onChange={(event: any) => {
-                                            handleFileUpload(event);
-                                            event.target.value = null;
+                                        onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                            const file = event.target.files?.[0];
+                                            if (file) {
+                                                handleFileUpload(file);
+                                            }
+                                            event.target.value = "";
                                         }}
                                     />
                                 </Box>
@@ -540,7 +531,31 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                 <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px"}}>Data Maping</Typography>
                                 <Typography sx={{fontFamily: "Nunito Sans", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Map your Field from your Source to the destination data base.</Typography>
                             </Box>
-                            {rows?.map((row, index) => (
+                            <Grid container alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' }, marginBottom: '14px' }}>
+                                <Grid item xs="auto" sm={2} sx={{
+                                    textAlign: 'center',
+                                    '@media (max-width:599px)': {
+                                        minWidth: '196px'
+                                    }
+                                }}>
+                                    <Image src='/logo.svg' alt='logo' height={22} width={34} />
+                                </Grid>
+                                <Grid item xs="auto" sm={0.5} sx={{
+                                    '@media (max-width:599px)': {
+                                        minWidth: '50px'
+                                    }
+                                }}>&nbsp;</Grid>
+                                <Grid item xs="auto" sm={2} sx={{
+                                    textAlign: 'center',
+                                    '@media (max-width:599px)': {
+                                        minWidth: '196px'
+                                    }
+                                }}>
+                                    <Image src='/csv-icon.svg' alt='scv' height={20} width={24} />
+                                </Grid>
+                                <Grid item xs="auto" sm={1}>&nbsp;</Grid>
+                            </Grid>
+                            {rows?.filter(row => !row.isHidden).map((row, index) => (
                                 <Box key={index}>
                                     <Grid container spacing={2} alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' } }}>
                                         {/* Left Input Field */}
@@ -557,7 +572,7 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                                         color: 'rgba(17, 17, 19, 0.60)',
                                                         top: '-5px',
                                                         '&.Mui-focused': {
-                                                            color: '#0000FF',
+                                                            color: 'rgba(80, 82, 178, 1)',
                                                             top: 0
                                                         },
                                                         '&.MuiInputLabel-shrink': {
@@ -584,7 +599,7 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                                                 borderColor: '#A3B0C2',
                                                             },
                                                             '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                borderColor: '#0000FF',
+                                                                borderColor: 'rgba(80, 82, 178, 1)',
                                                             },
                                                         },
                                                         '&+.MuiFormHelperText-root': {
@@ -597,31 +612,12 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
 
                                         {/* Middle Icon Toggle (Right Arrow or Close Icon) */}
                                         <Grid item xs="auto" sm={0.5} container justifyContent="center">
-                                            {row.selectValue !== undefined ? (
-                                                row.selectValue ? (
-                                                    <Image
-                                                        src='/chevron-right-purple.svg'
-                                                        alt='chevron-right-purple'
-                                                        height={18}
-                                                        width={18} // Adjust the size as needed
-                                                    />
-
-                                                ) : (
-                                                    <Image
-                                                        src='/close-circle.svg'
-                                                        alt='close-circle'
-                                                        height={18}
-                                                        width={18} // Adjust the size as needed
-                                                    />
-                                                )
-                                            ) : (
-                                                <Image
-                                                    src='/chevron-right-purple.svg'
-                                                    alt='chevron-right-purple'
-                                                    height={18}
-                                                    width={18} // Adjust the size as needed
-                                                /> // For the first two rows, always show the right arrow
-                                            )}
+                                            <Image
+                                                src='/chevron-right-purple.svg'
+                                                alt='chevron-right-purple'
+                                                height={18}
+                                                width={18}
+                                            /> 
                                         </Grid>
                                         
                                         <Grid item xs="auto" sm={2}>
@@ -651,7 +647,7 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                                                 borderColor: '#A3B0C2',
                                                             },
                                                             '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                borderColor: '#0000FF',
+                                                                borderColor: 'rgba(80, 82, 178, 1)',
                                                             },
                                                         },
                                                     }}
@@ -669,7 +665,7 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                         <Grid item xs="auto" sm={0.5} container justifyContent="center">
                                             {row.canDelete && (
                                                 <>
-                                                    <IconButton onClick={(event) => handleDeletePopoverOpen(event, row.id)}>
+                                                    <IconButton onClick={() => handleDelete(row.id)}>
                                                         <Image
                                                             src='/trash-icon-filled.svg'
                                                             alt='trash-icon-filled'
@@ -677,83 +673,42 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                                             width={18}
                                                         />
                                                     </IconButton>
-                                                    <Popover
-                                                        id={deleteId}
-                                                        open={deleteOpen}
-                                                        anchorEl={deleteAnchorEl}
-                                                        onClose={handleDeleteClose}
-                                                        anchorOrigin={{
-                                                            vertical: 'bottom',
-                                                            horizontal: 'center',
-                                                        }}
-                                                        transformOrigin={{
-                                                            vertical: 'top',
-                                                            horizontal: 'right',
-                                                        }}
-                                                        disableEnforceFocus
-                                                    >
-                                                        <Box sx={{
-                                                            minWidth: '254px',
-                                                            borderRadius: '4px',
-                                                            border: '0.2px solid #afafaf',
-                                                            background: '#fff',
-                                                            boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
-                                                            padding: '16px 21px 16px 16px'
-                                                        }}>
-                                                            <Typography variant="body1" className='first-sub-title' sx={{
-                                                                paddingBottom: '12px'
-                                                            }}>Confirm Deletion</Typography>
-                                                            <Typography variant="body2" sx={{
-                                                                color: '#5f6368',
-                                                                fontFamily: 'Roboto',
-                                                                fontSize: '12px',
-                                                                fontWeight: '400',
-                                                                lineHeight: '16px',
-                                                                paddingBottom: '26px'
-                                                            }}>
-                                                                Are you sure you want to delete this <br /> map data?
-                                                            </Typography>
-                                                            <Box display="flex" justifyContent="flex-end" mt={2}>
-                                                                <Button onClick={handleDeleteClose} sx={{
-                                                                    borderRadius: '4px',
-                                                                    border: '1px solid #5052b2',
-                                                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                                                    color: '#5052b2',
-                                                                    fontFamily: 'Nunito Sans',
-                                                                    fontSize: '14px',
-                                                                    fontWeight: '600',
-                                                                    lineHeight: '20px',
-                                                                    marginRight: '16px',
-                                                                    textTransform: 'none'
-                                                                }}>
-                                                                    Clear
-                                                                </Button>
-                                                                <Button onClick={handleDelete} sx={{
-                                                                    background: '#5052B2',
-                                                                    borderRadius: '4px',
-                                                                    border: '1px solid #5052b2',
-                                                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                                                    color: '#fff',
-                                                                    fontFamily: 'Nunito Sans',
-                                                                    fontSize: '14px',
-                                                                    fontWeight: '600',
-                                                                    lineHeight: '20px',
-                                                                    textTransform: 'none',
-                                                                    '&:hover': {
-                                                                        color: '#5052B2'
-                                                                    }
-                                                                }}>
-                                                                    Delete
-                                                                </Button>
-                                                            </Box>
-                                                        </Box>
-                                                    </Popover>
                                                 </>
                                             )}
                                         </Grid>
                                     </Grid>
                                 </Box>
                             ))}
+                            {rows.some(row => row.isHidden) && (
+                                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, mr: 6 }}>
+                                    <Button
+                                        onClick={handleAdd}
+                                        aria-haspopup="true"
+                                        sx={{
+                                            textTransform: 'none',
+                                            border: '1px solid rgba(80, 82, 178, 1)',
+                                            borderRadius: '4px',
+                                            padding: '9px 16px',
+                                            minWidth: 'auto',
+                                            '@media (max-width: 900px)': {
+                                                display: 'none'
+                                            }
+                                        }}
+                                    >
+                                        <Typography sx={{
+                                            marginRight: '0.5em',
+                                            fontFamily: 'Nunito Sans',
+                                            lineHeight: '22.4px',
+                                            fontSize: '16px',
+                                            textAlign: 'left',
+                                            fontWeight: '500',
+                                            color: '#5052B2'
+                                        }}>
+                                            Add
+                                        </Typography>
+                                    </Button>
+                                </Box>
+                            )}
                         </Box>
                         <Box sx={{display: sourceMethod !== 0 && file ? "flex" : "none", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
                             <Box sx={{display: "flex", alignItems: "center", gap: 2}}>
@@ -826,7 +781,7 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                         Cancel
                                     </Typography>
                                 </Button> 
-                                <Button variant="contained" onClick={handleSumbit} disabled={sourceName.trim() === ""} sx={{
+                                <Button variant="contained" onClick={handleSumbit} disabled={sourceName.trim() === "" || rows[0].value === "None" || rows[0].value === ''} sx={{
                                     backgroundColor: "rgba(80, 82, 178, 1)",
                                     width: "120px",
                                     height: "40px",

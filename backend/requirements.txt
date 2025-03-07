@@ -20,6 +20,7 @@ bs4==0.0.2
 cachetools==5.3.3
 certifi==2024.6.2
 cffi==1.17.1
+chardet==5.2.0
 charset-normalizer==3.3.2
 click==8.1.7
 comtypes==1.4.8

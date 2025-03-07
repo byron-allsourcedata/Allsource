@@ -10,7 +10,7 @@ interface Data {
 interface SSEContextType {
   data: Data | null;
   newNotification: boolean;
-  NotificationData : { id: number; text: string } | null;
+  NotificationData: { id: number; text: string } | null;
   sourceProgress: Record<string, { total: number; processed: number }>
 }
 
@@ -18,12 +18,13 @@ interface SSEProviderProps {
   children: ReactNode;
 }
 
+
 const SSEContext = createContext<SSEContextType | undefined>(undefined);
 
 export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   const [data, setData] = useState<Data | null>(null);
   const [newNotification, setNewNotifications] = useState(false);
-  const [NotificationData , setLatestNotification] = useState<{ id: number; text: string } | null>(null);
+  const [NotificationData, setLatestNotification] = useState<{ id: number; text: string } | null>(null);
   const [sourceProgress, setSourceProgress] = useState<Record<string, { total: number; processed: number }>>({});
 
   const updateSourceProgress = (source_id: string, total: number, processed: number) => {
@@ -33,11 +34,12 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
     }));
   };
 
-  const url = process.env.NEXT_PUBLIC_API_BASE_URL;
   const handleNotificationDismiss = () => {
     setNewNotifications(false);
     setLatestNotification(null);
   };
+
+  const url = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   if (!url) {
     throw new Error("NEXT_PUBLIC_API_BASE_URL is not defined");
@@ -76,8 +78,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
         else if(data.status == 'PIXEL_CODE_INSTALLED' && data.need_reload_page) {
           showToast("Pixel code is installed successfully!");
         }
-        else if (window.location.pathname === "/sources") {
-          console.log(data);
+        else if (data.status == 'SOURCE_PROCESSING_PROGRESS') {
           const { total, processed, source_id } = data.data;
           if (!source_id) {
               console.error("source_id is undefined");
@@ -87,7 +88,6 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
           updateSourceProgress(source_id, total, processed);
       }
         else {
-          showToast("Pixel code is installed successfully!");
           if (data.percent) {
             const meItem = sessionStorage.getItem('me');
             const meData = meItem ? JSON.parse(meItem) : {};
@@ -95,7 +95,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
             sessionStorage.setItem('me', JSON.stringify(meData));
           }
           setData(data);
-          // window.location.reload();
+          window.location.reload();
         }
       }
     };
