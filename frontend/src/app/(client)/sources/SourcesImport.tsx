@@ -139,7 +139,7 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
 
         const uploadedFile = event.dataTransfer.files[0];
         if (uploadedFile) {
-            processDownloadFile(uploadedFile);
+            handleFileUpload(uploadedFile)
         }
     };
 
@@ -194,8 +194,7 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
         }
     };
 
-    const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
+    const handleFileUpload = async (file: File) => {
         if (file) {
             
             const response = await fetch("/api/upload", {
@@ -462,9 +461,12 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                         type="file"
                                         hidden
                                         accept=".csv"
-                                        onChange={(event: any) => {
-                                            handleFileUpload(event);
-                                            event.target.value = null;
+                                        onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                            const file = event.target.files?.[0];
+                                            if (file) {
+                                                handleFileUpload(file);
+                                            }
+                                            event.target.value = "";
                                         }}
                                     />
                                 </Box>
@@ -572,7 +574,7 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                                         color: 'rgba(17, 17, 19, 0.60)',
                                                         top: '-5px',
                                                         '&.Mui-focused': {
-                                                            color: '#0000FF',
+                                                            color: 'rgba(80, 82, 178, 1)',
                                                             top: 0
                                                         },
                                                         '&.MuiInputLabel-shrink': {
@@ -599,7 +601,7 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                                                 borderColor: '#A3B0C2',
                                                             },
                                                             '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                borderColor: '#0000FF',
+                                                                borderColor: 'rgba(80, 82, 178, 1)',
                                                             },
                                                         },
                                                         '&+.MuiFormHelperText-root': {
@@ -647,7 +649,7 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                                                 borderColor: '#A3B0C2',
                                                             },
                                                             '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                borderColor: '#0000FF',
+                                                                borderColor: 'rgba(80, 82, 178, 1)',
                                                             },
                                                         },
                                                     }}
