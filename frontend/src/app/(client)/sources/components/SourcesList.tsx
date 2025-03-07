@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Chip, Drawer, List, ListItemText, ListItemButton, Popover } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '../../../../axios/axiosInterceptorInstance';
@@ -38,7 +38,6 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
     const { hasNotification } = useNotification();
     const [data, setData] = useState<any[]>([]);
     const [count_companies, setCount] = useState<number | null>(null);
-    const [progress, setProgress] = useState<any>(null);
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
     const [status, setStatus] = useState<string | null>(null);
@@ -59,6 +58,7 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [selectedJobTitle, setSelectedJobTitle] = React.useState<string | null>(null);
     const [employeeId, setEmployeeId] = useState<number | null>(null)
+    const [id, setId] = useState<string>('')
     const { sourceProgress } = useSSE();
 
 
@@ -176,7 +176,6 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
             .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
             .join(' ');
     }
-
 
     return (
         <>
@@ -364,7 +363,10 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
                                         Number of Customers
                                     </Typography>
                                     <Typography variant="subtitle1" className="table-data">
-                                        {progress?.total ?? <ThreeDotsLoader />}
+                                    {createdSource?.id && sourceProgress[createdSource?.id]?.total 
+                                        ? <ThreeDotsLoader />
+                                        : "--"
+                                    }
                                     </Typography>
                                 </Box>
                                 <Box>
@@ -376,7 +378,10 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
                                         Matched Records
                                     </Typography>
                                     <Typography variant="subtitle1" className="table-data">
-                                        <ProgressBar progress={progress} />
+                                        {createdSource?.id && sourceProgress[createdSource?.id]?.processed 
+                                        ? <ProgressBar progress={sourceProgress[id]} />
+                                        : "--"
+                                    }
                                     </Typography>
                                 </Box>
                             </Box>

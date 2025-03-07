@@ -11,6 +11,7 @@ import BusinessIcon from '@mui/icons-material/Business';
 import FeaturedPlayListIcon from '@mui/icons-material/FeaturedPlayList';
 import SettingsIcon from '@mui/icons-material/Settings';
 import AccountBoxIcon from '@mui/icons-material/AccountBox';
+import AllInboxIcon from '@mui/icons-material/AllInbox';
 import Image from 'next/image';
 import { AxiosError } from 'axios';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
@@ -281,6 +282,12 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                         <SpaceDashboardIcon />
                     </ListItemIcon>
                     <ListItemText primary="Dashboard" />
+                </ListItem>
+                <ListItem button onClick={() => handleNavigation('/sources')} sx={isActive('/sources') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                        <AllInboxIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Sources" />
                 </ListItem>
                 <ListItem button onClick={() => handleNavigation('/leads')} sx={isActive('/leads') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>

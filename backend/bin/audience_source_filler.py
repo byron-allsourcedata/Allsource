@@ -27,10 +27,10 @@ from config.rmq_connection import RabbitMQConnection
 
 load_dotenv()
 
-AUDIENCE_SOURCES_MATCHING= 'aud_sources_matching'
-AUDIENCE_SOURCES_READER= 'aud_sources_reader'
+AUDIENCE_SOURCES_READER = 'aud_sources_files'
+AUDIENCE_SOURCES_MATCHING = 'aud_sources_matching'
 S3_BUCKET_NAME = "maximiz-data"
-SELECTED_ROW_COUNT = 5000
+SELECTED_ROW_COUNT = 10
 
 
 async def publish_rabbitmq_message(channel, queue_name: str, message_body: dict):
@@ -131,20 +131,18 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, s3_s
             for row in islice(csv_reader, SELECTED_ROW_COUNT):
                 email = row.get(email_field)
                 batch_rows.append(email)
-                processed_rows += 1
 
-
+            persons = [{"email": email} for email in batch_rows]
             message_body = {
                 "type": "email",
                 "data": {
-                    "persons": [{'email': batch_rows}],
+                    "persons": persons,
                     "source_id": source_id,
                 },
             }
 
             await publish_rabbitmq_message(channel=channel, queue_name=AUDIENCE_SOURCES_MATCHING, message_body=message_body)
             send_rows += SELECTED_ROW_COUNT
-
         
         db_session.commit()
 
@@ -154,48 +152,6 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, s3_s
         db_session.rollback()
         logging.error(f"Error processing message: {e}", exc_info=True)
         await message.nack()
-
-
-# async def aud_sources_matching(message: IncomingMessage, db_session: Session):
-    try:
-        message_body = json.loads(message.body)
-        data = message_body.get('data')
-        if not data:
-            logging.warning("Message data is missing.")
-            await message.ack()
-            return
-        
-        email = data.get("email")
-        row = data.get("row")
-        source_id = data.get("source_id")
-
-        logging.info(f"Processing AudienceSourceMatching with ID: {source_id}")
-
-        email_record = db_session.query(FiveXFiveEmails).filter_by(email=email).first()
-        if email_record:
-            user = db_session.query(FiveXFiveUsersEmails.user_id).filter_by(email_id=email_record.id).first()
-
-            matched_person = AudienceSourcesMatchedPerson(
-                source_id=source_id,
-                five_x_five_user_id=user.user_id,
-                mapped_fields=json.dumps(row),
-            )
-            db_session.add(matched_person)
-
-            audience_source = db_session.query(AudienceSource).filter_by(id=source_id).first()
-            if audience_source:
-                audience_source.matched_records += 1
-                db_session.flush()
-        
-        db_session.commit()
-
-        await message.ack()
-
-    except Exception as e:
-        db_session.rollback()
-        logging.error(f"Error processing matching: {e}", exc_info=True)
-        await message.nack()
-
 
 def extract_key_from_url(s3_url: str):
     parsed_url = s3_url.split("amazonaws.com/", 1)
@@ -251,12 +207,6 @@ async def main():
             durable=True,
         )
         await reader_queue.consume(functools.partial(aud_sources_reader, db_session=db_session, s3_session=s3_session, channel=channel))
-
-        # matching_queue = await channel.declare_queue(
-        #     name=AUDIENCE_SOURCES_MATCHING,
-        #     durable=True,
-        # )
-        # await matching_queue.consume(functools.partial(aud_sources_matching, db_session=db_session))
 
         await asyncio.Future()
 
