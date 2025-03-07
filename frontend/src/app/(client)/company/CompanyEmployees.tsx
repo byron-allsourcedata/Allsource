@@ -587,9 +587,9 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                 <CustomizedProgressBar/>
             )}
             <Box sx={{
-                display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
+                display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',pr:3,
                 '@media (max-width: 900px)': {
-                    paddingRight: 0,
+                    paddingRight: 2,
                     minHeight: '100vh'
 
                 }
