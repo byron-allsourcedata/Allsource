@@ -338,7 +338,7 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource, setSources }) 
                                         {createdSource?.id && (
                                             sourceProgress[createdSource.id]?.processed ===  sourceProgress[createdSource.id]?.total 
                                             ? sourceProgress[createdSource.id]?.matched
-                                            : <ProgressBar progress={sourceProgress[id]} />
+                                            : <ProgressBar progress={sourceProgress[createdSource.id]} />
                                         )}
                                     </Typography>
                                 </Box>
