@@ -531,6 +531,30 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                 <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px"}}>Data Maping</Typography>
                                 <Typography sx={{fontFamily: "Nunito Sans", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Map your Field from your Source to the destination data base.</Typography>
                             </Box>
+                            <Grid container alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' }, marginBottom: '14px' }}>
+                                <Grid item xs="auto" sm={2} sx={{
+                                    textAlign: 'center',
+                                    '@media (max-width:599px)': {
+                                        minWidth: '196px'
+                                    }
+                                }}>
+                                    <Image src='/logo.svg' alt='logo' height={22} width={34} />
+                                </Grid>
+                                <Grid item xs="auto" sm={0.5} sx={{
+                                    '@media (max-width:599px)': {
+                                        minWidth: '50px'
+                                    }
+                                }}>&nbsp;</Grid>
+                                <Grid item xs="auto" sm={2} sx={{
+                                    textAlign: 'center',
+                                    '@media (max-width:599px)': {
+                                        minWidth: '196px'
+                                    }
+                                }}>
+                                    <Image src='/csv-icon.png' alt='scv' height={20} width={24} />
+                                </Grid>
+                                <Grid item xs="auto" sm={1}>&nbsp;</Grid>
+                            </Grid>
                             {rows?.filter(row => !row.isHidden).map((row, index) => (
                                 <Box key={index}>
                                     <Grid container spacing={2} alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' } }}>
