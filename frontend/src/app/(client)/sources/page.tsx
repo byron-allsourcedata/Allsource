@@ -666,7 +666,7 @@ const Sources: React.FC = () => {
                                 }
                             }}>
                                 {newSource && 
-                                    <SourcesList createdSource={createdSource}/>}
+                                    <SourcesList createdSource={createdSource} setSources={setSources}/>}
                                 {!newSource &&  
                                     <SourcesTable setStatus={setStatus} status={status} setData={setData} data={data} setSources={setSources}/>}
                                 {showSlider && <Slider />}

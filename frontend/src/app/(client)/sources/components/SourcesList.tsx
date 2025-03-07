@@ -9,6 +9,7 @@ import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import ThreeDotsLoader from './ThreeDotsLoader';
 import { useNotification } from '@/context/NotificationContext';
 import { useSSE } from '../../../../context/SSEContext';
+import { MoreVert } from '@mui/icons-material';
 import ProgressBar from './ProgressLoader';
 
 interface Source {
@@ -25,6 +26,7 @@ interface Source {
 
 interface SourcesListProps {
     createdSource: Source | null
+    setSources: (action: boolean) => void 
 }
 
 interface RenderCeil {
@@ -33,7 +35,7 @@ interface RenderCeil {
 }
 
 
-const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
+const SourcesList: React.FC<SourcesListProps> = ({ createdSource, setSources }) => {
     const router = useRouter();
     const { hasNotification } = useNotification();
     const [data, setData] = useState<any[]>([]);
@@ -218,45 +220,29 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
                         }
                     }}>
                         <Box
-                            key={1}
                             sx={{
                                 display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
                                 padding: 2,
                                 border: "1px solid #e0e0e0",
                                 borderRadius: 2,
-                                backgroundColor: "#fff",
-                                mb: 3,
-                                '@media (max-width: 600px)': { flexDirection: 'column', justifyContent: 'space-between', width: '100%', alignItems: 'flex-start', gap:2 }
+                                '@media (max-width: 600px)': {
+                                    alignItems: "start"
+                                }
                             }}
                             >
                             <Box
                                 sx={{
                                     display: "flex",
                                     gap: 5,
+                                    width: "100%",
+                                    justifyContent: "space-between",
                                     "@media (max-width: 600px)": {
                                     flexDirection: "column",
-                                    justifyContent: "space-between",
-                                    width: "100%",
-                                    gap: 2,
+                                    gap: 2
                                     },
                                 }}
                                 >
-                            <Box
-                                sx={{
-                                display: "flex",
-                                gap: 6,
-                                "@media (max-width: 900px)": { gap: 3 },
-                                "@media (max-width: 600px)": {
-                                    justifyContent: "space-between",
-                                    width: "100%",
-                                    display: "flex",
-                                    pr: 0.75,
-                                },
-                                }}
-                            >
-                                <Box>
+                                <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
                                     <Typography variant="body2" className="table-heading">
                                         Name
                                     </Typography>
@@ -264,7 +250,7 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
                                         {createdSource?.name}
                                     </Typography>
                                 </Box>
-                                <Box>
+                                <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
                                     <Typography
                                         variant="body2"
                                         className="table-heading"
@@ -276,21 +262,8 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
                                         {createdSource?.source_origin}
                                     </Typography>
                                 </Box>
-                            </Box>
-                            <Box
-                                sx={{
-                                display: "flex",
-                                gap: 6,
-                                "@media (max-width: 900px)": { gap: 3 },
-                                "@media (max-width: 600px)": {
-                                    justifyContent: "space-between",
-                                    width: "100%",
-                                    display: "flex",
-                                    pr: 1.5,
-                                },
-                                }}
-                            >
-                                <Box>
+
+                                <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
                                     <Typography variant="body2" className="table-heading">
                                         Type
                                     </Typography>
@@ -298,7 +271,7 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
                                         {createdSource?.source_type}
                                     </Typography>
                                 </Box>
-                                <Box>
+                                <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
                                     <Typography
                                         variant="body2"
                                         className="table-heading"
@@ -310,21 +283,9 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
                                         {createdSource?.created_by}
                                     </Typography>
                                 </Box>
-                            </Box>
-                            <Box
-                                sx={{
-                                display: "flex",
-                                gap: 6,
-                                "@media (max-width: 900px)": { gap: 3 },
-                                "@media (max-width: 600px)": {
-                                    justifyContent: "space-between",
-                                    width: "100%",
-                                    display: "flex",
-                                    pr: 1.5,
-                                },
-                                }}
-                            >
-                                <Box>
+
+
+                                <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
                                     <Typography variant="body2" className="table-heading">
                                         Created Date
                                     </Typography>
@@ -332,7 +293,7 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
                                         {dayjs(createdSource?.created_at).isValid() ? dayjs(createdSource?.created_at).format('MMM D, YYYY') : '--'}
                                     </Typography>
                                 </Box>
-                                <Box>
+                                <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
                                     <Typography
                                         variant="body2"
                                         className="table-heading"
@@ -344,21 +305,8 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
                                         {dayjs(createdSource?.updated_at).isValid() ? dayjs(createdSource?.updated_at).format('MMM D, YYYY') : '--'}
                                     </Typography>
                                 </Box>
-                            </Box>
-                            <Box
-                                sx={{
-                                display: "flex",
-                                gap: 6,
-                                "@media (max-width: 900px)": { gap: 3 },
-                                "@media (max-width: 600px)": {
-                                    justifyContent: "space-between",
-                                    width: "100%",
-                                    display: "flex",
-                                    pr: 1.5,
-                                },
-                                }}
-                            >
-                                <Box>
+
+                                <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
                                     <Typography variant="body2" className="table-heading">
                                         Number of Customers
                                     </Typography>
@@ -369,7 +317,7 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
                                     }
                                     </Typography>
                                 </Box>
-                                <Box>
+                                <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
                                     <Typography
                                         variant="body2"
                                         className="table-heading"
@@ -384,9 +332,51 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
                                     }
                                     </Typography>
                                 </Box>
+
+                                <IconButton onClick={(event) => handleOpenPopover(event)} sx={{ ':hover': { backgroundColor: 'transparent' }}} >
+                                    <MoreVert sx={{color: "rgba(32, 33, 36, 1)"}} height={8} width={24}/>
+                                </IconButton>
                             </Box>
+
                         </Box>
-                    </Box>
+                        <Box sx={{display: "flex", justifyContent: "end", gap: 2, mt: 2, alignItems: "center"}}>
+                            <Button
+                                variant="outlined"
+                                onClick={() => setSources(false)}
+                                sx={{
+                                    height: '40px',
+                                    borderRadius: '4px',
+                                    textTransform: 'none',
+                                    fontSize: '14px',
+                                    lineHeight: "19.6px",
+                                    fontWeight: '500',
+                                    color: '#5052B2',
+                                    borderColor: '#5052B2',
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(80, 82, 178, 0.1)',
+                                        borderColor: '#5052B2',
+                                    },
+                                }}
+                            >
+                                Add Another Source
+                            </Button>
+                            <Button
+                                variant="contained"
+                                onClick={() => router.push(`/lookalikes/${createdSource?.id}/builder`)}
+                                className='second-sub-title'
+                                sx={{
+                                    backgroundColor: 'rgba(80, 82, 178, 1)',
+                                    textTransform: 'none',
+                                    padding: '10px 24px',
+                                    color: '#fff !important',
+                                    ':hover': {
+                                        backgroundColor: 'rgba(80, 82, 178, 1)'
+                                    }
+                                }}
+                            >
+                                Create Lookalike
+                            </Button>
+                        </Box>
                     </Box>
                     <Popover
                         open={isOpen}
@@ -413,6 +403,7 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource }) => {
                                 </ListItemButton>
                                 <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
                                         handleClosePopover()
+                                        router.push(`/lookalikes/${createdSource?.id}/builder`)
                                     }}>
                                 <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Remove"/>
                                 </ListItemButton>
