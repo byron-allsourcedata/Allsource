@@ -39,7 +39,7 @@ class AudienceSourcesPersistence:
             )
                 .join(Users, Users.id == AudienceSource.created_by_user_id)
                 .filter(AudienceSource.user_id == user_id)
-                .order_by(AudienceSource.created_at.asc())
+                .order_by(AudienceSource.created_at.desc())
         )
 
         sort_options = {

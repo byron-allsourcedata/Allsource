@@ -2,7 +2,9 @@ import React from 'react';
 import { LinearProgress } from '@mui/material';
 
 const ProgressBar = ({ progress }: any) => {
-  const percentage = (progress?.processed / progress?.total) * 100;
+  const percentage = progress?.processed 
+  ? (progress.processed / progress.total) * 100 
+  : 0; 
 
   return (
     <div>

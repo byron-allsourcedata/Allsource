@@ -94,18 +94,18 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
                 )
                 db_session.add(matched_person)
 
-            total_records, processed_records = db_session.execute(
+            total_records, processed_records, matched_records = db_session.execute(
                 update(AudienceSource)
                 .where(AudienceSource.id == source_id)
                 .values(
                     matched_records=AudienceSource.matched_records + len(five_x_five_user_ids),
-                    processed_records=AudienceSource.processed_records + len(emails)
+                    processed_records=AudienceSource.processed_records + len(persons)
                 )
-                .returning(AudienceSource.total_records, AudienceSource.processed_records)
+                .returning(AudienceSource.total_records, AudienceSource.processed_records, AudienceSource.matched_records)
             ).fetchone()
             
             db_session.flush()
-            if processed_records == total_records:
+            if processed_records >= total_records:
                 db_session.execute(
                     update(AudienceSource)
                     .where(AudienceSource.id == source_id)
@@ -113,7 +113,7 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
                 )
 
             db_session.commit()
-            await send_sse(connection, user_id, {"source_id": source_id, "total": total_records, "processed": processed_records})
+            await send_sse(connection, user_id, {"source_id": source_id, "total": total_records, "processed": processed_records, "matched": matched_records})
             
         logging.info(f"ack")
         await message.ack()

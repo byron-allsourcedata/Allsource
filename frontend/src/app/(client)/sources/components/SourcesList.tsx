@@ -311,10 +311,15 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource, setSources }) 
                                         Number of Customers
                                     </Typography>
                                     <Typography variant="subtitle1" className="table-data">
-                                    {createdSource?.id && sourceProgress[createdSource?.id]?.total 
+                                    {/* {createdSource?.id && sourceProgress[createdSource?.id]?.total 
                                         ? <ThreeDotsLoader />
                                         : "--"
-                                    }
+                                    } */}
+                                    {createdSource?.id && (
+                                        sourceProgress[createdSource.id]?.total
+                                        ? sourceProgress[createdSource.id].total
+                                        : <ThreeDotsLoader />
+                                    )}
                                     </Typography>
                                 </Box>
                                 <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
@@ -326,10 +331,15 @@ const SourcesList: React.FC<SourcesListProps> = ({ createdSource, setSources }) 
                                         Matched Records
                                     </Typography>
                                     <Typography variant="subtitle1" className="table-data">
-                                        {createdSource?.id && sourceProgress[createdSource?.id]?.processed 
+                                        {/* {createdSource?.id && sourceProgress[createdSource?.id]?.processed 
                                         ? <ProgressBar progress={sourceProgress[id]} />
                                         : "--"
-                                    }
+                                        } */}
+                                        {createdSource?.id && (
+                                            sourceProgress[createdSource.id]?.processed ===  sourceProgress[id]?.total 
+                                            ? sourceProgress[createdSource.id]?.matched
+                                            : <ProgressBar progress={sourceProgress[id]} />
+                                        )}
                                     </Typography>
                                 </Box>
 

@@ -11,7 +11,7 @@ interface SSEContextType {
   data: Data | null;
   newNotification: boolean;
   NotificationData: { id: number; text: string } | null;
-  sourceProgress: Record<string, { total: number; processed: number }>
+  sourceProgress: Record<string, { total: number; processed: number, matched: number }>
 }
 
 interface SSEProviderProps {
@@ -25,12 +25,12 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   const [data, setData] = useState<Data | null>(null);
   const [newNotification, setNewNotifications] = useState(false);
   const [NotificationData, setLatestNotification] = useState<{ id: number; text: string } | null>(null);
-  const [sourceProgress, setSourceProgress] = useState<Record<string, { total: number; processed: number }>>({});
+  const [sourceProgress, setSourceProgress] = useState<Record<string, { total: number; processed: number, matched: number }>>({});
 
-  const updateSourceProgress = (source_id: string, total: number, processed: number) => {
+  const updateSourceProgress = (source_id: string, total: number, processed: number, matched: number) => {
     setSourceProgress((prev) => ({
       ...prev,
-      [source_id]: { total, processed },
+      [source_id]: { total, processed, matched },
     }));
   };
 
@@ -54,6 +54,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
     evtSource.onmessage = (event) => {
       if (event.data) {
         const data = JSON.parse(event.data);
+        console.log(data)
         if (data.status === "PIXEL_CODE_PARSE_FAILED") {
           showErrorToast("Could not find pixel code on your site")
         }
@@ -79,13 +80,13 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
           showToast("Pixel code is installed successfully!");
         }
         else if (data.status == 'SOURCE_PROCESSING_PROGRESS') {
-          const { total, processed, source_id } = data.data;
+          const { total, processed, source_id, matched } = data.data;
           if (!source_id) {
               console.error("source_id is undefined");
               return;
           }
       
-          updateSourceProgress(source_id, total, processed);
+          updateSourceProgress(source_id, total, processed, matched);
       }
         else {
           if (data.percent) {
