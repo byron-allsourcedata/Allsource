@@ -59,15 +59,13 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
     const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const [sourceType, setSourceType] = useState<string>("");
-    const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(null)
-    const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
     const [sourceName, setSourceName] = useState<string>("");
     const [fileSizeStr, setFileSizeStr] = useState<string>("");
     const [fileName, setFileName] = useState<string>("");
     const [fileUrl, setFileUrl] = useState<string>("");
     const [sourceMethod, setSourceMethod] = useState<number>(0);
     const [dragActive, setDragActive] = useState(false);
-    const [fileSizeError, setFileSizeError] = useState(false);
+    const [emailNotSubstitution, setEmailNotSubstitution] = useState(false);
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
     const [headersinCSV, setHeadersinCSV] = useState<string[]>([]);
 
@@ -112,15 +110,7 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
     const handleDeleteFile = () => {
         setFile(null);
         setFileName('')
-        setFileSizeStr('')
     };
-
-    const processDownloadFile = (uploadedFile: File) => {
-        setFile(uploadedFile)
-        const fileSize = parseFloat((uploadedFile.size / (1024 * 1024)).toFixed(2))
-        setFileSizeStr(fileSize + " MB")
-        setFileName(uploadedFile.name)
-    }
 
     const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault();
@@ -135,7 +125,6 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
     const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault();
         setDragActive(false);
-        setFileSizeError(false)
 
         const uploadedFile = event.dataTransfer.files[0];
         if (uploadedFile) {
@@ -196,7 +185,14 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
 
     const handleFileUpload = async (file: File) => {
         if (file) {
-            
+
+            const fileSize = parseFloat((file.size / (1024 * 1024)).toFixed(2))
+            if (fileSize > 100) {
+                handleDeleteFile()
+                showErrorToast("The uploaded CSV file exceeds the 100MB limit. Please reduce the file size and try again.")
+                return
+            }
+
             const response = await fetch("/api/upload", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -233,7 +229,9 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
             xhr.setRequestHeader("Content-Type", file.type);
             xhr.send(file);
 
-            processDownloadFile(file);
+            setFile(file)
+            setFileSizeStr(fileSize + " MB")
+            setFileName(file.name)
 
             const reader = new FileReader();
 
@@ -783,7 +781,7 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                         Cancel
                                     </Typography>
                                 </Button> 
-                                <Button variant="contained" onClick={handleSumbit} disabled={sourceName.trim() === ""} sx={{
+                                <Button variant="contained" onClick={handleSumbit} disabled={sourceName.trim() === "" || rows[0].value === "None" || rows[0].value === ''} sx={{
                                     backgroundColor: "rgba(80, 82, 178, 1)",
                                     width: "120px",
                                     height: "40px",
