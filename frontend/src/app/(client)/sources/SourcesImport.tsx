@@ -551,7 +551,7 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ setCreatedSource, setNewS
                                         minWidth: '196px'
                                     }
                                 }}>
-                                    <Image src='/csv-icon.png' alt='scv' height={20} width={24} />
+                                    <Image src='/csv-icon.svg' alt='scv' height={20} width={24} />
                                 </Grid>
                                 <Grid item xs="auto" sm={1}>&nbsp;</Grid>
                             </Grid>
