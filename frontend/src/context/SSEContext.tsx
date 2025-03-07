@@ -10,11 +10,7 @@ interface Data {
 interface SSEContextType {
   data: Data | null;
   newNotification: boolean;
-<<<<<<< HEAD
   NotificationData: { id: number; text: string } | null;
-=======
-  NotificationData : { id: number; text: string } | null;
->>>>>>> audience_source_matching
   sourceProgress: Record<string, { total: number; processed: number }>
 }
 
@@ -22,17 +18,13 @@ interface SSEProviderProps {
   children: ReactNode;
 }
 
+
 const SSEContext = createContext<SSEContextType | undefined>(undefined);
 
 export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   const [data, setData] = useState<Data | null>(null);
   const [newNotification, setNewNotifications] = useState(false);
-<<<<<<< HEAD
-
   const [NotificationData, setLatestNotification] = useState<{ id: number; text: string } | null>(null);
-=======
-  const [NotificationData , setLatestNotification] = useState<{ id: number; text: string } | null>(null);
->>>>>>> audience_source_matching
   const [sourceProgress, setSourceProgress] = useState<Record<string, { total: number; processed: number }>>({});
 
   const updateSourceProgress = (source_id: string, total: number, processed: number) => {
@@ -40,6 +32,11 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
       ...prev,
       [source_id]: { total, processed },
     }));
+  };
+
+  const handleNotificationDismiss = () => {
+    setNewNotifications(false);
+    setLatestNotification(null);
   };
 
   const url = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -117,8 +114,6 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   return (
     <SSEContext.Provider value={{ data, newNotification, NotificationData, sourceProgress }}>
       {children}
-<<<<<<< HEAD
-=======
       {NotificationData  && (
         <CustomNotification 
           id={NotificationData.id} 
@@ -127,7 +122,6 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
           onDismiss={handleNotificationDismiss} 
         />
       )}
->>>>>>> audience_source_matching
     </SSEContext.Provider>
   );
 };
