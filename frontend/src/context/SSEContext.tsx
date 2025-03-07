@@ -10,6 +10,7 @@ interface Data {
 interface SSEContextType {
   data: Data | null;
   newNotification: boolean;
+  NotificationData : { id: number; text: string } | null;
   sourceProgress: Record<string, { total: number; processed: number }>
 }
 
@@ -22,7 +23,7 @@ const SSEContext = createContext<SSEContextType | undefined>(undefined);
 export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   const [data, setData] = useState<Data | null>(null);
   const [newNotification, setNewNotifications] = useState(false);
-  const [latestNotification, setLatestNotification] = useState<{ id: number; text: string } | null>(null);
+  const [NotificationData , setLatestNotification] = useState<{ id: number; text: string } | null>(null);
   const [sourceProgress, setSourceProgress] = useState<Record<string, { total: number; processed: number }>>({});
 
   const updateSourceProgress = (source_id: string, total: number, processed: number) => {
@@ -109,16 +110,8 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   }, [url]);
 
   return (
-    <SSEContext.Provider value={{ data, newNotification, sourceProgress }}>
+    <SSEContext.Provider value={{ data, newNotification, NotificationData, sourceProgress }}>
       {children}
-      {latestNotification && (
-        <CustomNotification 
-          id={latestNotification.id} 
-          message={latestNotification.text} 
-          showDismiss={true}
-          onDismiss={handleNotificationDismiss} 
-        />
-      )}
     </SSEContext.Provider>
   );
 };

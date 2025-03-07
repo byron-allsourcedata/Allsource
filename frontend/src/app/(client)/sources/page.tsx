@@ -520,7 +520,7 @@ const Sources: React.FC = () => {
 
                 }
             }}>
-                <Box sx={{ flex: 1, display: 'flex', pr: 2, flexDirection: 'column', }}>
+                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', }}>
                     {sources && 
                         <Box>
                             <Box
@@ -547,7 +547,7 @@ const Sources: React.FC = () => {
                                     <CustomToolTip title={'Here you can view your active sources and upload new ones to expand your data.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
                                 </Box>
                                 <Box sx={{
-                                    display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px',
+                                    display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px', pr:2,
                                     '@media (max-width: 900px)': {
                                         gap: '8px'
                                     }
@@ -659,7 +659,7 @@ const Sources: React.FC = () => {
                                     {/* --- CHIPS --- */}
                             </Box>
                             <Box sx={{
-                                flex: 1, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 4.25rem)', overflow: 'auto', maxWidth: '100%',
+                                flex: 1, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 4.25rem)', pr:2, overflow: 'auto', maxWidth: '100%',
                                 '@media (max-width: 900px)': {
                                     pt: '2px',
                                     pb: '18px'
@@ -692,7 +692,7 @@ const Sources: React.FC = () => {
                                         marginTop: hasNotification ? '2rem' : '0rem',
                                     },
                                 }}>
-                                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1, pt:1.5 }}>
                                     <Typography className='first-sub-title'>
                                         Import Sources
                                     </Typography>
@@ -703,7 +703,7 @@ const Sources: React.FC = () => {
                                     {/* --- CHIPS --- */}
                             </Box>
                             <Box sx={{
-                                flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto', height: "calc(100vh - 7rem)", maxWidth: '100%', pl: 0, pr: 0, pt: '14px',
+                                flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto', height: "calc(100vh - 7rem)", maxWidth: '100%', pl: 0, pr: 2, pt: '14px',
                                 '@media (max-width: 900px)': {
                                     pt: '2px',
                                     pb: '18px'
