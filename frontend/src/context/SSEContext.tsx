@@ -78,7 +78,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
         else if(data.status == 'PIXEL_CODE_INSTALLED' && data.need_reload_page) {
           showToast("Pixel code is installed successfully!");
         }
-        else if (window.location.pathname === "/sources") {
+        else if (data.status == 'SOURCE_PROCESSING_PROGRESS') {
           const { total, processed, source_id } = data.data;
           if (!source_id) {
               console.error("source_id is undefined");
@@ -88,7 +88,6 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
           updateSourceProgress(source_id, total, processed);
       }
         else {
-          showToast("Pixel code is installed successfully!");
           if (data.percent) {
             const meItem = sessionStorage.getItem('me');
             const meData = meItem ? JSON.parse(meItem) : {};

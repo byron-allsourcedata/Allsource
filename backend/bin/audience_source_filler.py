@@ -30,6 +30,7 @@ load_dotenv()
 
 AUDIENCE_SOURCES_READER = 'aud_sources_files'
 AUDIENCE_SOURCES_MATCHING = 'aud_sources_matching'
+SOURCE_PROCESSING_PROGRESS = "SOURCE_PROCESSING_PROGRESS"
 S3_BUCKET_NAME = "maximiz-data"
 SELECTED_ROW_COUNT = 500
 
@@ -162,6 +163,7 @@ async def send_sse(connection, user_id: int, data: dict):
                     connection=connection,
                     queue_name=f'sse_events_{str(user_id)}',
                     message_body={
+                        "status": SOURCE_PROCESSING_PROGRESS,
                         "data": data
                     }
                 )

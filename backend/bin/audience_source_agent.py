@@ -24,6 +24,7 @@ from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 load_dotenv()
 
 AUDIENCE_SOURCES_MATCHING= 'aud_sources_matching'
+SOURCE_PROCESSING_PROGRESS = "SOURCE_PROCESSING_PROGRESS"
 
 def setup_logging(level):
     logging.basicConfig(
@@ -56,6 +57,7 @@ async def send_sse(connection, user_id: int, data: dict):
                     connection=connection,
                     queue_name=f'sse_events_{str(user_id)}',
                     message_body={
+                        "status": SOURCE_PROCESSING_PROGRESS,
                         "data": data
                     }
                 )
