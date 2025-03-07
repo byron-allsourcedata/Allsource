@@ -128,7 +128,7 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, s3_s
             persons = [{"email": email} for email in batch_rows]
             if persons:
                 message_body = {
-                    "type": "email",
+                    "type": email_field,
                     "data": {
                         "persons": persons,
                         "source_id": source_id,
