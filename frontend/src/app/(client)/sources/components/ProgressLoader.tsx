@@ -12,7 +12,7 @@ const ProgressBar = ({ progress }: any) => {
         variant="determinate"
         value={percentage}
         sx={{ 
-            width: "50%", 
+            width: "100%", 
             borderRadius: "54px", 
             height: "8px", 
             backgroundColor: "rgba(217, 217, 217, 1)", 
