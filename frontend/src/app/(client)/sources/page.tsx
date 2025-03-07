@@ -544,7 +544,7 @@ const Sources: React.FC = () => {
                                     <Typography className='first-sub-title'>
                                         Sources
                                     </Typography>
-                                    <CustomToolTip title={'Here you can view your active sources and upload new ones to expand your data.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
+                                    <CustomToolTip title={'Here you can view your active sources.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
                                 </Box>
                                 <Box sx={{
                                     display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px',
@@ -696,7 +696,7 @@ const Sources: React.FC = () => {
                                     <Typography className='first-sub-title'>
                                         Import Sources
                                     </Typography>
-                                    <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
+                                    <CustomToolTip title={'Here you can upload new ones to expand your data.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
                                 </Box>
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, overflowX: 'auto', "@media (max-width: 600px)": { mb: 1 } }}>
