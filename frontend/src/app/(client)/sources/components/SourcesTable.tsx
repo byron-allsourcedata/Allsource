@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, Suspense } from 'react';
-import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Chip, Drawer, List, ListItemText, ListItemButton, Popover } from '@mui/material';
+import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Chip, Drawer, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '../../../../axios/axiosInterceptorInstance';
@@ -29,7 +29,7 @@ import { useNotification } from '@/context/NotificationContext';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
-import { UpgradePlanPopup } from  '../../components/UpgradePlanPopup'
+import { UpgradePlanPopup } from '../../components/UpgradePlanPopup'
 import { sources } from 'next/dist/compiled/webpack/webpack';
 import { useSSE } from '../../../../context/SSEContext';
 import ThreeDotsLoader from './ThreeDotsLoader';
@@ -90,6 +90,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
     const [upgradePlanPopup, setUpgradePlanPopup] = React.useState(false);
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
     const [selectedJobTitle, setSelectedJobTitle] = React.useState<string | null>(null);
     const [employeeId, setEmployeeId] = useState<number | null>(null)
     const [selectedRowData, setSelectedRowData] = useState<Source | null>(null);
@@ -147,23 +148,34 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
     const handleDeleteSource = async () => {
         setIsLoading(true);
         try {
-            if (selectedRowData && selectedRowData.id){
-                const response = await axiosInstance.delete(`/audience-sources/${selectedRowData.id}`)
-                if (response.status === 200 && response.data){
-                    showToast("Source successfully deleted!")
+            if (selectedRowData?.id) {
+                const response = await axiosInstance.delete(`/audience-sources/${selectedRowData.id}`);
+                if (response.status === 200 && response.data) {
+                    showToast("Source successfully deleted!");
                     setData((prevAccounts: Source[]) =>
                         prevAccounts.filter((item: Source) => item.id !== selectedRowData.id)
                     );
                 }
             }
-        } catch {
+        } catch (error) {
+            console.error("Error deleting source:", error);
         } finally {
             setIsLoading(false);
+            handleClosePopover();
+            handleCloseConfirmDialog();
         }
-    }
+    };
+
+    const handleOpenConfirmDialog = () => {
+        setOpenConfirmDialog(true);
+    };
+
+    const handleCloseConfirmDialog = () => {
+        setOpenConfirmDialog(false);
+    };
 
 
-    
+
     const fetchEmployeesCompany = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
         try {
             setIsLoading(true);
@@ -182,13 +194,13 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
 
             const response = await axiosInstance.get(url)
 
-            if (response.status === 200){
-                const {source_list, count} = response.data;
+            if (response.status === 200) {
+                const { source_list, count } = response.data;
                 setData(source_list);
                 setCount(count || 0);
             }
             setStatus("");
-    
+
             // const options = [15, 30, 50, 100, 200, 500];
             // let RowsPerPageOptions = options.filter(option => option <= count_companies);
             // if (RowsPerPageOptions.length < options.length) {
@@ -217,9 +229,9 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
     interface FilterParams {
         regions: string[];
         searchQuery: string | null;
-        department: Record<string, boolean>; 
-        seniority: Record<string, boolean>; 
-        jobTitle: Record<string, boolean>; 
+        department: Record<string, boolean>;
+        seniority: Record<string, boolean>;
+        jobTitle: Record<string, boolean>;
     }
 
     useEffect(() => {
@@ -274,7 +286,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
                     params.push(`${paramName}=${encodeURIComponent(filter.split(', ').join(','))}`);
                 }
             };
-            processMultiFilter('Department', 'department'); 
+            processMultiFilter('Department', 'department');
             processMultiFilter('Seniority', 'seniority');
             processMultiFilter('Job Title', 'job_title');
 
@@ -348,20 +360,20 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
         const filterMappings: { condition: boolean | string | string[] | number | null, label: string, value: string | ((f: any) => string) }[] = [
             { condition: filters.regions?.length, label: 'Regions', value: () => filters.regions!.join(', ') },
             { condition: filters.searchQuery?.trim() !== '', label: 'Search', value: filters.searchQuery || '' },
-            { 
-                condition: filters.seniority && Object.values(filters.seniority).some(Boolean), 
-                label: 'Seniority', 
-                value: () => getSelectedValues(filters.seniority!) 
+            {
+                condition: filters.seniority && Object.values(filters.seniority).some(Boolean),
+                label: 'Seniority',
+                value: () => getSelectedValues(filters.seniority!)
             },
-            { 
-                condition: filters.jobTitle && Object.values(filters.jobTitle).some(Boolean), 
-                label: 'Job Title', 
-                value: () => getSelectedValues(filters.jobTitle!) 
+            {
+                condition: filters.jobTitle && Object.values(filters.jobTitle).some(Boolean),
+                label: 'Job Title',
+                value: () => getSelectedValues(filters.jobTitle!)
             },
-            { 
-                condition: filters.department && Object.values(filters.department).some(Boolean), 
-                label: 'Department', 
-                value: () => getSelectedValues(filters.department!) 
+            {
+                condition: filters.department && Object.values(filters.department).some(Boolean),
+                label: 'Department',
+                value: () => getSelectedValues(filters.department!)
             },
         ];
 
@@ -375,7 +387,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
         setSelectedFilters(newSelectedFilters);
     };
 
-    const capitalizeTableCell  = (city: string) => {
+    const capitalizeTableCell = (city: string) => {
         return city
             ?.split(' ')
             .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -406,10 +418,10 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
     const handleDeleteFilter = (filterToDelete: { label: string; value: string }) => {
         const updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
         setSelectedFilters(updatedFilters);
-        
+
         const filters = JSON.parse(sessionStorage.getItem('filters-employee') || '{}');
         const valuesToDelete = filterToDelete.value.split(',').map(value => value.trim());
-    
+
         switch (filterToDelete.label) {
             case 'Search':
                 filters.searchQuery = '';
@@ -438,9 +450,9 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
             default:
                 break;
         }
-        
+
         sessionStorage.setItem('filters-employee', JSON.stringify(filters));
-    
+
         // Обновляем фильтры для применения
         const newFilters: FilterParams = {
             regions: updatedFilters.find(f => f.label === 'Regions') ? updatedFilters.find(f => f.label === 'Regions')!.value.split(', ') : [],
@@ -449,7 +461,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
             jobTitle: Object.fromEntries(Object.keys(filters.jobTitle).map(key => [key, updatedFilters.some(f => f.label === 'Job Title' && f.value.includes(key))])),
             seniority: Object.fromEntries(Object.keys(filters.seniority).map(key => [key, updatedFilters.some(f => f.label === 'Seniority' && f.value.includes(key))]))
         };
-    
+
         // Применяем обновленные фильтры
         handleApplyFilters(newFilters);
     };
@@ -458,7 +470,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
     return (
         <>
             {loading && (
-                <CustomizedProgressBar/>
+                <CustomizedProgressBar />
             )}
             <Box sx={{
                 display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
@@ -566,7 +578,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
                                 </Button>
                             </Box>
                         }
-                        {status !== 'PIXEL_INSTALLATION_NEEDED' && data.length !== 0 && 
+                        {status !== 'PIXEL_INSTALLATION_NEEDED' && data.length !== 0 &&
                             <Grid container spacing={1} sx={{ flex: 1 }}>
                                 <Grid item xs={12}>
                                     <TableContainer
@@ -596,13 +608,13 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
                                                     {[
                                                         { key: 'name', label: 'Name' },
                                                         { key: 'source', label: 'Source' },
-                                                        { key: 'type', label: 'Type'},
+                                                        { key: 'type', label: 'Type' },
                                                         { key: 'created_date', label: 'Created Date' },
-                                                        { key: 'created_by', label: 'Created By'},
-                                                        { key: 'updated_date', label: 'Update Date'},
-                                                        { key: 'number_of_customers', label: 'Number of Customers', sortable: true},
-                                                        { key: 'matched_records', label: 'Matched Records', sortable: true},
-                                                        { key: 'actions', label: 'Actions'}
+                                                        { key: 'created_by', label: 'Created By' },
+                                                        { key: 'updated_date', label: 'Update Date' },
+                                                        { key: 'number_of_customers', label: 'Number of Customers', sortable: true },
+                                                        { key: 'matched_records', label: 'Matched Records', sortable: true },
+                                                        { key: 'actions', label: 'Actions' }
                                                     ].map(({ key, label, sortable = false }) => (
                                                         <TableCell
                                                             key={key}
@@ -617,7 +629,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
                                                                     "::after": { content: 'none' }
                                                                 })
                                                             }}
-                                                            
+
                                                             onClick={sortable ? () => handleSortRequest(key) : undefined}
                                                             style={{ cursor: sortable ? 'pointer' : 'default' }}
                                                         >
@@ -674,28 +686,28 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
 
                                                             {/* Source Column */}
                                                             <TableCell
-                                                                sx={{ ...sourcesStyles.table_array, position: 'relative'}}
+                                                                sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                             >
                                                                 {row.source_origin}
                                                             </TableCell>
 
                                                             {/* Type Column */}
                                                             <TableCell
-                                                                sx={{ ...sourcesStyles.table_array, position: 'relative'}}
+                                                                sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                             >
                                                                 {row.source_type}
                                                             </TableCell>
 
                                                             {/* Created date Column */}
-                                                            <TableCell 
-                                                                sx={{ ...sourcesStyles.table_array, position: 'relative'}}
+                                                            <TableCell
+                                                                sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                             >
                                                                 {dayjs(row.created_at).isValid() ? dayjs(row.created_at).format('MMM D, YYYY') : '--'}
                                                             </TableCell>
 
                                                             {/* Created By Column */}
-                                                            <TableCell 
-                                                                sx={{...sourcesStyles.table_array, position: 'relative'}}
+                                                            <TableCell
+                                                                sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                             >
                                                                 {row.created_by}
                                                             </TableCell>
@@ -711,9 +723,9 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
                                                             <TableCell
                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {row.matched_records_status === "pending" 
-                                                                ? progress?.total ??  <ThreeDotsLoader/>
-                                                                : row.total_records ?? "--"
+                                                                {row.matched_records_status === "pending"
+                                                                    ? progress?.total ?? <ThreeDotsLoader />
+                                                                    : row.total_records ?? "--"
                                                                 }
                                                             </TableCell>
 
@@ -721,15 +733,15 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
                                                             <TableCell
                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                             >
-                                                                {row.matched_records_status === "pending" 
-                                                                ? <ProgressBar progress={progress} />
-                                                                : row.matched_records ?? '--'}
+                                                                {row.matched_records_status === "pending"
+                                                                    ? <ProgressBar progress={progress} />
+                                                                    : row.matched_records ?? '--'}
                                                             </TableCell>
 
                                                             <TableCell sx={{ ...sourcesStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
-                                                                <IconButton onClick={(event) => handleOpenPopover(event, row)} sx={{ ':hover': { backgroundColor: 'transparent' }}} >
+                                                                <IconButton onClick={(event) => handleOpenPopover(event, row)} sx={{ ':hover': { backgroundColor: 'transparent' } }} >
                                                                     {/* <Image src='/more_horizontal.svg' alt='more' height={16.18} width={22.91} /> */}
-                                                                    <MoreVert sx={{color: "rgba(32, 33, 36, 1)"}} height={8} width={24}/>
+                                                                    <MoreVert sx={{ color: "rgba(32, 33, 36, 1)" }} height={8} width={24} />
                                                                 </IconButton>
 
                                                                 <Popover
@@ -740,28 +752,92 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
                                                                         vertical: 'bottom',
                                                                         horizontal: 'left',
                                                                     }}
-                                                                    >
+                                                                >
                                                                     <List
-                                                                        sx={{ 
-                                                                            width: '100%', maxWidth: 360}}
+                                                                        sx={{
+                                                                            width: '100%', maxWidth: 360
+                                                                        }}
+                                                                    >
+                                                                        <ListItemButton sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
+                                                                            handleClosePopover()
+                                                                        }}>
+                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Download" />
+                                                                        </ListItemButton>
+                                                                        <ListItemButton sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
+                                                                            handleClosePopover()
+                                                                            router.push(`/lookalikes/${row.id}/builder`)
+                                                                        }}>
+                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Lookalike" />
+                                                                        </ListItemButton>
+                                                                        <ListItemButton
+                                                                            sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }}
+                                                                            onClick={() => {
+                                                                                handleOpenConfirmDialog();
+                                                                            }}
                                                                         >
-                                                                        <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
-                                                                                handleClosePopover()
-                                                                            }}>
-                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Download"/>
+                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Remove" />
                                                                         </ListItemButton>
-                                                                        <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
-                                                                                handleClosePopover()
-                                                                                router.push(`/lookalikes/${row.id}/builder`)
-                                                                        }}>
-                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Lookalike"/>
-                                                                        </ListItemButton>
-                                                                        <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
-                                                                                handleClosePopover()
-                                                                                handleDeleteSource()
-                                                                        }}>
-                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Remove"/>
-                                                                        </ListItemButton>
+                                                                        <Popover
+                                                                            open={openConfirmDialog}
+                                                                            onClose={handleCloseConfirmDialog}
+                                                                            anchorEl={anchorEl}
+                                                                            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                                                                            transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+                                                                            slotProps={{ paper: {
+                                                                                sx: {
+                                                                                    padding: '0.125rem',
+                                                                                    width: '15.875rem',
+                                                                                    boxShadow: 0,
+                                                                                    borderRadius: '8px',
+                                                                                    border: '0.5px solid rgba(175, 175, 175, 1)'
+                                                                                }
+                                                                            }}}
+                                                                        >
+                                                                            <Typography className="first-sub-title" sx={{ paddingLeft: 2, pt: 1, pb: 0 }}>
+                                                                                Confirm Deletion
+                                                                            </Typography>
+                                                                            <DialogContent sx={{ padding: 2 }}>
+                                                                                <DialogContentText className="table-data">
+                                                                                    Are you sure you want to delete this source?
+                                                                                </DialogContentText>
+                                                                            </DialogContent>
+                                                                            <DialogActions>
+                                                                                <Button
+                                                                                    className="second-sub-title"
+                                                                                    onClick={handleCloseConfirmDialog}
+                                                                                    sx={{
+                                                                                        backgroundColor: '#fff',
+                                                                                        color: 'rgba(80, 82, 178, 1) !important',
+                                                                                        fontSize: '14px',
+                                                                                        textTransform: 'none',
+                                                                                        padding: '0.75em 1em',
+                                                                                        border: '1px solid rgba(80, 82, 178, 1)',
+                                                                                        maxWidth: '50px',
+                                                                                        maxHeight: '30px',
+                                                                                        '&:hover': { backgroundColor: '#fff', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
+                                                                                    }}
+                                                                                >
+                                                                                    Cancel
+                                                                                </Button>
+                                                                                <Button
+                                                                                    className="second-sub-title"
+                                                                                    onClick={handleDeleteSource}
+                                                                                    sx={{
+                                                                                        backgroundColor: 'rgba(80, 82, 178, 1)',
+                                                                                        color: '#fff !important',
+                                                                                        fontSize: '14px',
+                                                                                        textTransform: 'none',
+                                                                                        padding: '0.75em 1em',
+                                                                                        border: '1px solid rgba(80, 82, 178, 1)',
+                                                                                        maxWidth: '60px',
+                                                                                        maxHeight: '30px',
+                                                                                        '&:hover': { backgroundColor: 'rgba(80, 82, 178, 1)', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
+                                                                                    }}
+                                                                                >
+                                                                                    Delete
+                                                                                </Button>
+                                                                            </DialogActions>
+                                                                        </Popover>
                                                                     </List>
                                                                 </Popover>
                                                             </TableCell>
@@ -783,11 +859,11 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
                                         />
                                     </Box>}
                                 </Grid>
-                            </Grid> 
+                            </Grid>
                         }
                         {showSlider && <Slider />}
                     </Box>
-                    
+
                     {/* <FilterPopup open={filterPopupOpen} 
                         onClose={handleFilterPopupClose} 
                         onApply={handleApplyFilters} 
