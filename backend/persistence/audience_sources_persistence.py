@@ -35,7 +35,6 @@ class AudienceSourcesPersistence:
                 AudienceSource.total_records,
                 AudienceSource.matched_records,
                 AudienceSource.matched_records_status,
-
             )
                 .join(Users, Users.id == AudienceSource.created_by_user_id)
                 .filter(AudienceSource.user_id == user_id)
@@ -43,12 +42,17 @@ class AudienceSourcesPersistence:
         )
 
         sort_options = {
-            'total_records': AudienceSource.total_records,
+            'number_of_customers': AudienceSource.total_records,
             'matched_records': AudienceSource.matched_records,
         }
         if sort_by in sort_options:
             sort_column = sort_options[sort_by]
-            query = query.order_by(asc(sort_column) if sort_order == 'asc' else desc(sort_column))
+            query = query.order_by(
+                AudienceSource.created_at.desc(),
+                asc(sort_column) if sort_order == 'asc' else desc(sort_column),
+            )
+        else:
+            query = query.order_by(AudienceSource.created_at.desc()) 
 
 
         offset = (page - 1) * per_page

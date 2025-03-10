@@ -578,11 +578,11 @@ const Sources: React.FC = () => {
                                         aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
                                         aria-haspopup="true"
                                         aria-expanded={dropdownOpen ? 'true' : undefined}
-                                        disabled={!status || status === 'PIXEL_INSTALLATION_NEEDED' || data?.length === 0}
+                                        disabled={data?.length === 0}
                                         sx={{
                                             textTransform: 'none',
                                             color: 'rgba(128, 128, 128, 1)',
-                                            opacity: status === 'PIXEL_INSTALLATION_NEEDED' || data?.length === 0 ? '0.5' : '1',
+                                            opacity: data?.length === 0 ? '0.5' : '1',
                                             border: '1px solid rgba(184, 184, 184, 1)',
                                             borderRadius: '4px',
                                             padding: '8px',
@@ -606,7 +606,7 @@ const Sources: React.FC = () => {
                                     </Button>
                                     <Button
                                         onClick={handleFilterPopupOpen}
-                                        disabled={!status || status === 'PIXEL_INSTALLATION_NEEDED' || data?.length === 0}
+                                        disabled={data?.length === 0}
                                         aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
                                         aria-haspopup="true"
                                         aria-expanded={dropdownOpen ? 'true' : undefined}
@@ -616,7 +616,7 @@ const Sources: React.FC = () => {
                                             border: selectedFilters.length > 0 ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
                                             borderRadius: '4px',
                                             padding: '8px',
-                                            opacity: status === 'PIXEL_INSTALLATION_NEEDED' || data?.length === 0 ? '0.5' : '1',
+                                            opacity: data?.length === 0 ? '0.5' : '1',
                                             minWidth: 'auto',
                                             position: 'relative',
                                             '@media (max-width: 900px)': {
@@ -655,6 +655,7 @@ const Sources: React.FC = () => {
                                     </Button>
                                 </Box>
                             </Box>
+                            
                             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, "@media (max-width: 600px)": { mb: 1 } }}>
                                     {/* --- CHIPS --- */}
                             </Box>

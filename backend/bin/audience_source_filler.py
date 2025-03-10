@@ -123,13 +123,12 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, s3_s
             batch_rows = []
             for row in islice(csv_reader, SELECTED_ROW_COUNT):
                 email = row.get(email_field, "")
-                if email:
-                    batch_rows.append(email)
+                batch_rows.append(email)
 
             persons = [{"email": email} for email in batch_rows]
             if persons:
                 message_body = {
-                    "type": "email",
+                    "type": email_field,
                     "data": {
                         "persons": persons,
                         "source_id": source_id,
