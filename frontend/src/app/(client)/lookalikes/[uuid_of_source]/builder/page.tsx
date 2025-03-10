@@ -160,11 +160,11 @@ const CreateLookalikePage: React.FC = () => {
     }
 
     return (
-        <Box sx={{ width: "100%", pr: 2 }}>
-            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+        <Box sx={{ width: "100%", pr: 2, overflow: 'auto', flexGrow: 1 }}>
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, pt: 1, overflow: 'auto' }}>
             {!isLookalikeCreated ? (
                 <>
-                <Box>
+                <Box sx={{display: 'flex', flexDirection: 'column', justifyContent: 'space-between', width: '100%', overflow: 'auto'}}>
                     <Box sx={{ width: "100%", padding: 3, color: "#202124" }}>
                         {/* Title */}
                         <Typography
@@ -213,12 +213,8 @@ const CreateLookalikePage: React.FC = () => {
                         {currentStep >= 1 && (
                             <AudienceSizeSelector
                                 audienceSize={audienceSize}
-                                min={0}
-                                max={20}
-                                onSliderChange={handleSliderChange}
                                 onSelectSize={handleSelectSize}
                                 selectedSize={selectedSize}
-                                sliderValue={sliderValue}
                             />
                         )}
 
@@ -282,8 +278,10 @@ const CreateLookalikePage: React.FC = () => {
                     {currentStep >= 2 && (
                         <Box
                             sx={{
+                                width: '100%',
                                 display: "flex",
                                 justifyContent: "end",
+                                alignItems: 'end',
                                 gap: 2,
                                 borderTop: "1px solid rgba(228, 228, 228, 1)",
                                 mt: 2,

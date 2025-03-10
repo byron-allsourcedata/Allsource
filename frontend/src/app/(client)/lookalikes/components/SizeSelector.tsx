@@ -11,22 +11,14 @@ interface AudienceSize {
 
 interface AudienceSizeSelectorProps {
     audienceSize: AudienceSize[];
-    min: number;
-    max: number;
-    onSliderChange: (value: number) => void;
     onSelectSize: (id: string, min: number, max: number) => void;
     selectedSize: string;
-    sliderValue: number[]; // Массив значений для двух ползунков
 }
 
 const AudienceSizeSelector: React.FC<AudienceSizeSelectorProps> = ({
     audienceSize,
-    min,
-    max,
-    onSliderChange,
     onSelectSize,
     selectedSize,
-    sliderValue,
 }) => {
     return (
         <Box
@@ -107,17 +99,19 @@ const AudienceSizeSelector: React.FC<AudienceSizeSelectorProps> = ({
                                 }
                                 sx={{
                                     display: "flex",
-                                    flexDirection: "row",
+                                    flexDirection: "column",
                                     alignItems: "center",
+                                    justifyContent: "center",
+                                    flex: 1,
+                                    minWidth: 0, // Избегаем минимальной ширины
                                     border:
                                         selectedSize === source.id
                                             ? "1px solid #1976d2"
                                             : "1px solid rgba(208, 213, 221, 1)",
-                                    gap: "10px",
                                     padding: "0.6rem 0.5rem",
                                     borderRadius: "4px",
                                     textTransform: "none",
-                                    width: "100%",
+                                    width: { xs: "100%", sm: "auto" }, // 100% на маленьких экранах, адаптивно на больших
                                 }}
                             >
                                 <Box
@@ -144,48 +138,6 @@ const AudienceSizeSelector: React.FC<AudienceSizeSelectorProps> = ({
                             </Button>
                         </Box>
                     ))}
-                </Box>
-
-                <Box sx={{ width: "100%", mt: 0 }}>
-                    <Slider
-                        value={[min, sliderValue[1]]} // фиксируем min, меняем только второй ползунок
-                        onChange={(_, newValue) =>
-                            onSliderChange(newValue as number) // обновляем только второй ползунок
-                        }
-                        min={min}
-                        max={max}
-                        step={1}
-                        valueLabelDisplay="auto"
-                        sx={{
-                            color: "rgba(80, 82, 178, 1)",
-                        }}
-                    />
-                    <Box
-                        sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            mt: 0,
-                        }}
-                    >
-                        <Typography
-                            variant="body2"
-                            sx={{ color: "rgba(0, 0, 0, 0.6)" }}
-                        >
-                            {min}%
-                        </Typography>
-                        <Typography
-                            variant="body2"
-                            sx={{ color: "rgba(0, 0, 0, 0.6)" }}
-                        >
-                            {(min + max) / 2}%
-                        </Typography>
-                        <Typography
-                            variant="body2"
-                            sx={{ color: "rgba(0, 0, 0, 0.6)" }}
-                        >
-                            {max}%
-                        </Typography>
-                    </Box>
                 </Box>
             </Box>
         </Box>
