@@ -272,7 +272,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
     };
 
 
-    const isActive = (path: string) => pathname === path;
+    const isActive = (path: string) => pathname.startsWith(path);
 
     return (
         <Box sx={containerStyles(hasNotification).container} >
@@ -283,7 +283,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                     </ListItemIcon>
                     <ListItemText primary="Dashboard" />
                 </ListItem>
-                <ListItem button onClick={() => handleNavigation('/sources')} sx={isActive('/sources') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                <ListItem button onClick={() => handleNavigation('/sources')} sx={isActive(`/sources`) ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <AllInboxIcon />
                     </ListItemIcon>

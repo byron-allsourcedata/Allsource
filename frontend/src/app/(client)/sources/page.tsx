@@ -1,39 +1,31 @@
 "use client";
 import React, { useState, useEffect, Suspense } from 'react';
-import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Chip, Drawer, Popover } from '@mui/material';
+import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText, LinearProgress } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '../../../axios/axiosInterceptorInstance';
-import { AxiosError } from 'axios';
 import { sourcesStyles } from './sourcesStyles';
 import Slider from '../../../components/Slider';
 import { SliderProvider } from '../../../context/SliderContext';
-import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import DownloadIcon from '@mui/icons-material/Download';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import FilterListIcon from '@mui/icons-material/FilterList';
 // import FilterPopup from './CompanyFilters';
 import AudiencePopup from '@/components/AudienceSlider';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import SouthOutlinedIcon from '@mui/icons-material/SouthOutlined';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import NorthOutlinedIcon from '@mui/icons-material/NorthOutlined';
 import dayjs from 'dayjs';
-// import PopupDetails from './CompanyDetails';
 import CloseIcon from '@mui/icons-material/Close';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
-import Tooltip from '@mui/material/Tooltip';
 import CustomToolTip from '@/components/customToolTip';
-import CalendarPopup from '@/components/CustomCalendar';
 import CustomTablePagination from '@/components/CustomTablePagination';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useNotification } from '@/context/NotificationContext';
-import { showErrorToast } from '@/components/ToastNotification';
-import SourcesTable from "./components/SourcesTable"
-import SourcesImport from './SourcesImport';
-import SourcesList from './components/SourcesList';
-
+import { showErrorToast, showToast } from '@/components/ToastNotification';
+import ThreeDotsLoader from './components/ThreeDotsLoader';
+import ProgressBar from './components/ProgressLoader';
+import { MoreVert } from '@mui/icons-material'
+import { useSSE } from '../../../context/SSEContext';
 
 interface Source {
     id: string
@@ -45,6 +37,14 @@ interface Source {
     created_by: string
     total_records?: number
     matched_records?: number
+    matched_records_status: string
+}
+
+interface FetchDataParams {
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+    page: number;
+    rowsPerPage: number;
 }
 
 interface FilterParams {
@@ -96,37 +96,30 @@ const Sources: React.FC = () => {
     const router = useRouter();
     const { hasNotification } = useNotification();
     const [data, setData] = useState<Source[]>([]);
-    const [sources, setSources] = useState<boolean>(true);
-    const [newSource, setNewSource] = useState<boolean>(false);
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(15);
     const [count_companies, setCount] = useState<number | null>(null);
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
     const [status, setStatus] = useState<string | null>(null);
     const [showSlider, setShowSlider] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [isFirstLoad, setIsFirstLoad] = useState(true);
     const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
     const dropdownOpen = Boolean(dropdownEl);
-    const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
-    const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(15);
+    const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
     const [activeFilter, setActiveFilter] = useState<string>('');
-    const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedDates, setSelectedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
-    const isCalendarOpen = Boolean(calendarAnchorEl);
-    const [formattedDates, setFormattedDates] = useState<string>('');
-    const [companyName, setCompanyName] = useState<string>('');
-    const [companyId, setCompanyId] = useState<number>(0);
     const [filterPopupOpen, setFilterPopupOpen] = useState(false);
-    const [audiencePopupOpen, setAudiencePopupOpen] = useState(false);
-    const [companyEmployeesOpen, setCompanyEmployeesOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [selectedFilters, setSelectedFilters] = useState<{ label: string, value: string }[]>([]);
-    const [openPopup, setOpenPopup] = React.useState(false);
-    const [popupData, setPopupData] = React.useState<any>(null);
-    const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
-    const [openDrawer, setOpenDrawer] = React.useState(false);
+    const { sourceProgress } = useSSE();
+    const [loaderForTable, setLoaderForTable] = useState(false);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-    const [createdSource, setCreatedSource] = useState<Source | null >(null);
+    const [selectedRowData, setSelectedRowData] = useState<Source | null>(null);
+    const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+    const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
+    const isOpen = Boolean(anchorEl);
 
     useEffect(() => {
         document.body.style.overflow = 'hidden';
@@ -135,15 +128,57 @@ const Sources: React.FC = () => {
         };
     }, []);
 
-    const handleOpenPopup = (row: any) => {
-        setPopupData(row);
-        setOpenPopup(true);
-    };
+    useEffect(() => {
+        fetchSources({
+            sortBy: orderBy,
+            sortOrder: order,
+            page,
+            rowsPerPage,
+        });
+    }, [orderBy, order, page, rowsPerPage, selectedFilters]);
 
-    const handleClosePopup = () => {
-        setOpenPopup(false);
-    };
+    const fetchSources = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
+        try {
+            isFirstLoad ? setLoading(true)  : setLoaderForTable(true);
+            const accessToken = localStorage.getItem("token");
+            if (!accessToken) {
+                router.push('/signin');
+                return;
+            }
 
+            let url = `/audience-sources?&page=${page + 1}&per_page=${rowsPerPage}`
+
+            if (sortBy) {
+                setPage(0)
+                url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
+            }
+
+            const response = await axiosInstance.get(url)
+
+            const { source_list, count } = response.data;
+            setData(source_list);
+            setCount(count || 0);
+            setStatus("");
+
+            const options = [10, 20, 50, 100, 300, 500];
+            let RowsPerPageOptions = options.filter(option => option <= count);
+            if (RowsPerPageOptions.length < options.length) {
+                RowsPerPageOptions = [...RowsPerPageOptions, options[RowsPerPageOptions.length]];
+            }
+            setRowsPerPageOptions(RowsPerPageOptions);
+            const selectedValue = RowsPerPageOptions.includes(rowsPerPage) ? rowsPerPage : 10;
+            setRowsPerPage(selectedValue);
+
+        } catch {
+        } finally {
+            if (isFirstLoad) {
+                setLoading(false);
+                setIsFirstLoad(false);
+            } else {
+                setLoaderForTable(false);
+            }
+        }
+    }
 
     const handleFilterPopupOpen = () => {
         setFilterPopupOpen(true);
@@ -153,162 +188,58 @@ const Sources: React.FC = () => {
         setFilterPopupOpen(false);
     };
 
+    const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, rowData: Source) => {
+        setAnchorEl(event.currentTarget);
+        setSelectedRowData(rowData);
+    };
+
+    const handleClosePopover = () => {
+        setAnchorEl(null);
+    };
+
     const handleSortRequest = (property: string) => {
         const isAsc = orderBy === property && order === 'asc';
         setOrder(isAsc ? 'desc' : 'asc');
         setOrderBy(property);
+    };
+    
+    const handleDeleteSource = async () => {
+        setLoaderForTable(true);
+        try {
+            if (selectedRowData?.id) {
+                const response = await axiosInstance.delete(`/audience-sources/${selectedRowData.id}`);
+                if (response.status === 200 && response.data) {
+                    showToast("Source successfully deleted!");
+                    setData((prevAccounts: Source[]) =>
+                        prevAccounts.filter((item: Source) => item.id !== selectedRowData.id)
+                    );
+                }
+            }
+        } catch {
+            showErrorToast("Error deleting source")
+        } finally {
+            setLoaderForTable(false);
+            handleClosePopover();
+            handleCloseConfirmDialog();
+        }
+    };
+
+    const handleOpenConfirmDialog = () => {
+        setOpenConfirmDialog(true);
+    };
+
+    const handleCloseConfirmDialog = () => {
+        setOpenConfirmDialog(false);
+    };
+
+    const handleChangePage = (event: unknown, newPage: number) => {
+        setPage(newPage);
     };
 
     const handleChangeRowsPerPage = (event: React.ChangeEvent<{ value: unknown }>) => {
         setRowsPerPage(parseInt(event.target.value as string, 10));
         setPage(0);
     };
-
-    const centerContainerStyles = {
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        border: '1px solid rgba(235, 235, 235, 1)',
-        borderRadius: 2,
-        padding: 3,
-        boxSizing: 'border-box',
-        width: '100%',
-        textAlign: 'center',
-        flex: 1,
-        '& img': {
-            width: 'auto',
-            height: 'auto',
-            maxWidth: '100%'
-        }
-    };
-
-    const handleDownload = async () => {
-        setLoading(true);
-        try {
-
-            let url = '/company/download-companies';
-            let params = [];
-
-            if (selectedFilters.some(filter => filter.label === 'Visitor Type')) {
-                const status = selectedFilters.find(filter => filter.label === 'Visitor Type')?.value?.split(', ') || [];
-                if (status.length > 0) {
-                    const formattedStatus = status.map(status => status.toLowerCase().replace(/\s+/g, '_'));
-                    params.push(`behavior_type=${encodeURIComponent(formattedStatus.join(','))}`);
-                }
-            }
-
-            if (selectedFilters.some(filter => filter.label === 'Regions')) {
-                const regions = selectedFilters.find(filter => filter.label === 'Regions')?.value?.split(', ') || [];
-                if (regions.length > 0) {
-                    params.push(`regions=${encodeURIComponent(regions.join(','))}`);
-                }
-            }
-
-            if (selectedFilters.some(filter => filter.label === 'From Date')) {
-                const fromDate = selectedFilters.find(filter => filter.label === 'From Date')?.value || '';
-                if (fromDate) {
-                    const fromDateEpoch = Math.floor(new Date(fromDate).getTime() / 1000);
-                    params.push(`from_date=${fromDateEpoch}`);
-                }
-            }
-
-            if (selectedFilters.some(filter => filter.label === 'To Date')) {
-                const toDate = selectedFilters.find(filter => filter.label === 'To Date')?.value || '';
-                if (toDate) {
-                    const toDateEpoch = Math.floor(new Date(toDate).getTime() / 1000);
-                    params.push(`to_date=${toDateEpoch}`);
-                }
-            }
-
-            if (selectedFilters.some(filter => filter.label === 'Lead Status')) {
-                const funnels = selectedFilters.find(filter => filter.label === 'Lead Status')?.value?.split(', ') || [];
-                if (funnels.length > 0) {
-                    const formattedFunnels = funnels.map(funnel => funnel.toLowerCase().replace(/\s+/g, '_'));
-                    params.push(`status=${encodeURIComponent(formattedFunnels.join(','))}`);
-                }
-            }
-
-            if (selectedFilters.some(filter => filter.label === 'Search')) {
-                const searchQuery = selectedFilters.find(filter => filter.label === 'Search')?.value || '';
-                if (searchQuery) {
-                    params.push(`search_query=${encodeURIComponent(searchQuery)}`);
-                }
-            }
-
-            if (selectedFilters.some(filter => filter.label === 'From Time')) {
-                const fromTime = selectedFilters.find(filter => filter.label === 'From Time')?.value || '';
-                if (fromTime) {
-                    params.push(`from_time=${encodeURIComponent(fromTime)}`);
-                }
-            }
-
-            if (selectedFilters.some(filter => filter.label === 'To Time')) {
-                const toTime = selectedFilters.find(filter => filter.label === 'To Time')?.value || '';
-                if (toTime) {
-                    params.push(`to_time=${encodeURIComponent(toTime)}`);
-                }
-            }
-
-            if (selectedFilters.some(filter => filter.label === 'Time Spent')) {
-                const timeSpent = selectedFilters.find(filter => filter.label === 'Time Spent')?.value?.split(', ') || [];
-                if (timeSpent.length > 0) {
-                    const formattedTimeSpent = timeSpent.map(value => value.replace(/\s+/g, '_'));
-                    params.push(`average_time_sec=${encodeURIComponent(formattedTimeSpent.join(','))}`);
-                }
-            }
-
-            if (selectedFilters.some(filter => filter.label === 'Recurring Visits')) {
-                const recurringVisits = selectedFilters.find(filter => filter.label === 'Recurring Visits')?.value?.split(', ') || [];
-                if (recurringVisits.length > 0) {
-                    const formattedRecurringVisits = recurringVisits.map(value => value.replace(/\s+/g, '_'));
-                    params.push(`recurring_visits=${encodeURIComponent(formattedRecurringVisits.join(','))}`);
-                }
-            }
-
-            if (selectedFilters.some(filter => filter.label === 'Page Visits')) {
-                const pageVisits = selectedFilters.find(filter => filter.label === 'Page Visits')?.value?.split(', ') || [];
-                if (pageVisits.length > 0) {
-                    const formattedPageVisits = pageVisits.map(value => value.replace(/\s+/g, '_'));
-                    params.push(`page_visits=${encodeURIComponent(formattedPageVisits.join(','))}`);
-                }
-            }
-
-            // Join all parameters into a single query string
-            if (params.length > 0) {
-                url += `?${params.join('&')}`;
-            }
-
-            const response = await axiosInstance.get(url, { responseType: 'blob' });
-
-            if (response.status === 200) {
-                const url = window.URL.createObjectURL(new Blob([response.data]));
-                const link = document.createElement('a');
-                link.href = url;
-                link.setAttribute('download', 'data.csv');
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                window.URL.revokeObjectURL(url);
-            } else {
-                console.error('Error downloading file:', response.statusText);
-            }
-        } catch (error) {
-            console.error('Error during the download process:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-
-    const handleChangePage = (event: unknown, newPage: number) => {
-        setPage(newPage);
-    };
-
-    const truncateText = (text: string, maxLength: number) => {
-        return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
-    };
-
 
 
     const handleApplyFilters = (filters: FilterParams) => {
@@ -357,19 +288,11 @@ const Sources: React.FC = () => {
         setSelectedFilters(newSelectedFilters);
     };
 
-    const capitalizeCity = (city: string) => {
-        return city
-            ?.split(' ')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-            .join(' ');
-    }
-
     const handleResetFilters = async () => {
         const url = `/company`;
 
         try {
             setIsLoading(true)
-            setFormattedDates('')
             sessionStorage.removeItem('filters')
             const response = await axiosInstance.get(url);
             const [leads, count] = response.data;
@@ -377,7 +300,6 @@ const Sources: React.FC = () => {
             setData(Array.isArray(leads) ? leads : []);
             setCount(count || 0);
             setStatus(response.data.status);
-            setSelectedDates({start: null, end: null})
             setSelectedFilters([]);
         } catch (error) {
             console.error('Error fetching leads:', error);
@@ -442,7 +364,6 @@ const Sources: React.FC = () => {
         sessionStorage.setItem('filters', JSON.stringify(filters));
     
         if (filterToDelete.label === 'Dates') {
-            setFormattedDates('');
             setSelectedDates({ start: null, end: null });
         }
     
@@ -507,6 +428,17 @@ const Sources: React.FC = () => {
         handleApplyFilters(newFilters);
     };
 
+    const setSourceOrigin = (sourceOrigin: string) => {
+        return sourceOrigin === "pixel" ? "Pixel" : "CSV File"
+    }
+
+    const setSourceType = (sourceType: string) => {
+        return sourceType
+            .split('_')
+            .map((item: string) => item.charAt(0).toUpperCase() + item.slice(1))
+            .join(' ');
+    }
+
 
     return (
         <>
@@ -521,205 +453,481 @@ const Sources: React.FC = () => {
                 }
             }}>
                 <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', }}>
-                    {sources && 
-                        <Box>
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    marginTop: hasNotification ? '1rem' : '0.5rem',
-                                    flexWrap: 'wrap',
-                                    pl: '0.5rem',
-                                    gap: '15px',
-                                    '@media (max-width: 900px)': {
-                                        marginTop: hasNotification ? '3rem' : '1.125rem',
-                                    },
-                                    '@media (max-width: 600px)': {
-                                        marginTop: hasNotification ? '2rem' : '0rem',
-                                    },
-                                }}>
-                                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
-                                    <Typography className='first-sub-title'>
-                                        Sources
-                                    </Typography>
-                                    <CustomToolTip title={'Here you can view your active sources.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
-                                </Box>
-                                <Box sx={{
-                                    display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px', pr:2,
-                                    '@media (max-width: 900px)': {
-                                        gap: '8px'
-                                    }
-                                }}>
-                                    <Button
-                                        variant="outlined"
-                                        sx={{
-                                            height: '40px',
-                                            borderRadius: '4px',
-                                            textTransform: 'none',
-                                            fontSize: '14px',
-                                            lineHeight: "19.6px",
-                                            fontWeight: '500',
-                                            color: '#5052B2',
+                    <Box>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                marginTop: hasNotification ? '1rem' : '0.5rem',
+                                flexWrap: 'wrap',
+                                pl: '0.5rem',
+                                gap: '15px',
+                                '@media (max-width: 900px)': {
+                                    marginTop: hasNotification ? '3rem' : '1.125rem',
+                                },
+                                '@media (max-width: 600px)': {
+                                    marginTop: hasNotification ? '2rem' : '0rem',
+                                },
+                            }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                                <Typography className='first-sub-title'>
+                                    Sources
+                                </Typography>
+                                <CustomToolTip title={'Here you can view your active sources.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
+                            </Box>
+                            <Box sx={{
+                                display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px', pr:2,
+                                '@media (max-width: 900px)': {
+                                    gap: '8px'
+                                }
+                            }}>
+                                <Button
+                                    variant="outlined"
+                                    sx={{
+                                        height: '40px',
+                                        borderRadius: '4px',
+                                        textTransform: 'none',
+                                        fontSize: '14px',
+                                        lineHeight: "19.6px",
+                                        fontWeight: '500',
+                                        color: '#5052B2',
+                                        borderColor: '#5052B2',
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(80, 82, 178, 0.1)',
                                             borderColor: '#5052B2',
-                                            '&:hover': {
-                                                backgroundColor: 'rgba(80, 82, 178, 0.1)',
-                                                borderColor: '#5052B2',
-                                            },
-                                        }}
-                                        onClick={() => {
-                                            setSources(false)
-                                        }}
-                                    >
-                                        Import Source
-                                    </Button>
-                                    <Button
-                                        aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
-                                        aria-haspopup="true"
-                                        aria-expanded={dropdownOpen ? 'true' : undefined}
-                                        disabled={data?.length === 0}
-                                        sx={{
-                                            textTransform: 'none',
-                                            color: 'rgba(128, 128, 128, 1)',
-                                            opacity: data?.length === 0 ? '0.5' : '1',
-                                            border: '1px solid rgba(184, 184, 184, 1)',
-                                            borderRadius: '4px',
-                                            padding: '8px',
-                                            minWidth: 'auto',
-                                            '@media (max-width: 900px)': {
-                                                border: 'none',
-                                                padding: 0
-                                            },
-                                            '&:hover': {
-                                                backgroundColor: 'transparent',
-                                                border: '1px solid rgba(80, 82, 178, 1)',
-                                                color: 'rgba(80, 82, 178, 1)',
-                                                '& .MuiSvgIcon-root': {
-                                                    color: 'rgba(80, 82, 178, 1)'
-                                                }
+                                        },
+                                    }}
+                                    onClick={() => {
+                                        router.push("/sources/builder")
+                                    }}
+                                >
+                                    Import Source
+                                </Button>
+                                <Button
+                                    onClick={handleFilterPopupOpen}
+                                    disabled={data?.length === 0}
+                                    aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
+                                    aria-haspopup="true"
+                                    aria-expanded={dropdownOpen ? 'true' : undefined}
+                                    sx={{
+                                        textTransform: 'none',
+                                        color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
+                                        border: selectedFilters.length > 0 ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
+                                        borderRadius: '4px',
+                                        padding: '8px',
+                                        opacity: data?.length === 0 ? '0.5' : '1',
+                                        minWidth: 'auto',
+                                        position: 'relative',
+                                        '@media (max-width: 900px)': {
+                                            border: 'none',
+                                            padding: 0
+                                        },
+                                        '&:hover': {
+                                            backgroundColor: 'transparent',
+                                            border: '1px solid rgba(80, 82, 178, 1)',
+                                            color: 'rgba(80, 82, 178, 1)',
+                                            '& .MuiSvgIcon-root': {
+                                                color: 'rgba(80, 82, 178, 1)'
                                             }
-                                        }}
-                                        onClick={handleDownload}
-                                    >
-                                        <DownloadIcon fontSize='medium' />
-                                    </Button>
-                                    <Button
-                                        onClick={handleFilterPopupOpen}
-                                        disabled={data?.length === 0}
-                                        aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
-                                        aria-haspopup="true"
-                                        aria-expanded={dropdownOpen ? 'true' : undefined}
-                                        sx={{
-                                            textTransform: 'none',
-                                            color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
-                                            border: selectedFilters.length > 0 ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
-                                            borderRadius: '4px',
-                                            padding: '8px',
-                                            opacity: data?.length === 0 ? '0.5' : '1',
-                                            minWidth: 'auto',
-                                            position: 'relative',
-                                            '@media (max-width: 900px)': {
-                                                border: 'none',
-                                                padding: 0
-                                            },
-                                            '&:hover': {
-                                                backgroundColor: 'transparent',
-                                                border: '1px solid rgba(80, 82, 178, 1)',
-                                                color: 'rgba(80, 82, 178, 1)',
-                                                '& .MuiSvgIcon-root': {
-                                                    color: 'rgba(80, 82, 178, 1)'
-                                                }
-                                            }
-                                        }}
-                                    >
-                                        <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }} />
+                                        }
+                                    }}
+                                >
+                                    <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }} />
 
-                                        {selectedFilters.length > 0 && (
-                                            <Box
-                                                sx={{
-                                                    position: 'absolute',
-                                                    top: 6,
-                                                    right: 8,
-                                                    width: '10px',
-                                                    height: '10px',
-                                                    backgroundColor: 'red',
-                                                    borderRadius: '50%',
-                                                    '@media (max-width: 900px)': {
-                                                        top: -1,
-                                                        right: 1
-                                                    }
-                                                }}
-                                            />
-                                        )}
-                                    </Button>
-                                </Box>
+                                    {selectedFilters.length > 0 && (
+                                        <Box
+                                            sx={{
+                                                position: 'absolute',
+                                                top: 6,
+                                                right: 8,
+                                                width: '10px',
+                                                height: '10px',
+                                                backgroundColor: 'red',
+                                                borderRadius: '50%',
+                                                '@media (max-width: 900px)': {
+                                                    top: -1,
+                                                    right: 1
+                                                }
+                                            }}
+                                        />
+                                    )}
+                                </Button>
                             </Box>
+                        </Box>
+
+                        <Box sx={{
+                            flex: 1, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 4.25rem)', pr:2, overflow: 'auto', maxWidth: '100%',
+                            '@media (max-width: 900px)': {
+                                pt: '2px',
+                                pb: '18px'
+                            }
+                        }}>
                             
-                            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, "@media (max-width: 600px)": { mb: 1 } }}>
-                                    {/* --- CHIPS --- */}
-                            </Box>
                             <Box sx={{
-                                flex: 1, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 4.25rem)', pr:2, overflow: 'auto', maxWidth: '100%',
+                                display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
                                 '@media (max-width: 900px)': {
-                                    pt: '2px',
-                                    pb: '18px'
+                                    paddingRight: 0,
+                                    minHeight: '100vh'
+
                                 }
                             }}>
-                                {newSource && 
-                                    <SourcesList createdSource={createdSource} setSources={setSources}/>}
-                                {!newSource &&  
-                                    <SourcesTable setStatus={setStatus} status={status} setData={setData} data={data} setSources={setSources}/>}
-                                {showSlider && <Slider />}
-                            </Box>
-                        </Box>
-                    }
-                    {!sources && 
-                        <Box>
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    marginTop: hasNotification ? '1rem' : '0.5rem',
-                                    flexWrap: 'wrap',
-                                    pl: '0.5rem',
-                                    gap: '15px',
-                                    '@media (max-width: 900px)': {
-                                        marginTop: hasNotification ? '3rem' : '1.125rem',
-                                    },
-                                    '@media (max-width: 600px)': {
-                                        marginTop: hasNotification ? '2rem' : '0rem',
-                                    },
-                                }}>
-                                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1, pt:1.5 }}>
-                                    <Typography className='first-sub-title'>
-                                        Import Sources
-                                    </Typography>
-                                    <CustomToolTip title={'Here you can upload new ones to expand your data.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
+                                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+                                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, overflowX: 'auto', "@media (max-width: 600px)": { mb: 1 } }}>
+                                        {/* CHIPS */}
+                                    </Box>
+                                    <Box sx={{
+                                        flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px', pb: '20px',
+                                        '@media (max-width: 900px)': {
+                                            pt: '2px',
+                                            pb: '18px'
+                                        }
+                                    }}>
+                                        {data.length === 0 &&
+                                            <Box sx={sourcesStyles.centerContainerStyles}>
+                                                <Typography variant="h5" sx={{
+                                                    mb: 3,
+                                                    fontFamily: 'Nunito Sans',
+                                                    fontSize: "20px",
+                                                    color: "#4a4a4a",
+                                                    fontWeight: "600",
+                                                    lineHeight: "28px"
+                                                }}>
+                                                    Import Your First Source
+                                                </Typography>
+                                                <Image src='/no-data.svg' alt='No Data' height={250} width={300} />
+                                                <Typography variant="body1" color="textSecondary"
+                                                    sx={{
+                                                        mt: 3,
+                                                        fontFamily: 'Nunito Sans',
+                                                        fontSize: "14px",
+                                                        color: "#808080",
+                                                        fontWeight: "600",
+                                                        lineHeight: "20px"
+                                                    }}>
+                                                    Import your first source to generate lookalikes.
+                                                </Typography>
+                                                <Button
+                                                    variant="contained"
+                                                    onClick={() => router.push("/sources/builder")}
+                                                    className='second-sub-title'
+                                                    sx={{
+                                                        backgroundColor: 'rgba(80, 82, 178, 1)',
+                                                        textTransform: 'none',
+                                                        padding: '10px 24px',
+                                                        mt: 3,
+                                                        color: '#fff !important',
+                                                        ':hover': {
+                                                            backgroundColor: 'rgba(80, 82, 178, 1)'
+                                                        }
+                                                    }}
+                                                >
+                                                    Import Your First Source
+                                                </Button>
+                                            </Box>
+                                        }
+                                        {data.length !== 0 &&
+                                            <Grid container spacing={1} sx={{ flex: 1 }}>
+                                                <Grid item xs={12}>
+                                                    <TableContainer
+                                                        component={Paper}
+                                                        sx={{
+                                                            border: '1px solid rgba(235, 235, 235, 1)',
+                                                            overflowX: 'scroll',
+                                                            maxHeight: selectedFilters.length > 0
+                                                                ? (hasNotification ? '63vh' : '68vh')
+                                                                : '72vh',
+                                                            overflowY: 'auto',
+                                                            "@media (max-height: 800px)": {
+                                                                maxHeight: selectedFilters.length > 0
+                                                                    ? (hasNotification ? '53vh' : '57vh')
+                                                                    : '70vh',
+                                                            },
+                                                            "@media (max-width: 400px)": {
+                                                                maxHeight: selectedFilters.length > 0
+                                                                    ? (hasNotification ? '53vh' : '60vh')
+                                                                    : '67vh',
+                                                            },
+                                                        }}
+                                                    >
+                                                        <Table stickyHeader aria-label="leads table">
+                                                            <TableHead sx={{position: "relative"}}>
+                                                                <TableRow>
+                                                                    {[
+                                                                        { key: 'name', label: 'Name' },
+                                                                        { key: 'source', label: 'Source' },
+                                                                        { key: 'type', label: 'Type' },
+                                                                        { key: 'created_date', label: 'Created Date' },
+                                                                        { key: 'created_by', label: 'Created By' },
+                                                                        { key: 'updated_date', label: 'Update Date' },
+                                                                        { key: 'number_of_customers', label: 'Number of Customers', sortable: true },
+                                                                        { key: 'matched_records', label: 'Matched Records', sortable: true },
+                                                                        { key: 'actions', label: 'Actions' }
+                                                                    ].map(({ key, label, sortable = false }) => (
+                                                                        <TableCell
+                                                                            key={key}
+                                                                            sx={{
+                                                                                ...sourcesStyles.table_column,
+                                                                                ...(key === 'name' && {
+                                                                                    position: 'sticky',
+                                                                                    left: 0,
+                                                                                    zIndex: 10,
+                                                                                    top: 0,
+                                                                                }),
+                                                                                ...(key === 'average_time_sec' && {
+                                                                                    "::after": { content: 'none' }
+                                                                                })
+                                                                            }}
+
+                                                                            onClick={sortable ? () => handleSortRequest(key) : undefined}
+                                                                            style={{ cursor: sortable ? 'pointer' : 'default' }}
+                                                                        >
+                                                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: "space-between", }}>
+                                                                                <Typography variant="body2" sx={{ ...sourcesStyles.table_column, borderRight: '0' }}>{label}</Typography>
+                                                                                {sortable && (
+                                                                                    <IconButton size="small">
+                                                                                        {orderBy === key ? (
+                                                                                            order === 'asc' ? (
+                                                                                                <NorthOutlinedIcon fontSize="inherit" />
+                                                                                            ) : (
+                                                                                                <SouthOutlinedIcon fontSize="inherit" />
+                                                                                            )
+                                                                                        ) : (
+                                                                                            <SwapVertIcon fontSize="inherit" />
+                                                                                        )}
+                                                                                    </IconButton>
+                                                                                )}
+                                                                            </Box>
+                                                                        </TableCell>
+                                                                    ))}
+                                                                </TableRow>
+                                                                {loaderForTable && (
+                                                                    <TableRow sx={{
+                                                                        position: "sticky",
+                                                                        top: '56px',
+                                                                        zIndex: 11,
+                                                                    }}>
+                                                                        <TableCell colSpan={9} sx={{p: 0, pb: "4px"}}>
+                                                                            <LinearProgress variant="indeterminate" sx={{width: "100%", position: "absolute"}}/> 
+                                                                        </TableCell>
+                                                                    </TableRow>
+                                                                )}
+                                                            </TableHead>
+                                                            <TableBody>
+                                                                {data.map((row: Source) => {
+                                                                    const progress = sourceProgress[row.id];
+                                                                    return (
+                                                                        <TableRow
+                                                                            key={row.id}
+                                                                            selected={selectedRows.has(row.id)}
+                                                                            sx={{
+                                                                                backgroundColor: selectedRows.has(row.id) && !loaderForTable ? 'rgba(247, 247, 247, 1)' : '#fff',
+                                                                                '&:hover': {
+                                                                                    backgroundColor: 'rgba(247, 247, 247, 1)',
+                                                                                    '& .sticky-cell': {
+                                                                                        backgroundColor: 'rgba(247, 247, 247, 1)',
+                                                                                    }
+                                                                                }
+                                                                            }}
+                                                                        >
+                                                                            {/* Name Column */}
+                                                                            <TableCell className="sticky-cell"
+                                                                                sx={{
+                                                                                    ...sourcesStyles.table_array, position: 'sticky', left: '0', zIndex: 9, backgroundColor: loaderForTable ? 'transparent' : '#fff',
+                                                                                }}>
+                                                                                {row.name}
+                                                                            </TableCell>
+
+                                                                            {/* Source Column */}
+                                                                            <TableCell
+                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative' }}
+                                                                            >
+                                                                                {setSourceOrigin(row.source_type)}
+                                                                            </TableCell>
+
+                                                                            {/* Type Column */}
+                                                                            <TableCell
+                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative' }}
+                                                                            >
+                                                                                {setSourceType(row.source_origin)}
+                                                                            </TableCell>
+
+                                                                            {/* Created date Column */}
+                                                                            <TableCell
+                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative' }}
+                                                                            >
+                                                                                {dayjs(row.created_at).isValid() ? dayjs(row.created_at).format('MMM D, YYYY') : '--'}
+                                                                            </TableCell>
+
+                                                                            {/* Created By Column */}
+                                                                            <TableCell
+                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative' }}
+                                                                            >
+                                                                                {row.created_by}
+                                                                            </TableCell>
+
+                                                                            {/* Update Date Column */}
+                                                                            <TableCell
+                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative' }}
+                                                                            >
+                                                                                {dayjs(row.updated_at).isValid() ? dayjs(row.updated_at).format('MMM D, YYYY') : '--'}
+                                                                            </TableCell>
+
+                                                                            {/* Number of Customers Column */}
+                                                                            <TableCell
+                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative' }}
+                                                                            >
+                                                                                {row.matched_records_status === "pending"
+                                                                                    ? progress?.total ?? <ThreeDotsLoader />
+                                                                                    : row.total_records ?? "--"
+                                                                                }
+                                                                            </TableCell>
+
+                                                                            {/* Matched Records  Column */}
+                                                                            <TableCell
+                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative' }}
+                                                                            >
+                                                                                {row.matched_records_status === "pending"
+                                                                                    ? <ProgressBar progress={progress} />
+                                                                                    : row.matched_records ?? '--'}
+                                                                            </TableCell>
+
+                                                                            <TableCell sx={{ ...sourcesStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
+                                                                                <IconButton onClick={(event) => handleOpenPopover(event, row)} sx={{ ':hover': { backgroundColor: 'transparent' } }} >
+                                                                                    <MoreVert sx={{ color: "rgba(32, 33, 36, 1)" }} height={8} width={24} />
+                                                                                </IconButton>
+
+                                                                                <Popover
+                                                                                    open={isOpen}
+                                                                                    anchorEl={anchorEl}
+                                                                                    onClose={handleClosePopover}
+                                                                                    anchorOrigin={{
+                                                                                        vertical: 'bottom',
+                                                                                        horizontal: 'left',
+                                                                                    }}
+                                                                                >
+                                                                                    <List
+                                                                                        sx={{
+                                                                                            width: '100%', maxWidth: 360
+                                                                                        }}
+                                                                                    >
+                                                                                        <ListItemButton sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
+                                                                                            handleClosePopover()
+                                                                                            router.push(`/lookalikes/${row.id}/builder`)
+                                                                                        }}>
+                                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Lookalike" />
+                                                                                        </ListItemButton>
+                                                                                        <ListItemButton
+                                                                                            sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }}
+                                                                                            onClick={() => {
+                                                                                                handleOpenConfirmDialog();
+                                                                                            }}
+                                                                                        >
+                                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Remove" />
+                                                                                        </ListItemButton>
+                                                                                        <Popover
+                                                                                            open={openConfirmDialog}
+                                                                                            onClose={handleCloseConfirmDialog}
+                                                                                            anchorEl={anchorEl}
+                                                                                            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                                                                                            transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+                                                                                            slotProps={{ paper: {
+                                                                                                sx: {
+                                                                                                    padding: '0.125rem',
+                                                                                                    width: '15.875rem',
+                                                                                                    boxShadow: 0,
+                                                                                                    borderRadius: '8px',
+                                                                                                    border: '0.5px solid rgba(175, 175, 175, 1)'
+                                                                                                }
+                                                                                            }}}
+                                                                                        >
+                                                                                            <Typography className="first-sub-title" sx={{ paddingLeft: 2, pt: 1, pb: 0 }}>
+                                                                                                Confirm Deletion
+                                                                                            </Typography>
+                                                                                            <DialogContent sx={{ padding: 2 }}>
+                                                                                                <DialogContentText className="table-data">
+                                                                                                    Are you sure you want to delete this source?
+                                                                                                </DialogContentText>
+                                                                                            </DialogContent>
+                                                                                            <DialogActions>
+                                                                                                <Button
+                                                                                                    className="second-sub-title"
+                                                                                                    onClick={handleCloseConfirmDialog}
+                                                                                                    sx={{
+                                                                                                        backgroundColor: '#fff',
+                                                                                                        color: 'rgba(80, 82, 178, 1) !important',
+                                                                                                        fontSize: '14px',
+                                                                                                        textTransform: 'none',
+                                                                                                        padding: '0.75em 1em',
+                                                                                                        border: '1px solid rgba(80, 82, 178, 1)',
+                                                                                                        maxWidth: '50px',
+                                                                                                        maxHeight: '30px',
+                                                                                                        '&:hover': { backgroundColor: '#fff', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
+                                                                                                    }}
+                                                                                                >
+                                                                                                    Cancel
+                                                                                                </Button>
+                                                                                                <Button
+                                                                                                    className="second-sub-title"
+                                                                                                    onClick={handleDeleteSource}
+                                                                                                    sx={{
+                                                                                                        backgroundColor: 'rgba(80, 82, 178, 1)',
+                                                                                                        color: '#fff !important',
+                                                                                                        fontSize: '14px',
+                                                                                                        textTransform: 'none',
+                                                                                                        padding: '0.75em 1em',
+                                                                                                        border: '1px solid rgba(80, 82, 178, 1)',
+                                                                                                        maxWidth: '60px',
+                                                                                                        maxHeight: '30px',
+                                                                                                        '&:hover': { backgroundColor: 'rgba(80, 82, 178, 1)', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
+                                                                                                    }}
+                                                                                                >
+                                                                                                    Delete
+                                                                                                </Button>
+                                                                                            </DialogActions>
+                                                                                        </Popover>
+                                                                                    </List>
+                                                                                </Popover>
+                                                                            </TableCell>
+
+                                                                        </TableRow>
+                                                                    )
+                                                                })}
+                                                            </TableBody>
+                                                        </Table>
+                                                    </TableContainer>
+                                                    {count_companies && count_companies > 15 && <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0', "@media (max-width: 600px)": { padding: '12px 0 0' } }}>
+                                                        <CustomTablePagination
+                                                            count={count_companies ?? 0}
+                                                            page={page}
+                                                            rowsPerPage={rowsPerPage}
+                                                            onPageChange={handleChangePage}
+                                                            onRowsPerPageChange={handleChangeRowsPerPage}
+                                                            rowsPerPageOptions={rowsPerPageOptions}
+                                                        />
+                                                    </Box>}
+                                                </Grid>
+                                            </Grid>
+                                        }
+                                        {showSlider && <Slider />}
+                                    </Box>
+
+                                    {/* <FilterPopup open={filterPopupOpen} 
+                                        onClose={handleFilterPopupClose} 
+                                        onApply={handleApplyFilters} 
+                                        jobTitles={jobTitles || []} 
+                                        seniorities={seniorities || []} 
+                                        departments={departments || []} />
+                                    */}
+
                                 </Box>
                             </Box>
-                            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, overflowX: 'auto', "@media (max-width: 600px)": { mb: 1 } }}>
-                                    {/* --- CHIPS --- */}
-                            </Box>
-                            <Box sx={{
-                                flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto', height: "calc(100vh - 7rem)", maxWidth: '100%', pl: 0, pr: 2, pt: '14px',
-                                '@media (max-width: 900px)': {
-                                    pt: '2px',
-                                    pb: '18px'
-                                }
-                            }}>
-                                <SourcesImport setCreatedSource={setCreatedSource} setNewSource={setNewSource} setSources={setSources} />
-                                {showSlider && <Slider />}
-                            </Box>
+                            {/* <SourcesTable setStatus={setStatus} status={status} setData={setData} data={data} setSources={setSources}/> */}
+                            {/* {showSlider && <Slider />} */}
                         </Box>
-                    }
-
-                    {/* <PopupDetails open={openPopup}
-                        onClose={handleClosePopup}
-                        rowData={popupData} />
-                    <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose} onApply={handleApplyFilters} industry={industry || []} /> */}
+                    </Box>
                 </Box>
             </Box>
         </>
