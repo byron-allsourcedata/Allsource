@@ -532,7 +532,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
   const [openDeletePopup, setOpenDeletePopup] = useState(false);
   const [search, setSearch] = useState<string>('');
   const [upgradePlanPopup, setUpgradePlanPopup] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value);
@@ -962,6 +962,7 @@ const Integrations = () => {
   useEffect(() => {
     const fetchIntegrationCredentials = async () => {
       try {
+        setLoading(true)
         const response = await axiosInstance.get('/integrations/credentials/')
         if (response.status === 200) {
           setIntegrationsCredentials(response.data)
@@ -984,6 +985,7 @@ const Integrations = () => {
     }
     const fetchIntegration = async () => {
       try {
+        setLoading(true)
         const response = await axiosInstance.get('/integrations/')
         if (response.status === 200) {
           setIntegrations(response.data)
