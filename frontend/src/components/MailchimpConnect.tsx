@@ -185,7 +185,8 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, In
         } else {
             showErrorToast("Invalid API Key")
         }
-    } catch (error) {}
+    } catch (error) {
+    }
     finally{
         setDisableButton(false)
         setLoading(false)

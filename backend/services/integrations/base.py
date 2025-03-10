@@ -62,6 +62,12 @@ class IntegrationService:
     def get_sync_by_hook_url(self, hook_url):
         return self.integrations_user_sync_persistence.get_data_sync_filter_by(hook_url=hook_url)
     
+    def is_integration_limit_reached(self, user_id: int, domain_id: int):
+        integration_limit, domain_integrations_count = self.integrations_user_sync_persistence.get_limits_integrations(user_id, domain_id)
+        if domain_integrations_count >= integration_limit:
+            return True
+        return False
+    
     def get_leads_for_zapier(self, domain):
         five_x_five_users = self.lead_persistence.get_last_leads_for_zapier(domain.id)
         valid_users = []

@@ -187,7 +187,7 @@ const SlackIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxShado
                         access_token: apiKey,
                     })
                 }
-                showToast("Integration Klaviyo Successfully");
+                showToast("Integration Slack Successfully");
                 handleNextTab();
             }
         } catch (err) {

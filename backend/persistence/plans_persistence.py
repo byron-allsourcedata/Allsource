@@ -50,7 +50,7 @@ class PlansPersistence:
         
     def get_plan_by_title_price(self, plan_name: str, payment_amount: str):
         plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.title == plan_name,
-                                                      SubscriptionPlan.price == payment_amount).first()
+                                                      SubscriptionPlan.full_price == payment_amount).first()
         if plan:
             return plan
         else:
