@@ -486,7 +486,7 @@ class SubscriptionService:
                 self.db.commit()
 
     def get_plan_by_price(self, lead_credit_price):
-        return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.price == lead_credit_price).first()
+        return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.full_price == lead_credit_price).first()
     
     def process_shopify_subscription(self, user, plan, subscription_info, charge_id):
         result = {'status': None, 'lead_credit_price': None}
