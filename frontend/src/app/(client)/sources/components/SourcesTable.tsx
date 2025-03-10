@@ -86,7 +86,6 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
     const [loaderForTable, setLoaderForTable] = useState(false);
     const [selectedFilters, setSelectedFilters] = useState<{ label: string, value: string }[]>([]);
     const [openPopup, setOpenPopup] = React.useState(false);
-    const [creditsChargePopup, setCreditsChargePopup] = React.useState(false);
     const [upgradePlanPopup, setUpgradePlanPopup] = React.useState(false);
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -176,9 +175,9 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
 
 
 
-    const fetchEmployeesCompany = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
+    const fetchSources = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
         try {
-            setLoadingPage(true);
+            setLoaderForTable(true);
             const accessToken = localStorage.getItem("token");
             if (!accessToken) {
                 router.push('/signin');
@@ -220,7 +219,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
                 }
             }
         } finally {
-            setLoadingPage(false);
+            setLoaderForTable(false);
         }
     }
 
@@ -233,7 +232,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
     }
 
     useEffect(() => {
-        fetchEmployeesCompany({
+        fetchSources({
             sortBy: orderBy,
             sortOrder: order,
             page,
@@ -597,7 +596,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
                                         }}
                                     >
                                         <Table stickyHeader aria-label="leads table">
-                                            <TableHead>
+                                            <TableHead sx={{position: "relative", borderBottomColor: loaderForTable ? "transparent" : "inherit"}}>
                                                 <TableRow>
                                                     {[
                                                         { key: 'name', label: 'Name' },
@@ -646,9 +645,10 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
                                                         </TableCell>
                                                     ))}
                                                 </TableRow>
+                                                {loaderForTable && 
+                                                    <LinearProgress variant="indeterminate" sx={{width: "100%", position: "absolute"}}/> 
+                                                }
                                             </TableHead>
-                                            {loaderForTable && 
-                                                <LinearProgress variant="determinate" /> }
                                             <TableBody>
                                                 {data.map((row: any) => {
                                                     const progress = sourceProgress[row.id];
@@ -657,7 +657,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
                                                             key={row.id}
                                                             selected={selectedRows.has(row.id)}
                                                             sx={{
-                                                                backgroundColor: selectedRows.has(row.id) ? 'rgba(247, 247, 247, 1)' : '#fff',
+                                                                backgroundColor: selectedRows.has(row.id) && !loaderForTable ? 'rgba(247, 247, 247, 1)' : '#fff',
                                                                 '&:hover': {
                                                                     backgroundColor: 'rgba(247, 247, 247, 1)',
                                                                     '& .sticky-cell': {
@@ -669,7 +669,7 @@ const SourcesTable: React.FC<SourceTableProps> = ({ status, setStatus, data, set
                                                             {/* Name Column */}
                                                             <TableCell className="sticky-cell"
                                                                 sx={{
-                                                                    ...sourcesStyles.table_array, position: 'sticky', left: '0', zIndex: 9, backgroundColor: '#fff'
+                                                                    ...sourcesStyles.table_array, position: 'sticky', left: '0', zIndex: 9, backgroundColor: loaderForTable ? 'transparent' : '#fff',
 
                                                                 }} onClick={(e) => {
                                                                     e.stopPropagation();
