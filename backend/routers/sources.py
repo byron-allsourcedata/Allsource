@@ -69,3 +69,10 @@ def get_sample_customers_list(sources_service: AudienceSourceService = Depends(g
     file_path = sources_service.get_sample_customers_list()
     return FileResponse(file_path, media_type="text/csv",
                         headers={"Content-Disposition": "attachment; filename=sample-customers-list.csv"})
+
+@router.get("/get_processing_sources")
+def get_processing_sources(
+                           sources_ids: List[int],
+                           user=Depends(check_user_authorization),
+                           sources_service: AudienceSourceService = Depends(get_audience_sources_service)):
+    return sources_service.get_processing_sources(sources_ids, user=user)

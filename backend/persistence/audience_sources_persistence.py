@@ -39,7 +39,7 @@ class AudienceSourcesPersistence:
             )
                 .join(Users, Users.id == AudienceSource.created_by_user_id)
                 .filter(AudienceSource.user_id == user_id)
-                .order_by(AudienceSource.created_at.asc())
+                .order_by(AudienceSource.created_at.desc())
         )
 
         sort_options = {
@@ -80,3 +80,9 @@ class AudienceSourcesPersistence:
         ).delete()
         self.db.commit()
         return deleted_count
+
+    def get_processing_sources(self, sources_ids, user_id):
+        processing_sources = self.db.query(AudienceSource).filter(AudienceSource.user_id == user_id,
+                                                                  AudienceSource.id.in_(sources_ids),
+                                                                  )
+        return processing_sources
