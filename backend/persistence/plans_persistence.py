@@ -3,15 +3,23 @@ from sqlalchemy import case
 from models.plans import SubscriptionPlan
 from models.subscriptions import UserSubscriptions
 from models.users import User
-from enums import SubscriptionStatus
+from enums import SourcePlatformEnum
 
 
 class PlansPersistence:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_stripe_plans(self):
-        return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_active == True).all()
+    def get_stripe_plans(self, platform):
+        query = self.db.query(SubscriptionPlan).filter(
+            SubscriptionPlan.is_active == True,
+            SubscriptionPlan.platform == (
+                SourcePlatformEnum.SHOPIFY.value if platform == SourcePlatformEnum.SHOPIFY.value 
+                else SourcePlatformEnum.MAXIMIZ.value
+            )
+        )
+        return query.all()
+
 
     def save_reason_unsubscribe(self, reason_unsubscribe, user_id, cancel_scheduled_at):
         subscription = self.get_user_subscription(user_id)
