@@ -190,133 +190,224 @@ const SourcesImport: React.FC = () => {
         }
     };
 
-    const validateFileSize = (file: File, maxSizeMB: number): boolean => {
-        const fileSize = parseFloat((file.size / (1024 * 1024)).toFixed(2));
-        if (fileSize > maxSizeMB) {
-            handleDeleteFile();
-            showErrorToast("The uploaded CSV file exceeds the 100MB limit. Please reduce the file size and try again.");
-            return false;
-        }
-        setFileSizeStr(fileSize + " MB");
-        setFileName(file.name);
-        return true;
-    };
+    const handleFileUpload = async (file: File) => {
+        if (file) {
 
-    const getFileUploadUrl = async (fileType: string): Promise<void> => {
-        try {
+            const fileSize = parseFloat((file.size / (1024 * 1024)).toFixed(2))
+            if (fileSize > 100) {
+                handleDeleteFile()
+                showErrorToast("The uploaded CSV file exceeds the 100MB limit. Please reduce the file size and try again.")
+                return
+            }
+
             const response = await fetch("/api/upload", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ fileType }),
-            });
-
+                body: JSON.stringify({ fileType: file.type }),
+              });
+          
             const { url } = await response.json();
-    
             if (!url) {
-                throw new Error("Storage access error!");
+                showErrorToast("Error at upload file!")
+                return
             }
-    
-            setFileUrl(url);
 
-        } catch (error: unknown) {
-            throw error;
-        }
-    };
-
-    const uploadFile = (file: File, url: string, onProgress: (progress: number) => void): Promise<void> => {
-        return new Promise((resolve, reject) => {
+            setFileUrl(url)
+            
             const xhr = new XMLHttpRequest();
             xhr.open("PUT", url);
-
+        
             xhr.upload.onprogress = (event) => {
-                if (event.lengthComputable) {
-                    const percentCompleted = Math.round((event.loaded * 100) / event.total);
-                    onProgress(percentCompleted);
-                }
+              if (event.lengthComputable) {
+                const percentCompleted = Math.round((event.loaded * 100) / event.total);
+                setUploadProgress(percentCompleted);
+              }
             };
-
-            xhr.onload = () => resolve();
-            xhr.onerror = () => reject(new Error("Error at upload file!"));
-
+        
+            xhr.onload = () => {
+              setUploadProgress(null);
+            };
+        
+            xhr.onerror = () => {
+                showErrorToast("Error at upload file!")
+                setUploadProgress(null);
+            };
+        
             xhr.setRequestHeader("Content-Type", file.type);
             xhr.send(file);
-        });
-    };
 
-    const processFileContent = async (content: string): Promise<void> => {
-        try {
-            if (!content) {
-                throw new Error("File is empty or couldn't be read!");
-            }
+            setFile(file)
+            setFileSizeStr(fileSize + " MB")
+            setFileName(file.name)
 
-            const lines = content.split("\n");
-            const headers = lines[0]?.split(",").map((header) => header.trim());
-            setHeadersinCSV(headers);
-
-            if (headers.length === 0 || headers.every((header) => header === "")) {
-                throw new Error("CSV file doesn't contain headers!");
-            }
-
-            const newHeadings = await smartSubstitutionHeaders(headers);
-
-            if (newHeadings[0] === "None") {
-                setEmailNotSubstitution(true);
-            }
-
-            const updatedRows = rows.map((row, index) => ({
-                ...row,
-                value: newHeadings[index] === "None" ? "" : newHeadings[index],
-            }));
-
-            setRows(updatedRows);
-        } catch (error: unknown) {
-            throw error;
-        }
-    };
-
-    const readFileContent = (file: File): Promise<string> => {
-        return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            reader.onload = (event) => {
+
+            reader.onload = async (event) => {
                 const content = event.target?.result as string;
-                if (content) {
-                    resolve(content);
-                } else {
-                    reject(new Error("Failed to read file content."));
+        
+                if (!content) {
+                    showErrorToast("File is empty or couldn't be read!");
+                    return;
                 }
+        
+                const lines = content.split("\n");
+                const headers = lines[0]?.split(",").map(header => header.trim());
+                setHeadersinCSV(headers)
+        
+                if (!headers) {
+                    showErrorToast("СSV file doesn't contain headers!")
+                    return;
+                }
+
+                const newHeadings = await smartSubstitutionHeaders(headers)
+                
+                if (newHeadings[0] === "None"){
+                    setEmailNotSubstitution(true)
+                }
+        
+                const updatedRows = rows.map((row, index) => {
+                    return {
+                        ...row,
+                        value: newHeadings[index] === "None" ? "" : newHeadings[index],
+                    };
+                });
+
+                setRows(updatedRows);
             };
-            reader.onerror = () => {
-                reject(new Error("An error occurred while reading the file."));
-            };
+        
             reader.readAsText(file);
-        });
-    };
-
-    const handleFileUpload = async (file: File) => {
-        try {
-            if (!file) return;
-
-            if (!validateFileSize(file, 100)) return;
-
-            await getFileUploadUrl(file.type);
-
-            await uploadFile(file, fileUrl, setUploadProgress);
-            setUploadProgress(null);
-
-            setFile(file);
-
-            const content = await readFileContent(file);
-            await processFileContent(content);
-
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-                showErrorToast(error.message);
-            } else {
-                showErrorToast("An unexpected error occurred during file upload.");
-            }
-            setUploadProgress(null);
         }
     };
+
+    
+    // const validateFileSize = (file: File, maxSizeMB: number): boolean => {
+    //     const fileSize = parseFloat((file.size / (1024 * 1024)).toFixed(2));
+    //     if (fileSize > maxSizeMB) {
+    //         handleDeleteFile();
+    //         showErrorToast("The uploaded CSV file exceeds the 100MB limit. Please reduce the file size and try again.");
+    //         return false;
+    //     }
+    //     setFileSizeStr(fileSize + " MB");
+    //     setFileName(file.name);
+    //     return true;
+    // };
+
+    // const getFileUploadUrl = async (fileType: string): Promise<string> => {
+    //     try {
+    //         const response = await fetch("/api/upload", {
+    //             method: "POST",
+    //             headers: { "Content-Type": "application/json" },
+    //             body: JSON.stringify({ fileType }),
+    //         });
+
+    //         const { url } = await response.json();
+    
+    //         if (!url) {
+    //             throw new Error("Storage access error!");
+    //         }
+
+    //         setFileUrl(url);
+    //         return url
+
+    //     } catch (error: unknown) {
+    //         throw error;
+    //     }
+    // };
+
+    // const uploadFile = (file: File, url: string, onProgress: (progress: number) => void): Promise<void> => {
+    //     return new Promise((resolve, reject) => {
+    //         const xhr = new XMLHttpRequest();
+    //         xhr.open("PUT", url);
+
+    //         xhr.upload.onprogress = (event) => {
+    //             if (event.lengthComputable) {
+    //                 const percentCompleted = Math.round((event.loaded * 100) / event.total);
+    //                 onProgress(percentCompleted);
+    //             }
+    //         };
+
+    //         xhr.onload = () => resolve();
+    //         xhr.onerror = () => reject(new Error("Error at upload file!"));
+
+    //         xhr.setRequestHeader("Content-Type", file.type);
+    //         xhr.send(file);
+    //     });
+    // };
+
+    // const processFileContent = async (content: string): Promise<void> => {
+    //     try {
+    //         if (!content) {
+    //             throw new Error("File is empty or couldn't be read!");
+    //         }
+
+    //         const lines = content.split("\n");
+    //         const headers = lines[0]?.split(",").map((header) => header.trim());
+    //         setHeadersinCSV(headers);
+
+    //         if (headers.length === 0 || headers.every((header) => header === "")) {
+    //             throw new Error("CSV file doesn't contain headers!");
+    //         }
+
+    //         const newHeadings = await smartSubstitutionHeaders(headers);
+
+    //         if (newHeadings[0] === "None") {
+    //             setEmailNotSubstitution(true);
+    //         }
+
+    //         const updatedRows = rows.map((row, index) => ({
+    //             ...row,
+    //             value: newHeadings[index] === "None" ? "" : newHeadings[index],
+    //         }));
+
+    //         setRows(updatedRows);
+    //     } catch (error: unknown) {
+    //         throw error;
+    //     }
+    // };
+
+    // const readFileContent = (file: File): Promise<string> => {
+    //     return new Promise((resolve, reject) => {
+    //         const reader = new FileReader();
+    //         reader.onload = (event) => {
+    //             const content = event.target?.result as string;
+    //             if (content) {
+    //                 resolve(content);
+    //             } else {
+    //                 reject(new Error("Failed to read file content."));
+    //             }
+    //         };
+    //         reader.onerror = () => {
+    //             reject(new Error("An error occurred while reading the file."));
+    //         };
+    //         reader.readAsText(file);
+    //     });
+    // };
+
+    // const handleFileUpload = async (file: File) => {
+    //     try {
+    //         if (!file) return;
+
+    //         if (!validateFileSize(file, 100)) return;
+
+    //         const url = await getFileUploadUrl(file.type);
+
+    //         await uploadFile(file, url, setUploadProgress);
+    //         setUploadProgress(null);
+
+    //         setFile(file);
+
+    //         const content = await readFileContent(file);
+    //         await processFileContent(content);
+
+    //     } catch (error: unknown) {
+    //         if (error instanceof Error) {
+    //             showErrorToast(error.message);
+    //         } else {
+    //             showErrorToast("An unexpected error occurred during file upload.");
+    //         }
+    //         setUploadProgress(null);
+    //     }
+    // };
 
     const smartSubstitutionHeaders = async (headings: string[]) => {
         setIsChatGPTProcessing(true)
