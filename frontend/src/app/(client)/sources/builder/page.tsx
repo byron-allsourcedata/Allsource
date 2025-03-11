@@ -13,18 +13,6 @@ import { styled } from '@mui/material/styles';
 import CustomToolTip from '@/components/customToolTip';
 import { useNotification } from '@/context/NotificationContext';
 
-interface Source {
-    id: string
-    name: string
-    source_origin: string
-    source_type: string
-    created_at: Date
-    updated_at: Date
-    created_by: string
-    total_records?: number
-    matched_records?: number
-}
-
 interface Row {
     id: number;
     type: string;
@@ -124,6 +112,8 @@ const SourcesImport: React.FC = () => {
     const handleDeleteFile = () => {
         setFile(null);
         setFileName('')
+        setEmailNotSubstitution(false)
+        setRows(defaultRows)
     };
 
     const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
@@ -200,95 +190,132 @@ const SourcesImport: React.FC = () => {
         }
     };
 
-    const handleFileUpload = async (file: File) => {
-        if (file) {
+    const validateFileSize = (file: File, maxSizeMB: number): boolean => {
+        const fileSize = parseFloat((file.size / (1024 * 1024)).toFixed(2));
+        if (fileSize > maxSizeMB) {
+            handleDeleteFile();
+            showErrorToast("The uploaded CSV file exceeds the 100MB limit. Please reduce the file size and try again.");
+            return false;
+        }
+        setFileSizeStr(fileSize + " MB");
+        setFileName(file.name);
+        return true;
+    };
 
-            const fileSize = parseFloat((file.size / (1024 * 1024)).toFixed(2))
-            if (fileSize > 100) {
-                handleDeleteFile()
-                showErrorToast("The uploaded CSV file exceeds the 100MB limit. Please reduce the file size and try again.")
-                return
-            }
-
+    const getFileUploadUrl = async (fileType: string): Promise<void> => {
+        try {
             const response = await fetch("/api/upload", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ fileType: file.type }),
-              });
-          
-            const { url } = await response.json();
-            if (!url) {
-                showErrorToast("Error at upload file!")
-                return
-            }
+                body: JSON.stringify({ fileType }),
+            });
 
-            setFileUrl(url)
-            
+            const { url } = await response.json();
+    
+            if (!url) {
+                throw new Error("Storage access error!");
+            }
+    
+            setFileUrl(url);
+
+        } catch (error: unknown) {
+            throw error;
+        }
+    };
+
+    const uploadFile = (file: File, url: string, onProgress: (progress: number) => void): Promise<void> => {
+        return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
             xhr.open("PUT", url);
-        
+
             xhr.upload.onprogress = (event) => {
-              if (event.lengthComputable) {
-                const percentCompleted = Math.round((event.loaded * 100) / event.total);
-                setUploadProgress(percentCompleted);
-              }
+                if (event.lengthComputable) {
+                    const percentCompleted = Math.round((event.loaded * 100) / event.total);
+                    onProgress(percentCompleted);
+                }
             };
-        
-            xhr.onload = () => {
-              setUploadProgress(null);
-            };
-        
-            xhr.onerror = () => {
-              setUploadProgress(null);
-            };
-        
+
+            xhr.onload = () => resolve();
+            xhr.onerror = () => reject(new Error("Error at upload file!"));
 
             xhr.setRequestHeader("Content-Type", file.type);
             xhr.send(file);
+        });
+    };
 
-            setFile(file)
-            setFileSizeStr(fileSize + " MB")
-            setFileName(file.name)
+    const processFileContent = async (content: string): Promise<void> => {
+        try {
+            if (!content) {
+                throw new Error("File is empty or couldn't be read!");
+            }
 
-            const reader = new FileReader();
+            const lines = content.split("\n");
+            const headers = lines[0]?.split(",").map((header) => header.trim());
+            setHeadersinCSV(headers);
 
-            reader.onload = async (event) => {
-                const content = event.target?.result as string;
-        
-                if (!content) {
-                    console.error("File is empty or couldn't be read");
-                    return;
-                }
-        
-                const lines = content.split("\n");
-                const headers = lines[0]?.split(",").map(header => header.trim());
-                setHeadersinCSV(headers)
-        
-                if (!headers) {
-                    console.error("No headers found in the file");
-                    return;
-                }
+            if (headers.length === 0 || headers.every((header) => header === "")) {
+                throw new Error("CSV file doesn't contain headers!");
+            }
 
-                const newHeadings = await smartSubstitutionHeaders(headers)
-                
-                if (newHeadings[0] === "None"){
-                    setEmailNotSubstitution(true)
-                }
-        
-                const updatedRows = rows.map((row, index) => {
-                    return {
-                        ...row,
-                        value: newHeadings[index] === "None" ? "" : newHeadings[index],
-                    };
-                });
+            const newHeadings = await smartSubstitutionHeaders(headers);
 
-                setRows(updatedRows);
-            };
-        
-            reader.readAsText(file);
+            if (newHeadings[0] === "None") {
+                setEmailNotSubstitution(true);
+            }
+
+            const updatedRows = rows.map((row, index) => ({
+                ...row,
+                value: newHeadings[index] === "None" ? "" : newHeadings[index],
+            }));
+
+            setRows(updatedRows);
+        } catch (error: unknown) {
+            throw error;
         }
+    };
 
-        
+    const readFileContent = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const content = event.target?.result as string;
+                if (content) {
+                    resolve(content);
+                } else {
+                    reject(new Error("Failed to read file content."));
+                }
+            };
+            reader.onerror = () => {
+                reject(new Error("An error occurred while reading the file."));
+            };
+            reader.readAsText(file);
+        });
+    };
+
+    const handleFileUpload = async (file: File) => {
+        try {
+            if (!file) return;
+
+            if (!validateFileSize(file, 100)) return;
+
+            await getFileUploadUrl(file.type);
+
+            await uploadFile(file, fileUrl, setUploadProgress);
+            setUploadProgress(null);
+
+            setFile(file);
+
+            const content = await readFileContent(file);
+            await processFileContent(content);
+
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                showErrorToast(error.message);
+            } else {
+                showErrorToast("An unexpected error occurred during file upload.");
+            }
+            setUploadProgress(null);
+        }
     };
 
     const smartSubstitutionHeaders = async (headings: string[]) => {
@@ -318,7 +345,7 @@ const SourcesImport: React.FC = () => {
             )}
             <Box sx={{
                 display: 'flex', flexDirection: 'column', height: 'calc(100vh - 4.25rem)', overflow: 'auto',
-                '@media (max-width: 900px)': {
+                '@media (max-width: 1024px)': {
                     pr: 2,
                 }
             }}>
