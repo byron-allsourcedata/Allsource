@@ -2,6 +2,8 @@ from datetime import datetime, timezone
 from models.audience_sources import AudienceSource
 from models.lookalikes import Lookalikes
 from sqlalchemy.orm import Session
+from typing import Optional, Tuple, List
+import math
 from sqlalchemy import func
 from fastapi import HTTPException
 import re
@@ -18,6 +20,30 @@ class LookalikesPersistence:
             .filter(AudienceSource.id == uuid_of_source, AudienceSource.user_id == user_id).first()
 
         return source
+
+    def get_lookalikes(self, user_id: int, page: int, per_page: int,
+                       sort_by: Optional[str] = None, sort_order: Optional[str] = None):
+        query = self.db.query(
+            Lookalikes, AudienceSource.source_type, AudienceSource.source_origin, Users.full_name)\
+            .join(AudienceSource, Lookalikes.source_uuid == AudienceSource.id)\
+            .join(Users, Users.id == AudienceSource.created_by_user_id)\
+            .filter(AudienceSource.user_id == user_id)
+
+        offset = (page - 1) * per_page
+        lookalikes = query.limit(per_page).offset(offset).all()
+        count = query.count()
+        max_page = math.ceil(count / per_page)
+        result = [
+            {
+                **lookalike.__dict__,
+                "source": source_origin,
+                "source_type": source_type,
+                "created_by": created_by
+            }
+            for lookalike, source_type, source_origin, created_by in lookalikes
+        ]
+
+        return result, count, max_page
 
     def create_lookalike(self, uuid_of_source, user_id, lookalike_size, lookalike_name, created_by_user_id):
         source_info = self.get_source_info(uuid_of_source, user_id)

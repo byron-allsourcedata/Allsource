@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { Box, Typography, Button, IconButton, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText } from '@mui/material';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axiosInstance from "@/axios/axiosInterceptorInstance";
@@ -408,4 +408,12 @@ const SourcesList: React.FC = () => {
     );
 };
 
-export default SourcesList;
+const SourcesListPage: React.FC = () => {
+    return (
+        <Suspense fallback={<CustomizedProgressBar />}>
+            <SourcesList />
+        </Suspense>
+    );
+};
+
+export default SourcesListPage;

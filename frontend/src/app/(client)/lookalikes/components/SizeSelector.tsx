@@ -11,7 +11,7 @@ interface AudienceSize {
 
 interface AudienceSizeSelectorProps {
     audienceSize: AudienceSize[];
-    onSelectSize: (id: string, min: number, max: number) => void;
+    onSelectSize: (id: string, min: number, max: number, label: string) => void;
     selectedSize: string;
 }
 
@@ -94,7 +94,8 @@ const AudienceSizeSelector: React.FC<AudienceSizeSelectorProps> = ({
                                     onSelectSize(
                                         source.id,
                                         source.min_value,
-                                        source.max_value
+                                        source.max_value,
+                                        source.label
                                     )
                                 }
                                 sx={{
@@ -103,7 +104,7 @@ const AudienceSizeSelector: React.FC<AudienceSizeSelectorProps> = ({
                                     alignItems: "center",
                                     justifyContent: "center",
                                     flex: 1,
-                                    minWidth: 0, // Избегаем минимальной ширины
+                                    minWidth: 0,
                                     border:
                                         selectedSize === source.id
                                             ? "1px solid #1976d2"
@@ -111,7 +112,7 @@ const AudienceSizeSelector: React.FC<AudienceSizeSelectorProps> = ({
                                     padding: "0.6rem 0.5rem",
                                     borderRadius: "4px",
                                     textTransform: "none",
-                                    width: { xs: "100%", sm: "auto" }, // 100% на маленьких экранах, адаптивно на больших
+                                    width: { xs: "100%", sm: "auto" },
                                 }}
                             >
                                 <Box

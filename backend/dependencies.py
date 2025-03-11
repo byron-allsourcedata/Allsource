@@ -640,5 +640,5 @@ def check_api_key(maximiz_api_key=Header(None),
     raise HTTPException(status_code=401, detail={'status': UserAuthorizationStatus.INVALID_API_KEY.value})
 
 
-def get_lookalikes_service(user=Depends(check_user_authentication), lookalikes_persistence_service: LookalikesPersistence = Depends(get_lookalikes_persistence)):
-    return LookalikesService(user=user, lookalikes_persistence_service=lookalikes_persistence_service)
+def get_lookalikes_service(lookalikes_persistence_service: LookalikesPersistence = Depends(get_lookalikes_persistence)):
+    return LookalikesService(lookalikes_persistence_service=lookalikes_persistence_service)
