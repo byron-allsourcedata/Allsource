@@ -1,6 +1,6 @@
 "use client";
 import React, { ChangeEvent, useState, useEffect } from 'react';
-import { Box, Grid, Typography, TextField, Button, FormControl, MenuItem, Select, LinearProgress, SelectChangeEvent, IconButton, Popover } from '@mui/material';
+import { Box, Grid, Typography, TextField, Button, FormControl, MenuItem, Select, LinearProgress, SelectChangeEvent, IconButton } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import axiosInstance from "@/axios/axiosInterceptorInstance";
@@ -46,7 +46,6 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
 
 const SourcesImport: React.FC = () => {
     const router = useRouter();
-    const [isLoading, setIsLoading] = useState(false);
     const [isChatGPTProcessing, setIsChatGPTProcessing] = useState(false);
     const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
@@ -67,12 +66,7 @@ const SourcesImport: React.FC = () => {
         { id: 2, type: 'Phone number', value: '', canDelete: true, isHidden: false },
         { id: 3, type: 'Last Name', value: '', canDelete: true, isHidden: false },
         { id: 4, type: 'First Name', value: '', canDelete: true, isHidden: false },
-        { id: 5, type: 'Gender', value: '', canDelete: true, isHidden: false },
-        { id: 6, type: 'Age', value: '', canDelete: true, isHidden: false },
-        { id: 7, type: 'Order Amount', value: '', canDelete: true, isHidden: false },
-        { id: 8, type: 'State', value: '', canDelete: true, isHidden: false },
-        { id: 9, type: 'City', value: '', canDelete: true, isHidden: false },
-        { id: 10, type: 'Zip Code', value: '', canDelete: true, isHidden: false }
+        { id: 5, type: 'Transaction Date', value: '', canDelete: true, isHidden: false },
     ];
     const [rows, setRows] = useState<Row[]>(defaultRows);
 
@@ -80,9 +74,36 @@ const SourcesImport: React.FC = () => {
         setRows(rows.map(row =>
             row.id === id ? { ...row, value } : row
         ));
+
+        if (id === 1) {
+            setEmailNotSubstitution(false);
+        }
     };
 
+    useEffect(() => {
+        let updatedRows = defaultRows.map(row => {
+            if (row.type === 'Transaction Date') {
+                let newType = row.type;
+                if (sourceType === "Customer conversion") newType = "Transaction Date";
+                if (sourceType === "Failed Leads") newType = "Lead Date";
+                if (sourceType === "Interest") newType = "Interest Date";
+
+                return { ...row, type: newType };
+            }
+            return row;
+        });
+        if (sourceType === "Customer conversion") {
+            updatedRows = [
+                ...updatedRows,
+                { id: 6, type: 'Order Amount', value: '', canDelete: true, isHidden: false },
+            ];
+        }
+
+        setRows(updatedRows);
+    }, [sourceType]);
+
     const handleChangeSourceType = (event: SelectChangeEvent<string>) => {
+        handleDeleteFile()
         setSourceType(event.target.value);
     };
 
@@ -249,11 +270,15 @@ const SourcesImport: React.FC = () => {
                 }
 
                 const newHeadings = await smartSubstitutionHeaders(headers)
+                
+                if (newHeadings[0] === "None"){
+                    setEmailNotSubstitution(true)
+                }
         
-                const updatedRows = defaultRows.map((row, index) => {
+                const updatedRows = rows.map((row, index) => {
                     return {
                         ...row,
-                        value: newHeadings[index],
+                        value: newHeadings[index] === "None" ? "" : newHeadings[index],
                     };
                 });
 
@@ -269,7 +294,7 @@ const SourcesImport: React.FC = () => {
     const smartSubstitutionHeaders = async (headings: string[]) => {
         setIsChatGPTProcessing(true)
         try {
-            const response = await axiosInstance.post(`/audience-sources/heading-substitution`, {headings}, {
+            const response = await axiosInstance.post(`/audience-sources/heading-substitution`, {source_type: sourceType, headings}, {
                 headers: { 'Content-Type': 'application/json' },
             })
             if (response.status === 200){
@@ -285,11 +310,6 @@ const SourcesImport: React.FC = () => {
     } 
 
 
-    if (isLoading) {
-        return <CustomizedProgressBar />;
-    }
-
-
 
     return (
         <>
@@ -297,40 +317,33 @@ const SourcesImport: React.FC = () => {
                 <CustomizedProgressBar/>
             )}
             <Box sx={{
-                display: 'flex', flexDirection: 'column', height: 'calc(100vh - 4.25rem)', overflow: 'auto', pr: 2,
+                display: 'flex', flexDirection: 'column', height: 'calc(100vh - 4.25rem)', overflow: 'auto',
                 '@media (max-width: 900px)': {
-                    minHeight: '100vh'
-
+                    pr: 2,
                 }
             }}>
                 <Box sx={{display: "flex", flexDirection: 'column', alignItems: "center"}}>
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            marginTop: hasNotification ? '1rem' : 4,
-                            flexWrap: 'wrap',
-                            gap: '15px',
-                            '@media (max-width: 900px)': {
-                                marginTop: hasNotification ? '3rem' : '1rem',
-                            },
-                        }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Typography className='first-sub-title'>
-                                    Import Source
-                                </Typography>
-                                <CustomToolTip title={'Here you can upload new ones to expand your data.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
-                            </Box>
-                    </Box>
-                    
                     <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                marginTop: hasNotification ? '1rem' : 4,
+                                flexWrap: 'wrap',
+                                gap: '15px',
+                                '@media (max-width: 900px)': {
+                                    marginTop: hasNotification ? '3rem' : '1rem',
+                                },
+                            }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Typography className='first-sub-title'>
+                                        Import Source
+                                    </Typography>
+                                    <CustomToolTip title={'Here you can upload new ones to expand your data.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
+                                </Box>
+                        </Box>
                         <Box sx={{
                             flex: 1, gap: 2, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '16px', pb: '20px',
-                            '@media (max-width: 900px)': {
-                                pt: '2px',
-                                pb: '18px'
-                            }
                         }}>
                             <Box sx={{display: "flex", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
                                 <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
@@ -548,39 +561,27 @@ const SourcesImport: React.FC = () => {
                                     <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px"}}>Data Maping</Typography>
                                     <Typography sx={{fontFamily: "Nunito Sans", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Map your Field from your Source to the destination data base.</Typography>
                                 </Box>
-                                <Grid container alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' }, marginBottom: '14px' }}>
-                                    <Grid item xs="auto" sm={3} sx={{
-                                        textAlign: 'center',
-                                        '@media (max-width:599px)': {
-                                            minWidth: '196px'
-                                        }
-                                    }}>
+                                <Grid container alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' }, }}>
+                                    <Grid item xs={5} sm={3} sx={{textAlign: "center"}}>
                                         <Image src='/logo.svg' alt='logo' height={22} width={34} />
                                     </Grid>
-                                    <Grid item xs="auto" sm={0.5} sx={{
-                                        '@media (max-width:599px)': {
-                                            minWidth: '50px'
-                                        }
-                                    }}>&nbsp;</Grid>
-                                    <Grid item xs="auto" sm={3} sx={{
-                                        textAlign: 'center',
-                                        '@media (max-width:599px)': {
-                                            minWidth: '196px'
-                                        }
-                                    }}>
-                                        <Image src='/csv-icon.svg' alt='scv' height={20} width={24} />
+                                    <Grid item xs={1} sm={0.5}>&nbsp;</Grid>
+                                    <Grid item xs={5} sm={3} sx={{textAlign: "center"}}>
+                                        <Image src='/csv-icon.svg' alt='scv' height={22} width={34} />
                                     </Grid>
-                                    <Grid item xs="auto" sm={1}>&nbsp;</Grid>
                                 </Grid>
                                 {rows?.filter(row => !row.isHidden).map((row, index) => (
-                                    <Box key={index}>
+                                    <Box key={index} sx={{
+                                        mt: index === 1 && emailNotSubstitution ? "10px" : 0,
+                                    }}>
                                         <Grid container spacing={2} alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' } }}>
                                             {/* Left Input Field */}
-                                            <Grid item xs="auto" sm={3}>
+                                            <Grid item xs={5} sm={3}>
                                                 <TextField
                                                     fullWidth
                                                     variant="outlined"
                                                     value={row.type}
+                                                    disabled={true}
                                                     InputLabelProps={{
                                                         sx: {
                                                             fontFamily: 'Nunito Sans',
@@ -628,7 +629,7 @@ const SourcesImport: React.FC = () => {
                                             </Grid>
 
                                             {/* Middle Icon Toggle (Right Arrow or Close Icon) */}
-                                            <Grid item xs="auto" sm={0.5} container justifyContent="center">
+                                            <Grid item xs={1} sm={0.5} container justifyContent="center">
                                                 <Image
                                                     src='/chevron-right-purple.svg'
                                                     alt='chevron-right-purple'
@@ -637,8 +638,8 @@ const SourcesImport: React.FC = () => {
                                                 /> 
                                             </Grid>
                                             
-                                            <Grid item xs="auto" sm={3}>
-                                                <FormControl fullWidth sx={{ height: '36px' }}>
+                                            <Grid item xs={5} sm={3}>
+                                                <FormControl fullWidth sx={{ height: '36px'}}>
                                                     <Select
                                                         value={row.value || ''}
                                                         onChange={(e) => handleMapListChange(row.id, e.target.value)}
@@ -675,11 +676,12 @@ const SourcesImport: React.FC = () => {
                                                             </MenuItem>
                                                         ))}
                                                     </Select>
+                                                    {row.type === "Email" && emailNotSubstitution && <Typography sx={{fontFamily: "Nunito", fontSize: "12px", color: "rgba(224, 49, 48, 1)"}}>Please match email</Typography>}
                                                 </FormControl>
                                             </Grid>
 
                                             {/* Delete Icon */}
-                                            <Grid item xs="auto" sm={0.5} container justifyContent="center">
+                                            <Grid item xs={1} sm={0.5} container justifyContent="center">
                                                 {row.canDelete && (
                                                     <>
                                                         <IconButton onClick={() => handleDelete(row.id)}>
@@ -713,7 +715,7 @@ const SourcesImport: React.FC = () => {
                             </Box>
                             <Box sx={{display: sourceMethod !== 0 && file ? "flex" : "none", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
                                 <Box sx={{display: "flex", alignItems: "center", gap: 2}}>
-                                    <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px"}}>Name</Typography>
+                                    <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px"}}>Create Name</Typography>
                                     <TextField
                                         id="outlined"
                                         label="Name"
@@ -782,7 +784,7 @@ const SourcesImport: React.FC = () => {
                                             Cancel
                                         </Typography>
                                     </Button> 
-                                    <Button variant="contained" onClick={handleSumbit} disabled={sourceName.trim() === "" || rows[0].value === "None" || rows[0].value === ''} sx={{
+                                    <Button variant="contained" onClick={handleSumbit} disabled={sourceName.trim() === "" || emailNotSubstitution} sx={{
                                         backgroundColor: "rgba(80, 82, 178, 1)",
                                         width: "120px",
                                         height: "40px",

@@ -15,8 +15,11 @@ logger = logging.getLogger(__name__)
 class AudienceSourceService:
     def __init__(self, audience_sources_persistence: AudienceSourcesPersistence):
         self.audience_sources_persistence = audience_sources_persistence
-        self.default_headings = ['Email', 'Phone number', 'Last Name', 'First Name', 'Gender', 'Age', 'Order Amount', 'State', 'City', 'Zip Code']
-
+        self.headings_map = {
+            "Customer Conversions": ['Email', 'Phone number', 'Last Name', 'First Name', 'Transaction Date', 'Order Amount'],
+            "Failed Leads": ['Email', 'Phone number', 'Last Name', 'First Name', 'Lead Date'],
+            "Interest": ['Email', 'Phone number', 'Last Name', 'First Name', 'Interest Date']
+        }
 
     def get_sources(
             self, 
@@ -53,16 +56,17 @@ class AudienceSourceService:
         return source_list, count
 
 
-    def substitution_headings(self, headers: List[str]) -> Optional[List[str]]: 
+    def substitution_headings(self, source_type: str, headers: List[str]) -> Optional[List[str]]:
+        default_headings = self.headings_map.get(source_type)
         prompt = (
             "You are given a list of CSV headers and a predefined list of default headers. "
             "Map each header in the default headers to the closest matching header from the provided list. "
             "If a header is in a different language, translate it before matching. "
             "If there is no close match, return 'None' for that header. "
-            "Default headers: " + ", ".join(self.default_headings) + ".\n"
+            "Default headers: " + ", ".join(default_headings) + ".\n"
             "Headers to map: " + ", ".join(headers) + ".\n"
             "The output must be a comma-separated string of exactly 10 values, corresponding strictly to the predefined default headers: "
-            "" + ", ".join(self.default_headings) + ".\n"
+            "" + ", ".join(default_headings) + ".\n"
             "Do not include any comments, explanations, or extra information."
         )
         try:

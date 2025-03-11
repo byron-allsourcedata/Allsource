@@ -35,7 +35,7 @@ def substitution_headings(
         payload: HeadingSubstitutionRequest,
         sources_service: AudienceSourceService = Depends(get_audience_sources_service)
 ):
-    return sources_service.substitution_headings(payload.headings)
+    return sources_service.substitution_headings(payload.source_type, payload.headings)
 
 
 @router.post("/create", response_model=SourceResponse)
