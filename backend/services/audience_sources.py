@@ -129,3 +129,8 @@ class AudienceSourceService:
     
     def get_sample_customers_list(self):
         return os.path.join(os.getcwd(), "data/sample-source-list.csv")
+    
+
+    def get_processing_sources(self, sources_ids, user: User):
+        sources = self.audience_sources_persistence.get_processing_sources(sources_ids, user.get("id"))
+        return sources

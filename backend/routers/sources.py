@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Body
 from dependencies import get_audience_sources_service, check_user_authorization
 from services.audience_sources import AudienceSourceService
-from schemas.audience import HeadingSubstitutionRequest, NewSource, SourcesObjectResponse, SourceResponse
+from schemas.audience import HeadingSubstitutionRequest, NewSource, SourcesObjectResponse, SourceResponse, SourceIDs
 from uuid import UUID
 from typing import Optional, List
 from fastapi.responses import FileResponse
@@ -12,7 +12,7 @@ router = APIRouter(dependencies=[Depends(check_user_authorization)])
 def get_sources(
         user=Depends(check_user_authorization),
         page: int = Query(1, alias="page", ge=1, description="Page number"),
-        per_page: int = Query(15, alias="per_page", ge=1, le=500, description="Items per page"),
+        per_page: int = Query(10, alias="per_page", ge=1, le=500, description="Items per page"),
         sort_by: str = Query(None, description="Field"),
         sort_order: str = Query(None, description="Field to sort by: 'asc' or 'desc'"),
         sources_service: AudienceSourceService = Depends(get_audience_sources_service)
@@ -69,3 +69,11 @@ def get_sample_customers_list(sources_service: AudienceSourceService = Depends(g
     file_path = sources_service.get_sample_customers_list()
     return FileResponse(file_path, media_type="text/csv",
                         headers={"Content-Disposition": "attachment; filename=sample-customers-list.csv"})
+
+
+@router.post("/get-processing-sources")
+def get_processing_sources(
+        data: SourceIDs,
+        user=Depends(check_user_authorization),
+        sources_service: AudienceSourceService = Depends(get_audience_sources_service)):
+    return sources_service.get_processing_sources(data.sources_ids, user=user)

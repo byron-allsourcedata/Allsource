@@ -120,6 +120,7 @@ const Sources: React.FC = () => {
     const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
     const isOpen = Boolean(anchorEl);
+    const hasUnmatchedRecords = data.some(item => item.matched_records === 0 && item.matched_records_status === "pending");
 
     useEffect(() => {
         document.body.style.overflow = 'hidden';
@@ -136,6 +137,39 @@ const Sources: React.FC = () => {
             rowsPerPage,
         });
     }, [orderBy, order, page, rowsPerPage, selectedFilters]);
+
+    // useEffect(() => {
+    //     const interval = setInterval(fetchData, 5000);
+      
+    //     return () => clearInterval(interval);
+    //   }, [hasUnmatchedRecords]);
+      
+
+    const fetchData = async () => {
+    try {
+        const idsToFetch = data
+        .filter(item => item.matched_records === 0)
+        .map(item => item.id);
+
+        if (idsToFetch.length === 0) return;
+
+        const response = await axiosInstance.post('/audience-sources/get-processing-sources', {
+            sources_ids: idsToFetch,
+        }
+        );
+
+        const updatedData = data.map(item => {
+        const updatedItem = response.data.find(
+            (record: any) => record.id === item.id
+        );
+        return updatedItem ? { ...item, ...updatedItem } : item;
+        });
+
+        setData(updatedData);
+    } catch (error) {
+        console.error('Failed to fetch data:', error);
+    }
+    };
 
     const fetchSources = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
         try {
@@ -779,19 +813,22 @@ const Sources: React.FC = () => {
                                                                             <TableCell
                                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                                             >
-                                                                                {row.matched_records_status === "pending"
-                                                                                    ? progress?.total ?? <ThreeDotsLoader />
-                                                                                    : row.total_records ?? "--"
-                                                                                }
+                                                                                {row.matched_records_status === "pending" 
+                                                                                ? progress.total
+                                                                                    ? progress.total
+                                                                                    : <ThreeDotsLoader />
+                                                                                : row.total_records ?? '--'}
                                                                             </TableCell>
 
                                                                             {/* Matched Records  Column */}
                                                                             <TableCell
                                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                                             >
-                                                                                {row.matched_records_status === "pending"
-                                                                                    ? <ProgressBar progress={progress} />
-                                                                                    : row.matched_records ?? '--'}
+                                                                                {row.matched_records_status === "pending" 
+                                                                                ? progress.processed >= progress.total && progress.processed /* error in DB processed - total = 1  */
+                                                                                    ? progress.matched
+                                                                                    : <ProgressBar progress={progress}/>
+                                                                                : row.matched_records ?? '--'}
                                                                             </TableCell>
 
                                                                             <TableCell sx={{ ...sourcesStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>

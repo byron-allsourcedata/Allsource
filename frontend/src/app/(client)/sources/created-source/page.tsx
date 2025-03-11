@@ -12,18 +12,6 @@ import { MoreVert } from '@mui/icons-material';
 import ProgressBar from '../components/ProgressLoader';
 import { showToast, showErrorToast } from '@/components/ToastNotification';
 
-interface Source {
-    id: string
-    name: string
-    source_origin: string
-    source_type: string
-    created_at: Date
-    updated_at: Date
-    created_by: string
-    total_records?: number
-    matched_records?: number
-}
-
 
 const SourcesList: React.FC = () => {
     const router = useRouter();
@@ -38,6 +26,7 @@ const SourcesList: React.FC = () => {
 
 
     const handleOpenPopover = (event: React.MouseEvent<HTMLElement>) => {
+        event.stopPropagation();
         setAnchorEl(event.currentTarget);
     };
 
@@ -67,6 +56,7 @@ const SourcesList: React.FC = () => {
         } finally {
             setLoading(false);
             handleCloseConfirmDialog();
+            handleClosePopover()
         }
     };
 
@@ -258,12 +248,12 @@ const SourcesList: React.FC = () => {
                                         </Typography>
                                     </Box>
 
-                                    <IconButton disabled={createdSource?.id && sourceProgress[createdSource.id]?.processed === sourceProgress[createdSource.id]?.total} onClick={(event) => handleOpenPopover(event)} sx={{ '@media (max-width: 900px)': {display: 'none'}, ':hover': { backgroundColor: 'transparent' }}} >
+                                    <IconButton disabled={createdSource?.id && sourceProgress[createdSource.id]?.processed !== sourceProgress[createdSource.id]?.total} onClick={(event) => handleOpenPopover(event)} sx={{ '@media (max-width: 900px)': {display: 'none'}, ':hover': { backgroundColor: 'transparent' }}} >
                                         <MoreVert sx={{color: "rgba(32, 33, 36, 1)"}} height={8} width={24}/>
                                     </IconButton>
                                 </Box>
 
-                                <IconButton disabled={createdSource?.id && sourceProgress[createdSource.id]?.processed === sourceProgress[createdSource.id]?.total} onClick={(event) => handleOpenPopover(event)} sx={{ display: 'none', '@media (max-width: 900px)': {display: 'block'}, ':hover': { backgroundColor: 'transparent' }}} >
+                                <IconButton disabled={createdSource?.id && sourceProgress[createdSource.id]?.processed !== sourceProgress[createdSource.id]?.total} onClick={(event) => handleOpenPopover(event)} sx={{ display: 'none', '@media (max-width: 900px)': {display: 'block'}, ':hover': { backgroundColor: 'transparent' }}} >
                                         <MoreVert sx={{color: "rgba(32, 33, 36, 1)"}} height={8} width={24}/>
                                 </IconButton>             
                             </Box>
@@ -290,7 +280,7 @@ const SourcesList: React.FC = () => {
                                 </Button>
                                 <Button
                                     variant="contained"
-                                    disabled={createdSource?.id && sourceProgress[createdSource.id]?.processed === sourceProgress[createdSource.id]?.total}
+                                    disabled={createdSource?.id && sourceProgress[createdSource.id]?.processed !== sourceProgress[createdSource.id]?.total}
                                     onClick={() => router.push(`/lookalikes/${createdSource?.id}/builder`)}
                                     className='second-sub-title'
                                     sx={{
@@ -317,8 +307,12 @@ const SourcesList: React.FC = () => {
                             anchorEl={anchorEl}
                             onClose={handleClosePopover}
                             anchorOrigin={{
-                            vertical: 'bottom',
-                            horizontal: 'left',
+                                vertical: 'bottom',
+                                horizontal: 'left',
+                            }}
+                            transformOrigin={{
+                                vertical: 'top',
+                                horizontal: 'left',
                             }}
                             >
                                 <List
