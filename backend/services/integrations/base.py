@@ -49,6 +49,7 @@ class IntegrationService:
         self.domain_persistence = domain_persistence
         self.suppression_persistence = suppression_persistence
         self.eai_persistence = epi_persistence
+        self.UNLIMITED = -1
 
     def get_user_service_credentials(self, domain_id, filters):
         return self.integration_persistence.get_integration_by_user(domain_id, filters)
@@ -64,7 +65,7 @@ class IntegrationService:
     
     def is_integration_limit_reached(self, user_id: int, domain_id: int):
         integration_limit, domain_integrations_count = self.integrations_user_sync_persistence.get_limits_integrations(user_id, domain_id)
-        if domain_integrations_count >= integration_limit:
+        if integration_limit != self.UNLIMITED and domain_integrations_count >= integration_limit:
             return True
         return False
     

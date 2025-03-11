@@ -358,20 +358,20 @@ const HubspotIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                         Connect to Hubspot
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href={initApiKey ?
-                            "https://maximizai.zohodesk.eu/portal/en/kb/articles/update-hubspot-integration-configuration" :
-                            "https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-hubspot-to-maximiz"
-                        }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            sx={{
-                                fontFamily: 'Nunito Sans',
-                                fontSize: '14px',
-                                fontWeight: '600',
-                                lineHeight: '20px',
-                                color: '#5052b2',
-                                textDecorationColor: '#5052b2'
-                            }}>Tutorial</Link>
+                            {/* <Link href={initApiKey ?
+                                "https://maximizai.zohodesk.eu/portal/en/kb/articles/update-hubspot-integration-configuration" :
+                                "https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-hubspot-to-maximiz"
+                            }
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                sx={{
+                                    fontFamily: 'Nunito Sans',
+                                    fontSize: '14px',
+                                    fontWeight: '600',
+                                    lineHeight: '20px',
+                                    color: '#5052b2',
+                                    textDecorationColor: '#5052b2'
+                                }}>Tutorial</Link> */}
                         <IconButton onClick={handleClose} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />
                         </IconButton>

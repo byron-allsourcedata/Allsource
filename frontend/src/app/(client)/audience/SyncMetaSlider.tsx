@@ -187,8 +187,6 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
         setAnchorElAdAccount(textFieldRefAdAccount.current);
     };
 
-    const handleConnectToFacebook = () => { }
-    // Handle menu close
     const handleClose = () => {
         setAnchorEl(null);
         setAnchorElAdAccount(null)
@@ -292,14 +290,8 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                     lineHeight: '20px',
                     fontWeight: '400'
                 },
-                '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#A3B0C2',
-                },
                 '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#A3B0C2',
-                },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#0000FF',
+                    borderColor: '#5052B2',
                 },
             },
             '&+.MuiFormHelperText-root': {

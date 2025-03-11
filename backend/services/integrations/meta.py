@@ -205,9 +205,18 @@ class MetaIntegrationsService:
             'id': id_account,
             'list_name': list.name
         }
-       
+    
+    def edit_sync(self, leads_type: str, integrations_users_sync_id: int, domain_id: int, created_by: str):
+        credentials = self.get_credentials(domain_id)
+        sync = self.sync_persistence.edit_sync({
+            'integration_id': credentials.id,
+            'domain_id': domain_id,
+            'leads_type': leads_type,
+            'created_by': created_by,
+        }, integrations_users_sync_id)
+        return sync
 
-    async def create_sync(self, domain_id: int, created_by: str, data_map: List[DataMap] = None, leads_type: str = None, list_id: str = None, list_name: str = None,):
+    async def create_sync(self, customer_id: int, domain_id: int, created_by: str, data_map: List[DataMap] = None, leads_type: str = None, list_id: str = None, list_name: str = None,):
         credentials = self.get_credentials(domain_id)
         data_syncs = self.sync_persistence.get_data_sync_filter_by(domain_id=domain_id)
         for sync in data_syncs:
@@ -219,6 +228,7 @@ class MetaIntegrationsService:
             'list_name': list_name,
             'leads_type': leads_type,
             'domain_id': domain_id,
+            'customer_id': customer_id,
             'data_map': [data.model_dump_json() for data in data_map] if data_map else None,
             'created_by': created_by
         })

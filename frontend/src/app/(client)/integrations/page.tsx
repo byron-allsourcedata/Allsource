@@ -153,6 +153,12 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
     if (name === "big_commerce") {
       return "BigCommerce";
     }
+    if (name === "google_ads") {
+      return "GoogleAds";
+    }
+    if (name === "sales_force") {
+      return "SalesForce";
+    }
     return name
       .split("_")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
