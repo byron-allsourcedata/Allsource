@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { Box, Typography, Button, IconButton, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText } from '@mui/material';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axiosInstance from "@/axios/axiosInterceptorInstance";
@@ -9,6 +9,7 @@ import ThreeDotsLoader from '../components/ThreeDotsLoader';
 import { useNotification } from '@/context/NotificationContext';
 import { useSSE } from '../../../../context/SSEContext';
 import { MoreVert } from '@mui/icons-material';
+import { SliderProvider } from '../../../../context/SliderContext';
 import ProgressBar from '../components/ProgressLoader';
 import { showToast, showErrorToast } from '@/components/ToastNotification';
 
@@ -402,4 +403,14 @@ const SourcesList: React.FC = () => {
     );
 };
 
-export default SourcesList;
+const SourcesListPage: React.FC = () => {
+    return (
+        <Suspense fallback={<CustomizedProgressBar />}>
+            <SliderProvider>
+                <SourcesList />
+            </SliderProvider>
+        </Suspense>
+    );
+};
+
+export default SourcesListPage;
