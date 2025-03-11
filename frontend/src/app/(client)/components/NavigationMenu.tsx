@@ -26,6 +26,7 @@ import DomainButtonSelect from './NavigationDomainButton';
 import BusinessIcon from '@mui/icons-material/Business';
 import DnsIcon from '@mui/icons-material/Dns';
 import QuestionMarkOutlinedIcon from '@mui/icons-material/QuestionMarkOutlined';
+import AllInboxIcon from '@mui/icons-material/AllInbox';
 
 const navigationmenuStyles = {
   mobileMenuHeader: {
@@ -338,6 +339,15 @@ const NavigationMenu: React.FC<NavigationProps> = ({ NewRequestNotification }) =
             <ListItemIcon><DashboardIcon /></ListItemIcon>
             <ListItemText
               primary="Dashboard" />
+          </ListItem>
+          <ListItem button onClick={() => handleNavigation('/dashboard')}
+            sx={{
+              ...(isActive('/sources') ? navigationmenuStyles.activeItem : {}),
+              ...navigationmenuStyles.mobileDrawerList
+            }}>
+            <ListItemIcon><AllInboxIcon /></ListItemIcon>
+            <ListItemText
+              primary="Sources" />
           </ListItem>
           <ListItem button onClick={() => handleNavigation('/leads')}
             sx={{

@@ -4,6 +4,7 @@ import sys
 import asyncio
 import functools
 import json
+import chardet
 import io
 import csv
 import boto3
@@ -12,6 +13,7 @@ from aio_pika import IncomingMessage, Message, Channel
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
+from itertools import islice
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -22,25 +24,15 @@ from models.audience_sources import AudienceSource
 from models.users import Users
 from models.five_x_five_users import FiveXFiveUser
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
-from config.rmq_connection import RabbitMQConnection
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 load_dotenv()
 
-AUDIENCE_SOURCES_MATCHING= 'aud_sources_matching'
-AUDIENCE_SOURCES_READER= 'aud_sources_reader'
+AUDIENCE_SOURCES_READER = 'aud_sources_files'
+AUDIENCE_SOURCES_MATCHING = 'aud_sources_matching'
+SOURCE_PROCESSING_PROGRESS = "SOURCE_PROCESSING_PROGRESS"
 S3_BUCKET_NAME = "maximiz-data"
-
-
-async def publish_rabbitmq_message(channel, queue_name: str, message_body: dict):
-    try:
-        json_data = json.dumps(message_body).encode("utf-8")
-        message = Message(
-            body=json_data
-        )
-        await channel.default_exchange.publish(message, routing_key=queue_name)
-    except Exception as e:
-        logging.error(f"Failed to publish message: {e}")
-
+SELECTED_ROW_COUNT = 500
 
 def setup_logging(level):
     logging.basicConfig(
@@ -65,7 +57,7 @@ def assume_role(role_arn, sts_client):
     logging.info(f"Assumed role '{role_arn}', got temporary credentials.")
     return credentials
 
-async def aud_sources_reader(message: IncomingMessage, db_session: Session, s3_session, channel: Channel):
+async def aud_sources_reader(message: IncomingMessage, db_session: Session, s3_session, connection):
     try:
         message_body = json.loads(message.body)
         data = message_body.get('data')
@@ -105,88 +97,56 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, s3_s
                 s3_obj = await s3.get_object(Bucket=S3_BUCKET_NAME, Key=key)
                 body = await s3_obj['Body'].read()
             except Exception as s3_error:
+                db_session.rollback()
                 logging.error(f"Error reading S3 object: {s3_error}")
                 await message.nack()
                 return
-
-            csv_file = io.StringIO(body.decode("utf-8"))
-            csv_reader = csv.DictReader(csv_file)
-        
+            
+        result = chardet.detect(body)
+        encoding = result['encoding']
+        batch_content = body.decode(encoding, errors='replace')
+        csv_file = io.StringIO(batch_content)
+        csv_reader = csv.DictReader(csv_file)
+        email_field = email_field.strip().replace('"', '')
         total_rows = sum(1 for _ in csv_reader)
         csv_file.seek(0)
         processed_rows = 0
 
-        # async with db_session.begin():  # Open a transaction
         logging.info(f"Total row in CSV file: {total_rows}")
         source.total_records = total_rows
         db_session.add(source)
+        db_session.commit()
+        await send_sse(connection, user_id, {"source_id": source_id, "total": total_rows, "processed": processed_rows})
 
-        for row in csv_reader:
-            email = row.get(email_field)
-            # Send email to the matching queue
-            await publish_rabbitmq_message(
-                channel=channel,
-                queue_name=AUDIENCE_SOURCES_MATCHING,
-                message_body={
-                    "data": {"email": email, "source_id": source_id, "row": row}
+        send_rows = 0
+        while send_rows < total_rows:
+            batch_rows = []
+            for row in islice(csv_reader, SELECTED_ROW_COUNT):
+                email = row.get(email_field, "")
+                batch_rows.append(email)
+
+            persons = [{"email": email} for email in batch_rows]
+            if persons:
+                message_body = {
+                    "type": email_field,
+                    "data": {
+                        "persons": persons,
+                        "source_id": source_id,
+                        "user_id": user_id
+                    },
                 }
-            )
-            source.processed_records = processed_rows
-            if processed_rows == total_rows:
-                source.matched_records_status = "complete"
-            db_session.add(source)
-            db_session.flush()
-            await send_sse(channel, user_id, {"source_id": source_id, "total": total_rows, "processed": processed_rows})
-            processed_rows += 1
+
+                await publish_rabbitmq_message(connection=connection, queue_name=AUDIENCE_SOURCES_MATCHING, message_body=message_body)
+            send_rows += SELECTED_ROW_COUNT
         
         db_session.commit()
 
         await message.ack()
 
     except Exception as e:
+        db_session.rollback()
         logging.error(f"Error processing message: {e}", exc_info=True)
         await message.nack()
-
-
-async def aud_sources_matching(message: IncomingMessage, db_session: Session):
-    try:
-        message_body = json.loads(message.body)
-        data = message_body.get('data')
-        if not data:
-            logging.warning("Message data is missing.")
-            await message.ack()
-            return
-        
-        email = data.get("email")
-        row = data.get("row")
-        source_id = data.get("source_id")
-
-        logging.info(f"Processing AudienceSourceMatching with ID: {source_id}")
-
-        email_record = db_session.query(FiveXFiveEmails).filter_by(email=email).first()
-        if email_record:
-            user_id = db_session.query(FiveXFiveUsersEmails.user_id).filter_by(email_id=email_record.id).scalar()
-
-            matched_person = AudienceSourcesMatchedPerson(
-                source_id=source_id,
-                five_x_five_user_id=user_id,
-                mapped_fields=json.dumps(row),
-            )
-            db_session.add(matched_person)
-
-            audience_source = db_session.query(AudienceSource).filter_by(id=source_id).first()
-            if audience_source:
-                audience_source.matched_records += 1
-                db_session.flush()
-        
-        db_session.commit()
-
-        await message.ack()
-
-    except Exception as e:
-        logging.error(f"Error processing matching: {e}", exc_info=True)
-        await message.nack()
-
 
 def extract_key_from_url(s3_url: str):
     parsed_url = s3_url.split("amazonaws.com/", 1)
@@ -195,13 +155,14 @@ def extract_key_from_url(s3_url: str):
     return parsed_url[1].split("?", 1)[0]
 
 
-async def send_sse(channel, user_id: int, data: dict):
+async def send_sse(connection, user_id: int, data: dict):
     try:
         logging.info(f"send client throught SSE: {data, user_id}")
         await publish_rabbitmq_message(
-                    channel=channel,
+                    connection=connection,
                     queue_name=f'sse_events_{str(user_id)}',
                     message_body={
+                        "status": SOURCE_PROCESSING_PROGRESS,
                         "data": data
                     }
                 )
@@ -241,17 +202,12 @@ async def main():
             name=AUDIENCE_SOURCES_READER,
             durable=True,
         )
-        await reader_queue.consume(functools.partial(aud_sources_reader, db_session=db_session, s3_session=s3_session, channel=channel))
-
-        matching_queue = await channel.declare_queue(
-            name=AUDIENCE_SOURCES_MATCHING,
-            durable=True,
-        )
-        await matching_queue.consume(functools.partial(aud_sources_matching, db_session=db_session))
+        await reader_queue.consume(functools.partial(aud_sources_reader, db_session=db_session, s3_session=s3_session, connection=connection))
 
         await asyncio.Future()
 
     except Exception:
+        db_session.rollback()
         logging.error('Unhandled Exception:', exc_info=True)
 
     finally:

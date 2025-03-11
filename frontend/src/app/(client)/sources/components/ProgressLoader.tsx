@@ -1,8 +1,20 @@
 import React from 'react';
 import { LinearProgress } from '@mui/material';
 
-const ProgressBar = ({ progress }: any) => {
-  const percentage = (progress?.processed / progress?.total) * 100;
+type Progress = {
+  total: number;
+  processed: number;
+  matched: number;
+};
+
+interface ProgressBarProps {
+  progress: Progress;
+}
+
+const ProgressBar = ({ progress }: ProgressBarProps) => {
+  const percentage = progress?.processed 
+  ? (progress.processed / progress.total) * 100 
+  : 0; 
 
   return (
     <div>
@@ -10,7 +22,7 @@ const ProgressBar = ({ progress }: any) => {
         variant="determinate"
         value={percentage}
         sx={{ 
-            width: "40%", 
+            width: "100%", 
             borderRadius: "54px", 
             height: "8px", 
             backgroundColor: "rgba(217, 217, 217, 1)", 
