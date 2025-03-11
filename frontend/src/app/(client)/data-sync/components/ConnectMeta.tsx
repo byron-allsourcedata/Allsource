@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Drawer, Box, Typography, IconButton, TextField, Divider, FormGroup, FormControlLabel, FormControl, FormLabel, Radio, Collapse, Checkbox, Button, List, ListItem, Link, Tab, Tooltip, Switch, RadioGroup, InputLabel, MenuItem, Select, Dialog, DialogActions, DialogContent, DialogTitle, Popover, Menu, SelectChangeEvent, ListItemText, ClickAwayListener, InputAdornment, Grid } from '@mui/material';
+import { Drawer, Box, Typography, IconButton, TextField, Divider, FormControlLabel, FormControl, FormLabel, Radio, Button, Link, Tab, Tooltip, Switch, RadioGroup, InputLabel, MenuItem, Popover, Menu, SelectChangeEvent, ListItemText, ClickAwayListener, InputAdornment, Grid } from '@mui/material';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
@@ -14,6 +14,7 @@ import { useIntegrationContext } from '@/context/IntegrationContext';
 interface ConnectMetaPopupProps {
     open: boolean;
     onClose: () => void;
+    isEdit?: boolean;
     data: any
 }
 
@@ -27,12 +28,12 @@ interface MetaAuidece {
     list_name: string
 }
 
-const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) => {
+const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isEdit }) => {
     const { triggerSync } = useIntegrationContext();
     const [value, setValue] = React.useState('1');
     const [listID, setListID] = useState<string>('')
     const [checked, setChecked] = useState(false);
-    const [selectedRadioValue, setSelectedRadioValue] = useState('');
+    const [selectedRadioValue, setSelectedRadioValue] = useState(data?.type);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedOption, setSelectedOption] = useState<MetaAuidece | null>(null);
     const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
@@ -58,17 +59,6 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
     const [UpdateKlaviuo, setUpdateKlaviuo] = useState<any>(null);
     const [anchorElAdAccount, setAnchorElAdAccount] = useState<null | HTMLElement>(null);
     const [isDropdownOpenAdAccount, setIsDropdownOpenAdAccount] = useState(false);
-    const [newKlaviyoList, setNewKlaviyoList] = useState()
-    const [mapListOptions, setMapListOptions] = useState<string[]>([
-        'Email',
-        'Phone number',
-        'First name',
-        'Second name',
-        'Gender',
-        'Age',
-        'Job Title',
-        'Location'
-    ]);
 
     useEffect(() => {
         const fetchAdAccount = async () => {
@@ -78,6 +68,15 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                     const response = await axiosInstance.get('/integrations/sync/ad_accounts');
                     if (response.status === 200) {
                         setAdAccounts(response.data);
+                        const foundItem = response.data?.find((item: any) => item.id === data?.customer_id);
+                        if (foundItem) {
+                            setUpdateKlaviuo(data.id)
+                            setOptionAdAccount({
+                                id: foundItem.id,
+                                name: foundItem.name
+                            });
+                        }
+
                     }
                 }
                 finally {
@@ -120,10 +119,10 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                         id: foundItem.id,
                         list_name: foundItem.list_name
                     });
+                    setIsDropdownValid(true)
                 } else {
                     setSelectedOption(null);
                 }
-                setSelectedRadioValue(data?.type);
 
             }
             setLoading(false)
@@ -132,7 +131,6 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
             getList()
         }
     }, [optionAdAccount])
-
 
     const createNewList = async () => {
         const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
@@ -176,9 +174,6 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
         };
     }, [selectedOption]);
 
-    // Static options
-    const staticOptions = ['Email List', 'Phone List', 'SMS List', 'Maximiz Contacts', 'Preview List', 'Maximiz'];
-
     // Handle menu open
     const handleClick = (event: React.MouseEvent<HTMLInputElement>) => {
         setIsShrunk(true);
@@ -200,7 +195,6 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
         setAnchorElAdAccount(textFieldRefAdAccount.current);
     };
 
-    const handleConnectToFacebook = () => { }
     // Handle menu close
     const handleClose = () => {
         setAnchorEl(null);
@@ -211,18 +205,11 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
         setNewListName(''); // Clear new list name when closing
     };
 
-    const handleMapClose = () => {
-        setShowCreateMapForm(false);
-        setNewMapListName(''); // Clear new list name when closing
-    };
-
     const handleSelectAdAccount = async (value: any) => {
         setOptionAdAccount(value);
         handleClose();
-        // setIsDropdownValid(value.naem !== '');
     }
 
-    // Handle option selection
     const handleSelectOption = (value: MetaAuidece | string) => {
         if (value === 'createNew') {
             setShowCreateForm(prev => !prev);
@@ -230,7 +217,6 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                 setAnchorEl(textFieldRef.current);
             }
         } else if (isKlaviyoList(value)) {
-            // Проверка, является ли value объектом KlaviyoList
             setSelectedOption({
                 id: value.id,
                 list_name: value.list_name
@@ -248,21 +234,6 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
             typeof value === 'object' &&
             'id' in value &&
             'list_name' in value;
-    };
-
-    const handleSelectMapOption = (value: string, event: React.MouseEvent<HTMLElement>, id: number) => {
-        event.stopPropagation(); // Prevent click event from closing the dropdown
-
-        if (value === 'createNewField') {
-            setShowCreateMapForm(prev => !prev); // Toggle form visibility
-
-            // Ensure dropdown remains open if it was already open or if form is being opened
-            if (openDropdown !== id) {
-                setOpenDropdown(id); // Open dropdown if it’s not already open
-            }
-        } else {
-            handleDropdownClose(); // Close dropdown for other selections
-        }
     };
 
     // Handle Save action for the create new list form
@@ -287,51 +258,6 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
             handleClose();
         }
     };
-
-    const handleMapSave = (id: number) => {
-        let valid = true;
-
-        // Validate List Name
-        if (newMapListName.trim() === '') {
-            setMapListNameError(true);
-            valid = false;
-        } else {
-            setMapListNameError(false);
-        }
-
-
-
-        // If valid, save and close
-        if (valid) {
-            if (newMapListName.trim() === '') return; // Prevent saving empty values
-
-            // Update the value in the rows state
-            handleMapListChange(id, 'selectValue', newMapListName);
-
-            setMapListOptions(prevOptions => [...prevOptions, newMapListName]);
-
-            // Optionally, reset the new value state if needed
-            setNewMapListName('');
-
-
-            setShowCreateMapForm(false); // Close the form
-            setOpenDropdown(null); // Close the dropdown if needed
-            handleMapClose();
-        }
-    };
-
-
-
-    const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setChecked(event.target.checked);
-    };
-
-    const label = { inputProps: { 'aria-label': 'Switch demo' } };
-
-    const handleChange = (event: React.SyntheticEvent, newValue: string) => {
-        setValue(newValue);
-    };
-
 
     const metaStyles = {
         tabHeading: {
@@ -474,9 +400,6 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
         setSelectedRadioValue(event.target.value);
     };
 
-    /** Map List */
-
-    // Define the Row type
     interface Row {
         id: number;
         type: string;
@@ -504,8 +427,6 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
         ));
     };
 
-    // Delete function with typed parameter
-    // Delete function with typed parameter
     const handleClickOpen = (event: React.MouseEvent<HTMLElement>, id: number) => {
         setDeleteAnchorEl(event.currentTarget);  // Set the current target as the anchor
         setSelectedRowId(id);  // Set the ID of the row to delete
@@ -523,34 +444,12 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
         }
     };
 
-    // Add row function
-    const handleAddRow = () => {
-        const newRow: Row = {
-            id: Date.now(), // Unique ID for each new row
-            type: 'Enter new data',
-            value: '',
-            selectValue: '', // Ensure selectValue is present for new rows
-            canDelete: true, // This new row can be deleted
-        };
-        setRows([...rows, newRow]);
-    };
-    const handleDropdownOpen = (id: number) => {
-        setOpenDropdown(id); // Set the open state for the current dropdown
-    };
-
-    const handleDropdownClose = () => {
-        setOpenDropdown(null); // Reset when dropdown closes
-    };
-
-
     const handleNextTab = async () => {
         if (value === '1') {
             setValue((prevValue) => String(Number(prevValue) + 1));
         }
         if (value === '2') {
-            // Validate Tab 3
             if (isDropdownValid) {
-                // Proceed to next tab
                 setValue((prevValue) => String(Number(prevValue) + 1));
             }
         }
@@ -576,8 +475,6 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
             if (UpdateKlaviuo) {
                 const response = await axiosInstance.put(`/data-sync/sync`, {
                     integrations_users_sync_id: UpdateKlaviuo,
-                    list_id: list?.id,
-                    list_name: list?.list_name,
                     leads_type: selectedRadioValue,
                 }, {
                     params: {
@@ -591,6 +488,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                 }
             } else {
                 const response = await axiosInstance.post('/data-sync/sync', {
+                    customer_id: String(optionAdAccount?.id),
                     list_id: list?.id,
                     list_name: list?.list_name,
                     leads_type: selectedRadioValue,
@@ -636,7 +534,6 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
         setMapListNameError(false);
         setLoading(false);
         setOptionAdAccount(null)
-        setSelectedOption(null)
     };
     const handleChangeTab = (event: React.SyntheticEvent, newValue: string) => {
         setValue(newValue);
@@ -680,11 +577,6 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                         zIndex: 1300,
                         top: 0,
                         bottom: 0,
-                        // msOverflowStyle: 'none',
-                        // scrollbarWidth: 'none',
-                        // '&::-webkit-scrollbar': {
-                        //     display: 'none',
-                        // },
                         '@media (max-width: 600px)': {
                             width: '100%',
                         }
@@ -703,16 +595,16 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                         Connect to Meta
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/sync-contacts-to-meta" className="main-text" 
-                        target="_blank"
-                        rel="noopener referrer"
-                        sx={{
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            lineHeight: '20px',
-                            color: '#5052b2',
-                            textDecorationColor: '#5052b2'
-                        }}>Tutorial</Link>
+                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/sync-contacts-to-meta" className="main-text"
+                            target="_blank"
+                            rel="noopener referrer"
+                            sx={{
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                lineHeight: '20px',
+                                color: '#5052b2',
+                                textDecorationColor: '#5052b2'
+                            }}>Tutorial</Link>
                         <IconButton onClick={handlePopupClose} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />
                         </IconButton>
@@ -927,11 +819,11 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                                                         ref={textFieldRefAdAccount}
                                                         variant="outlined"
                                                         value={
-                                                            optionAdAccount?.name || null // Установить значение по умолчанию на пустую строку
+                                                            optionAdAccount?.name || null
                                                         }
                                                         onClick={handleClickAdAccount}
                                                         size="small"
-
+                                                        disabled={data?.customer_id}
                                                         fullWidth
                                                         label={optionAdAccount?.name ? '' : 'Select Ad Account'}
                                                         InputLabelProps={{
@@ -953,7 +845,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                                                         InputProps={{
                                                             endAdornment: (
                                                                 <InputAdornment position="end">
-                                                                    <IconButton onClick={handleDropdownToggleAdAccount} edge="end">
+                                                                    <IconButton disabled={data?.customer_id} onClick={handleDropdownToggleAdAccount} edge="end">
                                                                         {isDropdownOpenAdAccount ? <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} /> : <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />}
                                                                     </IconButton>
                                                                 </InputAdornment>
@@ -979,7 +871,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                                                     />
                                                     <Menu
                                                         anchorEl={anchorElAdAccount}
-                                                        open={Boolean(anchorElAdAccount) && isDropdownOpenAdAccount}
+                                                        open={Boolean(anchorElAdAccount) && isDropdownOpenAdAccount && !data?.customer_id}
                                                         onClose={handleCloseAdAccount}
                                                         PaperProps={{
                                                             sx: {
@@ -1015,6 +907,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                                                     <TextField
                                                         ref={textFieldRef}
                                                         variant="outlined"
+                                                        disabled={data?.customer_id}
                                                         value={selectedOption?.list_name}
                                                         onClick={handleClick}
                                                         size="small"
@@ -1063,7 +956,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
 
                                                     <Menu
                                                         anchorEl={anchorEl}
-                                                        open={Boolean(anchorEl) && isDropdownOpen}
+                                                        open={Boolean(anchorEl) && isDropdownOpen && !data?.customer_id}
                                                         onClose={handleClose}
                                                         PaperProps={{
                                                             sx: {

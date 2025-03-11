@@ -61,7 +61,7 @@ class CompanyService:
         company_list = []
         for company in companies:
             first_visited_date = company[5].strftime('%d.%m.%Y') if company[5] else None
-            first_visited_time = company[6].strftime('%H:%M')
+            first_visited_time = company[6].strftime('%H:%M') if company[6] else None
             combined_datetime = datetime.strptime(f"{first_visited_date} {first_visited_time}", '%d.%m.%Y %H:%M')
             adjusted_datetime = combined_datetime + timedelta(hours=timezone_offset)
             adjusted_date = adjusted_datetime.strftime('%d.%m.%Y')

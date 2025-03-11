@@ -1,7 +1,10 @@
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from sqlalchemy.orm import Session
 from models.users import Users
+from enums import SourcePlatformEnum
 from models.users_domains import UserDomains
+from models.subscriptions import UserSubscriptions
+from sqlalchemy import func
 from models.integrations.users_domains_integrations import UserIntegration
 
 class IntegrationsUserSyncPersistence:
@@ -48,6 +51,23 @@ class IntegrationsUserSyncPersistence:
     def get_all(self):
         return self.db.query(IntegrationUserSync).all()
     
+    def get_limits_integrations(self, user_id, domain_id):
+        user_subscription = self.db.query(UserSubscriptions.integrations_limit) \
+            .join(Users, Users.current_subscription_id == UserSubscriptions.id) \
+            .filter(Users.id == user_id) \
+            .first()
+
+        if user_subscription:
+            integration_limit = user_subscription.integrations_limit
+        else:
+            return None, None
+
+        domain_integrations_count = self.db.query(func.count(UserIntegration.id)) \
+            .filter(UserIntegration.domain_id == domain_id, UserIntegration.service_name != SourcePlatformEnum.SHOPIFY.value, UserIntegration.service_name != SourcePlatformEnum.BIG_COMMERCE.value) \
+            .scalar()
+
+        return integration_limit, domain_integrations_count
+
     def get_filter_by(self, domain_id, service_name: str = None, integrations_users_sync_id: str = None):
         query = self.db.query(
             IntegrationUserSync.id, 

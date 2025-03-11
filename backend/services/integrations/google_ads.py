@@ -444,18 +444,19 @@ class GoogleAdsIntegrationsService:
             customer_data = []
 
             for resource_name in resource_names:
-                customer_id = resource_name.split('/')[-1]
-                if customer_id != '9087286246':
+                try:
+                    customer_id = resource_name.split('/')[-1]
+                    
+                    query = """
+                        SELECT
+                            customer.id,
+                            customer.descriptive_name
+                        FROM
+                            customer
+                    """
+                    response = googleads_service.search(customer_id=customer_id, query=query)
+                except Exception:
                     continue
-                
-                query = """
-                    SELECT
-                        customer.id,
-                        customer.descriptive_name
-                    FROM
-                        customer
-                """
-                response = googleads_service.search(customer_id=customer_id, query=query)
                 
                 for row in response:
                     customer_id = row.customer.id

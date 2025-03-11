@@ -24,6 +24,7 @@ class CreateDataSync(Enum):
     ZAPIER_CONNECTED = 'ZAPIER_CONNECTED'
     
 class SourcePlatformEnum(Enum):
+    MAXIMIZ = 'maximiz'
     SHOPIFY = 'shopify'
     AWIN = 'awin'
     ATTENTIVE = 'attentive'
@@ -261,6 +262,7 @@ class ProccessDataSyncResult(Enum):
     
 class PlanAlias(Enum):
     PARTNERS = 'partners'
+    SHOPIFY = 'shopify'
     
 class ProgramType(Enum):
     PARTNER = 'partner'

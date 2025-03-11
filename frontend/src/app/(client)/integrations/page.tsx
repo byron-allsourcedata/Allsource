@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect, Suspense, useRef } from "react";
 import { integrationsStyle } from "./integrationsStyle";
+import { UpgradePlanPopup } from '@/app/(client)/components/UpgradePlanPopup';
 import axiosInstance from '../../../axios/axiosInterceptorInstance';
 import { Box, Button, Typography, Tab, TextField, InputAdornment, Popover, IconButton, TableContainer, Table, Paper, TableHead, TableRow, TableCell, TableBody, Tooltip, Drawer, Backdrop, LinearProgress } from "@mui/material";
 import Image from "next/image";
@@ -151,6 +152,12 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
   const formatServiceName = (name: string): string => {
     if (name === "big_commerce") {
       return "BigCommerce";
+    }
+    if (name === "google_ads") {
+      return "GoogleAds";
+    }
+    if (name === "sales_force") {
+      return "SalesForce";
     }
     return name
       .split("_")
@@ -530,6 +537,8 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
   const [openModal, setOpenModal] = useState<string | null>(null);
   const [openDeletePopup, setOpenDeletePopup] = useState(false);
   const [search, setSearch] = useState<string>('');
+  const [upgradePlanPopup, setUpgradePlanPopup] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value);
@@ -543,7 +552,20 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
     setOpenModal(null);
   };
 
-  const handleAddIntegration = (service_name: string) => {
+  const handleAddIntegration = async (service_name: string) => {
+    try {
+      setIsLoading(true)
+      const response = await axiosInstance.get('/integrations/check-limit-reached')
+      if (response.status === 200 && response.data == true) {
+        setUpgradePlanPopup(true)
+        return 
+      }
+    } catch (error) {
+    }
+    finally {
+      setIsLoading(false)
+    }
+
     const isIntegrated = integrationsCredentials.some(integration_cred => integration_cred.service_name === service_name);
     if (isIntegrated) return;
     setOpenModal(service_name);
@@ -596,6 +618,8 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
 
   return (
     <Box sx={{ width: '100%', flexGrow: 1, height: 'calc(100vh - 7.75rem)', overflow: 'auto', pt: 2, '@media (max-width: 600px)': { pr: 2, pb: 4, height: 'calc(100vh - 11.25rem)', pt: 2 } }}>
+      {isLoading && <CustomizedProgressBar />}
+      <UpgradePlanPopup open={upgradePlanPopup} limitName={'domain'} handleClose={() => setUpgradePlanPopup(false)} />
       <Box sx={{ overflowX: 'hidden' }}>
         <TextField
           fullWidth
@@ -772,7 +796,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
         <ZapierConnectPopup
           open={true}
           handlePopupClose={handleClose}
-          boxShadow="rgba(0, 0, 0, 0.01)"
+          boxShadow="rgba(0, 0, 0, 0.1)"
         />
       )}
 
@@ -780,7 +804,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
         <SlackConnectPopup
           open={true}
           handlePopupClose={handleClose}
-          boxShadow="rgba(0, 0, 0, 0.01)"
+          boxShadow="rgba(0, 0, 0, 0.1)"
         />
       )}
 
@@ -788,6 +812,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
         <GoogleADSConnectPopup
           open={true}
           handlePopupClose={handleClose}
+          boxShadow="rgba(0, 0, 0, 0.1)"
         />
       )}
 
@@ -944,6 +969,7 @@ const Integrations = () => {
   useEffect(() => {
     const fetchIntegrationCredentials = async () => {
       try {
+        setLoading(true)
         const response = await axiosInstance.get('/integrations/credentials/')
         if (response.status === 200) {
           setIntegrationsCredentials(response.data)
@@ -966,6 +992,7 @@ const Integrations = () => {
     }
     const fetchIntegration = async () => {
       try {
+        setLoading(true)
         const response = await axiosInstance.get('/integrations/')
         if (response.status === 200) {
           setIntegrations(response.data)

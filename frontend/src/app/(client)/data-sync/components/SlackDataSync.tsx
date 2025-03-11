@@ -57,12 +57,11 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (textFieldRef.current && !textFieldRef.current.contains(event.target as Node)) {
-                // If clicked outside, reset shrink only if there is no input value
                 if (selectedOption?.name === '') {
                     setIsShrunk(false);
                 }
                 if (isDropdownOpen) {
-                    setIsDropdownOpen(false); // Close dropdown when clicking outside
+                    setIsDropdownOpen(false);
                 }
             }
         };
@@ -83,12 +82,6 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
             setCustomFields(customFieldsList.map(field => ({ type: field?.value, value: field?.type })))
         }
     }, [open])
-
-
-
-    const handleAddField = () => {
-        setCustomFields([...customFields, { type: '', value: '' }]);
-    };
 
     const handleDeleteField = (index: number) => {
         setCustomFields(customFields.filter((_, i) => i !== index));
@@ -124,10 +117,12 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         try {
             setLoading(true)
             const response = await axiosInstance.get('/slack/get-channels')
-            setSlackList(response.data.channels || [])
-            if (response.data.status !== 'success'){
-                showErrorToast(response.data.message)
+            if (response.data.status === 'authentication_failed'){
+                showErrorToast('Key authentication failed')
+                onClose();
+                return
             }
+            setSlackList(response.data.channels || [])
             const foundItem = response.data?.channel.find((item: any) => item.name === data?.channel.name);
             if (foundItem) {
                 setUpdateKlaviuo(data.id)
@@ -195,8 +190,6 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         }
     };
     
-
-
     const handleSaveSync = async () => {
         if (!savedList) {
             showToast('No list data found. Please save the list first.');
@@ -243,35 +236,24 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         }
     };
     
-
-
-    // Handle menu open
     const handleClick = (event: React.MouseEvent<HTMLInputElement>) => {
         setIsShrunk(true);
         setIsDropdownOpen(prev => !prev);
         setAnchorEl(event.currentTarget);
-        setShowCreateForm(false); // Reset form when menu opens
+        setShowCreateForm(false);
     };
 
-    // Handle dropdown toggle specifically when clicking on the arrow
     const handleDropdownToggle = (event: React.MouseEvent) => {
-        event.stopPropagation(); // Prevent triggering the input field click
+        event.stopPropagation();
         setIsDropdownOpen(prev => !prev);
         setAnchorEl(textFieldRef.current);
     };
 
-    // Handle menu close
     const handleClose = () => {
         setAnchorEl(null);
         setShowCreateForm(false);
         setIsDropdownOpen(false);
-        setNewListName(''); // Clear new list name when closing
-    };
-
-    const handleMapClose = () => {
-        setValue('1')
-        setShowCreateMapForm(false);
-        setNewMapListName('');
+        setNewListName('');
     };
 
     const handleSelectOption = (value: ChannelList | string) => {
@@ -281,7 +263,6 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                 setAnchorEl(textFieldRef.current);
             }
         } else if (isKlaviyoList(value)) {
-            // Проверка, является ли value объектом KlaviyoList
             setSelectedOption({
                 id: value.id,
                 name: value.name,
@@ -301,22 +282,14 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
             'name' in value;
     };
 
-
-
-
-    // Handle Save action for the create new list form
     const handleSave = async () => {
         let valid = true;
-
-        // Validate List Name
         if (newListName.trim() === '') {
             setListNameError(true);
             valid = false;
         } else {
             setListNameError(false);
         }
-
-        // If valid, save and close
         if (valid) {
             const newSlackList = { id: '-1', name: newListName }
             setSelectedOption(newSlackList);
@@ -326,13 +299,6 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
             handleClose();
         }
     };
-
-    const label = { inputProps: { 'aria-label': 'Switch demo' } };
-
-    const handleChange = (event: React.SyntheticEvent, newValue: string) => {
-        setValue(newValue);
-    };
-
 
     const klaviyoStyles = {
         tabHeading: {
@@ -385,72 +351,6 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         },
     }
 
-    type HighlightConfig = {
-        [keyword: string]: { color?: string; fontWeight?: string }; // keyword as the key, style options as the value
-    };
-
-    const highlightText = (text: string, highlightConfig: HighlightConfig) => {
-        // Start with the whole text as a single part.
-        let parts: (string | JSX.Element)[] = [text];
-
-        // For each keyword, split the text and insert the highlighted part.
-        Object.keys(highlightConfig).forEach((keyword, keywordIndex) => {
-            const { color, fontWeight } = highlightConfig[keyword];
-            parts = parts.flatMap((part, partIndex) =>
-                // Only split if the part is a string and contains the keyword.
-                typeof part === 'string' && part.includes(keyword)
-                    ? part.split(keyword).flatMap((segment, index, array) =>
-                        index < array.length - 1
-                            ? [
-                                segment,
-                                <span
-                                    style={{
-                                        color: color || 'inherit',
-                                        fontWeight: fontWeight || 'normal'
-                                    }}
-                                    key={`highlight-${keywordIndex}-${partIndex}-${index}`}
-                                >
-                                    {keyword}
-                                </span>
-                            ]
-                            : [segment]
-                    )
-                    : [part] // Otherwise, just keep the part as is (could be JSX).
-            );
-        });
-
-        return <>{parts}</>; // Return the array wrapped in a fragment.
-    };
-
-    const instructions: any[] = [
-        // { id: 'unique-id-1', text: 'Go to the Klaviyo website and log into your account.' },
-        // { id: 'unique-id-2', text: 'Click on the Settings option located in your Klaviyo account options.' },
-        // { id: 'unique-id-3', text: 'Click Create Private API Key Name to Maximiz.' },
-        // { id: 'unique-id-4', text: 'Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Klaviyo key.' },
-        // { id: 'unique-id-5', text: 'Click Create.' },
-        // { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in Maximiz Klaviyo section.' },
-        // { id: 'unique-id-7', text: 'Click Connect.' },
-        // { id: 'unique-id-8', text: 'Select the existing list or create a new one to integrate with Maximiz.' },
-        // { id: 'unique-id-9', text: 'Click Export.' },
-    ]
-
-    // Define the keywords and their styles
-    const highlightConfig: HighlightConfig = {
-        'Klaviyo': { color: '#5052B2', fontWeight: '500' }, // Blue and bold
-        'Settings': { color: '#707071', fontWeight: '500' }, // Bold only
-        'Create Private API Key': { color: '#707071', fontWeight: '500' }, // Blue and bold
-        'Lists': { color: '#707071', fontWeight: '500' }, // Bold only
-        'Profiles': { color: '#707071', fontWeight: '500' }, // Bold only
-        'Metrics': { color: '#707071', fontWeight: '500' }, // Blue and bold
-        'Events': { color: '#707071', fontWeight: '500' }, // Blue and bold
-        'Templates': { color: '#707071', fontWeight: '500' }, // Blue and bold
-        'Create': { color: '#707071', fontWeight: '500' }, // Blue and bold
-        'API Key': { color: '#707071', fontWeight: '500' }, // Blue and bold
-        'Connect': { color: '#707071', fontWeight: '500' }, // Bold only
-        'Export': { color: '#707071', fontWeight: '500' } // Blue and bold
-    };
-
-    // Define buttons for each tab
     const getButton = (tabValue: string) => {
         switch (tabValue) {
             case '1':
@@ -567,23 +467,10 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         ));
     };
 
-    const handleClickOpen = (event: React.MouseEvent<HTMLElement>, id: number) => {
-        setDeleteAnchorEl(event.currentTarget);
-        setSelectedRowId(id);
-    };
-
     const handleDeleteClose = () => {
         setDeleteAnchorEl(null);
         setSelectedRowId(null);
     };
-
-    const handleDelete = () => {
-        if (selectedRowId !== null) {
-            setRows(rows.filter(row => row.id !== selectedRowId));
-            handleDeleteClose();
-        }
-    };
-
 
     const validateTab2 = () => {
         if (selectedRadioValue === null) {
@@ -619,7 +506,6 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         }
     };
 
-
     const handleNextTab = async () => {
 
         if (value === '1') {
@@ -633,16 +519,13 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                 setValue((prevValue) => String(Number(prevValue) + 1));
             }
         } else if (value === '3') {
-
             if (isDropdownValid) {
-                // Proceed to next tab
                 setValue((prevValue) => String(Number(prevValue) + 1));
             }
         }
     };
 
     const deleteOpen = Boolean(deleteAnchorEl);
-    const deleteId = deleteOpen ? 'delete-popover' : undefined;
 
     const handleChangeTab = (event: React.SyntheticEvent, newValue: string) => {
         setValue(newValue);

@@ -78,6 +78,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
         }
         else if(data.status == 'PIXEL_CODE_INSTALLED' && data.need_reload_page) {
           showToast("Pixel code is installed successfully!");
+          window.location.reload();
         }
         else if (data.status == 'SOURCE_PROCESSING_PROGRESS') {
           const { total, processed, source_id, matched } = data.data;
@@ -96,7 +97,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
             sessionStorage.setItem('me', JSON.stringify(meData));
           }
           setData(data);
-          window.location.reload();
+          // window.location.reload();
         }
       }
     };
