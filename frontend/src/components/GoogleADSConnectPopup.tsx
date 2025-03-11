@@ -10,10 +10,16 @@ import CustomizedProgressBar from "@/components/ProgressBar";
 
 const slackStyles = {
     tabHeading: {
+        fontFamily: 'Nunito Sans',
+        fontSize: '14px',
+        color: '#707071',
+        fontWeight: '500',
+        lineHeight: '20px',
         textTransform: 'none',
         padding: 0,
         minWidth: 'auto',
         px: 2,
+        pointerEvents: 'none',
         '@media (max-width: 600px)': {
             alignItems: 'flex-start',
             p: 0
@@ -25,8 +31,9 @@ const slackStyles = {
     },
     inputLabel: {
         fontFamily: 'Nunito Sans',
-        fontSize: '12px',
+        fontSize: '14px',
         lineHeight: '16px',
+        left: '2px',
         color: 'rgba(17, 17, 19, 0.60)',
         '&.Mui-focused': {
             color: '#0000FF',
@@ -51,6 +58,9 @@ const slackStyles = {
             },
             '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                 borderColor: '#0000FF',
+            },
+            '&.Mui-error .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'red',
             },
         },
         '&+.MuiFormHelperText-root': {
@@ -105,6 +115,11 @@ const GoogleADSConnectPopup = ({ open, handlePopupClose, boxShadow }: GoogleADSC
                     top: 0,
                     boxShadow: boxShadow ? '0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)' : 'none',
                     bottom: 0,
+                    msOverflowStyle: 'none',
+                    scrollbarWidth: 'none',
+                    '&::-webkit-scrollbar': {
+                        display: 'none',
+                    },
                     '@media (max-width: 600px)': {
                         width: '100%',
                     }
@@ -113,7 +128,7 @@ const GoogleADSConnectPopup = ({ open, handlePopupClose, boxShadow }: GoogleADSC
             slotProps={{
                 backdrop: {
                     sx: {
-                        backgroundColor: boxShadow ? boxShadow : 'transparent'
+                        backgroundColor: boxShadow ? boxShadow : 'rgba(0, 0, 0, 0.01)'
                     }
                 }
             }}
