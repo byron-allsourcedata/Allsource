@@ -80,10 +80,6 @@ class WebhookIntegrationService:
                     
     async def create_sync(self, leads_type: str, list_name: str, webhook_url: str, method: str, data_map: List[DataMap], domain_id: int, created_by: str, tags_id: str = None):
         credential = self.integration_persistence.get_credentials_for_service(domain_id=domain_id, service_name=SourcePlatformEnum.WEBHOOK.value)
-        data_syncs = self.sync_persistence.get_filter_by(domain_id=domain_id)
-        for sync in data_syncs:
-            if sync.get('integration_id') == credential.id and sync.get('leads_type') == leads_type:
-                return
         sync = self.sync_persistence.create_sync({
             'integration_id': credential.id,
             'list_name': list_name,

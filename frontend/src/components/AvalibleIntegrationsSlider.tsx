@@ -2,6 +2,7 @@ import { Box, Button, Drawer, IconButton, InputAdornment, List, ListItem, ListIt
 import Image from "next/image"
 import MetaConnectButton from "./MetaConnectButton"
 import KlaviyoIntegrationPopup from "./KlaviyoIntegrationPopup"
+import SalesForceIntegrationPopup from "./SalesForceIntegrationPopup"
 import AttentiveIntegrationPopup from "./AttentiveIntegrationPopup"
 import { useState } from "react"
 import SearchIcon from '@mui/icons-material/Search';
@@ -14,6 +15,7 @@ import SendlaneConnect from "./SendlaneConnect"
 import SlackConnectPopup from "./SlackConnectPopup"
 import WebhookConnectPopup from "./WebhookConnectPopup"
 import ZapierConnectPopup from "./ZapierConnectPopup"
+import HubspotIntegrationPopup from "./HubspotIntegrationPopup"
 import GoogleADSConnectPopup from "./GoogleADSConnectPopup"
 
 
@@ -47,6 +49,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
     const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
     const [openZapierConnect, setOPenZapierComnect] = useState(false)
     const [openSlackConnect, setOpenSlackConnect] = useState(false)
+    const [openHubspotConnect, setOpenHubspotConnect] = useState(false)
     const [openGoogleAdsConnect, setOpenGoogleAdsConnect] = useState(false)
     const [openWebhookConnect, setOpenWebhookConnect] = useState(false)
     const [searchQuery, setSearchQuery] = useState("");
@@ -60,6 +63,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
         setOpenSendlaneConnect(false)
         setOPenZapierComnect(false)
         setOpenSlackConnect(false)
+        setOpenHubspotConnect(false)
         setOpenGoogleAdsConnect(false)
         setOpenWebhookConnect(false)
     }
@@ -447,6 +451,26 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                             </ListItemButton>
                                         </ListItem>
                                     )}
+                                {filteredIntegrations.some(integration => integration.service_name === 'hubspot') && (
+                                    !integrationsCredentials.some(integration => integration.service_name === 'hubspot')) && (
+                                        <ListItem sx={{
+                                            p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                            '@media (max-width:600px)': {
+                                                flexBasis: 'calc(50% - 8px)'
+                                            }
+                                        }}>
+                                            <ListItemButton onClick={() => setOpenHubspotConnect(true)} sx={{ p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center' }}>
+                                                <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                    <Image src="/hubspot.svg" alt="slack" height={24} width={24} />
+                                                </ListItemIcon>
+                                                <ListItemText primary="Hubspot" primaryTypographyProps={{
+                                                    sx: {
+                                                        ...intergrations.integrate
+                                                    }
+                                                }} />
+                                            </ListItemButton>
+                                        </ListItem>
+                                    )}
                                     {filteredIntegrations.some(integration => integration.service_name === 'google_ads') && (
                                     !integrationsCredentials.some(integration => integration.service_name === 'google_ads')) && (
                                         <ListItem sx={{
@@ -474,6 +498,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
             </Drawer>
             <MetaConnectButton open={openMetaConnect} onClose={handleClose} onSave={saveIntegration} />
             <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={handleClose} onSave={saveIntegration} />
+            <SalesForceIntegrationPopup open={openKlaviyoConnect} handleClose={handleClose} onSave={saveIntegration} />
             <AttentiveIntegrationPopup open={openAttentiveConnect} handleClose={handleClose} onSave={saveIntegration} />
             <ShopifySettings open={openShopifuConnect} handleClose={handleClose} onSave={saveIntegration} />
             <BCommerceConnect
@@ -485,6 +510,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
             <SendlaneConnect open={openSendlaneConnect} handleClose={() => setOpenSendlaneConnect(false)} onSave={saveIntegration} />
             <ZapierConnectPopup open={openZapierConnect} handlePopupClose={handleClose} />
             <SlackConnectPopup open={openSlackConnect} handlePopupClose={() => setOpenSlackConnect(false)} onSave={saveIntegration} />
+            <HubspotIntegrationPopup open={openHubspotConnect} handleClose={handleClose} onSave={saveIntegration} />
             <GoogleADSConnectPopup open={openGoogleAdsConnect} handlePopupClose={() => setOpenGoogleAdsConnect(false)} onSave={saveIntegration} />
             <WebhookConnectPopup open={openWebhookConnect} handleClose={() => setOpenWebhookConnect(false)} onSave={saveIntegration} />
         </>

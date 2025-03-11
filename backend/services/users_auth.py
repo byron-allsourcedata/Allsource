@@ -564,6 +564,7 @@ class UsersAuth:
         if shopify_data:
             self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
             self.user_persistence_service.email_confirmed(user_object.id)
+            self.subscription_service.create_subscription_from_shopify(user_id=user_object.id)
         
         if shop_hash:
             self._process_big_commerce_integration(user_object, shop_hash)
@@ -584,6 +585,7 @@ class UsersAuth:
                 user_form.spi is None,
                 teams_token is None,
                 referral_token is None,
+                shopify_data is None
             ]
         if all(conditions):
             self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)    

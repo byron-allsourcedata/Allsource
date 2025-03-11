@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, VARCHAR, DECIMAL, TIMESTAMP
-from datetime import datetime
+from datetime import datetime, timezone
 from .base import Base
 
 
@@ -13,7 +13,7 @@ class LeadOrders(Base):
     lead_user_id = Column(Integer)
     total_price = Column(DECIMAL(10, 2))
     currency_code = Column(VARCHAR)
-    created_at = Column(TIMESTAMP, default=datetime.now)
+    created_at = Column(TIMESTAMP, default=datetime.now(timezone.utc))
     platform_created_at = Column(TIMESTAMP)
     platfrom_email = Column(VARCHAR)
 

@@ -160,31 +160,31 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
 
     const getKlaviyoList = async () => {
         try {
-        setLoading(true)
-        const response = await axiosInstance.get('/integrations/sync/list/', {
-            params: {
-                service_name: 'Klaviyo'
+            setLoading(true)
+            const response = await axiosInstance.get('/integrations/sync/list/', {
+                params: {
+                    service_name: 'Klaviyo'
+                }
+            })
+            setKlaviyoList(response.data)
+            const foundItem = response.data?.find((item: any) => item.list_name === data?.name);
+            if (foundItem) {
+                setUpdateKlaviuo(data.id)
+                setSelectedOption({
+                    id: foundItem.id,
+                    list_name: foundItem.list_name
+                });
+            } else {
+                setSelectedOption(null);
             }
-        })
-        setKlaviyoList(response.data)
-        const foundItem = response.data?.find((item: any) => item.list_name === data?.name);
-        if (foundItem) {
-            setUpdateKlaviuo(data.id)
-            setSelectedOption({
-                id: foundItem.id,
-                list_name: foundItem.list_name
-            });
-        } else {
-            setSelectedOption(null);
-        }
-        setSelectedRadioValue(data?.type);
-        setLoading(false)
-    } catch (error) {
+            setSelectedRadioValue(data?.type);
+            setLoading(false)
+        } catch (error) {
 
-    }
+        }
     }
     useEffect(() => {
-        if(open) {
+        if (open) {
             getKlaviyoList()
         }
     }, [open])
@@ -412,14 +412,8 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                     lineHeight: '20px',
                     fontWeight: '400'
                 },
-                '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#A3B0C2',
-                },
                 '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#A3B0C2',
-                },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#0000FF',
+                    borderColor: '#5052B2',
                 },
             },
             '&+.MuiFormHelperText-root': {
@@ -698,101 +692,102 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
 
     return (
         <>
-        {loading && (
-            <Box
-                sx={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'rgba(0, 0, 0, 0.2)',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    zIndex: 1400,
-                    overflow: 'hidden'
+            {loading && (
+                <Box
+                    sx={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0, 0, 0, 0.2)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 1400,
+                        overflow: 'hidden'
+                    }}
+                >
+                    <Box sx={{ width: '100%', top: 0, height: '100vh' }}>
+                        <LinearProgress />
+                    </Box>
+                </Box>
+            )}
+            <Drawer
+                anchor="right"
+                open={open}
+                onClose={handlePopupClose}
+                PaperProps={{
+                    sx: {
+                        width: '620px',
+                        position: 'fixed',
+                        zIndex: 1301,
+                        top: 0,
+                        boxShadow: isEdit ? '0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)' : 'none',
+                        bottom: 0,
+                        // msOverflowStyle: 'none',
+                        // scrollbarWidth: 'none',
+                        // '&::-webkit-scrollbar': {
+                        //     display: 'none',
+                        // },
+                        '@media (max-width: 600px)': {
+                            width: '100%',
+                        }
+                    },
+                }}
+                slotProps={{
+                    backdrop: {
+                        sx: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    }
                 }}
             >
-            <Box sx={{width: '100%', top: 0, height: '100vh'}}>
-                <LinearProgress />
-            </Box>
-            </Box>
-        )}
-        <Drawer
-            anchor="right"
-            open={open}
-            onClose={handlePopupClose}
-            PaperProps={{
-                sx: {
-                    width: '620px',
-                    position: 'fixed',
-                    zIndex: 1301,
-                    top: 0,
-                    boxShadow: isEdit ? '0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)' :'none',
-                    bottom: 0,
-                    // msOverflowStyle: 'none',
-                    // scrollbarWidth: 'none',
-                    // '&::-webkit-scrollbar': {
-                    //     display: 'none',
-                    // },
-                    '@media (max-width: 600px)': {
-                        width: '100%',
-                    }
-                },
-            }}
-            slotProps={{
-                backdrop: {
-                  sx: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.1)'
-                  }
-                }
-              }}
-        >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
-                <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
-                    Connect to Klaviyo
-                </Typography>
-                <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                    <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-the-maximiz-contact-sync-work" target="_blank" rel="noopener referrer" className="main-text" sx={{
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        lineHeight: '20px',
-                        color: '#5052b2',
-                        textDecorationColor: '#5052b2'
-                    }}>Tutorial</Link>
-                    <IconButton onClick={handlePopupClose} sx={{ p: 0 }}>
-                        <CloseIcon sx={{ width: '20px', height: '20px' }} />
-                    </IconButton>
-                </Box>
-            </Box>
-            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
-                <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
-                <TabContext value={value}>
-                    <Box sx={{pb: 4}}>
-                        <TabList centered aria-label="Connect to Klaviyo Tabs"
-                        TabIndicatorProps={{sx: {backgroundColor: "#5052b2" } }} 
-                        sx={{
-                            "& .MuiTabs-scroller": {
-                                overflowX: 'auto !important',
-                            },
-                            "& .MuiTabs-flexContainer": {
-                            justifyContent:'center',
-                            '@media (max-width: 600px)': {
-                                gap: '16px',
-                                justifyContent:'flex-start'
-                            }
-                        }}} onChange={handleChangeTab}>
-                            <Tab label="Sync Filter" value="1" className='tab-heading' sx={klaviyoStyles.tabHeading} />
-                            <Tab label="Contact Sync" value="2" className='tab-heading' sx={klaviyoStyles.tabHeading} />
-                            <Tab label="Map data" value="3" className='tab-heading' sx={klaviyoStyles.tabHeading} />
-                        </TabList>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+                    <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
+                        Connect to Klaviyo
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
+                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-the-maximiz-contact-sync-work" target="_blank" rel="noopener referrer" className="main-text" sx={{
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            lineHeight: '20px',
+                            color: '#5052b2',
+                            textDecorationColor: '#5052b2'
+                        }}>Tutorial</Link>
+                        <IconButton onClick={handlePopupClose} sx={{ p: 0 }}>
+                            <CloseIcon sx={{ width: '20px', height: '20px' }} />
+                        </IconButton>
                     </Box>
-                    <TabPanel value="1" sx={{ p: 0 }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                </Box>
+                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
+                    <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
+                        <TabContext value={value}>
+                            <Box sx={{ pb: 4 }}>
+                                <TabList centered aria-label="Connect to Klaviyo Tabs"
+                                    TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
+                                    sx={{
+                                        "& .MuiTabs-scroller": {
+                                            overflowX: 'auto !important',
+                                        },
+                                        "& .MuiTabs-flexContainer": {
+                                            justifyContent: 'center',
+                                            '@media (max-width: 600px)': {
+                                                gap: '16px',
+                                                justifyContent: 'flex-start'
+                                            }
+                                        }
+                                    }} onChange={handleChangeTab}>
+                                    <Tab label="Sync Filter" value="1" className='tab-heading' sx={klaviyoStyles.tabHeading} />
+                                    <Tab label="Contact Sync" value="2" className='tab-heading' sx={klaviyoStyles.tabHeading} />
+                                    <Tab label="Map data" value="3" className='tab-heading' sx={klaviyoStyles.tabHeading} />
+                                </TabList>
+                            </Box>
+                            <TabPanel value="1" sx={{ p: 0 }}>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                     <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                    <Typography variant="subtitle1" className='paragraph'>Synchronise all data in real-time from this moment forward for seamless integration and continuous updates.</Typography>
-                                    <FormControl sx={{ gap: '16px',  }} error={tab2Error}>
+                                        <Typography variant="subtitle1" className='paragraph'>Synchronise all data in real-time from this moment forward for seamless integration and continuous updates.</Typography>
+                                        <FormControl sx={{ gap: '16px', }} error={tab2Error}>
                                             <FormLabel id="contact-type-radio-buttons-group-label" className='first-sub-title' sx={{
                                                 '&.Mui-focused': {
                                                     color: '#000',
@@ -956,8 +951,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                 <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
                                             </Tooltip>
                                         </Box>
-
-
                                         <ClickAwayListener onClickAway={handleClose}>
                                             <Box>
                                                 <TextField
@@ -974,12 +967,12 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                             fontFamily: 'Nunito Sans',
                                                             fontSize: '12px',
                                                             lineHeight: '16px',
-                                                            color: 'rgba(17, 17, 19, 0.60)',
+                                                            // color: '#5052B2',
                                                             letterSpacing: '0.06px',
                                                             top: '5px',
-                                                            '&.Mui-focused': {
-                                                                color: '#0000FF',
-                                                            },
+                                                            // '&.Mui-focused': {
+                                                            //     color: '#0000FF',
+                                                            // },
                                                         }
                                                     }}
                                                     InputProps={{
@@ -998,7 +991,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                             caretColor: 'transparent', // Hide caret with transparent color
                                                             fontFamily: "Nunito Sans",
                                                             fontSize: "14px",
-                                                            color: "rgba(0, 0, 0, 0.89)",
+                                                            // color: "rgba(0, 0, 0, 0.89)",
                                                             fontWeight: "600",
                                                             lineHeight: "normal",
                                                         },
@@ -1425,7 +1418,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                             sx: {
                                                                 '&.MuiOutlinedInput-root': {
                                                                     height: '36px',
-                                                                    
+
                                                                     '& .MuiOutlinedInput-input': {
                                                                         padding: '6.5px 8px',
                                                                         fontFamily: 'Roboto',
@@ -1567,8 +1560,8 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                                 },
                                                                 '&.MuiInputLabel-shrink': {
                                                                     top: 0,
-                                                                    padding:0,
-                                                                    margin:0,
+                                                                    padding: 0,
+                                                                    margin: 0,
                                                                     flexShrink: 0
                                                                 }
                                                             }
@@ -1716,12 +1709,13 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                         {/* Button based on selected tab */}
 
                     </Box>
-                    <Box sx={{ px: 2, py: 2, border: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0, background: '#fff', zIndex: '1',
+                    <Box sx={{
+                        px: 2, py: 2, border: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0, background: '#fff', zIndex: '1',
                         width: '620px',
                         '@media (max-width: 600px)': {
-                                width: '100%',
+                            width: '100%',
                         }
-                     }}>
+                    }}>
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
 
                             {getButton(value)}

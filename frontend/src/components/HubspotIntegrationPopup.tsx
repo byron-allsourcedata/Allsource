@@ -12,7 +12,7 @@ import { showErrorToast, showToast } from "./ToastNotification";
 import { useAxiosHook } from "@/hooks/AxiosHooks";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 
-interface CreateKlaviyoProps {
+interface CreateHubspotProps {
     handleClose: () => void
     onSave?: (integration: IntegrationsCredentials) => void
     open: boolean
@@ -32,7 +32,7 @@ interface IntegrationsCredentials {
     is_with_suppression?: boolean
 }
 
-const klaviyoStyles = {
+const hubspotStyles = {
     tabHeading: {
         fontFamily: 'Nunito Sans',
         fontSize: '14px',
@@ -92,7 +92,7 @@ const klaviyoStyles = {
     },
 }
 
-const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxShadow, Invalid_api_key }: CreateKlaviyoProps) => {
+const HubspotIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxShadow, Invalid_api_key }: CreateHubspotProps) => {
     const { triggerSync } = useIntegrationContext();
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
@@ -125,14 +125,17 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
     };
 
     const instructions = [
-        { id: 'unique-id-1', text: 'Go to the Klaviyo website and log into your account.' },
-        { id: 'unique-id-2', text: 'Click on the Settings option located in your Klaviyo account options.' },
-        { id: 'unique-id-3', text: 'Click Create Private API Key Name to Maximiz.' },
-        { id: 'unique-id-4', text: 'Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Klaviyo key.' },
-        { id: 'unique-id-5', text: 'Click Create.' },
-        { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in Maximiz Klaviyo section.' },
-        { id: 'unique-id-7', text: 'Click Connect.' },
+        { id: 'unique-id-1', text: 'Go to the Hubspot website and log into your account.' },
+        { id: 'unique-id-2', text: 'Click on the settings icon in the top navigation bar.' },
+        { id: 'unique-id-3', text: 'Navigate to "Integrations" and select "Private Apps".' },
+        { id: 'unique-id-4', text: 'Click on "Create a private app".' },
+        { id: 'unique-id-5', text: 'Enter "Maximiz" as the app name.' },
+        { id: 'unique-id-6', text: 'Assign full access permissions to "CRM", "Contacts", and "Objects".' },
+        { id: 'unique-id-7', text: 'Click "Create app" and confirm your selection.' },
+        { id: 'unique-id-8', text: 'Copy the generated API key and paste it into the API Key field in the Maximiz Hubspot section.' },
+        { id: 'unique-id-9', text: 'Click "Connect" to complete the integration process.' },
     ];
+
 
     type HighlightConfig = {
         [keyword: string]: { color?: string; fontWeight?: string };
@@ -175,24 +178,24 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                 url: "/integrations/",
                 method: "POST",
                 data: {
-                    klaviyo: {
-                        api_key: apiKey,
+                    hubspot: {
+                        access_token: apiKey,
                     },
                 },
-                params: { service_name: "klaviyo" },
+                params: { service_name: "hubspot" },
             });
             if (response?.status === 200) {
                 if (onSave) {
                     onSave({
-                        service_name: 'klaviyo',
+                        service_name: 'hubspot',
                         access_token: apiKey,
                     })
                 }
-                showToast("Integration Klaviyo Successfully");
+                showToast("Integration Hubspot Successfully");
                 triggerSync();
                 handleNextTab();
             }
-        } catch (error) {
+        } catch (err) {
         } finally {
             setDisableButton(false)
         }
@@ -200,7 +203,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
 
 
     const highlightConfig: HighlightConfig = {
-        'Klaviyo': { color: '#5052B2', fontWeight: '500' },
+        'Hubspot': { color: '#5052B2', fontWeight: '500' },
         'Settings': { color: '#707071', fontWeight: '500' },
         'Create Private API Key': { color: '#707071', fontWeight: '500' },
         'Lists': { color: '#707071', fontWeight: '500' },
@@ -228,7 +231,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
         if (onSave) {
             onSave({
                 id: -1,
-                'service_name': 'klaviyo',
+                'service_name': 'hubspot',
                 data_center: '',
                 access_token: apiKey,
                 is_with_suppression: checked,
@@ -352,23 +355,23 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
             >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4' }}>
                     <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
-                        Connect to Klaviyo
+                        Connect to Hubspot
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href={initApiKey ?
-                            "https://maximizai.zohodesk.eu/portal/en/kb/articles/update-klaviyo-integration-configuration" :
-                            "https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-klaviyo-to-maximiz"
-                        }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            sx={{
-                                fontFamily: 'Nunito Sans',
-                                fontSize: '14px',
-                                fontWeight: '600',
-                                lineHeight: '20px',
-                                color: '#5052b2',
-                                textDecorationColor: '#5052b2'
-                            }}>Tutorial</Link>
+                            {/* <Link href={initApiKey ?
+                                "https://maximizai.zohodesk.eu/portal/en/kb/articles/update-hubspot-integration-configuration" :
+                                "https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-hubspot-to-maximiz"
+                            }
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                sx={{
+                                    fontFamily: 'Nunito Sans',
+                                    fontSize: '14px',
+                                    fontWeight: '600',
+                                    lineHeight: '20px',
+                                    color: '#5052b2',
+                                    textDecorationColor: '#5052b2'
+                                }}>Tutorial</Link> */}
                         <IconButton onClick={handleClose} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />
                         </IconButton>
@@ -382,7 +385,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                                     value={value}
                                     onChange={handleChange}
                                     centered
-                                    aria-label="Connect to Klaviyo Tabs"
+                                    aria-label="Connect to Hubspot Tabs"
                                     TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
                                     sx={{
                                         cursor: 'pointer',
@@ -401,12 +404,12 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                                     <Tab
                                         label="API Key"
                                         value="1"
-                                        sx={{ ...klaviyoStyles.tabHeading, cursor: 'pointer' }}
+                                        sx={{ ...hubspotStyles.tabHeading, cursor: 'pointer' }}
                                     />
                                     <Tab
                                         label="Suppression Sync"
                                         value="2"
-                                        sx={{ ...klaviyoStyles.tabHeading, cursor: 'pointer' }}
+                                        sx={{ ...hubspotStyles.tabHeading, cursor: 'pointer' }}
                                     />
                                 </Tabs>
 
@@ -414,14 +417,14 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                             <TabPanel value="1" sx={{ p: 0 }}>
                                 <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <Image src='/klaviyo.svg' alt='klaviyo' height={26} width={32} />
+                                        <Image src='/hubspot.svg' alt='hubspot' height={26} width={32} />
                                         <Typography variant="h6" sx={{
                                             fontFamily: 'Nunito Sans',
                                             fontSize: '16px',
                                             fontWeight: '600',
                                             color: '#202124'
                                         }}>API Key</Typography>
-                                        <Tooltip title="Enter the API key provided by Klaviyo" placement="right">
+                                        <Tooltip title="Enter the API key provided by Hubspot" placement="right">
                                             <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
                                         </Tooltip>
                                     </Box>
@@ -434,8 +437,8 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                                         helperText={apiKeyError ? 'API Key is required' : ''}
                                         value={apiKey}
                                         onChange={handleApiKeyChange}
-                                        InputLabelProps={{ sx: klaviyoStyles.inputLabel }}
-                                        InputProps={{ sx: { ...klaviyoStyles.formInput, borderColor: Invalid_api_key ? 'red' : 'inherit' }, }}
+                                        InputLabelProps={{ sx: hubspotStyles.inputLabel }}
+                                        InputProps={{ sx: { ...hubspotStyles.formInput, borderColor: Invalid_api_key ? 'red' : 'inherit' }, }}
                                     />
                                 </Box>
                                 <Box sx={{ background: '#f0f0f0', border: '1px solid #efefef', borderRadius: '4px', p: 2 }}>
@@ -447,7 +450,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                                             fontWeight: '600',
                                             color: '#202124',
                                             lineHeight: 'normal'
-                                        }}>How to integrate Klaviyo</Typography>
+                                        }}>How to integrate Hubspot</Typography>
                                     </Box>
                                     <List dense sx={{ p: 0 }}>
                                         {instructions.map((instruction, index) => (
@@ -488,7 +491,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                     <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <Image src='/klaviyo.svg' alt='klaviyo' height={26} width={32} />
+                                            <Image src='/hubspot.svg' alt='hubspot' height={26} width={32} />
                                             <Typography variant="h6" sx={{
                                                 fontFamily: 'Nunito Sans',
                                                 fontSize: '16px',
@@ -505,7 +508,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                                             lineHeight: '20px',
                                             letterSpacing: '0.06px'
                                         }}>Sync your current list to avoid collecting contacts you already possess.
-                                            Newly added contacts in Klaviyo will be automatically suppressed each day.</Typography>
+                                            Newly added contacts in Hubspot will be automatically suppressed each day.</Typography>
 
 
                                         <Box sx={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
@@ -622,7 +625,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                                                 color: '#808080',
                                                 lineHeight: '20px',
                                                 letterSpacing: '0.06px'
-                                            }}>By performing this action, all your Klaviyo contacts will be added to your Grow suppression list, and new contacts will be imported daily around 6pm EST.</Typography>
+                                            }}>By performing this action, all your Hubspot contacts will be added to your Grow suppression list, and new contacts will be imported daily around 6pm EST.</Typography>
                                         </Box>
                                     </Box>
                                 </Box>
@@ -640,4 +643,4 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
     );
 }
 
-export default KlaviyoIntegrationPopup;
+export default HubspotIntegrationPopup;

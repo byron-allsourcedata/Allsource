@@ -143,7 +143,9 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
             'zapier': integration_service.zapier,
             'slack': integration_service.slack,
             'google_ads': integration_service.google_ads,
-            'webhook': integration_service.webhook
+            'webhook': integration_service.webhook,
+            'hubspot': integration_service.hubspot,
+            'sales_force': integration_service.sales_force
         }
         
         service = service_map.get(service_name)

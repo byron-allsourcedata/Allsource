@@ -38,7 +38,12 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
     const [value, setValue] = React.useState('1');
     const [selectedRadioValue, setSelectedRadioValue] = useState(data?.type);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [selectedOption, setSelectedOption] = useState<ChannelList | null>(null);
+    const [selectedOption, setSelectedOption] = useState<ChannelList | null>(
+        {
+            list_id: data?.list_id ?? '',
+            list_name: data?.name ?? '',
+        }
+    ?? null);
     const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
     const [newListName, setNewListName] = useState<string>(data?.name ?? '');
     const [isShrunk, setIsShrunk] = useState<boolean>(false);
@@ -51,23 +56,27 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
     const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(null)
     const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
     const [newMapListName, setNewMapListName] = useState<string>('');
+    const textFieldRefAdAccount = useRef<HTMLDivElement>(null);
     const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
     const [maplistNameError, setMapListNameError] = useState(false);
-    const [googleList, setGoogleAdsList] = useState<ChannelList[]>([
-        {
-            list_id: data?.list_id ?? '',
-            list_name: data?.name ?? '',
-        }
-      ] ?? []);
+    const [anchorElAdAccount, setAnchorElAdAccount] = useState<null | HTMLElement>(null);
+    const [isDropdownOpenAdAccount, setIsDropdownOpenAdAccount] = useState(false);
+    const [googleList, setGoogleAdsList] = useState<ChannelList[]>([]);
 
     const [customersInfo, setCustomersInfo] = useState<Customers[]>([
         {
-          customer_id: data?.customer_id ?? '',
-          customer_name: data?.customer_id ?? '',
+            customer_id: data?.customer_id ?? '',
+            customer_name: data?.customer_id ?? '',
         }
-      ] ?? []);
-      
+    ] ?? []);
+
     const [selectedAccountId, setSelectedAccountId] = useState<string>(data?.customer_id ?? '');
+    const [optionAdAccount, setOptionAdAccount] = useState<Customers>(
+        {
+            customer_id: data?.customer_id ?? '',
+            customer_name: data?.customer_id ?? '',
+        }
+    ?? '');
     const [listNameErrorMessage, setListNameErrorMessage] = useState('')
     const [customFieldsList, setCustomFieldsList] = useState<CustomField[]>([]);
     const [savedList, setSavedList] = useState<ChannelList | null>({
@@ -105,20 +114,11 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
         }
     }, [open])
 
-
-
-    const handleAddField = () => {
-        setCustomFields([...customFields, { type: '', value: '' }]);
+    const handleCloseAdAccount = () => {
+        setAnchorElAdAccount(null);
+        setIsDropdownOpenAdAccount(false);
     };
 
-    const handleDeleteField = (index: number) => {
-        setCustomFields(customFields.filter((_, i) => i !== index));
-    };
-
-    const handleChangeField = (index: number, field: string, value: string) => {
-
-        setCustomFields(customFields.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
-    };
     useEffect(() => {
         if (open) { return }
         setLoading(false);
@@ -207,6 +207,51 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
         }
     }
 
+    const metaStyles = {
+        tabHeading: {
+            textTransform: 'none',
+            padding: 0,
+            minWidth: 'auto',
+            px: 2,
+            '@media (max-width: 600px)': {
+                alignItems: 'flex-start',
+                p: 0
+            },
+            '&.Mui-selected': {
+                color: '#5052b2',
+                fontWeight: '700'
+            }
+        },
+        inputLabel: {
+            fontFamily: 'Nunito Sans',
+            fontSize: '12px',
+            lineHeight: '16px',
+            color: 'rgba(17, 17, 19, 0.60)',
+            '&.Mui-focused': {
+                color: '#0000FF',
+            },
+        },
+        formInput: {
+            '&.MuiOutlinedInput-root': {
+                height: '48px',
+                '& .MuiOutlinedInput-input': {
+                    padding: '12px 16px 13px 16px',
+                    fontFamily: 'Roboto',
+                    color: '#202124',
+                    fontSize: '14px',
+                    lineHeight: '20px',
+                    fontWeight: '400'
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#5052B2',
+                },
+            },
+            '&+.MuiFormHelperText-root': {
+                marginLeft: '0',
+            },
+        },
+    }
+
     const handleSaveList = async () => {
         setLoading(true);
         try {
@@ -231,8 +276,6 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
             setLoading(false);
         }
     };
-
-
 
     const handleSaveSync = async () => {
         if (!savedList) {
@@ -282,35 +325,26 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
         }
     };
 
-
-
-    // Handle menu open
     const handleClick = (event: React.MouseEvent<HTMLInputElement>) => {
         setIsShrunk(true);
         setIsDropdownOpen(prev => !prev);
         setAnchorEl(event.currentTarget);
-        setShowCreateForm(false); // Reset form when menu opens
+        setShowCreateForm(false);
     };
 
-    // Handle dropdown toggle specifically when clicking on the arrow
     const handleDropdownToggle = (event: React.MouseEvent) => {
-        event.stopPropagation(); // Prevent triggering the input field click
+        event.stopPropagation();
         setIsDropdownOpen(prev => !prev);
         setAnchorEl(textFieldRef.current);
     };
 
-    // Handle menu close
     const handleClose = () => {
         setAnchorEl(null);
+        setAnchorElAdAccount(null)
+        setIsDropdownOpenAdAccount(false)
         setShowCreateForm(false);
         setIsDropdownOpen(false);
-        setNewListName(''); // Clear new list name when closing
-    };
-
-    const handleMapClose = () => {
-        setValue('1')
-        setShowCreateMapForm(false);
-        setNewMapListName('');
+        setNewListName('');
     };
 
     const handleSelectOption = (value: ChannelList | string) => {
@@ -339,14 +373,9 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
             'list_name' in value;
     };
 
-
-
-
-    // Handle Save action for the create new list form
     const handleSave = async () => {
         let valid = true;
 
-        // Validate List Name
         if (newListName.trim() === '') {
             setListNameError(true);
             valid = false;
@@ -354,7 +383,6 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
             setListNameError(false);
         }
 
-        // If valid, save and close
         if (valid) {
             const newSlackList = { list_id: '-1', list_name: newListName }
             setSelectedOption(newSlackList);
@@ -364,13 +392,6 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
             handleClose();
         }
     };
-
-    const label = { inputProps: { 'aria-label': 'Switch demo' } };
-
-    const handleChange = (event: React.SyntheticEvent, newValue: string) => {
-        setValue(newValue);
-    };
-
 
     const klaviyoStyles = {
         tabHeading: {
@@ -407,14 +428,8 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                     lineHeight: '20px',
                     fontWeight: '400'
                 },
-                '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#A3B0C2',
-                },
                 '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#A3B0C2',
-                },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#0000FF',
+                    borderColor: '#5052B2',
                 },
             },
             '&+.MuiFormHelperText-root': {
@@ -423,44 +438,6 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
         },
     }
 
-    type HighlightConfig = {
-        [keyword: string]: { color?: string; fontWeight?: string }; // keyword as the key, style options as the value
-    };
-
-    const highlightText = (text: string, highlightConfig: HighlightConfig) => {
-        // Start with the whole text as a single part.
-        let parts: (string | JSX.Element)[] = [text];
-
-        // For each keyword, split the text and insert the highlighted part.
-        Object.keys(highlightConfig).forEach((keyword, keywordIndex) => {
-            const { color, fontWeight } = highlightConfig[keyword];
-            parts = parts.flatMap((part, partIndex) =>
-                // Only split if the part is a string and contains the keyword.
-                typeof part === 'string' && part.includes(keyword)
-                    ? part.split(keyword).flatMap((segment, index, array) =>
-                        index < array.length - 1
-                            ? [
-                                segment,
-                                <span
-                                    style={{
-                                        color: color || 'inherit',
-                                        fontWeight: fontWeight || 'normal'
-                                    }}
-                                    key={`highlight-${keywordIndex}-${partIndex}-${index}`}
-                                >
-                                    {keyword}
-                                </span>
-                            ]
-                            : [segment]
-                    )
-                    : [part] // Otherwise, just keep the part as is (could be JSX).
-            );
-        });
-
-        return <>{parts}</>; // Return the array wrapped in a fragment.
-    };
-
-    // Define buttons for each tab
     const getButton = (tabValue: string) => {
         switch (tabValue) {
             case '1':
@@ -573,23 +550,23 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
         ));
     };
 
-    const handleClickOpen = (event: React.MouseEvent<HTMLElement>, id: number) => {
-        setDeleteAnchorEl(event.currentTarget);
-        setSelectedRowId(id);
+    const handleSelectAdAccount = async (value: Customers) => {
+        setOptionAdAccount(value);
+        setSelectedAccountId(value.customer_id)
+        handleClose();
+    }
+
+    const handleClickAdAccount = (event: React.MouseEvent<HTMLInputElement>) => {
+        setIsShrunk(true)
+        setAnchorElAdAccount(event.currentTarget);
+        setIsDropdownOpenAdAccount(true);
     };
 
-    const handleDeleteClose = () => {
-        setDeleteAnchorEl(null);
-        setSelectedRowId(null);
+    const handleDropdownToggleAdAccount = (event: React.MouseEvent) => {
+        event.stopPropagation();
+        setIsDropdownOpenAdAccount(prev => !prev);
+        setAnchorElAdAccount(textFieldRefAdAccount.current);
     };
-
-    const handleDelete = () => {
-        if (selectedRowId !== null) {
-            setRows(rows.filter(row => row.id !== selectedRowId));
-            handleDeleteClose();
-        }
-    };
-
 
     const validateTab2 = () => {
         if (selectedRadioValue === null) {
@@ -617,7 +594,6 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
         }
     };
 
-
     const handleNextTab = async () => {
 
         if (value === '1') {
@@ -640,7 +616,6 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
     };
 
     const deleteOpen = Boolean(deleteAnchorEl);
-    const deleteId = deleteOpen ? 'delete-popover' : undefined;
 
     const handleChangeTab = (event: React.SyntheticEvent, newValue: string) => {
         setValue(newValue);
@@ -910,42 +885,93 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                 <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
                                             </Tooltip>
                                         </Box>
+                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                                            <TextField
+                                                ref={textFieldRefAdAccount}
+                                                variant="outlined"
+                                                value={
+                                                    optionAdAccount?.customer_name || null
+                                                }
+                                                onClick={handleClickAdAccount}
+                                                size="small"
 
-                                        <FormControl fullWidth sx={{ mb: 2, mt: 1 }}>
-                                            <InputLabel sx={{
-                                                fontSize: '16px',
-                                                fontWeight: '500',
-                                                color: 'rgba(33, 43, 54, 0.87)',
-                                                '&.Mui-focused': {
-                                                    color: 'rgba(33, 43, 54, 0.87)',
-                                                },
-                                            }}>Select an account</InputLabel>
-                                            <Select
-                                                value={selectedAccountId || ''}
-                                                onChange={(e) => {
-                                                    const selectedValue = e.target.value as string;
-                                                    setSelectedAccountId(selectedValue);
+                                                fullWidth
+                                                label={optionAdAccount?.customer_name ? '' : 'Select An Account'}
+                                                InputLabelProps={{
+                                                    shrink: isShrunk || optionAdAccount?.customer_name !== "",
+                                                    sx: {
+                                                        fontFamily: 'Nunito Sans',
+                                                        fontSize: '15px',
+                                                        lineHeight: '16px',
+                                                        color: 'rgba(17, 17, 19, 0.60)',
+
+                                                        padding: 0,
+                                                        margin: 0,
+                                                        left: '3px',
+                                                        '&.Mui-focused': {
+                                                            color: '#0000FF',
+                                                        },
+                                                    }
                                                 }}
-                                                disabled={data?.customer_id}
-                                                label="Account"
+                                                InputProps={{
+                                                    endAdornment: (
+                                                        <InputAdornment position="end">
+                                                            <IconButton onClick={handleDropdownToggleAdAccount} edge="end">
+                                                                {isDropdownOpenAdAccount ? <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} /> : <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />}
+                                                            </IconButton>
+                                                        </InputAdornment>
+                                                    ),
+                                                    sx: metaStyles.formInput
+                                                }}
                                                 sx={{
-                                                    backgroundColor: '#ffffff',
-                                                    borderRadius: '4px',
-                                                    border: '1px solid rgba(224, 224, 224, 1)',
-                                                    '&:focus': {
-                                                        borderColor: 'rgba(80, 82, 178, 1)',
-                                                        boxShadow: '0 0 0 2px rgba(80, 82, 178, 0.2)',
+                                                    '& input': {
+                                                        caretColor: 'transparent',
+                                                        fontFamily: "Nunito Sans",
+                                                        fontSize: "14px",
+                                                        color: "rgba(0, 0, 0, 0.89)",
+                                                        fontWeight: "600",
+                                                        lineHeight: "normal",
+                                                    },
+                                                    '& .MuiOutlinedInput-input': {
+                                                        cursor: 'default',
+                                                        top: '5px'
+                                                    },
+                                                    marginBottom: '24px'
+
+                                                }}
+                                            />
+                                            <Menu
+                                                anchorEl={anchorElAdAccount}
+                                                open={Boolean(anchorElAdAccount) && isDropdownOpenAdAccount}
+                                                onClose={handleCloseAdAccount}
+                                                PaperProps={{
+                                                    sx: {
+                                                        width: anchorElAdAccount ? `${anchorElAdAccount.clientWidth}px` : '538px', borderRadius: '4px',
+                                                        border: '1px solid #e4e4e4'
                                                     },
                                                 }}
+
                                             >
-                                                <MenuItem value="">Select an account</MenuItem>
                                                 {customersInfo?.map(account => (
-                                                    <MenuItem key={account.customer_id} value={account.customer_id}>
-                                                        {account.customer_name}
+                                                    <MenuItem key={account.customer_id} onClick={() => handleSelectAdAccount(account)} sx={{
+                                                        '&:hover': {
+                                                            background: 'rgba(80, 82, 178, 0.10)'
+                                                        }
+                                                    }}>
+                                                        <ListItemText primary={account.customer_name} primaryTypographyProps={{
+                                                            sx: {
+                                                                fontFamily: "Nunito Sans",
+                                                                fontSize: "14px",
+                                                                color: "#202124",
+                                                                fontWeight: "500",
+                                                                lineHeight: "20px"
+                                                            }
+                                                        }} />
+
                                                     </MenuItem>
                                                 ))}
-                                            </Select>
-                                        </FormControl>
+                                            </Menu>
+                                        </Box>
                                         <ClickAwayListener onClickAway={() => { }}>
                                             <Box>
                                                 <TextField
@@ -1007,13 +1033,12 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                         sx: {
                                                             width: anchorEl ? `${anchorEl.clientWidth}px` : '538px', borderRadius: '4px',
                                                             border: '1px solid #e4e4e4'
-                                                        }, // Match dropdown width to input
+                                                        },
                                                     }}
                                                     sx={{
 
                                                     }}
                                                 >
-                                                    {/* Show "Create New List" option */}
                                                     <MenuItem disabled={data?.name}
                                                         onClick={() => handleSelectOption('createNew')} sx={{
                                                             borderBottom: showCreateForm ? "none" : "1px solid #cdcdcd",
@@ -1033,7 +1058,6 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                         }} />
                                                     </MenuItem>
 
-                                                    {/* Show Create New List form if 'showCreateForm' is true */}
                                                     {showCreateForm && (
                                                         <Box>
                                                             <Box sx={{
@@ -1235,7 +1259,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                 minWidth: '196px'
                                             }
                                         }}>
-                                            <Image src='/slack-icon.svg' alt='slack' height={20} width={24} />
+                                            <Image src='/google-ads.svg' alt='googleAds' height={20} width={24} />
                                         </Grid>
                                         <Grid item xs="auto" sm={1}>&nbsp;</Grid>
                                     </Grid>
