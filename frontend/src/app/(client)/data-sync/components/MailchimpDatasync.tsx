@@ -205,13 +205,13 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                 showErrorToast("You've hit your audience limit. You already have the max amount of audiences allowed in your plan.")
                 throw new Error("You've hit your audience limit. You already have the max amount of audiences allowed in your plan.")
             }
-            else if (newListResponse.data.status === 'CREDENTIALS_INVALID'){
+            else if (newListResponse.data.status === 'CREDENTIALS_INVALID') {
                 showErrorToast("Credentials invalid, try updating the key.")
                 throw new Error("Credentials invalid, try updating the key.")
             }
 
             return newListResponse.data;
-        } catch (error) {}
+        } catch (error) { }
 
     };
 
@@ -230,7 +230,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                 return;
             }
 
-            if (list){
+            if (list) {
                 if (isEdit) {
                     const response = await axiosInstance.put(`/data-sync/sync`, {
                         integrations_users_sync_id: data.id,
