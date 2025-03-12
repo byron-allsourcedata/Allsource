@@ -693,7 +693,7 @@ const Sources: React.FC = () => {
                                                                         { key: 'name', label: 'Name' },
                                                                         { key: 'source', label: 'Source' },
                                                                         { key: 'type', label: 'Type' },
-                                                                        { key: 'created_date', label: 'Created Date' },
+                                                                        { key: 'created_date', label: 'Created Date', sortable: true },
                                                                         { key: 'created_by', label: 'Created By' },
                                                                         { key: 'updated_date', label: 'Update Date' },
                                                                         { key: 'number_of_customers', label: 'Number of Customers', sortable: true },

@@ -42,6 +42,7 @@ class AudienceSourcesPersistence:
 
         sort_options = {
             'number_of_customers': AudienceSource.total_records,
+            'created_date': AudienceSource.created_at,
             'matched_records': AudienceSource.matched_records,
         }
         if sort_by in sort_options:
