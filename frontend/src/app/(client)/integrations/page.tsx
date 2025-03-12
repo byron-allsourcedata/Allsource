@@ -796,7 +796,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
         <ZapierConnectPopup
           open={true}
           handlePopupClose={handleClose}
-          boxShadow="rgba(0, 0, 0, 0.01)"
+          boxShadow="rgba(0, 0, 0, 0.1)"
         />
       )}
 
@@ -804,7 +804,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
         <SlackConnectPopup
           open={true}
           handlePopupClose={handleClose}
-          boxShadow="rgba(0, 0, 0, 0.01)"
+          boxShadow="rgba(0, 0, 0, 0.1)"
         />
       )}
 
@@ -812,6 +812,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
         <GoogleADSConnectPopup
           open={true}
           handlePopupClose={handleClose}
+          boxShadow="rgba(0, 0, 0, 0.1)"
         />
       )}
 

@@ -6,6 +6,7 @@ import functools
 import json
 import chardet
 import io
+import re
 import csv
 import boto3
 import aioboto3
@@ -110,6 +111,7 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, s3_s
         email_field = email_field.strip().replace('"', '')
         total_rows = sum(1 for _ in csv_reader)
         csv_file.seek(0)
+        next(csv_reader, None)
         processed_rows = 0
 
         logging.info(f"Total row in CSV file: {total_rows}")
@@ -128,7 +130,7 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, s3_s
             persons = [{"email": email} for email in batch_rows]
             if persons:
                 message_body = {
-                    "type": email_field,
+                    "type": 'emails',
                     "data": {
                         "persons": persons,
                         "source_id": source_id,

@@ -5,7 +5,7 @@ import { Typography, Box, Link } from "@mui/material";
 import { useRouter, useSearchParams } from 'next/navigation';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { shopifyLandingStyle } from "./googleAds-landing";
-import { showErrorToast, showInfoToast } from '../../../components/ToastNotification';
+import { showErrorToast, showToast } from '../../../components/ToastNotification';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 
 const GoogleAdsLanding = () => {
@@ -35,7 +35,7 @@ const GoogleAdsLanding = () => {
         );
 
         if (response.data.status == 'SUCCESS') {
-          showInfoToast('Connect to GoogleAds success!')
+          showToast('Connect to GoogleAds success!')
           router.push(`/integrations`);
         } 
       } catch (error) {

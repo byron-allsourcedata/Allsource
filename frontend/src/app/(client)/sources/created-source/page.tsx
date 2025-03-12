@@ -9,20 +9,9 @@ import ThreeDotsLoader from '../components/ThreeDotsLoader';
 import { useNotification } from '@/context/NotificationContext';
 import { useSSE } from '../../../../context/SSEContext';
 import { MoreVert } from '@mui/icons-material';
+import { SliderProvider } from '../../../../context/SliderContext';
 import ProgressBar from '../components/ProgressLoader';
 import { showToast, showErrorToast } from '@/components/ToastNotification';
-
-interface Source {
-    id: string
-    name: string
-    source_origin: string
-    source_type: string
-    created_at: Date
-    updated_at: Date
-    created_by: string
-    total_records?: number
-    matched_records?: number
-}
 
 
 const SourcesList: React.FC = () => {
@@ -38,6 +27,7 @@ const SourcesList: React.FC = () => {
 
 
     const handleOpenPopover = (event: React.MouseEvent<HTMLElement>) => {
+        event.stopPropagation();
         setAnchorEl(event.currentTarget);
     };
 
@@ -67,6 +57,7 @@ const SourcesList: React.FC = () => {
         } finally {
             setLoading(false);
             handleCloseConfirmDialog();
+            handleClosePopover()
         }
     };
 
@@ -91,9 +82,9 @@ const SourcesList: React.FC = () => {
                 <CustomizedProgressBar/>
             )}
             <Box sx={{
-                display: 'flex', flexDirection: 'column', height: 'calc(100vh - 4.25rem)', overflow: 'auto', pr: 2,
+                display: 'flex', flexDirection: 'column', overflow: 'auto', pr: 2,
                 '@media (max-width: 900px)': {
-                    minHeight: '100vh'
+                    height: 'calc(100vh - 4.25rem)'
                 }
             }}>
                 <Box sx={{display: "flex", flexDirection: 'column'}}>
@@ -116,6 +107,35 @@ const SourcesList: React.FC = () => {
                             <Typography className='first-sub-title'>
                                 Created Source  
                             </Typography>
+                        </Box>
+                        <Box sx={{
+                                display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px', pr:2,
+                                '@media (max-width: 900px)': {
+                                    gap: '8px'
+                                }
+                            }}>
+                                <Button
+                                    variant="outlined"
+                                    sx={{
+                                        height: '40px',
+                                        borderRadius: '4px',
+                                        textTransform: 'none',
+                                        fontSize: '14px',
+                                        lineHeight: "19.6px",
+                                        fontWeight: '500',
+                                        color: '#5052B2',
+                                        borderColor: '#5052B2',
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(80, 82, 178, 0.1)',
+                                            borderColor: '#5052B2',
+                                        },
+                                    }}
+                                    onClick={() => {
+                                        router.push("/sources/builder")
+                                    }}
+                                >
+                                    Add Another Source
+                                </Button>
                         </Box>
                     </Box>
                     <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -251,26 +271,26 @@ const SourcesList: React.FC = () => {
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
                                             {createdSource?.id && (
-                                                sourceProgress[createdSource.id]?.processed === sourceProgress[createdSource.id]?.total && sourceProgress[createdSource.id]?.processed
+                                                sourceProgress[createdSource.id]?.processed === sourceProgress[createdSource.id]?.total && sourceProgress[createdSource.id]?.processed /*need chnage >= on ===*/
                                                 ? sourceProgress[createdSource.id]?.matched
                                                 : <ProgressBar progress={sourceProgress[createdSource.id]} />
                                             )}
                                         </Typography>
                                     </Box>
-
-                                    <IconButton disabled={createdSource?.id && sourceProgress[createdSource.id]?.processed === sourceProgress[createdSource.id]?.total} onClick={(event) => handleOpenPopover(event)} sx={{ '@media (max-width: 900px)': {display: 'none'}, ':hover': { backgroundColor: 'transparent' }}} >
+                                    {/* need chnage < on !== */}
+                                    <IconButton disabled={createdSource?.id && sourceProgress[createdSource.id]?.processed !== sourceProgress[createdSource.id]?.total} onClick={(event) => handleOpenPopover(event)} sx={{ '@media (max-width: 900px)': {display: 'none'}, ':hover': { backgroundColor: 'transparent' }}} >
                                         <MoreVert sx={{color: "rgba(32, 33, 36, 1)"}} height={8} width={24}/>
                                     </IconButton>
                                 </Box>
-
-                                <IconButton disabled={createdSource?.id && sourceProgress[createdSource.id]?.processed === sourceProgress[createdSource.id]?.total} onClick={(event) => handleOpenPopover(event)} sx={{ display: 'none', '@media (max-width: 900px)': {display: 'block'}, ':hover': { backgroundColor: 'transparent' }}} >
+                                    {/* need chnage < on !== */}
+                                <IconButton disabled={createdSource?.id && sourceProgress[createdSource.id]?.processed !== sourceProgress[createdSource.id]?.total} onClick={(event) => handleOpenPopover(event)} sx={{ display: 'none', '@media (max-width: 900px)': {display: 'block'}, ':hover': { backgroundColor: 'transparent' }}} >
                                         <MoreVert sx={{color: "rgba(32, 33, 36, 1)"}} height={8} width={24}/>
                                 </IconButton>             
                             </Box>
                             <Box sx={{display: "flex", justifyContent: "end", gap: 2, mt: 2, alignItems: "center"}}>
                                 <Button
                                     variant="outlined"
-                                    onClick={() => router.push("/sources/builder")}
+                                    onClick={() => router.push("/sources")}
                                     sx={{
                                         height: '40px',
                                         borderRadius: '4px',
@@ -286,11 +306,11 @@ const SourcesList: React.FC = () => {
                                         },
                                     }}
                                 >
-                                    Add Another Source
+                                    All Sources
                                 </Button>
                                 <Button
-                                    variant="contained"
-                                    disabled={createdSource?.id && sourceProgress[createdSource.id]?.processed === sourceProgress[createdSource.id]?.total}
+                                    variant="contained"/* need chnage < on !== */
+                                    disabled={createdSource?.id && sourceProgress[createdSource.id]?.processed !== sourceProgress[createdSource.id]?.total}
                                     onClick={() => router.push(`/lookalikes/${createdSource?.id}/builder`)}
                                     className='second-sub-title'
                                     sx={{
@@ -317,8 +337,12 @@ const SourcesList: React.FC = () => {
                             anchorEl={anchorEl}
                             onClose={handleClosePopover}
                             anchorOrigin={{
-                            vertical: 'bottom',
-                            horizontal: 'left',
+                                vertical: 'bottom',
+                                horizontal: 'left',
+                            }}
+                            transformOrigin={{
+                                vertical: 'top',
+                                horizontal: 'left',
                             }}
                             >
                                 <List
@@ -332,7 +356,6 @@ const SourcesList: React.FC = () => {
                                     <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Lookalike"/>
                                     </ListItemButton>
                                     <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
-                                            handleClosePopover()
                                             handleOpenConfirmDialog()
                                         }}>
                                     <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Remove"/>
@@ -411,7 +434,9 @@ const SourcesList: React.FC = () => {
 const SourcesListPage: React.FC = () => {
     return (
         <Suspense fallback={<CustomizedProgressBar />}>
-            <SourcesList />
+            <SliderProvider>
+                <SourcesList />
+            </SliderProvider>
         </Suspense>
     );
 };

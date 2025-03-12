@@ -43,7 +43,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
             list_id: data?.list_id ?? '',
             list_name: data?.name ?? '',
         }
-    ?? null);
+        ?? null);
     const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
     const [newListName, setNewListName] = useState<string>(data?.name ?? '');
     const [isShrunk, setIsShrunk] = useState<boolean>(false);
@@ -76,7 +76,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
             customer_id: data?.customer_id ?? '',
             customer_name: data?.customer_id ?? '',
         }
-    ?? '');
+        ?? '');
     const [listNameErrorMessage, setListNameErrorMessage] = useState('')
     const [customFieldsList, setCustomFieldsList] = useState<CustomField[]>([]);
     const [savedList, setSavedList] = useState<ChannelList | null>({
@@ -536,10 +536,10 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
     }
 
     const defaultRows: Row[] = [
-        { id: 1, type: 'Email', value: 'email' },
-        { id: 2, type: 'Full name', value: 'full_name' },
-        { id: 3, type: 'Phone', value: 'phone' },
-        { id: 4, type: 'Address', value: 'address' }
+        { id: 1, type: 'Email', value: 'Email' },
+        { id: 2, type: 'Full name', value: 'Full name' },
+        { id: 3, type: 'Phone', value: 'Phone' },
+        { id: 4, type: 'Address', value: 'Address' }
     ];
 
     const [rows, setRows] = useState<Row[]>(defaultRows);
@@ -901,13 +901,11 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                     shrink: isShrunk || optionAdAccount?.customer_name !== "",
                                                     sx: {
                                                         fontFamily: 'Nunito Sans',
-                                                        fontSize: '15px',
+                                                        fontSize: '12px',
                                                         lineHeight: '16px',
                                                         color: 'rgba(17, 17, 19, 0.60)',
-
-                                                        padding: 0,
-                                                        margin: 0,
-                                                        left: '3px',
+                                                        letterSpacing: '0.06px',
+                                                        top: '5px',
                                                         '&.Mui-focused': {
                                                             color: '#0000FF',
                                                         },
@@ -1074,7 +1072,6 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
 
                                                                         mt: 1, // Margin-top to separate form from menu item
                                                                         display: 'flex',
-                                                                        flexDirection: 'column',
                                                                         justifyContent: 'space-between',
                                                                         gap: '16px',
                                                                         '@media (max-width: 600px)': {
@@ -1083,11 +1080,11 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                                     }}
                                                                 >
                                                                     <TextField
-                                                                        label="Channel Name"
+                                                                        label="List Name"
                                                                         variant="outlined"
                                                                         value={newListName}
                                                                         onChange={handleNewListChange}
-                                                                        size="medium"
+                                                                        size="small"
                                                                         fullWidth
                                                                         onKeyDown={(e) => e.stopPropagation()}
                                                                         error={listNameError}
@@ -1095,15 +1092,12 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                                         InputLabelProps={{
                                                                             sx: {
                                                                                 fontFamily: 'Nunito Sans',
-                                                                                fontSize: '14px',
-                                                                                top: '-5px',
-                                                                                left: '3px',
+                                                                                fontSize: '12px',
                                                                                 lineHeight: '16px',
                                                                                 fontWeight: '400',
                                                                                 color: 'rgba(17, 17, 19, 0.60)',
                                                                                 '&.Mui-focused': {
                                                                                     color: '#0000FF',
-                                                                                    top: 0
                                                                                 },
                                                                             }
                                                                         }}

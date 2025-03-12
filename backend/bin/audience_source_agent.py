@@ -79,7 +79,7 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         user_id = data.get('user_id')
         persons = data.get('persons')
         logging.info(f"Processing AudienceSourceMatching with ID: {source_id}")
-        emails = [p['email'] for p in persons if p['email'] != type]
+        emails = [p['email'] for p in persons]
         email_records = db_session.query(FiveXFiveEmails).filter(FiveXFiveEmails.email.in_(emails)).all()
         if email_records:
             logging.info(f"email_records find")
