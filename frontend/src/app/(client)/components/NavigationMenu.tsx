@@ -27,6 +27,7 @@ import BusinessIcon from '@mui/icons-material/Business';
 import DnsIcon from '@mui/icons-material/Dns';
 import QuestionMarkOutlinedIcon from '@mui/icons-material/QuestionMarkOutlined';
 import AllInboxIcon from '@mui/icons-material/AllInbox';
+import ContactsIcon from '@mui/icons-material/Contacts';
 
 const navigationmenuStyles = {
   mobileMenuHeader: {
@@ -47,11 +48,12 @@ const navigationmenuStyles = {
     position: 'fixed',
     top: 0,
     width: '100%',
-    height: '100%',
+    height: 'calc(100vh - 4.25rem)',
     backgroundColor: '#fff',
     transition: 'left 0.3s ease-in-out',
     zIndex: 100,
     marginTop: '4.5rem', // Adjust for the header height
+    overflow: 'auto',
   },
   activeItem: {
     borderLeft: '0.25rem solid rgba(80, 82, 178, 1)',
@@ -321,7 +323,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({ NewRequestNotification }) =
       }}>
         <List sx={{ paddingTop: 0 }}>
 
-
+        {!pathname.includes('sources') && !pathname.includes('lookalikes') && 
           <ListItem
             sx={{
               ...navigationmenuStyles.mobileDomainList,
@@ -329,7 +331,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({ NewRequestNotification }) =
             }}>
             <DomainButtonSelect />
           </ListItem>
-
+        }
 
           <ListItem button onClick={() => handleNavigation('/dashboard')}
             sx={{
@@ -340,7 +342,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({ NewRequestNotification }) =
             <ListItemText
               primary="Dashboard" />
           </ListItem>
-          <ListItem button onClick={() => handleNavigation('/dashboard')}
+          <ListItem button onClick={() => handleNavigation('/sources')}
             sx={{
               ...(isActive('/sources') ? navigationmenuStyles.activeItem : {}),
               ...navigationmenuStyles.mobileDrawerList
@@ -348,6 +350,15 @@ const NavigationMenu: React.FC<NavigationProps> = ({ NewRequestNotification }) =
             <ListItemIcon><AllInboxIcon /></ListItemIcon>
             <ListItemText
               primary="Sources" />
+          </ListItem>
+          <ListItem onClick={() => handleNavigation('/lookalikes')}
+            sx={{
+              ...(isActive('/lookalikes') ? navigationmenuStyles.activeItem : {}),
+              ...navigationmenuStyles.mobileDrawerList
+            }}>
+            <ListItemIcon><ContactsIcon /></ListItemIcon>
+            <ListItemText
+              primary="Lookalikes" />
           </ListItem>
           <ListItem button onClick={() => handleNavigation('/leads')}
             sx={{

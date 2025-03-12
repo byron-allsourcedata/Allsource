@@ -16,6 +16,7 @@ import Image from 'next/image';
 import { AxiosError } from 'axios';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { useUser } from '@/context/UserContext';
+import ContactsIcon from '@mui/icons-material/Contacts';
 
 const sidebarStyles = {
     container: {
@@ -125,7 +126,7 @@ const containerStyles = (hasNotification: boolean) => ({
         backgroundColor: 'rgba(255, 255, 255, 1)',
         borderRight: '1px solid rgba(228, 228, 228, 1)',
         height: hasNotification ? 'calc(100vh - 6.85rem)' : 'calc(100vh - 4.25rem)',
-        maxWidth: '146px',
+        maxWidth: '154px',
         display: 'flex',
         overflow: 'hidden',
         flexDirection: 'column',
@@ -288,6 +289,12 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                         <AllInboxIcon />
                     </ListItemIcon>
                     <ListItemText primary="Sources" />
+                </ListItem>
+                <ListItem onClick={() => handleNavigation('/lookalikes')} sx={isActive(`/lookalikes`) ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                        <ContactsIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Lookalikes" />
                 </ListItem>
                 <ListItem button onClick={() => handleNavigation('/leads')} sx={isActive('/leads') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
