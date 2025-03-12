@@ -108,6 +108,35 @@ const SourcesList: React.FC = () => {
                                 Created Source  
                             </Typography>
                         </Box>
+                        <Box sx={{
+                                display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px', pr:2,
+                                '@media (max-width: 900px)': {
+                                    gap: '8px'
+                                }
+                            }}>
+                                <Button
+                                    variant="outlined"
+                                    sx={{
+                                        height: '40px',
+                                        borderRadius: '4px',
+                                        textTransform: 'none',
+                                        fontSize: '14px',
+                                        lineHeight: "19.6px",
+                                        fontWeight: '500',
+                                        color: '#5052B2',
+                                        borderColor: '#5052B2',
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(80, 82, 178, 0.1)',
+                                            borderColor: '#5052B2',
+                                        },
+                                    }}
+                                    onClick={() => {
+                                        router.push("/sources/builder")
+                                    }}
+                                >
+                                    Add Another Source
+                                </Button>
+                        </Box>
                     </Box>
                     <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                         <Box
@@ -261,7 +290,7 @@ const SourcesList: React.FC = () => {
                             <Box sx={{display: "flex", justifyContent: "end", gap: 2, mt: 2, alignItems: "center"}}>
                                 <Button
                                     variant="outlined"
-                                    onClick={() => router.push("/sources/builder")}
+                                    onClick={() => router.push("/sources")}
                                     sx={{
                                         height: '40px',
                                         borderRadius: '4px',
@@ -277,7 +306,7 @@ const SourcesList: React.FC = () => {
                                         },
                                     }}
                                 >
-                                    Add Another Source
+                                    All Sources
                                 </Button>
                                 <Button
                                     variant="contained"/* need chnage < on !== */
