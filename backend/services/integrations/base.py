@@ -28,6 +28,7 @@ from .google_ads import GoogleAdsIntegrationsService
 from .bigcommerce import BigcommerceIntegrationsService
 from .webhook import WebhookIntegrationService
 from .zapier import ZapierIntegrationService
+from .bing_ads import BingAdsIntegrationsService
 
 class IntegrationService:
 
@@ -223,6 +224,11 @@ class IntegrationService:
                                                self.million_verifier_integrations)
 
         self.hubspot = HubspotIntegrationsService(self.domain_persistence,
+                                                self.integration_persistence,
+                                                self.lead_persistence,
+                                                self.integrations_user_sync_persistence, self.client, self.million_verifier_integrations)
+        
+        self.bing_ads = BingAdsIntegrationsService(self.domain_persistence,
                                                 self.integration_persistence,
                                                 self.lead_persistence,
                                                 self.integrations_user_sync_persistence, self.client, self.million_verifier_integrations)

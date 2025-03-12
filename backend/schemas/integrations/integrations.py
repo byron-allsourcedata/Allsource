@@ -28,6 +28,10 @@ class MailchimpCredentials(BaseModel):
 class GoogleAdsCredentials(BaseModel):
     code: str
     scope: str
+    
+class BingAdsCredentials(BaseModel):
+    code: str
+    state: str
 
 class SalesForceCredentials(BaseModel):
     code: str
@@ -51,6 +55,7 @@ class IntegrationCredentials(BaseModel):
     omnisend: Optional[ApiKeyCredentials] = None
     hubspot: Optional[HubSpotCredentials] = None
     google_ads: Optional[GoogleAdsCredentials] = None
+    bing_ads: Optional[BingAdsCredentials] = None
     sales_force: Optional[SalesForceCredentials] = None
     pixel_install: bool = False
     supperssion: bool = False

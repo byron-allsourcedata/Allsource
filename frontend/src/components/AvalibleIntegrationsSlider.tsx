@@ -3,6 +3,7 @@ import Image from "next/image"
 import MetaConnectButton from "./MetaConnectButton"
 import KlaviyoIntegrationPopup from "./KlaviyoIntegrationPopup"
 import SalesForceIntegrationPopup from "./SalesForceIntegrationPopup"
+import BingAdsIntegrationPopup from "./BingAdsIntegrationPopup"
 import AttentiveIntegrationPopup from "./AttentiveIntegrationPopup"
 import { useState } from "react"
 import SearchIcon from '@mui/icons-material/Search';
@@ -36,11 +37,13 @@ const intergrations = {
         fontWeight: "500",
         lineHeight: "20px"
     },
-  }
+}
 
 const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, integrationsCredentials, onClose, handleSaveSettings }: AvailableIntegrationsSliderProps) => {
     const [openMetaConnect, setOpenMetaConnect] = useState(false)
     const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false)
+    const [openBingAdsConnect, setOpenBingAdsConnect] = useState(false)
+    const [openSalesForceConnect, setOpenSalesForceConnect] = useState(false)
     const [openAttentiveConnect, setAttentiveConnect] = useState(false)
     const [openShopifuConnect, setOpenShopifyConnect] = useState(false)
     const [openBigcommrceConnect, setOpenBigcommerceConnect] = useState(false)
@@ -56,6 +59,8 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
     const handleClose = () => {
         setOpenMetaConnect(false)
         setOpenKlaviyoConnect(false)
+        setOpenBingAdsConnect(false)
+        setOpenSalesForceConnect(false)
         setOpenShopifyConnect(false)
         setAttentiveConnect(false)
         setOpenBigcommerceConnect(false)
@@ -77,11 +82,11 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
 
     const filteredIntegrations = integrations.filter((integration) =>
         integration.service_name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    
-      const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    );
+
+    const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchQuery(event.target.value);
-      };
+    };
 
     if (!open) return null
 
@@ -225,7 +230,46 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                                 }} />
                                             </ListItemButton>
                                         </ListItem>)}
-
+                                {/* bingAds */}
+                                {filteredIntegrations.some(integration => integration.service_name === 'bing_ads') && (
+                                    !integrationsCredentials.some(integration => integration.service_name === 'bing_ads')) && (
+                                        <ListItem sx={{
+                                            p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                            '@media (max-width:600px)': {
+                                                flexBasis: 'calc(50% - 8px)'
+                                            }
+                                        }}>
+                                            <ListItemButton onClick={() => setOpenBingAdsConnect(true)} sx={{ p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center' }}>
+                                                <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                    <Image src="/bingads-icon.svg" alt="klaviyo" height={26} width={32} />
+                                                </ListItemIcon>
+                                                <ListItemText primary="bingads" primaryTypographyProps={{
+                                                    sx: {
+                                                        ...intergrations.integrate
+                                                    }
+                                                }} />
+                                            </ListItemButton>
+                                        </ListItem>)}
+                                {/* salesForce */}
+                                {filteredIntegrations.some(integration => integration.service_name === 'sales_force') && (
+                                    !integrationsCredentials.some(integration => integration.service_name === 'sales_force')) && (
+                                        <ListItem sx={{
+                                            p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                            '@media (max-width:600px)': {
+                                                flexBasis: 'calc(50% - 8px)'
+                                            }
+                                        }}>
+                                            <ListItemButton onClick={() => setOpenSalesForceConnect(true)} sx={{ p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center' }}>
+                                                <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                    <Image src="/salesforce.svg" alt="salesforce" height={26} width={32} />
+                                                </ListItemIcon>
+                                                <ListItemText primary="salesforce" primaryTypographyProps={{
+                                                    sx: {
+                                                        ...intergrations.integrate
+                                                    }
+                                                }} />
+                                            </ListItemButton>
+                                        </ListItem>)}
                                 {/* Attentive */}
                                 {filteredIntegrations.some(integration => integration.service_name === 'attentive') && (
                                     !integrationsCredentials.some(integration => integration.service_name === 'attentive')) && (
@@ -471,7 +515,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                             </ListItemButton>
                                         </ListItem>
                                     )}
-                                    {filteredIntegrations.some(integration => integration.service_name === 'google_ads') && (
+                                {filteredIntegrations.some(integration => integration.service_name === 'google_ads') && (
                                     !integrationsCredentials.some(integration => integration.service_name === 'google_ads')) && (
                                         <ListItem sx={{
                                             p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
@@ -498,7 +542,8 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
             </Drawer>
             <MetaConnectButton open={openMetaConnect} onClose={handleClose} onSave={saveIntegration} />
             <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={handleClose} onSave={saveIntegration} />
-            <SalesForceIntegrationPopup open={openKlaviyoConnect} handleClose={handleClose} onSave={saveIntegration} />
+            <SalesForceIntegrationPopup open={openSalesForceConnect} handleClose={handleClose} onSave={saveIntegration} />
+            <BingAdsIntegrationPopup open={openBingAdsConnect} handleClose={handleClose} onSave={saveIntegration} />
             <AttentiveIntegrationPopup open={openAttentiveConnect} handleClose={handleClose} onSave={saveIntegration} />
             <ShopifySettings open={openShopifuConnect} handleClose={handleClose} onSave={saveIntegration} />
             <BCommerceConnect
