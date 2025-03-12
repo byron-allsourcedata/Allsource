@@ -825,7 +825,7 @@ const Sources: React.FC = () => {
                                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                                             >
                                                                                 {row.matched_records_status === "pending" 
-                                                                                ? progress?.processed >= progress?.total && progress?.processed /* error in DB processed - total = 1  */
+                                                                                ? progress?.processed == progress?.total && progress?.processed /* error in DB processed - total = 1  */
                                                                                     ? progress?.matched
                                                                                     : <ProgressBar progress={progress}/>
                                                                                 : row.matched_records ?? '--'}

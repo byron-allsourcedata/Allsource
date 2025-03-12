@@ -242,19 +242,19 @@ const SourcesList: React.FC = () => {
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
                                             {createdSource?.id && (
-                                                sourceProgress[createdSource.id]?.processed >= sourceProgress[createdSource.id]?.total && sourceProgress[createdSource.id]?.processed /*need chnage >= on ===*/
+                                                sourceProgress[createdSource.id]?.processed === sourceProgress[createdSource.id]?.total && sourceProgress[createdSource.id]?.processed /*need chnage >= on ===*/
                                                 ? sourceProgress[createdSource.id]?.matched
                                                 : <ProgressBar progress={sourceProgress[createdSource.id]} />
                                             )}
                                         </Typography>
                                     </Box>
                                     {/* need chnage < on !== */}
-                                    <IconButton disabled={createdSource?.id && sourceProgress[createdSource.id]?.processed < sourceProgress[createdSource.id]?.total} onClick={(event) => handleOpenPopover(event)} sx={{ '@media (max-width: 900px)': {display: 'none'}, ':hover': { backgroundColor: 'transparent' }}} >
+                                    <IconButton disabled={createdSource?.id && sourceProgress[createdSource.id]?.processed !== sourceProgress[createdSource.id]?.total} onClick={(event) => handleOpenPopover(event)} sx={{ '@media (max-width: 900px)': {display: 'none'}, ':hover': { backgroundColor: 'transparent' }}} >
                                         <MoreVert sx={{color: "rgba(32, 33, 36, 1)"}} height={8} width={24}/>
                                     </IconButton>
                                 </Box>
                                     {/* need chnage < on !== */}
-                                <IconButton disabled={createdSource?.id && sourceProgress[createdSource.id]?.processed < sourceProgress[createdSource.id]?.total} onClick={(event) => handleOpenPopover(event)} sx={{ display: 'none', '@media (max-width: 900px)': {display: 'block'}, ':hover': { backgroundColor: 'transparent' }}} >
+                                <IconButton disabled={createdSource?.id && sourceProgress[createdSource.id]?.processed !== sourceProgress[createdSource.id]?.total} onClick={(event) => handleOpenPopover(event)} sx={{ display: 'none', '@media (max-width: 900px)': {display: 'block'}, ':hover': { backgroundColor: 'transparent' }}} >
                                         <MoreVert sx={{color: "rgba(32, 33, 36, 1)"}} height={8} width={24}/>
                                 </IconButton>             
                             </Box>
@@ -281,7 +281,7 @@ const SourcesList: React.FC = () => {
                                 </Button>
                                 <Button
                                     variant="contained"/* need chnage < on !== */
-                                    disabled={createdSource?.id && sourceProgress[createdSource.id]?.processed < sourceProgress[createdSource.id]?.total}
+                                    disabled={createdSource?.id && sourceProgress[createdSource.id]?.processed !== sourceProgress[createdSource.id]?.total}
                                     onClick={() => router.push(`/lookalikes/${createdSource?.id}/builder`)}
                                     className='second-sub-title'
                                     sx={{
