@@ -104,7 +104,7 @@ const AudienceSizeSelector: React.FC<AudienceSizeSelectorProps> = ({
                                     alignItems: "center",
                                     justifyContent: "center",
                                     flex: 1,
-                                    minWidth: 0,
+                                    minWidth: '12.125rem',
                                     border:
                                         selectedSize === source.id
                                             ? "1px solid #1976d2"
@@ -118,14 +118,16 @@ const AudienceSizeSelector: React.FC<AudienceSizeSelectorProps> = ({
                                 <Box
                                     sx={{
                                         display: "flex",
+                                        width: '100%',
                                         flexDirection: "column",
-                                        alignItems: "center",
+                                        alignItems: "flex-start",
+                                        justifyContent: 'start',
                                         gap: "10px",
                                     }}
                                 >
                                     <Typography
                                         className="paragraph"
-                                        sx={{ color: "rgba(32, 33, 36, 1)" }}
+                                        sx={{ color: "rgba(32, 33, 36, 1)", }}
                                     >
                                         {source.label}
                                     </Typography>
