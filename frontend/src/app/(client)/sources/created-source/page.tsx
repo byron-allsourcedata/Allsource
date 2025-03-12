@@ -109,7 +109,7 @@ const SourcesList: React.FC = () => {
                             </Typography>
                         </Box>
                         <Box sx={{
-                                display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px', pr:2,
+                                display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px',
                                 '@media (max-width: 900px)': {
                                     gap: '8px'
                                 }
