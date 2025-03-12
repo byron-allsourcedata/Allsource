@@ -58,6 +58,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
     const [newMapListName, setNewMapListName] = useState<string>('');
     const textFieldRefAdAccount = useRef<HTMLDivElement>(null);
     const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
+    const [notAdsUser, setNotAdsUser] = useState<boolean>(false);
     const [maplistNameError, setMapListNameError] = useState(false);
     const [anchorElAdAccount, setAnchorElAdAccount] = useState<null | HTMLElement>(null);
     const [isDropdownOpenAdAccount, setIsDropdownOpenAdAccount] = useState(false);
@@ -168,10 +169,14 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
         try {
             setLoading(true)
             const response = await axiosInstance.get('integrations/google-ads/customers-info')
-            if (response.data.status !== 'SUCCESS') {
-                showErrorToast(response.data.message)
-            } else {
+            if (response.data.status === 'SUCCESS') {
                 setCustomersInfo(response.data.customers || [])
+            }
+            else if (response.data.status === 'NOT_ADS_USER') {
+                setNotAdsUser(true)
+            }
+            else {
+                showErrorToast(response.data.message)
             }
         } catch (error) { }
         finally {
@@ -696,293 +701,235 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                 </Box>
                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
                     <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
-                        <TabContext value={value}>
-                            <Box sx={{ pb: 4 }}>
-                                <TabList centered aria-label="Connect to GoogleAds Tabs"
-                                    TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
-                                    sx={{
-                                        "& .MuiTabs-scroller": {
-                                            overflowX: 'auto !important',
-                                        },
-                                        "& .MuiTabs-flexContainer": {
-                                            justifyContent: 'center',
-                                            '@media (max-width: 600px)': {
-                                                gap: '16px',
-                                                justifyContent: 'flex-start'
-                                            }
-                                        }
-                                    }} onChange={handleChangeTab}>
-                                    <Tab label="Sync Filter" value="1" className='tab-heading' sx={klaviyoStyles.tabHeading} />
-                                    <Tab label="Contact Sync" value="2" className='tab-heading' sx={klaviyoStyles.tabHeading} />
-                                    <Tab label="Map data" value="3" className='tab-heading' sx={klaviyoStyles.tabHeading} />
-                                </TabList>
+                        {notAdsUser ?
+                            <Box sx={{
+                                p: 2,
+                                border: '1px solid #f0f0f0',
+                                borderRadius: '4px',
+                                boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '16px'
+                            }}>
+                                <Typography variant="subtitle1" className='paragraph'>
+                                    The Google account that generated the OAuth access tokens is not associated with any Ads accounts.
+                                    <br />
+                                    Please <strong>create a new account</strong> or add the Google account to an existing Ads account.
+                                </Typography>
+
+                                <Typography variant="body2" sx={{ color: '#5052b2', fontWeight: 'bold' }}>
+                                    <Link href="https://ads.google.com/signup" target="_blank" className="main-text" sx={{
+                                        fontSize: '14px',
+                                        fontWeight: '600',
+                                        lineHeight: '20px',
+                                        color: '#5052b2',
+                                        textDecorationColor: '#5052b2'
+                                    }}>Register for Google Ads</Link>
+                                </Typography>
                             </Box>
-                            <TabPanel value="1" sx={{ p: 0 }}>
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                    <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                        <Typography variant="subtitle1" className='paragraph'>Synchronise all data in real-time from this moment forward for seamless integration and continuous updates.</Typography>
-                                        <FormControl sx={{ gap: '16px' }} error={tab2Error}>
-                                            <FormLabel id="contact-type-radio-buttons-group-label" className='first-sub-title' sx={{
-                                                '&.Mui-focused': {
-                                                    color: '#000',
-                                                    transform: 'none !important'
+                            :
+                            <TabContext value={value}>
+                                <Box sx={{ pb: 4 }}>
+                                    <TabList centered aria-label="Connect to GoogleAds Tabs"
+                                        TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
+                                        sx={{
+                                            "& .MuiTabs-scroller": {
+                                                overflowX: 'auto !important',
+                                            },
+                                            "& .MuiTabs-flexContainer": {
+                                                justifyContent: 'center',
+                                                '@media (max-width: 600px)': {
+                                                    gap: '16px',
+                                                    justifyContent: 'flex-start'
                                                 }
-                                            }}>Filter by Contact type</FormLabel>
-                                            <RadioGroup
-                                                aria-labelledby="contact-type-radio-buttons-group-label"
-                                                name="contact-type-row-radio-buttons-group"
-                                                value={selectedRadioValue}
-                                                onChange={handleRadioChange}
-                                            >
-                                                <FormControlLabel value="allContacts" control={<Radio sx={{
-                                                    color: '#e4e4e4',
-                                                    '&.Mui-checked': {
-                                                        color: '#5052b2', // checked color
-                                                    }
-
-                                                }} />} label="All Contacts"
-                                                    componentsProps={{
-                                                        typography: {
-                                                            sx: {
-                                                                fontFamily: 'Nunito Sans',
-                                                                fontSize: '14px',
-                                                                fontWeight: '500',
-                                                                color: '#000',
-                                                                lineHeight: 'normal',
-                                                                opacity: selectedRadioValue === 'allContacts' ? 1 : 0.43,
-                                                                '@media (max-width:440px)': {
-                                                                    fontSize: '12px'
-                                                                }
-                                                            },
-                                                        },
-                                                    }}
-                                                    sx={{
-                                                        '@media (max-width:600px)': {
-                                                            flexBasis: 'calc(50% - 8px)'
-                                                        }
-                                                    }}
-                                                />
-                                                <FormControlLabel value="visitor" control={<Radio sx={{
-                                                    color: '#e4e4e4',
-                                                    '&.Mui-checked': {
-                                                        color: '#5052b2', // checked color
-                                                    }
-                                                }} />} label="Visitors"
-                                                    componentsProps={{
-                                                        typography: {
-                                                            sx: {
-                                                                fontFamily: 'Nunito Sans',
-                                                                fontSize: '14px',
-                                                                fontWeight: '500',
-                                                                color: '#000',
-                                                                lineHeight: 'normal',
-                                                                opacity: selectedRadioValue === 'visitors' ? 1 : 0.43,
-                                                                '@media (max-width:440px)': {
-                                                                    fontSize: '12px'
-                                                                }
-                                                            },
-                                                        },
-                                                    }}
-                                                    sx={{
-                                                        '@media (max-width:600px)': {
-                                                            flexBasis: 'calc(50% - 8px)'
-                                                        }
-                                                    }}
-                                                />
-                                                <FormControlLabel value="viewed_product" control={<Radio sx={{
-                                                    color: '#e4e4e4',
-                                                    '&.Mui-checked': {
-                                                        color: '#5052b2', // checked color
-                                                    }
-                                                }} />} label="View Product"
-                                                    componentsProps={{
-                                                        typography: {
-                                                            sx: {
-                                                                fontFamily: 'Nunito Sans',
-                                                                fontSize: '14px',
-                                                                fontWeight: '500',
-                                                                color: '#000',
-                                                                lineHeight: 'normal',
-                                                                opacity: selectedRadioValue === 'viewProduct' ? 1 : 0.43,
-                                                                '@media (max-width:440px)': {
-                                                                    fontSize: '12px'
-                                                                }
-                                                            },
-                                                        },
-                                                    }}
-                                                    sx={{
-                                                        '@media (max-width:600px)': {
-                                                            flexBasis: 'calc(50% - 8px)'
-                                                        }
-                                                    }}
-                                                />
-                                                <FormControlLabel value="added_to_cart" control={<Radio sx={{
-                                                    color: '#e4e4e4',
-                                                    '&.Mui-checked': {
-                                                        color: '#5052b2', // checked color
-                                                    }
-                                                }} />} label="Abandoned cart"
-                                                    componentsProps={{
-                                                        typography: {
-                                                            sx: {
-                                                                fontFamily: 'Nunito Sans',
-                                                                fontSize: '14px',
-                                                                fontWeight: '500',
-                                                                color: '#000',
-                                                                lineHeight: 'normal',
-                                                                opacity: selectedRadioValue === 'addToCart' ? 1 : 0.43,
-                                                                '@media (max-width:440px)': {
-                                                                    fontSize: '12px'
-                                                                }
-                                                            },
-                                                        },
-                                                    }}
-                                                    sx={{
-                                                        '@media (max-width:600px)': {
-                                                            flexBasis: 'calc(50% - 8px)'
-                                                        }
-                                                    }}
-                                                />
-                                                <FormControlLabel value="converted_sales" control={<Radio sx={{
-                                                    color: '#e4e4e4',
-                                                    '&.Mui-checked': {
-                                                        color: '#5052b2', // checked color
-                                                    }
-                                                }} />} label="Converted Sales"
-                                                    componentsProps={{
-                                                        typography: {
-                                                            sx: {
-                                                                fontFamily: 'Nunito Sans',
-                                                                fontSize: '14px',
-                                                                fontWeight: '500',
-                                                                color: '#000',
-                                                                lineHeight: 'normal',
-                                                                opacity: selectedRadioValue === 'addToCart' ? 1 : 0.43,
-                                                                '@media (max-width:440px)': {
-                                                                    fontSize: '12px'
-                                                                }
-                                                            },
-                                                        },
-                                                    }}
-                                                    sx={{
-                                                        '@media (max-width:600px)': {
-                                                            flexBasis: 'calc(50% - 8px)'
-                                                        }
-                                                    }}
-                                                />
-                                            </RadioGroup>
-                                        </FormControl>
-                                    </Box>
+                                            }
+                                        }} onChange={handleChangeTab}>
+                                        <Tab label="Sync Filter" value="1" className='tab-heading' sx={klaviyoStyles.tabHeading} />
+                                        <Tab label="Contact Sync" value="2" className='tab-heading' sx={klaviyoStyles.tabHeading} />
+                                        <Tab label="Map data" value="3" className='tab-heading' sx={klaviyoStyles.tabHeading} />
+                                    </TabList>
                                 </Box>
-                            </TabPanel>
-                            <TabPanel value="2" sx={{ p: 0 }}>
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                    <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
-                                            <Image src='/google-ads.svg' alt='webhook' height={26} width={32} />
-                                            <Typography variant="h6" className='first-sub-title'>Contact sync</Typography>
-                                            <Tooltip title="Sync data with list" placement="right">
-                                                <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
-                                            </Tooltip>
-                                        </Box>
-                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                                            <TextField
-                                                ref={textFieldRefAdAccount}
-                                                variant="outlined"
-                                                value={
-                                                    optionAdAccount?.customer_name || null
-                                                }
-                                                onClick={handleClickAdAccount}
-                                                size="small"
-
-                                                fullWidth
-                                                label={optionAdAccount?.customer_name ? '' : 'Select An Account'}
-                                                InputLabelProps={{
-                                                    shrink: isShrunk || optionAdAccount?.customer_name !== "",
-                                                    sx: {
-                                                        fontFamily: 'Nunito Sans',
-                                                        fontSize: '12px',
-                                                        lineHeight: '16px',
-                                                        color: 'rgba(17, 17, 19, 0.60)',
-                                                        letterSpacing: '0.06px',
-                                                        top: '5px',
-                                                        '&.Mui-focused': {
-                                                            color: '#0000FF',
-                                                        },
+                                <TabPanel value="1" sx={{ p: 0 }}>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                        <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                            <Typography variant="subtitle1" className='paragraph'>Synchronise all data in real-time from this moment forward for seamless integration and continuous updates.</Typography>
+                                            <FormControl sx={{ gap: '16px' }} error={tab2Error}>
+                                                <FormLabel id="contact-type-radio-buttons-group-label" className='first-sub-title' sx={{
+                                                    '&.Mui-focused': {
+                                                        color: '#000',
+                                                        transform: 'none !important'
                                                     }
-                                                }}
-                                                InputProps={{
-                                                    endAdornment: (
-                                                        <InputAdornment position="end">
-                                                            <IconButton onClick={handleDropdownToggleAdAccount} edge="end">
-                                                                {isDropdownOpenAdAccount ? <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} /> : <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />}
-                                                            </IconButton>
-                                                        </InputAdornment>
-                                                    ),
-                                                    sx: metaStyles.formInput
-                                                }}
-                                                sx={{
-                                                    '& input': {
-                                                        caretColor: 'transparent',
-                                                        fontFamily: "Nunito Sans",
-                                                        fontSize: "14px",
-                                                        color: "rgba(0, 0, 0, 0.89)",
-                                                        fontWeight: "600",
-                                                        lineHeight: "normal",
-                                                    },
-                                                    '& .MuiOutlinedInput-input': {
-                                                        cursor: 'default',
-                                                        top: '5px'
-                                                    },
-                                                    marginBottom: '24px'
-
-                                                }}
-                                            />
-                                            <Menu
-                                                anchorEl={anchorElAdAccount}
-                                                open={Boolean(anchorElAdAccount) && isDropdownOpenAdAccount}
-                                                onClose={handleCloseAdAccount}
-                                                PaperProps={{
-                                                    sx: {
-                                                        width: anchorElAdAccount ? `${anchorElAdAccount.clientWidth}px` : '538px', borderRadius: '4px',
-                                                        border: '1px solid #e4e4e4'
-                                                    },
-                                                }}
-
-                                            >
-                                                {customersInfo?.map(account => (
-                                                    <MenuItem key={account.customer_id} onClick={() => handleSelectAdAccount(account)} sx={{
-                                                        '&:hover': {
-                                                            background: 'rgba(80, 82, 178, 0.10)'
+                                                }}>Filter by Contact type</FormLabel>
+                                                <RadioGroup
+                                                    aria-labelledby="contact-type-radio-buttons-group-label"
+                                                    name="contact-type-row-radio-buttons-group"
+                                                    value={selectedRadioValue}
+                                                    onChange={handleRadioChange}
+                                                >
+                                                    <FormControlLabel value="allContacts" control={<Radio sx={{
+                                                        color: '#e4e4e4',
+                                                        '&.Mui-checked': {
+                                                            color: '#5052b2',
                                                         }
-                                                    }}>
-                                                        <ListItemText primary={account.customer_name} primaryTypographyProps={{
-                                                            sx: {
-                                                                fontFamily: "Nunito Sans",
-                                                                fontSize: "14px",
-                                                                color: "#202124",
-                                                                fontWeight: "500",
-                                                                lineHeight: "20px"
+                                                    }} />} label="All Contacts"
+                                                        componentsProps={{
+                                                            typography: {
+                                                                sx: {
+                                                                    fontFamily: 'Nunito Sans',
+                                                                    fontSize: '14px',
+                                                                    fontWeight: '500',
+                                                                    color: '#000',
+                                                                    lineHeight: 'normal',
+                                                                    opacity: selectedRadioValue === 'allContacts' ? 1 : 0.43,
+                                                                    '@media (max-width:440px)': {
+                                                                        fontSize: '12px'
+                                                                    }
+                                                                },
+                                                            },
+                                                        }}
+                                                        sx={{
+                                                            '@media (max-width:600px)': {
+                                                                flexBasis: 'calc(50% - 8px)'
                                                             }
-                                                        }} />
-
-                                                    </MenuItem>
-                                                ))}
-                                            </Menu>
+                                                        }}
+                                                    />
+                                                    <FormControlLabel value="visitor" control={<Radio sx={{
+                                                        color: '#e4e4e4',
+                                                        '&.Mui-checked': {
+                                                            color: '#5052b2',
+                                                        }
+                                                    }} />} label="Visitors"
+                                                        componentsProps={{
+                                                            typography: {
+                                                                sx: {
+                                                                    fontFamily: 'Nunito Sans',
+                                                                    fontSize: '14px',
+                                                                    fontWeight: '500',
+                                                                    color: '#000',
+                                                                    lineHeight: 'normal',
+                                                                    opacity: selectedRadioValue === 'visitors' ? 1 : 0.43,
+                                                                    '@media (max-width:440px)': {
+                                                                        fontSize: '12px'
+                                                                    }
+                                                                },
+                                                            },
+                                                        }}
+                                                        sx={{
+                                                            '@media (max-width:600px)': {
+                                                                flexBasis: 'calc(50% - 8px)'
+                                                            }
+                                                        }}
+                                                    />
+                                                    <FormControlLabel value="viewed_product" control={<Radio sx={{
+                                                        color: '#e4e4e4',
+                                                        '&.Mui-checked': {
+                                                            color: '#5052b2',
+                                                        }
+                                                    }} />} label="View Product"
+                                                        componentsProps={{
+                                                            typography: {
+                                                                sx: {
+                                                                    fontFamily: 'Nunito Sans',
+                                                                    fontSize: '14px',
+                                                                    fontWeight: '500',
+                                                                    color: '#000',
+                                                                    lineHeight: 'normal',
+                                                                    opacity: selectedRadioValue === 'viewProduct' ? 1 : 0.43,
+                                                                    '@media (max-width:440px)': {
+                                                                        fontSize: '12px'
+                                                                    }
+                                                                },
+                                                            },
+                                                        }}
+                                                        sx={{
+                                                            '@media (max-width:600px)': {
+                                                                flexBasis: 'calc(50% - 8px)'
+                                                            }
+                                                        }}
+                                                    />
+                                                    <FormControlLabel value="added_to_cart" control={<Radio sx={{
+                                                        color: '#e4e4e4',
+                                                        '&.Mui-checked': {
+                                                            color: '#5052b2',
+                                                        }
+                                                    }} />} label="Abandoned cart"
+                                                        componentsProps={{
+                                                            typography: {
+                                                                sx: {
+                                                                    fontFamily: 'Nunito Sans',
+                                                                    fontSize: '14px',
+                                                                    fontWeight: '500',
+                                                                    color: '#000',
+                                                                    lineHeight: 'normal',
+                                                                    opacity: selectedRadioValue === 'addToCart' ? 1 : 0.43,
+                                                                    '@media (max-width:440px)': {
+                                                                        fontSize: '12px'
+                                                                    }
+                                                                },
+                                                            },
+                                                        }}
+                                                        sx={{
+                                                            '@media (max-width:600px)': {
+                                                                flexBasis: 'calc(50% - 8px)'
+                                                            }
+                                                        }}
+                                                    />
+                                                    <FormControlLabel value="converted_sales" control={<Radio sx={{
+                                                        color: '#e4e4e4',
+                                                        '&.Mui-checked': {
+                                                            color: '#5052b2',
+                                                        }
+                                                    }} />} label="Converted Sales"
+                                                        componentsProps={{
+                                                            typography: {
+                                                                sx: {
+                                                                    fontFamily: 'Nunito Sans',
+                                                                    fontSize: '14px',
+                                                                    fontWeight: '500',
+                                                                    color: '#000',
+                                                                    lineHeight: 'normal',
+                                                                    opacity: selectedRadioValue === 'addToCart' ? 1 : 0.43,
+                                                                    '@media (max-width:440px)': {
+                                                                        fontSize: '12px'
+                                                                    }
+                                                                },
+                                                            },
+                                                        }}
+                                                        sx={{
+                                                            '@media (max-width:600px)': {
+                                                                flexBasis: 'calc(50% - 8px)'
+                                                            }
+                                                        }}
+                                                    />
+                                                </RadioGroup>
+                                            </FormControl>
                                         </Box>
-                                        <ClickAwayListener onClickAway={() => { }}>
-                                            <Box>
+                                    </Box>
+                                </TabPanel>
+                                <TabPanel value="2" sx={{ p: 0 }}>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                        <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
+                                                <Image src='/google-ads.svg' alt='webhook' height={26} width={32} />
+                                                <Typography variant="h6" className='first-sub-title'>Contact sync</Typography>
+                                                <Tooltip title="Sync data with list" placement="right">
+                                                    <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
+                                                </Tooltip>
+                                            </Box>
+                                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                                                 <TextField
-                                                    ref={textFieldRef}
+                                                    ref={textFieldRefAdAccount}
                                                     variant="outlined"
-                                                    value={selectedOption?.list_name}
-                                                    onClick={handleClick}
-                                                    disabled={data?.name}
+                                                    value={
+                                                        optionAdAccount?.customer_name || null
+                                                    }
+                                                    onClick={handleClickAdAccount}
                                                     size="small"
+
                                                     fullWidth
-                                                    label={selectedOption ? '' : 'Select or Create new list'}
+                                                    label={optionAdAccount?.customer_name ? '' : 'Select An Account'}
                                                     InputLabelProps={{
-                                                        shrink: selectedOption ? false : isShrunk,
+                                                        shrink: isShrunk || optionAdAccount?.customer_name !== "",
                                                         sx: {
                                                             fontFamily: 'Nunito Sans',
                                                             fontSize: '12px',
@@ -996,19 +943,18 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                         }
                                                     }}
                                                     InputProps={{
-
                                                         endAdornment: (
                                                             <InputAdornment position="end">
-                                                                <IconButton onClick={handleDropdownToggle} edge="end">
-                                                                    {isDropdownOpen ? <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} /> : <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />}
+                                                                <IconButton onClick={handleDropdownToggleAdAccount} edge="end">
+                                                                    {isDropdownOpenAdAccount ? <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} /> : <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />}
                                                                 </IconButton>
                                                             </InputAdornment>
                                                         ),
-                                                        sx: klaviyoStyles.formInput
+                                                        sx: metaStyles.formInput
                                                     }}
                                                     sx={{
                                                         '& input': {
-                                                            caretColor: 'transparent', // Hide caret with transparent color
+                                                            caretColor: 'transparent',
                                                             fontFamily: "Nunito Sans",
                                                             fontSize: "14px",
                                                             color: "rgba(0, 0, 0, 0.89)",
@@ -1016,181 +962,32 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                             lineHeight: "normal",
                                                         },
                                                         '& .MuiOutlinedInput-input': {
-                                                            cursor: 'default', // Prevent showing caret on input field
+                                                            cursor: 'default',
                                                             top: '5px'
                                                         },
+                                                        marginBottom: '24px'
 
                                                     }}
                                                 />
-
                                                 <Menu
-                                                    anchorEl={anchorEl}
-                                                    open={Boolean(anchorEl) && isDropdownOpen}
-                                                    onClose={handleClose}
+                                                    anchorEl={anchorElAdAccount}
+                                                    open={Boolean(anchorElAdAccount) && isDropdownOpenAdAccount}
+                                                    onClose={handleCloseAdAccount}
                                                     PaperProps={{
                                                         sx: {
-                                                            width: anchorEl ? `${anchorEl.clientWidth}px` : '538px', borderRadius: '4px',
+                                                            width: anchorElAdAccount ? `${anchorElAdAccount.clientWidth}px` : '538px', borderRadius: '4px',
                                                             border: '1px solid #e4e4e4'
                                                         },
                                                     }}
-                                                    sx={{
 
-                                                    }}
                                                 >
-                                                    <MenuItem disabled={data?.name}
-                                                        onClick={() => handleSelectOption('createNew')} sx={{
-                                                            borderBottom: showCreateForm ? "none" : "1px solid #cdcdcd",
+                                                    {customersInfo?.map(account => (
+                                                        <MenuItem key={account.customer_id} onClick={() => handleSelectAdAccount(account)} sx={{
                                                             '&:hover': {
                                                                 background: 'rgba(80, 82, 178, 0.10)'
                                                             }
                                                         }}>
-                                                        <ListItemText primary={`+ Create new list`} primaryTypographyProps={{
-                                                            sx: {
-                                                                fontFamily: "Nunito Sans",
-                                                                fontSize: "14px",
-                                                                color: showCreateForm ? "#5052B2" : "#202124",
-                                                                fontWeight: "500",
-                                                                lineHeight: "20px",
-
-                                                            }
-                                                        }} />
-                                                    </MenuItem>
-
-                                                    {showCreateForm && (
-                                                        <Box>
-                                                            <Box sx={{
-                                                                display: 'flex',
-                                                                flexDirection: 'column',
-                                                                gap: '24px',
-                                                                p: 2,
-                                                                width: anchorEl ? `${anchorEl.clientWidth}px` : '538px',
-                                                                pt: 0
-                                                            }}>
-                                                                <Box
-                                                                    sx={{
-
-
-                                                                        mt: 1, // Margin-top to separate form from menu item
-                                                                        display: 'flex',
-                                                                        justifyContent: 'space-between',
-                                                                        gap: '16px',
-                                                                        '@media (max-width: 600px)': {
-                                                                            flexDirection: 'column'
-                                                                        },
-                                                                    }}
-                                                                >
-                                                                    <TextField
-                                                                        label="List Name"
-                                                                        variant="outlined"
-                                                                        value={newListName}
-                                                                        onChange={handleNewListChange}
-                                                                        size="small"
-                                                                        fullWidth
-                                                                        onKeyDown={(e) => e.stopPropagation()}
-                                                                        error={listNameError}
-                                                                        helperText={listNameErrorMessage}
-                                                                        InputLabelProps={{
-                                                                            sx: {
-                                                                                fontFamily: 'Nunito Sans',
-                                                                                fontSize: '12px',
-                                                                                lineHeight: '16px',
-                                                                                fontWeight: '400',
-                                                                                color: 'rgba(17, 17, 19, 0.60)',
-                                                                                '&.Mui-focused': {
-                                                                                    color: '#0000FF',
-                                                                                },
-                                                                            }
-                                                                        }}
-                                                                        InputProps={{
-
-                                                                            endAdornment: (
-                                                                                newListName && ( // Conditionally render close icon if input is not empty
-                                                                                    <InputAdornment position="end">
-                                                                                        <IconButton
-                                                                                            edge="end"
-                                                                                            onClick={() => setNewListName('')} // Clear the text field when clicked
-                                                                                        >
-                                                                                            <Image
-                                                                                                src='/close-circle.svg'
-                                                                                                alt='close-circle'
-                                                                                                height={18}
-                                                                                                width={18} // Adjust the size as needed
-                                                                                            />
-                                                                                        </IconButton>
-                                                                                    </InputAdornment>
-                                                                                )
-                                                                            ),
-                                                                            sx: {
-                                                                                '&.MuiOutlinedInput-root': {
-                                                                                    height: '32px',
-                                                                                    '& .MuiOutlinedInput-input': {
-                                                                                        padding: '5px 16px 4px 16px',
-                                                                                        fontFamily: 'Roboto',
-                                                                                        color: '#202124',
-                                                                                        fontSize: '14px',
-                                                                                        fontWeight: '400',
-                                                                                        lineHeight: '20px'
-                                                                                    },
-                                                                                    '& .MuiOutlinedInput-notchedOutline': {
-                                                                                        borderColor: '#A3B0C2',
-                                                                                    },
-                                                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                                        borderColor: '#A3B0C2',
-                                                                                    },
-                                                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                                        borderColor: '#0000FF',
-                                                                                    },
-                                                                                },
-                                                                                '&+.MuiFormHelperText-root': {
-                                                                                    marginLeft: '0',
-                                                                                },
-                                                                            }
-                                                                        }}
-                                                                    />
-
-                                                                </Box>
-                                                                <Box sx={{ textAlign: 'right' }}>
-                                                                    <Button variant="contained" onClick={handleSave}
-                                                                        disabled={listNameError || !newListName}
-                                                                        sx={{
-                                                                            borderRadius: '4px',
-                                                                            border: '1px solid #5052B2',
-                                                                            background: '#fff',
-                                                                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                                                            fontFamily: 'Nunito Sans',
-                                                                            fontSize: '14px',
-                                                                            fontWeight: '600',
-                                                                            lineHeight: '20px',
-                                                                            color: '#5052b2',
-                                                                            textTransform: 'none',
-                                                                            padding: '4px 22px',
-                                                                            '&:hover': {
-                                                                                background: 'transparent'
-                                                                            },
-                                                                            '&.Mui-disabled': {
-                                                                                background: 'transparent',
-                                                                                color: '#5052b2'
-                                                                            }
-                                                                        }}>
-                                                                        Save
-                                                                    </Button>
-                                                                </Box>
-                                                            </Box>
-
-
-                                                            {/* Add a Divider to separate form from options */}
-                                                            <Divider sx={{ borderColor: '#cdcdcd' }} />
-                                                        </Box>
-                                                    )}
-
-                                                    {/* Show static options */}
-                                                    {googleList && googleList?.map((klaviyo) => (
-                                                        <MenuItem key={klaviyo.list_id} onClick={() => handleSelectOption(klaviyo)} sx={{
-                                                            '&:hover': {
-                                                                background: 'rgba(80, 82, 178, 0.10)'
-                                                            }
-                                                        }}>
-                                                            <ListItemText primary={klaviyo.list_name} primaryTypographyProps={{
+                                                            <ListItemText primary={account.customer_name} primaryTypographyProps={{
                                                                 sx: {
                                                                     fontFamily: "Nunito Sans",
                                                                     fontSize: "14px",
@@ -1199,222 +996,438 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                                     lineHeight: "20px"
                                                                 }
                                                             }} />
+
                                                         </MenuItem>
                                                     ))}
                                                 </Menu>
                                             </Box>
-                                        </ClickAwayListener>
-
-                                    </Box>
-                                </Box>
-                            </TabPanel>
-                            <TabPanel value="3" sx={{ p: 0 }}>
-                                <Box sx={{
-                                    borderRadius: '4px',
-                                    border: '1px solid #f0f0f0',
-                                    boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)',
-                                    padding: '16px 24px',
-                                    overflowX: 'auto'
-                                }}>
-                                    <Box sx={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-                                        <Typography variant="h6" className='first-sub-title'>Map list</Typography>
-                                        {selectedOption?.list_name &&
-                                            <Typography variant='h6' sx={{
-                                                background: '#EDEDF7',
-                                                borderRadius: '3px',
-                                                fontFamily: 'Roboto',
-                                                fontSize: '12px',
-                                                fontWeight: '400',
-                                                color: '#5f6368',
-                                                padding: '2px 4px',
-                                                lineHeight: '16px'
-                                            }}>
-                                                {selectedOption?.list_name}
-                                            </Typography>}
-                                    </Box>
-
-                                    <Grid container alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' }, marginBottom: '14px' }}>
-                                        <Grid item xs="auto" sm={5} sx={{
-                                            textAlign: 'center',
-                                            '@media (max-width:599px)': {
-                                                minWidth: '196px'
-                                            }
-                                        }}>
-                                            <Image src='/logo.svg' alt='logo' height={15} width={24} />
-                                        </Grid>
-                                        <Grid item xs="auto" sm={1} sx={{
-                                            '@media (max-width:599px)': {
-                                                minWidth: '50px'
-                                            }
-                                        }}>&nbsp;</Grid>
-                                        <Grid item xs="auto" sm={5} sx={{
-                                            textAlign: 'center',
-                                            '@media (max-width:599px)': {
-                                                minWidth: '196px'
-                                            }
-                                        }}>
-                                            <Image src='/google-ads.svg' alt='googleAds' height={20} width={24} />
-                                        </Grid>
-                                        <Grid item xs="auto" sm={1}>&nbsp;</Grid>
-                                    </Grid>
-
-                                    {defaultRows.map((row, index) => (
-                                        <Box key={row.id} sx={{ mb: 2 }}> {/* Add margin between rows */}
-                                            <Grid container spacing={2} alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' } }}>
-                                                {/* Left Input Field */}
-                                                <Grid item xs="auto" sm={5}>
+                                            <ClickAwayListener onClickAway={() => { }}>
+                                                <Box>
                                                     <TextField
-                                                        fullWidth
+                                                        ref={textFieldRef}
                                                         variant="outlined"
-                                                        disabled={true}
-                                                        value={row.value}
-                                                        onChange={(e) => handleMapListChange(row.id, 'value', e.target.value)}
+                                                        value={selectedOption?.list_name}
+                                                        onClick={handleClick}
+                                                        disabled={data?.name}
+                                                        size="small"
+                                                        fullWidth
+                                                        label={selectedOption ? '' : 'Select or Create new list'}
                                                         InputLabelProps={{
+                                                            shrink: selectedOption ? false : isShrunk,
                                                             sx: {
                                                                 fontFamily: 'Nunito Sans',
                                                                 fontSize: '12px',
                                                                 lineHeight: '16px',
                                                                 color: 'rgba(17, 17, 19, 0.60)',
-                                                                top: '-5px',
+                                                                letterSpacing: '0.06px',
+                                                                top: '5px',
                                                                 '&.Mui-focused': {
                                                                     color: '#0000FF',
-                                                                    top: 0
                                                                 },
-                                                                '&.MuiInputLabel-shrink': {
-                                                                    top: 0
-                                                                }
                                                             }
                                                         }}
                                                         InputProps={{
 
-                                                            sx: {
-                                                                '&.MuiOutlinedInput-root': {
-                                                                    height: '36px',
-                                                                    '& .MuiOutlinedInput-input': {
-                                                                        padding: '6.5px 8px',
-                                                                        fontFamily: 'Roboto',
-                                                                        color: '#202124',
-                                                                        fontSize: '12px',
-                                                                        fontWeight: '400',
-                                                                        lineHeight: '20px'
-                                                                    },
-                                                                    '& .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: '#A3B0C2',
-                                                                    },
-                                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: '#A3B0C2',
-                                                                    },
-                                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: '#0000FF',
-                                                                    },
-                                                                },
-                                                                '&+.MuiFormHelperText-root': {
-                                                                    marginLeft: '0',
-                                                                },
-                                                            }
+                                                            endAdornment: (
+                                                                <InputAdornment position="end">
+                                                                    <IconButton onClick={handleDropdownToggle} edge="end">
+                                                                        {isDropdownOpen ? <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} /> : <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />}
+                                                                    </IconButton>
+                                                                </InputAdornment>
+                                                            ),
+                                                            sx: klaviyoStyles.formInput
+                                                        }}
+                                                        sx={{
+                                                            '& input': {
+                                                                caretColor: 'transparent',
+                                                                fontFamily: "Nunito Sans",
+                                                                fontSize: "14px",
+                                                                color: "rgba(0, 0, 0, 0.89)",
+                                                                fontWeight: "600",
+                                                                lineHeight: "normal",
+                                                            },
+                                                            '& .MuiOutlinedInput-input': {
+                                                                cursor: 'default',
+                                                                top: '5px'
+                                                            },
                                                         }}
                                                     />
-                                                </Grid>
-                                                {/* Middle Icon Toggle (Right Arrow or Close Icon) */}
-                                                <Grid item xs="auto" sm={1} container justifyContent="center">
-                                                    {row.selectValue !== undefined ? (
-                                                        row.selectValue ? (
+                                                    <Menu
+                                                        anchorEl={anchorEl}
+                                                        open={Boolean(anchorEl) && isDropdownOpen}
+                                                        onClose={handleClose}
+                                                        PaperProps={{
+                                                            sx: {
+                                                                width: anchorEl ? `${anchorEl.clientWidth}px` : '538px', borderRadius: '4px',
+                                                                border: '1px solid #e4e4e4'
+                                                            },
+                                                        }}
+                                                        sx={{
+
+                                                        }}
+                                                    >
+                                                        <MenuItem disabled={data?.name}
+                                                            onClick={() => handleSelectOption('createNew')} sx={{
+                                                                borderBottom: showCreateForm ? "none" : "1px solid #cdcdcd",
+                                                                '&:hover': {
+                                                                    background: 'rgba(80, 82, 178, 0.10)'
+                                                                }
+                                                            }}>
+                                                            <ListItemText primary={`+ Create new list`} primaryTypographyProps={{
+                                                                sx: {
+                                                                    fontFamily: "Nunito Sans",
+                                                                    fontSize: "14px",
+                                                                    color: showCreateForm ? "#5052B2" : "#202124",
+                                                                    fontWeight: "500",
+                                                                    lineHeight: "20px",
+
+                                                                }
+                                                            }} />
+                                                        </MenuItem>
+                                                        {showCreateForm && (
+                                                            <Box>
+                                                                <Box sx={{
+                                                                    display: 'flex',
+                                                                    flexDirection: 'column',
+                                                                    gap: '24px',
+                                                                    p: 2,
+                                                                    width: anchorEl ? `${anchorEl.clientWidth}px` : '538px',
+                                                                    pt: 0
+                                                                }}>
+                                                                    <Box
+                                                                        sx={{
+                                                                            mt: 1,
+                                                                            display: 'flex',
+                                                                            justifyContent: 'space-between',
+                                                                            gap: '16px',
+                                                                            '@media (max-width: 600px)': {
+                                                                                flexDirection: 'column'
+                                                                            },
+                                                                        }}
+                                                                    >
+                                                                        <TextField
+                                                                            label="List Name"
+                                                                            variant="outlined"
+                                                                            value={newListName}
+                                                                            onChange={handleNewListChange}
+                                                                            size="small"
+                                                                            fullWidth
+                                                                            onKeyDown={(e) => e.stopPropagation()}
+                                                                            error={listNameError}
+                                                                            helperText={listNameErrorMessage}
+                                                                            InputLabelProps={{
+                                                                                sx: {
+                                                                                    fontFamily: 'Nunito Sans',
+                                                                                    fontSize: '12px',
+                                                                                    lineHeight: '16px',
+                                                                                    fontWeight: '400',
+                                                                                    color: 'rgba(17, 17, 19, 0.60)',
+                                                                                    '&.Mui-focused': {
+                                                                                        color: '#0000FF',
+                                                                                    },
+                                                                                }
+                                                                            }}
+                                                                            InputProps={{
+
+                                                                                endAdornment: (
+                                                                                    newListName && (
+                                                                                        <InputAdornment position="end">
+                                                                                            <IconButton
+                                                                                                edge="end"
+                                                                                                onClick={() => setNewListName('')}
+                                                                                            >
+                                                                                                <Image
+                                                                                                    src='/close-circle.svg'
+                                                                                                    alt='close-circle'
+                                                                                                    height={18}
+                                                                                                    width={18}
+                                                                                                />
+                                                                                            </IconButton>
+                                                                                        </InputAdornment>
+                                                                                    )
+                                                                                ),
+                                                                                sx: {
+                                                                                    '&.MuiOutlinedInput-root': {
+                                                                                        height: '32px',
+                                                                                        '& .MuiOutlinedInput-input': {
+                                                                                            padding: '5px 16px 4px 16px',
+                                                                                            fontFamily: 'Roboto',
+                                                                                            color: '#202124',
+                                                                                            fontSize: '14px',
+                                                                                            fontWeight: '400',
+                                                                                            lineHeight: '20px'
+                                                                                        },
+                                                                                        '& .MuiOutlinedInput-notchedOutline': {
+                                                                                            borderColor: '#A3B0C2',
+                                                                                        },
+                                                                                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                                            borderColor: '#A3B0C2',
+                                                                                        },
+                                                                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                                            borderColor: '#0000FF',
+                                                                                        },
+                                                                                    },
+                                                                                    '&+.MuiFormHelperText-root': {
+                                                                                        marginLeft: '0',
+                                                                                    },
+                                                                                }
+                                                                            }}
+                                                                        />
+
+                                                                    </Box>
+                                                                    <Box sx={{ textAlign: 'right' }}>
+                                                                        <Button variant="contained" onClick={handleSave}
+                                                                            disabled={listNameError || !newListName}
+                                                                            sx={{
+                                                                                borderRadius: '4px',
+                                                                                border: '1px solid #5052B2',
+                                                                                background: '#fff',
+                                                                                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                                                                fontFamily: 'Nunito Sans',
+                                                                                fontSize: '14px',
+                                                                                fontWeight: '600',
+                                                                                lineHeight: '20px',
+                                                                                color: '#5052b2',
+                                                                                textTransform: 'none',
+                                                                                padding: '4px 22px',
+                                                                                '&:hover': {
+                                                                                    background: 'transparent'
+                                                                                },
+                                                                                '&.Mui-disabled': {
+                                                                                    background: 'transparent',
+                                                                                    color: '#5052b2'
+                                                                                }
+                                                                            }}>
+                                                                            Save
+                                                                        </Button>
+                                                                    </Box>
+                                                                </Box>
+                                                                <Divider sx={{ borderColor: '#cdcdcd' }} />
+                                                            </Box>
+                                                        )}
+                                                        {googleList && googleList?.map((klaviyo) => (
+                                                            <MenuItem key={klaviyo.list_id} onClick={() => handleSelectOption(klaviyo)} sx={{
+                                                                '&:hover': {
+                                                                    background: 'rgba(80, 82, 178, 0.10)'
+                                                                }
+                                                            }}>
+                                                                <ListItemText primary={klaviyo.list_name} primaryTypographyProps={{
+                                                                    sx: {
+                                                                        fontFamily: "Nunito Sans",
+                                                                        fontSize: "14px",
+                                                                        color: "#202124",
+                                                                        fontWeight: "500",
+                                                                        lineHeight: "20px"
+                                                                    }
+                                                                }} />
+                                                            </MenuItem>
+                                                        ))}
+                                                    </Menu>
+                                                </Box>
+                                            </ClickAwayListener>
+                                        </Box>
+                                    </Box>
+                                </TabPanel>
+                                <TabPanel value="3" sx={{ p: 0 }}>
+                                    <Box sx={{
+                                        borderRadius: '4px',
+                                        border: '1px solid #f0f0f0',
+                                        boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)',
+                                        padding: '16px 24px',
+                                        overflowX: 'auto'
+                                    }}>
+                                        <Box sx={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+                                            <Typography variant="h6" className='first-sub-title'>Map list</Typography>
+                                            {selectedOption?.list_name &&
+                                                <Typography variant='h6' sx={{
+                                                    background: '#EDEDF7',
+                                                    borderRadius: '3px',
+                                                    fontFamily: 'Roboto',
+                                                    fontSize: '12px',
+                                                    fontWeight: '400',
+                                                    color: '#5f6368',
+                                                    padding: '2px 4px',
+                                                    lineHeight: '16px'
+                                                }}>
+                                                    {selectedOption?.list_name}
+                                                </Typography>}
+                                        </Box>
+
+                                        <Grid container alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' }, marginBottom: '14px' }}>
+                                            <Grid item xs="auto" sm={5} sx={{
+                                                textAlign: 'center',
+                                                '@media (max-width:599px)': {
+                                                    minWidth: '196px'
+                                                }
+                                            }}>
+                                                <Image src='/logo.svg' alt='logo' height={15} width={24} />
+                                            </Grid>
+                                            <Grid item xs="auto" sm={1} sx={{
+                                                '@media (max-width:599px)': {
+                                                    minWidth: '50px'
+                                                }
+                                            }}>&nbsp;</Grid>
+                                            <Grid item xs="auto" sm={5} sx={{
+                                                textAlign: 'center',
+                                                '@media (max-width:599px)': {
+                                                    minWidth: '196px'
+                                                }
+                                            }}>
+                                                <Image src='/google-ads.svg' alt='googleAds' height={20} width={24} />
+                                            </Grid>
+                                            <Grid item xs="auto" sm={1}>&nbsp;</Grid>
+                                        </Grid>
+
+                                        {defaultRows.map((row, index) => (
+                                            <Box key={row.id} sx={{ mb: 2 }}>
+                                                <Grid container spacing={2} alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' } }}>
+                                                    <Grid item xs="auto" sm={5}>
+                                                        <TextField
+                                                            fullWidth
+                                                            variant="outlined"
+                                                            disabled={true}
+                                                            value={row.value}
+                                                            onChange={(e) => handleMapListChange(row.id, 'value', e.target.value)}
+                                                            InputLabelProps={{
+                                                                sx: {
+                                                                    fontFamily: 'Nunito Sans',
+                                                                    fontSize: '12px',
+                                                                    lineHeight: '16px',
+                                                                    color: 'rgba(17, 17, 19, 0.60)',
+                                                                    top: '-5px',
+                                                                    '&.Mui-focused': {
+                                                                        color: '#0000FF',
+                                                                        top: 0
+                                                                    },
+                                                                    '&.MuiInputLabel-shrink': {
+                                                                        top: 0
+                                                                    }
+                                                                }
+                                                            }}
+                                                            InputProps={{
+                                                                sx: {
+                                                                    '&.MuiOutlinedInput-root': {
+                                                                        height: '36px',
+                                                                        '& .MuiOutlinedInput-input': {
+                                                                            padding: '6.5px 8px',
+                                                                            fontFamily: 'Roboto',
+                                                                            color: '#202124',
+                                                                            fontSize: '12px',
+                                                                            fontWeight: '400',
+                                                                            lineHeight: '20px'
+                                                                        },
+                                                                        '& .MuiOutlinedInput-notchedOutline': {
+                                                                            borderColor: '#A3B0C2',
+                                                                        },
+                                                                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                            borderColor: '#A3B0C2',
+                                                                        },
+                                                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                            borderColor: '#0000FF',
+                                                                        },
+                                                                    },
+                                                                    '&+.MuiFormHelperText-root': {
+                                                                        marginLeft: '0',
+                                                                    },
+                                                                }
+                                                            }}
+                                                        />
+                                                    </Grid>
+                                                    <Grid item xs="auto" sm={1} container justifyContent="center">
+                                                        {row.selectValue !== undefined ? (
+                                                            row.selectValue ? (
+                                                                <Image
+                                                                    src='/chevron-right-purple.svg'
+                                                                    alt='chevron-right-purple'
+                                                                    height={18}
+                                                                    width={18}
+                                                                />
+
+                                                            ) : (
+                                                                <Image
+                                                                    src='/close-circle.svg'
+                                                                    alt='close-circle'
+                                                                    height={18}
+                                                                    width={18}
+                                                                />
+                                                            )
+                                                        ) : (
                                                             <Image
                                                                 src='/chevron-right-purple.svg'
                                                                 alt='chevron-right-purple'
                                                                 height={18}
-                                                                width={18} // Adjust the size as needed
+                                                                width={18}
                                                             />
-
-                                                        ) : (
-                                                            <Image
-                                                                src='/close-circle.svg'
-                                                                alt='close-circle'
-                                                                height={18}
-                                                                width={18} // Adjust the size as needed
-                                                            />
-                                                        )
-                                                    ) : (
-                                                        <Image
-                                                            src='/chevron-right-purple.svg'
-                                                            alt='chevron-right-purple'
-                                                            height={18}
-                                                            width={18} // Adjust the size as needed
-                                                        /> // For the first two rows, always show the right arrow
-                                                    )}
-                                                </Grid>
-
-                                                {/* Right Side Input or Dropdown */}
-                                                <Grid item xs="auto" sm={5}>
-                                                    <TextField
-                                                        fullWidth
-                                                        variant="outlined"
-                                                        disabled={true}
-                                                        value={row.type}
-                                                        onChange={(e) => handleMapListChange(row.id, 'type', e.target.value)}
-                                                        InputLabelProps={{
-                                                            sx: {
-                                                                fontFamily: 'Nunito Sans',
-                                                                fontSize: '12px',
-                                                                lineHeight: '16px',
-                                                                color: 'rgba(17, 17, 19, 0.60)',
-                                                                top: '-5px',
-                                                                '&.Mui-focused': {
-                                                                    color: '#0000FF',
-                                                                    top: 0
-                                                                },
-                                                                '&.MuiInputLabel-shrink': {
-                                                                    top: 0
+                                                        )}
+                                                    </Grid>
+                                                    <Grid item xs="auto" sm={5}>
+                                                        <TextField
+                                                            fullWidth
+                                                            variant="outlined"
+                                                            disabled={true}
+                                                            value={row.type}
+                                                            onChange={(e) => handleMapListChange(row.id, 'type', e.target.value)}
+                                                            InputLabelProps={{
+                                                                sx: {
+                                                                    fontFamily: 'Nunito Sans',
+                                                                    fontSize: '12px',
+                                                                    lineHeight: '16px',
+                                                                    color: 'rgba(17, 17, 19, 0.60)',
+                                                                    top: '-5px',
+                                                                    '&.Mui-focused': {
+                                                                        color: '#0000FF',
+                                                                        top: 0
+                                                                    },
+                                                                    '&.MuiInputLabel-shrink': {
+                                                                        top: 0
+                                                                    }
                                                                 }
-                                                            }
-                                                        }}
-                                                        InputProps={{
-
-                                                            sx: {
-                                                                '&.MuiOutlinedInput-root': {
-                                                                    height: '36px',
-                                                                    '& .MuiOutlinedInput-input': {
-                                                                        padding: '6.5px 8px',
-                                                                        fontFamily: 'Roboto',
-                                                                        color: '#202124',
-                                                                        fontSize: '12px',
-                                                                        fontWeight: '400',
-                                                                        lineHeight: '20px'
+                                                            }}
+                                                            InputProps={{
+                                                                sx: {
+                                                                    '&.MuiOutlinedInput-root': {
+                                                                        height: '36px',
+                                                                        '& .MuiOutlinedInput-input': {
+                                                                            padding: '6.5px 8px',
+                                                                            fontFamily: 'Roboto',
+                                                                            color: '#202124',
+                                                                            fontSize: '12px',
+                                                                            fontWeight: '400',
+                                                                            lineHeight: '20px'
+                                                                        },
+                                                                        '& .MuiOutlinedInput-notchedOutline': {
+                                                                            borderColor: '#A3B0C2',
+                                                                        },
+                                                                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                            borderColor: '#A3B0C2',
+                                                                        },
+                                                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                            borderColor: '#0000FF',
+                                                                        },
                                                                     },
-                                                                    '& .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: '#A3B0C2',
+                                                                    '&+.MuiFormHelperText-root': {
+                                                                        marginLeft: '0',
                                                                     },
-                                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: '#A3B0C2',
-                                                                    },
-                                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: '#0000FF',
-                                                                    },
-                                                                },
-                                                                '&+.MuiFormHelperText-root': {
-                                                                    marginLeft: '0',
-                                                                },
-                                                            }
-                                                        }}
-                                                    />
+                                                                }
+                                                            }}
+                                                        />
+                                                    </Grid>
                                                 </Grid>
-                                            </Grid>
-                                        </Box>
-                                    ))}
-                                </Box>
-                            </TabPanel>
-                        </TabContext>
-                        {/* Button based on selected tab */}
-
+                                            </Box>
+                                        ))}
+                                    </Box>
+                                </TabPanel>
+                            </TabContext>
+                        }
                     </Box>
-                    <Box sx={{ px: 2, py: 2, width: '100%', borderTop: '1px solid #e4e4e4' }}>
-                        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
-
-                            {getButton(value)}
+                    {notAdsUser && (
+                        <Box sx={{ px: 2, py: 2, width: '100%', borderTop: '1px solid #e4e4e4' }}>
+                            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+                                {getButton(value)}
+                            </Box>
                         </Box>
-                    </Box>
+                    )}
                 </Box>
-
             </Drawer>
         </>
     );

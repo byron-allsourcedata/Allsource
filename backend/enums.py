@@ -234,6 +234,7 @@ class IntegrationsStatus(Enum):
     ALREADY_EXIST = 'ALREADY_EXIST'
     INVALID_WEBHOOK_URL = 'INVALID_WEBHOOK_URL'
     JOIN_CHANNEL_IS_FAILED = 'JOIN_CHANNEL_IS_FAILED'
+    NOT_ADS_USER = 'NOT_ADS_USER'
 
 
 class StripeConnectStatus(Enum):
