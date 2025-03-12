@@ -256,7 +256,7 @@ const SourcesList: React.FC = () => {
                                         <Typography variant="subtitle1" className="table-data">
                                         {createdSource?.id && (
                                             sourceProgress[createdSource.id]?.total
-                                            ? sourceProgress[createdSource.id].total
+                                            ? sourceProgress[createdSource.id].total.toLocaleString('en-US')
                                             : <ThreeDotsLoader />
                                         )}
                                         </Typography>
@@ -272,7 +272,7 @@ const SourcesList: React.FC = () => {
                                         <Typography variant="subtitle1" className="table-data">
                                             {createdSource?.id && (
                                                 sourceProgress[createdSource.id]?.processed === sourceProgress[createdSource.id]?.total && sourceProgress[createdSource.id]?.processed /*need chnage >= on ===*/
-                                                ? sourceProgress[createdSource.id]?.matched
+                                                ? sourceProgress[createdSource.id]?.matched.toLocaleString('en-US')
                                                 : <ProgressBar progress={sourceProgress[createdSource.id]} />
                                             )}
                                         </Typography>

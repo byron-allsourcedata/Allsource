@@ -7,14 +7,12 @@ import axiosInstance from '../../../axios/axiosInterceptorInstance';
 import { sourcesStyles } from './sourcesStyles';
 import Slider from '../../../components/Slider';
 import { SliderProvider } from '../../../context/SliderContext';
-import DownloadIcon from '@mui/icons-material/Download';
-import DateRangeIcon from '@mui/icons-material/DateRange';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import ArrowDownwardRoundedIcon from '@mui/icons-material/ArrowDownwardRounded';
+import ArrowUpwardRoundedIcon from '@mui/icons-material/ArrowUpwardRounded';
 // import FilterPopup from './CompanyFilters';
 import AudiencePopup from '@/components/AudienceSlider';
-import SouthOutlinedIcon from '@mui/icons-material/SouthOutlined';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
-import NorthOutlinedIcon from '@mui/icons-material/NorthOutlined';
 import dayjs from 'dayjs';
 import CloseIcon from '@mui/icons-material/Close';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
@@ -98,8 +96,8 @@ const Sources: React.FC = () => {
     const { hasNotification } = useNotification();
     const [data, setData] = useState<Source[]>([]);
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(15);
-    const [count_companies, setCount] = useState<number | null>(null);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [count_sources, setCount] = useState<number | null>(null);
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
     const [status, setStatus] = useState<string | null>(null);
@@ -724,9 +722,9 @@ const Sources: React.FC = () => {
                                                                                     <IconButton size="small">
                                                                                         {orderBy === key ? (
                                                                                             order === 'asc' ? (
-                                                                                                <NorthOutlinedIcon fontSize="inherit" />
+                                                                                                <ArrowDownwardRoundedIcon fontSize="inherit" />
                                                                                             ) : (
-                                                                                                <SouthOutlinedIcon fontSize="inherit" />
+                                                                                                <ArrowUpwardRoundedIcon fontSize="inherit" />
                                                                                             )
                                                                                         ) : (
                                                                                             <SwapVertIcon fontSize="inherit" />
@@ -815,9 +813,9 @@ const Sources: React.FC = () => {
                                                                             >
                                                                                 {row.matched_records_status === "pending" 
                                                                                 ? progress?.total
-                                                                                    ? progress?.total
+                                                                                    ? progress?.total.toLocaleString('en-US')
                                                                                     : <ThreeDotsLoader />
-                                                                                : row.total_records ?? '--'}
+                                                                                : row.total_records.toLocaleString('en-US') ?? '--'}
                                                                             </TableCell>
 
                                                                             {/* Matched Records  Column */}
@@ -826,9 +824,9 @@ const Sources: React.FC = () => {
                                                                             >
                                                                                 {row.matched_records_status === "pending" 
                                                                                 ? progress?.processed == progress?.total && progress?.processed
-                                                                                    ? progress?.matched
+                                                                                    ? progress?.matched.toLocaleString('en-US')
                                                                                     : <ProgressBar progress={progress}/>
-                                                                                : row.matched_records ?? '--'}
+                                                                                : row.matched_records.toLocaleString('en-US') ?? '--'}
                                                                                 {/* {row.processed 
                                                                                 ? progress?.processed == progress?.total && progress?.processed
                                                                                     ? progress?.matched
@@ -940,16 +938,43 @@ const Sources: React.FC = () => {
                                                             </TableBody>
                                                         </Table>
                                                     </TableContainer>
-                                                    {count_companies && count_companies > 15 && <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0', "@media (max-width: 600px)": { padding: '12px 0 0' } }}>
-                                                        <CustomTablePagination
-                                                            count={count_companies ?? 0}
-                                                            page={page}
-                                                            rowsPerPage={rowsPerPage}
-                                                            onPageChange={handleChangePage}
-                                                            onRowsPerPageChange={handleChangeRowsPerPage}
-                                                            rowsPerPageOptions={rowsPerPageOptions}
-                                                        />
-                                                    </Box>}
+                                                    {count_sources && count_sources > 10 
+                                                    ?
+                                                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0', "@media (max-width: 600px)": { padding: '12px 0 0' } }}>
+                                                            <CustomTablePagination
+                                                                count={count_sources ?? 0}
+                                                                page={page}
+                                                                rowsPerPage={rowsPerPage}
+                                                                onPageChange={handleChangePage}
+                                                                onRowsPerPageChange={handleChangeRowsPerPage}
+                                                                rowsPerPageOptions={rowsPerPageOptions}
+                                                            />
+                                                        </Box>
+                                                    :
+                                                        <Box
+                                                            display="flex"
+                                                            justifyContent="flex-end"
+                                                            alignItems="center"
+                                                            sx={{
+                                                                padding: '16px',
+                                                                backgroundColor: '#f9f9f9',
+                                                                borderRadius: '4px',
+                                                                "@media (max-width: 600px)": { padding: '12px' }
+                                                            }}
+                                                        >
+                                                            <Typography
+                                                                sx={{
+                                                                    fontFamily: 'Nunito Sans',
+                                                                    fontWeight: '400',
+                                                                    fontSize: '12px',
+                                                                    lineHeight: '16px',
+                                                                    marginRight: '16px',
+                                                                }}
+                                                            >
+                                                                {`${count_sources} - ${rowsPerPage} of ${rowsPerPage}`}
+                                                            </Typography>
+                                                        </Box>
+                                                    }
                                                 </Grid>
                                             </Grid>
                                         }
