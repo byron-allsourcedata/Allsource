@@ -21,12 +21,14 @@ from exceptions import InvalidToken
 from models.users import Users as User
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
 from persistence.company_persistence import CompanyPersistence
+from persistence.lookalikes import LookalikesPersistence
 from persistence.referral_user import ReferralUserPersistence
 from persistence.referral_payouts import ReferralPayoutsPersistence
 from persistence.audience_persistence import AudiencePersistence
 from persistence.domains import UserDomainsPersistence, UserDomains
 from persistence.million_verifier import MillionVerifierPersistence
 from services.companies import CompanyService
+from services.lookalikes import LookalikesService
 from services.payouts import PayoutsService
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from services.integrations.slack import SlackService
@@ -174,6 +176,9 @@ def get_epi_persistence(db: Session = Depends(get_db)) -> ExternalAppsInstallati
 
 def get_notification_persistence(db: Session = Depends(get_db)):
     return NotificationPersistence(db)
+
+def get_lookalikes_persistence(db: Session = Depends(get_db)):
+    return LookalikesPersistence(db=db)
 
 
 def get_accounts_service(
@@ -633,3 +638,7 @@ def check_api_key(maximiz_api_key=Header(None),
             return domains[0]
         raise HTTPException(status_code=404, detail={'status': DomainStatus.DOMAIN_NOT_FOUND.value})
     raise HTTPException(status_code=401, detail={'status': UserAuthorizationStatus.INVALID_API_KEY.value})
+
+
+def get_lookalikes_service(lookalikes_persistence_service: LookalikesPersistence = Depends(get_lookalikes_persistence)):
+    return LookalikesService(lookalikes_persistence_service=lookalikes_persistence_service)

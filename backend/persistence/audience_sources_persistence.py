@@ -48,7 +48,6 @@ class AudienceSourcesPersistence:
         if sort_by in sort_options:
             sort_column = sort_options[sort_by]
             query = query.order_by(
-                AudienceSource.created_at.desc(),
                 asc(sort_column) if sort_order == 'asc' else desc(sort_column),
             )
         else:

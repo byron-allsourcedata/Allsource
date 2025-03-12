@@ -29,6 +29,25 @@ export const sourcesStyles: { [key: string]: SxProps<Theme> } = {
     
   },
 
+  centerContainerStyles: {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    border: '1px solid rgba(235, 235, 235, 1)',
+    borderRadius: 2,
+    padding: 3,
+    boxSizing: 'border-box',
+    width: '100%',
+    textAlign: 'center',
+    flex: 1,
+    '& img': {
+        width: 'auto',
+        height: 'auto',
+        maxWidth: '100%'
+    }
+  },
+
   table_array: {
     fontFamily: 'Roboto', fontSize: '12px', fontWeight: '400',
     lineHeight: '16.8px',

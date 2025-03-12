@@ -687,7 +687,7 @@ const AIAudience: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                         <Box sx={{ display: 'flex', justifyContent: 'end', gap: 2, borderTop: '1px solid rgba(228, 228, 228, 1)', mt: 2, pr: 2, pt: '0.5rem' }}>
                             <Button
                                 sx={{
-                                    border: '1px #5052B2 solid',
+                                    border: '1px #5052B2 solid', 
                                     color: '#5052B2',
                                     backgroundColor: '#FFFFFF',
                                     textTransform: 'none',

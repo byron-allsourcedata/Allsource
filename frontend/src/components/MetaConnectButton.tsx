@@ -3,7 +3,7 @@ import { Box, Button, Drawer, IconButton, Link, TextField, Typography } from "@m
 import Image from 'next/image';
 import CloseIcon from '@mui/icons-material/Close';
 import { useEffect, useState } from "react";
-import { showToast } from "./ToastNotification";
+import { showErrorToast, showToast } from "./ToastNotification";
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { useIntegrationContext } from "@/context/IntegrationContext";
 
@@ -174,7 +174,9 @@ const MetaConnectButton = ({open, onClose, onSave, isEdit, boxShadow}: MetaConne
                 showToast('Connect to Meta Successfuly');
             }
             triggerSync();
-        } finally {
+        } catch(error){
+        } 
+        finally {
             setLoading(false);
             onClose();
         }

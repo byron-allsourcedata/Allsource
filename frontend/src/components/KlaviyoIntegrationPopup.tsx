@@ -83,8 +83,8 @@ const klaviyoStyles = {
                 borderColor: '#0000FF',
             },
             '&.Mui-error .MuiOutlinedInput-notchedOutline': {
-            borderColor: 'red',
-        },
+                borderColor: 'red',
+            },
         },
         '&+.MuiFormHelperText-root': {
             marginLeft: '0',
@@ -192,8 +192,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                 triggerSync();
                 handleNextTab();
             }
-        } catch (err) {
-            showErrorToast('Integration Klaviyo error, credentails invalid')
+        } catch (error) {
         } finally {
             setDisableButton(false)
         }
@@ -237,7 +236,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                 shop_domain: ''
             })
         }
-            handleClose()
+        handleClose()
     }
 
     const getButton = (tabValue: string) => {
@@ -300,27 +299,27 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
 
     return (
         <>
-        {loading && (
-            <Box
-                sx={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'rgba(0, 0, 0, 0.2)',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    zIndex: 1400,
-                    overflow: 'hidden'
-                }}
-            >
-            <Box sx={{width: '100%', top: 0, height: '100vh'}}>
-                <LinearProgress />
-            </Box>
-            </Box>
-        )}
+            {loading && (
+                <Box
+                    sx={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0, 0, 0, 0.2)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 1400,
+                        overflow: 'hidden'
+                    }}
+                >
+                    <Box sx={{ width: '100%', top: 0, height: '100vh' }}>
+                        <LinearProgress />
+                    </Box>
+                </Box>
+            )}
             <Drawer
                 anchor="right"
                 open={open}
@@ -436,7 +435,7 @@ const KlaviyoIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                                         value={apiKey}
                                         onChange={handleApiKeyChange}
                                         InputLabelProps={{ sx: klaviyoStyles.inputLabel }}
-                                        InputProps={{ sx: {...klaviyoStyles.formInput, borderColor: Invalid_api_key ? 'red' : 'inherit' },   }}
+                                        InputProps={{ sx: { ...klaviyoStyles.formInput, borderColor: Invalid_api_key ? 'red' : 'inherit' }, }}
                                     />
                                 </Box>
                                 <Box sx={{ background: '#f0f0f0', border: '1px solid #efefef', borderRadius: '4px', p: 2 }}>

@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect, Suspense, useRef } from "react";
 import { integrationsStyle } from "./integrationsStyle";
+import { UpgradePlanPopup } from '@/app/(client)/components/UpgradePlanPopup';
 import axiosInstance from '../../../axios/axiosInterceptorInstance';
 import { Box, Button, Typography, Tab, TextField, InputAdornment, Popover, IconButton, TableContainer, Table, Paper, TableHead, TableRow, TableCell, TableBody, Tooltip, Drawer, Backdrop, LinearProgress } from "@mui/material";
 import Image from "next/image";
@@ -151,6 +152,12 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
   const formatServiceName = (name: string): string => {
     if (name === "big_commerce") {
       return "BigCommerce";
+    }
+    if (name === "google_ads") {
+      return "GoogleAds";
+    }
+    if (name === "sales_force") {
+      return "SalesForce";
     }
     return name
       .split("_")
@@ -530,6 +537,8 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
   const [openModal, setOpenModal] = useState<string | null>(null);
   const [openDeletePopup, setOpenDeletePopup] = useState(false);
   const [search, setSearch] = useState<string>('');
+  const [upgradePlanPopup, setUpgradePlanPopup] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value);
@@ -543,7 +552,20 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
     setOpenModal(null);
   };
 
-  const handleAddIntegration = (service_name: string) => {
+  const handleAddIntegration = async (service_name: string) => {
+    try {
+      setIsLoading(true)
+      const response = await axiosInstance.get('/integrations/check-limit-reached')
+      if (response.status === 200 && response.data == true) {
+        setUpgradePlanPopup(true)
+        return 
+      }
+    } catch (error) {
+    }
+    finally {
+      setIsLoading(false)
+    }
+
     const isIntegrated = integrationsCredentials.some(integration_cred => integration_cred.service_name === service_name);
     if (isIntegrated) return;
     setOpenModal(service_name);
@@ -595,7 +617,9 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
   const integratedServices = integrationsCredentials.map(cred => cred.service_name);
 
   return (
-    <Box sx={{ width: '100%', flexGrow: 1, height: 'calc(100vh - 7.75rem)', overflow: 'auto', pt: 2, '@media (max-width: 600px)': { pr: 2, pb: 4, height: 'calc(100vh - 11.25rem)', pt: 2 } }}>
+    <Box sx={{ width: '100%', flexGrow: 1, overflow: 'auto', pt: 2, '@media (max-width: 600px)': { pr: 2, pb: 4, height: 'calc(100vh - 11.25rem)', pt: 2 } }}>
+      {isLoading && <CustomizedProgressBar />}
+      <UpgradePlanPopup open={upgradePlanPopup} limitName={'domain'} handleClose={() => setUpgradePlanPopup(false)} />
       <Box sx={{ overflowX: 'hidden' }}>
         <TextField
           fullWidth
@@ -832,7 +856,7 @@ const PixelManagment = () => {
     setValue(newValue);
   };
   return (
-    <Box sx={{ height: 'calc(100vh - 11rem)', overflow: 'auto', width: '100%', pr: '12px', }}>
+    <Box sx={{ flexGrow: 1, overflow: 'auto', width: '100%', pr: '12px', }}>
       <TabContext value={value}>
         <TabList
           centered
@@ -944,6 +968,7 @@ const Integrations = () => {
   useEffect(() => {
     const fetchIntegrationCredentials = async () => {
       try {
+        setLoading(true)
         const response = await axiosInstance.get('/integrations/credentials/')
         if (response.status === 200) {
           setIntegrationsCredentials(response.data)
@@ -966,6 +991,7 @@ const Integrations = () => {
     }
     const fetchIntegration = async () => {
       try {
+        setLoading(true)
         const response = await axiosInstance.get('/integrations/')
         if (response.status === 200) {
           setIntegrations(response.data)
@@ -1057,7 +1083,7 @@ const Integrations = () => {
               </Box>
             </Box>
 
-            <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', width: '90%', pr: '20%', alignItems: 'center', "@media (max-width: 900px)": { pr: 0 }, "@media (max-width: 600px)": { width: '97%', pr: '0' } }}>
+            <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', width: '100%', pr: '10%', alignItems: 'center', "@media (max-width: 900px)": { pr: 0 }, "@media (max-width: 600px)": { width: '97%', pr: '0' } }}>
               {status === 'PIXEL_INSTALLATION_NEEDED' ? '' : (
                 <TabList
                   centered

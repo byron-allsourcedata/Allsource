@@ -184,7 +184,6 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
                 handleNextTab()
             }
         } catch (error) {
-            showErrorToast("Invalid credentials, please try another API key")
         }
         finally{
             setDisableButton(false)

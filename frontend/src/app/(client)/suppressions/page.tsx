@@ -100,29 +100,29 @@ const Suppressions: React.FC = () => {
     }
 
     return (
-        <Box sx={{...suppressionsStyle.mainContent, overflow: 'hidden',}}>
+        <Box sx={{...suppressionsStyle.mainContent}}>
             <Box
     sx={{
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
         position: 'sticky',
-        pb: '16px',
-        left: 0,
+        top:0,
         pl: '0.5rem',
-        zIndex: 1,
+        zIndex: 10,
+        pt:1.5,
         backgroundColor: '#fff',
         justifyContent: 'space-between',
         width: '100%',
         "@media (max-width: 900px)": {
-            zIndex: 1
+            zIndex: 10
         },
         "@media (max-width: 600px)": {
             pt: '4.25rem',
             flexDirection: 'column',
             pl: '0.5rem',
             alignItems: 'flex-start',
-            zIndex: 1,
+            zIndex: 10,
             width: '100%',
             pr: 1.5
         },
@@ -141,7 +141,7 @@ const Suppressions: React.FC = () => {
                     <Box sx={{"@media (max-width: 600px)": { display: 'none' }}}><CustomTooltip title={"Suppressions help manage and filter out contacts or data points that should not receive communications or updates."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/suppression" /></Box>
                 </Box>
 
-                <Box sx={{ flexGrow: 1, display: 'flex', overflow: 'hidden', justifyContent: 'center', width: '100%', pr: '20%', alignItems: 'center', "@media (max-width: 900px)": { pr: 0 }, "@media (max-width: 600px)": { width: '100%', pr: '0' } }}>
+                <Box sx={{ flexGrow: 1, flexShrink:1, display: 'flex', overflow: 'hidden', justifyContent: 'center', width: '100%', pr: '10%', alignItems: 'center', "@media (max-width: 900px)": { pr: 0 }, "@media (max-width: 600px)": { width: '100%', pr: '0' } }}>
                     {status === 'PIXEL_INSTALLATION_NEEDED' ? '' : (
                         <Tabs
                             value={tabIndex}
@@ -261,10 +261,8 @@ const Suppressions: React.FC = () => {
             ) : (
                 <Box sx={{flexGrow: 1,
                     overflow: 'auto',
-                    height: 'calc(100vh - 8rem)',
-                    "@media (max-width: 900px)": {
-                        height: 'calc(100vh - 11rem)',
-                    }, width: '100%', pr: '2.5rem', pl:'2.5rem', "@media (max-width: 600px)": { pr: 0, pl:0 }, }}>
+
+                    width: '100%', pr: '2.5rem', pl:'2.5rem', "@media (max-width: 600px)": { pr: 0, pl:0 }, }}>
                     <Box sx={{ width: '100%' }}>
                         <TabPanel value={tabIndex} index={0}>
                             <SuppressionRules />

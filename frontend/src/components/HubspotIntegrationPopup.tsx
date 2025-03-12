@@ -83,8 +83,8 @@ const hubspotStyles = {
                 borderColor: '#0000FF',
             },
             '&.Mui-error .MuiOutlinedInput-notchedOutline': {
-            borderColor: 'red',
-        },
+                borderColor: 'red',
+            },
         },
         '&+.MuiFormHelperText-root': {
             marginLeft: '0',
@@ -135,7 +135,7 @@ const HubspotIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
         { id: 'unique-id-8', text: 'Copy the generated API key and paste it into the API Key field in the Maximiz Hubspot section.' },
         { id: 'unique-id-9', text: 'Click "Connect" to complete the integration process.' },
     ];
-    
+
 
     type HighlightConfig = {
         [keyword: string]: { color?: string; fontWeight?: string };
@@ -196,7 +196,6 @@ const HubspotIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                 handleNextTab();
             }
         } catch (err) {
-            showErrorToast('Integration Hubspot error, credentails invalid')
         } finally {
             setDisableButton(false)
         }
@@ -240,7 +239,7 @@ const HubspotIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                 shop_domain: ''
             })
         }
-            handleClose()
+        handleClose()
     }
 
     const getButton = (tabValue: string) => {
@@ -303,27 +302,27 @@ const HubspotIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
 
     return (
         <>
-        {loading && (
-            <Box
-                sx={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'rgba(0, 0, 0, 0.2)',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    zIndex: 1400,
-                    overflow: 'hidden'
-                }}
-            >
-            <Box sx={{width: '100%', top: 0, height: '100vh'}}>
-                <LinearProgress />
-            </Box>
-            </Box>
-        )}
+            {loading && (
+                <Box
+                    sx={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0, 0, 0, 0.2)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 1400,
+                        overflow: 'hidden'
+                    }}
+                >
+                    <Box sx={{ width: '100%', top: 0, height: '100vh' }}>
+                        <LinearProgress />
+                    </Box>
+                </Box>
+            )}
             <Drawer
                 anchor="right"
                 open={open}
@@ -359,20 +358,20 @@ const HubspotIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                         Connect to Hubspot
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href={initApiKey ?
-                            "https://maximizai.zohodesk.eu/portal/en/kb/articles/update-hubspot-integration-configuration" :
-                            "https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-hubspot-to-maximiz"
-                        }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            sx={{
-                                fontFamily: 'Nunito Sans',
-                                fontSize: '14px',
-                                fontWeight: '600',
-                                lineHeight: '20px',
-                                color: '#5052b2',
-                                textDecorationColor: '#5052b2'
-                            }}>Tutorial</Link>
+                            {/* <Link href={initApiKey ?
+                                "https://maximizai.zohodesk.eu/portal/en/kb/articles/update-hubspot-integration-configuration" :
+                                "https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-hubspot-to-maximiz"
+                            }
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                sx={{
+                                    fontFamily: 'Nunito Sans',
+                                    fontSize: '14px',
+                                    fontWeight: '600',
+                                    lineHeight: '20px',
+                                    color: '#5052b2',
+                                    textDecorationColor: '#5052b2'
+                                }}>Tutorial</Link> */}
                         <IconButton onClick={handleClose} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />
                         </IconButton>
@@ -439,7 +438,7 @@ const HubspotIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                                         value={apiKey}
                                         onChange={handleApiKeyChange}
                                         InputLabelProps={{ sx: hubspotStyles.inputLabel }}
-                                        InputProps={{ sx: {...hubspotStyles.formInput, borderColor: Invalid_api_key ? 'red' : 'inherit' },   }}
+                                        InputProps={{ sx: { ...hubspotStyles.formInput, borderColor: Invalid_api_key ? 'red' : 'inherit' }, }}
                                     />
                                 </Box>
                                 <Box sx={{ background: '#f0f0f0', border: '1px solid #efefef', borderRadius: '4px', p: 2 }}>

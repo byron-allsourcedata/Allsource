@@ -70,7 +70,6 @@ class ShopifyIntegrationService:
                 interval = "EVERY_30_DAYS"
             else:
                 interval = "ANNUAL"
-
             variables = {
                 "name": plan.title,
                 "returnUrl": os.getenv("STRIPE_SUCCESS_URL"),

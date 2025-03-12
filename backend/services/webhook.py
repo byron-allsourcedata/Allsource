@@ -188,9 +188,6 @@ class WebhookService:
                     payment_period = "month"
                 else:
                     payment_period = "year"  
-        if payment_period:
-            plan = self.subscription_service.get_plan_by_title_and_interval(plan_name, payment_period)
-        else:
             plan = self.subscription_service.get_plan_by_title_price(plan_name, payment_amount)
             
         self.subscription_service.create_shopify_subscription_transaction(subscription_info=subscription_info, user_id=user_data.id, plan=plan, charge_id=charge_id)

@@ -384,6 +384,33 @@ class SubscriptionService:
         user.prospect_credits=plan.prospect_credits
         user.current_subscription_id=add_subscription_obj.id
         self.db.commit()
+    
+    def create_subscription_from_shopify(self, user_id):
+        plan = self.plans_persistence.get_plan_by_alias(PlanAlias.SHOPIFY.value)
+        plan_start = datetime.now(timezone.utc).replace(tzinfo=None)
+        add_subscription_obj = Subscription(
+            domains_limit=plan.domains_limit,
+            integrations_limit=plan.integrations_limit,
+            plan_start = plan_start,
+            plan_end = plan_start + relativedelta(months=1),
+            user_id=user_id,
+            updated_at=plan_start.isoformat() + "Z",
+            created_at=plan_start.isoformat() + "Z",
+            members_limit=plan.members_limit,
+            status='active',
+            plan_id=plan.id,
+            is_trial=False,
+            lead_credit_price=plan.lead_credit_price
+        )
+        self.db.add(add_subscription_obj)
+        self.db.flush()
+        user = self.db.query(User).filter(User.id == user_id).first()
+        user.activate_steps_percent=50
+        user.is_book_call_passed=True
+        user.leads_credits=plan.leads_credits
+        user.prospect_credits=plan.prospect_credits
+        user.current_subscription_id=add_subscription_obj.id
+        self.db.commit()
 
     def create_subscription_from_free_trial(self, user_id, ftd=None):
         plan = self.plans_persistence.get_free_trial_plan(ftd)
@@ -459,7 +486,7 @@ class SubscriptionService:
                 self.db.commit()
 
     def get_plan_by_price(self, lead_credit_price):
-        return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.price == lead_credit_price).first()
+        return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.full_price == lead_credit_price).first()
     
     def process_shopify_subscription(self, user, plan, subscription_info, charge_id):
         result = {'status': None, 'lead_credit_price': None}
@@ -498,7 +525,7 @@ class SubscriptionService:
             )
 
             self.db.add(user_subscription)
-
+            self.db.flush()
             self.update_users_domains(user.id, plan.domains_limit)
             self.update_team_members(user.id, plan.members_limit)
             

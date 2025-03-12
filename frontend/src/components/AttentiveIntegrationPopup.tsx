@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import CustomizedProgressBar from "./CustomizedProgressBar";
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
-import { showToast } from "./ToastNotification";
+import { showErrorToast, showToast } from "./ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface CreateAttentiveProps {
@@ -164,7 +164,6 @@ const AttentiveIntegrationPopup = ({ handleClose, open, onSave, initApiKey, isEd
                 handleNextTab()
             }
         } catch (error) {
-            
         }
     }
 

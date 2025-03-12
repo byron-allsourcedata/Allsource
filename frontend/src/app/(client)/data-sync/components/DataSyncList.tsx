@@ -134,7 +134,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   }, []);
 
   useEffect(() => {
-    console.log(data)
   }, [data]);
 
   useEffect(() => {
@@ -1194,11 +1193,17 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
             />
           </>
         )}
-        <ConnectMeta
-          open={metaIconPopupOpen}
-          onClose={handleMetaIconPopupClose}
-          data={data.find((item) => item.id === selectedId)}
-        />
+        {metaIconPopupOpen && isEdit === true && (
+          <>
+            <ConnectMeta
+            open={metaIconPopupOpen}
+            onClose={handleMetaIconPopupClose}
+            data={data.find((item) => item.id === selectedId)}
+            isEdit={isEdit}
+          />
+          </>
+        )}
+        
         {mailchimpIconPopupOpen && isEdit === true && (
           <>
             <MailchimpDatasync
