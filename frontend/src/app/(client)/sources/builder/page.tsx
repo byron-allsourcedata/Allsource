@@ -742,7 +742,7 @@ const SourcesImport: React.FC = () => {
                                 )}
                             </Box>
                             <Box sx={{display: sourceMethod !== 0 && file ? "flex" : "none", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
-                                <Box sx={{display: "flex", alignItems: "center", gap: 2}}>
+                                <Box sx={{display: "flex", alignItems: "center", gap: 2, "@media (max-width: 400px)": { justifyContent: "space-between" },}}>
                                     <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px"}}>Create Name</Typography>
                                     <TextField
                                         id="outlined"
@@ -755,9 +755,11 @@ const SourcesImport: React.FC = () => {
                                                 fontSize: '15px',
                                                 padding:0,
                                                 top: '-1px',
-                                                margin:0
+                                                margin:0,
                                         }}}
                                         sx={{
+                                            width: "250px",
+                                            "@media (max-width: 400px)": { width: "150px" },
                                             "& .MuiInputLabel-root.Mui-focused": {
                                                 color: "rgba(17, 17, 19, 0.6)",
                                             },
