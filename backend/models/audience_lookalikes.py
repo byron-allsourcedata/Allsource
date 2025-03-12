@@ -2,8 +2,8 @@ from sqlalchemy import Column, Integer, TIMESTAMP, VARCHAR, ForeignKey, Index, U
 from .base import Base
 
 
-class Lookalikes(Base):
-    __tablename__ = 'lookalikes'
+class AudienceLookalikes(Base):
+    __tablename__ = 'audience_lookalikes'
 
     id = Column(UUID(as_uuid=True), primary_key=True, unique=True, nullable=False, server_default="gen_random_uuid()")
     name = Column(VARCHAR(128), nullable=False)

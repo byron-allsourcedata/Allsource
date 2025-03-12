@@ -206,10 +206,10 @@ const CreateLookalikePage: React.FC = () => {
                         justifyContent: 'space-between',
                         flexWrap: 'wrap',
                         pl: '0.5rem',
-                        mb: 2,
+                        mb: 1,
                         gap: '15px',
                     }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1, pt:2 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1, pt:1 }}>
                         <Typography className='first-sub-title'>
                             Lookalikes
                         </Typography>

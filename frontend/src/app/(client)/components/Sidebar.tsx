@@ -290,7 +290,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                     </ListItemIcon>
                     <ListItemText primary="Sources" />
                 </ListItem>
-                <ListItem onClick={() => handleNavigation('/lookalikes')} sx={isActive(`/lookalikes`) ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                <ListItem button onClick={() => handleNavigation('/lookalikes')} sx={isActive(`/lookalikes`) ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <ContactsIcon />
                     </ListItemIcon>

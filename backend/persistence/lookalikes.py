@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from models.audience_sources import AudienceSource
-from models.lookalikes import Lookalikes
+from models.audience_lookalikes import AudienceLookalikes
 from sqlalchemy.orm import Session
 from typing import Optional, Tuple, List
 import math
@@ -11,7 +11,7 @@ import re
 from models.users import Users
 
 
-class LookalikesPersistence:
+class AudienceLookalikesPersistence:
     def __init__(self, db: Session):
         self.db = db
 
@@ -24,8 +24,8 @@ class LookalikesPersistence:
     def get_lookalikes(self, user_id: int, page: int, per_page: int,
                        sort_by: Optional[str] = None, sort_order: Optional[str] = None):
         query = self.db.query(
-            Lookalikes, AudienceSource.source_type, AudienceSource.source_origin, Users.full_name)\
-            .join(AudienceSource, Lookalikes.source_uuid == AudienceSource.id)\
+            AudienceLookalikes, AudienceSource.source_type, AudienceSource.source_origin, Users.full_name)\
+            .join(AudienceSource, AudienceLookalikes.source_uuid == AudienceSource.id)\
             .join(Users, Users.id == AudienceSource.created_by_user_id)\
             .filter(AudienceSource.user_id == user_id)
 
@@ -52,7 +52,7 @@ class LookalikesPersistence:
 
         sources, created_by = source_info
 
-        lookalike = Lookalikes(
+        lookalike = AudienceLookalikes(
             name=lookalike_name,
             lookalike_size=lookalike_size,
             user_id=user_id,

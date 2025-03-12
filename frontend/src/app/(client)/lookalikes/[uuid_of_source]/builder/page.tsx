@@ -189,14 +189,14 @@ const CreateLookalikePage: React.FC = () => {
                             flex: 1,
                             pr:2,
                         }}>
-                            <Box sx={{ width: "100%", padding: 3, color: "#202124" }}>
+                            <Box sx={{ width: "100%", pt:1, pl:1, color: "#202124" }}>
                                 {/* Title */}
                                 <Typography
                                     variant="h1"
                                     sx={{
                                         fontFamily: "Nunito Sans",
-                                        fontWeight: 700,
-                                        fontSize: "19px",
+                                        fontWeight: 600,
+                                        fontSize: "16px",
                                         lineHeight: "25.92px",
                                         letterSpacing: "0%",
                                         marginBottom: 2,
