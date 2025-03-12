@@ -237,7 +237,7 @@ const SourcesImport: React.FC = () => {
             };
 
             xhr.onload = () => resolve();
-            xhr.onerror = () => reject(new Error("Error at upload file!"));
+            xhr.onerror = () => reject(new Error("Failed to upload file. Please contact our Support team"));
 
             xhr.setRequestHeader("Content-Type", file.type);
             xhr.send(file);

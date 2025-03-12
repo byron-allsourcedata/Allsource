@@ -139,24 +139,23 @@ const Sources: React.FC = () => {
     }, [orderBy, order, page, rowsPerPage, selectedFilters]);
 
     // useEffect(() => {
-    //     const interval = setInterval(fetchData, 5000);
+    //     if (data.length > 0 && hasUnmatchedRecords) {
+    //         const interval = setInterval(fetchData, 5000);
       
-    //     return () => clearInterval(interval);
+    //         return () => clearInterval(interval);
+    //     }
     //   }, [hasUnmatchedRecords]);
       
 
     const fetchData = async () => {
     try {
         const idsToFetch = data
-        .filter(item => item.matched_records === 0)
+        .filter(item => item.matched_records === 0 && item.matched_records_status === "pending")
         .map(item => item.id);
-
-        if (idsToFetch.length === 0) return;
 
         const response = await axiosInstance.post('/audience-sources/get-processing-sources', {
             sources_ids: idsToFetch,
-        }
-        );
+        });
 
         const updatedData = data.map(item => {
         const updatedItem = response.data.find(
