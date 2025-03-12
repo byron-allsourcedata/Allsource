@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 
 from dependencies import get_lookalikes_service, check_user_authorization_without_pixel
-from services.lookalikes import LookalikesService
+from services.lookalikes import AudienceLookalikesService
 from pydantic import BaseModel
 from models.users import User
 
@@ -25,7 +25,7 @@ async def get_lookalikes(
         sort_by: str = Query(None, description="Field"),
         sort_order: str = Query(None, description="Field to sort by: 'asc' or 'desc'"),
         timezone_offset: float = Query(0, description="timezone offset in integer format"),
-        lookalike_service: LookalikesService = Depends(get_lookalikes_service),
+        lookalike_service: AudienceLookalikesService = Depends(get_lookalikes_service),
 ):
     return lookalike_service.get_lookalikes(
         user=user,
@@ -43,7 +43,7 @@ async def get_lookalikes(
 async def get_source(
         user: dict = Depends(check_user_authorization_without_pixel),
         uuid_of_source: str = Query(None, description="UUID of source"),
-        lookalike_service: LookalikesService = Depends(get_lookalikes_service),
+        lookalike_service: AudienceLookalikesService = Depends(get_lookalikes_service),
 ):
     return lookalike_service.get_source_info(uuid_of_source, user=user)
 
@@ -51,7 +51,7 @@ async def get_source(
 @router.post("/builder")
 async def create_lookalike(
     request: LookalikeCreateRequest,
-    lookalike_service: LookalikesService = Depends(get_lookalikes_service),
+    lookalike_service: AudienceLookalikesService = Depends(get_lookalikes_service),
     user: dict = Depends(check_user_authorization_without_pixel)
 ):
     if user.get('team_member'):

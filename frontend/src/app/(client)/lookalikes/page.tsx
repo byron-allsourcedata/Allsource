@@ -21,26 +21,26 @@ import CustomizedProgressBar from '@/components/CustomizedProgressBar'
 
 
 const tableData = [
-  {
-    id: "1",
-    name: "Lookalike Audience 1",
-    source: "My Orders",
-    sourceType: "Lead Failures",
-    lookalikeSize: 'Almost identical 0-3%',
-    createdDate: new Date(2025, 3, 10),
-    createdBy: "John Doe",
-    size: 2500,
-  },
-  {
-    id: "2",
-    name: "Lookalike Audience 2",
-    source: "CSV",
-    sourceType: "Customer Conversions",
-    lookalikeSize: 'Almost identical 0-3%',
-    createdDate: new Date(2025, 3, 10),
-    createdBy: "Jane Smith",
-    size: 5000,
-  },
+    {
+        id: "1",
+        name: "Lookalike Audience 1",
+        source: "My Orders",
+        sourceType: "Lead Failures",
+        lookalikeSize: 'Almost identical 0-3%',
+        createdDate: new Date(2025, 3, 10),
+        createdBy: "John Doe",
+        size: 2500,
+    },
+    {
+        id: "2",
+        name: "Lookalike Audience 2",
+        source: "CSV",
+        sourceType: "Customer Conversions",
+        lookalikeSize: 'Almost identical 0-3%',
+        createdDate: new Date(2025, 3, 10),
+        createdBy: "Jane Smith",
+        size: 5000,
+    },
 ];
 
 interface FetchDataParams {
@@ -65,6 +65,7 @@ interface TableRowData {
 const CreateLookalikePage: React.FC = () => {
     const [isLookalikeGenerated, setIsLookalikeGenerated] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [lookalikesData, setLookalikeData] = useState<any[]>([]);
 
     // Pagination and Sorting
@@ -104,10 +105,10 @@ const CreateLookalikePage: React.FC = () => {
     };
 
     const handleChangeRowsPerPage = (event: React.ChangeEvent<{ value: unknown }>) => {
-            setRowsPerPage(parseInt(event.target.value as string, 10));
-            setPage(0);
-        };
-    
+        setRowsPerPage(parseInt(event.target.value as string, 10));
+        setPage(0);
+    };
+
     const handleChangePage = (event: unknown, newPage: number) => {
         setPage(newPage);
     };
@@ -151,7 +152,7 @@ const CreateLookalikePage: React.FC = () => {
                 ? Math.floor(new Date(appliedDates.end.toISOString()).getTime() / 1000)
                 : null;
 
-            let url = `/lookalikes?page=${page + 1}&per_page=${rowsPerPage}&timezone_offset=${timezoneOffsetInHours}`;
+            let url = `/audience-lookalikes?page=${page + 1}&per_page=${rowsPerPage}&timezone_offset=${timezoneOffsetInHours}`;
             if (startEpoch !== null && endEpoch !== null) {
                 url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
             }
@@ -163,7 +164,7 @@ const CreateLookalikePage: React.FC = () => {
             const [leads, count] = response.data;
             setLookalikeData(Array.isArray(leads) ? leads : []);
             setCountLookalike(count || 0);
-            if(leads && count > 0){
+            if (leads && count > 0) {
                 setIsLookalikeGenerated(true)
             }
             const options = [15, 30, 50, 100, 200, 500];
@@ -177,6 +178,7 @@ const CreateLookalikePage: React.FC = () => {
         } catch (error) {
         } finally {
             setLoading(false);
+            setIsLoading(false)
         }
     };
 
@@ -194,6 +196,10 @@ const CreateLookalikePage: React.FC = () => {
         });
     }, [appliedDates, orderBy, order, page, rowsPerPage]);
 
+    if (isLoading) {
+        return <CustomizedProgressBar />
+    }
+
     return (
         <Box sx={{ width: "100%", pr: 2, flexGrow: 1 }}>
             {loading && <CustomizedProgressBar />}
@@ -209,7 +215,7 @@ const CreateLookalikePage: React.FC = () => {
                         mb: 1,
                         gap: '15px',
                     }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1, pt:1 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1, pt: isLookalikeGenerated ? 1 : 2.5 }}>
                         <Typography className='first-sub-title'>
                             Lookalikes
                         </Typography>
@@ -347,22 +353,21 @@ const CreateLookalikePage: React.FC = () => {
                         }
                     </Box>
                 </Box>
-                <Box sx={{flexGrow: 1, display: 'flex',}}>
+                <Box sx={{ flexGrow: 1, display: 'flex', }}>
                     {isLookalikeGenerated ? (
-                        <Box sx={{flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', width: '100%', alignItems: 'end'}}>
-                        <LookalikeTable tableData={lookalikesData} />
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0', "@media (max-width: 600px)": { padding: '12px 0 0' } }}>
-                                        <CustomTablePagination
-                                            count={count_lookalikes ?? 0}
-                                            page={page}
-                                            rowsPerPage={rowsPerPage}
-                                            onPageChange={handleChangePage}
-                                            onRowsPerPageChange={handleChangeRowsPerPage}
-                                            rowsPerPageOptions={rowsPerPageOptions}
-                                        />
-                                    </Box>
-                                    </Box>
-                        //<Lookalike tableRows={tableRows} />
+                        <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', width: '100%', alignItems: 'end' }}>
+                            <LookalikeTable tableData={lookalikesData} />
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0', "@media (max-width: 600px)": { padding: '12px 0 0' } }}>
+                                <CustomTablePagination
+                                    count={count_lookalikes ?? 0}
+                                    page={page}
+                                    rowsPerPage={rowsPerPage}
+                                    onPageChange={handleChangePage}
+                                    onRowsPerPageChange={handleChangeRowsPerPage}
+                                    rowsPerPageOptions={rowsPerPageOptions}
+                                />
+                            </Box>
+                        </Box>
                     ) : (
                         <Box sx={{
                             display: 'flex',

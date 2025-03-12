@@ -1,12 +1,12 @@
 import csv
 import io
 from utils import format_phone_number
-from persistence.lookalikes import AudienceLookalikesPersistence
+from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from enums import BaseEnum
 from datetime import datetime, timedelta
 
 
-class LookalikesService:
+class AudienceLookalikesService:
     def __init__(self, lookalikes_persistence_service: AudienceLookalikesPersistence):
         self.lookalikes_persistence_service = lookalikes_persistence_service
 

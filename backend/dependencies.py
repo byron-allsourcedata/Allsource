@@ -21,14 +21,14 @@ from exceptions import InvalidToken
 from models.users import Users as User
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
 from persistence.company_persistence import CompanyPersistence
-from persistence.lookalikes import AudienceLookalikesPersistence
+from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.referral_user import ReferralUserPersistence
 from persistence.referral_payouts import ReferralPayoutsPersistence
 from persistence.audience_persistence import AudiencePersistence
 from persistence.domains import UserDomainsPersistence, UserDomains
 from persistence.million_verifier import MillionVerifierPersistence
 from services.companies import CompanyService
-from services.lookalikes import LookalikesService
+from services.lookalikes import AudienceLookalikesService
 from services.payouts import PayoutsService
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from services.integrations.slack import SlackService
@@ -641,4 +641,4 @@ def check_api_key(maximiz_api_key=Header(None),
 
 
 def get_lookalikes_service(lookalikes_persistence_service: AudienceLookalikesPersistence = Depends(get_lookalikes_persistence)):
-    return LookalikesService(lookalikes_persistence_service=lookalikes_persistence_service)
+    return AudienceLookalikesService(lookalikes_persistence_service=lookalikes_persistence_service)

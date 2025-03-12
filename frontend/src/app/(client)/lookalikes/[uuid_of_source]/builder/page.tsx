@@ -97,7 +97,7 @@ const CreateLookalikePage: React.FC = () => {
     const handleSourceData = async () => {
         try{
             setLoading(true)
-        const response = await axiosInstance.get(`lookalikes/builder?uuid_of_source=${params.uuid_of_source}`)
+        const response = await axiosInstance.get(`/audience-lookalikes/builder?uuid_of_source=${params.uuid_of_source}`)
         if (response.data){
             setSourceData(Array.isArray(response.data) ? response.data : [response.data]);
         }
@@ -140,7 +140,7 @@ const CreateLookalikePage: React.FC = () => {
     const handleGenerateLookalike = async () => {
         try{
             setLoading(true);
-            const response = await axiosInstance.post('/lookalikes/builder', {uuid_of_source: params.uuid_of_source, lookalike_size: selectedLabel, lookalike_name: sourceName})
+            const response = await axiosInstance.post('/audience-lookalikes/builder', {uuid_of_source: params.uuid_of_source, lookalike_size: selectedLabel, lookalike_name: sourceName})
             if (response.data.status === "SUCCESS"){
                 showToast('Lookalike was created successfully!');
                 setIsLookalikeCreated(true);
