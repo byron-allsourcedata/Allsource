@@ -51,6 +51,7 @@ class AudienceSourceService:
                 'total_records': source[7],
                 'matched_records': source[8],
                 'matched_records_status': source[9],
+                'processed_records': source[10],
             })
 
         return source_list, count

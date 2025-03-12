@@ -35,6 +35,7 @@ class AudienceSourcesPersistence:
                 AudienceSource.total_records,
                 AudienceSource.matched_records,
                 AudienceSource.matched_records_status,
+                AudienceSource.processed_records,
             )
                 .join(Users, Users.id == AudienceSource.created_by_user_id)
                 .filter(AudienceSource.user_id == user_id)

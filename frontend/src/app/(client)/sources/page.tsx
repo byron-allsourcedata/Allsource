@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText, LinearProgress } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -11,10 +11,8 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import ArrowDownwardRoundedIcon from '@mui/icons-material/ArrowDownwardRounded';
 import ArrowUpwardRoundedIcon from '@mui/icons-material/ArrowUpwardRounded';
 // import FilterPopup from './CompanyFilters';
-import AudiencePopup from '@/components/AudienceSlider';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import dayjs from 'dayjs';
-import CloseIcon from '@mui/icons-material/Close';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import CustomToolTip from '@/components/customToolTip';
 import CustomTablePagination from '@/components/CustomTablePagination';
@@ -33,9 +31,9 @@ interface Source {
     created_at: Date
     updated_at: Date
     created_by: string
-    processed: number
-    total_records?: number
-    matched_records?: number
+    processed_records: number
+    total_records: number
+    matched_records: number
     matched_records_status: string
 }
 
@@ -119,31 +117,47 @@ const Sources: React.FC = () => {
     const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
     const isOpen = Boolean(anchorEl);
-    const hasUnmatchedRecords = data.some(item => item.matched_records === 0 && item.matched_records_status === "pending");
+    // const hasUnmatchedRecords = useMemo(() => {
+    //     return data.some(item => item.matched_records === 0 && item.matched_records_status === "pending");
+    // }, [data]);
 
-    useEffect(() => {
-        document.body.style.overflow = 'hidden';
-        return () => {
-            document.body.style.overflow = 'auto';
-        };
-    }, []);
+    const memoizedData = useMemo(() => data, [data]);
+    const hasUnmatchedRecords = useMemo(() => {
+    return memoizedData.some(item => item.matched_records === 0 && item.matched_records_status === "pending");
+}, [memoizedData]);
 
-    useEffect(() => {
+    // useEffect(() => {
+    //     document.body.style.overflow = 'hidden';
+    //     return () => {
+    //         document.body.style.overflow = 'auto';
+    //     };
+    // }, []);
+
+    // useEffect(() => {
+    //     fetchSources({
+    //         sortBy: orderBy,
+    //         sortOrder: order,
+    //         page,
+    //         rowsPerPage,
+    //     });
+    // }, [orderBy, order, page, rowsPerPage, selectedFilters]);
+
+    const fetchSourcesMemoized = useCallback(() => {
         fetchSources({
             sortBy: orderBy,
             sortOrder: order,
             page,
             rowsPerPage,
         });
-    }, [orderBy, order, page, rowsPerPage, selectedFilters]);
-
-    // useEffect(() => {
-    //     if (data.length > 0 && hasUnmatchedRecords) {
-    //         const interval = setInterval(fetchData, 5000);
-      
-    //         return () => clearInterval(interval);
-    //     }
-    //   }, [hasUnmatchedRecords]);
+    }, [orderBy, order, page, rowsPerPage]);
+    
+    useEffect(() => {
+        if (isFirstLoad || hasUnmatchedRecords) {   
+            const interval = setInterval(fetchSourcesMemoized, 5000);
+    
+            return () => clearInterval(interval);
+        }
+    }, [fetchSourcesMemoized, hasUnmatchedRecords]);
       
 
     const fetchData = async () => {
@@ -748,7 +762,7 @@ const Sources: React.FC = () => {
                                                                 )}
                                                             </TableHead>
                                                             <TableBody>
-                                                                {data.map((row: any) => {
+                                                                {data.map((row: Source) => {
                                                                     const progress = sourceProgress[row.id];
                                                                     return (
                                                                         <TableRow
@@ -811,27 +825,35 @@ const Sources: React.FC = () => {
                                                                             <TableCell
                                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                                             >
-                                                                                {row.matched_records_status === "pending" 
+                                                                                {/* {row.matched_records_status === "pending" 
                                                                                 ? progress?.total
                                                                                     ? progress?.total.toLocaleString('en-US')
                                                                                     : <ThreeDotsLoader />
-                                                                                : row.total_records.toLocaleString('en-US') ?? '--'}
+                                                                                : row.total_records.toLocaleString('en-US') ?? '--'} */}
+
+                                                                                {progress?.total && progress?.total > 0 || row?.total_records > 0
+                                                                                ? progress?.total > 0
+                                                                                    ? progress?.total.toLocaleString('en-US')
+                                                                                    : row?.total_records?.toLocaleString('en-US')
+                                                                                :  <ThreeDotsLoader />
+                                                                                }
                                                                             </TableCell>
 
                                                                             {/* Matched Records  Column */}
                                                                             <TableCell
                                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                                             >
-                                                                                {row.matched_records_status === "pending" 
+                                                                                {/* {row.matched_records_status === "pending" 
                                                                                 ? progress?.processed == progress?.total && progress?.processed
                                                                                     ? progress?.matched.toLocaleString('en-US')
                                                                                     : <ProgressBar progress={progress}/>
-                                                                                : row.matched_records.toLocaleString('en-US') ?? '--'}
-                                                                                {/* {row.processed 
-                                                                                ? progress?.processed == progress?.total && progress?.processed
-                                                                                    ? progress?.matched
-                                                                                    : <ProgressBar progress={progress}/>
-                                                                                : row.matched_records ?? '--'} */}
+                                                                                : row.matched_records.toLocaleString('en-US') ?? '--'} */}
+                                                                                {(progress?.processed && progress?.processed == progress?.total) || (row?.processed_records == row?.total_records)
+                                                                                ? progress?.matched > row?.matched_records 
+                                                                                    ? progress?.matched.toLocaleString('en-US')
+                                                                                    : row.matched_records.toLocaleString('en-US')
+                                                                                :  <ProgressBar progress={progress}/> 
+                                                                                }
                                                                             </TableCell>
 
                                                                             <TableCell sx={{ ...sourcesStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
@@ -991,7 +1013,6 @@ const Sources: React.FC = () => {
 
                                 </Box>
                             </Box>
-                            {/* <SourcesTable setStatus={setStatus} status={status} setData={setData} data={data} setSources={setSources}/> */}
                             {/* {showSlider && <Slider />} */}
                         </Box>
                     </Box>

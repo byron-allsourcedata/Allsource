@@ -47,6 +47,7 @@ class SourceResponse(BaseModel):
     total_records: Optional[int] = None
     matched_records: int
     matched_records_status: str
+    processed_records: int
 
     model_config = {
         "from_attributes": True
