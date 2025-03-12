@@ -327,7 +327,6 @@ const SourcesList: React.FC = () => {
                                     <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Lookalike"/>
                                     </ListItemButton>
                                     <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
-                                            handleClosePopover()
                                             handleOpenConfirmDialog()
                                         }}>
                                     <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Remove"/>

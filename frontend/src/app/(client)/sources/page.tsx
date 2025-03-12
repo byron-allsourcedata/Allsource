@@ -814,8 +814,8 @@ const Sources: React.FC = () => {
                                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                                             >
                                                                                 {row.matched_records_status === "pending" 
-                                                                                ? progress.total
-                                                                                    ? progress.total
+                                                                                ? progress?.total
+                                                                                    ? progress?.total
                                                                                     : <ThreeDotsLoader />
                                                                                 : row.total_records ?? '--'}
                                                                             </TableCell>
@@ -825,8 +825,8 @@ const Sources: React.FC = () => {
                                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                                             >
                                                                                 {row.matched_records_status === "pending" 
-                                                                                ? progress.processed >= progress.total && progress.processed /* error in DB processed - total = 1  */
-                                                                                    ? progress.matched
+                                                                                ? progress?.processed >= progress?.total && progress?.processed /* error in DB processed - total = 1  */
+                                                                                    ? progress?.matched
                                                                                     : <ProgressBar progress={progress}/>
                                                                                 : row.matched_records ?? '--'}
                                                                             </TableCell>
