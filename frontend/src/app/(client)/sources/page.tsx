@@ -35,6 +35,7 @@ interface Source {
     created_at: Date
     updated_at: Date
     created_by: string
+    processed: number
     total_records?: number
     matched_records?: number
     matched_records_status: string
@@ -749,7 +750,7 @@ const Sources: React.FC = () => {
                                                                 )}
                                                             </TableHead>
                                                             <TableBody>
-                                                                {data.map((row: Source) => {
+                                                                {data.map((row: any) => {
                                                                     const progress = sourceProgress[row.id];
                                                                     return (
                                                                         <TableRow
@@ -824,10 +825,15 @@ const Sources: React.FC = () => {
                                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                                             >
                                                                                 {row.matched_records_status === "pending" 
-                                                                                ? progress?.processed == progress?.total && progress?.processed /* error in DB processed - total = 1  */
+                                                                                ? progress?.processed == progress?.total && progress?.processed
                                                                                     ? progress?.matched
                                                                                     : <ProgressBar progress={progress}/>
                                                                                 : row.matched_records ?? '--'}
+                                                                                {/* {row.processed 
+                                                                                ? progress?.processed == progress?.total && progress?.processed
+                                                                                    ? progress?.matched
+                                                                                    : <ProgressBar progress={progress}/>
+                                                                                : row.matched_records ?? '--'} */}
                                                                             </TableCell>
 
                                                                             <TableCell sx={{ ...sourcesStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
