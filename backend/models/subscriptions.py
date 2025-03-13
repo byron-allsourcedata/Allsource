@@ -1,4 +1,4 @@
-from sqlalchemy import Column, event, Integer, BOOLEAN, TEXT, DECIMAL
+from sqlalchemy import Column, ForeignKey, Integer, BOOLEAN, TEXT, event
 from sqlalchemy.dialects.postgresql import BIGINT, TIMESTAMP, VARCHAR
 
 from .base import Base, create_timestamps, update_timestamps
@@ -18,7 +18,7 @@ class UserSubscriptions(Base):
     plan_id = Column(BIGINT, nullable=True)
     is_trial = Column(BOOLEAN, nullable=True, default=False)
     domains_limit = Column(Integer, nullable=True)
-    lead_credit_price = Column(DECIMAL(10, 2), nullable=False)
+    contact_credit_price_id = Column(Integer, ForeignKey('subscription_plans.id'), nullable=True)
     members_limit = Column(Integer, nullable=True)
     integrations_limit = Column(Integer, nullable=True)
     downgrade_at = Column(TIMESTAMP(precision=7), nullable=True)

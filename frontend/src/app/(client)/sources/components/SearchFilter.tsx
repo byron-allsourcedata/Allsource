@@ -23,6 +23,11 @@ const mockDomains = [
   "shoponline.store",
 ];
 
+const csvTypes = ["Customer Conversions", "Lead Failures", "Intent"];
+const pixelTypes = ["Visitor", "View Product", "Abandoned Cart", "Converted sales"];
+
+
+
 interface FilterPopupProps {
   open: boolean;
   onClose: () => void;
@@ -30,26 +35,12 @@ interface FilterPopupProps {
 }
 
 const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => {
-  const [selectedButton, setSelectedButton] = useState<string | null>(null);
-  const [isVisitedDateOpen, setIsVisitedDateOpen] = useState(false);
-  const [isVisitedPageOpen, setIsVisitedPageOpen] = useState(false);
-  const [isTimeSpentOpen, setIsTimeSpentOpen] = useState(false);
-  const [isVisitedTimeOpen, setIsVisitedTimeOpen] = useState(false);
-  const [isRegionOpen, setIsRegionOpen] = useState(false);
-  const [isLeadFunnel, setIsLeadFunnel] = useState(false);
-  const [isRecurringVisits, setIsRecurringVisits] = useState(false);
-  const [region, setRegions] = useState("");
-  const [selectedDateRange, setSelectedDateRange] = useState<string | null>(
-    null
-  );
-  const [selectedTimeRange, setSelectedTimeRange] = useState<string | null>(
-    null
-  );
-  const [cities, setCities] = useState<{ city: string, state: string }[]>([]);
+  const [isCreatedDateOpen, setIsCreatedDateOpen] = useState(false);
+
   const [contacts, setContacts] = useState<{ name: string }[]>([]);
   const [selectedTags, setSelectedTags] = useState<{ [key: string]: string[] }>(
     {
-      visitedDate: [],
+      createdDate: [],
       visitedTime: [],
       region: [],
       pageVisits: [],
@@ -57,28 +48,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     }
   );
   const [regions, setTags] = useState<string[]>([]);
-  const [selectedFunnels, setSelectedFunnels] = useState<string[]>([]);
   const [buttonFilters, setButtonFilters] = useState<ButtonFilters>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  // const [open_save, setOpen] = useState(false);
-  // const [openLoadDrawer, setOpenLoadDrawer] = useState(false);
-  const [filterName, setFilterName] = useState("");
-  // const [isButtonDisabled, setIsButtonDisabled] = useState(true);
-
-
-  type SavedFilter = {
-    name: string;
-    data: ReturnType<typeof handleFilters>; // Use the return type of handleFilters directly
-  };
-  const [savedFilters, setSavedFilters] = useState<SavedFilter[]>([]);
-
-  const handleClear = () => {
-    setFilterName("");
-  };
-
-  // const handleOpen = () => setOpen(true);
-  // const handleClose = () => setOpen(false);
-
 
   type ButtonFilters = {
     button: string;
@@ -88,45 +59,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     };
     selectedFunnels: string[];
   } | null;
-
-  const handleAddTag = (e: { key: string }) => {
-    if (e.key === "Enter" && region.trim()) {
-      setTags([...regions, region.trim()]);
-      setRegions("");
-    }
-  };
-
-  const [selectedValues, setSelectedValues] = useState<string[]>([]);
-
-  const handleChangeRecurringVisits = (event: React.ChangeEvent<HTMLInputElement>) => {
-    let value = event.target.value;
-
-
-    setSelectedValues((prevSelectedValues) => {
-      if (prevSelectedValues.includes(value)) {
-        return prevSelectedValues.filter((item) => item !== value);
-      } else {
-        return [...prevSelectedValues, value];
-      }
-    });
-  };
-
-
-  const handleDeleteRecurringVisit = (valueToDelete: string) => {
-    setSelectedValues((prevSelectedValues) =>
-      prevSelectedValues.filter((value) => value !== valueToDelete)
-    );
-  };
-
-
-
-  const handleButtonLeadFunnelClick = (label: string) => {
-    setSelectedFunnels((prev) =>
-      prev.includes(label)
-        ? prev.filter((item) => item !== label)
-        : [...prev, label]
-    );
-  };
 
   // Source
   const [isStatus, setIsStatus] = useState<boolean>(false);
@@ -184,6 +116,35 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
 
     const isDomainActive = () => selectedDomains.length > 0;
 
+    // Logic
+    const getAllowedTypes = (): string[] => {
+        let allowed: string[] = [];
+        if (selectedStatus.includes(statusMapping["CSV"])) {
+          allowed = allowed.concat(csvTypes);
+        }
+        if (selectedStatus.includes(statusMapping["Pixel"])) {
+          allowed = allowed.concat(pixelTypes);
+        }
+        if (selectedStatus.length == 0) {
+            allowed = allowed.concat(csvTypes);
+            allowed = allowed.concat(pixelTypes);
+        }
+        return Array.from(new Set(allowed));
+      };
+    
+      useEffect(() => {
+        const allowed = getAllowedTypes();
+        setSelectedTypes((prevSelected) =>
+          prevSelected.filter((type) => allowed.includes(type))
+        );
+      }, [selectedStatus]);
+
+      useEffect(() => {
+        if (selectedStatus.length > 0 && !selectedStatus.includes(statusMapping["Pixel"])) {
+          setSelectedDomains([]);
+        }
+      }, [selectedStatus]);
+
   const addTag = (category: string, tag: string) => {
     setSelectedTags((prevTags) => {
       const newTags = [...prevTags[category]];
@@ -202,19 +163,18 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
 
       const isLastTagRemoved = updatedTags.length === 0;
 
-      // If the last tag and category "visitedDate" are deleted, clear the state
-      if (category === "visitedDate" && isLastTagRemoved) {
+      // If the last tag and category "CreatedDate" are deleted, clear the state
+      if (category === "createdDate" && isLastTagRemoved) {
         setDateRange({ fromDate: null, toDate: null });
-        setSelectedDateRange(null);
       }
 
       // Update checkbox states if necessary
-      if (category === "visitedDate") {
+      if (category === "createdDate") {
         const tagMap: { [key: string]: string } = {
           "Today": "today",
           "Last 7 days": "last7Days",
           "Last 30 days": "last30Days",
-          "Last 6 months": "last6Monts",
+          "Last 6 months": "last6Months",
         };
 
         const filterName = tagMap[tag];
@@ -226,98 +186,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         }
       }
 
-      if (category === "visitedTime") {
-        if (updatedTags.length === 0) {
-          setTimeRange({ fromTime: null, toTime: null });
-          setSelectedTimeRange(null);
-        }
-      }
-
-      if (category === "visitedTime") {
-        const tagMapTime: { [key: string]: string } = {
-          "Morning 12AM - 11AM": "morning",
-          "Afternoon 11AM - 5PM": "afternoon",
-          "Evening 5PM - 9PM": "evening",
-          "All day": "all_day",
-        };
-
-        const filterName = tagMapTime[tag];
-        if (filterName) {
-          setCheckedFiltersTime((prevFiltersTime) => ({
-            ...prevFiltersTime,
-            [filterName]: false,
-          }));
-        }
-      }
-
-      if (category === "pageVisits") {
-        const tagMap: { [key: string]: string } = {
-          "1 page": "page",
-          "2 pages": "two_page",
-          "3 pages": "three_page",
-          "More than 3 pages": "more_three",
-        };
-
-        const filterName = tagMap[tag];
-        if (filterName) {
-          setCheckedFiltersPageVisits((prevFilters) => ({
-            ...prevFilters,
-            [filterName]: false,
-          }));
-        }
-      }
-
       return { ...prevTags, [category]: updatedTags };
     });
   };
-
-  const handleDeletePageVisit = (valueToDelete: string) => {
-    setSelectedTags((prevTags) => {
-      const updatedTags = prevTags.pageVisits.filter((tag) => tag !== valueToDelete);
-
-      const tagMap: { [key: string]: string } = {
-        "1 page": "page",
-        "2 pages": "two_page",
-        "3 pages": "three_page",
-        "More than 3 pages": "more_three",
-      };
-
-      const filterName = tagMap[valueToDelete];
-      if (filterName) {
-        setCheckedFiltersPageVisits((prevFilters) => ({
-          ...prevFilters,
-          [filterName]: false,
-        }));
-      }
-
-      return { ...prevTags, pageVisits: updatedTags };
-    });
-  };
-
-  const handleDeleteTimeSpent = (valueToDelete: string) => {
-    setSelectedTags((prevTags) => {
-      const updatedTags = prevTags.timeSpents.filter((tag) => tag !== valueToDelete);
-
-      const tagMap: { [key: string]: string } = {
-        "under 10 secs": "under_10",
-        "10-30 secs": "over_10",
-        "30-60 secs": "over_30",
-        "Over 60 secs": "over_60",
-      };
-
-      const filterName = tagMap[valueToDelete];
-      if (filterName) {
-        setCheckedFiltersTimeSpent((prevFilters) => ({
-          ...prevFilters,
-          [filterName]: false,
-        }));
-      }
-
-      return { ...prevTags, timeSpents: updatedTags };
-    });
-  };
-
-
 
   interface TagMap {
     [key: string]: string;
@@ -332,7 +203,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         "Today": "today",
         "Last 7 days": "last7Days",
         "Last 30 days": "last30Days",
-        "Last 6 months": "last6Monts",
+        "Last 6 months": "last6Months",
     };
 
     const tagMapTime: TagMap = {
@@ -342,18 +213,13 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       "All day": "all_day",
     };
 
-    const mapToUse = category === "visitedDate" ? tagMap : tagMapTime;
+    const mapToUse = category === "createdDate" ? tagMap : tagMapTime;
     const filterName = mapToUse[tag];
 
     if (filterName) {
-      if (category === "visitedDate") {
+      if (category === "createdDate") {
         setCheckedFilters((prevFilters) => ({
           ...prevFilters,
-          [filterName]: isChecked,
-        }));
-      } else if (category === "visitedTime") {
-        setCheckedFiltersTime((prevFiltersTime) => ({
-          ...prevFiltersTime,
           [filterName]: isChecked,
         }));
       }
@@ -395,10 +261,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     </Box>
   );
 
-
-
-  ///// Date
-
+  // Date
   interface DateRange {
     fromDate: Dayjs | null;
     toDate: Dayjs | null;
@@ -413,7 +276,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     last30Days: false,
     last6Months: false,
   });
-
 
   const handleDateChange = (name: string) => (newValue: any) => {
     setDateRange((prevRange) => {
@@ -449,20 +311,19 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       setSelectedTags((prevTags) => {
         const updatedTags = {
           ...prevTags,
-          visitedDate: newTag ? [newTag] : [],
+          createdDate: newTag ? [newTag] : [],
         };
 
         // If a new label exists, add it
         if (newTag) {
-          addTag("visitedDate", newTag);
+          addTag("createdDate", newTag);
         }
 
         // If the label has been replaced or removed, clear the date range
-        if (!newTag && prevTags.visitedDate.length > 0) {
+        if (!newTag && prevTags.createdDate.length > 0) {
           setDateRange({ fromDate: null, toDate: null });
-          setSelectedDateRange(null);
         } else if (newTag && oldFromDate && oldToDate) {
-          removeTag("visitedDate", `From ${oldFromDate} to ${oldToDate}`);
+          removeTag("createdDate", `From ${oldFromDate} to ${oldToDate}`);
         }
 
         return updatedTags;
@@ -472,164 +333,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     });
   };
 
-  /////// Time
-  type TimeRange = {
-    fromTime: dayjs.Dayjs | null;
-    toTime: dayjs.Dayjs | null;
-  };
-
-  // Инициализация состояния
-  const [timeRange, setTimeRange] = useState<TimeRange>({
-    fromTime: null,
-    toTime: null,
-  });
-  const [checkedFiltersTime, setCheckedFiltersTime] = useState({
-    morning: false,
-    evening: false,
-    afternoon: false,
-    all_day: false,
-  });
-
-
-  const handleTimeChange = (name: string) => (newValue: any) => {
-    setTimeRange((prevRange) => {
-      const updatedRange = {
-        ...prevRange,
-        [name]: newValue,
-      };
-
-      setCheckedFiltersTime((prevFiltersTime) => {
-        // Explicitly type `prevFilters` for better TypeScript support
-        const prevFiltersTimeTyped = prevFiltersTime as Record<string, boolean>;
-
-        // Find the previously selected radio button
-        const previouslySelectedTime = Object.keys(prevFiltersTimeTyped).find((key) => prevFiltersTimeTyped[key]);
-
-        // Reset all filters and select the new one
-        const newFiltersTime = {
-          morning: false,
-          afternoon: false,
-          evening: false,
-          all_day: false,
-          [name]: true,
-        };
-
-        const tagMapTime: { [key: string]: string } = {
-          morning: "Morning 12AM - 11AM",
-          afternoon: "Afternoon 11AM - 5PM",
-          evening: "Evening 5PM - 9PM",
-          all_day: "All day",
-        };
-
-        // Remove the tag for the previously selected radio button, if any
-        if (previouslySelectedTime && previouslySelectedTime !== name) {
-          removeTag("visitedTime", tagMapTime[previouslySelectedTime]);
-        }
-
-        setCheckedFiltersTime({
-          morning: false,
-          evening: false,
-          afternoon: false,
-          all_day: false,
-        });
-
-        return newFiltersTime;
-      });
-
-      const fromTime = updatedRange.fromTime ? dayjs(updatedRange.fromTime).format('h:mm A') : '';
-      const toTime = updatedRange.toTime ? dayjs(updatedRange.toTime).format('h:mm A') : '';
-
-      // Set the formatted time range if both times are selected
-      if (fromTime && toTime) {
-        setSelectedTimeRange(`${fromTime} to ${toTime}`);
-      } else {
-        setSelectedTimeRange(null);
-      }
-
-      return updatedRange;
-    });
-  };
-
-  const deleteTagTime = () => {
-    setSelectedTimeRange(null)
-    setTimeRange({
-      fromTime: null,
-      toTime: null,
-    });
-  }
-
-  ////Page
-  const [checkedFiltersPageVisits, setCheckedFiltersPageVisits] = useState({
-    page: false,
-    two_page: false,
-    three_page: false,
-    more_three: false,
-  });
-
-  const handleCheckboxChangePageVisits = (event: {
-    target: { name: any; checked: any };
-  }) => {
-    const { name, checked } = event.target;
-
-    setCheckedFiltersPageVisits((prevFilters) => {
-      const newFilters = {
-        ...prevFilters,
-        [name]: checked,
-      };
-
-      const tagMap: { [key: string]: string } = {
-        page: "1 page",
-        two_page: "2 pages",
-        three_page: "3 pages",
-        more_three: "More than 3 pages",
-      };
-
-      if (checked) {
-        addTag("pageVisits", tagMap[name]);
-      } else {
-        removeTag("pageVisits", tagMap[name]);
-      }
-
-      return newFilters;
-    });
-  };
-
-  ////time spent
-  const [checkedFiltersTimeSpent, setCheckedFiltersTimeSpent] = useState({
-    under_10: false,
-    over_10: false,
-    over_30: false,
-    over_60: false,
-  });
-
-  const handleCheckboxChangeTimeSpent = (event: {
-    target: { name: any; checked: any };
-  }) => {
-    const { name, checked } = event.target;
-
-    setCheckedFiltersTimeSpent((prevFilters) => {
-      const newFilters = {
-        ...prevFilters,
-        [name]: checked,
-      };
-
-      const tagMap: { [key: string]: string } = {
-        under_10: "under 10 secs",
-        over_10: "10-30 secs",
-        over_30: "30-60 secs",
-        over_60: "Over 60 secs",
-      };
-
-      if (checked) {
-        addTag("timeSpents", tagMap[name]);
-      } else {
-        removeTag("timeSpents", tagMap[name]);
-      }
-
-      return newFilters;
-    });
-  };
-
+  // Page
   const getFilterDates = () => {
     const today = dayjs();
   
@@ -659,24 +363,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
 
     // Check that at least one of the time filters is active
     const isDateFilterChecked = Object.values(checkedFilters).some((value) => value);
-
-    let fromTime = timeRange.fromTime ? dayjs(timeRange.fromTime).format('HH:mm') : null;
-    let toTime = timeRange.toTime ? dayjs(timeRange.toTime).format('HH:mm') : null;
-
-    // Process filters by time (morning, afternoon, evening, all day)
-    if (checkedFiltersTime.morning) {
-      fromTime = "00:00"; // 12AM
-      toTime = "11:00";   // 11AM
-    } else if (checkedFiltersTime.afternoon) {
-      fromTime = "11:00"; // 11AM
-      toTime = "17:00";   // 5PM
-    } else if (checkedFiltersTime.evening) {
-      fromTime = "17:00"; // 5PM
-      toTime = "21:00";   // 9PM
-    } else if (checkedFiltersTime.all_day) {
-      fromTime = "00:00"; // 12AM
-      toTime = "23:59";   // 11:59PM
-    }
 
   // Determine from_date and to_date values ​​based on active filters
   let fromDateTime = null;
@@ -709,48 +395,42 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
 
 
     const filters = {
-      ...buttonFilters, // Existing button filters
-      from_date: fromDateTime, // Set value from_date
-      to_date: toDateTime, // Set value of to_date
-      from_time: fromTime, // Set start time value
-      to_time: toTime, // Set end time value
-      selectedFunnels: buttonFilters ? buttonFilters.selectedFunnels : selectedFunnels,
-      button: buttonFilters ? buttonFilters.button : selectedButton,
-      checkedFiltersTime,     // Filters by time (morning, afternoon, evening, etc.)
-      checkedFiltersPageVisits,
-      checkedFilters,
-      regions,
-      checkedFiltersTimeSpent,
-      selectedStatus,
-      recurringVisits: selectedValues,
-      searchQuery, 
-    };
+        ...buttonFilters,
+        from_date: fromDateTime,        
+        to_date: toDateTime,                                 
+        selectedStatus, 
+        selectedTypes, 
+        selectedDomains,               
+        searchQuery, 
+        createdDate: selectedTags.createdDate, 
+        
+        dateRange: {
+            fromDate: dateRange.fromDate ? dateRange.fromDate.valueOf() : null,
+            toDate: dateRange.toDate ? dateRange.toDate.valueOf() : null,
+          }
+      };
 
-    saveFiltersToSessionStorage(filters);
-
-
-    return filters;
+      saveFiltersToSessionStorage(filters);
+      return filters;
   };
 
 
   const saveFiltersToSessionStorage = (filters: {
     from_date: number | null;
     to_date: number | null;
-    from_time: string | null;
-    to_time: string | null;
-    selectedFunnels: string[]; button: string | null;
-    checkedFiltersTime: { morning: boolean; evening: boolean; afternoon: boolean; all_day: boolean; };
-    checkedFiltersPageVisits: { page: boolean; two_page: boolean; three_page: boolean; more_three: boolean; };
-    regions: string[];
-    checkedFiltersTimeSpent: { under_10: boolean; over_10: boolean; over_30: boolean; over_60: boolean; };
-    selectedStatus: string[]; recurringVisits: string[];
-    searchQuery: string; dateRange?: { fromDate: number | null; toDate: number | null; } | undefined;
+    selectedStatus: string[];
+    selectedTypes: string[];
+    selectedDomains: string[];
+    searchQuery: string;
+    createdDate: string[];
+    dateRange?: { fromDate: number | null; toDate: number | null; } | undefined;
   }) => {
-    sessionStorage.setItem('filters', JSON.stringify(filters));
+    sessionStorage.setItem('filtersBySource', JSON.stringify(filters));
   };
+  
 
   const loadFiltersFromSessionStorage = () => {
-    const savedFilters = sessionStorage.getItem('filters');
+    const savedFilters = sessionStorage.getItem('filtersBySource');
     if (savedFilters) {
       return JSON.parse(savedFilters);
     }
@@ -761,13 +441,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     const savedFilters = loadFiltersFromSessionStorage();
     if (savedFilters) {
 
-      // Page visits
-      setCheckedFiltersPageVisits(savedFilters.checkedFiltersPageVisits || {
-        page: false,
-        two_page: false,
-        three_page: false,
-        more_three: false,
-      });
 
       // Checking active page visit filters
       const isPageVisitsFilterActive = Object.values(savedFilters.checkedFiltersPageVisits || {}).some(value => value === true);
@@ -788,25 +461,11 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         });
       }
 
-      setCheckedFiltersTime(savedFilters.checkedFiltersTime || {
-        morning: false,
-        afternoon: false,
-        evening: false,
-        all_day: false,
-      });
       setCheckedFilters(savedFilters.checkedFilters || {
         today: false,
         last7Days: false,
         last30Days: false,
-        last6Monts: false,
-      });
-
-      // Time spent
-      setCheckedFiltersTimeSpent(savedFilters.checkedFiltersTimeSpent || {
-        under_10: false,
-        over_10: false,
-        over_30: false,
-        over_60: false,
+        last6Months: false,
       });
 
       const isTimeSpentFilterActive = Object.values(savedFilters.checkedFiltersTimeSpent || {}).some(value => value === true);
@@ -825,10 +484,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         });
       }
 
-
-      setSelectedFunnels(savedFilters.selectedFunnels || []);
+      setSelectedTypes(savedFilters.selectedTypes || []);
       setSelectedStatus(savedFilters.selectedStatus || []);
-      setSelectedValues(savedFilters.recurringVisits || []);
+      setSelectedDomains(savedFilters.selectedDomains || []);
       setSearchQuery(savedFilters.searchQuery || '');
 
 
@@ -848,27 +506,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           }
         });
 
-      } else {
-        // Convert time from string format to Dayjs
-        const fromTime = savedFilters.from_time ? dayjs(savedFilters.from_time, 'HH:mm') : null;
-        const toTime = savedFilters.to_time ? dayjs(savedFilters.to_time, 'HH:mm') : null;
-
-        // Formatting time for tag
-        const formattedFromTime = fromTime ? fromTime.format('h:mm A') : '';
-        const formattedToTime = toTime ? toTime.format('h:mm A') : '';
-        if (fromTime && toTime) {
-          setSelectedTimeRange(`${formattedFromTime} to ${formattedToTime}`);
-        } else {
-          setSelectedTimeRange(null);
-        }
-
-        // Обновление состояния
-        setTimeRange({
-          fromTime: fromTime && fromTime.isValid() ? fromTime : null,
-          toTime: toTime && toTime.isValid() ? toTime : null,
-        });
       }
-
 
       const isAnyFilterActive = Object.values(savedFilters.checkedFilters || {}).some(value => value === true);
       if (isAnyFilterActive) {
@@ -877,19 +515,19 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           today: "Today",
           last7Days: "Last 7 days",
           last30Days: "Last 30 days",
-          last6Monts: "Last 6 months",
+          last6Months: "Last 6 months",
         };
         const activeFilter = Object.keys(savedFilters.checkedFilters).find(key => savedFilters.checkedFilters[key]);
 
         if (activeFilter) {
-          addTag("visitedDate", tagMap[activeFilter]);
+          addTag("createdDate", tagMap[activeFilter]);
         }
       } else {
         const fromDate = savedFilters.from_date ? dayjs.unix(savedFilters.from_date).format('MMM DD, YYYY') : null;
         const toDate = savedFilters.to_date ? dayjs.unix(savedFilters.to_date).format('MMM DD, YYYY') : null;
         const newTag = fromDate && toDate ? `From ${fromDate} to ${toDate}` : null;
         if (newTag) {
-          addTag("visitedDate", newTag);
+          addTag("createdDate", newTag);
         }
         setDateRange({
           fromDate: savedFilters.from_date ? dayjs.unix(savedFilters.from_date) : null,
@@ -927,32 +565,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     );
   };
 
-  const isTimeFilterActive = () => {
-    return (
-      Object.values(checkedFiltersTime).some(value => value) || // Checking checkboxes for time
-      (timeRange.fromTime && timeRange.toTime) // Validate custom time range selection
-    );
-  };
-
-  const isPageVisitsFilterActive = () => {
-    return Object.values(checkedFiltersPageVisits).some(value => value);
-  };
-
-  const isTimeSpentFilterActive = () => {
-    return Object.values(checkedFiltersTimeSpent).some(value => value);
-  };
-
-
-  const isLeadFunnelActive = () => {
-    return selectedFunnels.length > 0;
-  };
-
-  const isRecurringVisitsFilterActive = () => {
-    return selectedValues.length > 0;
-  };
-
-
-
   const handleRadioChange = (event: { target: { name: string } }) => {
     const { name } = event.target;
 
@@ -977,87 +589,20 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       };
 
       if (previouslySelected && previouslySelected !== name) {
-        removeTag("visitedDate", tagMap[previouslySelected]);
+        removeTag("createdDate", tagMap[previouslySelected]);
       }
 
       setDateRange({ fromDate: null, toDate: null });
 
-      addTag("visitedDate", tagMap[name]);
+      addTag("createdDate", tagMap[name]);
 
-      return newFilters; // Теперь возвращается объект с правильными ключами
-    });
-  };
-
-
-  const handleRadioChangeTime = (event: { target: { name: string } }) => {
-
-    const { name } = event.target;
-    deleteTagTime()
-
-    setCheckedFiltersTime((prevFiltersTime) => {
-      // Explicitly type `prevFilters` for better TypeScript support
-      const prevFiltersTimeTyped = prevFiltersTime as Record<string, boolean>;
-
-      // Find the previously selected radio button
-      const previouslySelectedTime = Object.keys(prevFiltersTimeTyped).find((key) => prevFiltersTimeTyped[key]);
-
-      // Reset all filters and select the new one
-      const newFiltersTime = {
-        morning: false,
-        afternoon: false,
-        evening: false,
-        all_day: false,
-        [name]: true,
-      };
-
-      const tagMapTime: { [key: string]: string } = {
-        morning: "Morning 12AM - 11AM",
-        afternoon: "Afternoon 11AM - 5PM",
-        evening: "Evening 5PM - 9PM",
-        all_day: "All day",
-      };
-
-      // Remove the tag for the previously selected radio button, if any
-      if (previouslySelectedTime && previouslySelectedTime !== name) {
-        removeTag("visitedTime", tagMapTime[previouslySelectedTime]);
-      }
-
-      // Add the tag for the currently selected radio button
-      addTag("visitedTime", tagMapTime[name]);
-
-      return newFiltersTime;
+      return newFilters;
     });
   };
 
   const handleClearFilters = () => {
-    setSelectedButton(null);
-    setIsVisitedDateOpen(false);
-    setIsVisitedPageOpen(false);
-    setIsTimeSpentOpen(false);
-    setIsVisitedTimeOpen(false);
-    setIsRegionOpen(false);
-    setIsLeadFunnel(false);
+    setIsCreatedDateOpen(false);
     setIsStatus(false);
-    setIsRecurringVisits(false);
-
-    setCheckedFiltersPageVisits({
-      page: false,
-      two_page: false,
-      three_page: false,
-      more_three: false,
-    });
-
-    setTimeRange({
-      fromTime: null,
-      toTime: null,
-    });
-
-    setCheckedFiltersTimeSpent({
-      under_10: false,
-      over_10: false,
-      over_30: false,
-      over_60: false,
-    });
 
     // Reset date
     setDateRange({
@@ -1072,63 +617,21 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       last6Months: false,
     });
 
-    // Reset time filters
-    setCheckedFiltersTime({
-      morning: false,
-      evening: false,
-      afternoon: false,
-      all_day: false,
-    });
-
-    setSelectedValues([]);
-
     // Reset filter values
-    setRegions("");
-    setSelectedDateRange(null);
-    setSelectedTimeRange(null);
     setSelectedTags({
-      visitedDate: [],
+      createdDate: [],
       visitedTime: [],
       region: [],
       pageVisits: [],
       timeSpents: [],
     });
     setTags([]);
-    setSelectedFunnels([]);
     setSelectedStatus([]);
     setButtonFilters(null);
     setSearchQuery("");
 
     sessionStorage.removeItem('filters')
   };
-
-  const fetchCities = debounce(async (searchValue: string) => {
-    if (searchValue.length >= 3) {
-      try {
-        const response = await axiosInstance.get('leads/search-location', {
-          params: { start_letter: searchValue },
-        });
-        setCities(response.data);
-      } catch {
-      }
-    } else {
-      setCities([]);
-    }
-  }, 300);
-
-
-  const handleRegionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setRegions(value);
-    fetchCities(value);
-  };
-
-  const handleSelectCity = (city: { city: string, state: string }) => {
-    setTags((prevTags) => [...prevTags, `${city.city}-${city.state}`]);
-    setRegions('');
-    setCities([]);
-  };
-
 
   const fetchContacts = debounce(async (query: string) => {
     if (query.length >= 3) {
@@ -1156,8 +659,38 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     setContacts([]);
   };
 
-  const isDomainFilterActive = () => selectedDomains.length > 0;
+  const getSelectedDateChip = () => {
+    if (dateRange.fromDate && dateRange.toDate) {
+      return `${dayjs(dateRange.fromDate).format("YYYY-MM-DD")} - ${dayjs(dateRange.toDate).format("YYYY-MM-DD")}`;
+    }
+  
+    const activeFilter = Object.keys(checkedFilters).find(
+      (key) => checkedFilters[key as keyof typeof checkedFilters]
+    );
+  
+    return activeFilter ? formatFilterLabel(activeFilter as keyof typeof checkedFilters) : null;
+  };
+  
+  
+  const formatFilterLabel = (key: keyof typeof checkedFilters) => {
+    const labels: Record<keyof typeof checkedFilters, string> = {
+      today: "Today",
+      last7Days: "Last 7 days",
+      last30Days: "Last 30 days",
+      last6Months: "Last 6 months",
+    };
+    return labels[key];
+  };
 
+  const clearDateFilter = () => {
+    setCheckedFilters({
+      today: false,
+      last7Days: false,
+      last30Days: false,
+      last6Months: false,
+    });
+    setDateRange({ fromDate: null, toDate: null });
+  };
 
   return (
     <>
@@ -1387,7 +920,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             }}
         />
         <DnsIcon sx={{ fontSize: 20}} />
-        <Typography sx={filterStyles.filter_name}>Select Type</Typography>
+        <Typography sx={filterStyles.filter_name}>Type</Typography>
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, pt: 1 }}>
           {selectedTypes.map((label) => (
             <CustomChip key={label} label={label} onDelete={() => handleRemoveLabel(label)} />
@@ -1416,7 +949,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             <Typography
               sx={{
                 fontFamily: "Nunito Sans",
-                color: selectedDomains.length ? "rgba(220, 220, 239, 1)" : "#5F6368",
+                color: selectedTypes.length ? "rgba(220, 220, 239, 1)" : "#5F6368",
               }}
             >
               {selectedTypes.length > 0 ? selectedTypes.join(", ") : "Select Type"}
@@ -1433,7 +966,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               borderRadius: "4px",
               pl: 2
             }}>
-            {["Customer Conversions", "Intent", "Visitor", "View Product"].map((label) => (
+            {getAllowedTypes().map((label) => (
               <FormControlLabel
                 sx={{ fontFamily: 'Nunito Sans', fontWeight: 100 }}
                 key={label}
@@ -1470,100 +1003,97 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       </Collapse>
       </Collapse>  
     </Box>
-    {/* Domain */}
+    {(selectedStatus.length === 0 || selectedStatus.includes(statusMapping["Pixel"])) && (
+  <Box sx={filterStyles.main_filter_form}>
     <Box
-            sx={filterStyles.main_filter_form}
-          >
-            <Box
-              sx={filterStyles.filter_form}
-              onClick={() => setIsDomainFilterOpen(!isDomainFilterOpen)}
-            >
-              <Box
-                sx={{
-                  ...filterStyles.active_filter_dote,
-                  visibility: isDomainActive() ? "visible" : "hidden"
-                }}
-              />
-        <WebIcon sx={{ fontSize: 20 }} />
-        <Typography sx={filterStyles.filter_name}>Select Domain</Typography>
-        
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, pt: 1 }}>
-          {selectedDomains.map((domain) => (
-            <CustomChip key={domain} label={domain} onDelete={() => handleRemoveDomain(domain)} />
-          ))}
-        </Box>
-
-        <IconButton onClick={() => setIsDomainFilterOpen(!isDomainFilterOpen)} aria-label="toggle-content">
-            {isDomainFilterOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-        </IconButton>
+      sx={filterStyles.filter_form}
+      onClick={() => setIsDomainFilterOpen(!isDomainFilterOpen)}
+    >
+      <Box
+        sx={{
+          ...filterStyles.active_filter_dote,
+          visibility: isDomainActive() ? "visible" : "hidden"
+        }}
+      />
+      <WebIcon sx={{ fontSize: 20 }} />
+      <Typography sx={filterStyles.filter_name}>Domain</Typography>
+      
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, pt: 1 }}>
+        {selectedDomains.map((domain) => (
+          <CustomChip key={domain} label={domain} onDelete={() => handleRemoveDomain(domain)} />
+        ))}
       </Box>
 
-      {/* Выпадающий список */}
-      <Collapse in={isDomainFilterOpen}>
-        <Box sx={{ pt: 1, pl: 2 }} onClick={() => setIsFieldDomainOpen(!isFieldDomainOpen)}>
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              border: "1px solid rgba(220, 220, 239, 1)",
-              borderRadius: "4px",
-              padding: "5px 10px",
-              cursor: "pointer",
-              backgroundColor: "#fff",
-            }}
-            onClick={() => setIsFieldDomainOpen(!isFieldDomainOpen)}
-          >
-            <Typography
-              sx={{
-                fontFamily: "Nunito Sans",
-                color: selectedDomains.length ? "rgba(220, 220, 239, 1)" : "#5F6368",
-              }}
-            >
-              { isDomainFilterActive() ? selectedDomains.join(", ") : "Select Domain"}
-            </Typography>
-            <IconButton size="small">
-              {isFieldDomainOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-            </IconButton>
-          </Box>
-        </Box>
-
-        <Collapse in={isFieldDomainOpen}>
-          <Box sx={{ pt: "2px", pl: 2 }}>
-            <FormGroup sx={{ border: "1px solid rgba(220, 220, 239, 1)", borderRadius: "4px", pl: 2 }}>
-              {mockDomains.map((domain) => (
-                <FormControlLabel
-                  sx={{ fontFamily: "Nunito Sans", fontWeight: 100 }}
-                  key={domain}
-                  control={
-                    <Checkbox
-                      checked={selectedDomains.includes(domain)}
-                      onChange={() => handleDomainCheckboxChange(domain)}
-                      size="small"
-                      sx={{ "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" } }}
-                    />
-                  }
-                  label={
-                    <Typography
-                      className="table-data"
-                      sx={{
-                        color: selectedDomains.includes(domain)
-                          ? "rgba(80, 82, 178, 1) !important"
-                          : "rgba(74, 74, 74, 1)",
-                      }}
-                    >
-                      {domain}
-                    </Typography>
-                  }
-                />
-              ))}
-            </FormGroup>
-          </Box>
-        </Collapse>
-      </Collapse>
+      <IconButton onClick={() => setIsDomainFilterOpen(!isDomainFilterOpen)} aria-label="toggle-content">
+        {isDomainFilterOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+      </IconButton>
     </Box>
 
-          {/* Visited date */}
+    <Collapse in={isDomainFilterOpen}>
+      <Box sx={{ pt: 1, pl: 2 }} onClick={() => setIsFieldDomainOpen(!isFieldDomainOpen)}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            border: "1px solid rgba(220, 220, 239, 1)",
+            borderRadius: "4px",
+            padding: "5px 10px",
+            cursor: "pointer",
+            backgroundColor: "#fff",
+          }}
+          onClick={() => setIsFieldDomainOpen(!isFieldDomainOpen)}
+        >
+          <Typography
+            sx={{
+              fontFamily: "Nunito Sans",
+              color: selectedDomains.length ? "rgba(220, 220, 239, 1)" : "#5F6368",
+            }}
+          >
+            { isDomainActive() ? selectedDomains.join(", ") : "Select Domain"}
+          </Typography>
+          <IconButton size="small">
+            {isFieldDomainOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+          </IconButton>
+        </Box>
+      </Box>
+
+      <Collapse in={isFieldDomainOpen}>
+        <Box sx={{ pt: "2px", pl: 2 }}>
+          <FormGroup sx={{ border: "1px solid rgba(220, 220, 239, 1)", borderRadius: "4px", pl: 2 }}>
+            {mockDomains.map((domain) => (
+              <FormControlLabel
+                sx={{ fontFamily: "Nunito Sans", fontWeight: 100 }}
+                key={domain}
+                control={
+                  <Checkbox
+                    checked={selectedDomains.includes(domain)}
+                    onChange={() => handleDomainCheckboxChange(domain)}
+                    size="small"
+                    sx={{ "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" } }}
+                  />
+                }
+                label={
+                  <Typography
+                    className="table-data"
+                    sx={{
+                      color: selectedDomains.includes(domain)
+                        ? "rgba(80, 82, 178, 1) !important"
+                        : "rgba(74, 74, 74, 1)",
+                    }}
+                  >
+                    {domain}
+                  </Typography>
+                }
+              />
+            ))}
+          </FormGroup>
+        </Box>
+      </Collapse>
+    </Collapse>
+  </Box>
+)}
+          {/* Created date */}
           <Box
             sx={{
               width: "100%",
@@ -1581,7 +1111,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 gap: 1,
                 cursor: 'pointer'
               }}
-              onClick={() => setIsVisitedDateOpen(!isVisitedDateOpen)}
+              onClick={() => setIsCreatedDateOpen(!isCreatedDateOpen)}
             >
               <Box
                 sx={{
@@ -1602,21 +1132,20 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               >
                 Created date
               </Typography>
-              {selectedTags.visitedDate.map((tag, index) => (
+              {getSelectedDateChip() && (
                 <CustomChip
-                  key={index}
-                  label={tag}
-                  onDelete={() => removeTag("visitedDate", tag)}
+                    label={getSelectedDateChip()!}
+                    onDelete={clearDateFilter}
                 />
-              ))}
+                )}
               <IconButton
-                onClick={() => setIsVisitedDateOpen(!isVisitedDateOpen)}
+                onClick={() => setIsCreatedDateOpen(!isCreatedDateOpen)}
                 aria-label="toggle-content"
               >
-                {isVisitedDateOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                {isCreatedDateOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
               </IconButton>
             </Box>
-            <Collapse in={isVisitedDateOpen}>
+            <Collapse in={isCreatedDateOpen}>
               <Box
                 sx={{
                   ...filterStyles.filter_dropdown

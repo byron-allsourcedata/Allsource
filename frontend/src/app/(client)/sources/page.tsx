@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, Suspense } from 'react';
-import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText, LinearProgress } from '@mui/material';
+import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText, LinearProgress, Chip } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '../../../axios/axiosInterceptorInstance';
@@ -50,45 +50,12 @@ interface FetchDataParams {
 interface FilterParams {
     from_date: number | null;
     to_date: number | null;
-    regions: string[];
     searchQuery: string | null;
-    selectedPageVisit: string | null;
-    checkedFiltersNumberOfEmployees: {
-        '1-10': boolean,
-        '11-25': boolean,
-        '26-50': boolean,
-        '51-100': boolean,
-        '101-250': boolean,
-        '251-500': boolean,
-        '501-1000': boolean,
-        '1001-5000': boolean,
-        '2001-5000': boolean,
-        '5001-10000': boolean,
-        '10001+': boolean,
-        "unknown": boolean,
-    };
-    checkedFiltersRevenue: {
-    "Below 10k": boolean,
-    "$10k - $50k": boolean,
-    "$50k - $100k": boolean,
-    "$100k - $500k": boolean,
-    "$500k - $1M": boolean,
-    "$1M - $5M": boolean,
-    "$5M - $10M": boolean,
-    "$10M - $50M": boolean,
-    "$50M - $100M": boolean,
-    "$100M - $500M": boolean,
-    "$500M - $1B": boolean,
-    "$1 Billion +": boolean,
-    "unknown": boolean,
-    }
-    checkedFilters: {
-        lastWeek: boolean;
-        last30Days: boolean;
-        last6Months: boolean;
-        allTime: boolean;
-    };
-    industry: Record<string, boolean>; 
+    selectedStatus: string[];
+    selectedTypes: string[];
+    selectedDomains: string[];
+    createdDate: string[];
+    dateRange: { fromDate: number | null; toDate: number | null };
 }
 
 
@@ -274,80 +241,70 @@ const Sources: React.FC = () => {
         setPage(0);
     };
 
+    useEffect(() => {
+        const storedFilters = sessionStorage.getItem('filtersBySource');
+        
+        if (storedFilters) {
+            const filters = JSON.parse(storedFilters);
+            
+            handleApplyFilters(filters);
+        }
+    }, []);
 
     const handleApplyFilters = (filters: FilterParams) => {
-        const newSelectedFilters: { label: string; value: string }[] = [];
-
+        const newSelectedFilters: { label: string; value: string }[] = [];  
         const dateFormat = 'YYYY-MM-DD';
-
-        const getSelectedValues = (obj: Record<string, boolean>): string => {
-            return Object.entries(obj)
-                .filter(([_, value]) => value)
-                .map(([key]) => key)
-                .join(', ');
-        };
-
-        // Map of filter conditions to their labels
+    
         const filterMappings: { condition: boolean | string | string[] | number | null, label: string, value: string | ((f: any) => string) }[] = [
             { condition: filters.from_date, label: 'From Date', value: () => dayjs.unix(filters.from_date!).format(dateFormat) },
             { condition: filters.to_date, label: 'To Date', value: () => dayjs.unix(filters.to_date!).format(dateFormat) },
-            { condition: filters.regions?.length, label: 'Regions', value: () => filters.regions!.join(', ') },
-            { condition: filters.searchQuery?.trim() !== '', label: 'Search', value: filters.searchQuery || '' },
-            { condition: filters.selectedPageVisit?.trim() !== '', label: 'Employee Visits', value: filters.selectedPageVisit || '' },
-            { 
-                condition: filters.checkedFiltersNumberOfEmployees && Object.values(filters.checkedFiltersNumberOfEmployees).some(Boolean), 
-                label: 'Number of Employees', 
-                value: () => getSelectedValues(filters.checkedFiltersNumberOfEmployees!) 
-            },
-            { 
-                condition: filters.checkedFiltersRevenue && Object.values(filters.checkedFiltersRevenue).some(Boolean), 
-                label: 'Revenue', 
-                value: () => getSelectedValues(filters.checkedFiltersRevenue!) 
-            },
-            { 
-                condition: filters.industry && Object.values(filters.industry).some(Boolean), 
-                label: 'Industry', 
-                value: () => getSelectedValues(filters.industry!) 
-            },
+            { condition: filters.searchQuery, label: 'Search', value: filters.searchQuery! },
+            { condition: filters.selectedStatus.length > 0, label: 'Status', value: () => filters.selectedStatus.join(', ') },
+            { condition: filters.selectedTypes.length > 0, label: 'Types', value: () => filters.selectedTypes.join(', ') },
+            { condition: filters.selectedDomains.length > 0, label: 'Domains', value: () => filters.selectedDomains.join(', ') },
+            { condition: filters.createdDate.length > 0, label: 'Created Date', value: () => filters.createdDate.join(', ') },
+            { condition: filters.dateRange.fromDate || filters.dateRange.toDate, label: 'Date Range', value: () => {
+                const from = dayjs.unix(filters.dateRange.fromDate!).format(dateFormat);
+                const to = dayjs.unix(filters.dateRange.toDate!).format(dateFormat);
+                return `${from} to ${to}`;
+            }},
         ];
-
-
+    
         filterMappings.forEach(({ condition, label, value }) => {
             if (condition) {
                 newSelectedFilters.push({ label, value: typeof value === 'function' ? value(filters) : value });
             }
         });
-
+    
         setSelectedFilters(newSelectedFilters);
     };
 
-    const handleResetFilters = async () => {
-        const url = `/company`;
-
-        try {
-            setIsLoading(true)
-            sessionStorage.removeItem('filters')
-            const response = await axiosInstance.get(url);
-            const [leads, count] = response.data;
-
-            setData(Array.isArray(leads) ? leads : []);
-            setCount(count || 0);
-            setStatus(response.data.status);
-            setSelectedFilters([]);
-        } catch (error) {
-            console.error('Error fetching leads:', error);
-        }
-        finally {
-            setIsLoading(false)
-        }
+    const handleResetFilters = () => {
+        setSelectedFilters([]);
+    
+        const filters = {
+            from_date: null,
+            to_date: null,
+            searchQuery: null,
+            selectedStatus: [],
+            selectedTypes: [],
+            selectedDomains: [],
+            createdDate: [],
+            dateRange: { fromDate: null, toDate: null },
+        };
+    
+        sessionStorage.setItem('filtersBySource', JSON.stringify(filters));
+    
+        handleApplyFilters(filters);
     };
+    
 
     const handleDeleteFilter = (filterToDelete: { label: string; value: string }) => {
         const updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
         setSelectedFilters(updatedFilters);
         
-        const filters = JSON.parse(sessionStorage.getItem('filters') || '{}');
-    
+        const filters = JSON.parse(sessionStorage.getItem('filtersBySource') || '{}');
+        
         switch (filterToDelete.label) {
             case 'From Date':
                 filters.from_date = null;
@@ -357,109 +314,47 @@ const Sources: React.FC = () => {
                 filters.to_date = null;
                 setSelectedDates({ start: null, end: null });
                 break;
-            case 'Regions':
-                filters.regions = [];
-                break;
             case 'Search':
                 filters.searchQuery = '';
                 break;
-            case 'Employee Visits':
-                filters.selectedPageVisit = '';
+            case 'Status':
+                filters.selectedStatus = [];
                 break;
-            case 'Number of Employees':
-                Object.keys(filters.checkedFiltersNumberOfEmployees).forEach(key => {
-                    filters.checkedFiltersNumberOfEmployees[key] = false;
-                });
+            case 'Types':
+                filters.selectedTypes = [];
                 break;
-            case 'Revenue':
-                Object.keys(filters.checkedFiltersRevenue).forEach(key => {
-                    filters.checkedFiltersRevenue[key] = false;
-                });
+            case 'Domains':
+                filters.selectedDomains = [];
                 break;
-            case 'Industry':
-                Object.keys(filters.industry).forEach(key => {
-                    filters.industry[key] = false;
-                });
+            case 'Created Date':
+                filters.createdDate = [];
+                break;
+            case 'Date Range':
+                filters.dateRange = { fromDate: null, toDate: null };
                 break;
             default:
                 break;
         }
         
-        if (!filters.from_date && !filters.to_date) {
-            filters.checkedFilters = {
-                lastWeek: false,
-                last30Days: false,
-                last6Months: false,
-                allTime: false,
-            };
-        }
-    
-        sessionStorage.setItem('filters', JSON.stringify(filters));
-    
-        if (filterToDelete.label === 'Dates') {
-            setSelectedDates({ start: null, end: null });
-        }
-    
-        // Обновляем фильтры для применения
+        sessionStorage.setItem('filtersBySource', JSON.stringify(filters));
+        
         const newFilters: FilterParams = {
             from_date: updatedFilters.find(f => f.label === 'From Date') ? dayjs(updatedFilters.find(f => f.label === 'From Date')!.value).unix() : null,
             to_date: updatedFilters.find(f => f.label === 'To Date') ? dayjs(updatedFilters.find(f => f.label === 'To Date')!.value).unix() : null,
-            regions: updatedFilters.find(f => f.label === 'Regions') ? updatedFilters.find(f => f.label === 'Regions')!.value?.split(', ') : [],
             searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',
-            selectedPageVisit: updatedFilters.find(f => f.label === 'Employee Visits') ? updatedFilters.find(f => f.label === 'Employee Visits')!.value : '',
-            checkedFiltersNumberOfEmployees: {
-                ...Object.keys(filters.checkedFiltersNumberOfEmployees).reduce((acc, key) => {
-                    acc[key as keyof typeof filters.checkedFiltersNumberOfEmployees] = updatedFilters.some(
-                        f => f.label === 'Number of Employees' && f.value.includes(key)
-                    );
-                    return acc;
-                }, {} as Record<keyof typeof filters.checkedFiltersNumberOfEmployees, boolean>),
-                '1-10': false,
-                '11-25': false,
-                '26-50': false,
-                '51-100': false,
-                '101-250': false,
-                '251-500': false,
-                '501-1000': false,
-                '1001-5000': false,
-                '2001-5000': false,
-                '5001-10000': false,
-                '10001+': false,
-                unknown: false
-            },
-            checkedFiltersRevenue: {
-                ...Object.keys(filters.checkedFiltersRevenue).reduce((acc, key) => {
-                    acc[key as keyof typeof filters.checkedFiltersRevenue] = updatedFilters.some(
-                        f => f.label === 'Revenue' && f.value.includes(key)
-                    );
-                    return acc;
-                }, {} as Record<keyof typeof filters.checkedFiltersRevenue, boolean>),
-                'Below 10k': false,
-                '$10k - $50k': false,
-                '$50k - $100k': false,
-                '$100k - $500k': false,
-                '$500k - $1M': false,
-                '$1M - $5M': false,
-                '$5M - $10M': false,
-                '$10M - $50M': false,
-                '$50M - $100M': false,
-                '$100M - $500M': false,
-                '$500M - $1B': false,
-                '$1 Billion +': false,
-                unknown: false
-            },
-            checkedFilters: {
-                lastWeek: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'lastWeek'),
-                last30Days: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'last30Days'),
-                last6Months: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'last6Months'),
-                allTime: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'allTime')
-            },
-            industry: Object.fromEntries(Object.keys(filters.industry).map(key => [key, updatedFilters.some(f => f.label === 'Industry' && f.value.includes(key))]))
+            selectedStatus: updatedFilters.find(f => f.label === 'Status') ? updatedFilters.find(f => f.label === 'Status')!.value.split(', ') : [],
+            selectedTypes: updatedFilters.find(f => f.label === 'Types') ? updatedFilters.find(f => f.label === 'Types')!.value.split(', ') : [],
+            selectedDomains: updatedFilters.find(f => f.label === 'Domains') ? updatedFilters.find(f => f.label === 'Domains')!.value.split(', ') : [],
+            createdDate: updatedFilters.find(f => f.label === 'Created Date') ? updatedFilters.find(f => f.label === 'Created Date')!.value.split(', ') : [],
+            dateRange: {
+                fromDate: updatedFilters.find(f => f.label === 'Date Range') ? dayjs(updatedFilters.find(f => f.label === 'Date Range')!.value.split(', ')[0]).unix() : null,
+                toDate: updatedFilters.find(f => f.label === 'Date Range') ? dayjs(updatedFilters.find(f => f.label === 'Date Range')!.value.split(', ')[1]).unix() : null,
+            }
         };
-    
-        // Применяем обновленные фильтры
+        
         handleApplyFilters(newFilters);
     };
+    
 
     const setSourceOrigin = (sourceOrigin: string) => {
         return sourceOrigin === "pixel" ? "Pixel" : "CSV File"
@@ -610,6 +505,43 @@ const Sources: React.FC = () => {
 
                                     <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, overflowX: 'auto', "@media (max-width: 600px)": { mb: 1 } }}>
                                         {/* CHIPS */}
+                                        {selectedFilters.length > 0 && (
+                                        <Chip
+                                            className='second-sub-title'
+                                            label="Clear all"
+                                            onClick={handleResetFilters}
+                                            sx={{ color: '#5052B2 !important', backgroundColor: 'transparent', lineHeight: '20px !important', fontWeight: '400 !important', borderRadius: '4px' }}
+                                        />
+                                    )}
+                                    {selectedFilters.map(filter => {
+                                        if (filter.label === 'From Date' || filter.label === 'To Date') {
+                                            return null;
+                                        }
+                                        let displayValue = filter.value;
+                                        return (
+                                            <Chip
+                                                className='paragraph'
+                                                key={filter.label}
+                                                label={`${filter.label}: ${displayValue.charAt(0).toUpperCase() + displayValue.slice(1)}`}
+                                                onDelete={() => handleDeleteFilter(filter)}
+                                                deleteIcon={
+                                                    <CloseIcon
+                                                        sx={{
+                                                            backgroundColor: 'transparent',
+                                                            color: '#828282 !important',
+                                                            fontSize: '14px !important'
+                                                        }}
+                                                    />
+                                                }
+                                                sx={{
+                                                    borderRadius: '4.5px',
+                                                    backgroundColor: 'rgba(80, 82, 178, 0.10)',
+                                                    color: '#5F6368 !important',
+                                                    lineHeight: '16px !important'
+                                                }}
+                                            />
+                                        );
+                                    })}
                                     </Box>
                                     <Box sx={{
                                         flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px', pb: '20px',
