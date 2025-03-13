@@ -37,7 +37,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   const [isVisitedTimeOpen, setIsVisitedTimeOpen] = useState(false);
   const [isRegionOpen, setIsRegionOpen] = useState(false);
   const [isLeadFunnel, setIsLeadFunnel] = useState(false);
-  const [isStatus, setIsStatus] = useState(false);
   const [isRecurringVisits, setIsRecurringVisits] = useState(false);
   const [region, setRegions] = useState("");
   const [selectedDateRange, setSelectedDateRange] = useState<string | null>(
@@ -59,7 +58,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   );
   const [regions, setTags] = useState<string[]>([]);
   const [selectedFunnels, setSelectedFunnels] = useState<string[]>([]);
-  const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
   const [buttonFilters, setButtonFilters] = useState<ButtonFilters>(null);
   const [searchQuery, setSearchQuery] = useState("");
   // const [open_save, setOpen] = useState(false);
@@ -130,7 +128,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     );
   };
 
-  // Status button
+  // Source
+  const [isStatus, setIsStatus] = useState<boolean>(false);
+  const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
   const handleButtonStatusClick = (label: string) => {
     const mappedStatus = statusMapping[label];
     setSelectedStatus((prev) =>
@@ -139,12 +139,50 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         : [...prev, mappedStatus]
     );
   };
-
-
+  const isStatusFilterActive = () => selectedStatus.length > 0;
   const statusMapping: Record<string, string> = {
     "CSV": "CSV",
     "Pixel": "Pixel"
   };
+
+  // Selected Type
+    const [isLeadFunnelOpen, setIsLeadFunnelOpen] = useState<boolean>(false);
+    const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+    const [isFieldOpen, setIsFieldOpen] = useState<boolean>(false);
+    const handleRemoveLabel = (label: string) => {
+    setSelectedTypes((prevSelected) =>
+        prevSelected.filter((item) => item !== label)
+    );
+    };
+    const handleCheckboxChange = (label: string) => {
+    setSelectedTypes((prevSelected) =>
+        prevSelected.includes(label)
+        ? prevSelected.filter((item) => item !== label)
+        : [...prevSelected, label]
+    );
+    };
+    const isTypesFilterActive = () => selectedTypes.length > 0;
+
+    // Domain
+    const [isDomainFilterOpen, setIsDomainFilterOpen] = useState<boolean>(false);
+    const [selectedDomains, setSelectedDomains] = useState<string[]>([]);
+    const [isFieldDomainOpen, setIsFieldDomainOpen] = useState<boolean>(false);
+
+    const handleRemoveDomain = (domain: string) => {
+    setSelectedDomains((prevDomains) =>
+        prevDomains.filter((item) => item !== domain)
+    );
+    };
+
+    const handleDomainCheckboxChange = (domain: string) => {
+      setSelectedDomains((prevDomains) =>
+        prevDomains.includes(domain)
+          ? prevDomains.filter((item) => item !== domain)
+          : [...prevDomains, domain]
+      );
+    };
+
+    const isDomainActive = () => selectedDomains.length > 0;
 
   const addTag = (category: string, tag: string) => {
     setSelectedTags((prevTags) => {
@@ -670,7 +708,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     }
 
 
-    // Составление объекта с фильтрами
     const filters = {
       ...buttonFilters, // Existing button filters
       from_date: fromDateTime, // Set value from_date
@@ -876,8 +913,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     initializeFilters();
   }, [open]);
 
-
-
   const handleApply = () => {
     const filters = handleFilters();
     onApply(filters);
@@ -911,12 +946,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   const isLeadFunnelActive = () => {
     return selectedFunnels.length > 0;
   };
-
-
-  const isStatusFilterActive = () => {
-      return selectedTypes.length > 0;
-    };
-  
 
   const isRecurringVisitsFilterActive = () => {
     return selectedValues.length > 0;
@@ -1127,32 +1156,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     setContacts([]);
   };
 
-  const [isLeadFunnelOpen, setIsLeadFunnelOpen] = useState(false);
-  const [isFieldOpen, setIsFieldOpen] = useState(false);
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-
-  const handleCheckboxChange = (label: string) => {
-    setSelectedTypes((prevSelected) => {
-      if (prevSelected.includes(label)) {
-        return prevSelected.filter((item) => item !== label);
-      } else {
-        return [...prevSelected, label];
-      }
-    });
-  };
-
-  const handleRemoveLabel = (label: string) => {
-    setSelectedTypes((prevSelected) => prevSelected.filter((item) => item !== label));
-  };
-
-  const [isDomainFilterOpen, setIsDomainFilterOpen] = useState(false);
-  const [selectedDomains, setSelectedDomains] = useState<string[]>([]);
-
-  const handleRemoveDomain = (domain: string) => {
-    setSelectedDomains((prevSelected) => prevSelected.filter((item) => item !== domain));
-  };
-
   const isDomainFilterActive = () => selectedDomains.length > 0;
+
 
   return (
     <>
@@ -1321,12 +1326,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   />
                 );
               })}
-              <IconButton
-                onClick={() => setIsStatus(!isStatus)}
-                aria-label="toggle-content"
-              >
+              <IconButton onClick={() => setIsStatus(!isStatus)} aria-label="toggle-content">
                 {isStatus ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-              </IconButton>
+                </IconButton>
             </Box>
             
             <Collapse in={isStatus}>
@@ -1381,7 +1383,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         <Box
             sx={{
                 ...filterStyles.active_filter_dote,
-                visibility: isStatusFilterActive() ? "visible" : "hidden"
+                visibility: isTypesFilterActive() ? "visible" : "hidden"
             }}
         />
         <DnsIcon sx={{ fontSize: 20}} />
@@ -1414,13 +1416,13 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             <Typography
               sx={{
                 fontFamily: "Nunito Sans",
-                color: selectedTypes.length ? "rgba(220, 220, 239, " : "#5F6368",
+                color: selectedDomains.length ? "rgba(220, 220, 239, 1)" : "#5F6368",
               }}
             >
               {selectedTypes.length > 0 ? selectedTypes.join(", ") : "Select Type"}
             </Typography>
             <IconButton size="small">
-              {isFieldOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                {isFieldOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
             </IconButton>
           </Box>
           </Box>
@@ -1474,16 +1476,16 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           >
             <Box
               sx={filterStyles.filter_form}
-              onClick={() => setIsStatus(!isStatus)}
+              onClick={() => setIsDomainFilterOpen(!isDomainFilterOpen)}
             >
               <Box
                 sx={{
                   ...filterStyles.active_filter_dote,
-                  visibility: isStatusFilterActive() ? "visible" : "hidden"
+                  visibility: isDomainActive() ? "visible" : "hidden"
                 }}
               />
         <WebIcon sx={{ fontSize: 20 }} />
-        <Typography sx={{ /* filterStyles.filter_name */ }}>Select Domain</Typography>
+        <Typography sx={filterStyles.filter_name}>Select Domain</Typography>
         
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, pt: 1 }}>
           {selectedDomains.map((domain) => (
@@ -1492,13 +1494,13 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         </Box>
 
         <IconButton onClick={() => setIsDomainFilterOpen(!isDomainFilterOpen)} aria-label="toggle-content">
-          {isDomainFilterOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            {isDomainFilterOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
         </IconButton>
       </Box>
 
       {/* Выпадающий список */}
       <Collapse in={isDomainFilterOpen}>
-        <Box sx={{ pt: 1, pl: 2 }} onClick={() => setIsFieldOpen(!isFieldOpen)}>
+        <Box sx={{ pt: 1, pl: 2 }} onClick={() => setIsFieldDomainOpen(!isFieldDomainOpen)}>
           <Box
             sx={{
               display: "flex",
@@ -1510,7 +1512,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               cursor: "pointer",
               backgroundColor: "#fff",
             }}
-            onClick={() => setIsFieldOpen(!isFieldOpen)}
+            onClick={() => setIsFieldDomainOpen(!isFieldDomainOpen)}
           >
             <Typography
               sx={{
@@ -1518,15 +1520,15 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 color: selectedDomains.length ? "rgba(220, 220, 239, 1)" : "#5F6368",
               }}
             >
-              {selectedDomains.length > 0 ? selectedDomains.join(", ") : "Select Domain"}
+              { isDomainFilterActive() ? selectedDomains.join(", ") : "Select Domain"}
             </Typography>
             <IconButton size="small">
-              {isFieldOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              {isFieldDomainOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
             </IconButton>
           </Box>
         </Box>
 
-        <Collapse in={isFieldOpen}>
+        <Collapse in={isFieldDomainOpen}>
           <Box sx={{ pt: "2px", pl: 2 }}>
             <FormGroup sx={{ border: "1px solid rgba(220, 220, 239, 1)", borderRadius: "4px", pl: 2 }}>
               {mockDomains.map((domain) => (
@@ -1536,7 +1538,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                   control={
                     <Checkbox
                       checked={selectedDomains.includes(domain)}
-                      onChange={() => handleCheckboxChange(domain)}
+                      onChange={() => handleDomainCheckboxChange(domain)}
                       size="small"
                       sx={{ "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" } }}
                     />
