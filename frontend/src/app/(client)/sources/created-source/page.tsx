@@ -242,10 +242,10 @@ const SourcesList: React.FC = () => {
                                             className="table-heading"
                                             sx={{ textAlign: "left" }}
                                         >
-                                            Updated Date
+                                            Domain
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
-                                            {dayjs(createdSource?.updated_at).isValid() ? dayjs(createdSource?.updated_at).format('MMM D, YYYY') : '--'}
+                                            {createdSource?.domain ?? "--"}
                                         </Typography>
                                     </Box>
 

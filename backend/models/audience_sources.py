@@ -11,7 +11,7 @@ class AudienceSource(Base):
     created_at = Column(TIMESTAMP, nullable=False)
     updated_at = Column(TIMESTAMP, nullable=False)
     name = Column(VARCHAR(128), nullable=False)
-    source_type = Column(VARCHAR(64), nullable=False)
+    source_type = Column(VARCHAR(128), nullable=False)
     source_origin = Column(VARCHAR(64), nullable=False)
     matched_records = Column(Integer, default=0, nullable=False)
     total_records = Column(Integer, default=0, nullable=False)
@@ -19,6 +19,7 @@ class AudienceSource(Base):
     processed_records = Column(Integer, default=0, nullable=False)
     file_url = Column(VARCHAR(256), nullable=True)
     mapped_fields = Column(JSON, nullable=True)
+    domain_id = Column(Integer, ForeignKey('users_domains.id', onupdate='SET NULL'), nullable=True)
 
     __table_args__ = (
         Index('audience_sources_pkey', 'id'),

@@ -54,15 +54,7 @@ async def create_source(
         user=Depends(check_user_authorization),
         sources_service: AudienceSourceService = Depends(get_audience_sources_service)
 ):
-    return await sources_service.create_source(
-        user=user,
-        source_type=payload.source_type,
-        source_origin=payload.source_origin,
-        domain_id=payload.domain_id,
-        source_name=payload.source_name,
-        file_url=payload.file_url,
-        rows=payload.rows,
-    )
+    return await sources_service.create_source(user=user, payload=payload)
 
 
 @router.delete("/{id}", response_model=bool)

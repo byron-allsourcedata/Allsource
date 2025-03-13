@@ -23,9 +23,9 @@ class NewSource(BaseModel):
     source_type: str
     source_origin: str
     source_name: str
-    file_url: Optional[str]
-    rows: List[Row]
-    domain_id: Optional[int]
+    file_url: Optional[str] = None
+    rows: Optional[List[Row]] = None
+    domain_id: Optional[int] = None
 
 class AudienceResponse(BaseModel):
     id: UUID
@@ -54,7 +54,7 @@ class SourceResponse(BaseModel):
     source_type: str
     created_at: datetime
     created_by: str
-    updated_at: datetime
+    domain: Optional[str] = None
     total_records: Optional[int] = None
     matched_records: int
     matched_records_status: str

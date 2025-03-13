@@ -29,7 +29,7 @@ interface Source {
     source_origin: string
     source_type: string
     created_at: Date
-    updated_at: Date
+    domain: string
     created_by: string
     processed_records: number
     total_records: number
@@ -717,7 +717,7 @@ const Sources: React.FC = () => {
                                                                         { key: 'type', label: 'Type' },
                                                                         { key: 'created_date', label: 'Created Date', sortable: true },
                                                                         { key: 'created_by', label: 'Created By' },
-                                                                        { key: 'updated_date', label: 'Update Date' },
+                                                                        { key: 'domain', label: 'Domain' },
                                                                         { key: 'number_of_customers', label: 'Number of Customers', sortable: true },
                                                                         { key: 'matched_records', label: 'Matched Records', sortable: true },
                                                                         { key: 'actions', label: 'Actions' }
@@ -824,11 +824,11 @@ const Sources: React.FC = () => {
                                                                                 {row.created_by}
                                                                             </TableCell>
 
-                                                                            {/* Update Date Column */}
+                                                                            {/* Domain Column */}
                                                                             <TableCell
                                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                                             >
-                                                                                {dayjs(row.updated_at).isValid() ? dayjs(row.updated_at).format('MMM D, YYYY') : '--'}
+                                                                                {row.domain ?? "--"}
                                                                             </TableCell>
 
                                                                             {/* Number of Customers Column */}

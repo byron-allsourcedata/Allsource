@@ -32,7 +32,7 @@ interface NewSource {
     source_origin: string;
     source_name: string;
     file_url?: string;
-    rows: { type: string; value: string }[];
+    rows?: { type: string; value: string }[];
     domain_id?: number;
 }
 
@@ -182,20 +182,29 @@ const SourcesImport: React.FC = () => {
         return sourceType.split(' ').join('_').toLowerCase()
     }
 
+    const convertToDBFormat2 = (eventTypesArr: number[]) => {
+        return eventTypesArr
+            .map(id => {
+                const eventType = eventTypes.find(event => event.id === id);
+                return eventType?.name
+            })
+            .filter(name => name)
+            .join(',');
+    };
     const handleSumbit = async () => {
         setLoading(true)
 
         const rowsToSubmit = rows.map(({ id, canDelete, isHidden, ...rest }) => rest);
 
         const newSource: NewSource = {
-            source_type: convertToDBFormat(sourceType),
+            source_type: sourceMethod === 1  ? convertToDBFormat(sourceType) : convertToDBFormat2(eventType),
             source_origin: sourceMethod === 1 ? "csv" : "pixel",
             source_name: sourceName,
-            rows: rowsToSubmit,
         }
 
         if (sourceMethod === 1) {
             newSource.file_url = fileUrl
+            newSource.rows = rowsToSubmit
         }
 
 
@@ -384,23 +393,29 @@ const SourcesImport: React.FC = () => {
     } 
 
 
-    const toggleEventType = (id: number) => {
+    const toggleEventType = (id: number) => { 
+        const isCurrentlyActive = eventType.includes(id);
+    
+        const typeCount = eventTypes.find(event => event.id === id)?.name as keyof DomainsLeads;
+        const countChange = Number(domains.find(domain => domain.name === selectedDomain)?.[typeCount] || 0);
+
         setEventType((prev) => {
-            let newEventType: number[];
-            if (prev.includes(id)) {
-                newEventType = prev.filter((item) => item !== id);
-                const typeCount = eventTypes.find(event => event.id === id)?.name as keyof DomainsLeads;
-                const removedCount = Number(domains.find(domain => domain.name === selectedDomain)?.[typeCount] || 0);
-                setMatchedLeads((prevLeads) => prevLeads - removedCount);
+            if (isCurrentlyActive) {
+                return prev.filter((item) => item !== id);
             } else {
-                newEventType = [...prev, id];
-                const typeCount = eventTypes.find(event => event.id === id)?.name as keyof DomainsLeads;
-                const addedCount = Number(domains.find(domain => domain.name === selectedDomain)?.[typeCount] || 0);
-                setMatchedLeads((prevLeads) => prevLeads + addedCount);
+                return [...prev, id];
             }
-            return newEventType;
+        });
+    
+        setMatchedLeads((prevLeads) => {
+            if (isCurrentlyActive) {
+                return prevLeads - countChange;
+            } else {
+                return prevLeads + countChange;
+            }
         });
     };
+    
     
 
     const handleChangeDomain = (event: SelectChangeEvent<string>) => {
@@ -411,6 +426,12 @@ const SourcesImport: React.FC = () => {
         if (selectedDomainData) {
             setTotalLeads(selectedDomainData.total_count || 0);
             setSelectedDomainId(selectedDomainData.id);
+            if (!selectedDomainData.pixel_installed) {
+                setPixelNotInstalled(true);
+            }
+            else {
+                setPixelNotInstalled(false);
+            }
         }
     };
 
@@ -418,7 +439,6 @@ const SourcesImport: React.FC = () => {
         setIsDomainSearchProcessing(true)
         try {
             const response = await axiosInstance.get(`/audience-sources/domains-with-leads`)
-            console.log(response.data)
             if (response.status === 200){
                 const domains = response.data
                 setDomains(domains)
@@ -846,6 +866,17 @@ const SourcesImport: React.FC = () => {
 
                             {sourceMethod === 2 && 
                                 <Box sx={{display: "flex", flexDirection: "column", gap: 2, position: "relative", flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
+                                    {isDomainSearchProcessing && <Box
+                                        sx={{
+                                        width: '100%',
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        zIndex: 1200,   
+                                        }}
+                                    >
+                                        <BorderLinearProgress variant="indeterminate" sx={{borderRadius: "6px"}} />
+                                    </Box>}
                                     <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
                                         <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px"}}>Select your Domain</Typography>
                                         <Typography sx={{fontFamily: "Nunito Sans", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Please Select your domain.</Typography>
@@ -872,14 +903,40 @@ const SourcesImport: React.FC = () => {
                                             ))}
                                         </Select>
                                     </FormControl>
-                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
-                                        <Typography sx={{fontFamily: "Roboto", fontSize: "14px", color: "rgba(32, 33, 36, 1)"}}>Total Leads</Typography> 
-                                        <Typography sx={{fontFamily: "Nunino Sans", fontWeight: 600, color: "rgba(32, 33, 36, 1)"}}>{totalLeads}</Typography>
-                                    </Box>
+                                    {pixelNotInstalled && 
+                                        <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
+                                            <Typography sx={{fontFamily: "Roboto", fontSize: "12px", color: "rgba(205, 40, 43, 1)"}}>✗ The selected domain does not have the pixel installed. Please install the pixel first to continue.</Typography>
+                                            <Button
+                                                variant="contained"
+                                                onClick={() => router.push("/sources/builder")}
+                                                className='second-sub-title'
+                                                sx={{
+                                                    alignSelf: "flex-end",
+                                                    width: "130px",
+                                                    backgroundColor: 'rgba(80, 82, 178, 1)',
+                                                    textTransform: 'none',
+                                                    padding: '10px 24px',
+                                                    mt: 3,
+                                                    color: '#fff !important',
+                                                    ':hover': {
+                                                        backgroundColor: 'rgba(80, 82, 178, 1)'
+                                                    }
+                                                }}
+                                            >
+                                                Install Pixel
+                                            </Button>
+                                        </Box>
+                                    }
+                                    {!pixelNotInstalled && 
+                                        <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
+                                            <Typography sx={{fontFamily: "Roboto", fontSize: "14px", color: "rgba(32, 33, 36, 1)"}}>Total Leads</Typography> 
+                                            <Typography sx={{fontFamily: "Nunino Sans", fontWeight: 600, color: "rgba(32, 33, 36, 1)"}}>{totalLeads}</Typography>
+                                        </Box>
+                                    }
                                 </Box>
                             }
 
-                            { sourceMethod === 2 && 
+                            { sourceMethod === 2 && !pixelNotInstalled && 
                                 <Box sx={{display: "flex", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
                                     <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
                                         <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px"}}>Choose your data source</Typography>
@@ -1056,7 +1113,7 @@ const SourcesImport: React.FC = () => {
                                             Cancel
                                         </Typography>
                                     </Button> 
-                                    <Button variant="contained" onClick={handleSumbit} disabled={sourceName.trim() === "" || emailNotSubstitution} sx={{
+                                    <Button variant="contained" onClick={handleSumbit} disabled={sourceName.trim() === "" || emailNotSubstitution || pixelNotInstalled} sx={{
                                         backgroundColor: "rgba(80, 82, 178, 1)",
                                         width: "120px",
                                         height: "40px",

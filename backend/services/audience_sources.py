@@ -3,7 +3,7 @@ import json
 from openai import OpenAI
 import logging
 from typing import List, Optional
-from schemas.audience import Row, SourcesObjectResponse, SourceResponse
+from schemas.audience import Row, SourcesObjectResponse, SourceResponse, NewSource
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from enums import QueueName, LeadStatus, SourceType
@@ -47,7 +47,7 @@ class AudienceSourceService:
                 'source_type': source[3],
                 'created_at': source[5],
                 'created_by': source[4],
-                'updated_at': source[6],
+                'domain': source[6],
                 'total_records': source[7],
                 'matched_records': source[8],
                 'matched_records_status': source[9],
@@ -85,7 +85,7 @@ class AudienceSourceService:
             return None
 
         
-    async def send_matching_status(self, *, source_id, user_id, email_field, type, domain_id, statuses):
+    async def send_matching_status(self, source_id, user_id, type, statuses, domain_id=None, email_field = None):
         queue_name = QueueName.AUDIENCE_SOURCES_READER.value
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
@@ -116,17 +116,19 @@ class AudienceSourceService:
             await rabbitmq_connection.close()
 
 
-    async def create_source(self, user, source_type: str, source_origin: str, source_name: str, rows: List[Row], file_url: str = None) -> SourceResponse:
+    async def create_source(self, user: User, payload: NewSource) -> SourceResponse:
         creating_data = {
             "user_id": user.get("id"),
-            "source_type": source_type,
-            "source_origin": source_origin,
-            "source_name": source_name,
-            "file_url": file_url,
-            "rows": json.dumps([row.dict() for row in rows])
+            "source_type": payload.source_type,
+            "source_origin": payload.source_origin,
+            "source_name": payload.source_name,
+            "file_url": payload.file_url or None,
+            "domain_id": payload.domain_id or None,
+            "rows": json.dumps([row.dict() for row in payload.rows]) if payload.rows else None,
         }
         created_data = self.audience_sources_persistence.create_source(**creating_data)
-        await self.send_matching_status(created_data.id, user.get("id"), rows[0].value)
+        email_field = payload.rows[0].value if payload.rows else None
+        await self.send_matching_status(created_data.id, user.get("id"), payload.source_origin, payload.source_type, payload.domain_id, email_field)
 
         if not created_data:
             logger.debug('Database error during creation')
