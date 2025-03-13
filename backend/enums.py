@@ -24,6 +24,7 @@ class CreateDataSync(Enum):
     ZAPIER_CONNECTED = 'ZAPIER_CONNECTED'
     
 class SourcePlatformEnum(Enum):
+    MAXIMIZ = 'maximiz'
     SHOPIFY = 'shopify'
     AWIN = 'awin'
     ATTENTIVE = 'attentive'
@@ -246,6 +247,7 @@ class IntegrationsStatus(Enum):
     ALREADY_EXIST = 'ALREADY_EXIST'
     INVALID_WEBHOOK_URL = 'INVALID_WEBHOOK_URL'
     JOIN_CHANNEL_IS_FAILED = 'JOIN_CHANNEL_IS_FAILED'
+    NOT_ADS_USER = 'NOT_ADS_USER'
 
 
 class StripeConnectStatus(Enum):
@@ -270,6 +272,7 @@ class ProccessDataSyncResult(Enum):
     
 class PlanAlias(Enum):
     PARTNERS = 'partners'
+    SHOPIFY = 'shopify'
     
 class ProgramType(Enum):
     PARTNER = 'partner'

@@ -5,7 +5,7 @@ import logging
 from urllib.parse import urlencode
 from fastapi import APIRouter, Depends, Query, HTTPException, status, Body, Request
 from fastapi.responses import RedirectResponse
-from enums import CreateDataSync
+from enums import CreateDataSync, SubscriptionStatus
 from utils import normalize_url
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from persistence.settings_persistence import SettingsPersistence
@@ -63,6 +63,14 @@ async def get_credential_service(platform: str,
         service = getattr(service, platform.lower())
         return service.get_credentials(domain.id)
 
+@router.get('/check-limit-reached', status_code=200)
+async def check_limit_reached(integration_service: IntegrationService = Depends(get_integration_service),
+                             user=Depends(check_user_authentication), domain=Depends(check_domain)):
+
+    if integration_service.is_integration_limit_reached(user.get('id'), domain.id):
+            return True
+    
+    return False
 
 @router.post('/', status_code=200)
 async def create_integration(credentials: IntegrationCredentials, service_name: str = Query(...),
@@ -76,6 +84,9 @@ async def create_integration(credentials: IntegrationCredentials, service_name: 
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins and standard only."
             )
+    if integration_service.is_integration_limit_reached(user.get('id'), domain.id):
+            raise HTTPException(status_code=403, detail={'status': SubscriptionStatus.NEED_UPGRADE_PLAN.value})
+    
     with integration_service as service:
         service = getattr(service, service_name.lower())
         if not service:

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, event, Integer, DECIMAL, Index
+from sqlalchemy import Column, event, Integer, ForeignKey, Index
 from sqlalchemy.dialects.postgresql import BOOLEAN, INTEGER, NUMERIC, VARCHAR, JSONB
 
 from .base import Base, create_timestamps, update_timestamps
@@ -8,6 +8,7 @@ class SubscriptionPlan(Base):
     __tablename__ = "subscription_plans"
 
     id = Column(Integer, primary_key=True, nullable=False)
+    contact_credit_price_id = Column(Integer, ForeignKey('subscription_plans.id'), nullable=True)
     title = Column(VARCHAR(32), nullable=True)
     description = Column(VARCHAR(128), nullable=True)
     interval = Column(VARCHAR(16), nullable=True)
@@ -25,16 +26,18 @@ class SubscriptionPlan(Base):
     prospect_credits = Column(INTEGER, nullable=True)
     members_limit = Column(Integer, nullable=True)
     features = Column(JSONB, nullable=True)
-    lead_credit_price = Column(DECIMAL(10, 2), nullable=False)
     priority = Column(INTEGER, nullable=False)
     full_price = Column(NUMERIC(18, 2), nullable=True)
     alias = Column(VARCHAR(64), nullable=True)
+    platform = Column(VARCHAR(64), nullable=True)
     
     __table_args__ = (
         Index('subscription_plans_title_interval_idx', 'title', 'interval'),
         Index('subscription_plans_title_price_idx', 'title', 'price'),
         Index('subscription_plans_alias_idx', 'alias'),
+        Index('subscription_plans_platform_is_active_idx', 'platform', 'is_active'),
         Index('subscription_plans_interval_is_active_idx', 'interval', 'is_active'),
+        Index('subscription_plans_contact_credit_price_id_idx', 'contact_credit_price_id'),
     )
 
 

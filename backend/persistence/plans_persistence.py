@@ -3,15 +3,23 @@ from sqlalchemy import case
 from models.plans import SubscriptionPlan
 from models.subscriptions import UserSubscriptions
 from models.users import User
-from enums import SubscriptionStatus
+from enums import SourcePlatformEnum
 
 
 class PlansPersistence:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_stripe_plans(self):
-        return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_active == True).all()
+    def get_stripe_plans(self, platform):
+        query = self.db.query(SubscriptionPlan).filter(
+            SubscriptionPlan.is_active == True,
+            SubscriptionPlan.platform == (
+                SourcePlatformEnum.SHOPIFY.value if platform == SourcePlatformEnum.SHOPIFY.value 
+                else SourcePlatformEnum.MAXIMIZ.value
+            )
+        )
+        return query.all()
+
 
     def save_reason_unsubscribe(self, reason_unsubscribe, user_id, cancel_scheduled_at):
         subscription = self.get_user_subscription(user_id)
@@ -42,7 +50,7 @@ class PlansPersistence:
         
     def get_plan_by_title_price(self, plan_name: str, payment_amount: str):
         plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.title == plan_name,
-                                                      SubscriptionPlan.price == payment_amount).first()
+                                                      SubscriptionPlan.full_price == payment_amount).first()
         if plan:
             return plan
         else:
@@ -55,8 +63,8 @@ class PlansPersistence:
         leads_credits = plan.leads_credits
         prospect_credits = plan.prospect_credits
         members_limit = plan.members_limit
-        lead_credit_price = plan.lead_credit_price
-        return domains_limit, integrations_limit, leads_credits, prospect_credits, members_limit, lead_credit_price
+        contact_credit_price_id = plan.contact_credit_price_id
+        return domains_limit, integrations_limit, leads_credits, prospect_credits, members_limit, contact_credit_price_id
 
     def get_free_trial_plan(self, ftd):
         trial_days = 90 if ftd == 'n' else 14
@@ -98,3 +106,7 @@ class PlansPersistence:
         return self.db.query(SubscriptionPlan).join(
             UserSubscriptions, UserSubscriptions.plan_id == SubscriptionPlan.id).join(
             User, User.current_subscription_id == UserSubscriptions.id).filter(User.id == user_id).first()
+    
+    
+    def contact_credit_price_by_plan_id(self, *, plan_id):
+        return self.db.query(SubscriptionPlan.price).filter(SubscriptionPlan.id == plan_id).scalar()

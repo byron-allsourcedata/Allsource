@@ -3,6 +3,7 @@ import logging
 from enums import UserAuthorizationStatus
 from persistence.plans_persistence import PlansPersistence
 from services.subscriptions import SubscriptionService
+from enums import SourcePlatformEnum
 
 logger = logging.getLogger(__name__)
 TRIAL_STUB_PLAN_ID = 17
@@ -36,9 +37,13 @@ class PlansService:
     def save_reason_unsubscribe(self, reason_unsubscribe, user_id, cancel_scheduled_at):
         self.plans_persistence.save_reason_unsubscribe(reason_unsubscribe, user_id, cancel_scheduled_at)
         
-    def get_subscription_plans(self, user):
-        stripe_plans = self.plans_persistence.get_stripe_plans()
-        user_subscription = self.plans_persistence.get_user_subscription(user_id=user.get('id'))
+    def get_subscription_plans(self, user: dict):
+        if user.get('source_platform') == SourcePlatformEnum.SHOPIFY.value:
+            stripe_plans = self.plans_persistence.get_stripe_plans(SourcePlatformEnum.SHOPIFY.value)
+        else:
+            stripe_plans = self.plans_persistence.get_stripe_plans(SourcePlatformEnum.MAXIMIZ.value)
+            
+        user_subscription = self.plans_persistence.get_user_subscription(user_id=user.get('id'))    
         current_plan = self.plans_persistence.get_current_plan(user_id=user.get('id'))
         if current_plan and current_plan.is_free_trial:
             stripe_plans.append(current_plan)

@@ -38,7 +38,8 @@ const WebhookConnectPopup = ({ handleClose, open, onSave, initApiKey, boxShadow 
             } else {
                 showErrorToast("Error connect webhook")
             }
-        } catch (error) { }
+        } catch (error) {
+         }
         finally {
             setLoading(false)
         }

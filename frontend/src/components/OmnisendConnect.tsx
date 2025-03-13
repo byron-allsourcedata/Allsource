@@ -190,7 +190,8 @@ const OmnisendConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
             showErrorToast('Invalid API Key, please, try another')
             setApiKeyError(true)
         }
-    } catch (error) {}
+    } catch (error) {
+    }
     finally {
      setDisableButton(false)
      setLoading(false)
