@@ -1,12 +1,10 @@
 import React from "react";
 import TabContext from "@mui/lab/TabContext";
 import TabPanel from "@mui/lab/TabPanel";
-import { Box, Typography, Drawer, IconButton, Button, LinearProgress } from "@mui/material";
+import { Box, Typography, Drawer, IconButton, Button } from "@mui/material";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import CloseIcon from '@mui/icons-material/Close';
-import { useAxiosHook } from "@/hooks/AxiosHooks";
-import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface CreateSalesForceProps {
     handleClose: () => void
@@ -92,21 +90,21 @@ const BingAdsIntegrationPopup = ({ handleClose, open, boxShadow }: CreateSalesFo
     const [value, setValue] = useState("1");
 
     const handleLogin = async () => {
-        const client_id = 'ВАШ_CLIENT_ID';
+        const client_id = 'abba3068-6388-4dd2-8977-dc7c78b94ad9';
         const redirect_uri = `${process.env.NEXT_PUBLIC_BASE_URL}/bing-ads-landing`;
-        const authority = 'https://login.microsoftonline.com/common';
-        const scope = 'bingads.manage';
-
-        const authorizationUrl = `${authority}/oauth2/v2.0/authorize?` +
+        console.log(redirect_uri)
+        const scope = 'openid offline_access https://ads.microsoft.com/msads.manage';
+        const tenant = 'f8cdef31-a31e-4b4a-93e4-5f571e91255a'
+        const authorizationUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +
             `client_id=${client_id}` +
             `&redirect_uri=${encodeURIComponent(redirect_uri)}` +
             `&response_type=code` +
             `&scope=${encodeURIComponent(scope)}` +
             `&state=${Math.random().toString(36).substring(7)}` +
             `&response_mode=query`;
-
+    
         window.location.href = authorizationUrl;
-    };
+    };    
 
     return (
         <>

@@ -1,14 +1,10 @@
 import React from "react";
 import TabContext from "@mui/lab/TabContext";
-import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
-import { Box, List, ListItem, TextField, Tooltip, Typography, Drawer, Backdrop, Link, IconButton, Button, RadioGroup, FormControl, FormControlLabel, Radio, FormLabel, Divider, Tab, Switch, LinearProgress, Tabs } from "@mui/material";
+import { Box, Typography, Drawer, IconButton, Button, LinearProgress } from "@mui/material";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import CustomizedProgressBar from "./CustomizedProgressBar";
 import CloseIcon from '@mui/icons-material/Close';
-import axiosInstance from '@/axios/axiosInterceptorInstance';
-import { showErrorToast, showToast } from "./ToastNotification";
 import { useAxiosHook } from "@/hooks/AxiosHooks";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 
@@ -32,81 +28,11 @@ interface IntegrationsCredentials {
     is_with_suppression?: boolean
 }
 
-const klaviyoStyles = {
-    tabHeading: {
-        fontFamily: 'Nunito Sans',
-        fontSize: '14px',
-        color: '#707071',
-        fontWeight: '500',
-        lineHeight: '20px',
-        textTransform: 'none',
-        padding: 0,
-        minWidth: 'auto',
-        px: 2,
-        '@media (max-width: 600px)': {
-            alignItems: 'flex-start',
-            p: 0
-        },
-        '&.Mui-selected': {
-            color: '#5052b2',
-            fontWeight: '700'
-        }
-    },
-    inputLabel: {
-        fontFamily: 'Nunito Sans',
-        fontSize: '14px',
-        lineHeight: '16px',
-        left: '2px',
-        color: 'rgba(17, 17, 19, 0.60)',
-        '&.Mui-focused': {
-            color: '#0000FF',
-        },
-    },
-    formInput: {
-        '&.MuiOutlinedInput-root': {
-            height: '48px',
-            '& .MuiOutlinedInput-input': {
-                padding: '12px 16px 13px 16px',
-                fontFamily: 'Roboto',
-                color: '#202124',
-                fontSize: '14px',
-                lineHeight: '20px',
-                fontWeight: '400'
-            },
-            '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#A3B0C2',
-            },
-            '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#A3B0C2',
-            },
-            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#0000FF',
-            },
-            '&.Mui-error .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'red',
-            },
-        },
-        '&+.MuiFormHelperText-root': {
-            marginLeft: '0',
-        },
-    },
-}
-
 const SalesForceIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxShadow, Invalid_api_key }: CreateSalesForceProps) => {
-    const { triggerSync } = useIntegrationContext();
     const [apiKey, setApiKey] = useState('');
-    const [checked, setChecked] = useState(false);
-    const [tab2Error, setTab2Error] = useState(false);
-    const [disableButton, setDisableButton] = useState(false);
-    const label = { inputProps: { 'aria-label': 'Switch demo' } };
-    const { data, loading, error, sendRequest } = useAxiosHook();
 
 
     const [value, setValue] = useState("1");
-
-    const handleChange = (event: React.SyntheticEvent, newValue: string) => {
-        setValue(newValue);
-    };
 
     useEffect(() => {
         setApiKey(initApiKey || '')
@@ -121,27 +47,6 @@ const SalesForceIntegrationPopup = ({ handleClose, open, onSave, initApiKey, box
 
     return (
         <>
-            {loading && (
-                <Box
-                    sx={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: 'rgba(0, 0, 0, 0.2)',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        zIndex: 1400,
-                        overflow: 'hidden'
-                    }}
-                >
-                    <Box sx={{ width: '100%', top: 0, height: '100vh' }}>
-                        <LinearProgress />
-                    </Box>
-                </Box>
-            )}
             <Drawer
                 anchor="right"
                 open={open}
