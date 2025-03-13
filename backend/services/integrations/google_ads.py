@@ -455,8 +455,10 @@ class GoogleAdsIntegrationsService:
                             customer
                     """
                     response = googleads_service.search(customer_id=customer_id, query=query)
-                except Exception:
-                    continue
+                except GoogleAdsException as ex:
+                    logger.error(f"Ошибка при запросе данных для customer_id {customer_id}")
+                    for error in ex.failure.errors:
+                        logger.error(f"Код ошибки: {error.error_code}, Сообщение: {error.message}")
                 
                 for row in response:
                     customer_id = row.customer.id
@@ -469,10 +471,17 @@ class GoogleAdsIntegrationsService:
             return {'status': IntegrationsStatus.SUCCESS.value, 'customers': customer_data}
         except GoogleAdsException as googleads_error:
             details = googleads_error.failure.errors[0].message
+            error_code = googleads_error.failure.errors[0].error_code.authentication_error.name 
             logger.error(f"Google Ads API error occurred: {googleads_error}")
+            if error_code == "NOT_ADS_USER":
+                return {
+                    'status': IntegrationsStatus.NOT_ADS_USER.value
+                }
+
             return {'status': IntegrationsStatus.CREDENTAILS_INVALID.value, 'message': str(details)}
     
-        except Exception as e:
-            logger.error(f"An unexpected error occurred: {e}")
-            return {'status': IntegrationsStatus.CREDENTAILS_INVALID.value, 'message': str(e)}
+        except GoogleAdsException as ex:
+            logger.error("Error connecting to Google Ads API")
+            for error in ex.failure.errors:
+                logger.error(f"Error code: {error.error_code}, Message: {error.message}")
 
