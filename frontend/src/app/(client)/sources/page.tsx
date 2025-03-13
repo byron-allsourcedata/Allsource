@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText, LinearProgress } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -117,30 +117,16 @@ const Sources: React.FC = () => {
     const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
     const isOpen = Boolean(anchorEl);
-    // const hasUnmatchedRecords = useMemo(() => {
-    //     return data.some(item => item.matched_records === 0 && item.matched_records_status === "pending");
-    // }, [data]);
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-    const memoizedData = useMemo(() => data, [data]);
-    const hasUnmatchedRecords = useMemo(() => {
-    return memoizedData.some(item => item.matched_records === 0 && item.matched_records_status === "pending");
-}, [memoizedData]);
-
-    // useEffect(() => {
-    //     document.body.style.overflow = 'hidden';
-    //     return () => {
-    //         document.body.style.overflow = 'auto';
-    //     };
-    // }, []);
-
-    // useEffect(() => {
-    //     fetchSources({
-    //         sortBy: orderBy,
-    //         sortOrder: order,
-    //         page,
-    //         rowsPerPage,
-    //     });
-    // }, [orderBy, order, page, rowsPerPage, selectedFilters]);
+    useEffect(() => {
+        fetchSources({
+            sortBy: orderBy,
+            sortOrder: order,
+            page,
+            rowsPerPage,
+        });
+    }, [orderBy, order, page, rowsPerPage, selectedFilters]);
 
     const fetchSourcesMemoized = useCallback(() => {
         fetchSources({
@@ -152,12 +138,34 @@ const Sources: React.FC = () => {
     }, [orderBy, order, page, rowsPerPage]);
     
     useEffect(() => {
-        if (isFirstLoad || hasUnmatchedRecords) {   
-            const interval = setInterval(fetchSourcesMemoized, 5000);
+        console.log("longpol");
     
-            return () => clearInterval(interval);
+        if (!intervalRef.current) {
+            console.log("longpol started");
+            intervalRef.current = setInterval(() => {
+                const hasPending = data.some(item => item.matched_records_status === "pending");
+    
+                if (hasPending) {
+                    console.log("Fetching due to pending records");
+                    fetchSourcesMemoized();
+                } else {
+                    console.log("No pending records, stopping interval");
+                    if (intervalRef.current) {
+                        clearInterval(intervalRef.current);
+                        intervalRef.current = null;
+                    }
+                }
+            }, 2000);
         }
-    }, [fetchSourcesMemoized, hasUnmatchedRecords]);
+    
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+                console.log("interval cleared");
+            }
+        };
+    }, [data, fetchSourcesMemoized]);
       
 
     const fetchData = async () => {
@@ -185,7 +193,9 @@ const Sources: React.FC = () => {
 
     const fetchSources = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
         try {
-            isFirstLoad ? setLoading(true)  : setLoaderForTable(true);
+            !intervalRef.current 
+                ? isFirstLoad ? setLoading(true)  : setLoaderForTable(true)
+                : () => {}
             const accessToken = localStorage.getItem("token");
             if (!accessToken) {
                 router.push('/signin');
@@ -848,11 +858,13 @@ const Sources: React.FC = () => {
                                                                                     ? progress?.matched.toLocaleString('en-US')
                                                                                     : <ProgressBar progress={progress}/>
                                                                                 : row.matched_records.toLocaleString('en-US') ?? '--'} */}
-                                                                                {(progress?.processed && progress?.processed == progress?.total) || (row?.processed_records == row?.total_records)
+                                                                                {(progress?.processed && progress?.processed == progress?.total) || (row?.processed_records == row?.total_records && row?.processed_records !== 0)
                                                                                 ? progress?.matched > row?.matched_records 
                                                                                     ? progress?.matched.toLocaleString('en-US')
                                                                                     : row.matched_records.toLocaleString('en-US')
-                                                                                :  <ProgressBar progress={progress}/> 
+                                                                                :  row?.processed_records !== 0 
+                                                                                    ? <ProgressBar progress={{total: row?.total_records, processed: row?.processed_records, matched: row?.matched_records}}/> 
+                                                                                    : <ProgressBar progress={progress}/> 
                                                                                 }
                                                                             </TableCell>
 

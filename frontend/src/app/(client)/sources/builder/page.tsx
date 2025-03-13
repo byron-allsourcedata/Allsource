@@ -248,10 +248,7 @@ const SourcesImport: React.FC = () => {
     const processFileContent = async (parsedData: ParseResult<string[]>): Promise<void> => {
         try {
             const { data } = parsedData;
-            // const lines = content.split("\n");
-            // const headers = lines[0]?.split(",").map((header) => header.trim());
             const headers = data[0]
-            console.log(headers)
             setHeadersinCSV(headers);
 
             if (headers.length === 0 || headers.every((header: string) => header === "")) {
@@ -276,21 +273,6 @@ const SourcesImport: React.FC = () => {
     };
 
     const readFileContent = (file: File): Promise<ParseResult<string[]>> => {
-        // return new Promise((resolve, reject) => {
-        //     const reader = new FileReader();
-        //     reader.onload = (event) => {
-        //         let content = event.target?.result as string;
-        //         if (content) {
-        //             resolve(content);
-        //         } else {
-        //             reject(new Error("Failed to read file content."));
-        //         }
-        //     };
-        //     reader.onerror = () => {
-        //         reject(new Error("An error occurred while reading the file."));
-        //     };
-        //     reader.readAsText(file);
-        // });
         return new Promise((resolve, reject) => {
             Papa.parse<string[]>(file, {
                 complete: (result: any) => {
