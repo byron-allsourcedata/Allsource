@@ -1,6 +1,7 @@
 from typing import List, Optional
 from pydantic import BaseModel
 from datetime import datetime
+from enums import LeadStatus
 from uuid import UUID
 
 class AudienceRequest(BaseModel):
@@ -22,7 +23,8 @@ class NewSource(BaseModel):
     file_url: str
     rows: List[Row]
     type: str
-    statuses: Optional[List[str]] = None
+    domain_id: int
+    statuses: Optional[List[str]] = [LeadStatus.VISITOR.value]
 
 class AudienceResponse(BaseModel):
     id: UUID

@@ -42,7 +42,6 @@ def substitution_headings(
 async def create_source(
         payload: NewSource,
         user=Depends(check_user_authorization),
-        domain = Depends(check_domain),
         sources_service: AudienceSourceService = Depends(get_audience_sources_service)
 ):
     return await sources_service.create_source(
@@ -53,7 +52,7 @@ async def create_source(
         file_url=payload.file_url,
         rows=payload.rows,
         type=payload.type,
-        domain_id=domain.id,
+        domain_id=payload.domain_id,
         statuses=payload.statuses
     )
 

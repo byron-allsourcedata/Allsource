@@ -6,7 +6,7 @@ from typing import List, Optional
 from schemas.audience import Row, SourcesObjectResponse, SourceResponse
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
-from enums import QueueName, LeadStatus, SourceType
+from enums import QueueName, SourceType
 from models.users import User
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -106,11 +106,11 @@ class AudienceSourceService:
                 message_body=message_body
             )
         except Exception as e:
-            await rabbitmq_connection.close()
+            logger.error(e)
         finally:
             await rabbitmq_connection.close()
 
-    async def create_source(self, *, user: dict, source_type: str, source_origin: str, source_name: str, rows: List[Row], type: str, domain_id: int, statuses = [LeadStatus.VISITOR.value] ,file_url: str = None) -> SourceResponse:
+    async def create_source(self, *, user: dict, source_type: str, source_origin: str, source_name: str, rows: List[Row], type: str, domain_id: int, statuses, file_url: str = None) -> SourceResponse:
         creating_data = {
             "user_id": user.get("id"),
             "source_type": source_type,
