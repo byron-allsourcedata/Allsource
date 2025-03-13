@@ -63,8 +63,8 @@ class PlansPersistence:
         leads_credits = plan.leads_credits
         prospect_credits = plan.prospect_credits
         members_limit = plan.members_limit
-        lead_credit_price = plan.lead_credit_price
-        return domains_limit, integrations_limit, leads_credits, prospect_credits, members_limit, lead_credit_price
+        contact_credit_price_id = plan.contact_credit_price_id
+        return domains_limit, integrations_limit, leads_credits, prospect_credits, members_limit, contact_credit_price_id
 
     def get_free_trial_plan(self, ftd):
         trial_days = 90 if ftd == 'n' else 14
@@ -106,3 +106,7 @@ class PlansPersistence:
         return self.db.query(SubscriptionPlan).join(
             UserSubscriptions, UserSubscriptions.plan_id == SubscriptionPlan.id).join(
             User, User.current_subscription_id == UserSubscriptions.id).filter(User.id == user_id).first()
+    
+    
+    def contact_credit_price_by_plan_id(self, *, plan_id):
+        return self.db.query(SubscriptionPlan.price).filter(SubscriptionPlan.id == plan_id).scalar()
