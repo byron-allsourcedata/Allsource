@@ -24,6 +24,7 @@ import ThreeDotsLoader from './components/ThreeDotsLoader';
 import ProgressBar from './components/ProgressLoader';
 import { MoreVert } from '@mui/icons-material'
 import { useSSE } from '../../../context/SSEContext';
+import FilterPopup from './components/SearchFilter';
 
 interface Source {
     id: string
@@ -981,13 +982,9 @@ const Sources: React.FC = () => {
                                         {showSlider && <Slider />}
                                     </Box>
 
-                                    {/* <FilterPopup open={filterPopupOpen} 
+                                    <FilterPopup open={filterPopupOpen} 
                                         onClose={handleFilterPopupClose} 
-                                        onApply={handleApplyFilters} 
-                                        jobTitles={jobTitles || []} 
-                                        seniorities={seniorities || []} 
-                                        departments={departments || []} />
-                                    */}
+                                        onApply={handleApplyFilters} />
 
                                 </Box>
                             </Box>
