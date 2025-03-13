@@ -1,5 +1,9 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, Query, Body
-from dependencies import get_audience_sources_service, check_user_authorization
+from dependencies import get_audience_sources_service, check_user_authorization, check_user_authentication
+from enums import TypeOfSourceOrigin, TypeOfCustomer
+from models.users import Users
 from services.audience_sources import AudienceSourceService
 from schemas.audience import HeadingSubstitutionRequest, NewSource, SourcesObjectResponse, SourceResponse, SourceIDs
 from uuid import UUID
@@ -77,3 +81,15 @@ def get_processing_sources(
         user=Depends(check_user_authorization),
         sources_service: AudienceSourceService = Depends(get_audience_sources_service)):
     return sources_service.get_processing_sources(data.sources_ids, user=user)
+
+@router.get("/filter")
+async def get_sources(
+    name: Optional[str] = Query(None, description="Filter by source name"),
+    source: Optional[TypeOfSourceOrigin] = Query(None, description="Source type"),
+    type_customer: Optional[List[TypeOfCustomer]] = Query(None, description="Type of customers"),
+    domain_id: Optional[int] = Query(None, description="Domain of customers"),
+    created_date: Optional[datetime] = Query(None, description="Created date"),
+    user: Users = Depends(check_user_authentication),
+    sources_service: AudienceSourceService = Depends(get_audience_sources_service),
+):
+    return sources_service.get_filtered_sources(name=name, source=source, type_customer=type_customer, domain_id=domain_id, created_date=created_date, user_id=user.get("id"))

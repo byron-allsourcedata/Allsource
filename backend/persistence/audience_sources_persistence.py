@@ -1,6 +1,10 @@
 import logging
-from sqlalchemy import desc, asc
+from datetime import datetime
+
+from sqlalchemy import desc, asc, select
 from sqlalchemy.orm import Session
+
+from enums import TypeOfSourceOrigin, TypeOfCustomer
 from models.audience_sources import AudienceSource
 from models.users import Users
 from typing import Optional, Tuple, List
@@ -89,3 +93,37 @@ class AudienceSourcesPersistence:
         processing_sources = self.db.query(AudienceSource).filter(
             AudienceSource.user_id == user_id, AudienceSource.id.in_(sources_ids))
         return processing_sources
+
+    def get_filtered_sources(
+            self,
+            user_id: int,
+            name: Optional[str] = None,
+            source: Optional[TypeOfSourceOrigin] = None,
+            type_customer: Optional[List[TypeOfCustomer]] = None,
+            domain_id: Optional[int] = None,
+            created_date: Optional[datetime] = None,
+    ) -> List[Row]:
+        query = select(AudienceSource)
+
+        filters = []
+
+        if user_id:
+            filters.append(AudienceSource.user_id == user_id)
+        if name:
+            filters.append(AudienceSource.name == name)
+        if source:
+            type_source_origin = source.value
+            filters.append(AudienceSource.source_origin == type_source_origin)
+        if type_customer:
+            type_customer_values = [tc.value for tc in type_customer]
+            filters.append(AudienceSource.source_type.in_(type_customer_values))
+        if domain_id is not None:
+            filters.append(AudienceSource.domain_id == domain_id)
+        if created_date:
+            filters.append(AudienceSource.created_at >= created_date)
+
+        if filters:
+            query = query.where(*filters)
+
+        result = self.db.execute(query)
+        return result.scalars().all()

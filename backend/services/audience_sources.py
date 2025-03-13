@@ -1,12 +1,14 @@
 import os
 import json
+from datetime import datetime
+
 from openai import OpenAI
 import logging
 from typing import List, Optional
 from schemas.audience import Row, SourcesObjectResponse, SourceResponse
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
-from enums import QueueName
+from enums import QueueName, TypeOfSourceOrigin, TypeOfCustomer
 from models.users import User
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -131,3 +133,18 @@ class AudienceSourceService:
     def get_processing_sources(self, sources_ids, user: User):
         sources = self.audience_sources_persistence.get_processing_sources(sources_ids, user.get("id"))
         return sources
+
+    def get_filtered_sources(self,
+                             user_id: int,
+                             name: Optional[str] = None,
+                             source: Optional[TypeOfSourceOrigin] = None,
+                             type_customer: Optional[List[TypeOfCustomer]] = None,
+                             domain_id: Optional[int] = None,
+                             created_date: Optional[datetime] = None,
+
+                             ):
+        response = self.audience_sources_persistence.get_filtered_sources(user_id=user_id, source=source,
+                                                                          type_customer=type_customer,
+                                                                          domain_id=domain_id,
+                                                                          created_date=created_date)
+        return response
