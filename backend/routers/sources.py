@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Query
-from dependencies import get_audience_sources_service, check_user_authorization
+from dependencies import get_audience_sources_service, check_user_authorization, check_domain
 from services.audience_sources import AudienceSourceService
 from schemas.audience import HeadingSubstitutionRequest, NewSource, SourcesObjectResponse, SourceResponse
 from uuid import UUID
@@ -42,6 +42,7 @@ def substitution_headings(
 async def create_source(
         payload: NewSource,
         user=Depends(check_user_authorization),
+        domain = Depends(check_domain),
         sources_service: AudienceSourceService = Depends(get_audience_sources_service)
 ):
     return await sources_service.create_source(
@@ -51,6 +52,9 @@ async def create_source(
         source_name=payload.source_name,
         file_url=payload.file_url,
         rows=payload.rows,
+        type=payload.type,
+        domain_id=domain.id,
+        statuses=payload.statuses
     )
 
 

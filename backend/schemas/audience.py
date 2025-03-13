@@ -21,6 +21,8 @@ class NewSource(BaseModel):
     source_name: str
     file_url: str
     rows: List[Row]
+    type: str
+    statuses: Optional[List[str]] = None
 
 class AudienceResponse(BaseModel):
     id: UUID

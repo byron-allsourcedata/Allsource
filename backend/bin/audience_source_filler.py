@@ -60,6 +60,7 @@ def assume_role(role_arn, sts_client):
 async def aud_sources_reader(message: IncomingMessage, db_session: Session, s3_session, connection):
     try:
         message_body = json.loads(message.body)
+        type = message_body.get('type')
         data = message_body.get('data')
         if not data:
             logging.warning("Message data is missing.")
