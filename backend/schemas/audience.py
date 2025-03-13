@@ -23,8 +23,9 @@ class NewSource(BaseModel):
     source_type: str
     source_origin: str
     source_name: str
-    file_url: str
+    file_url: Optional[str]
     rows: List[Row]
+    domain_id: Optional[int]
 
 class AudienceResponse(BaseModel):
     id: UUID
@@ -35,6 +36,16 @@ class AudienceResponse(BaseModel):
     status: str
     created_at: datetime
     exported_on: Optional[datetime] = None
+
+class DomainsLeads(BaseModel):
+    id: int
+    name: str
+    pixel_installed: bool
+    converted_sales_count: int
+    viewed_product_count: int
+    visitor_count: int
+    abandoned_cart_count: int
+    total_count: int
 
 class SourceResponse(BaseModel):
     id: UUID

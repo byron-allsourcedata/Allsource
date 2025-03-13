@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, Query, Body
-from dependencies import get_audience_sources_service, check_user_authorization
+from dependencies import get_audience_sources_service, get_domain_service, check_user_authorization
 from services.audience_sources import AudienceSourceService
-from schemas.audience import HeadingSubstitutionRequest, NewSource, SourcesObjectResponse, SourceResponse, SourceIDs
+from services.domains import UserDomainsService
+from schemas.audience import HeadingSubstitutionRequest, NewSource, SourcesObjectResponse, SourceResponse, SourceIDs, DomainsLeads
 from uuid import UUID
 from typing import Optional, List
 from fastapi.responses import FileResponse
@@ -29,6 +30,15 @@ def get_sources(
         "count": count
     }
 
+@router.get("/domains-with-leads", response_model=List[DomainsLeads])
+def get_domains_with_leads(
+        user=Depends(check_user_authorization),
+        domains_service: UserDomainsService = Depends(get_domain_service)
+):
+    domain_list = domains_service.get_domains_with_leads(user=user)
+    
+    return domain_list
+
 
 @router.post("/heading-substitution", response_model=Optional[List[str]])
 def substitution_headings(
@@ -48,6 +58,7 @@ async def create_source(
         user=user,
         source_type=payload.source_type,
         source_origin=payload.source_origin,
+        domain_id=payload.domain_id,
         source_name=payload.source_name,
         file_url=payload.file_url,
         rows=payload.rows,

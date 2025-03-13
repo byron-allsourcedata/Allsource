@@ -6,7 +6,7 @@ from typing import List, Optional
 from schemas.audience import Row, SourcesObjectResponse, SourceResponse
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
-from enums import QueueName
+from enums import QueueName, LeadStatus, SourceType
 from models.users import User
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -84,13 +84,27 @@ class AudienceSourceService:
             logger.error("Error with ChatGPT API", exc_info=True)
             return None
 
-
-    async def send_matching_status(self, source_id, user_id, email_field):
+        
+    async def send_matching_status(self, *, source_id, user_id, email_field, type, domain_id, statuses):
         queue_name = QueueName.AUDIENCE_SOURCES_READER.value
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
+        data = {
+            'source_id': str(source_id),
+            'user_id': user_id
+        }
+        if type == SourceType.CSV.value:
+            data['email'] = email_field
+            
+        if type == SourceType.PIXEL.value:
+            data['domain_id'] = domain_id
+            data['statuses'] = statuses
+            
         try:
-            message_body = {'data': {'source_id': str(source_id), 'email': email_field, 'user_id': user_id}}
+            message_body = {
+                'type': type,
+                'data': data
+                }
             await publish_rabbitmq_message(
                 connection=connection,
                 queue_name=queue_name,

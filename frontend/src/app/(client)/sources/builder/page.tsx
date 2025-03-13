@@ -22,6 +22,31 @@ interface Row {
     isHidden: boolean
 }
 
+interface EventTypeInterface {
+    id: number;
+    name: string;
+}
+
+interface NewSource {
+    source_type: string;
+    source_origin: string;
+    source_name: string;
+    file_url?: string;
+    rows: { type: string; value: string }[];
+    domain_id?: number;
+}
+
+interface DomainsLeads {
+    id: number;
+    name: string
+    pixel_installed: boolean
+    converted_sales_count: number
+    viewed_product_count: number
+    visitor_count: number
+    abandoned_cart_count: number
+    total_count: number
+}
+
 const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
     height: 4,
     borderRadius: 0,
@@ -36,19 +61,35 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
 const SourcesImport: React.FC = () => {
     const router = useRouter();
     const [isChatGPTProcessing, setIsChatGPTProcessing] = useState(false);
+    const [isDomainSearchProcessing, setIsDomainSearchProcessing] = useState(false);
     const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const [sourceType, setSourceType] = useState<string>("");
+    const [selectedDomain, setSelectedDomain] = useState<string>("");
     const [sourceName, setSourceName] = useState<string>("");
     const [fileSizeStr, setFileSizeStr] = useState<string>("");
     const [fileName, setFileName] = useState<string>("");
     const [fileUrl, setFileUrl] = useState<string>("");
     const [sourceMethod, setSourceMethod] = useState<number>(0);
+    const [selectedDomainId, setSelectedDomainId] = useState<number>(0);
     const [dragActive, setDragActive] = useState(false);
     const [emailNotSubstitution, setEmailNotSubstitution] = useState(false);
+    const [pixelNotInstalled, setPixelNotInstalled] = useState(false);
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
     const [headersinCSV, setHeadersinCSV] = useState<string[]>([]);
     const { hasNotification } = useNotification();
+
+    const [eventType, setEventType] = useState<number[]>([]);
+    const [domains, setDomains] = useState<DomainsLeads[]>([]);
+    const [totalLeads, setTotalLeads] = useState(0);
+    const [matchedLeads, setMatchedLeads] = useState(0);
+
+    const eventTypes: EventTypeInterface[] = [
+        { id: 1, name: "visitor_count" },
+        { id: 2, name: "viewed_product_count" },
+        { id: 3, name: "abandoned_cart_count"},
+        { id: 4, name: "converted_sales_count"}
+    ];
 
     const defaultRows: Row[] = [
         { id: 1, type: 'Email', value: '', canDelete: false, isHidden: false },
@@ -146,12 +187,20 @@ const SourcesImport: React.FC = () => {
 
         const rowsToSubmit = rows.map(({ id, canDelete, isHidden, ...rest }) => rest);
 
-        const newSource = {
+        const newSource: NewSource = {
             source_type: convertToDBFormat(sourceType),
             source_origin: sourceMethod === 1 ? "csv" : "pixel",
             source_name: sourceName,
-            file_url: fileUrl,
-            rows: rowsToSubmit
+            rows: rowsToSubmit,
+        }
+
+        if (sourceMethod === 1) {
+            newSource.file_url = fileUrl
+        }
+
+
+        if (sourceMethod === 2) {
+            newSource.domain_id = selectedDomainId;
         }
         
         try {
@@ -335,6 +384,54 @@ const SourcesImport: React.FC = () => {
     } 
 
 
+    const toggleEventType = (id: number) => {
+        setEventType((prev) => {
+            let newEventType: number[];
+            if (prev.includes(id)) {
+                newEventType = prev.filter((item) => item !== id);
+                const typeCount = eventTypes.find(event => event.id === id)?.name as keyof DomainsLeads;
+                const removedCount = Number(domains.find(domain => domain.name === selectedDomain)?.[typeCount] || 0);
+                setMatchedLeads((prevLeads) => prevLeads - removedCount);
+            } else {
+                newEventType = [...prev, id];
+                const typeCount = eventTypes.find(event => event.id === id)?.name as keyof DomainsLeads;
+                const addedCount = Number(domains.find(domain => domain.name === selectedDomain)?.[typeCount] || 0);
+                setMatchedLeads((prevLeads) => prevLeads + addedCount);
+            }
+            return newEventType;
+        });
+    };
+    
+
+    const handleChangeDomain = (event: SelectChangeEvent<string>) => {
+        const domainName = event.target.value;
+        setSelectedDomain(domainName);
+    
+        const selectedDomainData = domains.find((domain: DomainsLeads) => domain.name === domainName);
+        if (selectedDomainData) {
+            setTotalLeads(selectedDomainData.total_count || 0);
+            setSelectedDomainId(selectedDomainData.id);
+        }
+    };
+
+    const fetchDomainsAndLeads = async () => {
+        setIsDomainSearchProcessing(true)
+        try {
+            const response = await axiosInstance.get(`/audience-sources/domains-with-leads`)
+            console.log(response.data)
+            if (response.status === 200){
+                const domains = response.data
+                setDomains(domains)
+            }
+        } 
+        catch {
+        }
+        finally {
+            setIsDomainSearchProcessing(false)
+        }
+    }
+
+
 
     return (
         <>
@@ -422,323 +519,471 @@ const SourcesImport: React.FC = () => {
                                             setSourceMethod(2)
                                             handleDeleteFile()
                                             setSourceType('')
+                                            fetchDomainsAndLeads()
                                         }}
                                         >
                                         Website - Pixel
                                     </Button>
                                 </Box>
                             </Box>
-                            <Box sx={{display: sourceMethod === 0 ? "none" : "flex", flexDirection: "column", gap: 2, position: "relative", flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
-                                {uploadProgress !== null && (
-                                                <Box sx={{ width: "100%", position: "absolute", top: 0, left: 0, zIndex: 1200  }}>
-                                                    <LinearProgress variant="determinate" value={uploadProgress} sx={{borderRadius: "6px", backgroundColor: '#c6dafc', '& .MuiLinearProgress-bar': {borderRadius: 5, backgroundColor: '#4285f4'}}} />
-                                                </Box>
-                                )}
-                                <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
-                                    <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px"}}>Select your Source File</Typography>
-                                    <Typography sx={{fontFamily: "Nunito Sans", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Please upload a CSV file containing the list of customers who have successfully completed an order on your website.</Typography>
-                                </Box>
-                                <FormControl
-                                    variant="outlined"
-                                    >
-                                    <Select
-                                        value={sourceType}
-                                        onChange={handleChangeSourceType}
-                                        displayEmpty
-                                        sx={{   
-                                            ...sourcesStyles.text,
+                            
+                            {sourceMethod === 1 && 
+                                <Box sx={{display: "flex", flexDirection: "column", gap: 2, position: "relative", flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
+                                    {uploadProgress !== null && (
+                                                    <Box sx={{ width: "100%", position: "absolute", top: 0, left: 0, zIndex: 1200  }}>
+                                                        <LinearProgress variant="determinate" value={uploadProgress} sx={{borderRadius: "6px", backgroundColor: '#c6dafc', '& .MuiLinearProgress-bar': {borderRadius: 5, backgroundColor: '#4285f4'}}} />
+                                                    </Box>
+                                    )}
+                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
+                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px"}}>Select your Source File</Typography>
+                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Please upload a CSV file containing the list of customers who have successfully completed an order on your website.</Typography>
+                                    </Box>
+                                    <FormControl
+                                        variant="outlined"
+                                        >
+                                        <Select
+                                            value={sourceType}
+                                            onChange={handleChangeSourceType}
+                                            displayEmpty
+                                            sx={{   
+                                                ...sourcesStyles.text,
+                                                width: "316px",
+                                                borderRadius: "4px",
+                                                "@media (max-width: 390px)": { width: "calc(100vw - 74px)" },
+                                            }}
+                                        >
+                                            <MenuItem value="" disabled sx={{display: "none"}}>
+                                                Select a Source Type
+                                            </MenuItem>
+                                            <MenuItem value={"Customer Conversions"}>Customer Conversions</MenuItem>
+                                            <MenuItem value={"Failed Leads"}>Failed Leads</MenuItem>
+                                            <MenuItem value={"Interest"}>Interest</MenuItem>
+                                        </Select>
+                                    </FormControl>
+                                    {sourceType !== "" && !file &&
+                                        <Box sx={{
+                                            display: "flex",
+                                            alignItems: "center",
                                             width: "316px",
+                                            border: dragActive
+                                                ? "2px dashed rgba(80, 82, 178, 1)"
+                                                : "1px dashed rgba(80, 82, 178, 1)",
                                             borderRadius: "4px",
+                                            padding: "8px 16px",
+                                            height: "80px",
+                                            gap: "16px",
+                                            cursor: "pointer",
+                                            backgroundColor: dragActive
+                                                ? "rgba(80, 82, 178, 0.1)"
+                                                : "rgba(246, 248, 250, 1)",
+                                            transition: "background-color 0.3s, border-color 0.3s",
                                             "@media (max-width: 390px)": { width: "calc(100vw - 74px)" },
                                         }}
-                                    >
-                                        <MenuItem value="" disabled sx={{display: "none"}}>
-                                            Select a Source Type
-                                        </MenuItem>
-                                        <MenuItem value={"Customer Conversions"}>Customer Conversions</MenuItem>
-                                        <MenuItem value={"Failed Leads"}>Failed Leads</MenuItem>
-                                        <MenuItem value={"Interest"}>Interest</MenuItem>
-                                    </Select>
-                                </FormControl>
-                                {sourceType !== "" && !file &&
-                                    <Box sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        width: "316px",
-                                        border: dragActive
-                                            ? "2px dashed rgba(80, 82, 178, 1)"
-                                            : "1px dashed rgba(80, 82, 178, 1)",
-                                        borderRadius: "4px",
-                                        padding: "8px 16px",
-                                        height: "80px",
-                                        gap: "16px",
-                                        cursor: "pointer",
-                                        backgroundColor: dragActive
-                                            ? "rgba(80, 82, 178, 0.1)"
-                                            : "rgba(246, 248, 250, 1)",
-                                        transition: "background-color 0.3s, border-color 0.3s",
-                                        "@media (max-width: 390px)": { width: "calc(100vw - 74px)" },
-                                    }}
-                                        onDragOver={handleDragOver}
-                                        onDragLeave={handleDragLeave}
-                                        onDrop={handleDrop}
-                                        onClick={() => document.getElementById("fileInput")?.click()}>
-                                        <IconButton sx={{ width: "40px", height: "40px", borderRadius: "4px", backgroundColor: "rgba(234, 235, 255, 1)",  }} >
-                                        <FileUploadOutlinedIcon sx={{
-                                            color: "rgba(80, 82, 178, 1)" }} />
-                                        </IconButton>
-                                        <Box sx={{ flexGrow: 1 }}>
-                                            <Typography
-                                            sx={{
-                                                fontFamily: "Nunito Sans",
-                                                fontSize: "16px",
-                                                fontWeight: "600",
-                                                color: "rgba(80, 82, 178, 1)"
-                                            }}
-                                            >
-                                            Upload a file
-                                            </Typography>
-                                            <Typography
-                                            sx={{
-                                                fontFamily: "Nunito Sans",
-                                                fontSize: "14px",
-                                                fontWeight: "500",
-                                                color: "rgba(32, 33, 36, 1)",
-                                            }}
-                                            >
-                                            CSV.Max 100MB
-                                            </Typography>
+                                            onDragOver={handleDragOver}
+                                            onDragLeave={handleDragLeave}
+                                            onDrop={handleDrop}
+                                            onClick={() => document.getElementById("fileInput")?.click()}>
+                                            <IconButton sx={{ width: "40px", height: "40px", borderRadius: "4px", backgroundColor: "rgba(234, 235, 255, 1)",  }} >
+                                            <FileUploadOutlinedIcon sx={{
+                                                color: "rgba(80, 82, 178, 1)" }} />
+                                            </IconButton>
+                                            <Box sx={{ flexGrow: 1 }}>
+                                                <Typography
+                                                sx={{
+                                                    fontFamily: "Nunito Sans",
+                                                    fontSize: "16px",
+                                                    fontWeight: "600",
+                                                    color: "rgba(80, 82, 178, 1)"
+                                                }}
+                                                >
+                                                Upload a file
+                                                </Typography>
+                                                <Typography
+                                                sx={{
+                                                    fontFamily: "Nunito Sans",
+                                                    fontSize: "14px",
+                                                    fontWeight: "500",
+                                                    color: "rgba(32, 33, 36, 1)",
+                                                }}
+                                                >
+                                                CSV.Max 100MB
+                                                </Typography>
+                                            </Box>
+                                            <input
+                                                id="fileInput"
+                                                type="file"
+                                                hidden
+                                                accept=".csv"
+                                                onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                                    const file = event.target.files?.[0];
+                                                    if (file) {
+                                                        handleFileUpload(file);
+                                                    }
+                                                    event.target.value = "";
+                                                }}
+                                            />
                                         </Box>
-                                        <input
-                                            id="fileInput"
-                                            type="file"
-                                            hidden
-                                            accept=".csv"
-                                            onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                                                const file = event.target.files?.[0];
-                                                if (file) {
-                                                    handleFileUpload(file);
-                                                }
-                                                event.target.value = "";
-                                            }}
-                                        />
-                                    </Box>
-                                }
-                                {sourceType !== "" && file &&
-                                    <Box sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        width: "316px",
-                                        border: "1px solid rgba(228, 228, 228, 1)",
-                                        borderRadius: "4px",
-                                        padding: "8px 16px",
-                                        height: "80px",
-                                        backgroundColor: "rgba(246, 248, 250, 1)",
-                                        gap: "16px",
-                                        "@media (max-width: 390px)": { width: "calc(100vw - 74px)" }
-                                    }}>
-                                        <Box sx={{ flexGrow: 1 }}>
-                                            <Typography
-                                            sx={{
-                                                fontFamily: "Nunito Sans",
-                                                fontSize: "16px",
-                                                fontWeight: "600",
-                                                color: "rgba(32, 33, 36, 1)"
-                                            }}
-                                            >
-                                            {fileName}
-                                            </Typography>
-                                            <Typography
-                                            sx={{
-                                                fontFamily: "Nunito Sans",
-                                                fontSize: "12px",
-                                                fontWeight: "600",
-                                                color: "rgba(74, 74, 74, 1)",
-                                            }}
-                                            >
-                                            {fileSizeStr}
-                                            </Typography>
+                                    }
+                                    {sourceType !== "" && file &&
+                                        <Box sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            width: "316px",
+                                            border: "1px solid rgba(228, 228, 228, 1)",
+                                            borderRadius: "4px",
+                                            padding: "8px 16px",
+                                            height: "80px",
+                                            backgroundColor: "rgba(246, 248, 250, 1)",
+                                            gap: "16px",
+                                            "@media (max-width: 390px)": { width: "calc(100vw - 74px)" }
+                                        }}>
+                                            <Box sx={{ flexGrow: 1 }}>
+                                                <Typography
+                                                sx={{
+                                                    fontFamily: "Nunito Sans",
+                                                    fontSize: "16px",
+                                                    fontWeight: "600",
+                                                    color: "rgba(32, 33, 36, 1)"
+                                                }}
+                                                >
+                                                {fileName}
+                                                </Typography>
+                                                <Typography
+                                                sx={{
+                                                    fontFamily: "Nunito Sans",
+                                                    fontSize: "12px",
+                                                    fontWeight: "600",
+                                                    color: "rgba(74, 74, 74, 1)",
+                                                }}
+                                                >
+                                                {fileSizeStr}
+                                                </Typography>
+                                            </Box>
+                                            <IconButton onClick={handleDeleteFile}>
+                                                <DeleteOutlinedIcon />
+                                            </IconButton>
                                         </Box>
-                                        <IconButton onClick={handleDeleteFile}>
-                                            <DeleteOutlinedIcon />
-                                        </IconButton>
-                                    </Box>
-                                }
-                                <Typography className="main-text" component="div"
-                                        sx={{ ...sourcesStyles.text, gap: 0.25, pt: 1, "@media (max-width: 700px)": { mb: 1 } }}
-                                    >
-                                        Sample doc: <Typography onClick={downloadSampleFile} component="span" sx={{ ...sourcesStyles.text, color: 'rgba(80, 82, 178, 1)', cursor: 'pointer', fontWeight: 400 }}>sample recent customers-list.csv</Typography>
-                                    </Typography>
-                            </Box>
-                            <Box sx={{display: sourceMethod !== 0 && file ? "flex" : "none", flexDirection: "column", position: 'relative', gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
-                                {isChatGPTProcessing && <Box
-                                    sx={{
-                                    width: '100%',
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    zIndex: 1200,   
-                                    }}
-                                >
-                                    <BorderLinearProgress variant="indeterminate" sx={{borderRadius: "6px"}} />
-                                </Box>}
-                                <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
-                                    <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px"}}>Data Maping</Typography>
-                                    <Typography sx={{fontFamily: "Nunito Sans", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Map your Field from your Source to the destination data base.</Typography>
+                                    }
+                                    <Typography className="main-text" component="div"
+                                            sx={{ ...sourcesStyles.text, gap: 0.25, pt: 1, "@media (max-width: 700px)": { mb: 1 } }}
+                                        >
+                                            Sample doc: <Typography onClick={downloadSampleFile} component="span" sx={{ ...sourcesStyles.text, color: 'rgba(80, 82, 178, 1)', cursor: 'pointer', fontWeight: 400 }}>sample recent customers-list.csv</Typography>
+                                        </Typography>
                                 </Box>
-                                <Grid container alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' }, }}>
-                                    <Grid item xs={5} sm={3} sx={{textAlign: "center"}}>
-                                        <Image src='/logo.svg' alt='logo' height={22} width={34} />
+                            }
+
+                            {sourceMethod === 1 && 
+                                <Box sx={{display: file ? "flex" : "none", flexDirection: "column", position: 'relative', gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
+                                    {isChatGPTProcessing && <Box
+                                        sx={{
+                                        width: '100%',
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        zIndex: 1200,   
+                                        }}
+                                    >
+                                        <BorderLinearProgress variant="indeterminate" sx={{borderRadius: "6px"}} />
+                                    </Box>}
+                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
+                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px"}}>Data Maping</Typography>
+                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Map your Field from your Source to the destination data base.</Typography>
+                                    </Box>
+                                    <Grid container alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' }, }}>
+                                        <Grid item xs={5} sm={3} sx={{textAlign: "center"}}>
+                                            <Image src='/logo.svg' alt='logo' height={22} width={34} />
+                                        </Grid>
+                                        <Grid item xs={1} sm={0.5}>&nbsp;</Grid>
+                                        <Grid item xs={5} sm={3} sx={{textAlign: "center"}}>
+                                            <Image src='/csv-icon.svg' alt='scv' height={22} width={34} />
+                                        </Grid>
                                     </Grid>
-                                    <Grid item xs={1} sm={0.5}>&nbsp;</Grid>
-                                    <Grid item xs={5} sm={3} sx={{textAlign: "center"}}>
-                                        <Image src='/csv-icon.svg' alt='scv' height={22} width={34} />
-                                    </Grid>
-                                </Grid>
-                                {rows?.filter(row => !row.isHidden).map((row, index) => (
-                                    <Box key={index} sx={{
-                                        mt: index === 1 && emailNotSubstitution ? "10px" : 0,
-                                    }}>
-                                        <Grid container spacing={2} alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' } }}>
-                                            {/* Left Input Field */}
-                                            <Grid item xs={5} sm={3}>
-                                                <TextField
-                                                    fullWidth
-                                                    variant="outlined"
-                                                    value={row.type}
-                                                    disabled={true}
-                                                    InputLabelProps={{
-                                                        sx: {
-                                                            fontFamily: 'Nunito Sans',
-                                                            fontSize: '12px',
-                                                            lineHeight: '16px',
-                                                            color: 'rgba(17, 17, 19, 0.60)',
-                                                            top: '-5px',
-                                                            '&.Mui-focused': {
-                                                                color: 'rgba(80, 82, 178, 1)',
-                                                                top: 0
-                                                            },
-                                                            '&.MuiInputLabel-shrink': {
-                                                                top: 0
+                                    {rows?.filter(row => !row.isHidden).map((row, index) => (
+                                        <Box key={index} sx={{
+                                            mt: index === 1 && emailNotSubstitution ? "10px" : 0,
+                                        }}>
+                                            <Grid container spacing={2} alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' } }}>
+                                                {/* Left Input Field */}
+                                                <Grid item xs={5} sm={3}>
+                                                    <TextField
+                                                        fullWidth
+                                                        variant="outlined"
+                                                        value={row.type}
+                                                        disabled={true}
+                                                        InputLabelProps={{
+                                                            sx: {
+                                                                fontFamily: 'Nunito Sans',
+                                                                fontSize: '12px',
+                                                                lineHeight: '16px',
+                                                                color: 'rgba(17, 17, 19, 0.60)',
+                                                                top: '-5px',
+                                                                '&.Mui-focused': {
+                                                                    color: 'rgba(80, 82, 178, 1)',
+                                                                    top: 0
+                                                                },
+                                                                '&.MuiInputLabel-shrink': {
+                                                                    top: 0
+                                                                }
                                                             }
-                                                        }
-                                                    }}
-                                                    InputProps={{
-                                                        sx: {
-                                                            '&.MuiOutlinedInput-root': {
-                                                                height: '36px',
-                                                                '& .MuiOutlinedInput-input': {
+                                                        }}
+                                                        InputProps={{
+                                                            sx: {
+                                                                '&.MuiOutlinedInput-root': {
+                                                                    height: '36px',
+                                                                    '& .MuiOutlinedInput-input': {
+                                                                        padding: '6.5px 8px',
+                                                                        fontFamily: 'Roboto',
+                                                                        color: '#202124',
+                                                                        fontSize: '12px',
+                                                                        fontWeight: '400',
+                                                                        lineHeight: '20px'
+                                                                    },
+                                                                    '& .MuiOutlinedInput-notchedOutline': {
+                                                                        borderColor: '#A3B0C2',
+                                                                    },
+                                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                        borderColor: '#A3B0C2',
+                                                                    },
+                                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                        borderColor: 'rgba(80, 82, 178, 1)',
+                                                                    },
+                                                                },
+                                                                '&+.MuiFormHelperText-root': {
+                                                                    marginLeft: '0',
+                                                                },
+                                                            }
+                                                        }}
+                                                    />
+                                                </Grid>
+
+                                                {/* Middle Icon Toggle (Right Arrow or Close Icon) */}
+                                                <Grid item xs={1} sm={0.5} container justifyContent="center">
+                                                    <Image
+                                                        src='/chevron-right-purple.svg'
+                                                        alt='chevron-right-purple'
+                                                        height={18}
+                                                        width={18}
+                                                    /> 
+                                                </Grid>
+                                                
+                                                <Grid item xs={5} sm={3}>
+                                                    <FormControl fullWidth sx={{ height: '36px'}}>
+                                                        <Select
+                                                            value={row.value || ''}
+                                                            onChange={(e) => handleMapListChange(row.id, e.target.value)}
+                                                            displayEmpty
+                                                            inputProps={{
+                                                                sx: {
+                                                                    height: '36px',
                                                                     padding: '6.5px 8px',
                                                                     fontFamily: 'Roboto',
-                                                                    color: '#202124',
                                                                     fontSize: '12px',
                                                                     fontWeight: '400',
-                                                                    lineHeight: '20px'
+                                                                    color: '#202124',
+                                                                    lineHeight: '20px',
                                                                 },
-                                                                '& .MuiOutlinedInput-notchedOutline': {
-                                                                    borderColor: '#A3B0C2',
+                                                            }}
+                                                            sx={{
+                                                                '&.MuiOutlinedInput-root': {
+                                                                    height: '36px',
+                                                                    '& .MuiOutlinedInput-notchedOutline': {
+                                                                        borderColor: '#A3B0C2',
+                                                                    },
+                                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                        borderColor: '#A3B0C2',
+                                                                    },
+                                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                        borderColor: 'rgba(80, 82, 178, 1)',
+                                                                    },
                                                                 },
-                                                                '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                    borderColor: '#A3B0C2',
-                                                                },
-                                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                    borderColor: 'rgba(80, 82, 178, 1)',
-                                                                },
-                                                            },
-                                                            '&+.MuiFormHelperText-root': {
-                                                                marginLeft: '0',
-                                                            },
-                                                        }
-                                                    }}
-                                                />
-                                            </Grid>
+                                                            }}
+                                                        >
+                                                            {headersinCSV.map((item: string, index: number) => (
+                                                                <MenuItem key={index} value={item}>
+                                                                    {item}
+                                                                </MenuItem>
+                                                            ))}
+                                                        </Select>
+                                                        {row.type === "Email" && emailNotSubstitution && <Typography sx={{fontFamily: "Nunito", fontSize: "12px", color: "rgba(224, 49, 48, 1)"}}>Please match email</Typography>}
+                                                    </FormControl>
+                                                </Grid>
 
-                                            {/* Middle Icon Toggle (Right Arrow or Close Icon) */}
-                                            <Grid item xs={1} sm={0.5} container justifyContent="center">
-                                                <Image
-                                                    src='/chevron-right-purple.svg'
-                                                    alt='chevron-right-purple'
-                                                    height={18}
-                                                    width={18}
-                                                /> 
+                                                {/* Delete Icon */}
+                                                <Grid item xs={1} sm={0.5} container justifyContent="center">
+                                                    {row.canDelete && (
+                                                        <>
+                                                            <IconButton onClick={() => handleDelete(row.id)}>
+                                                                <Image
+                                                                    src='/trash-icon-filled.svg'
+                                                                    alt='trash-icon-filled'
+                                                                    height={18}
+                                                                    width={18}
+                                                                />
+                                                            </IconButton>
+                                                        </>
+                                                    )}
+                                                </Grid>
                                             </Grid>
-                                            
-                                            <Grid item xs={5} sm={3}>
-                                                <FormControl fullWidth sx={{ height: '36px'}}>
-                                                    <Select
-                                                        value={row.value || ''}
-                                                        onChange={(e) => handleMapListChange(row.id, e.target.value)}
-                                                        displayEmpty
-                                                        inputProps={{
-                                                            sx: {
-                                                                height: '36px',
-                                                                padding: '6.5px 8px',
-                                                                fontFamily: 'Roboto',
-                                                                fontSize: '12px',
-                                                                fontWeight: '400',
-                                                                color: '#202124',
-                                                                lineHeight: '20px',
-                                                            },
-                                                        }}
-                                                        sx={{
-                                                            '&.MuiOutlinedInput-root': {
-                                                                height: '36px',
-                                                                '& .MuiOutlinedInput-notchedOutline': {
-                                                                    borderColor: '#A3B0C2',
-                                                                },
-                                                                '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                    borderColor: '#A3B0C2',
-                                                                },
-                                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                    borderColor: 'rgba(80, 82, 178, 1)',
-                                                                },
-                                                            },
-                                                        }}
-                                                    >
-                                                        {headersinCSV.map((item: string, index: number) => (
-                                                            <MenuItem key={index} value={item}>
-                                                                {item}
-                                                            </MenuItem>
-                                                        ))}
-                                                    </Select>
-                                                    {row.type === "Email" && emailNotSubstitution && <Typography sx={{fontFamily: "Nunito", fontSize: "12px", color: "rgba(224, 49, 48, 1)"}}>Please match email</Typography>}
-                                                </FormControl>
-                                            </Grid>
+                                        </Box>
+                                    ))}
+                                    {rows.some(row => row.isHidden) && (
+                                        <Box sx={{ display: 'flex', justifyContent: 'flex-start'}} onClick={handleAdd}>
+                                                <Typography sx={{
+                                                    fontFamily: 'Nunito Sans',
+                                                    lineHeight: '22.4px',
+                                                    fontSize: '14px',
+                                                    fontWeight: '600',
+                                                    color: 'rgba(80, 82, 178, 1)',
+                                                    cursor: 'pointer'
+                                                }}>
+                                                    + Add more
+                                                </Typography>
+                                        </Box>
+                                    )}
+                                </Box>
+                            }
 
-                                            {/* Delete Icon */}
-                                            <Grid item xs={1} sm={0.5} container justifyContent="center">
-                                                {row.canDelete && (
-                                                    <>
-                                                        <IconButton onClick={() => handleDelete(row.id)}>
-                                                            <Image
-                                                                src='/trash-icon-filled.svg'
-                                                                alt='trash-icon-filled'
-                                                                height={18}
-                                                                width={18}
-                                                            />
-                                                        </IconButton>
-                                                    </>
-                                                )}
-                                            </Grid>
-                                        </Grid>
+
+                            {sourceMethod === 2 && 
+                                <Box sx={{display: "flex", flexDirection: "column", gap: 2, position: "relative", flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
+                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
+                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px"}}>Select your Domain</Typography>
+                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Please Select your domain.</Typography>
                                     </Box>
-                                ))}
-                                {rows.some(row => row.isHidden) && (
-                                    <Box sx={{ display: 'flex', justifyContent: 'flex-start'}} onClick={handleAdd}>
-                                            <Typography sx={{
-                                                fontFamily: 'Nunito Sans',
-                                                lineHeight: '22.4px',
-                                                fontSize: '14px',
-                                                fontWeight: '600',
-                                                color: 'rgba(80, 82, 178, 1)',
-                                                cursor: 'pointer'
-                                            }}>
-                                                + Add more
-                                            </Typography>
+                                    <FormControl
+                                        variant="outlined"
+                                        >
+                                        <Select
+                                            value={selectedDomain}
+                                            onChange={handleChangeDomain}
+                                            displayEmpty
+                                            sx={{   
+                                                ...sourcesStyles.text,
+                                                width: "316px",
+                                                borderRadius: "4px",
+                                                "@media (max-width: 390px)": { width: "calc(100vw - 74px)" },
+                                            }}
+                                        >
+                                            <MenuItem value="" disabled sx={{display: "none"}}>
+                                                Select domain
+                                            </MenuItem>
+                                            {domains.map((item: DomainsLeads, index) => (
+                                                <MenuItem key={index} value={item.name}>{item.name}</MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
+                                        <Typography sx={{fontFamily: "Roboto", fontSize: "14px", color: "rgba(32, 33, 36, 1)"}}>Total Leads</Typography> 
+                                        <Typography sx={{fontFamily: "Nunino Sans", fontWeight: 600, color: "rgba(32, 33, 36, 1)"}}>{totalLeads}</Typography>
                                     </Box>
-                                )}
-                            </Box>
-                            <Box sx={{display: sourceMethod !== 0 && file ? "flex" : "none", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
+                                </Box>
+                            }
+
+                            { sourceMethod === 2 && 
+                                <Box sx={{display: "flex", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
+                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
+                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px"}}>Choose your data source</Typography>
+                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Please Select your event type.</Typography>
+                                    </Box>
+                                    <Box sx={{display: "flex",  gap: 2, "@media (max-width: 420px)": { display: "grid", gridTemplateColumns: "1fr" }}}>
+                                        <Button
+                                            variant="outlined"
+                                            sx={{
+                                                fontFamily: "Nunito Sans",
+                                                border: "1px solid rgba(208, 213, 221, 1)",
+                                                borderRadius: "4px",
+                                                color: "rgba(32, 33, 36, 1)",
+                                                textTransform: "none",
+                                                fontSize: "14px",
+                                                padding: "8px 12px",
+                                                backgroundColor: eventType.includes(1) ? "rgba(246, 248, 250, 1)" : "#fff",
+                                                ":hover": {
+                                                    borderColor: "#1C3A57",
+                                                    backgroundColor: "rgba(236, 238, 241, 1)"
+                                                },
+                                            }}
+                                            onClick={() => {
+                                                toggleEventType(1)
+                                            }}
+                                            >
+                                            Visitor
+                                        </Button>
+                                        <Button
+                                            variant="outlined"
+                                            sx={{
+                                                fontFamily: "Nunito Sans",
+                                                border: "1px solid rgba(208, 213, 221, 1)",
+                                                borderRadius: "4px",
+                                                color: "rgba(32, 33, 36, 1)",
+                                                textTransform: "none",
+                                                fontSize: "14px",
+                                                padding: "8px 12px",
+                                                backgroundColor: eventType.includes(2) ? "rgba(246, 248, 250, 1)" : "#fff",
+                                                ":hover": {
+                                                    borderColor: "#1C3A57",
+                                                    backgroundColor: "rgba(236, 238, 241, 1)"
+                                                },
+                                            }}
+                                            onClick={() => {
+                                                toggleEventType(2)
+                                            }}
+                                            >
+                                                View Product
+                                        </Button>
+                                        <Button
+                                            variant="outlined"
+                                            sx={{
+                                                fontFamily: "Nunito Sans",
+                                                border: "1px solid rgba(208, 213, 221, 1)",
+                                                borderRadius: "4px",
+                                                color: "rgba(32, 33, 36, 1)",
+                                                textTransform: "none",
+                                                fontSize: "14px",
+                                                padding: "8px 12px",
+                                                backgroundColor: eventType.includes(3) ? "rgba(246, 248, 250, 1)" : "#fff",
+                                                ":hover": {
+                                                    borderColor: "#1C3A57",
+                                                    backgroundColor: "rgba(236, 238, 241, 1)"
+                                                },
+                                            }}
+                                            onClick={() => {
+                                                toggleEventType(3)
+                                            }}
+                                            >
+                                                Abandoned Cart
+                                        </Button>
+                                        <Button
+                                            variant="outlined"
+                                            sx={{
+                                                fontFamily: "Nunito Sans",
+                                                border: "1px solid rgba(208, 213, 221, 1)",
+                                                borderRadius: "4px",
+                                                color: "rgba(32, 33, 36, 1)",
+                                                textTransform: "none",
+                                                fontSize: "14px",
+                                                padding: "8px 12px",
+                                                backgroundColor: eventType.includes(4) ? "rgba(246, 248, 250, 1)" : "#fff",
+                                                ":hover": {
+                                                    borderColor: "#1C3A57",
+                                                    backgroundColor: "rgba(236, 238, 241, 1)"
+                                                },
+                                            }}
+                                            onClick={() => {
+                                                toggleEventType(4)
+                                            }}
+                                            >
+                                                Converted Sales
+                                        </Button>
+                                    </Box>
+                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
+                                        <Typography sx={{fontFamily: "Roboto", fontSize: "14px", color: "rgba(32, 33, 36, 1)"}}>Matched Leads</Typography> 
+                                        <Typography sx={{fontFamily: "Nunino Sans", fontWeight: 600, color: "rgba(32, 33, 36, 1)"}}>{matchedLeads}</Typography>
+                                    </Box>
+                                </Box>
+                            }
+                            
+                            
+                            <Box sx={{display: sourceMethod !== 0 && file || selectedDomain !== "" && eventType.length > 0 ? "flex" : "none", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
                                 <Box sx={{display: "flex", alignItems: "center", gap: 2, "@media (max-width: 400px)": { justifyContent: "space-between" },}}>
                                     <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px"}}>Create Name</Typography>
                                     <TextField

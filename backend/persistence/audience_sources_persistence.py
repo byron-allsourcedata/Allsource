@@ -70,6 +70,7 @@ class AudienceSourcesPersistence:
             source_origin=creating_data.get("source_origin"),
             file_url=creating_data.get("file_url"),
             name=creating_data.get("source_name"),
+            domain_id=creating_data.get("domain_id") or None,
             mapped_fields=creating_data.get("rows"),
         )
 
