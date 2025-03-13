@@ -146,7 +146,30 @@ const Sources: React.FC = () => {
                 return;
             }
 
-            let url = `/audience-sources?&page=${page + 1}&per_page=${rowsPerPage}`
+            const filters = JSON.parse(sessionStorage.getItem('filtersBySource') || '{}');
+
+            let url = `/audience-sources?&page=${page + 1}&per_page=${rowsPerPage}`;
+
+            if (filters.from_date || filters.to_date) {
+                url += `&created_date_start=${filters.from_date || ''}&created_date_end=${filters.to_date || ''}`;
+            }
+            if (filters.selectedStatus?.length > 0) {
+                url += `&status=${filters.selectedStatus.map((status: string) => status.toLowerCase()).join(',')}`;
+            }
+            if (filters.selectedTypes?.length > 0) {
+                url += `&type_customer=${filters.selectedTypes.map((type: string) => type.toLowerCase()).join(',')}`;
+            }            
+            if (filters.selectedDomains?.length > 0) {
+                url += `&domain_id=${filters.selectedDomains.join(',')}`;
+            }
+            if (filters.searchQuery) {
+                url += `&name=${filters.searchQuery}`;
+            }
+
+            if (sortBy) {
+                setPage(0)
+                url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
+            }
 
             if (sortBy) {
                 setPage(0)
@@ -262,7 +285,7 @@ const Sources: React.FC = () => {
             { condition: filters.selectedStatus.length > 0, label: 'Status', value: () => filters.selectedStatus.join(', ') },
             { condition: filters.selectedTypes.length > 0, label: 'Types', value: () => filters.selectedTypes.join(', ') },
             { condition: filters.selectedDomains.length > 0, label: 'Domains', value: () => filters.selectedDomains.join(', ') },
-            { condition: filters.createdDate.length > 0, label: 'Created Date', value: () => filters.createdDate.join(', ') },
+            { condition: filters.createdDate.length > 0, label: 'Visited Date', value: () => filters.createdDate.join(', ') },
             { condition: filters.dateRange.fromDate || filters.dateRange.toDate, label: 'Date Range', value: () => {
                 const from = dayjs.unix(filters.dateRange.fromDate!).format(dateFormat);
                 const to = dayjs.unix(filters.dateRange.toDate!).format(dateFormat);

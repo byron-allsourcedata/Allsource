@@ -9,7 +9,9 @@ from models.audience_sources import AudienceSource
 from models.users import Users
 from typing import Optional, Tuple, List
 from sqlalchemy.engine.row import Row
+from sqlalchemy.orm import Query
 
+from persistence.utils import apply_filters
 
 logger = logging.getLogger(__name__)
 
@@ -19,12 +21,18 @@ class AudienceSourcesPersistence:
 
 
     def get_sources(
-        self, 
-        user_id: int, 
-        page: int, 
-        per_page: int, 
-        sort_by: Optional[str] = None, 
-        sort_order: Optional[str] = None
+            self,
+            user_id: int,
+            page: int,
+            per_page: int,
+            sort_by: Optional[str] = None,
+            sort_order: Optional[str] = None,
+            name: Optional[str] = None,
+            source: Optional[TypeOfSourceOrigin] = None,
+            type_customer: Optional[List[TypeOfCustomer]] = None,
+            domain_id: Optional[int] = None,
+            created_date_start: Optional[datetime] = None,
+            created_date_end: Optional[datetime] = None
     ) -> Tuple[List[Row], int]:
 
         query = (
@@ -42,6 +50,16 @@ class AudienceSourcesPersistence:
             )
                 .join(Users, Users.id == AudienceSource.created_by_user_id)
                 .filter(AudienceSource.user_id == user_id)
+        )
+
+        query = apply_filters(
+            query,
+            name=name,
+            source=source,
+            type_customer=type_customer,
+            domain_id=domain_id,
+            created_date_start=created_date_start,
+            created_date_end=created_date_end
         )
 
         sort_options = {
@@ -93,37 +111,3 @@ class AudienceSourcesPersistence:
         processing_sources = self.db.query(AudienceSource).filter(
             AudienceSource.user_id == user_id, AudienceSource.id.in_(sources_ids))
         return processing_sources
-
-    def get_filtered_sources(
-            self,
-            user_id: int,
-            name: Optional[str] = None,
-            source: Optional[TypeOfSourceOrigin] = None,
-            type_customer: Optional[List[TypeOfCustomer]] = None,
-            domain_id: Optional[int] = None,
-            created_date: Optional[datetime] = None,
-    ) -> List[Row]:
-        query = select(AudienceSource)
-
-        filters = []
-
-        if user_id:
-            filters.append(AudienceSource.user_id == user_id)
-        if name:
-            filters.append(AudienceSource.name == name)
-        if source:
-            type_source_origin = source.value
-            filters.append(AudienceSource.source_origin == type_source_origin)
-        if type_customer:
-            type_customer_values = [tc.value for tc in type_customer]
-            filters.append(AudienceSource.source_type.in_(type_customer_values))
-        if domain_id is not None:
-            filters.append(AudienceSource.domain_id == domain_id)
-        if created_date:
-            filters.append(AudienceSource.created_at >= created_date)
-
-        if filters:
-            query = query.where(*filters)
-
-        result = self.db.execute(query)
-        return result.scalars().all()
