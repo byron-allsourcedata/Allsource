@@ -5,7 +5,7 @@ import { Typography, Box, Link } from "@mui/material";
 import { useRouter, useSearchParams } from 'next/navigation';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { shopifyLandingStyle } from "./bingAds-landing";
-import { showErrorToast, showInfoToast } from '../../../components/ToastNotification';
+import { showErrorToast, showInfoToast, showToast } from '../../../components/ToastNotification';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 
 const GoogleAdsLanding = () => {
@@ -23,24 +23,26 @@ const GoogleAdsLanding = () => {
         showErrorToast(`Error connect to BingAds: ${error}`);
         return
       }
+      const codeVerifier = localStorage.getItem('codeVerifier');
       try {
         const response = await axiosInstance.post(
           '/integrations/',
           {
             bing_ads: {
               code: code,
-              state: state
+              state: state,
+              code_verifier: codeVerifier
             },
           },
           {
             params: {
-              service_name: 'bing-ads',
+              service_name: 'bing_ads',
             },
           }
         );
 
         if (response.data.status == 'SUCCESS') {
-          showInfoToast('Connect to BingAds success!')
+          showToast('Connect to BingAds success!')
           router.push(`/integrations`);
         }
         else if (response.data.status == 'ERROR_BINGADS_TOKEN') {

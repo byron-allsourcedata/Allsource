@@ -32,6 +32,7 @@ class GoogleAdsCredentials(BaseModel):
 class BingAdsCredentials(BaseModel):
     code: str
     state: str
+    code_verifier: str
 
 class SalesForceCredentials(BaseModel):
     code: str

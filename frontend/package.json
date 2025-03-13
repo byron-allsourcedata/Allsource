@@ -45,7 +45,8 @@
     "react-toastify": "^10.0.5",
     "stripe": "^13.4.0",
     "styled-components": "^6.1.12",
-    "sweetalert2": "^11.6.13"
+    "sweetalert2": "^11.6.13",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/axios": "^0.14.0",

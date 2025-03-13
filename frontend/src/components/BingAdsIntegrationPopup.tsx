@@ -4,6 +4,7 @@ import TabPanel from "@mui/lab/TabPanel";
 import { Box, Typography, Drawer, IconButton, Button } from "@mui/material";
 import Image from "next/image";
 import { useState } from "react";
+import { v4 as uuidv4 } from 'uuid';
 import CloseIcon from '@mui/icons-material/Close';
 
 interface CreateSalesForceProps {
@@ -89,22 +90,58 @@ const klaviyoStyles = {
 const BingAdsIntegrationPopup = ({ handleClose, open, boxShadow }: CreateSalesForceProps) => {
     const [value, setValue] = useState("1");
 
-    const handleLogin = async () => {
-        const client_id = 'abba3068-6388-4dd2-8977-dc7c78b94ad9';
+    // Функция для генерации случайной строки (code verifier)
+    const generateRandomString = (length: number): string => {
+        const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += charset.charAt(Math.floor(Math.random() * charset.length));
+        }
+        return result;
+    };
+
+    // Функция для генерации code challenge из code verifier с помощью SHA-256
+    async function generateCodeChallenge(codeVerifier: string): Promise<string> {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(codeVerifier);
+        const digest = await crypto.subtle.digest('SHA-256', data);
+
+        const uint8Array = new Uint8Array(digest);
+        let base64Digest = '';
+        for (let i = 0; i < uint8Array.length; i++) {
+            base64Digest += String.fromCharCode(uint8Array[i]);
+        }
+
+        const base64String = btoa(base64Digest);
+
+        // Преобразование в URL-safe base64
+        return base64String
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=+$/, '');
+    }
+
+    async function handleLogin(): Promise<void> {
+        const client_id = process.env.NEXT_PUBLIC_AZURE_CLIENT_ID;
         const redirect_uri = `${process.env.NEXT_PUBLIC_BASE_URL}/bing-ads-landing`;
-        console.log(redirect_uri)
-        const scope = 'openid offline_access https://ads.microsoft.com/msads.manage';
-        const tenant = 'f8cdef31-a31e-4b4a-93e4-5f571e91255a'
-        const authorizationUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +
-            `client_id=${client_id}` +
-            `&redirect_uri=${encodeURIComponent(redirect_uri)}` +
-            `&response_type=code` +
-            `&scope=${encodeURIComponent(scope)}` +
-            `&state=${Math.random().toString(36).substring(7)}` +
-            `&response_mode=query`;
-    
-        window.location.href = authorizationUrl;
-    };    
+        const scope = 'openid offline_access';
+        const state = uuidv4();
+        const codeVerifier: string = generateRandomString(128);
+        localStorage.setItem('codeVerifier', codeVerifier);
+        const codeChallenge = await generateCodeChallenge(codeVerifier);
+        const authorizationUrl =
+            `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +
+            `client_id=${client_id}&` +
+            `redirect_uri=${encodeURIComponent(redirect_uri)}&` +
+            `response_type=code&` +
+            `scope=${encodeURIComponent(scope)}&` +
+            `state=${state}&` +
+            `response_mode=query&` +
+            `code_challenge=${codeChallenge}&` +
+            `code_challenge_method=S256`;
+
+        window.open(authorizationUrl, '_blank');
+    }
 
     return (
         <>

@@ -43,11 +43,11 @@ class BingAdsIntegrationsService:
         return response
 
     def get_credentials(self, domain_id: str):
-        credential = self.integrations_persisntece.get_credentials_for_service(domain_id, SourcePlatformEnum.SALES_FORCE.value)
+        credential = self.integrations_persisntece.get_credentials_for_service(domain_id, SourcePlatformEnum.BING_ADS.value)
         return credential
         
 
-    def __save_integrations(self, api_key: str, instance_url: str, domain_id: int, user: dict):
+    def __save_integrations(self, api_key: str, domain_id: int, user: dict):
         credential = self.get_credentials(domain_id)
         if credential:
             credential.access_token = api_key
@@ -59,8 +59,7 @@ class BingAdsIntegrationsService:
             'domain_id': domain_id,
             'access_token': api_key,
             'full_name': user.get('full_name'),
-            'instance_url': instance_url,
-            'service_name': SourcePlatformEnum.SALES_FORCE.value
+            'service_name': SourcePlatformEnum.BING_ADS.value
         })
         if not integartions:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
@@ -118,25 +117,22 @@ class BingAdsIntegrationsService:
         return response
     
     def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
-        client_id = os.getenv("BING_ADS_TOKEN")
-        client_secret = os.getenv("BING_ADS_SECRET")
-        authority = os.getenv("BING_ADS_AUTHORITY")
+        client_id = os.getenv("AZURE_CLIENT_ID")
+        client_secret = os.getenv("AZURE_CLIENT_SECRET")
         data = {
             "client_id": client_id,
             "client_secret": client_secret,
             "code": credentials.bing_ads.code,
             "grant_type": "authorization_code",
             "redirect_uri": f"{os.getenv('SITE_HOST_URL')}/bing-ads-landing",
+            'code_verifier': credentials.bing_ads.code_verifier
         }
-        url = f"{authority}/oauth2/v2.0/token"
-        response = self.__handle_request(method='POST', url=url, data=data, headers = {"Content-Type": "application/x-www-form-urlencoded"})
-        print(response)
+        response = self.__handle_request(method='POST', url='https://login.microsoftonline.com/common/oauth2/v2.0/token', data=data, headers = {"Content-Type": "application/x-www-form-urlencoded"})
         if response.status_code == 200:
             token_data = response.json()
             access_token = token_data.get('access_token')
             refresh_token = token_data.get('refresh_token')
-            instance_url = token_data.get('instance_url')
-            integrations = self.__save_integrations(refresh_token, instance_url, domain.id, user)
+            integrations = self.__save_integrations(refresh_token, domain.id, user)
             return {
                 'integrations': integrations,
                 'status': IntegrationsStatus.SUCCESS.value
