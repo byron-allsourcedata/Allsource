@@ -88,12 +88,15 @@ class AudienceSourcesPersistence:
         
         return sources, count
 
-
     def create_source(self, **creating_data) -> Optional[AudienceSource]:
+        source_type = creating_data.get("source_type")
+        if not source_type:
+            source_type = 'viewed_product,visitor,abandoned_cart,converted_sales'
+
         source = AudienceSource(
             user_id=creating_data.get("user_id"),
             created_by_user_id=creating_data.get("user_id"),
-            source_type=creating_data.get("source_type"),
+            source_type=source_type,
             source_origin=creating_data.get("source_origin"),
             file_url=creating_data.get("file_url"),
             name=creating_data.get("source_name"),
@@ -104,7 +107,6 @@ class AudienceSourcesPersistence:
         self.db.add(source)
         self.db.commit()
         return source
-    
 
     def delete_source(self, source_id: int) -> int:
         deleted_count = self.db.query(AudienceSource).filter(
