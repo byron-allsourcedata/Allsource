@@ -373,7 +373,7 @@ class SubscriptionService:
             status='active',
             plan_id=plan.id,
             is_trial=False,
-            lead_credit_price_id=plan.lead_credit_price_id
+            contact_credit_price_id=plan.contact_credit_price_id
         )
         self.db.add(add_subscription_obj)
         self.db.flush()
@@ -400,7 +400,7 @@ class SubscriptionService:
             status='active',
             plan_id=plan.id,
             is_trial=False,
-            lead_credit_price_id=plan.lead_credit_price_id
+            contact_credit_price_id=plan.contact_credit_price_id
         )
         self.db.add(add_subscription_obj)
         self.db.flush()
@@ -426,7 +426,7 @@ class SubscriptionService:
             status=status,
             plan_id=plan.id,
             is_trial=True,
-            lead_credit_price_id=plan.lead_credit_price_id
+            contact_credit_price_id=plan.contact_credit_price_id
         )
         self.db.add(add_subscription_obj)
         self.db.flush()
@@ -489,7 +489,7 @@ class SubscriptionService:
         return self.db.query(SubscriptionPlan).filter(SubscriptionPlan.full_price == lead_credit_price).first()
     
     def process_shopify_subscription(self, user, plan, subscription_info, charge_id):
-        result = {'status': None, 'lead_credit_price_id': None}
+        result = {'status': None, 'contact_credit_price_id': None}
         
         status = subscription_info.get("status", "").lower()
         if status in ('cancelled', 'declined'):
@@ -503,7 +503,7 @@ class SubscriptionService:
             end_date = start_date + relativedelta(months=1) if plan.interval == "month" else start_date + relativedelta(years=1)
             
         if status == 'active':
-            result['lead_credit_price_id'] = plan.lead_credit_price_id
+            result['contact_credit_price_id'] = plan.contact_credit_price_id
 
             self.db.query(UserSubscriptions).where(
                 UserSubscriptions.user_id == user.id,
@@ -520,7 +520,7 @@ class SubscriptionService:
                 status=status,
                 created_at=datetime.now(timezone.utc).replace(tzinfo=None),
                 user_id=user.id,
-                lead_credit_price_id=plan.lead_credit_price_id,
+                contact_credit_price_id=plan.contact_credit_price_id,
                 is_trial=False
             )
 
@@ -550,7 +550,7 @@ class SubscriptionService:
     def process_subscription(self, user: Users, stripe_payload, payout_id, referral_parent_id):
         result = {
             'status': None,
-            'lead_credit_price_id': None
+            'contact_credit_price_id': None
         }
         user_id = user.id
         platform_subscription_id = stripe_payload.get("id")
@@ -621,8 +621,8 @@ class SubscriptionService:
             leads_credits = plan.leads_credits
             prospect_credits = plan.prospect_credits
             members_limit = plan.members_limit
-            lead_credit_price_id = plan.lead_credit_price_id
-            result['lead_credit_price'] = lead_credit_price_id
+            contact_credit_price_id = plan.contact_credit_price_id
+            result['contact_credit_price_id'] = contact_credit_price_id
             if user_subscription and user_subscription.status == 'active':
                 if canceled_at:
                     user_subscription.cancel_scheduled_at = datetime.fromtimestamp(canceled_at, timezone.utc).replace(
@@ -652,7 +652,7 @@ class SubscriptionService:
                     user_id=user_id,
                     price_id=price_id,
                     platform_subscription_id=platform_subscription_id,
-                    lead_credit_price_id=lead_credit_price_id,
+                    contact_credit_price_id=contact_credit_price_id,
                     is_trial=True if stripe_status == 'trialing' else False
                 )
                 self.db.add(user_subscription)
