@@ -1420,7 +1420,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                             </TabContext>
                         }
                     </Box>
-                    {notAdsUser && (
+                    {!notAdsUser && (
                         <Box sx={{ px: 2, py: 2, width: '100%', borderTop: '1px solid #e4e4e4' }}>
                             <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
                                 {getButton(value)}
