@@ -27,66 +27,6 @@ interface IntegrationsCredentials {
     is_with_suppression?: boolean
 }
 
-const klaviyoStyles = {
-    tabHeading: {
-        fontFamily: 'Nunito Sans',
-        fontSize: '14px',
-        color: '#707071',
-        fontWeight: '500',
-        lineHeight: '20px',
-        textTransform: 'none',
-        padding: 0,
-        minWidth: 'auto',
-        px: 2,
-        '@media (max-width: 600px)': {
-            alignItems: 'flex-start',
-            p: 0
-        },
-        '&.Mui-selected': {
-            color: '#5052b2',
-            fontWeight: '700'
-        }
-    },
-    inputLabel: {
-        fontFamily: 'Nunito Sans',
-        fontSize: '14px',
-        lineHeight: '16px',
-        left: '2px',
-        color: 'rgba(17, 17, 19, 0.60)',
-        '&.Mui-focused': {
-            color: '#0000FF',
-        },
-    },
-    formInput: {
-        '&.MuiOutlinedInput-root': {
-            height: '48px',
-            '& .MuiOutlinedInput-input': {
-                padding: '12px 16px 13px 16px',
-                fontFamily: 'Roboto',
-                color: '#202124',
-                fontSize: '14px',
-                lineHeight: '20px',
-                fontWeight: '400'
-            },
-            '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#A3B0C2',
-            },
-            '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#A3B0C2',
-            },
-            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#0000FF',
-            },
-            '&.Mui-error .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'red',
-            },
-        },
-        '&+.MuiFormHelperText-root': {
-            marginLeft: '0',
-        },
-    },
-}
-
 const BingAdsIntegrationPopup = ({ handleClose, open, boxShadow }: CreateSalesForceProps) => {
     const [value, setValue] = useState("1");
 
@@ -124,7 +64,7 @@ const BingAdsIntegrationPopup = ({ handleClose, open, boxShadow }: CreateSalesFo
     async function handleLogin(): Promise<void> {
         const client_id = process.env.NEXT_PUBLIC_AZURE_CLIENT_ID;
         const redirect_uri = `${process.env.NEXT_PUBLIC_BASE_URL}/bing-ads-landing`;
-        const scope = 'openid offline_access';
+        const scope = 'openid offline_access https://ads.microsoft.com/msads.manage';
         const state = uuidv4();
         const codeVerifier: string = generateRandomString(128);
         localStorage.setItem('codeVerifier', codeVerifier);
@@ -138,7 +78,9 @@ const BingAdsIntegrationPopup = ({ handleClose, open, boxShadow }: CreateSalesFo
             `state=${state}&` +
             `response_mode=query&` +
             `code_challenge=${codeChallenge}&` +
-            `code_challenge_method=S256`;
+            `code_challenge_method=S256&` +
+            `prompt=consent`;
+
 
         window.open(authorizationUrl, '_blank');
     }
