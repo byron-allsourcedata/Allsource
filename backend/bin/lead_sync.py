@@ -261,10 +261,7 @@ def generate_random_order_detail():
     }
 
 def process_root_user_behavior(lead_user, behavior_type, requested_at, session):
-    events = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-    random_event = random.choice(events)
-
-    if behavior_type == 'checkout_completed' or random_event % 4 == 0:
+    if behavior_type == 'checkout_completed':
         if not lead_user.is_converted_sales:
             lead_user.is_converted_sales = True
             session.flush()
@@ -286,7 +283,7 @@ def process_root_user_behavior(lead_user, behavior_type, requested_at, session):
             new_record = LeadsUsersOrdered(lead_user_id=lead_user.id, ordered_at=requested_at)
             session.add(new_record)
 
-    if behavior_type == 'product_added_to_cart' or random_event % 3 == 0:
+    if behavior_type == 'product_added_to_cart':
         existing_record = session.query(LeadsUsersAddedToCart).filter_by(lead_user_id=lead_user.id).first()
         if existing_record:
             existing_record.added_at = requested_at
@@ -525,7 +522,7 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
             ContactCredits = aliased(SubscriptionPlan)
             result_query = session.query(
                 SubscriptionPlan, ContactCredits.price
-            ).join(
+            ).outerjoin(
                 ContactCredits, SubscriptionPlan.contact_credit_price_id == ContactCredits.id
             ).filter(
                 SubscriptionPlan.id == user_subscription.plan_id
@@ -561,12 +558,6 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
         lead_visit_id = leads_result[0][1]
         lead_behavior_type = leads_result[0][2]
         lead_visit_full_time_sec = leads_result[0][3]
-        if lead_user.behavior_type in ('visitor', 'viewed_product') and behavior_type in (
-                'viewed_product', 'product_added_to_cart') and lead_user.behavior_type != behavior_type:
-            session.query(LeadUser).filter(LeadUser.id == lead_user.id).update({
-                LeadUser.behavior_type: behavior_type
-            })
-            session.flush()
         if lead_behavior_type == 'visitor':
             if behavior_type == 'viewed_product':
                 lead_behavior_type = behavior_type
@@ -603,6 +594,13 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
             if not lead_user.is_returning_visitor:
                 lead_user.is_returning_visitor = True
                 session.flush()
+                
+    if lead_user.behavior_type in ('visitor', 'viewed_product') and behavior_type in (
+                'viewed_product', 'product_added_to_cart') and lead_user.behavior_type != behavior_type:
+            session.query(LeadUser).filter(LeadUser.id == lead_user.id).update({
+                LeadUser.behavior_type: behavior_type
+            })
+            session.flush()
     if root_user:
         process_root_user_behavior(lead_user, behavior_type, requested_at, session)
     else:
