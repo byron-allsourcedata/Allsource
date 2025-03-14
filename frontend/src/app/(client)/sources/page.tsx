@@ -599,6 +599,8 @@ const Sources: React.FC = () => {
                                         padding: '8px',
                                         opacity: data?.length === 0 ? '0.5' : '1',
                                         minWidth: 'auto',
+                                        maxHeight: '40px',
+                                        maxWidth:'40px',
                                         position: 'relative',
                                         '@media (max-width: 900px)': {
                                             border: 'none',
