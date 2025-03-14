@@ -134,27 +134,26 @@ async def parse_csv_file(*, data, source_id, db_session, s3_session, connection,
     db_session.commit()
     return True
 
-def get_min_max_ids(db_session, domain_id, statuses):
+def get_max_ids(db_session, domain_id, statuses):
     query = db_session.query(
-        func.min(FiveXFiveUser.id), 
-        func.max(FiveXFiveUser.id),
+        func.max(LeadUser.id),
         func.count(FiveXFiveUser.id)
-    ).join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id).filter(
+    ).join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)\
+    .filter(
         LeadUser.domain_id == domain_id
     )
 
     filters = []
-    
     if LeadStatus.VIEWED_PRODUCT.value in statuses:
         filters.append(
-            or_(
+            and_(
                 LeadUser.behavior_type == "viewed_product",
                 LeadUser.is_converted_sales == False
             )
         )
     if LeadStatus.VISITOR.value in statuses:
         filters.append(
-            or_(
+            and_(
                 LeadUser.behavior_type == "visitor",
                 LeadUser.is_converted_sales == False
             )
@@ -178,11 +177,16 @@ def get_min_max_ids(db_session, domain_id, statuses):
             )
         )
     if LeadStatus.CONVERTED_SALES.value in statuses:
+        query = query.outerjoin(
+                LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id
+            ).outerjoin(
+                LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id
+            )
         filters.append(
             or_(
                 and_(
                     LeadUser.behavior_type != "product_added_to_cart",
-                    LeadUser.is_converted_sales == False
+                    LeadUser.is_converted_sales == True
                 ),
                 and_(
                     LeadUser.is_converted_sales == True,
@@ -193,10 +197,10 @@ def get_min_max_ids(db_session, domain_id, statuses):
             
     if filters:
         query = query.filter(or_(*filters))
+        
+    max_id, total_count = query.one()
 
-    min_id, max_id, total_count = query.one()
-
-    return min_id, max_id, total_count
+    return max_id, total_count
 
 async def send_pixel_contacts(*, data, source_id, db_session, connection, user_id):
     domain_id = data.get('domain_id')
@@ -208,51 +212,36 @@ async def send_pixel_contacts(*, data, source_id, db_session, connection, user_i
         logging.warning(f"AudienceSource with ID {source_id} not found.")
         return False
     
-    min_id, max_id, total_rows = get_min_max_ids(db_session, domain_id, statuses)
+    max_id, total_rows = get_max_ids(db_session, domain_id, statuses)
     processed_rows = 0
-    logging.info(f"Total row in CSV file: {total_rows}")
+    logging.info(f"Total row in pixel file: {total_rows}")
     source.total_records = total_rows
     db_session.add(source)
     db_session.commit()
     
     await send_sse(connection, user_id, {"source_id": source_id, "total": total_rows, "processed": processed_rows})
-    if not min_id or not max_id:
+    if not max_id:
         return False
-    
-    for start_id in range(min_id, max_id + 1, SELECTED_ROW_COUNT):
-        end_id = min(start_id + SELECTED_ROW_COUNT - 1, max_id)
+    current_id = -1
+    while(current_id < max_id):
         query = (
-            db_session.query(FiveXFiveUser.id)
+            db_session.query(FiveXFiveUser.id, LeadUser.id)
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
             .filter(LeadUser.domain_id == domain_id)
-            .filter(FiveXFiveUser.id >= start_id, FiveXFiveUser.id <= end_id)
+            .filter(LeadUser.id > current_id)
         )
         filters = []
-        if LeadStatus.VIEWED_PRODUCT.value in statuses and LeadStatus.CONVERTED_SALES.value in statuses:
-            or_(
-                    LeadUser.behavior_type == "viewed_product",
-                    LeadUser.is_converted_sales == True
-                )
-            
-        if LeadStatus.VIEWED_PRODUCT.value in statuses and LeadStatus.CONVERTED_SALES.value not in statuses:
-            and_(
+        if LeadStatus.VIEWED_PRODUCT.value in statuses:
+            filters.append(and_(
                     LeadUser.behavior_type == "viewed_product",
                     LeadUser.is_converted_sales == False
-                )
-        
-        if LeadStatus.VISITOR.value in statuses and LeadStatus.CONVERTED_SALES.value in statuses:
-            or_(
-                    LeadUser.behavior_type == "visitor",
-                    LeadUser.is_converted_sales == True
-                )
-            
-        if LeadStatus.VISITOR.value in statuses and LeadStatus.CONVERTED_SALES.value not in statuses:
-            and_(
+                ))
+        if LeadStatus.VISITOR.value in statuses:
+            filters.append(and_(
                     LeadUser.behavior_type == "visitor",
                     LeadUser.is_converted_sales == False
-                )
-                    
-        if LeadStatus.CONVERTED_SALES.value in statuses and LeadStatus.ABANDONED_CART.value in statuses:
+                ))
+        if LeadStatus.ABANDONED_CART.value in statuses:
             query = query.outerjoin(
                     LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id
                 ).outerjoin(
@@ -262,41 +251,55 @@ async def send_pixel_contacts(*, data, source_id, db_session, connection, user_i
                 or_(
                     and_(
                         LeadUser.behavior_type == "product_added_to_cart",
-                        LeadUser.is_converted_sales == True
+                        LeadUser.is_converted_sales == False
                     ),
-                        LeadsUsersAddedToCart.added_at < LeadsUsersOrdered.ordered_at
-                    
+                    and_(
+                        LeadUser.behavior_type == "product_added_to_cart",
+                        LeadsUsersAddedToCart.added_at > LeadsUsersOrdered.ordered_at
+                    )
                 )
             )
-        elif LeadStatus.CONVERTED_SALES.value not in statuses and LeadStatus.ABANDONED_CART.value in statuses:
+        if LeadStatus.CONVERTED_SALES.value in statuses:
+            query = query.outerjoin(
+                    LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id
+                ).outerjoin(
+                    LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id
+                )
             filters.append(
-            or_(
-                and_(
-                    LeadUser.behavior_type == "product_added_to_cart",
-                    LeadUser.is_converted_sales == False
-                ),
-                LeadsUsersAddedToCart.added_at > LeadsUsersOrdered.ordered_at
+                or_(
+                    and_(
+                        LeadUser.behavior_type != "product_added_to_cart",
+                        LeadUser.is_converted_sales == True
+                    ),
+                    and_(
+                        LeadUser.is_converted_sales == True,
+                        LeadsUsersAddedToCart.added_at < LeadsUsersOrdered.ordered_at
+                    )
+                )
             )
-        )
-        elif LeadStatus.CONVERTED_SALES.value in statuses and LeadStatus.ABANDONED_CART.value not in statuses:
-            filters.append(LeadUser.is_converted_sales == True)
                 
         if filters:
             query = query.filter(or_(*filters))
+        
+        query = query.order_by(LeadUser.created_at.asc()).limit(SELECTED_ROW_COUNT)
+        results = query.all()
+        persons = []
+        for result in results:
+            user_id, current_id = result
                 
-        user_ids = query.all()
-        persons = [{"user_id": email[0]} for email in user_ids]
-        if persons:
-            message_body = {
-                "type": 'user_ids',
-                "data": {
-                    "persons": persons,
-                    "source_id": source_id,
-                    "user_id": user_id
-                },
-            }
+            if current_id <= max_id:
+                persons.append({'user_id': user_id})
+            
+        message_body = {
+            "type": 'user_ids',
+            "data": {
+                "persons": persons,
+                "source_id": source_id,
+                "user_id": user_id
+            },
+        }
 
-            await publish_rabbitmq_message(connection=connection, queue_name=AUDIENCE_SOURCES_MATCHING, message_body=message_body)
+        await publish_rabbitmq_message(connection=connection, queue_name=AUDIENCE_SOURCES_MATCHING, message_body=message_body)
     
     return True
 
