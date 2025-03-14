@@ -261,6 +261,8 @@ const Sources: React.FC = () => {
     
     const handleDeleteSource = async () => {
         setLoaderForTable(true);
+        handleClosePopover();
+        handleCloseConfirmDialog();
         try {
             if (selectedRowData?.id) {
                 const response = await axiosInstance.delete(`/audience-sources/${selectedRowData.id}`);
@@ -275,8 +277,6 @@ const Sources: React.FC = () => {
             showErrorToast("Error deleting source")
         } finally {
             setLoaderForTable(false);
-            handleClosePopover();
-            handleCloseConfirmDialog();
         }
     };
 
@@ -991,7 +991,7 @@ const Sources: React.FC = () => {
                                                             alignItems="center"
                                                             sx={{
                                                                 padding: '16px',
-                                                                backgroundColor: '#f9f9f9',
+                                                                backgroundColor: '#fff',
                                                                 borderRadius: '4px',
                                                                 "@media (max-width: 600px)": { padding: '12px' }
                                                             }}
