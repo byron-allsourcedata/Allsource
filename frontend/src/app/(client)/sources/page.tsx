@@ -113,9 +113,11 @@ const Sources: React.FC = () => {
     const { sourceProgress } = useSSE();
     const [loaderForTable, setLoaderForTable] = useState(false);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const [anchorElFullName, setAnchorElFullName] = React.useState<null | HTMLElement>(null);
     const [selectedRowData, setSelectedRowData] = useState<Source | null>(null);
     const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
+    const [selectedName, setSelectedName] = React.useState<string | null>(null);
     const isOpen = Boolean(anchorEl);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -235,6 +237,18 @@ const Sources: React.FC = () => {
             }
         }
     }
+
+    const isOpenFullName = Boolean(anchorElFullName);
+
+    const handleOpenPopoverFullName = (event: React.MouseEvent<HTMLElement>, industry: string) => {
+        setSelectedName(industry);
+        setAnchorElFullName(event.currentTarget);
+    };
+
+    const handleClosePopoverFullName = () => {
+        setAnchorElFullName(null);
+        setSelectedName(null);
+    };
 
     const handleFilterPopupOpen = () => {
         setFilterPopupOpen(true);
@@ -499,6 +513,11 @@ const Sources: React.FC = () => {
             )
             .join(', ');
     }
+
+
+    const truncateText = (text: string, maxLength: number) => {
+        return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
+    };
 
 
     return (
@@ -817,9 +836,10 @@ const Sources: React.FC = () => {
 
                                                                             {/* Type Column */}
                                                                             <TableCell
-                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative' }}
+                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative', cursor: "pointer" }}
+                                                                                onClick={(e) => row?.source_origin ? handleOpenPopoverFullName(e, setSourceType(row?.source_origin)) : {}}
                                                                             >
-                                                                                {setSourceType(row.source_origin)}
+                                                                                {truncateText(setSourceType(row.source_origin), 20)}
                                                                             </TableCell>
 
                                                                             {/* Created date Column */}
@@ -1018,6 +1038,48 @@ const Sources: React.FC = () => {
                                             </Grid>
                                         }
                                         {showSlider && <Slider />}
+                                        <Popover
+                                            open={isOpenFullName}
+                                            anchorEl={anchorElFullName}
+                                            onClose={handleClosePopoverFullName}
+                                            anchorOrigin={{
+                                                vertical: "bottom",
+                                                horizontal: "left",
+                                            }}
+                                            transformOrigin={{
+                                                vertical: "top",
+                                                horizontal: "left",
+                                            }}
+                                            PaperProps={{
+                                                sx: {
+                                                    width: "184px",
+                                                    height: "108px",
+                                                    borderRadius: "4px 0px 0px 0px",
+                                                    border: "0.2px solid #ddd",
+                                                    padding: "8px",
+                                                    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+                                                },
+                                            }}
+                                        >
+                                            <Box sx={{ maxHeight: "92px", overflowY: "auto", backgroundColor: 'rgba(255, 255, 255, 1)' }}>
+                                                {selectedName?.split(",").map((part, index) => (
+                                                    <Typography
+                                                        key={index}
+                                                        variant="body2"
+                                                        className='second-sub-title'
+                                                        sx={{
+                                                            wordBreak: "break-word",
+                                                            backgroundColor: 'rgba(243, 243, 243, 1)',
+                                                            borderRadius: '4px',
+                                                            color: 'rgba(95, 99, 104, 1) !important',
+                                                            marginBottom: index < selectedName?.split(",").length - 1 ? "4px" : 0, 
+                                                        }}
+                                                    >
+                                                        {part.trim()}
+                                                    </Typography>
+                                                ))}
+                                            </Box>
+                                        </Popover>
                                     </Box>
 
                                     {/* <FilterPopup open={filterPopupOpen} 

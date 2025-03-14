@@ -432,6 +432,8 @@ const SourcesImport: React.FC = () => {
         if (selectedDomainData) {
             setTotalLeads(selectedDomainData.total_count || 0);
             setSelectedDomainId(selectedDomainData.id);
+            setMatchedLeads(0)
+            setEventType([])
             if (!selectedDomainData.pixel_installed) {
                 setPixelNotInstalled(true);
             }
@@ -1046,7 +1048,7 @@ const SourcesImport: React.FC = () => {
                             }
                             
                             
-                            <Box sx={{display: sourceMethod !== 0 && file || selectedDomain !== "" && eventType.length > 0 ? "flex" : "none", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
+                            <Box sx={{display: sourceMethod !== 0 && file || selectedDomain !== "" && eventType.length > 0 && !pixelNotInstalled && matchedLeads > 0 ? "flex" : "none", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
                                 <Box sx={{display: "flex", alignItems: "center", gap: 2, "@media (max-width: 400px)": { justifyContent: "space-between" },}}>
                                     <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px"}}>Create Name</Typography>
                                     <TextField
