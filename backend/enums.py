@@ -205,6 +205,15 @@ class VerifyToken(Enum):
     EMAIL_ALREADY_VERIFIED = 'EMAIL_ALREADY_VERIFIED'
     INCORRECT_TOKEN = 'INCORRECT_TOKEN'
 
+class LeadStatus(Enum):
+    ABANDONED_CART = 'abandoned_cart'
+    VIEW_PRODUCT = 'view_product'
+    CONVERTED_SALES = 'converted_sales'
+    VISITOR = 'visitor'
+    
+class SourceType(Enum):
+    CSV = 'csv'
+    PIXEL = 'pixel'
 
 class DomainStatus(Enum):
     LAST_DOMAIN = 'LAST_DOMAIN'

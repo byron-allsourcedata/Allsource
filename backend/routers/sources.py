@@ -1,5 +1,5 @@
+from dependencies import get_audience_sources_service, check_user_authorization, check_domain
 from fastapi import APIRouter, Depends, Query, Body
-from dependencies import get_audience_sources_service, check_user_authorization
 from services.audience_sources import AudienceSourceService
 from schemas.audience import HeadingSubstitutionRequest, NewSource, SourcesObjectResponse, SourceResponse, SourceIDs
 from uuid import UUID
@@ -51,6 +51,9 @@ async def create_source(
         source_name=payload.source_name,
         file_url=payload.file_url,
         rows=payload.rows,
+        type=payload.type,
+        domain_id=payload.domain_id,
+        statuses=payload.statuses
     )
 
 
