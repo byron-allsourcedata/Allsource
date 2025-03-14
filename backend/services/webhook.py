@@ -48,10 +48,7 @@ class WebhookService:
                                                                   stripe_payload=payload)
         
         result = self.subscription_service.process_subscription(user=user_data, stripe_payload=data_object, payout_id=payout_id, referral_parent_id=referral_parent_id)
-        lead_credit_plan_id = None
-        if result['lead_credit_price']:
-            plan = self.subscription_service.get_plan_by_price(lead_credit_price=result['lead_credit_price'])
-            lead_credit_plan_id = plan.id
+        lead_credit_plan_id = result.get('lead_credit_price_id')
         if result['status'] == 'active':
             saved_details_of_payment = save_payment_details_in_stripe(customer_id=customer_id)
             if not saved_details_of_payment:
@@ -59,7 +56,7 @@ class WebhookService:
         result = {
             'status': result['status'],
             'user': user_data,
-            'lead_credit_plan_id': lead_credit_plan_id if lead_credit_plan_id else None
+            'lead_credit_plan_id': lead_credit_plan_id
         }
         
         return result
@@ -193,11 +190,7 @@ class WebhookService:
         self.subscription_service.create_shopify_subscription_transaction(subscription_info=subscription_info, user_id=user_data.id, plan=plan, charge_id=charge_id)
 
         result = self.subscription_service.process_shopify_subscription(user=user_data, plan=plan, subscription_info=subscription_info, charge_id=charge_id)
-        lead_credit_plan_id = None
-        if result['lead_credit_price']:
-            plan = self.subscription_service.get_plan_by_price(lead_credit_price=result['lead_credit_price'])
-            lead_credit_plan_id = plan.id
-                
+        lead_credit_plan_id = result.get('lead_credit_price_id')               
         result = {
             'status': result['status'],
             'user': user_data,

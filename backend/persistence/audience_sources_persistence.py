@@ -3,6 +3,7 @@ from sqlalchemy import desc, asc
 from sqlalchemy.orm import Session
 from models.audience_sources import AudienceSource
 from models.users import Users
+from models.users_domains import UserDomains
 from typing import Optional, Tuple, List
 from sqlalchemy.engine.row import Row
 
@@ -31,12 +32,14 @@ class AudienceSourcesPersistence:
                 AudienceSource.source_origin,
                 Users.full_name,
                 AudienceSource.created_at,
-                AudienceSource.updated_at,
+                UserDomains.domain,
                 AudienceSource.total_records,
                 AudienceSource.matched_records,
                 AudienceSource.matched_records_status,
+                AudienceSource.processed_records,
             )
                 .join(Users, Users.id == AudienceSource.created_by_user_id)
+                .outerjoin(UserDomains, AudienceSource.domain_id == UserDomains.id)
                 .filter(AudienceSource.user_id == user_id)
         )
 
@@ -69,6 +72,7 @@ class AudienceSourcesPersistence:
             source_origin=creating_data.get("source_origin"),
             file_url=creating_data.get("file_url"),
             name=creating_data.get("source_name"),
+            domain_id=creating_data.get("domain_id"),
             mapped_fields=creating_data.get("rows"),
         )
 

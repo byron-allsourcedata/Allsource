@@ -78,42 +78,50 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         type = message_body.get('type')
         user_id = data.get('user_id')
         persons = data.get('persons')
-        logging.info(f"Processing AudienceSourceMatching with ID: {source_id}")
-        emails = [p['email'] for p in persons]
-        email_records = db_session.query(FiveXFiveEmails).filter(FiveXFiveEmails.email.in_(emails)).all()
-        if email_records:
-            logging.info(f"email_records find")
-            email_ids = [record.id for record in email_records]
-            five_x_five_users = db_session.query(FiveXFiveUsersEmails.user_id).filter(FiveXFiveUsersEmails.email_id.in_(email_ids)).all()
-            five_x_five_user_ids = [five_x_five_user[0] for five_x_five_user in five_x_five_users]
+        five_x_five_user_ids = []
+        if type == 'emails':
+            emails = [p['email'] for p in persons]
+            email_records = db_session.query(FiveXFiveEmails).filter(FiveXFiveEmails.email.in_(emails)).all()
+            if email_records:
+                logging.info(f"email_records find")
+                email_ids = [record.id for record in email_records]
+                five_x_five_users = db_session.query(FiveXFiveUsersEmails.user_id).filter(FiveXFiveUsersEmails.email_id.in_(email_ids)).all()
+                five_x_five_user_ids = [five_x_five_user[0] for five_x_five_user in five_x_five_users]
+                logging.info(f"user_ids find {len(five_x_five_user_ids)} for source_id {source_id}")
+        
+        if type == 'user_ids':
+            five_x_five_user_ids = [p['user_id'] for p in persons]
             logging.info(f"user_ids find {len(five_x_five_user_ids)} for source_id {source_id}")
-            for five_x_five_user_id in five_x_five_user_ids:
-                matched_person = AudienceSourcesMatchedPerson(
-                    source_id=source_id,
-                    five_x_five_user_id=five_x_five_user_id
-                )
-                db_session.add(matched_person)
+        
+        logging.info(f"Processing AudienceSourceMatching with ID: {source_id}")
+        
+        for five_x_five_user_id in five_x_five_user_ids:
+            matched_person = AudienceSourcesMatchedPerson(
+                source_id=source_id,
+                five_x_five_user_id=five_x_five_user_id
+            )
+            db_session.add(matched_person)
 
-            total_records, processed_records, matched_records = db_session.execute(
+        total_records, processed_records, matched_records = db_session.execute(
+            update(AudienceSource)
+            .where(AudienceSource.id == source_id)
+            .values(
+                matched_records=AudienceSource.matched_records + len(five_x_five_user_ids),
+                processed_records=AudienceSource.processed_records + len(persons)
+            )
+            .returning(AudienceSource.total_records, AudienceSource.processed_records, AudienceSource.matched_records)
+        ).fetchone()
+        
+        db_session.flush()
+        if processed_records >= total_records:
+            db_session.execute(
                 update(AudienceSource)
                 .where(AudienceSource.id == source_id)
-                .values(
-                    matched_records=AudienceSource.matched_records + len(five_x_five_user_ids),
-                    processed_records=AudienceSource.processed_records + len(persons)
-                )
-                .returning(AudienceSource.total_records, AudienceSource.processed_records, AudienceSource.matched_records)
-            ).fetchone()
-            
-            db_session.flush()
-            if processed_records >= total_records:
-                db_session.execute(
-                    update(AudienceSource)
-                    .where(AudienceSource.id == source_id)
-                    .values(matched_records_status="complete")
-                )
+                .values(matched_records_status="complete")
+            )
 
-            db_session.commit()
-            await send_sse(connection, user_id, {"source_id": source_id, "total": total_records, "processed": processed_records, "matched": matched_records})
+        db_session.commit()
+        await send_sse(connection, user_id, {"source_id": source_id, "total": total_records, "processed": processed_records, "matched": matched_records})
             
         logging.info(f"ack")
         await message.ack()

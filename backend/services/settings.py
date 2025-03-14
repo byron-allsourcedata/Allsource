@@ -273,6 +273,7 @@ class SettingsService:
         plan_name = f"{current_plan.title} {'yearly' if current_plan.interval == 'year' else ''}".strip()
         next_billing_date = None
         total_sum = None
+        lead_credit_price = self.plan_persistence.contact_credit_price_by_plan_id(plan_id=user_subscription.contact_credit_price_id)
         if subscription is None and user_subscription:
             if user_subscription.plan_start:
                 billing_cycle = f"{user_subscription.plan_start.strftime('%b %d, %Y')} to {user_subscription.plan_end.strftime('%b %d, %Y')}" 
@@ -288,7 +289,7 @@ class SettingsService:
                 'plan_name': plan_name,
                 'domains': f"{user_limit_domain}/{plan_limit_domain}",
                 'prospect_credits': 'Coming soon',
-                'overage': 'free' if user_subscription.lead_credit_price == -1 else user_subscription.lead_credit_price,
+                'overage': 'free' if lead_credit_price == -1 else lead_credit_price,
                 'next_billing_date': next_billing_date,
                 total_key: total_sum,
                 'active': True if user_subscription.status == 'active' else False,
@@ -325,7 +326,7 @@ class SettingsService:
                 'plan_name': plan_name,
                 'domains': f"{user_limit_domain}/{plan_limit_domain}",
                 'prospect_credits': 'Coming soon',
-                'overage': 'free' if user_subscription.lead_credit_price == -1 else user_subscription.lead_credit_price,
+                'overage': 'free' if lead_credit_price == -1 else lead_credit_price,
                 'next_billing_date': self.timestamp_to_date(subscription['current_period_end']).strftime('%b %d, %Y'),
                 total_key: total_price,
                 'active': is_active,

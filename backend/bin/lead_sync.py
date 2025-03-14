@@ -39,7 +39,7 @@ from models.suppressions_list import SuppressionList
 from models.users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
 from models.integrations.suppressed_contact import SuppressedContact
 from sqlalchemy import create_engine, desc
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker, Session, aliased
 from models.five_x_five_users import FiveXFiveUser
 from models.leads_users import LeadUser
 from models.users import Users
@@ -138,18 +138,18 @@ async def process_table(session, states_dict, groupped_requests, rabbitmq_connec
 
 
 async def handle_payment_notification(user, notification_persistence, plan_leads_credits, leads_credits,
-                                      plan_lead_credit_price):
+                                      contact_credit_price):
     credit_usage_percentage = round(((plan_leads_credits - leads_credits) / plan_leads_credits) * 100, 2)
     if 80 == credit_usage_percentage or credit_usage_percentage == 90:
         account_notification = notification_persistence.get_account_notification_by_title(
             NotificationTitles.CONTACT_LIMIT_APPROACHING.value)
-        notification_text = account_notification.text.format(int(credit_usage_percentage), plan_lead_credit_price)
+        notification_text = account_notification.text.format(int(credit_usage_percentage), contact_credit_price)
         queue_name = f'sse_events_{str(user.id)}'
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
 
         save_account_notification = notification_persistence.save_account_notification(user.id, account_notification.id,
-                                                                                       f"{credit_usage_percentage}, {plan_lead_credit_price}")
+                                                                                       f"{credit_usage_percentage}, {contact_credit_price}")
 
         await publish_rabbitmq_message(
             connection=connection,
@@ -195,7 +195,7 @@ async def notify_missing_plan(notification_persistence, user):
 
 async def process_payment_unlocked_five_x_five_user(session, five_x_five_user_up_id, user_domain_id, user, lead_user,
                                       leads_persistence, notification_persistence, plan_leads_credits,
-                                      plan_lead_credit_price):
+                                      contact_credit_price):
     users_unlocked_five_x_five_user = session.query(UsersUnlockedFiveXFiveUser).filter(
         UsersUnlockedFiveXFiveUser.five_x_five_up_id == str(five_x_five_user_up_id),
         UsersUnlockedFiveXFiveUser.domain_id == user_domain_id
@@ -220,7 +220,7 @@ async def process_payment_unlocked_five_x_five_user(session, five_x_five_user_up
     if plan_leads_credits != UNLIMITED:
         user.leads_credits -= AMOUNT_CREDITS
         await handle_payment_notification(user, notification_persistence, plan_leads_credits, user.leads_credits,
-                                        plan_lead_credit_price)
+                                        contact_credit_price)
     session.flush()
 
 
@@ -522,11 +522,19 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
             
         user_subscription = subscription_service.get_user_subscription(user.id)
         if user_subscription:
-            subscription_plan = session.query(SubscriptionPlan).filter(
-                SubscriptionPlan.id == user_subscription.plan_id).first()
+            ContactCredits = aliased(SubscriptionPlan)
+            result_query = session.query(
+                SubscriptionPlan, ContactCredits.price
+            ).join(
+                ContactCredits, SubscriptionPlan.contact_credit_price_id == ContactCredits.id
+            ).filter(
+                SubscriptionPlan.id == user_subscription.plan_id
+            ).first()
+            subscription_plan, contact_credit_price = result_query
+            
             await process_payment_unlocked_five_x_five_user(session, five_x_five_user.up_id, user_domain_id, user,
                                                 lead_user, leads_persistence, notification_persistence,
-                                                subscription_plan.leads_credits, subscription_plan.lead_credit_price)
+                                                subscription_plan.leads_credits, contact_credit_price)
 
             if not lead_user.is_active and user.is_leads_auto_charging:
                 await dispatch_leads_to_rabbitmq(session=session, user=user, rabbitmq_connection=rabbitmq_connection,

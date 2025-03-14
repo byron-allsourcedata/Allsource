@@ -1,7 +1,10 @@
 from datetime import datetime, timezone
 from models.users_domains import UserDomains
+from models.leads_users import LeadUser
+from models.leads_users_added_to_cart import LeadsUsersAddedToCart
+from models.leads_users_ordered import LeadsUsersOrdered
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, case, and_, or_
 from fastapi import HTTPException
 import re
 
@@ -16,6 +19,73 @@ class UserDomainsPersistence:
         if domain_substr:
             query = query.filter(UserDomains.domain == domain_substr)
         return query.all()
+
+
+    def get_domains_with_leads(self, user_id: int):
+        converted_sales = func.count(case(
+            (or_(
+                and_(
+                    LeadUser.behavior_type != "product_added_to_cart",
+                    LeadUser.is_converted_sales == True
+                ),
+                and_(
+                    LeadUser.is_converted_sales == True,
+                    LeadUser.behavior_type == "product_added_to_cart",
+                    LeadsUsersAddedToCart.added_at < LeadsUsersOrdered.ordered_at
+                )
+            ), 1),
+            else_=None
+        ))
+        viewed_product = func.count(case(
+            (and_(
+                LeadUser.behavior_type == "viewed_product",
+                LeadUser.is_converted_sales == False
+            ), 1),
+            else_=None
+        ))
+        visitor = func.count(case(
+            (and_(
+                LeadUser.behavior_type == "visitor",
+                LeadUser.is_converted_sales == False
+            ), 1),
+            else_=None
+        ))
+        abandoned_cart = func.count(case(
+            (and_(
+                LeadUser.behavior_type == "product_added_to_cart",
+                LeadUser.is_converted_sales == False,
+                or_(
+                    LeadUser.behavior_type == "product_added_to_cart",
+                    and_(
+                        LeadUser.is_converted_sales == True,
+                        LeadsUsersAddedToCart.added_at > LeadsUsersOrdered.ordered_at,
+                    )
+                )
+            ), 1),
+            else_=None
+        ))
+
+        total_count = converted_sales + viewed_product + visitor + abandoned_cart
+
+        query = (
+            self.db.query(
+                UserDomains.id,
+                UserDomains.domain,
+                UserDomains.is_pixel_installed,
+                converted_sales,
+                viewed_product,
+                visitor,
+                abandoned_cart,
+                total_count
+            )
+            .outerjoin(LeadUser, UserDomains.id == LeadUser.domain_id)
+            .outerjoin(LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id)
+            .outerjoin(LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id)
+            .filter(UserDomains.user_id == user_id)
+            .group_by(UserDomains.id, UserDomains.domain)
+        )
+        return query.all()
+
 
     def get_domain_by_filter(self, **filter_by):
         return self.db.query(UserDomains).filter_by(**filter_by).all()
