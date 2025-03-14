@@ -231,16 +231,21 @@ const SourcesImport: React.FC = () => {
     const downloadSampleFile = async () => {
         try {
             setLoading(true)
-            const response = await axiosInstance.get('/audience-sources/sample-customers-list', {
-                responseType: 'blob',
-            });
-            const url = window.URL.createObjectURL(new Blob([response.data]));
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', 'sample-customers-list.csv');
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            if (sourceType !== ""){
+                const response = await axiosInstance.get(`/audience-sources/sample-customers-list?&source_type=${convertToDBFormat(sourceType)}`, {
+                    responseType: 'blob',
+                });
+                const url = window.URL.createObjectURL(new Blob([response.data]));
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', 'sample-customers-list.csv');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+            else {
+                showErrorToast("Please select source type")
+            }
 
         } catch (error) {
             showErrorToast('Error downloading the file.');

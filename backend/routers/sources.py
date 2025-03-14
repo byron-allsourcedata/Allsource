@@ -68,8 +68,10 @@ def delete_source(
 
 
 @router.get("/sample-customers-list")
-def get_sample_customers_list(sources_service: AudienceSourceService = Depends(get_audience_sources_service)):
-    file_path = sources_service.get_sample_customers_list()
+def get_sample_customers_list(
+    source_type: str = Query(...),
+    sources_service: AudienceSourceService = Depends(get_audience_sources_service)):
+    file_path = sources_service.get_sample_customers_list(source_type)
     return FileResponse(file_path, media_type="text/csv",
                         headers={"Content-Disposition": "attachment; filename=sample-customers-list.csv"})
 

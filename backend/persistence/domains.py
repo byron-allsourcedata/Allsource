@@ -23,7 +23,18 @@ class UserDomainsPersistence:
 
     def get_domains_with_leads(self, user_id: int):
         converted_sales = func.count(case(
-            (LeadUser.is_converted_sales == True, 1),
+            (and_(
+                LeadUser.behavior_type != "product_added_to_cart",
+                LeadUser.is_converted_sales == True,
+                LeadsUsersAddedToCart.added_at.isnot(None),
+                or_(
+                    LeadsUsersAddedToCart.added_at < LeadsUsersOrdered.ordered_at,
+                    and_(
+                        LeadsUsersOrdered.ordered_at.is_(None),
+                        LeadsUsersAddedToCart.added_at.isnot(None)
+                    )
+                )
+            ), 1),
             else_=None
         ))
         viewed_product = func.count(case(
