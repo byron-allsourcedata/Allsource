@@ -108,38 +108,38 @@ const Sources: React.FC = () => {
     // useEffect(() => {
     //     if (data.length > 0 && hasUnmatchedRecords) {
     //         const interval = setInterval(fetchData, 5000);
-      
+
     //         return () => clearInterval(interval);
     //     }
     //   }, [hasUnmatchedRecords]);
-      
+
 
     const fetchData = async () => {
-    try {
-        const idsToFetch = data
-        .filter(item => item.matched_records === 0 && item.matched_records_status === "pending")
-        .map(item => item.id);
+        try {
+            const idsToFetch = data
+                .filter(item => item.matched_records === 0 && item.matched_records_status === "pending")
+                .map(item => item.id);
 
-        const response = await axiosInstance.post('/audience-sources/get-processing-sources', {
-            sources_ids: idsToFetch,
-        });
+            const response = await axiosInstance.post('/audience-sources/get-processing-sources', {
+                sources_ids: idsToFetch,
+            });
 
-        const updatedData = data.map(item => {
-        const updatedItem = response.data.find(
-            (record: any) => record.id === item.id
-        );
-        return updatedItem ? { ...item, ...updatedItem } : item;
-        });
+            const updatedData = data.map(item => {
+                const updatedItem = response.data.find(
+                    (record: any) => record.id === item.id
+                );
+                return updatedItem ? { ...item, ...updatedItem } : item;
+            });
 
-        setData(updatedData);
-    } catch (error) {
-        console.error('Failed to fetch data:', error);
-    }
+            setData(updatedData);
+        } catch (error) {
+            console.error('Failed to fetch data:', error);
+        }
     };
 
     const fetchSources = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
         try {
-            isFirstLoad ? setLoading(true)  : setLoaderForTable(true);
+            isFirstLoad ? setLoading(true) : setLoaderForTable(true);
             const accessToken = localStorage.getItem("token");
             if (!accessToken) {
                 router.push('/signin');
@@ -160,7 +160,7 @@ const Sources: React.FC = () => {
                 url += `&type_customer=${filters.selectedTypes
                     .map((type: string) => type.toLowerCase().replace(/\s+/g, '_'))
                     .join(',')}`;
-            }           
+            }
             if (filters.selectedDomains?.length > 0) {
                 url += `&domain_id=${filters.selectedDomains.join(',')}`;
             }
@@ -227,7 +227,7 @@ const Sources: React.FC = () => {
         setOrder(isAsc ? 'desc' : 'asc');
         setOrderBy(property);
     };
-    
+
     const handleDeleteSource = async () => {
         setLoaderForTable(true);
         try {
@@ -268,18 +268,18 @@ const Sources: React.FC = () => {
 
     useEffect(() => {
         const storedFilters = sessionStorage.getItem('filtersBySource');
-        
+
         if (storedFilters) {
             const filters = JSON.parse(storedFilters);
-            
+
             handleApplyFilters(filters);
         }
     }, []);
 
     const handleApplyFilters = (filters: FilterParams) => {
-        const newSelectedFilters: { label: string; value: string }[] = [];  
+        const newSelectedFilters: { label: string; value: string }[] = [];
         const dateFormat = 'YYYY-MM-DD';
-    
+
         const filterMappings: { condition: boolean | string | string[] | number | null, label: string, value: string | ((f: any) => string) }[] = [
             { condition: filters.from_date, label: 'From Date', value: () => dayjs.unix(filters.from_date!).format(dateFormat) },
             { condition: filters.to_date, label: 'To Date', value: () => dayjs.unix(filters.to_date!).format(dateFormat) },
@@ -288,25 +288,27 @@ const Sources: React.FC = () => {
             { condition: filters.selectedTypes.length > 0, label: 'Types', value: () => filters.selectedTypes.join(', ') },
             { condition: filters.selectedDomains.length > 0, label: 'Domains', value: () => filters.selectedDomains.join(', ') },
             { condition: filters.createdDate.length > 0, label: 'Created Date', value: () => filters.createdDate.join(', ') },
-            { condition: filters.dateRange.fromDate || filters.dateRange.toDate, label: 'Date Range', value: () => {
-                const from = dayjs.unix(filters.dateRange.fromDate!).format(dateFormat);
-                const to = dayjs.unix(filters.dateRange.toDate!).format(dateFormat);
-                return `${from} to ${to}`;
-            }},
+            {
+                condition: filters.dateRange.fromDate || filters.dateRange.toDate, label: 'Date Range', value: () => {
+                    const from = dayjs.unix(filters.dateRange.fromDate!).format(dateFormat);
+                    const to = dayjs.unix(filters.dateRange.toDate!).format(dateFormat);
+                    return `${from} to ${to}`;
+                }
+            },
         ];
-    
+
         filterMappings.forEach(({ condition, label, value }) => {
             if (condition) {
                 newSelectedFilters.push({ label, value: typeof value === 'function' ? value(filters) : value });
             }
         });
-    
+
         setSelectedFilters(newSelectedFilters);
     };
 
     const handleResetFilters = () => {
         setSelectedFilters([]);
-    
+
         const filters = {
             from_date: null,
             to_date: null,
@@ -317,19 +319,19 @@ const Sources: React.FC = () => {
             createdDate: [],
             dateRange: { fromDate: null, toDate: null },
         };
-    
+
         sessionStorage.setItem('filtersBySource', JSON.stringify({}));
-    
+
         handleApplyFilters(filters);
     };
-    
+
 
     const handleDeleteFilter = (filterToDelete: { label: string; value: string }) => {
         const updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
         setSelectedFilters(updatedFilters);
-        
+
         const filters = JSON.parse(sessionStorage.getItem('filtersBySource') || '{}');
-        
+
         switch (filterToDelete.label) {
             case 'From Date':
                 filters.from_date = null;
@@ -365,9 +367,9 @@ const Sources: React.FC = () => {
             default:
                 break;
         }
-        
+
         sessionStorage.setItem('filtersBySource', JSON.stringify(filters));
-        
+
         const newFilters: FilterParams = {
             from_date: updatedFilters.find(f => f.label === 'From Date') ? dayjs(updatedFilters.find(f => f.label === 'From Date')!.value).unix() : null,
             to_date: updatedFilters.find(f => f.label === 'To Date') ? dayjs(updatedFilters.find(f => f.label === 'To Date')!.value).unix() : null,
@@ -381,11 +383,11 @@ const Sources: React.FC = () => {
                 toDate: updatedFilters.find(f => f.label === 'Date Range') ? dayjs(updatedFilters.find(f => f.label === 'Date Range')!.value.split(', ')[1]).unix() : null,
             }
         };
-        
+
         handleApplyFilters(newFilters);
     };
-    
-      
+
+
     const setSourceOrigin = (sourceOrigin: string) => {
         return sourceOrigin === "pixel" ? "Pixel" : "CSV File"
     }
@@ -401,7 +403,7 @@ const Sources: React.FC = () => {
     return (
         <>
             {loading && (
-                <CustomizedProgressBar/>
+                <CustomizedProgressBar />
             )}
             <Box sx={{
                 display: 'flex', flexDirection: 'column', height: '100%',
@@ -436,7 +438,7 @@ const Sources: React.FC = () => {
                                 <CustomToolTip title={'Here you can view your active sources.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
                             </Box>
                             <Box sx={{
-                                display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px', pr:2,
+                                display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px', pr: 2,
                                 '@media (max-width: 900px)': {
                                     gap: '8px'
                                 }
@@ -516,13 +518,13 @@ const Sources: React.FC = () => {
                         </Box>
 
                         <Box sx={{
-                            flex: 1, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 4.25rem)', pr:2, overflow: 'auto', maxWidth: '100%',
+                            flex: 1, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 4.25rem)', pr: 2, overflow: 'auto', maxWidth: '100%',
                             '@media (max-width: 900px)': {
                                 pt: '2px',
                                 pb: '18px'
                             }
                         }}>
-                            
+
                             <Box sx={{
                                 display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
                                 '@media (max-width: 900px)': {
@@ -536,42 +538,42 @@ const Sources: React.FC = () => {
                                     <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, overflowX: 'auto', "@media (max-width: 600px)": { mb: 1 } }}>
                                         {/* CHIPS */}
                                         {selectedFilters.length > 0 && (
-                                        <Chip
-                                            className='second-sub-title'
-                                            label="Clear all"
-                                            onClick={handleResetFilters}
-                                            sx={{ color: '#5052B2 !important', backgroundColor: 'transparent', lineHeight: '20px !important', fontWeight: '400 !important', borderRadius: '4px' }}
-                                        />
-                                    )}
-                                    {selectedFilters.map(filter => {
-                                        if (filter.label === 'From Date' || filter.label === 'To Date' || filter.label === 'Date Range') {
-                                            return null;
-                                        }
-                                        let displayValue = filter.value;
-                                        return (
                                             <Chip
-                                                className='paragraph'
-                                                key={filter.label}
-                                                label={`${filter.label}: ${displayValue.charAt(0).toUpperCase() + displayValue.slice(1)}`}
-                                                onDelete={() => handleDeleteFilter(filter)}
-                                                deleteIcon={
-                                                    <CloseIcon
-                                                        sx={{
-                                                            backgroundColor: 'transparent',
-                                                            color: '#828282 !important',
-                                                            fontSize: '14px !important'
-                                                        }}
-                                                    />
-                                                }
-                                                sx={{
-                                                    borderRadius: '4.5px',
-                                                    backgroundColor: 'rgba(80, 82, 178, 0.10)',
-                                                    color: '#5F6368 !important',
-                                                    lineHeight: '16px !important'
-                                                }}
+                                                className='second-sub-title'
+                                                label="Clear all"
+                                                onClick={handleResetFilters}
+                                                sx={{ color: '#5052B2 !important', backgroundColor: 'transparent', lineHeight: '20px !important', fontWeight: '400 !important', borderRadius: '4px' }}
                                             />
-                                        );
-                                    })}
+                                        )}
+                                        {selectedFilters.map(filter => {
+                                            if (filter.label === 'From Date' || filter.label === 'To Date' || filter.label === 'Date Range') {
+                                                return null;
+                                            }
+                                            let displayValue = filter.value;
+                                            return (
+                                                <Chip
+                                                    className='paragraph'
+                                                    key={filter.label}
+                                                    label={`${filter.label}: ${displayValue.charAt(0).toUpperCase() + displayValue.slice(1)}`}
+                                                    onDelete={() => handleDeleteFilter(filter)}
+                                                    deleteIcon={
+                                                        <CloseIcon
+                                                            sx={{
+                                                                backgroundColor: 'transparent',
+                                                                color: '#828282 !important',
+                                                                fontSize: '14px !important'
+                                                            }}
+                                                        />
+                                                    }
+                                                    sx={{
+                                                        borderRadius: '4.5px',
+                                                        backgroundColor: 'rgba(80, 82, 178, 0.10)',
+                                                        color: '#5F6368 !important',
+                                                        lineHeight: '16px !important'
+                                                    }}
+                                                />
+                                            );
+                                        })}
                                     </Box>
                                     <Box sx={{
                                         flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px', pb: '20px',
@@ -648,7 +650,7 @@ const Sources: React.FC = () => {
                                                         }}
                                                     >
                                                         <Table stickyHeader aria-label="leads table">
-                                                            <TableHead sx={{position: "relative"}}>
+                                                            <TableHead sx={{ position: "relative" }}>
                                                                 <TableRow>
                                                                     {[
                                                                         { key: 'name', label: 'Name' },
@@ -704,8 +706,8 @@ const Sources: React.FC = () => {
                                                                         top: '56px',
                                                                         zIndex: 11,
                                                                     }}>
-                                                                        <TableCell colSpan={9} sx={{p: 0, pb: "4px"}}>
-                                                                            <LinearProgress variant="indeterminate" sx={{width: "100%", position: "absolute"}}/> 
+                                                                        <TableCell colSpan={9} sx={{ p: 0, pb: "4px" }}>
+                                                                            <LinearProgress variant="indeterminate" sx={{ width: "100%", position: "absolute" }} />
                                                                         </TableCell>
                                                                     </TableRow>
                                                                 )}
@@ -774,22 +776,22 @@ const Sources: React.FC = () => {
                                                                             <TableCell
                                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                                             >
-                                                                                {row.matched_records_status === "pending" 
-                                                                                ? progress?.total
-                                                                                    ? progress?.total.toLocaleString('en-US')
-                                                                                    : <ThreeDotsLoader />
-                                                                                : row.total_records.toLocaleString('en-US') ?? '--'}
+                                                                                {row.matched_records_status === "pending"
+                                                                                    ? progress?.total
+                                                                                        ? progress?.total.toLocaleString('en-US')
+                                                                                        : <ThreeDotsLoader />
+                                                                                    : row.total_records.toLocaleString('en-US') ?? '--'}
                                                                             </TableCell>
 
                                                                             {/* Matched Records  Column */}
                                                                             <TableCell
                                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                                             >
-                                                                                {row.matched_records_status === "pending" 
-                                                                                ? progress?.processed == progress?.total && progress?.processed
-                                                                                    ? progress?.matched.toLocaleString('en-US')
-                                                                                    : <ProgressBar progress={progress}/>
-                                                                                : row.matched_records.toLocaleString('en-US') ?? '--'}
+                                                                                {row.matched_records_status === "pending"
+                                                                                    ? progress?.processed == progress?.total && progress?.processed
+                                                                                        ? progress?.matched.toLocaleString('en-US')
+                                                                                        : <ProgressBar progress={progress} />
+                                                                                    : row.matched_records.toLocaleString('en-US') ?? '--'}
                                                                                 {/* {row.processed 
                                                                                 ? progress?.processed == progress?.total && progress?.processed
                                                                                     ? progress?.matched
@@ -836,15 +838,17 @@ const Sources: React.FC = () => {
                                                                                             anchorEl={anchorEl}
                                                                                             anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                                                                                             transformOrigin={{ vertical: 'top', horizontal: 'center' }}
-                                                                                            slotProps={{ paper: {
-                                                                                                sx: {
-                                                                                                    padding: '0.125rem',
-                                                                                                    width: '15.875rem',
-                                                                                                    boxShadow: 0,
-                                                                                                    borderRadius: '8px',
-                                                                                                    border: '0.5px solid rgba(175, 175, 175, 1)'
+                                                                                            slotProps={{
+                                                                                                paper: {
+                                                                                                    sx: {
+                                                                                                        padding: '0.125rem',
+                                                                                                        width: '15.875rem',
+                                                                                                        boxShadow: 0,
+                                                                                                        borderRadius: '8px',
+                                                                                                        border: '0.5px solid rgba(175, 175, 175, 1)'
+                                                                                                    }
                                                                                                 }
-                                                                                            }}}
+                                                                                            }}
                                                                                         >
                                                                                             <Typography className="first-sub-title" sx={{ paddingLeft: 2, pt: 1, pb: 0 }}>
                                                                                                 Confirm Deletion
@@ -901,8 +905,8 @@ const Sources: React.FC = () => {
                                                             </TableBody>
                                                         </Table>
                                                     </TableContainer>
-                                                    {count_sources && count_sources > 10 
-                                                    ?
+                                                    {count_sources && count_sources > 10
+                                                        ?
                                                         <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0', "@media (max-width: 600px)": { padding: '12px 0 0' } }}>
                                                             <CustomTablePagination
                                                                 count={count_sources ?? 0}
@@ -913,7 +917,7 @@ const Sources: React.FC = () => {
                                                                 rowsPerPageOptions={rowsPerPageOptions}
                                                             />
                                                         </Box>
-                                                    :
+                                                        :
                                                         <Box
                                                             display="flex"
                                                             justifyContent="flex-end"
@@ -944,9 +948,10 @@ const Sources: React.FC = () => {
                                         {showSlider && <Slider />}
                                     </Box>
 
-                                    <FilterPopup open={filterPopupOpen} 
-                                        onClose={handleFilterPopupClose} 
-                                        onApply={handleApplyFilters} />
+                                    <FilterPopup open={filterPopupOpen}
+                                        onClose={handleFilterPopupClose}
+                                        onApply={handleApplyFilters}
+                                    />
 
                                 </Box>
                             </Box>
