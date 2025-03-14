@@ -1,12 +1,18 @@
 import logging
-from sqlalchemy import desc, asc
+from datetime import datetime
+
+from sqlalchemy import desc, asc, select
 from sqlalchemy.orm import Session
+
+from enums import TypeOfSourceOrigin, TypeOfCustomer
 from models.audience_sources import AudienceSource
 from models.users import Users
 from models.users_domains import UserDomains
 from typing import Optional, Tuple, List
 from sqlalchemy.engine.row import Row
+from sqlalchemy.orm import Query
 
+from persistence.utils import apply_filters
 
 logger = logging.getLogger(__name__)
 
@@ -16,12 +22,18 @@ class AudienceSourcesPersistence:
 
 
     def get_sources(
-        self, 
-        user_id: int, 
-        page: int, 
-        per_page: int, 
-        sort_by: Optional[str] = None, 
-        sort_order: Optional[str] = None
+            self,
+            user_id: int,
+            page: int,
+            per_page: int,
+            sort_by: Optional[str] = None,
+            sort_order: Optional[str] = None,
+            name: Optional[str] = None,
+            status: Optional[str] = None,
+            type_customer: Optional[str] = None,
+            domain_id: Optional[int] = None,
+            created_date_start: Optional[datetime] = None,
+            created_date_end: Optional[datetime] = None
     ) -> Tuple[List[Row], int]:
 
         query = (
@@ -41,6 +53,19 @@ class AudienceSourcesPersistence:
                 .join(Users, Users.id == AudienceSource.created_by_user_id)
                 .outerjoin(UserDomains, AudienceSource.domain_id == UserDomains.id)
                 .filter(AudienceSource.user_id == user_id)
+        )
+
+        status_list = status.split(',') if status else []
+        type_customer_list = type_customer.split(',') if type_customer else []
+
+        query = apply_filters(
+            query,
+            name=name,
+            status=status_list,
+            type_customer=type_customer_list,
+            domain_id=domain_id,
+            created_date_start=created_date_start,
+            created_date_end=created_date_end
         )
 
         sort_options = {
