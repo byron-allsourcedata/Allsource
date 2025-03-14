@@ -143,8 +143,7 @@ class AudienceSourceService:
         return count_deleted > 0
 
     def get_sample_customers_list(self, source_type: str):
-        print("data/sample-" + source_type + ".csv")
-        return os.path.join(os.getcwd(), "data/sample-" + source_type + ".csv")
+        return os.path.join(os.getcwd(), "data/sample-source-" + source_type + ".csv")
 
     def get_processing_sources(self, sources_ids, user: User):
         sources = self.audience_sources_persistence.get_processing_sources(sources_ids, user.get("id"))
