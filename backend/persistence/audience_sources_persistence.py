@@ -103,6 +103,7 @@ class AudienceSourcesPersistence:
 
         self.db.add(source)
         self.db.commit()
+        self.db.refresh(source)
         return source
     
 
