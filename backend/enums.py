@@ -16,6 +16,19 @@ class OauthShopify(Enum):
     ERROR_SHOPIFY_TOKEN = 'ERROR_SHOPIFY_TOKEN'
     NON_SHOPIFY_ACCOUNT = 'NON_SHOPIFY_ACCOUNT'
 
+class TypeOfCustomer(Enum):
+    CUSTOMER_CONVERSIONS = 'customer_conversions'
+    FAILED_LEADS = 'failed_leads'
+    INTEREST = 'interest'
+    VISITOR = 'visitor'
+    VIEW_PRODUCT = 'view_product'
+    ABANDONED_CART = 'abandoned_cart'
+    CONVERTED_SALES = 'converted_sales'
+
+class TypeOfSourceOrigin(Enum):
+    CSV = 'csv'
+    PIXEL = 'pixel'
+
 class BusinessType(Enum):
     D2C = 'd2c'
     B2B = 'b2b'
