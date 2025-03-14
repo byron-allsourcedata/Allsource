@@ -143,11 +143,30 @@ def get_min_max_ids(db_session, domain_id, statuses):
     )
 
     filters = []
-    for status_data in statuses:     
-        if status_data == LeadStatus.VIEW_PRODUCT.value:
-            filters.append(LeadUser.behavior_type == "viewed_product")
-        elif status_data == LeadStatus.VISITOR.value:
-            filters.append(LeadUser.behavior_type == "visitor")
+    
+    if LeadStatus.VIEW_PRODUCT.value in statuses and LeadStatus.CONVERTED_SALES.value in statuses:
+        or_(
+                LeadUser.behavior_type == "viewed_product",
+                LeadUser.is_converted_sales == True
+            )
+        
+    if LeadStatus.VIEW_PRODUCT.value in statuses and LeadStatus.CONVERTED_SALES.value not in statuses:
+        and_(
+                LeadUser.behavior_type == "viewed_product",
+                LeadUser.is_converted_sales == False
+            )
+    
+    if LeadStatus.VISITOR.value in statuses and LeadStatus.CONVERTED_SALES.value in statuses:
+        or_(
+                LeadUser.behavior_type == "visitor",
+                LeadUser.is_converted_sales == True
+            )
+        
+    if LeadStatus.VISITOR.value in statuses and LeadStatus.CONVERTED_SALES.value not in statuses:
+        and_(
+                LeadUser.behavior_type == "visitor",
+                LeadUser.is_converted_sales == False
+            )
                 
     if LeadStatus.CONVERTED_SALES.value in statuses and LeadStatus.ABANDONED_CART.value in statuses:
         query = query.outerjoin(
@@ -157,8 +176,12 @@ def get_min_max_ids(db_session, domain_id, statuses):
             )
         filters.append(
             or_(
-                LeadUser.behavior_type == "product_added_to_cart",
-                LeadUser.is_converted_sales == True
+                and_(
+                    LeadUser.behavior_type == "product_added_to_cart",
+                    LeadUser.is_converted_sales == True
+                ),
+                    LeadsUsersAddedToCart.added_at < LeadsUsersOrdered.ordered_at
+                
             )
         )
     elif LeadStatus.CONVERTED_SALES.value not in statuses and LeadStatus.ABANDONED_CART.value in statuses:
@@ -209,53 +232,76 @@ async def send_pixel_contacts(*, data, source_id, db_session, connection, user_i
             .filter(FiveXFiveUser.id >= start_id, FiveXFiveUser.id <= end_id)
         )
         filters = []
-        for status_data in statuses:     
-            if status_data == LeadStatus.VIEW_PRODUCT.value:
-                filters.append(LeadUser.behavior_type == "viewed_product")
-            elif status_data == LeadStatus.VISITOR.value:
-                filters.append(LeadUser.behavior_type == "visitor")
-                    
-        if LeadStatus.CONVERTED_SALES.value in statuses and LeadStatus.ABANDONED_CART.value in statuses:
-            query = query.outerjoin(
-                    LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id
-                ).outerjoin(
-                    LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id
-                )
-            filters.append(
-                or_(
-                    LeadUser.behavior_type == "product_added_to_cart",
-                    LeadUser.is_converted_sales == True
-                )
+    
+    if LeadStatus.VIEW_PRODUCT.value in statuses and LeadStatus.CONVERTED_SALES.value in statuses:
+        or_(
+                LeadUser.behavior_type == "viewed_product",
+                LeadUser.is_converted_sales == True
             )
-        elif LeadStatus.CONVERTED_SALES.value not in statuses and LeadStatus.ABANDONED_CART.value in statuses:
-            filters.append(
+        
+    if LeadStatus.VIEW_PRODUCT.value in statuses and LeadStatus.CONVERTED_SALES.value not in statuses:
+        and_(
+                LeadUser.behavior_type == "viewed_product",
+                LeadUser.is_converted_sales == False
+            )
+    
+    if LeadStatus.VISITOR.value in statuses and LeadStatus.CONVERTED_SALES.value in statuses:
+        or_(
+                LeadUser.behavior_type == "visitor",
+                LeadUser.is_converted_sales == True
+            )
+        
+    if LeadStatus.VISITOR.value in statuses and LeadStatus.CONVERTED_SALES.value not in statuses:
+        and_(
+                LeadUser.behavior_type == "visitor",
+                LeadUser.is_converted_sales == False
+            )
+                
+    if LeadStatus.CONVERTED_SALES.value in statuses and LeadStatus.ABANDONED_CART.value in statuses:
+        query = query.outerjoin(
+                LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id
+            ).outerjoin(
+                LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id
+            )
+        filters.append(
             or_(
                 and_(
                     LeadUser.behavior_type == "product_added_to_cart",
-                    LeadUser.is_converted_sales == False
+                    LeadUser.is_converted_sales == True
                 ),
-                LeadsUsersAddedToCart.added_at > LeadsUsersOrdered.ordered_at
+                    LeadsUsersAddedToCart.added_at < LeadsUsersOrdered.ordered_at
+                
             )
         )
-        elif LeadStatus.CONVERTED_SALES.value in statuses and LeadStatus.ABANDONED_CART.value not in statuses:
-            filters.append(LeadUser.is_converted_sales == True)
-                
-        if filters:
-            query = query.filter(or_(*filters))
+    elif LeadStatus.CONVERTED_SALES.value not in statuses and LeadStatus.ABANDONED_CART.value in statuses:
+        filters.append(
+        or_(
+            and_(
+                LeadUser.behavior_type == "product_added_to_cart",
+                LeadUser.is_converted_sales == False
+            ),
+            LeadsUsersAddedToCart.added_at > LeadsUsersOrdered.ordered_at
+        )
+    )
+    elif LeadStatus.CONVERTED_SALES.value in statuses and LeadStatus.ABANDONED_CART.value not in statuses:
+        filters.append(LeadUser.is_converted_sales == True)
             
-        user_ids = query.all()
-        persons = [{"user_id": email[0]} for email in user_ids]
-        if persons:
-            message_body = {
-                "type": 'user_ids',
-                "data": {
-                    "persons": persons,
-                    "source_id": source_id,
-                    "user_id": user_id
-                },
-            }
+    if filters:
+        query = query.filter(or_(*filters))
+            
+    user_ids = query.all()
+    persons = [{"user_id": email[0]} for email in user_ids]
+    if persons:
+        message_body = {
+            "type": 'user_ids',
+            "data": {
+                "persons": persons,
+                "source_id": source_id,
+                "user_id": user_id
+            },
+        }
 
-            await publish_rabbitmq_message(connection=connection, queue_name=AUDIENCE_SOURCES_MATCHING, message_body=message_body)
+        await publish_rabbitmq_message(connection=connection, queue_name=AUDIENCE_SOURCES_MATCHING, message_body=message_body)
     
     return True
 
