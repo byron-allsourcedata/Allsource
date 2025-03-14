@@ -19,6 +19,13 @@ class UserDomainsPersistence:
         if domain_substr:
             query = query.filter(UserDomains.domain == domain_substr)
         return query.all()
+    
+
+    def get_domain_name(self, domain_id: int):
+        query = self.db.query(UserDomains.domain).filter(UserDomains.id == domain_id)
+        result = query.first()
+    
+        return result.domain if result else None
 
 
     def get_domains_with_leads(self, user_id: int):

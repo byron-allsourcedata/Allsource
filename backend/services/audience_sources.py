@@ -5,6 +5,7 @@ import logging
 from typing import List, Optional
 from schemas.audience import Row, SourcesObjectResponse, SourceResponse, NewSource
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
+from persistence.domains import UserDomainsPersistence
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from enums import QueueName, SourceType
 from models.users import User
@@ -13,8 +14,9 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 logger = logging.getLogger(__name__)
 
 class AudienceSourceService:
-    def __init__(self, audience_sources_persistence: AudienceSourcesPersistence):
+    def __init__(self, audience_sources_persistence: AudienceSourcesPersistence, domain_persistence: UserDomainsPersistence):
         self.audience_sources_persistence = audience_sources_persistence
+        self.domain_persistence = domain_persistence
         self.headings_map = {
             "Customer Conversions": ['Email', 'Phone number', 'Last Name', 'First Name', 'Transaction Date', 'Order Amount'],
             "Failed Leads": ['Email', 'Phone number', 'Last Name', 'First Name', 'Lead Date'],
@@ -131,7 +133,12 @@ class AudienceSourceService:
         if not created_data:
             logger.debug('Database error during creation')
 
+
+        domain_name = self.domain_persistence.get_domain_name(created_data.domain_id)
+
         setattr(created_data, "created_by", user.get("full_name"))
+        if domain_name:
+            setattr(created_data, "domain", domain_name)
 
         response = SourceResponse.model_validate(created_data)
         return response

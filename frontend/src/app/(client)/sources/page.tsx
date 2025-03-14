@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
-import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText, LinearProgress } from '@mui/material';
+import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText, LinearProgress, Tooltip } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '../../../axios/axiosInterceptorInstance';
@@ -65,19 +65,19 @@ interface FilterParams {
         "unknown": boolean,
     };
     checkedFiltersRevenue: {
-    "Below 10k": boolean,
-    "$10k - $50k": boolean,
-    "$50k - $100k": boolean,
-    "$100k - $500k": boolean,
-    "$500k - $1M": boolean,
-    "$1M - $5M": boolean,
-    "$5M - $10M": boolean,
-    "$10M - $50M": boolean,
-    "$50M - $100M": boolean,
-    "$100M - $500M": boolean,
-    "$500M - $1B": boolean,
-    "$1 Billion +": boolean,
-    "unknown": boolean,
+        "Below 10k": boolean,
+        "$10k - $50k": boolean,
+        "$50k - $100k": boolean,
+        "$100k - $500k": boolean,
+        "$500k - $1M": boolean,
+        "$1M - $5M": boolean,
+        "$5M - $10M": boolean,
+        "$10M - $50M": boolean,
+        "$50M - $100M": boolean,
+        "$100M - $500M": boolean,
+        "$500M - $1B": boolean,
+        "$1 Billion +": boolean,
+        "unknown": boolean,
     }
     checkedFilters: {
         lastWeek: boolean;
@@ -85,7 +85,7 @@ interface FilterParams {
         last6Months: boolean;
         allTime: boolean;
     };
-    industry: Record<string, boolean>; 
+    industry: Record<string, boolean>;
 }
 
 
@@ -138,15 +138,15 @@ const Sources: React.FC = () => {
             rowsPerPage,
         });
     }, [orderBy, order, page, rowsPerPage]);
-    
+
     useEffect(() => {
         console.log("longpol");
-    
+
         if (!intervalRef.current) {
             console.log("longpol started");
             intervalRef.current = setInterval(() => {
                 const hasPending = data.some(item => item.matched_records_status === "pending");
-    
+
                 if (hasPending) {
                     console.log("Fetching due to pending records");
                     fetchSourcesMemoized();
@@ -159,7 +159,7 @@ const Sources: React.FC = () => {
                 }
             }, 2000);
         }
-    
+
         return () => {
             if (intervalRef.current) {
                 clearInterval(intervalRef.current);
@@ -168,36 +168,36 @@ const Sources: React.FC = () => {
             }
         };
     }, [data, fetchSourcesMemoized]);
-      
+
 
     const fetchData = async () => {
-    try {
-        const idsToFetch = data
-        .filter(item => item.matched_records === 0 && item.matched_records_status === "pending")
-        .map(item => item.id);
+        try {
+            const idsToFetch = data
+                .filter(item => item.matched_records === 0 && item.matched_records_status === "pending")
+                .map(item => item.id);
 
-        const response = await axiosInstance.post('/audience-sources/get-processing-sources', {
-            sources_ids: idsToFetch,
-        });
+            const response = await axiosInstance.post('/audience-sources/get-processing-sources', {
+                sources_ids: idsToFetch,
+            });
 
-        const updatedData = data.map(item => {
-        const updatedItem = response.data.find(
-            (record: any) => record.id === item.id
-        );
-        return updatedItem ? { ...item, ...updatedItem } : item;
-        });
+            const updatedData = data.map(item => {
+                const updatedItem = response.data.find(
+                    (record: any) => record.id === item.id
+                );
+                return updatedItem ? { ...item, ...updatedItem } : item;
+            });
 
-        setData(updatedData);
-    } catch (error) {
-        console.error('Failed to fetch data:', error);
-    }
+            setData(updatedData);
+        } catch (error) {
+            console.error('Failed to fetch data:', error);
+        }
     };
 
     const fetchSources = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
         try {
-            !intervalRef.current 
-                ? isFirstLoad ? setLoading(true)  : setLoaderForTable(true)
-                : () => {}
+            !intervalRef.current
+                ? isFirstLoad ? setLoading(true) : setLoaderForTable(true)
+                : () => { }
             const accessToken = localStorage.getItem("token");
             if (!accessToken) {
                 router.push('/signin');
@@ -272,7 +272,7 @@ const Sources: React.FC = () => {
         setOrder(isAsc ? 'desc' : 'asc');
         setOrderBy(property);
     };
-    
+
     const handleDeleteSource = async () => {
         setLoaderForTable(true);
         handleClosePopover();
@@ -331,20 +331,20 @@ const Sources: React.FC = () => {
             { condition: filters.regions?.length, label: 'Regions', value: () => filters.regions!.join(', ') },
             { condition: filters.searchQuery?.trim() !== '', label: 'Search', value: filters.searchQuery || '' },
             { condition: filters.selectedPageVisit?.trim() !== '', label: 'Employee Visits', value: filters.selectedPageVisit || '' },
-            { 
-                condition: filters.checkedFiltersNumberOfEmployees && Object.values(filters.checkedFiltersNumberOfEmployees).some(Boolean), 
-                label: 'Number of Employees', 
-                value: () => getSelectedValues(filters.checkedFiltersNumberOfEmployees!) 
+            {
+                condition: filters.checkedFiltersNumberOfEmployees && Object.values(filters.checkedFiltersNumberOfEmployees).some(Boolean),
+                label: 'Number of Employees',
+                value: () => getSelectedValues(filters.checkedFiltersNumberOfEmployees!)
             },
-            { 
-                condition: filters.checkedFiltersRevenue && Object.values(filters.checkedFiltersRevenue).some(Boolean), 
-                label: 'Revenue', 
-                value: () => getSelectedValues(filters.checkedFiltersRevenue!) 
+            {
+                condition: filters.checkedFiltersRevenue && Object.values(filters.checkedFiltersRevenue).some(Boolean),
+                label: 'Revenue',
+                value: () => getSelectedValues(filters.checkedFiltersRevenue!)
             },
-            { 
-                condition: filters.industry && Object.values(filters.industry).some(Boolean), 
-                label: 'Industry', 
-                value: () => getSelectedValues(filters.industry!) 
+            {
+                condition: filters.industry && Object.values(filters.industry).some(Boolean),
+                label: 'Industry',
+                value: () => getSelectedValues(filters.industry!)
             },
         ];
 
@@ -382,9 +382,9 @@ const Sources: React.FC = () => {
     const handleDeleteFilter = (filterToDelete: { label: string; value: string }) => {
         const updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
         setSelectedFilters(updatedFilters);
-        
+
         const filters = JSON.parse(sessionStorage.getItem('filters') || '{}');
-    
+
         switch (filterToDelete.label) {
             case 'From Date':
                 filters.from_date = null;
@@ -421,7 +421,7 @@ const Sources: React.FC = () => {
             default:
                 break;
         }
-        
+
         if (!filters.from_date && !filters.to_date) {
             filters.checkedFilters = {
                 lastWeek: false,
@@ -430,13 +430,13 @@ const Sources: React.FC = () => {
                 allTime: false,
             };
         }
-    
+
         sessionStorage.setItem('filters', JSON.stringify(filters));
-    
+
         if (filterToDelete.label === 'Dates') {
             setSelectedDates({ start: null, end: null });
         }
-    
+
         // Обновляем фильтры для применения
         const newFilters: FilterParams = {
             from_date: updatedFilters.find(f => f.label === 'From Date') ? dayjs(updatedFilters.find(f => f.label === 'From Date')!.value).unix() : null,
@@ -493,7 +493,7 @@ const Sources: React.FC = () => {
             },
             industry: Object.fromEntries(Object.keys(filters.industry).map(key => [key, updatedFilters.some(f => f.label === 'Industry' && f.value.includes(key))]))
         };
-    
+
         // Применяем обновленные фильтры
         handleApplyFilters(newFilters);
     };
@@ -523,7 +523,7 @@ const Sources: React.FC = () => {
     return (
         <>
             {loading && (
-                <CustomizedProgressBar/>
+                <CustomizedProgressBar />
             )}
             <Box sx={{
                 display: 'flex', flexDirection: 'column', height: '100%',
@@ -558,7 +558,7 @@ const Sources: React.FC = () => {
                                 <CustomToolTip title={'Here you can view your active sources.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
                             </Box>
                             <Box sx={{
-                                display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px', pr:2,
+                                display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px', pr: 2,
                                 '@media (max-width: 900px)': {
                                     gap: '8px'
                                 }
@@ -599,6 +599,8 @@ const Sources: React.FC = () => {
                                         padding: '8px',
                                         opacity: data?.length === 0 ? '0.5' : '1',
                                         minWidth: 'auto',
+                                        maxHeight: '40px',
+                                        maxWidth:'40px',
                                         position: 'relative',
                                         '@media (max-width: 900px)': {
                                             border: 'none',
@@ -638,13 +640,13 @@ const Sources: React.FC = () => {
                         </Box>
 
                         <Box sx={{
-                            flex: 1, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 4.25rem)', pr:2, overflow: 'auto', maxWidth: '100%',
+                            flex: 1, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 4.25rem)', pr: 2, overflow: 'auto', maxWidth: '100%',
                             '@media (max-width: 900px)': {
                                 pt: '2px',
                                 pb: '18px'
                             }
                         }}>
-                            
+
                             <Box sx={{
                                 display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
                                 '@media (max-width: 900px)': {
@@ -733,7 +735,7 @@ const Sources: React.FC = () => {
                                                         }}
                                                     >
                                                         <Table stickyHeader aria-label="leads table">
-                                                            <TableHead sx={{position: "relative"}}>
+                                                            <TableHead sx={{ position: "relative" }}>
                                                                 <TableRow>
                                                                     {[
                                                                         { key: 'name', label: 'Name' },
@@ -789,8 +791,8 @@ const Sources: React.FC = () => {
                                                                         top: '56px',
                                                                         zIndex: 11,
                                                                     }}>
-                                                                        <TableCell colSpan={9} sx={{p: 0, pb: "4px"}}>
-                                                                            <LinearProgress variant="indeterminate" sx={{width: "100%", position: "absolute"}}/> 
+                                                                        <TableCell colSpan={9} sx={{ p: 0, pb: "4px" }}>
+                                                                            <LinearProgress variant="indeterminate" sx={{ width: "100%", position: "absolute" }} />
                                                                         </TableCell>
                                                                     </TableRow>
                                                                 )}
@@ -836,11 +838,49 @@ const Sources: React.FC = () => {
 
                                                                             {/* Type Column */}
                                                                             <TableCell
-                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative', cursor: "pointer" }}
-                                                                                onClick={(e) => row?.source_origin ? handleOpenPopoverFullName(e, setSourceType(row?.source_origin)) : {}}
+                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative', cursor: 'default' }}
                                                                             >
-                                                                                {truncateText(setSourceType(row.source_origin), 20)}
+                                                                                <Box sx={{display: 'flex'}}>
+                                                                                <Tooltip
+                                                                                    title={
+                                                                                        <Box sx={{ backgroundColor: '#fff', margin: 0, padding: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', }}>
+                                                                                          <Typography className='table-data' component='div' sx={{ fontSize: '12px !important', }}>
+                                                                                            {setSourceType(row.source_origin)}
+                                                                                          </Typography>
+                                                                                        </Box>
+                                                                                      }
+                                                                                    sx={{marginLeft:'0.5rem !important'}}
+                                                                                    componentsProps={{
+                                                                                        tooltip: {
+                                                                                            sx: {
+                                                                                                backgroundColor: '#fff',
+                                                                                                color: '#000',
+                                                                                                boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
+                                                                                                border: '0.2px solid rgba(255, 255, 255, 1)',
+                                                                                                borderRadius: '4px',
+                                                                                                maxHeight: '100%',
+                                                                                                maxWidth: '500px',
+                                                                                                padding: '11px 10px',
+                                                                                                marginLeft: '0.5rem !important',
+                                                                                            },
+                                                                                        },
+                                                                                    }}
+                                                                                    placement='right'
+                                                                                >
+                                                                                    <Typography className='table-data'
+                                                                                        sx={{
+                                                                                            whiteSpace: 'nowrap',
+                                                                                            overflow: 'hidden',
+                                                                                            textOverflow: 'ellipsis',
+                                                                                            maxWidth:'150px',
+                                                                                        }}
+                                                                                    >
+                                                                                        {truncateText(setSourceType(row.source_origin), 20)}
+                                                                                    </Typography>
+                                                                                </Tooltip>
+                                                                                </Box>
                                                                             </TableCell>
+
 
                                                                             {/* Created date Column */}
                                                                             <TableCell
@@ -867,10 +907,10 @@ const Sources: React.FC = () => {
                                                                                 : row.total_records.toLocaleString('en-US') ?? '--'} */}
 
                                                                                 {progress?.total && progress?.total > 0 || row?.total_records > 0
-                                                                                ? progress?.total > 0
-                                                                                    ? progress?.total.toLocaleString('en-US')
-                                                                                    : row?.total_records?.toLocaleString('en-US')
-                                                                                :  <ThreeDotsLoader />
+                                                                                    ? progress?.total > 0
+                                                                                        ? progress?.total.toLocaleString('en-US')
+                                                                                        : row?.total_records?.toLocaleString('en-US')
+                                                                                    : <ThreeDotsLoader />
                                                                                 }
                                                                             </TableCell>
 
@@ -884,12 +924,12 @@ const Sources: React.FC = () => {
                                                                                     : <ProgressBar progress={progress}/>
                                                                                 : row.matched_records.toLocaleString('en-US') ?? '--'} */}
                                                                                 {(progress?.processed && progress?.processed == progress?.total) || (row?.processed_records == row?.total_records && row?.processed_records !== 0)
-                                                                                ? progress?.matched > row?.matched_records 
-                                                                                    ? progress?.matched.toLocaleString('en-US')
-                                                                                    : row.matched_records.toLocaleString('en-US')
-                                                                                :  row?.processed_records !== 0 
-                                                                                    ? <ProgressBar progress={{total: row?.total_records, processed: row?.processed_records, matched: row?.matched_records}}/> 
-                                                                                    : <ProgressBar progress={progress}/> 
+                                                                                    ? progress?.matched > row?.matched_records
+                                                                                        ? progress?.matched.toLocaleString('en-US')
+                                                                                        : row.matched_records.toLocaleString('en-US')
+                                                                                    : row?.processed_records !== 0
+                                                                                        ? <ProgressBar progress={{ total: row?.total_records, processed: row?.processed_records, matched: row?.matched_records }} />
+                                                                                        : <ProgressBar progress={progress} />
                                                                                 }
                                                                             </TableCell>
 
@@ -902,14 +942,28 @@ const Sources: React.FC = () => {
                                                                                     open={isOpen}
                                                                                     anchorEl={anchorEl}
                                                                                     onClose={handleClosePopover}
-                                                                                    anchorOrigin={{
-                                                                                        vertical: 'bottom',
-                                                                                        horizontal: 'left',
+                                                                                    slotProps={{
+                                                                                        paper: {
+                                                                                            sx: {
+                                                                                                boxShadow: 0,
+                                                                                                borderRadius: "4px",
+                                                                                                border: "0.5px solid rgba(175, 175, 175, 1)",
+                                                    
+                                                                                            },
+                                                                                        }}}
+                                                                                        anchorOrigin={{
+                                                                                            vertical: "center",
+                                                                                            horizontal: "center",
+                                                                                        }}
+                                                                                    transformOrigin={{
+                                                                                        vertical: "top",
+                                                                                        horizontal: "right",
                                                                                     }}
+                                                                                    
                                                                                 >
                                                                                     <List
                                                                                         sx={{
-                                                                                            width: '100%', maxWidth: 360
+                                                                                            width: '100%', maxWidth: 360, boxShadow: 'none'
                                                                                         }}
                                                                                     >
                                                                                         <ListItemButton sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
@@ -932,15 +986,17 @@ const Sources: React.FC = () => {
                                                                                             anchorEl={anchorEl}
                                                                                             anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                                                                                             transformOrigin={{ vertical: 'top', horizontal: 'center' }}
-                                                                                            slotProps={{ paper: {
-                                                                                                sx: {
-                                                                                                    padding: '0.125rem',
-                                                                                                    width: '15.875rem',
-                                                                                                    boxShadow: 0,
-                                                                                                    borderRadius: '8px',
-                                                                                                    border: '0.5px solid rgba(175, 175, 175, 1)'
+                                                                                            slotProps={{
+                                                                                                paper: {
+                                                                                                    sx: {
+                                                                                                        padding: '0.125rem',
+                                                                                                        width: '15.875rem',
+                                                                                                        boxShadow: 0,
+                                                                                                        borderRadius: '8px',
+                                                                                                        border: '0.5px solid rgba(175, 175, 175, 1)'
+                                                                                                    }
                                                                                                 }
-                                                                                            }}}
+                                                                                            }}
                                                                                         >
                                                                                             <Typography className="first-sub-title" sx={{ paddingLeft: 2, pt: 1, pb: 0 }}>
                                                                                                 Confirm Deletion
@@ -997,8 +1053,8 @@ const Sources: React.FC = () => {
                                                             </TableBody>
                                                         </Table>
                                                     </TableContainer>
-                                                    {count_sources && count_sources > 10 
-                                                    ?
+                                                    {count_sources && count_sources > 10
+                                                        ?
                                                         <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0', "@media (max-width: 600px)": { padding: '12px 0 0' } }}>
                                                             <CustomTablePagination
                                                                 count={count_sources ?? 0}
@@ -1009,7 +1065,7 @@ const Sources: React.FC = () => {
                                                                 rowsPerPageOptions={rowsPerPageOptions}
                                                             />
                                                         </Box>
-                                                    :
+                                                        :
                                                         <Box
                                                             display="flex"
                                                             justifyContent="flex-end"
@@ -1072,7 +1128,7 @@ const Sources: React.FC = () => {
                                                             backgroundColor: 'rgba(243, 243, 243, 1)',
                                                             borderRadius: '4px',
                                                             color: 'rgba(95, 99, 104, 1) !important',
-                                                            marginBottom: index < selectedName?.split(",").length - 1 ? "4px" : 0, 
+                                                            marginBottom: index < selectedName?.split(",").length - 1 ? "4px" : 0,
                                                         }}
                                                     >
                                                         {part.trim()}
