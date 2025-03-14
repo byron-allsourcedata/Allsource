@@ -233,50 +233,53 @@ class LeadsPersistence:
         if status:
             status_list = status.split(',')
             filters = []
-
-            for status_data in status_list:
-                if status_data == 'converted_sales':
-                    filters.append(LeadUser.is_converted_sales == True)
-
-                elif status_data == 'view_product':
-                    if 'converted_sales' not in status_list:
-                        filters.append(and_(
-                            LeadUser.behavior_type == "viewed_product",
-                            LeadUser.is_converted_sales == False
-                        ))
-                    else:
-                        filters.append(and_(LeadUser.behavior_type == "viewed_product"))
-
-                elif status_data == 'visitor':
-                    if 'converted_sales' not in status_list:
-                        filters.append(and_(
-                            LeadUser.behavior_type == "visitor",
-                            LeadUser.is_converted_sales == False
-                        ))
-                    else:
-                        filters.append(and_(LeadUser.behavior_type == "visitor"))
-
-                elif status_data == 'abandoned_cart':
-                    query = query.outerjoin(
+            
+            if 'converted_sales' in status_list or 'abandoned_cart' in status_list:
+                query = query.outerjoin(
                         LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id
                     ).outerjoin(
                         LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id
                     )
 
-                    filters.append(
+            if 'converted_sales' in status_list:
+                filters.append(
+                    or_(
                         and_(
-                            LeadUser.behavior_type == "product_added_to_cart",
-                            LeadUser.is_converted_sales == False,
-                            LeadsUsersAddedToCart.added_at.isnot(None),
-                            or_(
-                                LeadsUsersAddedToCart.added_at > LeadsUsersOrdered.ordered_at,
-                                and_(
-                                    LeadsUsersOrdered.ordered_at.is_(None),
-                                    LeadsUsersAddedToCart.added_at.isnot(None)
-                                )
-                            )
+                            LeadUser.behavior_type != "product_added_to_cart",
+                            LeadUser.is_converted_sales == True
+                        ),
+                        and_(
+                            LeadUser.is_converted_sales == True,
+                            LeadsUsersAddedToCart.added_at < LeadsUsersOrdered.ordered_at
                         )
                     )
+                )
+
+            if 'view_product' in status_list:
+                filters.append(and_(
+                    LeadUser.behavior_type == "viewed_product",
+                    LeadUser.is_converted_sales == False
+                ))
+                
+            if 'visitor' in status_list:
+                filters.append(and_(
+                    LeadUser.behavior_type == "visitor",
+                    LeadUser.is_converted_sales == False
+                ))
+
+            if 'abandoned_cart' in status_list:
+                filters.append(
+                    or_(
+                        and_(
+                            LeadUser.behavior_type == "product_added_to_cart",
+                            LeadUser.is_converted_sales == False
+                        ),
+                        and_(
+                            LeadUser.behavior_type == "product_added_to_cart",
+                            LeadsUsersAddedToCart.added_at > LeadsUsersOrdered.ordered_at
+                        )
+                    )
+                )
 
             query = query.filter(or_(*filters))
 
