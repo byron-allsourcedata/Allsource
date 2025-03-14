@@ -157,7 +157,6 @@ const CreateLookalikePage: React.FC = () => {
     };
 
     const handleApplyFilters = (filters: FilterParams) => {
-        console.log(filters)
             const newSelectedFilters: { label: string; value: string }[] = [];
             const getSelectedValues = (obj: Record<string, boolean>): string => {
                 return Object.entries(obj)
@@ -243,8 +242,8 @@ const CreateLookalikePage: React.FC = () => {
                 }
             };
     
-            processMultiFilter('Size', 'size');
-            processMultiFilter('Type', 'type');
+            processMultiFilter('Size', 'lookalike_size');
+            processMultiFilter('Type', 'lookalike_type');
 
             const response = await axiosInstance.get(url);
             const [leads, count] = response.data;

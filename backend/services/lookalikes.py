@@ -1,19 +1,17 @@
-import csv
-import io
-from utils import format_phone_number
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from enums import BaseEnum
-from datetime import datetime, timedelta
 
 
 class AudienceLookalikesService:
     def __init__(self, lookalikes_persistence_service: AudienceLookalikesPersistence):
         self.lookalikes_persistence_service = lookalikes_persistence_service
 
-    def get_lookalikes(self, user, page, per_page, from_date, to_date, sort_by, sort_order, timezone_offset):
+    def get_lookalikes(self, user, page, per_page, from_date, to_date, sort_by, sort_order, timezone_offset,
+                       lookalike_size, lookalike_type):
         lookalikes, count, max_page = self.lookalikes_persistence_service.\
             get_lookalikes(user_id=user.get('id'), page=page, per_page=per_page, sort_by=sort_by, sort_order=sort_order,
-                           from_date=from_date, to_date=to_date)
+                           from_date=from_date, to_date=to_date, lookalike_size=lookalike_size,
+                           lookalike_type=lookalike_type)
         return lookalikes, count, max_page
 
     def get_source_info(self, uuid_of_source, user):
