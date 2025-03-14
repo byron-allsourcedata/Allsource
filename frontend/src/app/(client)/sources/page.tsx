@@ -940,14 +940,28 @@ const Sources: React.FC = () => {
                                                                                     open={isOpen}
                                                                                     anchorEl={anchorEl}
                                                                                     onClose={handleClosePopover}
-                                                                                    anchorOrigin={{
-                                                                                        vertical: 'bottom',
-                                                                                        horizontal: 'left',
+                                                                                    slotProps={{
+                                                                                        paper: {
+                                                                                            sx: {
+                                                                                                boxShadow: 0,
+                                                                                                borderRadius: "4px",
+                                                                                                border: "0.5px solid rgba(175, 175, 175, 1)",
+                                                    
+                                                                                            },
+                                                                                        }}}
+                                                                                        anchorOrigin={{
+                                                                                            vertical: "center",
+                                                                                            horizontal: "center",
+                                                                                        }}
+                                                                                    transformOrigin={{
+                                                                                        vertical: "top",
+                                                                                        horizontal: "right",
                                                                                     }}
+                                                                                    
                                                                                 >
                                                                                     <List
                                                                                         sx={{
-                                                                                            width: '100%', maxWidth: 360
+                                                                                            width: '100%', maxWidth: 360, boxShadow: 'none'
                                                                                         }}
                                                                                     >
                                                                                         <ListItemButton sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
