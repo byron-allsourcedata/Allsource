@@ -23,8 +23,8 @@ const mockDomains = [
   "shoponline.store",
 ];
 
-const csvTypes = ["Customer Conversions", "Lead Failures", "Intent"];
-const pixelTypes = ["Visitor", "View Product", "Abandoned Cart", "Converted sales"];
+const csvTypes = ["Customer Conversions", "Failed Leads", "Interest"];
+const pixelTypes = ["Visitor", "Viewed Product", "Abandoned Cart", "Converted Sales"];
 
 
 
@@ -147,28 +147,28 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
 
   const addTag = (category: string, tag: string) => {
     setSelectedTags((prevTags) => {
-      const newTags = [...prevTags[category]];
+      const newTags = category === "createdDate" ? [tag] : [...prevTags[category]]; // Очистка старых значений
       if (!newTags.includes(tag)) {
         newTags.push(tag);
       }
       return { ...prevTags, [category]: newTags };
     });
-
+  
     updateCheckedFilters(category, tag, true);
   };
 
   const removeTag = (category: string, tag: string) => {
     setSelectedTags((prevTags) => {
       const updatedTags = prevTags[category].filter((t) => t !== tag);
-
+  
       const isLastTagRemoved = updatedTags.length === 0;
-
-      // If the last tag and category "CreatedDate" are deleted, clear the state
-      if (category === "createdDate" && isLastTagRemoved) {
+  
+      // Если удалена последняя дата, очищаем состояние
+      if (category === "createdDate") {
         setDateRange({ fromDate: null, toDate: null });
       }
-
-      // Update checkbox states if necessary
+  
+      // Сброс чекбокса, если дата удалена
       if (category === "createdDate") {
         const tagMap: { [key: string]: string } = {
           "Today": "today",
@@ -176,7 +176,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           "Last 30 days": "last30Days",
           "Last 6 months": "last6Months",
         };
-
+  
         const filterName = tagMap[tag];
         if (filterName) {
           setCheckedFilters((prevFilters) => ({
@@ -185,7 +185,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           }));
         }
       }
-
+  
       return { ...prevTags, [category]: updatedTags };
     });
   };

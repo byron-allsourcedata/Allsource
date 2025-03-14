@@ -157,8 +157,10 @@ const Sources: React.FC = () => {
                 url += `&status=${filters.selectedStatus.map((status: string) => status.toLowerCase()).join(',')}`;
             }
             if (filters.selectedTypes?.length > 0) {
-                url += `&type_customer=${filters.selectedTypes.map((type: string) => type.toLowerCase()).join(',')}`;
-            }            
+                url += `&type_customer=${filters.selectedTypes
+                    .map((type: string) => type.toLowerCase().replace(/\s+/g, '_'))
+                    .join(',')}`;
+            }           
             if (filters.selectedDomains?.length > 0) {
                 url += `&domain_id=${filters.selectedDomains.join(',')}`;
             }
@@ -285,7 +287,7 @@ const Sources: React.FC = () => {
             { condition: filters.selectedStatus.length > 0, label: 'Status', value: () => filters.selectedStatus.join(', ') },
             { condition: filters.selectedTypes.length > 0, label: 'Types', value: () => filters.selectedTypes.join(', ') },
             { condition: filters.selectedDomains.length > 0, label: 'Domains', value: () => filters.selectedDomains.join(', ') },
-            { condition: filters.createdDate.length > 0, label: 'Visited Date', value: () => filters.createdDate.join(', ') },
+            { condition: filters.createdDate.length > 0, label: 'Created Date', value: () => filters.createdDate.join(', ') },
             { condition: filters.dateRange.fromDate || filters.dateRange.toDate, label: 'Date Range', value: () => {
                 const from = dayjs.unix(filters.dateRange.fromDate!).format(dateFormat);
                 const to = dayjs.unix(filters.dateRange.toDate!).format(dateFormat);
@@ -316,7 +318,7 @@ const Sources: React.FC = () => {
             dateRange: { fromDate: null, toDate: null },
         };
     
-        sessionStorage.setItem('filtersBySource', JSON.stringify(filters));
+        sessionStorage.setItem('filtersBySource', JSON.stringify({}));
     
         handleApplyFilters(filters);
     };
@@ -351,6 +353,11 @@ const Sources: React.FC = () => {
                 break;
             case 'Created Date':
                 filters.createdDate = [];
+                filters.from_date = null;
+                setSelectedDates({ start: null, end: null });
+                filters.to_date = null;
+                setSelectedDates({ start: null, end: null });
+                filters.dateRange = { fromDate: null, toDate: null };
                 break;
             case 'Date Range':
                 filters.dateRange = { fromDate: null, toDate: null };
@@ -378,7 +385,7 @@ const Sources: React.FC = () => {
         handleApplyFilters(newFilters);
     };
     
-
+      
     const setSourceOrigin = (sourceOrigin: string) => {
         return sourceOrigin === "pixel" ? "Pixel" : "CSV File"
     }
@@ -537,7 +544,7 @@ const Sources: React.FC = () => {
                                         />
                                     )}
                                     {selectedFilters.map(filter => {
-                                        if (filter.label === 'From Date' || filter.label === 'To Date') {
+                                        if (filter.label === 'From Date' || filter.label === 'To Date' || filter.label === 'Date Range') {
                                             return null;
                                         }
                                         let displayValue = filter.value;
