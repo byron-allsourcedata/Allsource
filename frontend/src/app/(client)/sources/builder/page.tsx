@@ -940,13 +940,13 @@ const SourcesImport: React.FC = () => {
                                     {!pixelNotInstalled && 
                                         <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
                                             <Typography sx={{fontFamily: "Roboto", fontSize: "14px", color: "rgba(32, 33, 36, 1)"}}>Total Leads</Typography> 
-                                            <Typography sx={{fontFamily: "Nunino Sans", fontWeight: 600, fontSize: "16px", color: "rgba(32, 33, 36, 1)"}}>{totalLeads}</Typography>
+                                            <Typography className='second-sub-title' sx={{fontFamily: "Nunino Sans", fontWeight: 600, fontSize: "16px", color: "rgba(33, 33, 33, 1))"}}>{totalLeads}</Typography>
                                         </Box>
                                     }
                                 </Box>
                             }
 
-                            { sourceMethod === 2 && !pixelNotInstalled && 
+                            { sourceMethod === 2 && !pixelNotInstalled && selectedDomainId && 
                                 <Box sx={{display: "flex", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
                                     <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
                                         <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500}}>Choose your data source</Typography>
@@ -1048,7 +1048,7 @@ const SourcesImport: React.FC = () => {
                                     </Box>
                                     <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
                                         <Typography sx={{fontFamily: "Roboto", fontSize: "14px", color: "rgba(32, 33, 36, 1)"}}>Matched Leads</Typography> 
-                                        <Typography sx={{fontFamily: "Nunino Sans", fontWeight: 600, fontSize: "16px", color: "rgba(32, 33, 36, 1)"}}>{matchedLeads}</Typography>
+                                        <Typography className='second-sub-title' sx={{fontFamily: "Nunino Sans", fontWeight: 600, fontSize: "16px", color: "rgba(32, 33, 36, 1)"}}>{matchedLeads}</Typography>
                                     </Box>
                                 </Box>
                             }
