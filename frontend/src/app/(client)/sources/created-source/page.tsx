@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef, Suspense } from 'react';
-import { Box, Typography, Button, IconButton, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText } from '@mui/material';
+import { Box, Typography, Button, IconButton, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText, Tooltip } from '@mui/material';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import dayjs from 'dayjs';
@@ -291,7 +291,43 @@ const SourcesList: React.FC = () => {
                                             Type
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data" sx={{cursor: "pointer"}} onClick={(e) => createdSource?.source_type ? handleOpenPopoverFullName(e, setSourceType(createdSource?.source_type)) : {}}>
-                                            {truncateText(setSourceType(createdSource?.source_type), 20)}
+                                            <Tooltip
+                                                title={
+                                                    <Box sx={{ backgroundColor: '#fff', margin: 0, padding: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', }}>
+                                                        <Typography className='table-data' component='div' sx={{ fontSize: '12px !important', }}>
+                                                        {setSourceType(createdSource?.source_type)}
+                                                        </Typography>
+                                                    </Box>
+                                                    }
+                                                sx={{marginLeft:'0.5rem !important'}}
+                                                componentsProps={{
+                                                    tooltip: {
+                                                        sx: {
+                                                            backgroundColor: '#fff',
+                                                            color: '#000',
+                                                            boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
+                                                            border: '0.2px solid rgba(255, 255, 255, 1)',
+                                                            borderRadius: '4px',
+                                                            maxHeight: '100%',
+                                                            maxWidth: '500px',
+                                                            padding: '11px 10px',
+                                                            marginLeft: '0.5rem !important',
+                                                        },
+                                                    },
+                                                }}
+                                                placement='right'
+                                            >
+                                                <Typography className='table-data'
+                                                    sx={{
+                                                        whiteSpace: 'nowrap',
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis',
+                                                        maxWidth:'150px',
+                                                    }}
+                                                >
+                                                    {truncateText(setSourceType(createdSource?.source_type), 20)}
+                                                </Typography>
+                                            </Tooltip>
                                         </Typography>
                                     </Box>
                                     <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
