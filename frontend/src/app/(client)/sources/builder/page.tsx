@@ -937,7 +937,7 @@ const SourcesImport: React.FC = () => {
                                             </Button>
                                         </Box>
                                     }
-                                    {!pixelNotInstalled && 
+                                    {!pixelNotInstalled && selectedDomain &&
                                         <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
                                             <Typography sx={{fontFamily: "Roboto", fontSize: "14px", color: "rgba(32, 33, 36, 1)"}}>Total Leads</Typography> 
                                             <Typography className='second-sub-title' sx={{fontFamily: "Nunino Sans", fontWeight: 600, fontSize: "16px", color: "rgba(33, 33, 33, 1))"}}>{totalLeads}</Typography>
@@ -1047,12 +1047,12 @@ const SourcesImport: React.FC = () => {
                                 </Box>
                                 <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
                                     <Typography sx={{fontFamily: "Roboto", fontSize: "14px", color: "rgba(32, 33, 36, 1)"}}>Matched Leads</Typography> 
-                                    <Typography className='second-sub-title' sx={{fontFamily: "Nunino Sans", fontWeight: 600, fontSize: "16px", color: "rgba(32, 33, 36, 1)"}}>{matchedLeads}</Typography>
+                                    <Typography className='second-sub-title' sx={{fontFamily: "Nunino Sans", fontWeight: 600, fontSize: "16px", color: "rgba(32, 33, 36, 1)"}}>{eventType.includes(1 || 2|| 3 || 4) ?  matchedLeads : totalLeads }</Typography>
                                 </Box>
                             </Box>
                             {/* } */}
                             
-                            <Box sx={{display: sourceMethod !== 0 && file || selectedDomain !== "" && eventType.length > 0 && !pixelNotInstalled && matchedLeads > 0 ? "flex" : "none", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
+                            <Box sx={{display: sourceMethod !== 0 && file || selectedDomain !== "" && !pixelNotInstalled ? "flex" : "none", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
                                 <Box sx={{display: "flex", alignItems: "center", gap: 2, "@media (max-width: 400px)": { justifyContent: "space-between" },}}>
                                     <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500}}>Create Name</Typography>
                                     <TextField
