@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText, LinearProgress } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -11,10 +11,8 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import ArrowDownwardRoundedIcon from '@mui/icons-material/ArrowDownwardRounded';
 import ArrowUpwardRoundedIcon from '@mui/icons-material/ArrowUpwardRounded';
 // import FilterPopup from './CompanyFilters';
-import AudiencePopup from '@/components/AudienceSlider';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import dayjs from 'dayjs';
-import CloseIcon from '@mui/icons-material/Close';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import CustomToolTip from '@/components/customToolTip';
 import CustomTablePagination from '@/components/CustomTablePagination';
@@ -31,11 +29,11 @@ interface Source {
     source_origin: string
     source_type: string
     created_at: Date
-    updated_at: Date
+    domain: string
     created_by: string
-    processed: number
-    total_records?: number
-    matched_records?: number
+    processed_records: number
+    total_records: number
+    matched_records: number
     matched_records_status: string
 }
 
@@ -119,14 +117,7 @@ const Sources: React.FC = () => {
     const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
     const isOpen = Boolean(anchorEl);
-    const hasUnmatchedRecords = data.some(item => item.matched_records === 0 && item.matched_records_status === "pending");
-
-    useEffect(() => {
-        document.body.style.overflow = 'hidden';
-        return () => {
-            document.body.style.overflow = 'auto';
-        };
-    }, []);
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
         fetchSources({
@@ -137,13 +128,44 @@ const Sources: React.FC = () => {
         });
     }, [orderBy, order, page, rowsPerPage, selectedFilters]);
 
-    // useEffect(() => {
-    //     if (data.length > 0 && hasUnmatchedRecords) {
-    //         const interval = setInterval(fetchData, 5000);
-      
-    //         return () => clearInterval(interval);
-    //     }
-    //   }, [hasUnmatchedRecords]);
+    const fetchSourcesMemoized = useCallback(() => {
+        fetchSources({
+            sortBy: orderBy,
+            sortOrder: order,
+            page,
+            rowsPerPage,
+        });
+    }, [orderBy, order, page, rowsPerPage]);
+    
+    useEffect(() => {
+        console.log("longpol");
+    
+        if (!intervalRef.current) {
+            console.log("longpol started");
+            intervalRef.current = setInterval(() => {
+                const hasPending = data.some(item => item.matched_records_status === "pending");
+    
+                if (hasPending) {
+                    console.log("Fetching due to pending records");
+                    fetchSourcesMemoized();
+                } else {
+                    console.log("No pending records, stopping interval");
+                    if (intervalRef.current) {
+                        clearInterval(intervalRef.current);
+                        intervalRef.current = null;
+                    }
+                }
+            }, 2000);
+        }
+    
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+                console.log("interval cleared");
+            }
+        };
+    }, [data, fetchSourcesMemoized]);
       
 
     const fetchData = async () => {
@@ -171,7 +193,9 @@ const Sources: React.FC = () => {
 
     const fetchSources = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
         try {
-            isFirstLoad ? setLoading(true)  : setLoaderForTable(true);
+            !intervalRef.current 
+                ? isFirstLoad ? setLoading(true)  : setLoaderForTable(true)
+                : () => {}
             const accessToken = localStorage.getItem("token");
             if (!accessToken) {
                 router.push('/signin');
@@ -237,6 +261,8 @@ const Sources: React.FC = () => {
     
     const handleDeleteSource = async () => {
         setLoaderForTable(true);
+        handleClosePopover();
+        handleCloseConfirmDialog();
         try {
             if (selectedRowData?.id) {
                 const response = await axiosInstance.delete(`/audience-sources/${selectedRowData.id}`);
@@ -251,8 +277,6 @@ const Sources: React.FC = () => {
             showErrorToast("Error deleting source")
         } finally {
             setLoaderForTable(false);
-            handleClosePopover();
-            handleCloseConfirmDialog();
         }
     };
 
@@ -466,9 +490,14 @@ const Sources: React.FC = () => {
 
     const setSourceType = (sourceType: string) => {
         return sourceType
-            .split('_')
-            .map((item: string) => item.charAt(0).toUpperCase() + item.slice(1))
-            .join(' ');
+            .split(',')
+            .map(item =>
+                item
+                    .split('_')
+                    .map(subItem => subItem.charAt(0).toUpperCase() + subItem.slice(1))
+                    .join(' ')
+            )
+            .join(', ');
     }
 
 
@@ -690,10 +719,10 @@ const Sources: React.FC = () => {
                                                                     {[
                                                                         { key: 'name', label: 'Name' },
                                                                         { key: 'source', label: 'Source' },
+                                                                        { key: 'domain', label: 'Domain' },
                                                                         { key: 'type', label: 'Type' },
                                                                         { key: 'created_date', label: 'Created Date', sortable: true },
                                                                         { key: 'created_by', label: 'Created By' },
-                                                                        { key: 'updated_date', label: 'Update Date' },
                                                                         { key: 'number_of_customers', label: 'Number of Customers', sortable: true },
                                                                         { key: 'matched_records', label: 'Matched Records', sortable: true },
                                                                         { key: 'actions', label: 'Actions' }
@@ -748,7 +777,7 @@ const Sources: React.FC = () => {
                                                                 )}
                                                             </TableHead>
                                                             <TableBody>
-                                                                {data.map((row: any) => {
+                                                                {data.map((row: Source) => {
                                                                     const progress = sourceProgress[row.id];
                                                                     return (
                                                                         <TableRow
@@ -779,6 +808,13 @@ const Sources: React.FC = () => {
                                                                                 {setSourceOrigin(row.source_type)}
                                                                             </TableCell>
 
+                                                                            {/* Domain Column */}
+                                                                            <TableCell
+                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative' }}
+                                                                            >
+                                                                                {row.domain ?? "--"}
+                                                                            </TableCell>
+
                                                                             {/* Type Column */}
                                                                             <TableCell
                                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
@@ -800,38 +836,41 @@ const Sources: React.FC = () => {
                                                                                 {row.created_by}
                                                                             </TableCell>
 
-                                                                            {/* Update Date Column */}
-                                                                            <TableCell
-                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative' }}
-                                                                            >
-                                                                                {dayjs(row.updated_at).isValid() ? dayjs(row.updated_at).format('MMM D, YYYY') : '--'}
-                                                                            </TableCell>
-
                                                                             {/* Number of Customers Column */}
                                                                             <TableCell
                                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                                             >
-                                                                                {row.matched_records_status === "pending" 
+                                                                                {/* {row.matched_records_status === "pending" 
                                                                                 ? progress?.total
                                                                                     ? progress?.total.toLocaleString('en-US')
                                                                                     : <ThreeDotsLoader />
-                                                                                : row.total_records.toLocaleString('en-US') ?? '--'}
+                                                                                : row.total_records.toLocaleString('en-US') ?? '--'} */}
+
+                                                                                {progress?.total && progress?.total > 0 || row?.total_records > 0
+                                                                                ? progress?.total > 0
+                                                                                    ? progress?.total.toLocaleString('en-US')
+                                                                                    : row?.total_records?.toLocaleString('en-US')
+                                                                                :  <ThreeDotsLoader />
+                                                                                }
                                                                             </TableCell>
 
                                                                             {/* Matched Records  Column */}
                                                                             <TableCell
                                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                                             >
-                                                                                {row.matched_records_status === "pending" 
+                                                                                {/* {row.matched_records_status === "pending" 
                                                                                 ? progress?.processed == progress?.total && progress?.processed
                                                                                     ? progress?.matched.toLocaleString('en-US')
                                                                                     : <ProgressBar progress={progress}/>
-                                                                                : row.matched_records.toLocaleString('en-US') ?? '--'}
-                                                                                {/* {row.processed 
-                                                                                ? progress?.processed == progress?.total && progress?.processed
-                                                                                    ? progress?.matched
-                                                                                    : <ProgressBar progress={progress}/>
-                                                                                : row.matched_records ?? '--'} */}
+                                                                                : row.matched_records.toLocaleString('en-US') ?? '--'} */}
+                                                                                {(progress?.processed && progress?.processed == progress?.total) || (row?.processed_records == row?.total_records && row?.processed_records !== 0)
+                                                                                ? progress?.matched > row?.matched_records 
+                                                                                    ? progress?.matched.toLocaleString('en-US')
+                                                                                    : row.matched_records.toLocaleString('en-US')
+                                                                                :  row?.processed_records !== 0 
+                                                                                    ? <ProgressBar progress={{total: row?.total_records, processed: row?.processed_records, matched: row?.matched_records}}/> 
+                                                                                    : <ProgressBar progress={progress}/> 
+                                                                                }
                                                                             </TableCell>
 
                                                                             <TableCell sx={{ ...sourcesStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
@@ -957,7 +996,7 @@ const Sources: React.FC = () => {
                                                             alignItems="center"
                                                             sx={{
                                                                 padding: '16px',
-                                                                backgroundColor: '#f9f9f9',
+                                                                backgroundColor: '#fff',
                                                                 borderRadius: '4px',
                                                                 "@media (max-width: 600px)": { padding: '12px' }
                                                             }}
@@ -991,7 +1030,6 @@ const Sources: React.FC = () => {
 
                                 </Box>
                             </Box>
-                            {/* <SourcesTable setStatus={setStatus} status={status} setData={setData} data={data} setSources={setSources}/> */}
                             {/* {showSlider && <Slider />} */}
                         </Box>
                     </Box>

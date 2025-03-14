@@ -20,6 +20,16 @@ class BusinessType(Enum):
     D2C = 'd2c'
     B2B = 'b2b'
 
+class LeadStatus(Enum):
+    ABANDONED_CART = 'abandoned_cart'
+    VIEW_PRODUCT = 'view_product'
+    CONVERTED_SALES = 'converted_sales'
+    VISITOR = 'visitor'
+
+class SourceType(Enum):
+    CSV = 'csv'
+    PIXEL = 'pixel'
+
 class CreateDataSync(Enum):
     ZAPIER_CONNECTED = 'ZAPIER_CONNECTED'
     

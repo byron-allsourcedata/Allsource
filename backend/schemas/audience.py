@@ -24,11 +24,11 @@ class NewSource(BaseModel):
     source_type: str
     source_origin: str
     source_name: str
-    file_url: str
-    rows: List[Row]
-    type: str
     domain_id: int
-    statuses: Optional[List[str]] = [LeadStatus.VISITOR.value]
+    file_url: Optional[str] = None
+    rows: Optional[List[Row]] = None
+    domain_id: Optional[int] = None
+
 
 class AudienceResponse(BaseModel):
     id: UUID
@@ -40,6 +40,16 @@ class AudienceResponse(BaseModel):
     created_at: datetime
     exported_on: Optional[datetime] = None
 
+class DomainsLeads(BaseModel):
+    id: int
+    name: str
+    pixel_installed: bool
+    converted_sales_count: int
+    viewed_product_count: int
+    visitor_count: int
+    abandoned_cart_count: int
+    total_count: int
+
 class SourceResponse(BaseModel):
     id: UUID
     name: str
@@ -47,10 +57,11 @@ class SourceResponse(BaseModel):
     source_type: str
     created_at: datetime
     created_by: str
-    updated_at: datetime
+    domain: Optional[str] = None
     total_records: Optional[int] = None
     matched_records: int
     matched_records_status: str
+    processed_records: int
 
     model_config = {
         "from_attributes": True

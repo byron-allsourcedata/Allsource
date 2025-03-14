@@ -31,6 +31,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
     setSourceProgress((prev) => ({
       ...prev,
       [source_id]: { total, processed, matched },
+      // [source_id]: { total: 0, processed: 0, matched: 0 },
     }));
   };
 

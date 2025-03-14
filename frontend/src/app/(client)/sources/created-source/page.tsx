@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { Box, Typography, Button, IconButton, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText } from '@mui/material';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axiosInstance from "@/axios/axiosInterceptorInstance";
@@ -21,9 +21,53 @@ const SourcesList: React.FC = () => {
     const createdSource = data ? JSON.parse(data) : null;
     const { hasNotification } = useNotification();
     const [loading, setLoading] = useState(false);
+    const [createdData, setCreatedData] = useState(false);
     const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const { sourceProgress } = useSSE();
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+    // useEffect(() => {
+    //     console.log("longpol");
+    
+    //     if (!intervalRef.current) {
+    //         console.log("longpol started");
+    //         intervalRef.current = setInterval(() => {
+    //             const hasPending = createdSource?.matched_records_status === "pending";
+    
+    //             if (hasPending) {
+    //                 console.log("Fetching due to pending records");
+    //                 fetchData();
+    //             } else {
+    //                 console.log("No pending records, stopping interval");
+    //                 if (intervalRef.current) {
+    //                     clearInterval(intervalRef.current);
+    //                     intervalRef.current = null;
+    //                 }
+    //             }
+    //         }, 2000);
+    //     }
+    
+    //     return () => {
+    //         if (intervalRef.current) {
+    //             clearInterval(intervalRef.current);
+    //             intervalRef.current = null;
+    //             console.log("interval cleared");
+    //         }
+    //     };
+    // }, [createdSource]);
+      
+
+    // const fetchData = async () => {
+    //     try {
+    //         const response = await axiosInstance.post(`/audience-sources/get-processing-sources/${createdSource.id}`)
+    //         const updatedItem = response.data
+
+    //         setCreatedData(updatedItem);
+    //     } catch (error) {
+    //         console.error('Failed to fetch data:', error);
+    //     }
+    // };
 
 
     const handleOpenPopover = (event: React.MouseEvent<HTMLElement>) => {
@@ -242,10 +286,10 @@ const SourcesList: React.FC = () => {
                                             className="table-heading"
                                             sx={{ textAlign: "left" }}
                                         >
-                                            Updated Date
+                                            Domain
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
-                                            {dayjs(createdSource?.updated_at).isValid() ? dayjs(createdSource?.updated_at).format('MMM D, YYYY') : '--'}
+                                            {createdSource?.domain ?? "--"}
                                         </Typography>
                                     </Box>
 

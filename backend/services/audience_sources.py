@@ -3,7 +3,7 @@ import json
 from openai import OpenAI
 import logging
 from typing import List, Optional
-from schemas.audience import Row, SourcesObjectResponse, SourceResponse
+from schemas.audience import Row, SourcesObjectResponse, SourceResponse, NewSource
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from enums import QueueName, SourceType
@@ -47,10 +47,11 @@ class AudienceSourceService:
                 'source_type': source[3],
                 'created_at': source[5],
                 'created_by': source[4],
-                'updated_at': source[6],
+                'domain': source[6],
                 'total_records': source[7],
                 'matched_records': source[8],
                 'matched_records_status': source[9],
+                'processed_records': source[10],
             })
 
         return source_list, count
@@ -82,9 +83,8 @@ class AudienceSourceService:
         except Exception as e:
             logger.error("Error with ChatGPT API", exc_info=True)
             return None
-
-
-    async def send_matching_status(self, *, source_id, user_id, email_field, type, domain_id, statuses):
+        
+    async def send_matching_status(self, source_id, user_id, type, statuses, domain_id=None, email_field = None):
         queue_name = QueueName.AUDIENCE_SOURCES_READER.value
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
@@ -114,19 +114,20 @@ class AudienceSourceService:
         finally:
             await rabbitmq_connection.close()
 
-    async def create_source(self, *, user: dict, source_type: str, source_origin: str, source_name: str, rows: List[Row], type: str, domain_id: int, statuses, file_url: str = None) -> SourceResponse:
+    async def create_source(self, user: User, payload: NewSource) -> SourceResponse:
         creating_data = {
             "user_id": user.get("id"),
-            "source_type": source_type,
-            "source_origin": source_origin,
-            "source_name": source_name,
-            "file_url": file_url,
-            "rows": json.dumps([row.model_dump() for row in rows])
+            "source_type": payload.source_type,
+            "source_origin": payload.source_origin,
+            "source_name": payload.source_name,
+            "file_url": payload.file_url or None,
+            "domain_id": payload.domain_id or None,
+            "rows": json.dumps([row.dict() for row in payload.rows]) if payload.rows else None,
         }
         created_data = self.audience_sources_persistence.create_source(**creating_data)
+        email_field = payload.rows[0].value if payload.rows else None
+        await self.send_matching_status(created_data.id, user.get("id"), payload.source_origin, payload.source_type, payload.domain_id, email_field)
         
-        await self.send_matching_status(source_id=created_data.id, user_id=user.get("id"), email_field=rows[0].value, type=type, domain_id=domain_id, statuses=statuses)
-
         if not created_data:
             logger.debug('Database error during creation')
 
@@ -139,8 +140,8 @@ class AudienceSourceService:
         count_deleted = self.audience_sources_persistence.delete_source(id)
         return count_deleted > 0
 
-    def get_sample_customers_list(self):
-        return os.path.join(os.getcwd(), "data/sample-source-list.csv")
+    def get_sample_customers_list(self, source_type: str):
+        return os.path.join(os.getcwd(), "data/sample-source-" + source_type + ".csv")
 
     def get_processing_sources(self, sources_ids, user: User):
         sources = self.audience_sources_persistence.get_processing_sources(sources_ids, user.get("id"))
