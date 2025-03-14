@@ -25,6 +25,7 @@ interface Row {
 interface EventTypeInterface {
     id: number;
     name: string;
+    title: string;
 }
 
 interface NewSource {
@@ -85,10 +86,10 @@ const SourcesImport: React.FC = () => {
     const [matchedLeads, setMatchedLeads] = useState(0);
 
     const eventTypes: EventTypeInterface[] = [
-        { id: 1, name: "visitor_count" },
-        { id: 2, name: "viewed_product_count" },
-        { id: 3, name: "abandoned_cart_count"},
-        { id: 4, name: "converted_sales_count"}
+        { id: 1, name: "visitor_count", title: "visitor"},
+        { id: 2, name: "viewed_product_count", title: "viewed_product" },
+        { id: 3, name: "abandoned_cart_count", title: "abandoned_cart"},
+        { id: 4, name: "converted_sales_count", title: "converted_sales"}
     ];
 
     const defaultRows: Row[] = [
@@ -186,7 +187,7 @@ const SourcesImport: React.FC = () => {
         return eventTypesArr
             .map(id => {
                 const eventType = eventTypes.find(event => event.id === id);
-                return eventType?.name
+                return eventType?.title
             })
             .filter(name => name)
             .join(',');

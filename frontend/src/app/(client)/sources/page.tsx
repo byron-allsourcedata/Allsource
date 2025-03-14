@@ -490,9 +490,14 @@ const Sources: React.FC = () => {
 
     const setSourceType = (sourceType: string) => {
         return sourceType
-            .split('_')
-            .map((item: string) => item.charAt(0).toUpperCase() + item.slice(1))
-            .join(' ');
+            .split(',')
+            .map(item =>
+                item
+                    .split('_')
+                    .map(subItem => subItem.charAt(0).toUpperCase() + subItem.slice(1))
+                    .join(' ')
+            )
+            .join(', ');
     }
 
 
