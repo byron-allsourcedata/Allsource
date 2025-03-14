@@ -158,30 +158,26 @@ def get_max_ids(db_session, domain_id, statuses):
                 LeadUser.is_converted_sales == False
             )
         )
-    if LeadStatus.ABANDONED_CART.value in statuses:
+    if LeadStatus.ABANDONED_CART.value in statuses or LeadStatus.CONVERTED_SALES.value in statuses:
         query = query.outerjoin(
-                LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id
-            ).outerjoin(
-                LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id
-            )
-        filters.append(
-            or_(
-                and_(
-                    LeadUser.behavior_type == "product_added_to_cart",
-                    LeadUser.is_converted_sales == False
-                ),
-                and_(
-                    LeadUser.behavior_type == "product_added_to_cart",
-                    LeadsUsersAddedToCart.added_at > LeadsUsersOrdered.ordered_at
+                    LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id
+                ).outerjoin(
+                    LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id
+                )
+        if LeadStatus.ABANDONED_CART.value in statuses:
+            filters.append(
+                or_(
+                    and_(
+                        LeadUser.behavior_type == "product_added_to_cart",
+                        LeadUser.is_converted_sales == False
+                    ),
+                    and_(
+                        LeadUser.behavior_type == "product_added_to_cart",
+                        LeadsUsersAddedToCart.added_at > LeadsUsersOrdered.ordered_at
+                    )
                 )
             )
-        )
     if LeadStatus.CONVERTED_SALES.value in statuses:
-        query = query.outerjoin(
-                LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id
-            ).outerjoin(
-                LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id
-            )
         filters.append(
             or_(
                 and_(
@@ -241,30 +237,26 @@ async def send_pixel_contacts(*, data, source_id, db_session, connection, user_i
                     LeadUser.behavior_type == "visitor",
                     LeadUser.is_converted_sales == False
                 ))
-        if LeadStatus.ABANDONED_CART.value in statuses:
+        if LeadStatus.ABANDONED_CART.value in statuses or LeadStatus.CONVERTED_SALES.value in statuses:
             query = query.outerjoin(
-                    LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id
-                ).outerjoin(
-                    LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id
-                )
-            filters.append(
-                or_(
-                    and_(
-                        LeadUser.behavior_type == "product_added_to_cart",
-                        LeadUser.is_converted_sales == False
-                    ),
-                    and_(
-                        LeadUser.behavior_type == "product_added_to_cart",
-                        LeadsUsersAddedToCart.added_at > LeadsUsersOrdered.ordered_at
+                        LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id
+                    ).outerjoin(
+                        LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id
+                    )
+            if LeadStatus.ABANDONED_CART.value in statuses:
+                filters.append(
+                    or_(
+                        and_(
+                            LeadUser.behavior_type == "product_added_to_cart",
+                            LeadUser.is_converted_sales == False
+                        ),
+                        and_(
+                            LeadUser.behavior_type == "product_added_to_cart",
+                            LeadsUsersAddedToCart.added_at > LeadsUsersOrdered.ordered_at
+                        )
                     )
                 )
-            )
         if LeadStatus.CONVERTED_SALES.value in statuses:
-            query = query.outerjoin(
-                    LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id
-                ).outerjoin(
-                    LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id
-                )
             filters.append(
                 or_(
                     and_(
