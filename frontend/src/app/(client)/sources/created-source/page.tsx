@@ -274,6 +274,19 @@ const SourcesList: React.FC = () => {
                                     </Box>
 
                                     <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
+                                        <Typography
+                                            variant="body2"
+                                            className="table-heading"
+                                            sx={{ textAlign: "left" }}
+                                        >
+                                            Domain
+                                        </Typography>
+                                        <Typography variant="subtitle1" className="table-data">
+                                            {createdSource?.domain ?? "--"}
+                                        </Typography>
+                                    </Box>
+
+                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
                                         <Typography variant="body2" className="table-heading">
                                             Type
                                         </Typography>
@@ -301,18 +314,6 @@ const SourcesList: React.FC = () => {
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
                                             {dayjs(createdSource?.created_at).isValid() ? dayjs(createdSource?.created_at).format('MMM D, YYYY') : '--'}
-                                        </Typography>
-                                    </Box>
-                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
-                                        <Typography
-                                            variant="body2"
-                                            className="table-heading"
-                                            sx={{ textAlign: "left" }}
-                                        >
-                                            Domain
-                                        </Typography>
-                                        <Typography variant="subtitle1" className="table-data">
-                                            {createdSource?.domain ?? "--"}
                                         </Typography>
                                     </Box>
 
