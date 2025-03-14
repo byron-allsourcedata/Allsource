@@ -6,6 +6,7 @@ from services.domains import UserDomainsService
 from schemas.audience import HeadingSubstitutionRequest, NewSource, SourcesObjectResponse, SourceResponse, SourceIDs, DomainsLeads
 from uuid import UUID
 from typing import Optional, List
+from datetime import datetime
 from fastapi.responses import FileResponse
 
 router = APIRouter(dependencies=[Depends(check_user_authorization)])
