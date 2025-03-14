@@ -512,9 +512,10 @@ const SourcesImport: React.FC = () => {
                                             textTransform: "none",
                                             fontSize: "14px",
                                             padding: "8px 12px",
-                                            backgroundColor: sourceMethod === 1 ? "rgba(246, 248, 250, 1)" : "#fff",
+                                            backgroundColor: sourceMethod === 1 ? "rgba(246, 248, 250, 1)" : "rgba(255, 255, 255, 1)",
+                                            borderColor: sourceMethod === 1 ? "rgba(117, 168, 218, 1)" : "rgba(208, 213, 221, 1)",
                                             ":hover": {
-                                                borderColor: "#1C3A57",
+                                                borderColor: "rgba(208, 213, 221, 1)",
                                                 backgroundColor: "rgba(236, 238, 241, 1)"
                                             },
                                         }}
@@ -537,9 +538,10 @@ const SourcesImport: React.FC = () => {
                                             textTransform: "none",
                                             fontSize: "14px",
                                             padding: "8px 12px",
-                                            backgroundColor: sourceMethod === 2 ? "rgba(246, 248, 250, 1)" : "#fff",
+                                            backgroundColor: sourceMethod === 2 ? "rgba(246, 248, 250, 1)" : "rgba(255, 255, 255, 1)",
+                                            borderColor: sourceMethod === 2 ? "rgba(117, 168, 218, 1)" : "rgba(208, 213, 221, 1)",
                                             ":hover": {
-                                                borderColor: "#1C3A57",
+                                                borderColor: "rgba(208, 213, 221, 1)",
                                                 backgroundColor: "rgba(236, 238, 241, 1)"
                                             },
                                         }}
@@ -903,11 +905,11 @@ const SourcesImport: React.FC = () => {
                                                 "@media (max-width: 390px)": { width: "calc(100vw - 74px)" },
                                             }}
                                         >
-                                            <MenuItem value="" disabled sx={{display: "none"}}>
+                                            <MenuItem value="" disabled sx={{display: "none", fontFamily: "Roboto", fontSize: "12px", color: "rgba(205, 40, 43, 1)"}}>
                                                 Select domain
                                             </MenuItem>
                                             {domains.map((item: DomainsLeads, index) => (
-                                                <MenuItem sx={{fontfamily: "Nunito Sans", "fontWeight": 600, fontSize: "14px"}} key={index} value={item.name}>{item.name}</MenuItem>
+                                                <MenuItem sx={{fontFamily: "Nunito Sans", "fontWeight": 600, fontSize: "14px"}} key={index} value={item.name}>{item.name}</MenuItem>
                                             ))}
                                         </Select>
                                     </FormControl>
@@ -961,9 +963,10 @@ const SourcesImport: React.FC = () => {
                                                 textTransform: "none",
                                                 fontSize: "14px",
                                                 padding: "8px 12px",
-                                                backgroundColor: eventType.includes(1) ? "rgba(246, 248, 250, 1)" : "#fff",
+                                                backgroundColor: eventType.includes(1) ? "rgba(246, 248, 250, 1)" : "rgba(255, 255, 255, 1)",
+                                                borderColor: eventType.includes(1)? "rgba(117, 168, 218, 1)" : "rgba(208, 213, 221, 1)",
                                                 ":hover": {
-                                                    borderColor: "#1C3A57",
+                                                    borderColor: "rgba(208, 213, 221, 1)",
                                                     backgroundColor: "rgba(236, 238, 241, 1)"
                                                 },
                                             }}
@@ -983,9 +986,10 @@ const SourcesImport: React.FC = () => {
                                                 textTransform: "none",
                                                 fontSize: "14px",
                                                 padding: "8px 12px",
-                                                backgroundColor: eventType.includes(2) ? "rgba(246, 248, 250, 1)" : "#fff",
+                                                backgroundColor: eventType.includes(2) ? "rgba(246, 248, 250, 1)" : "rgba(255, 255, 255, 1)",
+                                                borderColor: eventType.includes(2)? "rgba(117, 168, 218, 1)" : "rgba(208, 213, 221, 1)",
                                                 ":hover": {
-                                                    borderColor: "#1C3A57",
+                                                    borderColor: "rgba(208, 213, 221, 1)",
                                                     backgroundColor: "rgba(236, 238, 241, 1)"
                                                 },
                                             }}
@@ -1005,10 +1009,11 @@ const SourcesImport: React.FC = () => {
                                                 textTransform: "none",
                                                 fontSize: "14px",
                                                 padding: "8px 12px",
-                                                backgroundColor: eventType.includes(3) ? "rgba(246, 248, 250, 1)" : "#fff",
+                                                backgroundColor: eventType.includes(3) ? "rgba(246, 248, 250, 1)" : "rgba(255, 255, 255, 1)",
+                                                borderColor: eventType.includes(3)? "rgba(117, 168, 218, 1)" : "rgba(208, 213, 221, 1)",
                                                 ":hover": {
-                                                    borderColor: "#1C3A57",
-                                                    backgroundColor: "rgba(236, 238, 241, 1)"
+                                                        borderColor: "rgba(208, 213, 221, 1)",
+                                                        backgroundColor: "rgba(236, 238, 241, 1)"
                                                 },
                                             }}
                                             onClick={() => {
@@ -1027,9 +1032,10 @@ const SourcesImport: React.FC = () => {
                                                 textTransform: "none",
                                                 fontSize: "14px",
                                                 padding: "8px 12px",
-                                                backgroundColor: eventType.includes(4) ? "rgba(246, 248, 250, 1)" : "#fff",
+                                                backgroundColor: eventType.includes(4) ? "rgba(246, 248, 250, 1)" : "rgba(255, 255, 255, 1)",
+                                                borderColor: eventType.includes(4)? "rgba(117, 168, 218, 1)" : "rgba(208, 213, 221, 1)",
                                                 ":hover": {
-                                                    borderColor: "#1C3A57",
+                                                    borderColor: "rgba(208, 213, 221, 1)",
                                                     backgroundColor: "rgba(236, 238, 241, 1)"
                                                 },
                                             }}
