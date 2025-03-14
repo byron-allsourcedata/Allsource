@@ -525,7 +525,7 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
             ContactCredits = aliased(SubscriptionPlan)
             result_query = session.query(
                 SubscriptionPlan, ContactCredits.price
-            ).join(
+            ).outerjoin(
                 ContactCredits, SubscriptionPlan.contact_credit_price_id == ContactCredits.id
             ).filter(
                 SubscriptionPlan.id == user_subscription.plan_id
