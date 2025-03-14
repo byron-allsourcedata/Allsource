@@ -26,12 +26,11 @@ class UserDomainsPersistence:
             (and_(
                 LeadUser.behavior_type != "product_added_to_cart",
                 LeadUser.is_converted_sales == True,
-                LeadsUsersAddedToCart.added_at.isnot(None),
                 or_(
-                    LeadsUsersAddedToCart.added_at < LeadsUsersOrdered.ordered_at,
+                    LeadUser.is_converted_sales == True,
                     and_(
-                        LeadsUsersOrdered.ordered_at.is_(None),
-                        LeadsUsersAddedToCart.added_at.isnot(None)
+                        LeadUser.behavior_type == "product_added_to_cart",
+                        LeadsUsersAddedToCart.added_at < LeadsUsersOrdered.ordered_at,
                     )
                 )
             ), 1),
@@ -55,12 +54,11 @@ class UserDomainsPersistence:
             (and_(
                 LeadUser.behavior_type == "product_added_to_cart",
                 LeadUser.is_converted_sales == False,
-                LeadsUsersAddedToCart.added_at.isnot(None),
                 or_(
-                    LeadsUsersAddedToCart.added_at > LeadsUsersOrdered.ordered_at,
+                    LeadUser.behavior_type == "product_added_to_cart",
                     and_(
-                        LeadsUsersOrdered.ordered_at.is_(None),
-                        LeadsUsersAddedToCart.added_at.isnot(None)
+                        LeadUser.is_converted_sales == True,
+                        LeadsUsersAddedToCart.added_at > LeadsUsersOrdered.ordered_at,
                     )
                 )
             ), 1),
