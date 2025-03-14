@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { Box, Typography, Button, IconButton, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText } from '@mui/material';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axiosInstance from "@/axios/axiosInterceptorInstance";
@@ -21,9 +21,67 @@ const SourcesList: React.FC = () => {
     const createdSource = data ? JSON.parse(data) : null;
     const { hasNotification } = useNotification();
     const [loading, setLoading] = useState(false);
+    const [createdData, setCreatedData] = useState(false);
     const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const [anchorElFullName, setAnchorElFullName] = React.useState<null | HTMLElement>(null);
+    const [selectedName, setSelectedName] = React.useState<string | null>(null);
     const { sourceProgress } = useSSE();
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+    const isOpenFullName = Boolean(anchorElFullName);
+
+    const handleOpenPopoverFullName = (event: React.MouseEvent<HTMLElement>, industry: string) => {
+        setSelectedName(industry);
+        setAnchorElFullName(event.currentTarget);
+    };
+
+    const handleClosePopoverFullName = () => {
+        setAnchorElFullName(null);
+        setSelectedName(null);
+    };
+
+    // useEffect(() => {
+    //     console.log("longpol");
+    
+    //     if (!intervalRef.current) {
+    //         console.log("longpol started");
+    //         intervalRef.current = setInterval(() => {
+    //             const hasPending = createdSource?.matched_records_status === "pending";
+    
+    //             if (hasPending) {
+    //                 console.log("Fetching due to pending records");
+    //                 fetchData();
+    //             } else {
+    //                 console.log("No pending records, stopping interval");
+    //                 if (intervalRef.current) {
+    //                     clearInterval(intervalRef.current);
+    //                     intervalRef.current = null;
+    //                 }
+    //             }
+    //         }, 2000);
+    //     }
+    
+    //     return () => {
+    //         if (intervalRef.current) {
+    //             clearInterval(intervalRef.current);
+    //             intervalRef.current = null;
+    //             console.log("interval cleared");
+    //         }
+    //     };
+    // }, [createdSource]);
+      
+
+    // const fetchData = async () => {
+    //     try {
+    //         const response = await axiosInstance.post(`/audience-sources/get-processing-sources/${createdSource.id}`)
+    //         const updatedItem = response.data
+
+    //         setCreatedData(updatedItem);
+    //     } catch (error) {
+    //         console.error('Failed to fetch data:', error);
+    //     }
+    // };
 
 
     const handleOpenPopover = (event: React.MouseEvent<HTMLElement>) => {
@@ -71,10 +129,19 @@ const SourcesList: React.FC = () => {
 
     const setSourceType = (sourceType: string) => {
         return sourceType
-            .split('_')
-            .map((item: string) => item.charAt(0).toUpperCase() + item.slice(1))
-            .join(' ');
+            .split(',')
+            .map(item =>
+                item
+                    .split('_')
+                    .map(subItem => subItem.charAt(0).toUpperCase() + subItem.slice(1))
+                    .join(' ')
+            )
+            .join(', ');
     }
+
+    const truncateText = (text: string, maxLength: number) => {
+        return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
+    };
 
     return (
         <>
@@ -210,8 +277,8 @@ const SourcesList: React.FC = () => {
                                         <Typography variant="body2" className="table-heading">
                                             Type
                                         </Typography>
-                                        <Typography variant="subtitle1" className="table-data">
-                                            {setSourceType(createdSource?.source_type)}
+                                        <Typography variant="subtitle1" className="table-data" sx={{cursor: "pointer"}} onClick={(e) => createdSource?.source_type ? handleOpenPopoverFullName(e, setSourceType(createdSource?.source_type)) : {}}>
+                                            {truncateText(setSourceType(createdSource?.source_type), 20)}
                                         </Typography>
                                     </Box>
                                     <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
@@ -242,10 +309,10 @@ const SourcesList: React.FC = () => {
                                             className="table-heading"
                                             sx={{ textAlign: "left" }}
                                         >
-                                            Updated Date
+                                            Domain
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
-                                            {dayjs(createdSource?.updated_at).isValid() ? dayjs(createdSource?.updated_at).format('MMM D, YYYY') : '--'}
+                                            {createdSource?.domain ?? "--"}
                                         </Typography>
                                     </Box>
 
@@ -332,6 +399,48 @@ const SourcesList: React.FC = () => {
                                 </Button>
                             </Box>
                         </Box>
+                        <Popover
+                            open={isOpenFullName}
+                            anchorEl={anchorElFullName}
+                            onClose={handleClosePopoverFullName}
+                            anchorOrigin={{
+                                vertical: "bottom",
+                                horizontal: "left",
+                            }}
+                            transformOrigin={{
+                                vertical: "top",
+                                horizontal: "left",
+                            }}
+                            PaperProps={{
+                                sx: {
+                                    width: "184px",
+                                    height: "108px",
+                                    borderRadius: "4px 0px 0px 0px",
+                                    border: "0.2px solid #ddd",
+                                    padding: "8px",
+                                    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+                                },
+                            }}
+                        >
+                            <Box sx={{ maxHeight: "92px", overflowY: "auto", backgroundColor: 'rgba(255, 255, 255, 1)' }}>
+                                {selectedName?.split(",").map((part, index) => (
+                                    <Typography
+                                        key={index}
+                                        variant="body2"
+                                        className='second-sub-title'
+                                        sx={{
+                                            wordBreak: "break-word",
+                                            backgroundColor: 'rgba(243, 243, 243, 1)',
+                                            borderRadius: '4px',
+                                            color: 'rgba(95, 99, 104, 1) !important',
+                                            marginBottom: index < selectedName?.split(",").length - 1 ? "4px" : 0, 
+                                        }}
+                                    >
+                                        {part.trim()}
+                                    </Typography>
+                                ))}
+                            </Box>
+                        </Popover>
                         <Popover
                             open={isOpen}
                             anchorEl={anchorEl}

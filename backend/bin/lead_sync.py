@@ -39,7 +39,7 @@ from models.suppressions_list import SuppressionList
 from models.users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
 from models.integrations.suppressed_contact import SuppressedContact
 from sqlalchemy import create_engine, desc
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker, Session, aliased
 from models.five_x_five_users import FiveXFiveUser
 from models.leads_users import LeadUser
 from models.users import Users
@@ -138,18 +138,18 @@ async def process_table(session, states_dict, groupped_requests, rabbitmq_connec
 
 
 async def handle_payment_notification(user, notification_persistence, plan_leads_credits, leads_credits,
-                                      plan_lead_credit_price):
+                                      contact_credit_price):
     credit_usage_percentage = round(((plan_leads_credits - leads_credits) / plan_leads_credits) * 100, 2)
     if 80 == credit_usage_percentage or credit_usage_percentage == 90:
         account_notification = notification_persistence.get_account_notification_by_title(
             NotificationTitles.CONTACT_LIMIT_APPROACHING.value)
-        notification_text = account_notification.text.format(int(credit_usage_percentage), plan_lead_credit_price)
+        notification_text = account_notification.text.format(int(credit_usage_percentage), contact_credit_price)
         queue_name = f'sse_events_{str(user.id)}'
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
 
         save_account_notification = notification_persistence.save_account_notification(user.id, account_notification.id,
-                                                                                       f"{credit_usage_percentage}, {plan_lead_credit_price}")
+                                                                                       f"{credit_usage_percentage}, {contact_credit_price}")
 
         await publish_rabbitmq_message(
             connection=connection,
@@ -195,7 +195,7 @@ async def notify_missing_plan(notification_persistence, user):
 
 async def process_payment_unlocked_five_x_five_user(session, five_x_five_user_up_id, user_domain_id, user, lead_user,
                                       leads_persistence, notification_persistence, plan_leads_credits,
-                                      plan_lead_credit_price):
+                                      contact_credit_price):
     users_unlocked_five_x_five_user = session.query(UsersUnlockedFiveXFiveUser).filter(
         UsersUnlockedFiveXFiveUser.five_x_five_up_id == str(five_x_five_user_up_id),
         UsersUnlockedFiveXFiveUser.domain_id == user_domain_id
@@ -220,7 +220,7 @@ async def process_payment_unlocked_five_x_five_user(session, five_x_five_user_up
     if plan_leads_credits != UNLIMITED:
         user.leads_credits -= AMOUNT_CREDITS
         await handle_payment_notification(user, notification_persistence, plan_leads_credits, user.leads_credits,
-                                        plan_lead_credit_price)
+                                        contact_credit_price)
     session.flush()
 
 
@@ -261,10 +261,7 @@ def generate_random_order_detail():
     }
 
 def process_root_user_behavior(lead_user, behavior_type, requested_at, session):
-    events = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-    random_event = random.choice(events)
-
-    if behavior_type == 'checkout_completed' or random_event % 4 == 0:
+    if behavior_type == 'checkout_completed':
         if not lead_user.is_converted_sales:
             lead_user.is_converted_sales = True
             session.flush()
@@ -286,7 +283,7 @@ def process_root_user_behavior(lead_user, behavior_type, requested_at, session):
             new_record = LeadsUsersOrdered(lead_user_id=lead_user.id, ordered_at=requested_at)
             session.add(new_record)
 
-    if behavior_type == 'product_added_to_cart' or random_event % 3 == 0:
+    if behavior_type == 'product_added_to_cart':
         existing_record = session.query(LeadsUsersAddedToCart).filter_by(lead_user_id=lead_user.id).first()
         if existing_record:
             existing_record.added_at = requested_at
@@ -522,11 +519,19 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
             
         user_subscription = subscription_service.get_user_subscription(user.id)
         if user_subscription:
-            subscription_plan = session.query(SubscriptionPlan).filter(
-                SubscriptionPlan.id == user_subscription.plan_id).first()
+            ContactCredits = aliased(SubscriptionPlan)
+            result_query = session.query(
+                SubscriptionPlan, ContactCredits.price
+            ).outerjoin(
+                ContactCredits, SubscriptionPlan.contact_credit_price_id == ContactCredits.id
+            ).filter(
+                SubscriptionPlan.id == user_subscription.plan_id
+            ).first()
+            subscription_plan, contact_credit_price = result_query
+            
             await process_payment_unlocked_five_x_five_user(session, five_x_five_user.up_id, user_domain_id, user,
                                                 lead_user, leads_persistence, notification_persistence,
-                                                subscription_plan.leads_credits, subscription_plan.lead_credit_price)
+                                                subscription_plan.leads_credits, contact_credit_price)
 
             if not lead_user.is_active and user.is_leads_auto_charging:
                 await dispatch_leads_to_rabbitmq(session=session, user=user, rabbitmq_connection=rabbitmq_connection,
@@ -553,12 +558,6 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
         lead_visit_id = leads_result[0][1]
         lead_behavior_type = leads_result[0][2]
         lead_visit_full_time_sec = leads_result[0][3]
-        if lead_user.behavior_type in ('visitor', 'viewed_product') and behavior_type in (
-                'viewed_product', 'product_added_to_cart') and lead_user.behavior_type != behavior_type:
-            session.query(LeadUser).filter(LeadUser.id == lead_user.id).update({
-                LeadUser.behavior_type: behavior_type
-            })
-            session.flush()
         if lead_behavior_type == 'visitor':
             if behavior_type == 'viewed_product':
                 lead_behavior_type = behavior_type
@@ -595,6 +594,13 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
             if not lead_user.is_returning_visitor:
                 lead_user.is_returning_visitor = True
                 session.flush()
+                
+    if lead_user.behavior_type in ('visitor', 'viewed_product') and behavior_type in (
+                'viewed_product', 'product_added_to_cart') and lead_user.behavior_type != behavior_type:
+            session.query(LeadUser).filter(LeadUser.id == lead_user.id).update({
+                LeadUser.behavior_type: behavior_type
+            })
+            session.flush()
     if root_user:
         process_root_user_behavior(lead_user, behavior_type, requested_at, session)
     else:

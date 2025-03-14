@@ -5,7 +5,7 @@ import { Typography, Box, Link } from "@mui/material";
 import { useRouter, useSearchParams } from 'next/navigation';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { shopifyLandingStyle } from "./salesForce-landing";
-import { showErrorToast, showInfoToast } from '../../../components/ToastNotification';
+import { showErrorToast, showInfoToast, showToast } from '../../../components/ToastNotification';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 
 const GoogleAdsLanding = () => {
@@ -33,15 +33,12 @@ const GoogleAdsLanding = () => {
         );
 
         if (response.data.status == 'SUCCESS') {
-          showInfoToast('Connect to SalesForce success!')
-          router.push(`/integrations`);
-        }
-        else if (response.data.status == 'ERROR_GOOGLEADS_TOKEN') {
-          showErrorToast('Error connect to SalesForce');
+          showToast('Connect to SalesForce success!')
           router.push(`/integrations`);
         }
       } catch (error) {
-        console.error('SalesForce Landing:', error);
+        showErrorToast(`Error connect to SalesForce ${error}`);
+        router.push(`/integrations`);
       }
     };
 

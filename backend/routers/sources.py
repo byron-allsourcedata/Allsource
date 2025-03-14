@@ -1,11 +1,9 @@
-from datetime import datetime
-
+from dependencies import get_audience_sources_service, check_user_authorization
 from fastapi import APIRouter, Depends, Query, Body
-from dependencies import get_audience_sources_service, check_user_authorization, check_user_authentication
-from enums import TypeOfSourceOrigin, TypeOfCustomer
-from models.users import Users
+from dependencies import get_audience_sources_service, get_domain_service, check_user_authorization
 from services.audience_sources import AudienceSourceService
-from schemas.audience import HeadingSubstitutionRequest, NewSource, SourcesObjectResponse, SourceResponse, SourceIDs
+from services.domains import UserDomainsService
+from schemas.audience import HeadingSubstitutionRequest, NewSource, SourcesObjectResponse, SourceResponse, SourceIDs, DomainsLeads
 from uuid import UUID
 from typing import Optional, List
 from fastapi.responses import FileResponse
@@ -46,6 +44,16 @@ def get_sources(
         "count": count
     }
 
+@router.get("/domains-with-leads", response_model=List[DomainsLeads])
+def get_domains_with_leads(
+        user=Depends(check_user_authorization),
+        domains_service: UserDomainsService = Depends(get_domain_service)
+):
+    domain_list = domains_service.get_domains_with_leads(user=user)
+    
+    return domain_list
+
+
 @router.post("/heading-substitution", response_model=Optional[List[str]])
 def substitution_headings(
         payload: HeadingSubstitutionRequest,
@@ -60,14 +68,7 @@ async def create_source(
         user=Depends(check_user_authorization),
         sources_service: AudienceSourceService = Depends(get_audience_sources_service)
 ):
-    return await sources_service.create_source(
-        user=user,
-        source_type=payload.source_type,
-        source_origin=payload.source_origin,
-        source_name=payload.source_name,
-        file_url=payload.file_url,
-        rows=payload.rows,
-    )
+    return await sources_service.create_source(user=user, payload=payload)
 
 
 @router.delete("/{id}", response_model=bool)
@@ -81,8 +82,10 @@ def delete_source(
 
 
 @router.get("/sample-customers-list")
-def get_sample_customers_list(sources_service: AudienceSourceService = Depends(get_audience_sources_service)):
-    file_path = sources_service.get_sample_customers_list()
+def get_sample_customers_list(
+    source_type: str = Query(...),
+    sources_service: AudienceSourceService = Depends(get_audience_sources_service)):
+    file_path = sources_service.get_sample_customers_list(source_type)
     return FileResponse(file_path, media_type="text/csv",
                         headers={"Content-Disposition": "attachment; filename=sample-customers-list.csv"})
 

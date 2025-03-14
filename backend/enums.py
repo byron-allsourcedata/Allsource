@@ -33,6 +33,16 @@ class BusinessType(Enum):
     D2C = 'd2c'
     B2B = 'b2b'
 
+class LeadStatus(Enum):
+    ABANDONED_CART = 'abandoned_cart'
+    VIEW_PRODUCT = 'view_product'
+    CONVERTED_SALES = 'converted_sales'
+    VISITOR = 'visitor'
+
+class SourceType(Enum):
+    CSV = 'csv'
+    PIXEL = 'pixel'
+
 class CreateDataSync(Enum):
     ZAPIER_CONNECTED = 'ZAPIER_CONNECTED'
     
@@ -218,6 +228,15 @@ class VerifyToken(Enum):
     EMAIL_ALREADY_VERIFIED = 'EMAIL_ALREADY_VERIFIED'
     INCORRECT_TOKEN = 'INCORRECT_TOKEN'
 
+class LeadStatus(Enum):
+    ABANDONED_CART = 'abandoned_cart'
+    VIEWED_PRODUCT = 'viewed_product'
+    CONVERTED_SALES = 'converted_sales'
+    VISITOR = 'visitor'
+    
+class SourceType(Enum):
+    CSV = 'csv'
+    PIXEL = 'pixel'
 
 class DomainStatus(Enum):
     LAST_DOMAIN = 'LAST_DOMAIN'
@@ -251,6 +270,7 @@ class IntegrationsStatus(Enum):
     ALREADY_EXIST = 'ALREADY_EXIST'
     INVALID_WEBHOOK_URL = 'INVALID_WEBHOOK_URL'
     JOIN_CHANNEL_IS_FAILED = 'JOIN_CHANNEL_IS_FAILED'
+    NOT_ADS_USER = 'NOT_ADS_USER'
 
 
 class StripeConnectStatus(Enum):

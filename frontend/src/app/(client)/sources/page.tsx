@@ -1,6 +1,6 @@
 "use client";
-import React, { useState, useEffect, Suspense } from 'react';
-import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText, LinearProgress, Chip } from '@mui/material';
+import React, { useState, useEffect, useRef,Suspense } from 'react';
+import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText, LinearProgress, Chip, Tooltip } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '../../../axios/axiosInterceptorInstance';
@@ -11,10 +11,8 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import ArrowDownwardRoundedIcon from '@mui/icons-material/ArrowDownwardRounded';
 import ArrowUpwardRoundedIcon from '@mui/icons-material/ArrowUpwardRounded';
 // import FilterPopup from './CompanyFilters';
-import AudiencePopup from '@/components/AudienceSlider';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import dayjs from 'dayjs';
-import CloseIcon from '@mui/icons-material/Close';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import CustomToolTip from '@/components/customToolTip';
 import CustomTablePagination from '@/components/CustomTablePagination';
@@ -25,6 +23,7 @@ import ProgressBar from './components/ProgressLoader';
 import { MoreVert } from '@mui/icons-material'
 import { useSSE } from '../../../context/SSEContext';
 import FilterPopup from './components/SearchFilter';
+import CloseIcon from '@mui/icons-material/Close';
 
 interface Source {
     id: string
@@ -32,11 +31,11 @@ interface Source {
     source_origin: string
     source_type: string
     created_at: Date
-    updated_at: Date
+    domain: string
     created_by: string
-    processed: number
-    total_records?: number
-    matched_records?: number
+    processed_records: number
+    total_records: number
+    matched_records: number
     matched_records_status: string
 }
 
@@ -83,18 +82,13 @@ const Sources: React.FC = () => {
     const { sourceProgress } = useSSE();
     const [loaderForTable, setLoaderForTable] = useState(false);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const [anchorElFullName, setAnchorElFullName] = React.useState<null | HTMLElement>(null);
     const [selectedRowData, setSelectedRowData] = useState<Source | null>(null);
     const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
+    const [selectedName, setSelectedName] = React.useState<string | null>(null);
     const isOpen = Boolean(anchorEl);
-    const hasUnmatchedRecords = data.some(item => item.matched_records === 0 && item.matched_records_status === "pending");
-
-    useEffect(() => {
-        document.body.style.overflow = 'hidden';
-        return () => {
-            document.body.style.overflow = 'auto';
-        };
-    }, []);
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
         fetchSources({
@@ -108,11 +102,11 @@ const Sources: React.FC = () => {
     // useEffect(() => {
     //     if (data.length > 0 && hasUnmatchedRecords) {
     //         const interval = setInterval(fetchData, 5000);
-
+      
     //         return () => clearInterval(interval);
     //     }
     //   }, [hasUnmatchedRecords]);
-
+      
 
     const fetchData = async () => {
         try {
@@ -139,7 +133,7 @@ const Sources: React.FC = () => {
 
     const fetchSources = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
         try {
-            isFirstLoad ? setLoading(true) : setLoaderForTable(true);
+            isFirstLoad ? setLoading(true)  : setLoaderForTable(true);
             const accessToken = localStorage.getItem("token");
             if (!accessToken) {
                 router.push('/signin');
@@ -205,6 +199,18 @@ const Sources: React.FC = () => {
         }
     }
 
+    const isOpenFullName = Boolean(anchorElFullName);
+
+    const handleOpenPopoverFullName = (event: React.MouseEvent<HTMLElement>, industry: string) => {
+        setSelectedName(industry);
+        setAnchorElFullName(event.currentTarget);
+    };
+
+    const handleClosePopoverFullName = () => {
+        setAnchorElFullName(null);
+        setSelectedName(null);
+    };
+
     const handleFilterPopupOpen = () => {
         setFilterPopupOpen(true);
     };
@@ -230,6 +236,8 @@ const Sources: React.FC = () => {
 
     const handleDeleteSource = async () => {
         setLoaderForTable(true);
+        handleClosePopover();
+        handleCloseConfirmDialog();
         try {
             if (selectedRowData?.id) {
                 const response = await axiosInstance.delete(`/audience-sources/${selectedRowData.id}`);
@@ -244,8 +252,6 @@ const Sources: React.FC = () => {
             showErrorToast("Error deleting source")
         } finally {
             setLoaderForTable(false);
-            handleClosePopover();
-            handleCloseConfirmDialog();
         }
     };
 
@@ -294,7 +300,7 @@ const Sources: React.FC = () => {
                     const to = dayjs.unix(filters.dateRange.toDate!).format(dateFormat);
                     return `${from} to ${to}`;
                 }
-            },
+            }
         ];
 
         filterMappings.forEach(({ condition, label, value }) => {
@@ -329,9 +335,9 @@ const Sources: React.FC = () => {
     const handleDeleteFilter = (filterToDelete: { label: string; value: string }) => {
         const updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
         setSelectedFilters(updatedFilters);
-
-        const filters = JSON.parse(sessionStorage.getItem('filtersBySource') || '{}');
-
+        
+        const filters = JSON.parse(sessionStorage.getItem('filters') || '{}');
+    
         switch (filterToDelete.label) {
             case 'From Date':
                 filters.from_date = null;
@@ -367,23 +373,37 @@ const Sources: React.FC = () => {
             default:
                 break;
         }
-
-        sessionStorage.setItem('filtersBySource', JSON.stringify(filters));
-
+        
+        if (!filters.from_date && !filters.to_date) {
+            filters.checkedFilters = {
+                lastWeek: false,
+                last30Days: false,
+                last6Months: false,
+                allTime: false,
+            };
+        }
+    
+        sessionStorage.setItem('filters', JSON.stringify(filters));
+    
+        if (filterToDelete.label === 'Dates') {
+            setSelectedDates({ start: null, end: null });
+        }
+    
+        // Обновляем фильтры для применения
         const newFilters: FilterParams = {
             from_date: updatedFilters.find(f => f.label === 'From Date') ? dayjs(updatedFilters.find(f => f.label === 'From Date')!.value).unix() : null,
             to_date: updatedFilters.find(f => f.label === 'To Date') ? dayjs(updatedFilters.find(f => f.label === 'To Date')!.value).unix() : null,
-            searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',
-            selectedStatus: updatedFilters.find(f => f.label === 'Status') ? updatedFilters.find(f => f.label === 'Status')!.value.split(', ') : [],
+            searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',selectedStatus: updatedFilters.find(f => f.label === 'Status') ? updatedFilters.find(f => f.label === 'Status')!.value.split(', ') : [],
             selectedTypes: updatedFilters.find(f => f.label === 'Types') ? updatedFilters.find(f => f.label === 'Types')!.value.split(', ') : [],
             selectedDomains: updatedFilters.find(f => f.label === 'Domains') ? updatedFilters.find(f => f.label === 'Domains')!.value.split(', ') : [],
             createdDate: updatedFilters.find(f => f.label === 'Created Date') ? updatedFilters.find(f => f.label === 'Created Date')!.value.split(', ') : [],
             dateRange: {
                 fromDate: updatedFilters.find(f => f.label === 'Date Range') ? dayjs(updatedFilters.find(f => f.label === 'Date Range')!.value.split(', ')[0]).unix() : null,
                 toDate: updatedFilters.find(f => f.label === 'Date Range') ? dayjs(updatedFilters.find(f => f.label === 'Date Range')!.value.split(', ')[1]).unix() : null,
-            }
+            },
         };
-
+    
+        // Применяем обновленные фильтры
         handleApplyFilters(newFilters);
     };
 
@@ -394,10 +414,20 @@ const Sources: React.FC = () => {
 
     const setSourceType = (sourceType: string) => {
         return sourceType
-            .split('_')
-            .map((item: string) => item.charAt(0).toUpperCase() + item.slice(1))
-            .join(' ');
+            .split(',')
+            .map(item =>
+                item
+                    .split('_')
+                    .map(subItem => subItem.charAt(0).toUpperCase() + subItem.slice(1))
+                    .join(' ')
+            )
+            .join(', ');
     }
+
+
+    const truncateText = (text: string, maxLength: number) => {
+        return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
+    };
 
 
     return (
@@ -479,6 +509,8 @@ const Sources: React.FC = () => {
                                         padding: '8px',
                                         opacity: data?.length === 0 ? '0.5' : '1',
                                         minWidth: 'auto',
+                                        maxHeight: '40px',
+                                        maxWidth:'40px',
                                         position: 'relative',
                                         '@media (max-width: 900px)': {
                                             border: 'none',
@@ -655,10 +687,10 @@ const Sources: React.FC = () => {
                                                                     {[
                                                                         { key: 'name', label: 'Name' },
                                                                         { key: 'source', label: 'Source' },
+                                                                        { key: 'domain', label: 'Domain' },
                                                                         { key: 'type', label: 'Type' },
                                                                         { key: 'created_date', label: 'Created Date', sortable: true },
                                                                         { key: 'created_by', label: 'Created By' },
-                                                                        { key: 'updated_date', label: 'Update Date' },
                                                                         { key: 'number_of_customers', label: 'Number of Customers', sortable: true },
                                                                         { key: 'matched_records', label: 'Matched Records', sortable: true },
                                                                         { key: 'actions', label: 'Actions' }
@@ -687,9 +719,9 @@ const Sources: React.FC = () => {
                                                                                     <IconButton size="small">
                                                                                         {orderBy === key ? (
                                                                                             order === 'asc' ? (
-                                                                                                <ArrowDownwardRoundedIcon fontSize="inherit" />
-                                                                                            ) : (
                                                                                                 <ArrowUpwardRoundedIcon fontSize="inherit" />
+                                                                                            ) : (
+                                                                                                <ArrowDownwardRoundedIcon fontSize="inherit" />
                                                                                             )
                                                                                         ) : (
                                                                                             <SwapVertIcon fontSize="inherit" />
@@ -713,7 +745,7 @@ const Sources: React.FC = () => {
                                                                 )}
                                                             </TableHead>
                                                             <TableBody>
-                                                                {data.map((row: any) => {
+                                                                {data.map((row: Source) => {
                                                                     const progress = sourceProgress[row.id];
                                                                     return (
                                                                         <TableRow
@@ -744,12 +776,58 @@ const Sources: React.FC = () => {
                                                                                 {setSourceOrigin(row.source_type)}
                                                                             </TableCell>
 
-                                                                            {/* Type Column */}
+                                                                            {/* Domain Column */}
                                                                             <TableCell
                                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                                             >
-                                                                                {setSourceType(row.source_origin)}
+                                                                                {row.domain ?? "--"}
                                                                             </TableCell>
+
+                                                                            {/* Type Column */}
+                                                                            <TableCell
+                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative', cursor: 'default' }}
+                                                                            >
+                                                                                <Box sx={{display: 'flex'}}>
+                                                                                <Tooltip
+                                                                                    title={
+                                                                                        <Box sx={{ backgroundColor: '#fff', margin: 0, padding: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', }}>
+                                                                                          <Typography className='table-data' component='div' sx={{ fontSize: '12px !important', }}>
+                                                                                            {setSourceType(row.source_origin)}
+                                                                                          </Typography>
+                                                                                        </Box>
+                                                                                      }
+                                                                                    sx={{marginLeft:'0.5rem !important'}}
+                                                                                    componentsProps={{
+                                                                                        tooltip: {
+                                                                                            sx: {
+                                                                                                backgroundColor: '#fff',
+                                                                                                color: '#000',
+                                                                                                boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
+                                                                                                border: '0.2px solid rgba(255, 255, 255, 1)',
+                                                                                                borderRadius: '4px',
+                                                                                                maxHeight: '100%',
+                                                                                                maxWidth: '500px',
+                                                                                                padding: '11px 10px',
+                                                                                                marginLeft: '0.5rem !important',
+                                                                                            },
+                                                                                        },
+                                                                                    }}
+                                                                                    placement='right'
+                                                                                >
+                                                                                    <Typography className='table-data'
+                                                                                        sx={{
+                                                                                            whiteSpace: 'nowrap',
+                                                                                            overflow: 'hidden',
+                                                                                            textOverflow: 'ellipsis',
+                                                                                            maxWidth:'150px',
+                                                                                        }}
+                                                                                    >
+                                                                                        {truncateText(setSourceType(row.source_origin), 20)}
+                                                                                    </Typography>
+                                                                                </Tooltip>
+                                                                                </Box>
+                                                                            </TableCell>
+
 
                                                                             {/* Created date Column */}
                                                                             <TableCell
@@ -765,33 +843,26 @@ const Sources: React.FC = () => {
                                                                                 {row.created_by}
                                                                             </TableCell>
 
-                                                                            {/* Update Date Column */}
-                                                                            <TableCell
-                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative' }}
-                                                                            >
-                                                                                {dayjs(row.updated_at).isValid() ? dayjs(row.updated_at).format('MMM D, YYYY') : '--'}
-                                                                            </TableCell>
-
                                                                             {/* Number of Customers Column */}
                                                                             <TableCell
                                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                                             >
-                                                                                {row.matched_records_status === "pending"
-                                                                                    ? progress?.total
-                                                                                        ? progress?.total.toLocaleString('en-US')
-                                                                                        : <ThreeDotsLoader />
-                                                                                    : row.total_records.toLocaleString('en-US') ?? '--'}
+                                                                                {row.matched_records_status === "pending" 
+                                                                                ? progress?.total
+                                                                                    ? progress?.total.toLocaleString('en-US')
+                                                                                    : <ThreeDotsLoader />
+                                                                                : row.total_records.toLocaleString('en-US') ?? '--'}
                                                                             </TableCell>
 
                                                                             {/* Matched Records  Column */}
                                                                             <TableCell
                                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                                             >
-                                                                                {row.matched_records_status === "pending"
-                                                                                    ? progress?.processed == progress?.total && progress?.processed
-                                                                                        ? progress?.matched.toLocaleString('en-US')
-                                                                                        : <ProgressBar progress={progress} />
-                                                                                    : row.matched_records.toLocaleString('en-US') ?? '--'}
+                                                                                {row.matched_records_status === "pending" 
+                                                                                ? progress?.processed == progress?.total && progress?.processed
+                                                                                    ? progress?.matched.toLocaleString('en-US')
+                                                                                    : <ProgressBar progress={progress}/>
+                                                                                : row.matched_records.toLocaleString('en-US') ?? '--'}
                                                                                 {/* {row.processed 
                                                                                 ? progress?.processed == progress?.total && progress?.processed
                                                                                     ? progress?.matched
@@ -808,14 +879,28 @@ const Sources: React.FC = () => {
                                                                                     open={isOpen}
                                                                                     anchorEl={anchorEl}
                                                                                     onClose={handleClosePopover}
-                                                                                    anchorOrigin={{
-                                                                                        vertical: 'bottom',
-                                                                                        horizontal: 'left',
+                                                                                    slotProps={{
+                                                                                        paper: {
+                                                                                            sx: {
+                                                                                                boxShadow: 0,
+                                                                                                borderRadius: "4px",
+                                                                                                border: "0.5px solid rgba(175, 175, 175, 1)",
+                                                    
+                                                                                            },
+                                                                                        }}}
+                                                                                        anchorOrigin={{
+                                                                                            vertical: "center",
+                                                                                            horizontal: "center",
+                                                                                        }}
+                                                                                    transformOrigin={{
+                                                                                        vertical: "top",
+                                                                                        horizontal: "right",
                                                                                     }}
+                                                                                    
                                                                                 >
                                                                                     <List
                                                                                         sx={{
-                                                                                            width: '100%', maxWidth: 360
+                                                                                            width: '100%', maxWidth: 360, boxShadow: 'none'
                                                                                         }}
                                                                                     >
                                                                                         <ListItemButton sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
@@ -924,7 +1009,7 @@ const Sources: React.FC = () => {
                                                             alignItems="center"
                                                             sx={{
                                                                 padding: '16px',
-                                                                backgroundColor: '#f9f9f9',
+                                                                backgroundColor: '#fff',
                                                                 borderRadius: '4px',
                                                                 "@media (max-width: 600px)": { padding: '12px' }
                                                             }}
@@ -946,6 +1031,48 @@ const Sources: React.FC = () => {
                                             </Grid>
                                         }
                                         {showSlider && <Slider />}
+                                        <Popover
+                                            open={isOpenFullName}
+                                            anchorEl={anchorElFullName}
+                                            onClose={handleClosePopoverFullName}
+                                            anchorOrigin={{
+                                                vertical: "bottom",
+                                                horizontal: "left",
+                                            }}
+                                            transformOrigin={{
+                                                vertical: "top",
+                                                horizontal: "left",
+                                            }}
+                                            PaperProps={{
+                                                sx: {
+                                                    width: "184px",
+                                                    height: "108px",
+                                                    borderRadius: "4px 0px 0px 0px",
+                                                    border: "0.2px solid #ddd",
+                                                    padding: "8px",
+                                                    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+                                                },
+                                            }}
+                                        >
+                                            <Box sx={{ maxHeight: "92px", overflowY: "auto", backgroundColor: 'rgba(255, 255, 255, 1)' }}>
+                                                {selectedName?.split(",").map((part, index) => (
+                                                    <Typography
+                                                        key={index}
+                                                        variant="body2"
+                                                        className='second-sub-title'
+                                                        sx={{
+                                                            wordBreak: "break-word",
+                                                            backgroundColor: 'rgba(243, 243, 243, 1)',
+                                                            borderRadius: '4px',
+                                                            color: 'rgba(95, 99, 104, 1) !important',
+                                                            marginBottom: index < selectedName?.split(",").length - 1 ? "4px" : 0,
+                                                        }}
+                                                    >
+                                                        {part.trim()}
+                                                    </Typography>
+                                                ))}
+                                            </Box>
+                                        </Popover>
                                     </Box>
 
                                     <FilterPopup open={filterPopupOpen}
@@ -955,7 +1082,6 @@ const Sources: React.FC = () => {
 
                                 </Box>
                             </Box>
-                            {/* <SourcesTable setStatus={setStatus} status={status} setData={setData} data={data} setSources={setSources}/> */}
                             {/* {showSlider && <Slider />} */}
                         </Box>
                     </Box>
