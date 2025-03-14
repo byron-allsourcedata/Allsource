@@ -193,8 +193,10 @@ def get_aws_service(s3_client=Depends(get_s3_client)) -> AWSService:
     return AWSService(s3_client)
 
 
-def get_audience_sources_service(audience_sources_persistence: AudienceSourcesPersistence = Depends(get_audience_sources_persistence)):
-    return AudienceSourceService(audience_sources_persistence=audience_sources_persistence)
+def get_audience_sources_service(
+        audience_sources_persistence: AudienceSourcesPersistence = Depends(get_audience_sources_persistence),
+        domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)):
+    return AudienceSourceService(audience_sources_persistence=audience_sources_persistence, domain_persistence=domain_persistence)
 
 
 def get_slack_service(
