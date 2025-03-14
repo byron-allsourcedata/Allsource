@@ -29,7 +29,7 @@ class AudienceSourcesPersistence:
             sort_by: Optional[str] = None,
             sort_order: Optional[str] = None,
             name: Optional[str] = None,
-            status: Optional[str] = None,
+            source: Optional[str] = None,
             type_customer: Optional[str] = None,
             domain_id: Optional[int] = None,
             created_date_start: Optional[datetime] = None,
@@ -55,13 +55,13 @@ class AudienceSourcesPersistence:
                 .filter(AudienceSource.user_id == user_id)
         )
 
-        status_list = status.split(',') if status else []
+        source_list = source.split(',') if source else []
         type_customer_list = type_customer.split(',') if type_customer else []
 
         query = apply_filters(
             query,
             name=name,
-            status=status_list,
+            source=source_list,
             type_customer=type_customer_list,
             domain_id=domain_id,
             created_date_start=created_date_start,

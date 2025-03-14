@@ -9,7 +9,6 @@ import {
   TextField,
   InputAdornment,
   Collapse,
-  Divider,
   FormControlLabel,
   Checkbox,
   Radio,
@@ -28,10 +27,8 @@ import WebIcon from "@mui/icons-material/Web";
 import {
   LocalizationProvider,
   DatePicker,
-  TimePicker,
 } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
-import Image from "next/image";
 import { filterStyles } from "@/css/filterSlider";
 import debounce from "lodash/debounce";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
@@ -73,12 +70,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
     [key: string]: string[];
   }>({
     createdDate: [],
-    visitedTime: [],
-    region: [],
     pageVisits: [],
-    timeSpents: [],
   });
-  const [regions, setTags] = useState<string[]>([]);
   const [buttonFilters, setButtonFilters] = useState<ButtonFilters>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -92,18 +85,18 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
   } | null;
 
   // Source
-  const [isStatus, setIsStatus] = useState<boolean>(false);
-  const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
-  const handleButtonStatusClick = (label: string) => {
-    const mappedStatus = statusMapping[label];
-    setSelectedStatus((prev) =>
-      prev.includes(mappedStatus)
-        ? prev.filter((item) => item !== mappedStatus)
-        : [...prev, mappedStatus]
+  const [isSource, setIsSource] = useState<boolean>(false);
+  const [selectedSource, setSelectedSource] = useState<string[]>([]);
+  const handleButtonSourceClick = (label: string) => {
+    const mappedSource = sourceMapping[label];
+    setSelectedSource((prev) =>
+      prev.includes(mappedSource)
+        ? prev.filter((item) => item !== mappedSource)
+        : [...prev, mappedSource]
     );
   };
-  const isStatusFilterActive = () => selectedStatus.length > 0;
-  const statusMapping: Record<string, string> = {
+  const  isSourceFilterActive = () => selectedSource.length > 0;
+  const sourceMapping: Record<string, string> = {
     CSV: "CSV",
     Pixel: "Pixel",
   };
@@ -151,13 +144,13 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
   // Logic
   const getAllowedTypes = (): string[] => {
     let allowed: string[] = [];
-    if (selectedStatus.includes(statusMapping["CSV"])) {
+    if (selectedSource.includes(sourceMapping["CSV"])) {
       allowed = allowed.concat(csvTypes);
     }
-    if (selectedStatus.includes(statusMapping["Pixel"])) {
+    if (selectedSource.includes(sourceMapping["Pixel"])) {
       allowed = allowed.concat(pixelTypes);
     }
-    if (selectedStatus.length == 0) {
+    if (selectedSource.length == 0) {
       allowed = allowed.concat(csvTypes);
       allowed = allowed.concat(pixelTypes);
     }
@@ -169,16 +162,16 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
     setSelectedTypes((prevSelected) =>
       prevSelected.filter((type) => allowed.includes(type))
     );
-  }, [selectedStatus]);
+  }, [selectedSource]);
 
   useEffect(() => {
     if (
-      selectedStatus.length > 0 &&
-      !selectedStatus.includes(statusMapping["Pixel"])
+      selectedSource.length > 0 &&
+      !selectedSource.includes(sourceMapping["Pixel"])
     ) {
       setSelectedDomains([]);
     }
-  }, [selectedStatus]);
+  }, [selectedSource]);
 
   const addTag = (category: string, tag: string) => {
     setSelectedTags((prevTags) => {
@@ -196,8 +189,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
   const removeTag = (category: string, tag: string) => {
     setSelectedTags((prevTags) => {
       const updatedTags = prevTags[category].filter((t) => t !== tag);
-
-      const isLastTagRemoved = updatedTags.length === 0;
 
       // Если удалена последняя дата, очищаем состояние
       if (category === "createdDate") {
@@ -437,7 +428,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
       ...buttonFilters,
       from_date: fromDateTime,
       to_date: toDateTime,
-      selectedStatus,
+      selectedSource,
       selectedTypes,
       selectedDomains,
       searchQuery,
@@ -458,7 +449,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
   const saveFiltersToSessionStorage = (filters: {
     from_date: number | null;
     to_date: number | null;
-    selectedStatus: string[];
+    selectedSource: string[];
     selectedTypes: string[];
     selectedDomains: string[];
     searchQuery: string;
@@ -513,49 +504,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
         }
       );
 
-      const isTimeSpentFilterActive = Object.values(
-        savedFilters.checkedFiltersTimeSpent || {}
-      ).some((value) => value === true);
-      if (isTimeSpentFilterActive) {
-        const timeSpentTagMap: { [key: string]: string } = {
-          under_10: "under 10 secs",
-          over_10: "10-30 secs",
-          over_30: "30-60 secs",
-          over_60: "Over 60 secs",
-        };
-
-        Object.keys(savedFilters.checkedFiltersTimeSpent).forEach(
-          (key) => {
-            if (savedFilters.checkedFiltersTimeSpent[key]) {
-              addTag("timeSpents", timeSpentTagMap[key]);
-            }
-          }
-        );
-      }
-
       setSelectedTypes(savedFilters.selectedTypes || []);
-      setSelectedStatus(savedFilters.selectedStatus || []);
+      setSelectedSource(savedFilters.selectedSource || []);
       setSelectedDomains(savedFilters.selectedDomains || []);
       setSearchQuery(savedFilters.searchQuery || "");
-
-      const isTimeFilterActive = Object.values(
-        savedFilters.checkedFiltersTime || {}
-      ).some((value) => value === true);
-      if (isTimeFilterActive) {
-        const timeTagMap: { [key: string]: string } = {
-          morning: "Morning 12AM - 11AM",
-          afternoon: "Afternoon 11AM - 5PM",
-          evening: "Evening 5PM - 9PM",
-          all_day: "All day",
-        };
-
-        // Process active filters
-        Object.keys(savedFilters.checkedFiltersTime).forEach((key) => {
-          if (savedFilters.checkedFiltersTime[key]) {
-            addTag("visitedTime", timeTagMap[key]);
-          }
-        });
-      }
 
       const isAnyFilterActive = Object.values(
         savedFilters.checkedFilters || {}
@@ -597,15 +549,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
         });
       }
       setButtonFilters(savedFilters.button);
-      if (savedFilters.regions) {
-        setTags((prevTags) => {
-          const uniqueTags = new Set(prevTags);
-          savedFilters.regions.forEach((cityTag: string) => {
-            uniqueTags.add(cityTag);
-          });
-          return Array.from(uniqueTags);
-        });
-      }
     }
   };
 
@@ -666,7 +609,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 
   const handleClearFilters = () => {
     setIsCreatedDateOpen(false);
-    setIsStatus(false);
+    setIsSource(false);
 
     // Reset date
     setDateRange({
@@ -684,13 +627,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
     // Reset filter values
     setSelectedTags({
       createdDate: [],
-      visitedTime: [],
-      region: [],
       pageVisits: [],
-      timeSpents: [],
     });
-    setTags([]);
-    setSelectedStatus([]);
+    setSelectedSource([]);
     setButtonFilters(null);
     setSearchQuery("");
 
@@ -954,12 +893,12 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
             <Box sx={filterStyles.main_filter_form}>
               <Box
                 sx={filterStyles.filter_form}
-                onClick={() => setIsStatus(!isStatus)}
+                onClick={() => setIsSource(!isSource)}
               >
                 <Box
                   sx={{
                     ...filterStyles.active_filter_dote,
-                    visibility: isStatusFilterActive()
+                    visibility: isSourceFilterActive()
                       ? "visible"
                       : "hidden",
                   }}
@@ -974,19 +913,19 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                 >
                   Source
                 </Typography>
-                {selectedStatus.map((mappedLabel) => {
+                {selectedSource.map((mappedLabel) => {
                   const originalLabel = Object.keys(
-                    statusMapping
+                    sourceMapping
                   ).find(
                     (key) =>
-                      statusMapping[key] === mappedLabel
-                  ) as keyof typeof statusMapping;
+                      sourceMapping[key] === mappedLabel
+                  ) as keyof typeof sourceMapping;
                   return (
                     <CustomChip
                       key={mappedLabel}
                       label={originalLabel}
                       onDelete={() =>
-                        handleButtonStatusClick(
+                        handleButtonSourceClick(
                           originalLabel
                         )
                       }
@@ -994,10 +933,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                   );
                 })}
                 <IconButton
-                  onClick={() => setIsStatus(!isStatus)}
+                  onClick={() => setIsSource(!isSource)}
                   aria-label="toggle-content"
                 >
-                  {isStatus ? (
+                  {isSource ? (
                     <ExpandLessIcon />
                   ) : (
                     <ExpandMoreIcon />
@@ -1005,7 +944,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                 </IconButton>
               </Box>
 
-              <Collapse in={isStatus}>
+              <Collapse in={isSource}>
                 <Box
                   sx={{
                     display: "flex",
@@ -1017,18 +956,18 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                   }}
                 >
                   {["CSV", "Pixel"].map((label) => {
-                    const mappedStatus =
-                      statusMapping[label];
+                    const mappedSource =
+                      sourceMapping[label];
                     const isSelected =
-                      selectedStatus.includes(
-                        mappedStatus
+                      selectedSource.includes(
+                        mappedSource
                       );
 
                     return (
                       <Button
                         key={label}
                         onClick={() =>
-                          handleButtonStatusClick(
+                          handleButtonSourceClick(
                             label
                           )
                         }
@@ -1217,9 +1156,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                 </Collapse>
               </Collapse>
             </Box>
-            {(selectedStatus.length === 0 ||
-              selectedStatus.includes(
-                statusMapping["Pixel"]
+            {(selectedSource.length === 0 ||
+              selectedSource.includes(
+                sourceMapping["Pixel"]
               )) && (
                 <Box sx={filterStyles.main_filter_form}>
                   <Box

@@ -50,7 +50,7 @@ interface FilterParams {
     from_date: number | null;
     to_date: number | null;
     searchQuery: string | null;
-    selectedStatus: string[];
+    selectedSource: string[];
     selectedTypes: string[];
     selectedDomains: string[];
     createdDate: string[];
@@ -147,8 +147,8 @@ const Sources: React.FC = () => {
             if (filters.from_date || filters.to_date) {
                 url += `&created_date_start=${filters.from_date || ''}&created_date_end=${filters.to_date || ''}`;
             }
-            if (filters.selectedStatus?.length > 0) {
-                url += `&status=${filters.selectedStatus.map((status: string) => status.toLowerCase()).join(',')}`;
+            if (filters.selectedSource?.length > 0) {
+                url += `&source=${filters.selectedSource.map((source: string) => source.toLowerCase()).join(',')}`;
             }
             if (filters.selectedTypes?.length > 0) {
                 url += `&type_customer=${filters.selectedTypes
@@ -290,10 +290,10 @@ const Sources: React.FC = () => {
             { condition: filters.from_date, label: 'From Date', value: () => dayjs.unix(filters.from_date!).format(dateFormat) },
             { condition: filters.to_date, label: 'To Date', value: () => dayjs.unix(filters.to_date!).format(dateFormat) },
             { condition: filters.searchQuery, label: 'Search', value: filters.searchQuery! },
-            { condition: filters.selectedStatus.length > 0, label: 'Status', value: () => filters.selectedStatus.join(', ') },
-            { condition: filters.selectedTypes.length > 0, label: 'Types', value: () => filters.selectedTypes.join(', ') },
-            { condition: filters.selectedDomains.length > 0, label: 'Domains', value: () => filters.selectedDomains.join(', ') },
-            { condition: filters.createdDate.length > 0, label: 'Created Date', value: () => filters.createdDate.join(', ') },
+            { condition: filters.selectedSource?.length > 0, label: 'Source', value: () => filters.selectedSource.join(', ') },
+            { condition: filters.selectedTypes?.length > 0, label: 'Types', value: () => filters.selectedTypes.join(', ') },
+            { condition: filters.selectedDomains?.length > 0, label: 'Domains', value: () => filters.selectedDomains.join(', ') },
+            { condition: filters.createdDate?.length > 0, label: 'Created Date', value: () => filters.createdDate.join(', ') },
             {
                 condition: filters.dateRange.fromDate || filters.dateRange.toDate, label: 'Date Range', value: () => {
                     const from = dayjs.unix(filters.dateRange.fromDate!).format(dateFormat);
@@ -319,39 +319,45 @@ const Sources: React.FC = () => {
             from_date: null,
             to_date: null,
             searchQuery: null,
-            selectedStatus: [],
+            selectedSource: [],
             selectedTypes: [],
             selectedDomains: [],
             createdDate: [],
             dateRange: { fromDate: null, toDate: null },
         };
 
-        sessionStorage.setItem('filtersBySource', JSON.stringify({}));
+        sessionStorage.setItem('filtersBySource', JSON.stringify(filters));
 
         handleApplyFilters(filters);
     };
 
-
     const handleDeleteFilter = (filterToDelete: { label: string; value: string }) => {
         const updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
         setSelectedFilters(updatedFilters);
-        
-        const filters = JSON.parse(sessionStorage.getItem('filters') || '{}');
-    
+
+        const deleteDate = (filters: FilterParams) => {
+            filters.createdDate = [];
+            filters.from_date = null;
+            setSelectedDates({ start: null, end: null });
+            filters.to_date = null;
+            setSelectedDates({ start: null, end: null });
+            filters.dateRange = { fromDate: null, toDate: null };
+        }
+
+        const filters = JSON.parse(sessionStorage.getItem('filtersBySource') || '{}');
+
         switch (filterToDelete.label) {
             case 'From Date':
-                filters.from_date = null;
-                setSelectedDates({ start: null, end: null });
+                deleteDate(filters);
                 break;
             case 'To Date':
-                filters.to_date = null;
-                setSelectedDates({ start: null, end: null });
+                deleteDate(filters);
                 break;
             case 'Search':
                 filters.searchQuery = '';
                 break;
-            case 'Status':
-                filters.selectedStatus = [];
+            case 'Source':
+                filters.selectedSource = [];
                 break;
             case 'Types':
                 filters.selectedTypes = [];
@@ -360,15 +366,10 @@ const Sources: React.FC = () => {
                 filters.selectedDomains = [];
                 break;
             case 'Created Date':
-                filters.createdDate = [];
-                filters.from_date = null;
-                setSelectedDates({ start: null, end: null });
-                filters.to_date = null;
-                setSelectedDates({ start: null, end: null });
-                filters.dateRange = { fromDate: null, toDate: null };
+                deleteDate(filters);
                 break;
             case 'Date Range':
-                filters.dateRange = { fromDate: null, toDate: null };
+                deleteDate(filters);
                 break;
             default:
                 break;
@@ -383,17 +384,17 @@ const Sources: React.FC = () => {
             };
         }
     
-        sessionStorage.setItem('filters', JSON.stringify(filters));
+        sessionStorage.setItem('filtersBySource', JSON.stringify(filters));
     
         if (filterToDelete.label === 'Dates') {
             setSelectedDates({ start: null, end: null });
         }
     
-        // Обновляем фильтры для применения
         const newFilters: FilterParams = {
             from_date: updatedFilters.find(f => f.label === 'From Date') ? dayjs(updatedFilters.find(f => f.label === 'From Date')!.value).unix() : null,
             to_date: updatedFilters.find(f => f.label === 'To Date') ? dayjs(updatedFilters.find(f => f.label === 'To Date')!.value).unix() : null,
-            searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',selectedStatus: updatedFilters.find(f => f.label === 'Status') ? updatedFilters.find(f => f.label === 'Status')!.value.split(', ') : [],
+            searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',
+            selectedSource: updatedFilters.find(f => f.label === 'Source') ? updatedFilters.find(f => f.label === 'Source')!.value.split(', ') : [],
             selectedTypes: updatedFilters.find(f => f.label === 'Types') ? updatedFilters.find(f => f.label === 'Types')!.value.split(', ') : [],
             selectedDomains: updatedFilters.find(f => f.label === 'Domains') ? updatedFilters.find(f => f.label === 'Domains')!.value.split(', ') : [],
             createdDate: updatedFilters.find(f => f.label === 'Created Date') ? updatedFilters.find(f => f.label === 'Created Date')!.value.split(', ') : [],
@@ -403,7 +404,6 @@ const Sources: React.FC = () => {
             },
         };
     
-        // Применяем обновленные фильтры
         handleApplyFilters(newFilters);
     };
 

@@ -12,7 +12,7 @@ from models.users import Users
 def apply_filters(
         query: Query,
         name: Optional[str] = None,
-        status: Optional[List[str]] = None,
+        source: Optional[List[str]] = None,
         type_customer: Optional[List[str]] = None,
         domain_id: Optional[int] = None,
         created_date_start: Optional[datetime] = None,
@@ -31,8 +31,8 @@ def apply_filters(
             )
         )
 
-    if status:
-        filters.append(AudienceSource.source_origin.in_(status))
+    if source:
+        filters.append(AudienceSource.source_origin.in_(source))
 
     if type_customer:
         if len(type_customer) == 1:
