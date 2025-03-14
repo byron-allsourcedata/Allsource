@@ -770,9 +770,9 @@ const Sources: React.FC = () => {
                                                                                     <IconButton size="small">
                                                                                         {orderBy === key ? (
                                                                                             order === 'asc' ? (
-                                                                                                <ArrowDownwardRoundedIcon fontSize="inherit" />
-                                                                                            ) : (
                                                                                                 <ArrowUpwardRoundedIcon fontSize="inherit" />
+                                                                                            ) : (
+                                                                                                <ArrowDownwardRoundedIcon fontSize="inherit" />
                                                                                             )
                                                                                         ) : (
                                                                                             <SwapVertIcon fontSize="inherit" />
