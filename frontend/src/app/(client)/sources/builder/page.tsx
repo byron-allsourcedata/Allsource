@@ -913,7 +913,7 @@ const SourcesImport: React.FC = () => {
                                             <Typography sx={{fontFamily: "Roboto", fontSize: "12px", color: "rgba(205, 40, 43, 1)"}}>✗ The selected domain does not have the pixel installed. Please install the pixel first to continue.</Typography>
                                             <Button
                                                 variant="contained"
-                                                onClick={() => router.push("/sources/builder")}
+                                                onClick={() => router.push('/dashboard')}
                                                 className='second-sub-title'
                                                 sx={{
                                                     alignSelf: "flex-end",

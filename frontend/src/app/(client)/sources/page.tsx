@@ -714,10 +714,10 @@ const Sources: React.FC = () => {
                                                                     {[
                                                                         { key: 'name', label: 'Name' },
                                                                         { key: 'source', label: 'Source' },
+                                                                        { key: 'domain', label: 'Domain' },
                                                                         { key: 'type', label: 'Type' },
                                                                         { key: 'created_date', label: 'Created Date', sortable: true },
                                                                         { key: 'created_by', label: 'Created By' },
-                                                                        { key: 'domain', label: 'Domain' },
                                                                         { key: 'number_of_customers', label: 'Number of Customers', sortable: true },
                                                                         { key: 'matched_records', label: 'Matched Records', sortable: true },
                                                                         { key: 'actions', label: 'Actions' }
@@ -803,6 +803,13 @@ const Sources: React.FC = () => {
                                                                                 {setSourceOrigin(row.source_type)}
                                                                             </TableCell>
 
+                                                                            {/* Domain Column */}
+                                                                            <TableCell
+                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative' }}
+                                                                            >
+                                                                                {row.domain ?? "--"}
+                                                                            </TableCell>
+
                                                                             {/* Type Column */}
                                                                             <TableCell
                                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
@@ -822,13 +829,6 @@ const Sources: React.FC = () => {
                                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                                             >
                                                                                 {row.created_by}
-                                                                            </TableCell>
-
-                                                                            {/* Domain Column */}
-                                                                            <TableCell
-                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative' }}
-                                                                            >
-                                                                                {row.domain ?? "--"}
                                                                             </TableCell>
 
                                                                             {/* Number of Customers Column */}
