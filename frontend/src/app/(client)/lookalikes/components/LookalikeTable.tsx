@@ -23,7 +23,9 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import dayjs from "dayjs";
 import { lookalikesStyles } from './lookalikeStyles';
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import CheckIcon from "@mui/icons-material/Check";
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { showErrorToast, showToast } from "@/components/ToastNotification";
 
 interface TableRowData {
     id: string;
@@ -38,70 +40,99 @@ interface TableRowData {
 
 interface LookalikeTableProps {
     tableData: TableRowData[];
+    order?: "asc" | "desc";
+    orderBy?: keyof TableRowData;
+    onSort: (column: keyof TableRowData) => void;
+    refreshData: () => void;
 }
 
-interface LookalikeRow {
-    id: string;
-    name: string;
-}
+const audienceSize = [
+    {
+        id: "almost",
+        label: "Almost identical",
+        text: "Lookalike size 0-3%",
+        min_value: 0,
+        max_value: 3,
+    },
+    {
+        id: "extremely",
+        label: "Extremely Similar",
+        text: "Lookalike size 0-7%",
+        min_value: 0,
+        max_value: 7,
+    },
+    {
+        id: "very",
+        label: "Very similar",
+        text: "Lookalike size 0-10%",
+        min_value: 0,
+        max_value: 10,
+    },
+    {
+        id: "quite",
+        label: "Quite similar",
+        text: "Lookalike size 0-15%",
+        min_value: 0,
+        max_value: 15,
+    },
+    {
+        id: "broad",
+        label: "Broad",
+        text: "Lookalike size 0-20%",
+        min_value: 0,
+        max_value: 20,
+    },
+];
 
-const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData }) => {
-    const [orderBy, setOrderBy] = useState<keyof TableRowData>("created_date");
-    const [order, setOrder] = useState<"asc" | "desc">("asc");
+
+const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, orderBy, onSort, refreshData }) => {
     const [editingRowId, setEditingRowId] = useState<string | null>(null);
-    const [isEdit, setIsEdit] = useState(false);
     const [editedName, setEditedName] = useState<string>("");
-
-    const handleSort = (column: keyof TableRowData) => {
-        const isAsc = orderBy === column && order === "asc";
-        setOrder(isAsc ? "desc" : "asc");
-        setOrderBy(column);
-    };
-
-    const sortedData = [...tableData].sort((a, b) => {
-        if (order === "asc") {
-            return a[orderBy] > b[orderBy] ? 1 : -1;
-        }
-        return a[orderBy] < b[orderBy] ? 1 : -1;
-    });
-
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const [editPopoverAnchorEl, setEditPopoverAnchorEl] = useState<null | HTMLElement>(null);
+    const [isEditPopoverOpen, setIsEditPopoverOpen] = useState(false);
     const [confirmAnchorEl, setConfirmAnchorEl] = useState<null | HTMLElement>(null);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-    const open = Boolean(anchorEl);
 
-    const handleOpenMenu = (event: React.MouseEvent<HTMLElement>, rowId: string, rowName: string) => {
-        setIsEdit(false);
-        setAnchorEl(event.currentTarget);
+
+    const handleRename = (event: React.MouseEvent<HTMLElement>, rowId: string, rowName: string) => {
         setEditingRowId(rowId);
         setEditedName(rowName)
+        setEditPopoverAnchorEl(event.currentTarget);
+        setIsEditPopoverOpen(true);
     };
 
-    const handleCloseMenu = () => {
-        setAnchorEl(null);
+    const handleCloseEditPopover = () => {
+        setIsEditPopoverOpen(false);
+        setEditPopoverAnchorEl(null);
     };
 
-    const handleRename = () => {
-        setIsEdit(true);
-        handleCloseMenu();
-    };
-                                                                                                                                                                    
     const handleConfirmRename = async () => {
         if (editingRowId === null) return;
         try {
             await axiosInstance.put(`/lookalikes/${editingRowId}`, { name: editedName });
             setEditingRowId(null);
         } catch (error) {
-            console.error("Ошибка при обновлении имени:", error);
         }
     };
 
-    const handleDelete = () => {
-        // Логика удаления
+    const handleDelete = async (rowId: string) => {
+        try {
+            const response = await axiosInstance.delete(`/audience-lookalikes/delete-lookalike`, {params: {uuid_of_lookalike: rowId }});
+            if(response.data.status === "SUCCESS"){
+                showToast("Lookalike has been successfully removed")
+                refreshData()
+            }
+            else{
+                showErrorToast("An error occurred while trying to remove lookalike")
+            }
+        } catch (error) {
+        }
     };
 
-    const handleOpenConfirm = (event: React.MouseEvent<HTMLElement>) => {
+    const handleOpenConfirm = (event: React.MouseEvent<HTMLElement>, rowId: string, rowName: string) => {
         setConfirmAnchorEl(event.currentTarget);
+        setEditingRowId(rowId);
+        setEditedName(rowName)
         setIsConfirmOpen(true);
     };
 
@@ -114,7 +145,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData }) => {
             sx={{
                 border: '1px solid rgba(235, 235, 235, 1)',
                 borderRadius: '4px',
-                maxHeight: '71vh',
+                maxHeight: '67vh',
                 overflowY: 'auto',
                 "@media (max-height: 800px)": {
                     maxHeight: '70vh',
@@ -129,25 +160,26 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData }) => {
                         {[
                             { key: "name", label: "Name", sortable: true },
                             { key: "source", label: "Source" },
-                            { key: "sourceType", label: "Source Type" },
-                            { key: "lookalikeSize", label: "Lookalike Size" },
-                            { key: "createdDate", label: "Created Date", sortable: true },
-                            { key: "createdBy", label: "Created By" },
-                            { key: "size", label: "Size" },
-                            { key: "actions", label: "Actions" },
+                            { key: "source_type", label: "Source Type" },
+                            { key: "lookalike_size", label: "Lookalike Size" },
+                            { key: "created_date", label: "Created Date", sortable: true },
+                            { key: "created_by", label: "Created By" },
+                            { key: "size", label: "Size", sortable: true },
+                            { key: "actions", label: "" },
                         ].map(({ key, label, sortable = false }) => (
                             <TableCell
                                 key={key}
-                                onClick={sortable ? () => handleSort(key as keyof TableRowData) : undefined}
+                                onClick={sortable ? () => onSort(key as keyof TableRowData) : undefined}
                                 sx={{
                                     ...lookalikesStyles.table_column,
+                                    cursor: sortable ? 'pointer' : 'default',
                                     ...(key === 'name' && {
                                         position: 'sticky',
                                         left: 0,
                                         zIndex: 99
                                     }),
                                     ...(key === 'actions' && {
-                                        ...lookalikesStyles.table_array,
+                                        ...lookalikesStyles.table_column,
                                         maxWidth: '30px',
                                         "::after": { content: 'none' }
                                     })
@@ -172,88 +204,160 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData }) => {
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {sortedData.map((row) => (
+                    {tableData.map((row) => (
                         <TableRow key={row.id}>
-                            <TableCell sx={{ ...lookalikesStyles.table_array, position: "sticky", left: 0, zIndex: 9, backgroundColor: "#fff" }}>
-                                {(editingRowId === row.id && isEdit) ? (
-                                    <Box sx={{ display: "flex", alignItems: "center", maxWidth: '150px' }}>
-                                        <TextField
-                                            value={editedName}
-                                            onChange={(e) => setEditedName(e.target.value)}
-                                            variant="standard"
-                                            size="small"
-                                            sx={{ width: "120px" }}
-                                        />
-                                        <IconButton onClick={handleConfirmRename} sx={{padding:0, ml:0.5}}>
-                                            <CheckIcon fontSize="small" color="primary" />
-                                        </IconButton>
-                                    </Box>
-                                ) : (
-                                    row.name
-                                )}
-                            </TableCell>
-                            <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>{row.source}</TableCell>
-                            <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>{row.source_type}</TableCell>
-                            <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>{row.lookalike_size}</TableCell>
-                            <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>{dayjs(row.created_date).format('MMM D, YYYY')}</TableCell>
-                            <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>{row.created_by}</TableCell>
-                            <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>{row.size}</TableCell>
-                            <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative', justifyContent: 'center', right: 0 }}>
-                                    <IconButton sx={{ padding: 0, margin: 0 }} onClick={(event) => handleOpenMenu(event, row.id, row.name)}>
-                                        <MoreVertIcon sx={{ maxHeight: "18px" }} />
+                            <TableCell sx={{ ...lookalikesStyles.table_array, position: "sticky", left: 0, zIndex: 9, backgroundColor: "#fff", '&:hover .edit-icon': { opacity: 1, pointerEvents: 'auto' } }}>
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        gap: 2,
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                    }}
+                                >
+                                    {row.name}
+                                    <IconButton
+                                        className="edit-icon"
+                                        sx={{
+                                            pl: 0, pr: 0, pt: 0.25, pb: 0.25,
+                                            margin: 0,
+                                            opacity: 0,
+                                            pointerEvents: 'none',
+                                            transition: 'opacity 0.2s ease-in-out'
+                                        }}
+                                        onClick={(event) => handleRename(event, row.id, row.name)}
+                                    >
+                                        <EditIcon sx={{ maxHeight: "18px" }} />
                                     </IconButton>
+                                </Box>
+
+
                             </TableCell>
                             <Popover
-                                open={open}
-                                anchorEl={anchorEl}
-                                onClose={handleCloseMenu}
+                                open={isEditPopoverOpen}
+                                anchorEl={editPopoverAnchorEl}
+                                onClose={handleCloseEditPopover}
                                 anchorOrigin={{
-                                    vertical: "top",
-                                    horizontal: "right",
+                                    vertical: "center",
+                                    horizontal: "center",
                                 }}
                                 transformOrigin={{
                                     vertical: "top",
-                                    horizontal: "right",
+                                    horizontal: "left",
                                 }}
                                 slotProps={{
                                     paper: {
                                         sx: {
-                                            textTransform: "none",
+                                            width: "15.875rem",
                                             boxShadow: 0,
                                             borderRadius: "4px",
                                             border: "0.5px solid rgba(175, 175, 175, 1)",
+
                                         },
-                                    },
+                                    }
                                 }}
                             >
-                                <Box
-                                    sx={{
-                                        p: 1,
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        alignItems: "flex-start",
-                                        width: "100%",
-                                        maxWidth: "160px",
-                                    }}>
-                                    <Button
-                                        sx={{
-                                            justifyContent: "flex-start",
-                                            width: "100%",
-                                            textTransform: "none",
-                                            fontFamily: "Nunito Sans",
-                                            fontSize: "14px",
-                                            color: "rgba(32, 33, 36, 1)",
-                                            fontWeight: 600,
-                                            ":hover": {
-                                                color: "rgba(80, 82, 178, 1)",
-                                                backgroundColor: "background: rgba(80, 82, 178, 0.1)",
+                                <Box sx={{ p: 2 }}>
+                                    <TextField
+                                        value={editedName}
+                                        onChange={(e) => setEditedName(e.target.value)}
+                                        variant="outlined"
+                                        label='Lookalike Name'
+                                        size="small"
+                                        fullWidth
+                                          sx={{
+                                            "& label.Mui-focused": {
+                                              color: "rgba(80, 82, 178, 1)",
                                             },
-                                        }}
-                                        onClick={() => handleRename()}>Rename</Button>
-                                    <Button className="second-sub-title" sx={{ textTransform: 'none' }} onClick={handleOpenConfirm}>Delete</Button>
+                                            "& .MuiOutlinedInput-root:hover fieldset": {
+                                                color: "rgba(80, 82, 178, 1)",
+                                            },
+                                            "& .MuiOutlinedInput-root": {
+                                              "&:hover fieldset": {
+                                                borderColor: "rgba(80, 82, 178, 1)",
+                                                border: "1px solid rgba(80, 82, 178, 1)",
+                                              },
+                                              "&.Mui-focused fieldset": {
+                                                borderColor: "rgba(80, 82, 178, 1)",
+                                                border: "1px solid rgba(80, 82, 178, 1)",
+                                              },
+                                            },
+                                          }}
+                                          InputProps={{
+                                            style: {
+                                              fontFamily: "Roboto",
+                                              fontSize: "14px",
+                                            },
+                                          }}
+                                          InputLabelProps={{
+                                            style: {
+                                              fontSize: "14px",
+                                              fontFamily: "Roboto",
+                                            },
+                                          }}
+                                    />
+                                    <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+                                        <Button
+                                            onClick={handleCloseEditPopover}
+                                            sx={{
+                                                backgroundColor: "#fff",
+                                                color: "rgba(80, 82, 178, 1) !important",
+                                                fontSize: "14px",
+                                                textTransform: "none",
+                                                padding: "0.75em 1em",
+                                                maxWidth: "50px",
+                                                maxHeight: "30px",
+                                                mr:0.5,
+                                                "&:hover": {
+                                                    backgroundColor: "#fff",
+                                                    boxShadow: "0 0px 1px 1px rgba(0, 0, 0, 0.3)",
+                                                },
+                                            }}
+                                        >
+                                            <Typography className="second-sub-title" sx={{ color: 'rgba(80, 82, 178, 1) !important' }}>Cancel</Typography>
+                                        </Button>
+                                        <Button
+                                            onClick={() => {
+                                                handleConfirmRename();
+                                                handleCloseEditPopover();
+                                            }}
+                                            sx={{
+                                                backgroundColor: "#fff",
+                                                color: "rgba(80, 82, 178, 1) !important",
+                                                fontSize: "14px",
+                                                textTransform: "none",
+                                                padding: "0.75em 1em",
+                                                maxWidth: "50px",
+                                                maxHeight: "30px",
+                                                "&:hover": {
+                                                    backgroundColor: "#fff",
+                                                    boxShadow: "0 0px 1px 1px rgba(0, 0, 0, 0.3)",
+                                                },
+                                            }}
+                                        >
+                                            <Typography className="second-sub-title" sx={{ color: 'rgba(80, 82, 178, 1) !important' }}>Save</Typography>
+                                        </Button>
+                                    </Box>
                                 </Box>
                             </Popover>
 
+                            <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>{row.source}</TableCell>
+                            <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>{row.source_type}</TableCell>
+                            <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>
+                                {(() => {
+                                    const size = audienceSize.find(size => size.label === row.lookalike_size);
+                                    return size ? `${size.label} ${size.min_value}-${size.max_value}%` : row.lookalike_size;
+                                })()}
+                            </TableCell>
+                            <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>{dayjs(row.created_date).format('MMM D, YYYY')}</TableCell>
+                            <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>{row.created_by}</TableCell>
+                            <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>{row.size}</TableCell>
+                            <TableCell sx={{ ...lookalikesStyles.table_array, maxWidth: '40px' }}>
+                                <IconButton sx={{ pl: 0, pr: 0, pt: 0.25, pb: 0.25, margin: 0 }} onClick={(event) => handleOpenConfirm(event, row.id, row.name)}>
+                                    <DeleteIcon sx={{ maxHeight: "18px" }} />
+                                </IconButton>
+                            </TableCell>
                             <Popover
                                 open={isConfirmOpen}
                                 anchorEl={confirmAnchorEl}
@@ -279,7 +383,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData }) => {
                                 <Typography className="first-sub-title" sx={{ paddingLeft: 2, pt: 1, pb: 0 }}>Confirm Deletion</Typography>
                                 <DialogContent sx={{ padding: 2 }}>
                                     <DialogContentText className="table-data">
-                                        Are you sure you want to delete the lookalike named <strong style={{ fontWeight: 700, color: 'black' }}>{row.name}</strong> ?
+                                        Are you sure you want to delete the lookalike named <strong style={{ fontWeight: 500, color: 'rgba(32, 33, 36, 1)' }}>{editedName}</strong> ?
                                     </DialogContentText>
                                 </DialogContent>
                                 <DialogActions>
@@ -316,7 +420,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData }) => {
                                                 boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
                                             },
                                         }}
-                                        onClick={() => { handleDelete(); handleCloseConfirm(); }}>Delete</Button>
+                                        onClick={() => { handleDelete(editingRowId || ''); handleCloseConfirm(); }}>Delete</Button>
                                 </DialogActions>
                             </Popover>
                         </TableRow>

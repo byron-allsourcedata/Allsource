@@ -11,8 +11,9 @@ class AudienceLookalikesService:
         self.lookalikes_persistence_service = lookalikes_persistence_service
 
     def get_lookalikes(self, user, page, per_page, from_date, to_date, sort_by, sort_order, timezone_offset):
-        lookalikes, count, max_page = self.lookalikes_persistence_service.get_lookalikes(user_id=user.get('id'),
-                                                                                         page=page, per_page=per_page)
+        lookalikes, count, max_page = self.lookalikes_persistence_service.\
+            get_lookalikes(user_id=user.get('id'), page=page, per_page=per_page, sort_by=sort_by, sort_order=sort_order,
+                           from_date=from_date, to_date=to_date)
         return lookalikes, count, max_page
 
     def get_source_info(self, uuid_of_source, user):
@@ -30,6 +31,12 @@ class AudienceLookalikesService:
             }
         return {}
 
+    def delete_lookalike(self, uuid_of_lookalike, user):
+        delete_lookalike = self.lookalikes_persistence_service.delete_lookalike(uuid_of_lookalike, user.get('id'))
+        if delete_lookalike:
+            return {'status': 'SUCCESS'}
+        return {'status': 'FAILURE'}
+
     def create_lookalike(self, user, uuid_of_source, lookalike_size, lookalike_name, created_by_user_id):
         lookalike = self.lookalikes_persistence_service.create_lookalike(
             uuid_of_source, user.get('id'), lookalike_size, lookalike_name, created_by_user_id
@@ -38,3 +45,11 @@ class AudienceLookalikesService:
             'status': BaseEnum.SUCCESS,
             'lookalike': lookalike
         }
+
+    def update_lookalike(self, uuid_of_lookalike, name_of_lookalike, user):
+        update = self.lookalikes_persistence_service.update_lookalike(
+            uuid_of_lookalike, name_of_lookalike, user.get('id')
+        )
+        if update:
+            return {'status': 'SUCCESS'}
+        return {'status': 'FAILURE'}

@@ -66,3 +66,22 @@ async def create_lookalike(
         lookalike_name=request.lookalike_name,
         created_by_user_id=user_id
     )
+
+
+@router.delete("/delete-lookalike")
+async def delete_lookalike(
+        user: dict = Depends(check_user_authorization_without_pixel),
+        uuid_of_lookalike: str = Query(None, description="UUID of source"),
+        lookalike_service: AudienceLookalikesService = Depends(get_lookalikes_service),
+):
+    return lookalike_service.delete_lookalike(uuid_of_lookalike, user=user)
+
+
+@router.put("/update-lookalike")
+async def update_lookalike(
+        user: dict = Depends(check_user_authorization_without_pixel),
+        uuid_of_lookalike: str = Query(None, description="UUID of source"),
+        name_of_lookalike: str = Query(None, description="UUID of source"),
+        lookalike_service: AudienceLookalikesService = Depends(get_lookalikes_service),
+):
+    return lookalike_service.update_lookalike(uuid_of_lookalike, name_of_lookalike, user=user)
