@@ -145,31 +145,21 @@ def get_min_max_ids(db_session, domain_id, statuses):
 
     filters = []
     
-    if LeadStatus.VIEWED_PRODUCT.value in statuses and LeadStatus.CONVERTED_SALES.value in statuses:
-        or_(
-                LeadUser.behavior_type == "viewed_product",
-                LeadUser.is_converted_sales == True
-            )
-        
-    if LeadStatus.VIEWED_PRODUCT.value in statuses and LeadStatus.CONVERTED_SALES.value not in statuses:
-        and_(
+    if LeadStatus.VIEWED_PRODUCT.value in statuses:
+        filters.append(
+            or_(
                 LeadUser.behavior_type == "viewed_product",
                 LeadUser.is_converted_sales == False
             )
-    
-    if LeadStatus.VISITOR.value in statuses and LeadStatus.CONVERTED_SALES.value in statuses:
-        or_(
-                LeadUser.behavior_type == "visitor",
-                LeadUser.is_converted_sales == True
-            )
-        
-    if LeadStatus.VISITOR.value in statuses and LeadStatus.CONVERTED_SALES.value not in statuses:
-        and_(
+        )
+    if LeadStatus.VISITOR.value in statuses:
+        filters.append(
+            or_(
                 LeadUser.behavior_type == "visitor",
                 LeadUser.is_converted_sales == False
             )
-                
-    if LeadStatus.CONVERTED_SALES.value in statuses and LeadStatus.ABANDONED_CART.value in statuses:
+        )
+    if LeadStatus.ABANDONED_CART.value in statuses:
         query = query.outerjoin(
                 LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id
             ).outerjoin(
@@ -179,24 +169,27 @@ def get_min_max_ids(db_session, domain_id, statuses):
             or_(
                 and_(
                     LeadUser.behavior_type == "product_added_to_cart",
-                    LeadUser.is_converted_sales == True
+                    LeadUser.is_converted_sales == False
                 ),
-                    LeadsUsersAddedToCart.added_at < LeadsUsersOrdered.ordered_at
-                
+                and_(
+                    LeadUser.behavior_type == "product_added_to_cart",
+                    LeadsUsersAddedToCart.added_at > LeadsUsersOrdered.ordered_at
+                )
             )
         )
-    elif LeadStatus.CONVERTED_SALES.value not in statuses and LeadStatus.ABANDONED_CART.value in statuses:
+    if LeadStatus.CONVERTED_SALES.value in statuses:
         filters.append(
-        or_(
-            and_(
-                LeadUser.behavior_type == "product_added_to_cart",
-                LeadUser.is_converted_sales == False
-            ),
-            LeadsUsersAddedToCart.added_at > LeadsUsersOrdered.ordered_at
+            or_(
+                and_(
+                    LeadUser.behavior_type != "product_added_to_cart",
+                    LeadUser.is_converted_sales == False
+                ),
+                and_(
+                    LeadUser.is_converted_sales == True,
+                    LeadsUsersAddedToCart.added_at < LeadsUsersOrdered.ordered_at
+                )
+            )
         )
-    )
-    elif LeadStatus.CONVERTED_SALES.value in statuses and LeadStatus.ABANDONED_CART.value not in statuses:
-        filters.append(LeadUser.is_converted_sales == True)
             
     if filters:
         query = query.filter(or_(*filters))
@@ -223,6 +216,8 @@ async def send_pixel_contacts(*, data, source_id, db_session, connection, user_i
     db_session.commit()
     
     await send_sse(connection, user_id, {"source_id": source_id, "total": total_rows, "processed": processed_rows})
+    if not min_id or not max_id:
+        return False
     
     for start_id in range(min_id, max_id + 1, SELECTED_ROW_COUNT):
         end_id = min(start_id + SELECTED_ROW_COUNT - 1, max_id)
