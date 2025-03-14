@@ -217,7 +217,7 @@ class VerifyToken(Enum):
 
 class LeadStatus(Enum):
     ABANDONED_CART = 'abandoned_cart'
-    VIEW_PRODUCT = 'view_product'
+    VIEWED_PRODUCT = 'viewed_product'
     CONVERTED_SALES = 'converted_sales'
     VISITOR = 'visitor'
     

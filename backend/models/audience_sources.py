@@ -1,6 +1,6 @@
 from sqlalchemy import Column, event, Integer, TIMESTAMP, JSON, VARCHAR, ForeignKey, Index, UUID
 from .base import Base, create_timestamps, update_timestamps
-
+from models.users_domains import UserDomains
 
 class AudienceSource(Base):
     __tablename__ = 'audience_sources'
@@ -19,14 +19,12 @@ class AudienceSource(Base):
     processed_records = Column(Integer, default=0, nullable=False)
     file_url = Column(VARCHAR(256), nullable=True)
     mapped_fields = Column(JSON, nullable=True)
-    domain_id = Column(Integer, ForeignKey('users_domains.id', onupdate='SET NULL'), nullable=True)
+    domain_id = Column(Integer, ForeignKey(UserDomains.id, onupdate='SET NULL'), nullable=True)
 
-    __table_args__ = (
-        Index('audience_sources_pkey', 'id'),
-        Index('audience_sources_user_id_idx', 'user_id'),
-        Index('audience_sources_matched_records_idx', 'matched_records'),
-        Index('audience_sources_total_records_idx', 'total_records'),
-    )
+Index('audience_sources_pkey', AudienceSource.id)
+Index('audience_sources_user_id_idx', AudienceSource.user_id)
+Index('audience_sources_matched_records_idx', AudienceSource.matched_records)
+Index('audience_sources_total_records_idx', AudienceSource.total_records)
 
 event.listen(AudienceSource, "before_insert", create_timestamps)
 event.listen(AudienceSource, "before_update", update_timestamps)
