@@ -140,6 +140,18 @@ const CreateLookalikePage: React.FC = () => {
             setAppliedDates(dates);
             setCalendarAnchorEl(null);
 
+            setSelectedFilters(prevFilters => {
+                const existingIndex = prevFilters.findIndex(filter => filter.label === 'Dates');
+                const newFilter = { label: 'Dates', value: dateRange };
+
+                if (existingIndex !== -1) {
+                    const updatedFilters = [...prevFilters];
+                    updatedFilters[existingIndex] = newFilter;
+                    return updatedFilters;
+                } else {
+                    return [...prevFilters, newFilter];
+                }
+            });
             handleCalendarClose();
         }
     };
@@ -201,7 +213,6 @@ const CreateLookalikePage: React.FC = () => {
                 url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
             }
 
-            console.log(selectedFilters)
             // Processing "From Date"
             if (selectedFilters.some(filter => filter.label === 'From Date')) {
                 const fromDate = selectedFilters.find(filter => filter.label === 'From Date')?.value || '';

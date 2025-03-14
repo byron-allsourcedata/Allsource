@@ -107,10 +107,21 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, order
     };
 
     const handleConfirmRename = async () => {
-        if (editingRowId === null) return;
+        if (!editingRowId || !editedName.trim()) return;
         try {
-            await axiosInstance.put(`/lookalikes/${editingRowId}`, { name: editedName });
+            const response = await axiosInstance.put(`/audience-lookalikes/update-lookalike`, {
+                uuid_of_lookalike: editingRowId,
+                name_of_lookalike: editedName
+            });
+            if(response.data.status === "SUCCESS"){
+                showToast("Lookalike has been successfully updated")
+                refreshData()
+            }
+            else{
+                showErrorToast("An error occurred while trying to rename lookalike")
+            }
             setEditingRowId(null);
+            setIsEditPopoverOpen(false);
         } catch (error) {
         }
     };
@@ -224,7 +235,10 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, order
                                             margin: 0,
                                             opacity: 0,
                                             pointerEvents: 'none',
-                                            transition: 'opacity 0.2s ease-in-out'
+                                            transition: 'opacity 0.2s ease-in-out',
+                                            '@media (max-width: 900px)':{
+                                                opacity:1
+                                            }
                                         }}
                                         onClick={(event) => handleRename(event, row.id, row.name)}
                                     >
@@ -353,7 +367,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, order
                             <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>{dayjs(row.created_date).format('MMM D, YYYY')}</TableCell>
                             <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>{row.created_by}</TableCell>
                             <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>{row.size}</TableCell>
-                            <TableCell sx={{ ...lookalikesStyles.table_array, maxWidth: '40px' }}>
+                            <TableCell sx={{ ...lookalikesStyles.table_array, maxWidth: '40px', padding:'8px', pr:0 }}>
                                 <IconButton sx={{ pl: 0, pr: 0, pt: 0.25, pb: 0.25, margin: 0 }} onClick={(event) => handleOpenConfirm(event, row.id, row.name)}>
                                     <DeleteIcon sx={{ maxHeight: "18px" }} />
                                 </IconButton>

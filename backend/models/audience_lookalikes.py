@@ -9,9 +9,9 @@ class AudienceLookalikes(Base):
     name = Column(VARCHAR(128), nullable=False)
     lookalike_size = Column(VARCHAR(32), nullable=False)
     created_date = Column(TIMESTAMP, nullable=False)
-    user_id = Column(Integer, ForeignKey('users.id', onupdate='SET NULL'), nullable=False)
-    created_by_user_id = Column(Integer, ForeignKey('users.id', onupdate='SET NULL'), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='SET NULL'), nullable=False)
+    created_by_user_id = Column(Integer, ForeignKey('users.id', ondelete='SET NULL'), nullable=False)
     processed_size = Column(Integer, default=0, nullable=False)
     size = Column(Integer, default=0, nullable=False)
     source_uuid = Column(UUID(as_uuid=True),
-                         ForeignKey('audience_sources.id', onupdate='SET NULL'), nullable=False)
+                         ForeignKey('audience_sources.id', ondelete='cascade'), nullable=False)

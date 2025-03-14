@@ -48,7 +48,7 @@ class AudienceLookalikesService:
 
     def update_lookalike(self, uuid_of_lookalike, name_of_lookalike, user):
         update = self.lookalikes_persistence_service.update_lookalike(
-            uuid_of_lookalike, name_of_lookalike, user.get('id')
+            uuid_of_lookalike=uuid_of_lookalike, name_of_lookalike=name_of_lookalike, user_id=user.get('id')
         )
         if update:
             return {'status': 'SUCCESS'}

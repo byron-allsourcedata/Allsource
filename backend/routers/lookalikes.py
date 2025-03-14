@@ -3,13 +3,18 @@ from fastapi import APIRouter, Depends, Query
 from dependencies import get_lookalikes_service, check_user_authorization_without_pixel
 from services.lookalikes import AudienceLookalikesService
 from pydantic import BaseModel
-from models.users import User
+from fastapi import Body
 
 
 class LookalikeCreateRequest(BaseModel):
     uuid_of_source: str
     lookalike_size: str
     lookalike_name: str
+
+
+class UpdateLookalikeRequest(BaseModel):
+    uuid_of_lookalike: str
+    name_of_lookalike: str
 
 
 router = APIRouter()
@@ -80,8 +85,7 @@ async def delete_lookalike(
 @router.put("/update-lookalike")
 async def update_lookalike(
         user: dict = Depends(check_user_authorization_without_pixel),
-        uuid_of_lookalike: str = Query(None, description="UUID of source"),
-        name_of_lookalike: str = Query(None, description="UUID of source"),
+        data: UpdateLookalikeRequest = Body(...),
         lookalike_service: AudienceLookalikesService = Depends(get_lookalikes_service),
 ):
-    return lookalike_service.update_lookalike(uuid_of_lookalike, name_of_lookalike, user=user)
+    return lookalike_service.update_lookalike(data.uuid_of_lookalike, data.name_of_lookalike, user=user)

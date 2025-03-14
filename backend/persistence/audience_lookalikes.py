@@ -108,7 +108,13 @@ class AudienceLookalikesPersistence:
         return False
 
     def update_lookalike(self, uuid_of_lookalike, name_of_lookalike, user_id):
-        self.db.query(AudienceLookalikes).filter(
-            AudienceLookalikes.id == uuid_of_lookalike, AudienceLookalikes.user_id == user_id
-        ).update({AudienceLookalikes.name: name_of_lookalike}, synchronize_session=False)
+        query = self.db.query(AudienceLookalikes).filter(
+            AudienceLookalikes.id == uuid_of_lookalike,
+            AudienceLookalikes.user_id == user_id
+        )
+
+        updated_rows = query.update({AudienceLookalikes.name: name_of_lookalike}, synchronize_session=False)
         self.db.commit()
+
+        return updated_rows > 0
+
