@@ -497,8 +497,8 @@ const SourcesImport: React.FC = () => {
                         }}>
                             <Box sx={{display: "flex", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
                                 <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
-                                    <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px"}}>Choose your data source</Typography>
-                                    <Typography sx={{fontFamily: "Nunito Sans", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Choose your data source, and let Maximia AI Audience Algorithm identify high-intent leads and create lookalike audiences to slash your acquisition costs.</Typography>
+                                    <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500}}>Choose your data source</Typography>
+                                    <Typography sx={{fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Choose your data source, and let Maximia AI Audience Algorithm identify high-intent leads and create lookalike audiences to slash your acquisition costs.</Typography>
                                 </Box>
                                 <Box sx={{display: "flex",  gap: 2, "@media (max-width: 420px)": { display: "grid", gridTemplateColumns: "1fr" }}}>
                                     <Button
@@ -563,8 +563,8 @@ const SourcesImport: React.FC = () => {
                                                     </Box>
                                     )}
                                     <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
-                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px"}}>Select your Source File</Typography>
-                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Please upload a CSV file containing the list of customers who have successfully completed an order on your website.</Typography>
+                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500}}>Select your Source File</Typography>
+                                        <Typography sx={{fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Please upload a CSV file containing the list of customers who have successfully completed an order on your website.</Typography>
                                     </Box>
                                     <FormControl
                                         variant="outlined"
@@ -714,8 +714,8 @@ const SourcesImport: React.FC = () => {
                                         <BorderLinearProgress variant="indeterminate" sx={{borderRadius: "6px"}} />
                                     </Box>}
                                     <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
-                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px"}}>Data Maping</Typography>
-                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Map your Field from your Source to the destination data base.</Typography>
+                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500}}>Data Maping</Typography>
+                                        <Typography sx={{fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Map your Field from your Source to the destination data base.</Typography>
                                     </Box>
                                     <Grid container alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' }, }}>
                                         <Grid item xs={5} sm={3} sx={{textAlign: "center"}}>
@@ -886,8 +886,8 @@ const SourcesImport: React.FC = () => {
                                         <BorderLinearProgress variant="indeterminate" sx={{borderRadius: "6px"}} />
                                     </Box>}
                                     <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
-                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px"}}>Select your Domain</Typography>
-                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Please Select your domain.</Typography>
+                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500}}>Select your Domain</Typography>
+                                        <Typography sx={{fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Please Select your domain.</Typography>
                                     </Box>
                                     <FormControl
                                         variant="outlined"
@@ -907,7 +907,7 @@ const SourcesImport: React.FC = () => {
                                                 Select domain
                                             </MenuItem>
                                             {domains.map((item: DomainsLeads, index) => (
-                                                <MenuItem key={index} value={item.name}>{item.name}</MenuItem>
+                                                <MenuItem sx={{fontfamily: "Nunito Sans", "fontWeight": 600, fontSize: "14px"}} key={index} value={item.name}>{item.name}</MenuItem>
                                             ))}
                                         </Select>
                                     </FormControl>
@@ -938,7 +938,7 @@ const SourcesImport: React.FC = () => {
                                     {!pixelNotInstalled && 
                                         <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
                                             <Typography sx={{fontFamily: "Roboto", fontSize: "14px", color: "rgba(32, 33, 36, 1)"}}>Total Leads</Typography> 
-                                            <Typography sx={{fontFamily: "Nunino Sans", fontWeight: 600, color: "rgba(32, 33, 36, 1)"}}>{totalLeads}</Typography>
+                                            <Typography sx={{fontFamily: "Nunino Sans", fontWeight: 600, fontSize: "16px", color: "rgba(32, 33, 36, 1)"}}>{totalLeads}</Typography>
                                         </Box>
                                     }
                                 </Box>
@@ -947,8 +947,8 @@ const SourcesImport: React.FC = () => {
                             { sourceMethod === 2 && !pixelNotInstalled && 
                                 <Box sx={{display: "flex", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
                                     <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
-                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px"}}>Choose your data source</Typography>
-                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Please Select your event type.</Typography>
+                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500}}>Choose your data source</Typography>
+                                        <Typography sx={{fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Please Select your event type.</Typography>
                                     </Box>
                                     <Box sx={{display: "flex",  gap: 2, "@media (max-width: 420px)": { display: "grid", gridTemplateColumns: "1fr" }}}>
                                         <Button
@@ -1042,7 +1042,7 @@ const SourcesImport: React.FC = () => {
                                     </Box>
                                     <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
                                         <Typography sx={{fontFamily: "Roboto", fontSize: "14px", color: "rgba(32, 33, 36, 1)"}}>Matched Leads</Typography> 
-                                        <Typography sx={{fontFamily: "Nunino Sans", fontWeight: 600, color: "rgba(32, 33, 36, 1)"}}>{matchedLeads}</Typography>
+                                        <Typography sx={{fontFamily: "Nunino Sans", fontWeight: 600, fontSize: "16px", color: "rgba(32, 33, 36, 1)"}}>{matchedLeads}</Typography>
                                     </Box>
                                 </Box>
                             }
@@ -1050,7 +1050,7 @@ const SourcesImport: React.FC = () => {
                             
                             <Box sx={{display: sourceMethod !== 0 && file || selectedDomain !== "" && eventType.length > 0 && !pixelNotInstalled && matchedLeads > 0 ? "flex" : "none", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
                                 <Box sx={{display: "flex", alignItems: "center", gap: 2, "@media (max-width: 400px)": { justifyContent: "space-between" },}}>
-                                    <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px"}}>Create Name</Typography>
+                                    <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500}}>Create Name</Typography>
                                     <TextField
                                         id="outlined"
                                         label="Name"
