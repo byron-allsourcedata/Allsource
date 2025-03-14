@@ -945,113 +945,112 @@ const SourcesImport: React.FC = () => {
                                     }
                                 </Box>
                             }
-
-                            { sourceMethod === 2 && !pixelNotInstalled && selectedDomainId && 
-                                <Box sx={{display: "flex", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
-                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
-                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500}}>Choose your data source</Typography>
-                                        <Typography sx={{fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Please Select your event type.</Typography>
-                                    </Box>
-                                    <Box sx={{display: "flex",  gap: 2, "@media (max-width: 420px)": { display: "grid", gridTemplateColumns: "1fr" }}}>
-                                        <Button
-                                            variant="outlined"
-                                            sx={{
-                                                fontFamily: "Nunito Sans",
-                                                border: "1px solid rgba(208, 213, 221, 1)",
-                                                borderRadius: "4px",
-                                                color: "rgba(32, 33, 36, 1)",
-                                                textTransform: "none",
-                                                fontSize: "14px",
-                                                padding: "8px 12px",
-                                                backgroundColor: eventType.includes(1) ? "rgba(246, 248, 250, 1)" : "rgba(255, 255, 255, 1)",
-                                                borderColor: eventType.includes(1)? "rgba(117, 168, 218, 1)" : "rgba(208, 213, 221, 1)",
-                                                ":hover": {
-                                                    borderColor: "rgba(208, 213, 221, 1)",
-                                                    backgroundColor: "rgba(236, 238, 241, 1)"
-                                                },
-                                            }}
-                                            onClick={() => {
-                                                toggleEventType(1)
-                                            }}
-                                            >
-                                            Visitor
-                                        </Button>
-                                        <Button
-                                            variant="outlined"
-                                            sx={{
-                                                fontFamily: "Nunito Sans",
-                                                border: "1px solid rgba(208, 213, 221, 1)",
-                                                borderRadius: "4px",
-                                                color: "rgba(32, 33, 36, 1)",
-                                                textTransform: "none",
-                                                fontSize: "14px",
-                                                padding: "8px 12px",
-                                                backgroundColor: eventType.includes(2) ? "rgba(246, 248, 250, 1)" : "rgba(255, 255, 255, 1)",
-                                                borderColor: eventType.includes(2)? "rgba(117, 168, 218, 1)" : "rgba(208, 213, 221, 1)",
-                                                ":hover": {
-                                                    borderColor: "rgba(208, 213, 221, 1)",
-                                                    backgroundColor: "rgba(236, 238, 241, 1)"
-                                                },
-                                            }}
-                                            onClick={() => {
-                                                toggleEventType(2)
-                                            }}
-                                            >
-                                                View Product
-                                        </Button>
-                                        <Button
-                                            variant="outlined"
-                                            sx={{
-                                                fontFamily: "Nunito Sans",
-                                                border: "1px solid rgba(208, 213, 221, 1)",
-                                                borderRadius: "4px",
-                                                color: "rgba(32, 33, 36, 1)",
-                                                textTransform: "none",
-                                                fontSize: "14px",
-                                                padding: "8px 12px",
-                                                backgroundColor: eventType.includes(3) ? "rgba(246, 248, 250, 1)" : "rgba(255, 255, 255, 1)",
-                                                borderColor: eventType.includes(3)? "rgba(117, 168, 218, 1)" : "rgba(208, 213, 221, 1)",
-                                                ":hover": {
-                                                        borderColor: "rgba(208, 213, 221, 1)",
-                                                        backgroundColor: "rgba(236, 238, 241, 1)"
-                                                },
-                                            }}
-                                            onClick={() => {
-                                                toggleEventType(3)
-                                            }}
-                                            >
-                                                Abandoned Cart
-                                        </Button>
-                                        <Button
-                                            variant="outlined"
-                                            sx={{
-                                                fontFamily: "Nunito Sans",
-                                                border: "1px solid rgba(208, 213, 221, 1)",
-                                                borderRadius: "4px",
-                                                color: "rgba(32, 33, 36, 1)",
-                                                textTransform: "none",
-                                                fontSize: "14px",
-                                                padding: "8px 12px",
-                                                backgroundColor: eventType.includes(4) ? "rgba(246, 248, 250, 1)" : "rgba(255, 255, 255, 1)",
-                                                borderColor: eventType.includes(4)? "rgba(117, 168, 218, 1)" : "rgba(208, 213, 221, 1)",
-                                                ":hover": {
-                                                    borderColor: "rgba(208, 213, 221, 1)",
-                                                    backgroundColor: "rgba(236, 238, 241, 1)"
-                                                },
-                                            }}
-                                            onClick={() => {
-                                                toggleEventType(4)
-                                            }}
-                                            >
-                                                Converted Sales
-                                        </Button>
-                                    </Box>
-                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
-                                        <Typography sx={{fontFamily: "Roboto", fontSize: "14px", color: "rgba(32, 33, 36, 1)"}}>Matched Leads</Typography> 
-                                        <Typography className='second-sub-title' sx={{fontFamily: "Nunino Sans", fontWeight: 600, fontSize: "16px", color: "rgba(32, 33, 36, 1)"}}>{matchedLeads}</Typography>
-                                    </Box>
+                            {/* { sourceMethod === 2 && !pixelNotInstalled && selectedDomainId &&  */}
+                            <Box sx={{display: sourceMethod === 2 && !pixelNotInstalled && selectedDomainId ? "flex" : "none", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
+                                <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
+                                    <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500}}>Choose your data source</Typography>
+                                    <Typography sx={{fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Please Select your event type.</Typography>
                                 </Box>
-                            }
+                                <Box sx={{display: "flex",  gap: 2, "@media (max-width: 420px)": { display: "grid", gridTemplateColumns: "1fr" }}}>
+                                    <Button
+                                        variant="outlined"
+                                        sx={{
+                                            fontFamily: "Nunito Sans",
+                                            border: "1px solid rgba(208, 213, 221, 1)",
+                                            borderRadius: "4px",
+                                            color: "rgba(32, 33, 36, 1)",
+                                            textTransform: "none",
+                                            fontSize: "14px",
+                                            padding: "8px 12px",
+                                            backgroundColor: eventType.includes(1) ? "rgba(246, 248, 250, 1)" : "rgba(255, 255, 255, 1)",
+                                            borderColor: eventType.includes(1)? "rgba(117, 168, 218, 1)" : "rgba(208, 213, 221, 1)",
+                                            ":hover": {
+                                                borderColor: "rgba(208, 213, 221, 1)",
+                                                backgroundColor: "rgba(236, 238, 241, 1)"
+                                            },
+                                        }}
+                                        onClick={() => {
+                                            toggleEventType(1)
+                                        }}
+                                        >
+                                        Visitor
+                                    </Button>
+                                    <Button
+                                        variant="outlined"
+                                        sx={{
+                                            fontFamily: "Nunito Sans",
+                                            border: "1px solid rgba(208, 213, 221, 1)",
+                                            borderRadius: "4px",
+                                            color: "rgba(32, 33, 36, 1)",
+                                            textTransform: "none",
+                                            fontSize: "14px",
+                                            padding: "8px 12px",
+                                            backgroundColor: eventType.includes(2) ? "rgba(246, 248, 250, 1)" : "rgba(255, 255, 255, 1)",
+                                            borderColor: eventType.includes(2)? "rgba(117, 168, 218, 1)" : "rgba(208, 213, 221, 1)",
+                                            ":hover": {
+                                                borderColor: "rgba(208, 213, 221, 1)",
+                                                backgroundColor: "rgba(236, 238, 241, 1)"
+                                            },
+                                        }}
+                                        onClick={() => {
+                                            toggleEventType(2)
+                                        }}
+                                        >
+                                            View Product
+                                    </Button>
+                                    <Button
+                                        variant="outlined"
+                                        sx={{
+                                            fontFamily: "Nunito Sans",
+                                            border: "1px solid rgba(208, 213, 221, 1)",
+                                            borderRadius: "4px",
+                                            color: "rgba(32, 33, 36, 1)",
+                                            textTransform: "none",
+                                            fontSize: "14px",
+                                            padding: "8px 12px",
+                                            backgroundColor: eventType.includes(3) ? "rgba(246, 248, 250, 1)" : "rgba(255, 255, 255, 1)",
+                                            borderColor: eventType.includes(3)? "rgba(117, 168, 218, 1)" : "rgba(208, 213, 221, 1)",
+                                            ":hover": {
+                                                    borderColor: "rgba(208, 213, 221, 1)",
+                                                    backgroundColor: "rgba(236, 238, 241, 1)"
+                                            },
+                                        }}
+                                        onClick={() => {
+                                            toggleEventType(3)
+                                        }}
+                                        >
+                                            Abandoned Cart
+                                    </Button>
+                                    <Button
+                                        variant="outlined"
+                                        sx={{
+                                            fontFamily: "Nunito Sans",
+                                            border: "1px solid rgba(208, 213, 221, 1)",
+                                            borderRadius: "4px",
+                                            color: "rgba(32, 33, 36, 1)",
+                                            textTransform: "none",
+                                            fontSize: "14px",
+                                            padding: "8px 12px",
+                                            backgroundColor: eventType.includes(4) ? "rgba(246, 248, 250, 1)" : "rgba(255, 255, 255, 1)",
+                                            borderColor: eventType.includes(4)? "rgba(117, 168, 218, 1)" : "rgba(208, 213, 221, 1)",
+                                            ":hover": {
+                                                borderColor: "rgba(208, 213, 221, 1)",
+                                                backgroundColor: "rgba(236, 238, 241, 1)"
+                                            },
+                                        }}
+                                        onClick={() => {
+                                            toggleEventType(4)
+                                        }}
+                                        >
+                                            Converted Sales
+                                    </Button>
+                                </Box>
+                                <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
+                                    <Typography sx={{fontFamily: "Roboto", fontSize: "14px", color: "rgba(32, 33, 36, 1)"}}>Matched Leads</Typography> 
+                                    <Typography className='second-sub-title' sx={{fontFamily: "Nunino Sans", fontWeight: 600, fontSize: "16px", color: "rgba(32, 33, 36, 1)"}}>{matchedLeads}</Typography>
+                                </Box>
+                            </Box>
+                            {/* } */}
                             
                             <Box sx={{display: sourceMethod !== 0 && file || selectedDomain !== "" && eventType.length > 0 && !pixelNotInstalled && matchedLeads > 0 ? "flex" : "none", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
                                 <Box sx={{display: "flex", alignItems: "center", gap: 2, "@media (max-width: 400px)": { justifyContent: "space-between" },}}>
