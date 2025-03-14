@@ -1,5 +1,7 @@
 import os
 import json
+from datetime import datetime
+
 from openai import OpenAI
 import logging
 from typing import List, Optional
@@ -24,24 +26,35 @@ class AudienceSourceService:
         }
 
     def get_sources(
-            self, 
-            user: User, 
-            page: int, 
-            per_page: int, 
-            sort_by: Optional[str] = None, 
-            sort_order: Optional[str] = None
-        ) -> SourcesObjectResponse:
+            self,
+            user: User,
+            page: int,
+            per_page: int,
+            sort_by: Optional[str] = None,
+            sort_order: Optional[str] = None,
+            name: Optional[str] = None,
+            status: Optional[str] = None,
+            type_customer: Optional[str] = None,
+            domain_id: Optional[int] = None,
+            created_date_start: Optional[datetime] = None,
+            created_date_end: Optional[datetime] = None
+    ) -> SourcesObjectResponse:
         sources, count = self.audience_sources_persistence.get_sources(
             user_id=user.get("id"),
             page=page,
             per_page=per_page,
             sort_by=sort_by,
-            sort_order=sort_order
+            sort_order=sort_order,
+            name=name,
+            status=status,
+            type_customer=type_customer,
+            domain_id=domain_id,
+            created_date_start=created_date_start,
+            created_date_end=created_date_end
         )
 
         source_list = []
         for source in sources:
-
             source_list.append({
                 'id': source[0],
                 'name': source[1],
@@ -57,7 +70,6 @@ class AudienceSourceService:
             })
 
         return source_list, count
-
 
     def substitution_headings(self, source_type: str, headers: List[str]) -> Optional[List[str]]:
         default_headings = self.headings_map.get(source_type)
