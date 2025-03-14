@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef,Suspense } from 'react';
+import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText, LinearProgress, Chip, Tooltip } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -99,37 +99,44 @@ const Sources: React.FC = () => {
         });
     }, [orderBy, order, page, rowsPerPage, selectedFilters]);
 
-    // useEffect(() => {
-    //     if (data.length > 0 && hasUnmatchedRecords) {
-    //         const interval = setInterval(fetchData, 5000);
-      
-    //         return () => clearInterval(interval);
-    //     }
-    //   }, [hasUnmatchedRecords]);
-      
-
-    const fetchData = async () => {
-        try {
-            const idsToFetch = data
-                .filter(item => item.matched_records === 0 && item.matched_records_status === "pending")
-                .map(item => item.id);
-
-            const response = await axiosInstance.post('/audience-sources/get-processing-sources', {
-                sources_ids: idsToFetch,
-            });
-
-            const updatedData = data.map(item => {
-                const updatedItem = response.data.find(
-                    (record: any) => record.id === item.id
-                );
-                return updatedItem ? { ...item, ...updatedItem } : item;
-            });
-
-            setData(updatedData);
-        } catch (error) {
-            console.error('Failed to fetch data:', error);
+    const fetchSourcesMemoized = useCallback(() => {
+        fetchSources({
+            sortBy: orderBy,
+            sortOrder: order,
+            page,
+            rowsPerPage,
+        });
+    }, [orderBy, order, page, rowsPerPage]);
+    
+    useEffect(() => {
+        console.log("longpol");
+    
+        if (!intervalRef.current) {
+            console.log("longpol started");
+            intervalRef.current = setInterval(() => {
+                const hasPending = data.some(item => item.matched_records_status === "pending");
+    
+                if (hasPending) {
+                    console.log("Fetching due to pending records");
+                    fetchSourcesMemoized();
+                } else {
+                    console.log("No pending records, stopping interval");
+                    if (intervalRef.current) {
+                        clearInterval(intervalRef.current);
+                        intervalRef.current = null;
+                    }
+                }
+            }, 2000);
         }
-    };
+    
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+                console.log("interval cleared");
+            }
+        };
+    }, [data, fetchSourcesMemoized]);
 
     const fetchSources = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
         try {
@@ -200,11 +207,6 @@ const Sources: React.FC = () => {
     }
 
     const isOpenFullName = Boolean(anchorElFullName);
-
-    const handleOpenPopoverFullName = (event: React.MouseEvent<HTMLElement>, industry: string) => {
-        setSelectedName(industry);
-        setAnchorElFullName(event.currentTarget);
-    };
 
     const handleClosePopoverFullName = () => {
         setAnchorElFullName(null);
