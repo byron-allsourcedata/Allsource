@@ -17,13 +17,13 @@ class OauthShopify(Enum):
     NON_SHOPIFY_ACCOUNT = 'NON_SHOPIFY_ACCOUNT'
 
 class TypeOfCustomer(Enum):
-    CUSTOMER_CONVERSIONS = 'customer conversions'
-    LEAD_FAILURES = 'lead failures'
-    INTENT = 'intent'
+    CUSTOMER_CONVERSIONS = 'customer_conversions'
+    FAILED_LEADS = 'failed_leads'
+    INTEREST = 'interest'
     VISITOR = 'visitor'
-    VIEW_PRODUCT = 'view product'
-    ABANDONED_CART = 'abandoned cart'
-    CONVERTED_SALES = 'converted sales'
+    VIEW_PRODUCT = 'view_product'
+    ABANDONED_CART = 'abandoned_cart'
+    CONVERTED_SALES = 'converted_sales'
 
 class TypeOfSourceOrigin(Enum):
     CSV = 'csv'
