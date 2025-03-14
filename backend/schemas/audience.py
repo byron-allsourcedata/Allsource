@@ -10,11 +10,15 @@ class AudienceRequest(BaseModel):
     audience_threshold: int
     
 class HeadingSubstitutionRequest(BaseModel):
+    source_type: str
     headings: List[str]
 
 class Row(BaseModel):
     type: str
     value: str
+
+class SourceIDs(BaseModel):
+    sources_ids: List[str]
 
 class NewSource(BaseModel):
     source_type: str

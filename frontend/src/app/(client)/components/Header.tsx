@@ -16,6 +16,7 @@ import QuestionMarkOutlinedIcon from '@mui/icons-material/QuestionMarkOutlined';
 import PersonIcon from '@mui/icons-material/Person';
 import { fetchUserData } from "@/services/meService";
 import CustomNotification from "@/components/CustomNotification";
+import { usePathname } from 'next/navigation';
 
 const headerStyles = {
   headers: {
@@ -50,6 +51,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ NewRequestNotification, NotificationData, onDismissNotification }) => {
+  const pathname = usePathname()
   const [hasNotification, setHasNotification] = useState(NewRequestNotification);
   const router = useRouter();
   const { newNotification } = useSSE();
@@ -186,7 +188,9 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification, NotificationDat
               Return to main
             </Button>
           )}
-          <DomainButton />
+          <>
+            {!pathname.includes('sources') && !pathname.includes('lookalikes') && <DomainButton />}
+          </>
         </Box>
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <TrialStatus />

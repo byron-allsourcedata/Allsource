@@ -35,20 +35,23 @@ class AudienceSourcesPersistence:
                 AudienceSource.total_records,
                 AudienceSource.matched_records,
                 AudienceSource.matched_records_status,
-
             )
                 .join(Users, Users.id == AudienceSource.created_by_user_id)
                 .filter(AudienceSource.user_id == user_id)
-                .order_by(AudienceSource.created_at.desc())
         )
 
         sort_options = {
-            'total_records': AudienceSource.total_records,
+            'number_of_customers': AudienceSource.total_records,
+            'created_date': AudienceSource.created_at,
             'matched_records': AudienceSource.matched_records,
         }
         if sort_by in sort_options:
             sort_column = sort_options[sort_by]
-            query = query.order_by(asc(sort_column) if sort_order == 'asc' else desc(sort_column))
+            query = query.order_by(
+                asc(sort_column) if sort_order == 'asc' else desc(sort_column),
+            )
+        else:
+            query = query.order_by(AudienceSource.created_at.desc()) 
 
 
         offset = (page - 1) * per_page
@@ -80,3 +83,9 @@ class AudienceSourcesPersistence:
         ).delete()
         self.db.commit()
         return deleted_count
+    
+    
+    def get_processing_sources(self, sources_ids, user_id):
+        processing_sources = self.db.query(AudienceSource).filter(
+            AudienceSource.user_id == user_id, AudienceSource.id.in_(sources_ids))
+        return processing_sources

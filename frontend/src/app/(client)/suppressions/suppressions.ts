@@ -4,10 +4,10 @@ export const suppressionsStyle: { [key: string]: SxProps<Theme> } = {
     mainContent: {
         display:'flex',
         flexDirection: 'column',
+        position: 'relative',
         width: '100%',
         padding: 0,
         margin: 0,
-        paddingTop: '0.75rem',
         alignItems: 'center',
         justifyContent: 'center',
         '@media (max-width: 440px)': {

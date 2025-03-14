@@ -617,7 +617,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
   const integratedServices = integrationsCredentials.map(cred => cred.service_name);
 
   return (
-    <Box sx={{ width: '100%', flexGrow: 1, height: 'calc(100vh - 7.75rem)', overflow: 'auto', pt: 2, '@media (max-width: 600px)': { pr: 2, pb: 4, height: 'calc(100vh - 11.25rem)', pt: 2 } }}>
+    <Box sx={{ width: '100%', flexGrow: 1, overflow: 'auto', pt: 2, '@media (max-width: 600px)': { pr: 2, pb: 4, height: 'calc(100vh - 11.25rem)', pt: 2 } }}>
       {isLoading && <CustomizedProgressBar />}
       <UpgradePlanPopup open={upgradePlanPopup} limitName={'domain'} handleClose={() => setUpgradePlanPopup(false)} />
       <Box sx={{ overflowX: 'hidden' }}>
@@ -857,7 +857,7 @@ const PixelManagment = () => {
     setValue(newValue);
   };
   return (
-    <Box sx={{ height: 'calc(100vh - 11rem)', overflow: 'auto', width: '100%', pr: '12px', }}>
+    <Box sx={{ flexGrow: 1, overflow: 'auto', width: '100%', pr: '12px', }}>
       <TabContext value={value}>
         <TabList
           centered
@@ -1084,7 +1084,7 @@ const Integrations = () => {
               </Box>
             </Box>
 
-            <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', width: '90%', pr: '20%', alignItems: 'center', "@media (max-width: 900px)": { pr: 0 }, "@media (max-width: 600px)": { width: '97%', pr: '0' } }}>
+            <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', width: '100%', pr: '10%', alignItems: 'center', "@media (max-width: 900px)": { pr: 0 }, "@media (max-width: 600px)": { width: '97%', pr: '0' } }}>
               {status === 'PIXEL_INSTALLATION_NEEDED' ? '' : (
                 <TabList
                   centered

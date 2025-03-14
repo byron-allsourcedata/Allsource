@@ -97,7 +97,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
             sessionStorage.setItem('me', JSON.stringify(meData));
           }
           setData(data);
-          window.location.reload();
+          // window.location.reload();
         }
       }
     };

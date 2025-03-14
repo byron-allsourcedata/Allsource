@@ -29,7 +29,7 @@ body {
 
 @media (max-width: 900px) {
   .page-container {
-    overflow: hidden;
+    overflow: auto;
     max-height: 100vh;
   }
 }

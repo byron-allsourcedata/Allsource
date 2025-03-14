@@ -1,5 +1,3 @@
-import React from "react";
-
 const ThreeDotsLoader = () => {
   return (
     <div className="dots-loader">
@@ -12,6 +10,12 @@ const ThreeDotsLoader = () => {
           align-items: center;
           justify-content: center;
           gap: 4px;
+        }
+
+        @media {max-width: 600px}: {
+          .dots-loader {
+            justify-content: flex-start;
+          }
         }
 
         .dot {

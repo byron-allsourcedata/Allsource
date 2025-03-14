@@ -6,6 +6,7 @@ import functools
 import json
 import chardet
 import io
+import re
 import csv
 import boto3
 import aioboto3
@@ -101,6 +102,7 @@ async def parse_csv_file(*, data, source_id, db_session, s3_session, connection,
     email_field = email_field.strip().replace('"', '')
     total_rows = sum(1 for _ in csv_reader)
     csv_file.seek(0)
+    next(csv_reader, None)
     processed_rows = 0
 
     logging.info(f"Total row in CSV file: {total_rows}")

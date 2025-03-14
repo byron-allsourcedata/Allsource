@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from routers import subscriptions, users, company_info, pixel_installation, admin_customers, dashboard, sse_events, sources, \
     admin_partner, admin_accounts, leads, audience, calendly, integrations, settings, domains, suppressions, data_sync, referral, partners, admin_assets, admin_payouts,\
-    slack, leads_companies
+    slack, leads_companies, lookalikes
 
 
 main_router = APIRouter()
@@ -30,3 +30,4 @@ main_router.include_router(settings.router, prefix='/settings')
 main_router.include_router(domains.router, prefix='/domains', tags=['Domains'])
 main_router.include_router(referral.router, prefix='/referral')
 main_router.include_router(leads_companies.router, prefix='/company')
+main_router.include_router(lookalikes.router, prefix='/audience-lookalikes')
