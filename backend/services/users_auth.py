@@ -337,9 +337,10 @@ class UsersAuth:
                             return {'status': LoginStatus.SUCCESS}
                         else:
                             if user.stripe_payment_url:
+                                stripe_payment_url = get_stripe_payment_url(user.customer_id, user.stripe_payment_url)
                                 return {
                                     'status': LoginStatus.PAYMENT_NEEDED,
-                                    'stripe_payment_url': user.stripe_payment_url
+                                    'stripe_payment_url': stripe_payment_url
                                 }
                             else:
                                 return {'status': LoginStatus.NEED_CHOOSE_PLAN}
@@ -740,9 +741,7 @@ class UsersAuth:
 
             if shopify_status is None:
                 self._process_shopify_integration(user_object, shopify_data, shopify_access_token, shop_id)
-            
         authorization_data = self.get_user_authorization_information(user_object)
-        
         if authorization_data['status'] == LoginStatus.PAYMENT_NEEDED:
             result = {
                 'status': authorization_data['status'].value,
