@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Query, Body
 from dependencies import get_audience_sources_service, get_domain_service, check_user_authorization
 from services.audience_sources import AudienceSourceService
 from services.domains import UserDomainsService
-from schemas.audience import HeadingSubstitutionRequest, NewSource, SourcesObjectResponse, SourceResponse, SourceIDs, DomainsLeads
+from schemas.audience import HeadingSubstitutionRequest, NewSource, SourcesObjectResponse, SourceResponse, DomainsLeads
 from uuid import UUID
 from typing import Optional, List
 from datetime import datetime
@@ -91,9 +91,8 @@ def get_sample_customers_list(
                         headers={"Content-Disposition": "attachment; filename=sample-customers-list.csv"})
 
 
-@router.post("/get-processing-sources")
-def get_processing_sources(
-        data: SourceIDs,
-        user=Depends(check_user_authorization),
+@router.get("/get-processing-source", response_model=SourceResponse)
+def get_processing_source(
+        id: str = Query(...),
         sources_service: AudienceSourceService = Depends(get_audience_sources_service)):
-    return sources_service.get_processing_sources(data.sources_ids, user=user)
+    return sources_service.get_processing_source(id)

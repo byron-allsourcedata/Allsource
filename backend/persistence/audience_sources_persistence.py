@@ -117,7 +117,23 @@ class AudienceSourcesPersistence:
         return deleted_count
     
     
-    def get_processing_sources(self, sources_ids, user_id):
-        processing_sources = self.db.query(AudienceSource).filter(
-            AudienceSource.user_id == user_id, AudienceSource.id.in_(sources_ids))
-        return processing_sources
+    def get_processing_sources(self, id):
+        query = (
+            self.db.query(
+                AudienceSource.id,
+                AudienceSource.name,
+                AudienceSource.source_type,
+                AudienceSource.source_origin,
+                Users.full_name,
+                AudienceSource.created_at,
+                UserDomains.domain,
+                AudienceSource.total_records,
+                AudienceSource.matched_records,
+                AudienceSource.matched_records_status,
+                AudienceSource.processed_records,
+            )
+                .join(Users, Users.id == AudienceSource.created_by_user_id)
+                .outerjoin(UserDomains, AudienceSource.domain_id == UserDomains.id)
+                .filter(AudienceSource.id == id)
+        ).first()
+        return query

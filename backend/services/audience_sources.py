@@ -162,6 +162,18 @@ class AudienceSourceService:
     def get_sample_customers_list(self, source_type: str):
         return os.path.join(os.getcwd(), "data/sample-source-" + source_type + ".csv")
 
-    def get_processing_sources(self, sources_ids, user: User):
-        sources = self.audience_sources_persistence.get_processing_sources(sources_ids, user.get("id"))
-        return sources
+    def get_processing_source(self, id: str) -> SourceResponse:
+        source = self.audience_sources_persistence.get_processing_sources(id)
+        return {
+            'id': source[0],
+            'name': source[1],
+            'source_origin': source[2],
+            'source_type': source[3],
+            'created_at': source[5],
+            'created_by': source[4],
+            'domain': source[6],
+            'total_records': source[7],
+            'matched_records': source[8],
+            'matched_records_status': source[9],
+            'processed_records': source[10],
+            }
