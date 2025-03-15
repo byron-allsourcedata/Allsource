@@ -65,7 +65,7 @@ async def update_payment_confirmation(request: fastRequest, webhook_service: Web
                 queue_name=QUEUE_CREDITS_CHARGING,
                 message_body={
                     'customer_id': user.customer_id,
-                    'plan_id': result_update_subscription['contact_credit_price_id']
+                    'plan_id': result_update_subscription['contact_credit_plan_id']
                 }
             )
         except:
@@ -198,7 +198,7 @@ async def shopify_billing_update_webhook(request: fastRequest, webhook_service: 
                 queue_name=QUEUE_CREDITS_CHARGING,
                 message_body={
                     'customer_id': user.customer_id,
-                    'plan_id': result_update_subscription['contact_credit_price_id']
+                    'plan_id': result_update_subscription['contact_credit_plan_id']
                 }
             )
         except:
