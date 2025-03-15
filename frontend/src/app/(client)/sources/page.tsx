@@ -89,7 +89,7 @@ const Sources: React.FC = () => {
     const [selectedName, setSelectedName] = React.useState<string | null>(null);
     const isOpen = Boolean(anchorEl);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
-    const [domains, setDomains] = useState<string[]>([]);
+    
     useEffect(() => {
         fetchSources({
             sortBy: orderBy,
@@ -187,18 +187,6 @@ const Sources: React.FC = () => {
             setRowsPerPageOptions(RowsPerPageOptions);
             const selectedValue = RowsPerPageOptions.includes(rowsPerPage) ? rowsPerPage : 10;
             setRowsPerPage(selectedValue);
-
-            const uniqueDomains: string[] = Array.from(
-                new Set(
-                  source_list
-                    .map((source: { domain: string | null }) => source.domain)
-                    .filter((domain: string | null ): domain is string => typeof domain === "string")
-                )
-              );
-              
-              if (uniqueDomains.length > 0) {
-                setDomains(uniqueDomains);
-              }
         } catch {
         } finally {
             if (isFirstLoad) {
@@ -1085,7 +1073,6 @@ const Sources: React.FC = () => {
                                     <FilterPopup open={filterPopupOpen}
                                         onClose={handleFilterPopupClose}
                                         onApply={handleApplyFilters}
-                                        domains={domains}
                                     />
 
                                 </Box>

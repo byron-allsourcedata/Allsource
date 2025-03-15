@@ -56,14 +56,12 @@ interface FilterPopupProps {
   open: boolean;
   onClose: () => void;
   onApply: (filters: any) => void;
-  domains: string[];
 }
 
 const FilterPopup: React.FC<FilterPopupProps> = ({
   open,
   onClose,
   onApply,
-  domains,
 }) => {
   const [isCreatedDateOpen, setIsCreatedDateOpen] = useState(false);
 
@@ -706,6 +704,37 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
     setDateRange({ fromDate: null, toDate: null });
   };
 
+  const [domains, setDomains] = useState<string[]>([]);
+  const [hasMore, setHasMore] = useState<boolean>(false);
+  const [page, setPage] = useState<number>(1);
+  const [perPage] = useState<number>(5);
+
+  const fetchDomains = async () => {
+    try {
+      const response = await axiosInstance.get(`/audience-sources/domains?page=${page}&per_page=${perPage}`);
+      const { domains: newDomains, has_more } = response.data;
+  
+      setDomains((prevDomains) => {
+        const allDomains = [...prevDomains, ...newDomains];
+        const uniqueDomains = Array.from(new Set(allDomains));
+        return uniqueDomains;
+      });
+      setHasMore(has_more);
+    } catch (error) {
+      console.error('Error fetching domains:', error);
+    }
+  };
+  
+  useEffect(() => {
+    fetchDomains();
+  }, [page]);
+  
+  const loadMoreDomains = () => {
+    if (hasMore) {
+      setPage((prevPage) => prevPage + 1);
+    }
+  };
+
   return (
     <>
       <Backdrop open={open} sx={{ zIndex: 1200, color: "#fff" }} />
@@ -1277,48 +1306,44 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                           }}
                         >
                           {domains.map((domain) => (
-                            <FormControlLabel
-                              sx={{
-                                fontFamily:
-                                  "Nunito Sans",
-                                fontWeight: 100,
-                              }}
-                              key={domain}
-                              control={
-                                <Checkbox
-                                  checked={selectedDomains.includes(
-                                    domain
-                                  )}
-                                  onChange={() =>
-                                    handleDomainCheckboxChange(
-                                      domain
-                                    )
-                                  }
-                                  size="small"
-                                  sx={{
-                                    "&.Mui-checked":
-                                    {
-                                      color: "rgba(80, 82, 178, 1)",
-                                    },
-                                  }}
-                                />
-                              }
-                              label={
-                                <Typography
-                                  className="table-data"
-                                  sx={{
-                                    color: selectedDomains.includes(
-                                      domain
-                                    )
-                                      ? "rgba(80, 82, 178, 1) !important"
-                                      : "rgba(74, 74, 74, 1)",
-                                  }}
-                                >
-                                  {domain}
-                                </Typography>
-                              }
-                            />
-                          ))}
+        <FormControlLabel
+          sx={{
+            fontFamily: "Nunito Sans",
+            fontWeight: 100,
+          }}
+          key={domain}
+          control={
+            <Checkbox
+              checked={selectedDomains.includes(domain)}
+              onChange={() => handleDomainCheckboxChange(domain)}
+              size="small"
+              sx={{
+                "&.Mui-checked": {
+                  color: "rgba(80, 82, 178, 1)",
+                },
+              }}
+            />
+          }
+          label={
+            <Typography
+              className="table-data"
+              sx={{
+                color: selectedDomains.includes(domain)
+                  ? "rgba(80, 82, 178, 1) !important"
+                  : "rgba(74, 74, 74, 1)",
+              }}
+            >
+              {domain}
+            </Typography>
+          }
+        />
+      ))}
+
+      {hasMore && (
+        <Button onClick={loadMoreDomains} sx={{ marginTop: "10px", color: "rgba(74, 74, 74, 1)" }}>
+          Load More Domains
+        </Button>
+      )}
                         </FormGroup>
                       </Box>
                     </Collapse>

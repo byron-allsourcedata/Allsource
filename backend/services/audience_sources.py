@@ -5,7 +5,7 @@ from datetime import datetime
 from openai import OpenAI
 import logging
 from typing import List, Optional
-from schemas.audience import Row, SourcesObjectResponse, SourceResponse, NewSource
+from schemas.audience import Row, SourcesObjectResponse, SourceResponse, NewSource, DomainsSourceResponse
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
 from persistence.domains import UserDomainsPersistence
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
@@ -165,3 +165,8 @@ class AudienceSourceService:
     def get_processing_sources(self, sources_ids, user: User):
         sources = self.audience_sources_persistence.get_processing_sources(sources_ids, user.get("id"))
         return sources
+
+    def get_domains(self, user_id: int, page: int, per_page: int):
+        result, has_more = self.audience_sources_persistence.get_domains_source(user_id=user_id, page=page, per_page=per_page)
+        domains = [domain for _, domain in result]
+        return DomainsSourceResponse(domains=domains, has_more=has_more)

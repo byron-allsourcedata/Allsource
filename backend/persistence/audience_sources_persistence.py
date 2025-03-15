@@ -88,7 +88,6 @@ class AudienceSourcesPersistence:
         
         return sources, count
 
-
     def create_source(self, **creating_data) -> Optional[AudienceSource]:
         source = AudienceSource(
             user_id=creating_data.get("user_id"),
@@ -118,3 +117,25 @@ class AudienceSourcesPersistence:
         processing_sources = self.db.query(AudienceSource).filter(
             AudienceSource.user_id == user_id, AudienceSource.id.in_(sources_ids))
         return processing_sources
+
+    def get_domains_source(self, user_id: int, page: int, per_page: int):
+        total_count = (
+            self.db.query(AudienceSource)
+            .join(UserDomains, AudienceSource.domain_id == UserDomains.id)
+            .filter(AudienceSource.user_id == user_id)
+            .distinct(UserDomains.domain)
+            .count()
+        )
+
+        result = (
+            self.db.query(AudienceSource, UserDomains.domain)
+            .join(UserDomains, AudienceSource.domain_id == UserDomains.id)
+            .filter(AudienceSource.user_id == user_id)
+            .distinct(UserDomains.domain)
+            .offset((page - 1) * per_page)
+            .limit(per_page)
+            .all()
+        )
+
+        has_more = (page * per_page) < total_count
+        return result, has_more

@@ -3,7 +3,8 @@ from fastapi import APIRouter, Depends, Query, Body
 from dependencies import get_audience_sources_service, get_domain_service, check_user_authorization
 from services.audience_sources import AudienceSourceService
 from services.domains import UserDomainsService
-from schemas.audience import HeadingSubstitutionRequest, NewSource, SourcesObjectResponse, SourceResponse, SourceIDs, DomainsLeads
+from schemas.audience import HeadingSubstitutionRequest, NewSource, SourcesObjectResponse, SourceResponse, SourceIDs, \
+    DomainsLeads, DomainsSourceResponse
 from uuid import UUID
 from typing import Optional, List
 from datetime import datetime
@@ -97,3 +98,13 @@ def get_processing_sources(
         user=Depends(check_user_authorization),
         sources_service: AudienceSourceService = Depends(get_audience_sources_service)):
     return sources_service.get_processing_sources(data.sources_ids, user=user)
+
+
+@router.get("/domains", response_model=DomainsSourceResponse)
+def get_domains(
+        user=Depends(check_user_authorization),
+        page: int = Query(1, alias="page", ge=1, description="Page number"),
+        per_page: int = Query(10, alias="per_page", ge=1, le=500, description="Items per page"),
+        sources_service: AudienceSourceService = Depends(get_audience_sources_service),
+):
+    return sources_service.get_domains(user_id=user.get("id"), page=page, per_page=per_page)
