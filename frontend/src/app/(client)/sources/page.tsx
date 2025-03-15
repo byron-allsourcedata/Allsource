@@ -89,7 +89,7 @@ const Sources: React.FC = () => {
     const [selectedName, setSelectedName] = React.useState<string | null>(null);
     const isOpen = Boolean(anchorEl);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
+    const [domains, setDomains] = useState<string[]>([]);
     useEffect(() => {
         fetchSources({
             sortBy: orderBy,
@@ -148,15 +148,15 @@ const Sources: React.FC = () => {
                 url += `&created_date_start=${filters.from_date || ''}&created_date_end=${filters.to_date || ''}`;
             }
             if (filters.selectedSource?.length > 0) {
-                url += `&source=${filters.selectedSource.map((source: string) => source.toLowerCase()).join(',')}`;
+                url += `&source_origin=${filters.selectedSource.map((source: string) => source.toLowerCase()).join(',')}`;
             }
             if (filters.selectedTypes?.length > 0) {
-                url += `&type_customer=${filters.selectedTypes
+                url += `&source_type=${filters.selectedTypes
                     .map((type: string) => type.toLowerCase().replace(/\s+/g, '_'))
                     .join(',')}`;
             }
             if (filters.selectedDomains?.length > 0) {
-                url += `&domain_id=${filters.selectedDomains.join(',')}`;
+                url += `&domain_name=${filters.selectedDomains.join(',')}`;
             }
             if (filters.searchQuery) {
                 url += `&name=${filters.searchQuery}`;
@@ -188,6 +188,17 @@ const Sources: React.FC = () => {
             const selectedValue = RowsPerPageOptions.includes(rowsPerPage) ? rowsPerPage : 10;
             setRowsPerPage(selectedValue);
 
+            const uniqueDomains: string[] = Array.from(
+                new Set(
+                  source_list
+                    .map((source: { domain: string | null }) => source.domain)
+                    .filter((domain: string | null ): domain is string => typeof domain === "string")
+                )
+              );
+              
+              if (uniqueDomains.length > 0) {
+                setDomains(uniqueDomains);
+              }
         } catch {
         } finally {
             if (isFirstLoad) {
@@ -332,25 +343,24 @@ const Sources: React.FC = () => {
     };
 
     const handleDeleteFilter = (filterToDelete: { label: string; value: string }) => {
-        const updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
+        let updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
         setSelectedFilters(updatedFilters);
-
+    
+        let filters = JSON.parse(sessionStorage.getItem('filtersBySource') || '{}');
+    
         const deleteDate = (filters: FilterParams) => {
             filters.createdDate = [];
             filters.from_date = null;
-            setSelectedDates({ start: null, end: null });
             filters.to_date = null;
-            setSelectedDates({ start: null, end: null });
             filters.dateRange = { fromDate: null, toDate: null };
-        }
-
-        const filters = JSON.parse(sessionStorage.getItem('filtersBySource') || '{}');
-
+            setSelectedDates({ start: null, end: null });
+        };
+    
         switch (filterToDelete.label) {
             case 'From Date':
-                deleteDate(filters);
-                break;
             case 'To Date':
+            case 'Created Date':
+            case 'Date Range':
                 deleteDate(filters);
                 break;
             case 'Search':
@@ -365,16 +375,10 @@ const Sources: React.FC = () => {
             case 'Domains':
                 filters.selectedDomains = [];
                 break;
-            case 'Created Date':
-                deleteDate(filters);
-                break;
-            case 'Date Range':
-                deleteDate(filters);
-                break;
             default:
                 break;
         }
-        
+    
         if (!filters.from_date && !filters.to_date) {
             filters.checkedFilters = {
                 lastWeek: false,
@@ -386,8 +390,11 @@ const Sources: React.FC = () => {
     
         sessionStorage.setItem('filtersBySource', JSON.stringify(filters));
     
-        if (filterToDelete.label === 'Dates') {
-            setSelectedDates({ start: null, end: null });
+        updatedFilters = updatedFilters.filter(f => !['From Date', 'To Date', 'Date Range'].includes(f.label));
+        setSelectedFilters(updatedFilters);
+    
+        if (updatedFilters.length === 0) {
+            setSelectedFilters([]);
         }
     
         const newFilters: FilterParams = {
@@ -405,7 +412,7 @@ const Sources: React.FC = () => {
         };
     
         handleApplyFilters(newFilters);
-    };
+    };    
 
 
     const setSourceOrigin = (sourceOrigin: string) => {
@@ -1078,6 +1085,7 @@ const Sources: React.FC = () => {
                                     <FilterPopup open={filterPopupOpen}
                                         onClose={handleFilterPopupClose}
                                         onApply={handleApplyFilters}
+                                        domains={domains}
                                     />
 
                                 </Box>

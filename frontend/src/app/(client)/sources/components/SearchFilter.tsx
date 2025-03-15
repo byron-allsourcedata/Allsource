@@ -56,12 +56,14 @@ interface FilterPopupProps {
   open: boolean;
   onClose: () => void;
   onApply: (filters: any) => void;
+  domains: string[];
 }
 
 const FilterPopup: React.FC<FilterPopupProps> = ({
   open,
   onClose,
   onApply,
+  domains,
 }) => {
   const [isCreatedDateOpen, setIsCreatedDateOpen] = useState(false);
 
@@ -766,9 +768,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
             flexGrow: 1,
             height: "100vh",
             border: "1px solid #ccc",
-            "&::-webkit-scrollbar": {
-              display: "none",
-            },
+            marginBottom: "75px", // Fix scroll
           }}
         >
           <Box
@@ -1276,7 +1276,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                             pl: 2,
                           }}
                         >
-                          {mockDomains.map((domain) => (
+                          {domains.map((domain) => (
                             <FormControlLabel
                               sx={{
                                 fontFamily:

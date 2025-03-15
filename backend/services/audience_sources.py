@@ -33,9 +33,9 @@ class AudienceSourceService:
             sort_by: Optional[str] = None,
             sort_order: Optional[str] = None,
             name: Optional[str] = None,
+            source_origin: Optional[str] = None,
             source_type: Optional[str] = None,
-            type_customer: Optional[str] = None,
-            domain_id: Optional[int] = None,
+            domain_name: Optional[str] = None,
             created_date_start: Optional[datetime] = None,
             created_date_end: Optional[datetime] = None
     ) -> SourcesObjectResponse:
@@ -46,9 +46,9 @@ class AudienceSourceService:
             sort_by=sort_by,
             sort_order=sort_order,
             name=name,
-            source=source_type,
-            type_customer=type_customer,
-            domain_id=domain_id,
+            source_origin=source_origin,
+            source_type=source_type,
+            domain_name=domain_name,
             created_date_start=created_date_start,
             created_date_end=created_date_end
         )
