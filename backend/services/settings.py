@@ -273,7 +273,7 @@ class SettingsService:
         plan_name = f"{current_plan.title} {'yearly' if current_plan.interval == 'year' else ''}".strip()
         next_billing_date = None
         total_sum = None
-        credit_price = self.plan_persistence.contact_credit_price_by_plan_id(plan_id=user_subscription.contact_credit_price_id)
+        credit_price = self.plan_persistence.contact_credit_price_by_plan_id(plan_id=user_subscription.contact_credit_plan_id)
         if subscription is None and user_subscription:
             if user_subscription.plan_start:
                 billing_cycle = f"{user_subscription.plan_start.strftime('%b %d, %Y')} to {user_subscription.plan_end.strftime('%b %d, %Y')}" 
