@@ -545,7 +545,7 @@ const Sources: React.FC = () => {
                         </Box>
 
                         <Box sx={{
-                            flex: 1, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 4.25rem)', pr: 2, overflow: 'auto', maxWidth: '100%',
+                            flex: 1, display: 'flex', flexDirection: 'column', pr: 2, overflow: 'auto', maxWidth: '100%',
                             '@media (max-width: 900px)': {
                                 pt: '2px',
                                 pb: '18px'
@@ -603,7 +603,7 @@ const Sources: React.FC = () => {
                                         })}
                                     </Box>
                                     <Box sx={{
-                                        flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px', pb: '20px',
+                                        flex: 1, display: 'flex', flexGrow:1, flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px',
                                         '@media (max-width: 900px)': {
                                             pt: '2px',
                                             pb: '18px'
@@ -659,7 +659,7 @@ const Sources: React.FC = () => {
                                                         component={Paper}
                                                         sx={{
                                                             border: '1px solid rgba(235, 235, 235, 1)',
-                                                            overflowX: 'scroll',
+                                                            overflowX: 'auto',
                                                             maxHeight: selectedFilters.length > 0
                                                                 ? (hasNotification ? '63vh' : '68vh')
                                                                 : '72vh',
@@ -842,27 +842,26 @@ const Sources: React.FC = () => {
                                                                             <TableCell
                                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                                             >
-                                                                                {row.matched_records_status === "pending" 
-                                                                                ? progress?.total
+                                                                                {progress?.total && progress?.total > 0 || row?.total_records > 0
+                                                                                ? progress?.total > 0
                                                                                     ? progress?.total.toLocaleString('en-US')
-                                                                                    : <ThreeDotsLoader />
-                                                                                : row.total_records.toLocaleString('en-US') ?? '--'}
+                                                                                    : row?.total_records?.toLocaleString('en-US')
+                                                                                :  <ThreeDotsLoader />
+                                                                                }
                                                                             </TableCell>
 
                                                                             {/* Matched Records  Column */}
                                                                             <TableCell
                                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                                             >
-                                                                                {row.matched_records_status === "pending" 
-                                                                                ? progress?.processed == progress?.total && progress?.processed
+                                                                                {(progress?.processed && progress?.processed == progress?.total) || (row?.processed_records == row?.total_records && row?.processed_records !== 0)
+                                                                                ? progress?.matched > row?.matched_records 
                                                                                     ? progress?.matched.toLocaleString('en-US')
-                                                                                    : <ProgressBar progress={progress}/>
-                                                                                : row.matched_records.toLocaleString('en-US') ?? '--'}
-                                                                                {/* {row.processed 
-                                                                                ? progress?.processed == progress?.total && progress?.processed
-                                                                                    ? progress?.matched
-                                                                                    : <ProgressBar progress={progress}/>
-                                                                                : row.matched_records ?? '--'} */}
+                                                                                    : row.matched_records.toLocaleString('en-US')
+                                                                                :  row?.processed_records !== 0 
+                                                                                    ? <ProgressBar progress={{total: row?.total_records, processed: row?.processed_records, matched: row?.matched_records}}/> 
+                                                                                    : <ProgressBar progress={progress}/> 
+                                                                                }
                                                                             </TableCell>
 
                                                                             <TableCell sx={{ ...sourcesStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>

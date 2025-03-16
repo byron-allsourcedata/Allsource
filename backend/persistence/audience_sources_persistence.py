@@ -89,10 +89,14 @@ class AudienceSourcesPersistence:
         return sources, count
 
     def create_source(self, **creating_data) -> Optional[AudienceSource]:
+        source_type = creating_data.get("source_type")
+        if not source_type:
+            source_type = 'viewed_product,visitor,abandoned_cart,converted_sales'
+
         source = AudienceSource(
             user_id=creating_data.get("user_id"),
             created_by_user_id=creating_data.get("user_id"),
-            source_type=creating_data.get("source_type"),
+            source_type=source_type,
             source_origin=creating_data.get("source_origin"),
             file_url=creating_data.get("file_url"),
             name=creating_data.get("source_name"),
@@ -102,8 +106,8 @@ class AudienceSourcesPersistence:
 
         self.db.add(source)
         self.db.commit()
+        self.db.refresh(source)
         return source
-    
 
     def delete_source(self, source_id: int) -> int:
         deleted_count = self.db.query(AudienceSource).filter(
@@ -111,12 +115,6 @@ class AudienceSourcesPersistence:
         ).delete()
         self.db.commit()
         return deleted_count
-    
-    
-    def get_processing_sources(self, sources_ids, user_id):
-        processing_sources = self.db.query(AudienceSource).filter(
-            AudienceSource.user_id == user_id, AudienceSource.id.in_(sources_ids))
-        return processing_sources
 
     def get_domains_source(self, user_id: int, page: int, per_page: int):
         total_count = (
@@ -139,3 +137,24 @@ class AudienceSourcesPersistence:
 
         has_more = (page * per_page) < total_count
         return result, has_more
+
+    def get_processing_sources(self, id):
+        query = (
+            self.db.query(
+                AudienceSource.id,
+                AudienceSource.name,
+                AudienceSource.source_type,
+                AudienceSource.source_origin,
+                Users.full_name,
+                AudienceSource.created_at,
+                UserDomains.domain,
+                AudienceSource.total_records,
+                AudienceSource.matched_records,
+                AudienceSource.matched_records_status,
+                AudienceSource.processed_records,
+            )
+                .join(Users, Users.id == AudienceSource.created_by_user_id)
+                .outerjoin(UserDomains, AudienceSource.domain_id == UserDomains.id)
+                .filter(AudienceSource.id == id)
+        ).first()
+        return query

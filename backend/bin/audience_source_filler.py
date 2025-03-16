@@ -314,10 +314,10 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, s3_s
 
         await message.ack()
 
-    except Exception as e:
+    except BaseException as e:
         db_session.rollback()
         logging.error(f"Error processing message: {e}", exc_info=True)
-        await message.nack()
+        await message.ack()
 
 def extract_key_from_url(s3_url: str):
     parsed_url = s3_url.split("amazonaws.com/", 1)

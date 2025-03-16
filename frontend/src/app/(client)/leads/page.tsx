@@ -1239,7 +1239,7 @@ const Leads: React.FC = () => {
                                             maxHeight: selectedFilters.length > 0
                                                 ? (hasNotification ? '63vh' : '68vh')
                                                 : '72vh',
-                                            overflowY: 'auto',
+                                            overflow: 'auto',
                                             "@media (max-height: 800px)": {
                                                 maxHeight: selectedFilters.length > 0
                                                     ? (hasNotification ? '53vh' : '57vh')

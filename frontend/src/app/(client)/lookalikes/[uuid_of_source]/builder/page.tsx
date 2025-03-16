@@ -9,6 +9,7 @@ import useAxios from "axios-hooks";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
+import { useRouter } from 'next/navigation';
 
 
 const audienceSize = [
@@ -57,7 +58,7 @@ interface TableData {
     created_by: string;
     number_of_customers: string;
     matched_records: string;
-  }
+}
 const tableData = [
     {
         name: "My Orders",
@@ -71,6 +72,7 @@ const tableData = [
 ];
 
 const CreateLookalikePage: React.FC = () => {
+    const router = useRouter();
     const params = useParams();
     const [selectedSize, setSelectedSize] = useState<string>("");
     const [selectedLabel, setSelectedLabel] = useState<string>("");
@@ -95,19 +97,19 @@ const CreateLookalikePage: React.FC = () => {
     };
 
     const handleSourceData = async () => {
-        try{
+        try {
             setLoading(true)
-        const response = await axiosInstance.get(`/audience-lookalikes/builder?uuid_of_source=${params.uuid_of_source}`)
-        if (response.data){
-            setSourceData(Array.isArray(response.data) ? response.data : [response.data]);
-        }
+            const response = await axiosInstance.get(`/audience-lookalikes/builder?uuid_of_source=${params.uuid_of_source}`)
+            if (response.data) {
+                setSourceData(Array.isArray(response.data) ? response.data : [response.data]);
+            }
         }
         catch {
             showErrorToast('An error occurred while uploading the sources. Please try again later.')
         }
-        finally{
+        finally {
             setLoading(false)
-        }  
+        }
 
     }
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -117,11 +119,11 @@ const CreateLookalikePage: React.FC = () => {
     const handleSliderChange = (newValue: number | number[]) => {
         const value = newValue as number[];
         setSliderValue(value);
-        
+
         const selectedRange = audienceSize.find(
             (size) => value[1] >= size.min_value && value[1] <= size.max_value
         );
-        
+
         if (selectedRange) {
             setSelectedSize(selectedRange.id);
         }
@@ -138,58 +140,58 @@ const CreateLookalikePage: React.FC = () => {
     };
 
     const handleGenerateLookalike = async () => {
-        try{
+        try {
             setLoading(true);
-            const response = await axiosInstance.post('/audience-lookalikes/builder', {uuid_of_source: params.uuid_of_source, lookalike_size: selectedLabel, lookalike_name: sourceName})
-            if (response.data.status === "SUCCESS"){
+            const response = await axiosInstance.post('/audience-lookalikes/builder', { uuid_of_source: params.uuid_of_source, lookalike_size: selectedLabel, lookalike_name: sourceName })
+            if (response.data.status === "SUCCESS") {
                 showToast('Lookalike was created successfully!');
                 setIsLookalikeCreated(true);
             }
         }
-        catch{
+        catch {
             showErrorToast('An error occurred while creating a new lookalike. Please try again later.')
         }
         finally {
-         setLoading(false)   
+            setLoading(false)
         }
     }
 
-    useEffect(()=> {
+    useEffect(() => {
         handleSourceData();
     }, [params]);
 
-    if(loading){
-        return <CustomizedProgressBar/>
+    if (loading) {
+        return <CustomizedProgressBar />
     }
 
     return (
-        <Box sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
+        <Box sx={{
+            display: 'flex',
+            flexDirection: 'column',
             height: 'calc(100vh - 4.25rem)',
-            width: "100%", 
-            overflow: 'auto', 
+            width: "100%",
+            overflow: 'auto',
         }}>
-            <Box sx={{ 
-                flex: 1, 
-                display: 'flex', 
-                flexDirection: 'column', 
-                gap: 2, 
-                pt: 1, 
-                overflow: 'auto' 
+            <Box sx={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 2,
+                pt: 1,
+                overflow: 'auto'
             }}>
                 {!isLookalikeCreated ? (
                     <>
                         <Box sx={{
-                            display: 'flex', 
-                            flexDirection: 'column', 
-                            justifyContent: 'space-between', 
-                            width: '100%', 
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between',
+                            width: '100%',
                             overflow: 'auto',
                             flex: 1,
-                            pr:2,
+                            pr: 2,
                         }}>
-                            <Box sx={{ width: "100%", pt:1, pl:1, color: "#202124" }}>
+                            <Box sx={{ width: "100%", pt: 1, pl: 1, color: "#202124" }}>
                                 {/* Title */}
                                 <Typography
                                     variant="h1"
@@ -205,7 +207,7 @@ const CreateLookalikePage: React.FC = () => {
                                 >
                                     Create Lookalike
                                 </Typography>
-        
+
                                 {/* Block with table Source */}
                                 {currentStep >= 1 && (
                                     <Box
@@ -229,7 +231,7 @@ const CreateLookalikePage: React.FC = () => {
                                         >
                                             Source
                                         </Typography>
-                                        
+
                                         {sourceData && <SourceTableContainer tableData={sourceData} />}
                                     </Box>
                                 )}
@@ -240,7 +242,7 @@ const CreateLookalikePage: React.FC = () => {
                                         selectedSize={selectedSize}
                                     />
                                 )}
-        
+
                                 {currentStep >= 2 && (
                                     <Box
                                         sx={{
@@ -385,14 +387,15 @@ const CreateLookalikePage: React.FC = () => {
                     </>
                 ) : (
                     <Box>
-                        <Box sx={{ width: "100%", padding: 3, color: "#202124" }}>
+                        <Box sx={{ width: "100%", padding: 3, pt: 1, pl: 1, color: "#202124" }}>
                             {/* Title */}
                             <Typography
                                 variant="h1"
+                                className="first-sub-title"
                                 sx={{
                                     fontFamily: "Nunito Sans",
-                                    fontWeight: 700,
-                                    fontSize: "19px",
+                                    fontWeight: 600,
+                                    fontSize: "17px !important",
                                     lineHeight: "25.92px",
                                     letterSpacing: "0%",
                                     marginBottom: 2,
@@ -401,9 +404,55 @@ const CreateLookalikePage: React.FC = () => {
                             >
                                 Lookalikes
                             </Typography>
-        
+
                             {/* Block with table Source */}
                             {sourceData && <SourceTableContainer tableData={sourceData} />}
+                            <Box sx={{ display: "flex", justifyContent: "end", gap: 2, mt: 2, alignItems: "center" }}>
+                                <Button
+                                    variant="outlined"
+                                    className='second-sub-title'
+                                    onClick={() => router.push('/lookalikes')}
+                                    sx={{
+                                        height: '40px',
+                                        borderRadius: '4px',
+                                        textTransform: 'none',
+                                        fontSize: '14px',
+                                        lineHeight: "19.6px",
+                                        fontWeight: '500',
+                                        color: '#5052B2 !important',
+                                        borderColor: '#5052B2',
+                                        '&:hover': {
+                                            backgroundColor: '#fff',
+                                            borderColor: '#5052B2',
+                                        },
+                                    }}
+                                >
+                                    All Lookalikes
+                                </Button>
+                                <Button
+                                    variant="contained"/* need chnage < on !== */
+                                    className='second-sub-title'
+                                    disabled={true}
+                                    sx={{
+                                        backgroundColor: 'rgba(80, 82, 178, 1)',
+                                        textTransform: 'none',
+                                        padding: '10px 24px',
+                                        color: '#fff !important',
+                                        ":hover": {
+                                            backgroundColor: "rgba(80, 82, 178, 1)"
+                                        },
+                                        ":active": {
+                                            backgroundColor: "rgba(80, 82, 178, 1)"
+                                        },
+                                        ":disabled": {
+                                            backgroundColor: "rgba(80, 82, 178, 1)",
+                                            opacity: 0.6,
+                                        },
+                                    }}
+                                >
+                                    Generate Smart Audience
+                                </Button>
+                            </Box>
                         </Box>
                     </Box>
                 )}

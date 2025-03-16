@@ -63,8 +63,8 @@ class PlansPersistence:
         leads_credits = plan.leads_credits
         prospect_credits = plan.prospect_credits
         members_limit = plan.members_limit
-        contact_credit_price_id = plan.contact_credit_price_id
-        return domains_limit, integrations_limit, leads_credits, prospect_credits, members_limit, contact_credit_price_id
+        contact_credit_plan_id = plan.contact_credit_plan_id
+        return domains_limit, integrations_limit, leads_credits, prospect_credits, members_limit, contact_credit_plan_id
 
     def get_free_trial_plan(self, ftd):
         trial_days = 90 if ftd == 'n' else 14

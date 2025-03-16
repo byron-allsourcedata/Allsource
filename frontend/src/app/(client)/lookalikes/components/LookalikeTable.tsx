@@ -157,7 +157,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, order
                 border: '1px solid rgba(235, 235, 235, 1)',
                 borderRadius: '4px',
                 maxHeight: '67vh',
-                overflowY: 'auto',
+                overflow: 'auto',
                 "@media (max-height: 800px)": {
                     maxHeight: '70vh',
                 },
