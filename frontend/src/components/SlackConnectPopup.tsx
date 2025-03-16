@@ -88,9 +88,10 @@ const SlackConnectPopup = ({ open, handlePopupClose, boxShadow }: SlackConnectPr
                 setLoading(false);
             }
         }
-        fetchApiKey()
-    }, [])
-
+        if (open) {
+            fetchApiKey()
+        }
+    }, [open])
 
     const handleChangeTab = (event: React.SyntheticEvent, newValue: string) => {
         setValue(newValue);
