@@ -1,6 +1,6 @@
-from sqlalchemy import Column, ForeignKey, Integer, BOOLEAN, TEXT, event
+from sqlalchemy import Column, ForeignKey, Integer, BOOLEAN, TEXT, event, Index
 from sqlalchemy.dialects.postgresql import BIGINT, TIMESTAMP, VARCHAR
-
+from models.plans import SubscriptionPlan
 from .base import Base, create_timestamps, update_timestamps
 
 
@@ -18,7 +18,7 @@ class UserSubscriptions(Base):
     plan_id = Column(BIGINT, nullable=True)
     is_trial = Column(BOOLEAN, nullable=True, default=False)
     domains_limit = Column(Integer, nullable=True)
-    contact_credit_price_id = Column(Integer, ForeignKey('subscription_plans.id'), nullable=True)
+    contact_credit_plan_id = Column(Integer, ForeignKey(SubscriptionPlan.id), nullable=True)
     members_limit = Column(Integer, nullable=True)
     integrations_limit = Column(Integer, nullable=True)
     downgrade_at = Column(TIMESTAMP(precision=7), nullable=True)
@@ -27,7 +27,10 @@ class UserSubscriptions(Base):
     price_id = Column(VARCHAR, nullable=True)
     cancel_scheduled_at = Column(TIMESTAMP(precision=7), nullable=True)
     is_avin_sended = Column(BOOLEAN, default=False, nullable=False)
-
+    
+Index('user_subscriptions_user_id_idx', UserSubscriptions.user_id)
+Index('user_subscriptions_user_id_status_idx', UserSubscriptions.user_id, UserSubscriptions.status)
+Index('user_subscriptions_contact_credit_plan_id_idx', UserSubscriptions.contact_credit_plan_id)
 
 Subscription = UserSubscriptions
 

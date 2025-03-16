@@ -523,7 +523,7 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
             result_query = session.query(
                 SubscriptionPlan, ContactCredits.price
             ).outerjoin(
-                ContactCredits, SubscriptionPlan.contact_credit_price_id == ContactCredits.id
+                ContactCredits, SubscriptionPlan.contact_credit_plan_id == ContactCredits.id
             ).filter(
                 SubscriptionPlan.id == user_subscription.plan_id
             ).first()
