@@ -40,6 +40,10 @@ class AudienceResponse(BaseModel):
     created_at: datetime
     exported_on: Optional[datetime] = None
 
+class DomainsSourceResponse(BaseModel):
+    domains: List[str]
+    has_more: bool
+
 class DomainsLeads(BaseModel):
     id: int
     name: str

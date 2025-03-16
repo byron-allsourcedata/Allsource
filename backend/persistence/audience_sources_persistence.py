@@ -29,9 +29,9 @@ class AudienceSourcesPersistence:
             sort_by: Optional[str] = None,
             sort_order: Optional[str] = None,
             name: Optional[str] = None,
-            status: Optional[str] = None,
-            type_customer: Optional[str] = None,
-            domain_id: Optional[int] = None,
+            source_origin: Optional[str] = None,
+            source_type: Optional[str] = None,
+            domain_name: Optional[str] = None,
             created_date_start: Optional[datetime] = None,
             created_date_end: Optional[datetime] = None
     ) -> Tuple[List[Row], int]:
@@ -55,15 +55,16 @@ class AudienceSourcesPersistence:
                 .filter(AudienceSource.user_id == user_id)
         )
 
-        status_list = status.split(',') if status else []
-        type_customer_list = type_customer.split(',') if type_customer else []
+        source_type_list = source_type.split(',') if source_type else []
+        source_origin_list = source_origin.split(',') if source_origin else []
+        domain_name_list = domain_name.split(',') if domain_name else []
 
         query = apply_filters(
             query,
             name=name,
-            status=status_list,
-            type_customer=type_customer_list,
-            domain_id=domain_id,
+            source_type_list=source_type_list,
+            source_origin_list=source_origin_list,
+            domain_name_list=domain_name_list,
             created_date_start=created_date_start,
             created_date_end=created_date_end
         )
@@ -80,7 +81,6 @@ class AudienceSourcesPersistence:
             )
         else:
             query = query.order_by(AudienceSource.created_at.desc()) 
-
 
         offset = (page - 1) * per_page
         sources = query.limit(per_page).offset(offset).all()
@@ -115,8 +115,29 @@ class AudienceSourcesPersistence:
         ).delete()
         self.db.commit()
         return deleted_count
-    
-    
+
+    def get_domains_source(self, user_id: int, page: int, per_page: int):
+        total_count = (
+            self.db.query(AudienceSource)
+            .join(UserDomains, AudienceSource.domain_id == UserDomains.id)
+            .filter(AudienceSource.user_id == user_id)
+            .distinct(UserDomains.domain)
+            .count()
+        )
+
+        result = (
+            self.db.query(AudienceSource, UserDomains.domain)
+            .join(UserDomains, AudienceSource.domain_id == UserDomains.id)
+            .filter(AudienceSource.user_id == user_id)
+            .distinct(UserDomains.domain)
+            .offset((page - 1) * per_page)
+            .limit(per_page)
+            .all()
+        )
+
+        has_more = (page * per_page) < total_count
+        return result, has_more
+
     def get_processing_sources(self, id):
         query = (
             self.db.query(
