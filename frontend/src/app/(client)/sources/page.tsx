@@ -550,7 +550,7 @@ const Sources: React.FC = () => {
                         </Box>
 
                         <Box sx={{
-                            flex: 1, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 4.25rem)', pr: 2, overflow: 'auto', maxWidth: '100%',
+                            flex: 1, display: 'flex', flexDirection: 'column', pr: 2, overflow: 'auto', maxWidth: '100%',
                             '@media (max-width: 900px)': {
                                 pt: '2px',
                                 pb: '18px'
@@ -608,7 +608,7 @@ const Sources: React.FC = () => {
                                         })}
                                     </Box>
                                     <Box sx={{
-                                        flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px', pb: '20px',
+                                        flex: 1, display: 'flex', flexGrow:1, flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px',
                                         '@media (max-width: 900px)': {
                                             pt: '2px',
                                             pb: '18px'
@@ -664,7 +664,7 @@ const Sources: React.FC = () => {
                                                         component={Paper}
                                                         sx={{
                                                             border: '1px solid rgba(235, 235, 235, 1)',
-                                                            overflowX: 'scroll',
+                                                            overflowX: 'auto',
                                                             maxHeight: selectedFilters.length > 0
                                                                 ? (hasNotification ? '63vh' : '68vh')
                                                                 : '72vh',
