@@ -52,6 +52,13 @@ const pixelTypes = [
   "Converted Sales",
 ];
 
+const dateTypes: Record<string, string> = {
+  today: "Today",
+  last7Days: "Last 7 days",
+  last30Days: "Last 30 days",
+  last6Months: "Last 6 months",
+}
+
 interface FilterPopupProps {
   open: boolean;
   onClose: () => void;
@@ -70,7 +77,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
     [key: string]: string[];
   }>({
     createdDate: [],
-    pageVisits: [],
   });
   const [buttonFilters, setButtonFilters] = useState<ButtonFilters>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -198,10 +204,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
       // Сброс чекбокса, если дата удалена
       if (category === "createdDate") {
         const tagMap: { [key: string]: string } = {
-          Today: "today",
-          "Last 7 days": "last7Days",
-          "Last 30 days": "last30Days",
-          "Last 6 months": "last6Months",
+          [dateTypes.today]: "today",
+          [dateTypes.last7Days]: "last7Days",
+          [dateTypes.last30Days]: "last30Days",
+          [dateTypes.last6Months]: "last6Months",
         };
 
         const filterName = tagMap[tag];
@@ -227,10 +233,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
     isChecked: boolean
   ) => {
     const tagMap: TagMap = {
-      Today: "today",
-      "Last 7 days": "last7Days",
-      "Last 30 days": "last30Days",
-      "Last 6 months": "last6Months",
+      [dateTypes.today]: "today",
+      [dateTypes.last7Days]: "last7Days",
+      [dateTypes.last30Days]: "last30Days",
+      [dateTypes.last6Months]: "last6Months",
     };
 
     const tagMapTime: TagMap = {
@@ -293,10 +299,12 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
     fromDate: Dayjs | null;
     toDate: Dayjs | null;
   }
+
   const [dateRange, setDateRange] = useState<DateRange>({
     fromDate: null,
     toDate: null,
   });
+
   const [checkedFilters, setCheckedFilters] = useState({
     today: false,
     last7Days: false,
@@ -305,6 +313,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
   });
 
   const handleDateChange = (name: string) => (newValue: any) => {
+    
     setDateRange((prevRange) => {
       const updatedRange = {
         ...prevRange,
@@ -433,7 +442,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
       selectedDomains,
       searchQuery,
       createdDate: selectedTags.createdDate,
-
+      checkedFilters,
       dateRange: {
         fromDate: dateRange.fromDate
           ? dateRange.fromDate.valueOf()
@@ -454,6 +463,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
     selectedDomains: string[];
     searchQuery: string;
     createdDate: string[];
+    checkedFilters: {today: boolean; last7Days: boolean; last30Days:boolean; last6Months: boolean};
     dateRange?:
     | { fromDate: number | null; toDate: number | null }
     | undefined;
@@ -472,29 +482,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
   const initializeFilters = () => {
     const savedFilters = loadFiltersFromSessionStorage();
     if (savedFilters) {
-      // Checking active page visit filters
-      const isPageVisitsFilterActive = Object.values(
-        savedFilters.checkedFiltersPageVisits || {}
-      ).some((value) => value === true);
-
-      if (isPageVisitsFilterActive) {
-        const pageVisitsTagMap: { [key: string]: string } = {
-          page: "1 page",
-          two_page: "2 pages",
-          three_page: "3 pages",
-          more_three: "More than 3 pages",
-        };
-
-        // Go through all filters and add a tag for each active one
-        Object.keys(savedFilters.checkedFiltersPageVisits).forEach(
-          (key) => {
-            if (savedFilters.checkedFiltersPageVisits[key]) {
-              addTag("pageVisits", pageVisitsTagMap[key]);
-            }
-          }
-        );
-      }
-
       setCheckedFilters(
         savedFilters.checkedFilters || {
           today: false,
@@ -515,11 +502,12 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
       if (isAnyFilterActive) {
         setButtonFilters(savedFilters.button);
         const tagMap: { [key: string]: string } = {
-          today: "Today",
-          last7Days: "Last 7 days",
-          last30Days: "Last 30 days",
-          last6Months: "Last 6 months",
+          today: dateTypes.today,
+          last7Days: dateTypes.last7dDys,
+          last30Days: dateTypes.last30Days,
+          last6Months: dateTypes.last6Months,
         };
+
         const activeFilter = Object.keys(
           savedFilters.checkedFilters
         ).find((key) => savedFilters.checkedFilters[key]);
@@ -589,10 +577,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
       };
 
       const tagMap: { [key: string]: string } = {
-        today: "Today",
-        last7Days: "Last 7 days",
-        last30Days: "Last 30 days",
-        last6Months: "Last 6 months",
+        today: dateTypes.today,
+        last7Days: dateTypes.last7Days,
+        last30Days: dateTypes.last30Days,
+        last6Months: dateTypes.last6Months,
       };
 
       if (previouslySelected && previouslySelected !== name) {
@@ -627,13 +615,12 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
     // Reset filter values
     setSelectedTags({
       createdDate: [],
-      pageVisits: [],
     });
     setSelectedSource([]);
     setButtonFilters(null);
     setSearchQuery("");
 
-    sessionStorage.removeItem("filters");
+    sessionStorage.removeItem("filtersBySource");
   };
 
   const fetchContacts = debounce(async (query: string) => {
@@ -669,6 +656,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
   };
 
   const getSelectedDateChip = () => {
+    
     if (dateRange.fromDate && dateRange.toDate) {
       return `${dayjs(dateRange.fromDate).format("YYYY-MM-DD")} - ${dayjs(
         dateRange.toDate
@@ -686,28 +674,33 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 
   const formatFilterLabel = (key: keyof typeof checkedFilters) => {
     const labels: Record<keyof typeof checkedFilters, string> = {
-      today: "Today",
-      last7Days: "Last 7 days",
-      last30Days: "Last 30 days",
-      last6Months: "Last 6 months",
+      today: dateTypes.today,
+      last7Days: dateTypes.last7Days,
+      last30Days: dateTypes.last30Days,
+      last6Months: dateTypes.last6Months,
     };
     return labels[key];
   };
 
   const clearDateFilter = () => {
+    setSelectedTags({
+      createdDate: [],
+    });
+
     setCheckedFilters({
       today: false,
       last7Days: false,
       last30Days: false,
       last6Months: false,
     });
+    
     setDateRange({ fromDate: null, toDate: null });
   };
 
   const [domains, setDomains] = useState<string[]>([]);
   const [hasMore, setHasMore] = useState<boolean>(false);
   const [page, setPage] = useState<number>(1);
-  const [perPage] = useState<number>(5);
+  const [perPage] = useState<number>(10);
 
   const fetchDomains = async () => {
     try {
