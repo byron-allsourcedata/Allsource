@@ -156,6 +156,13 @@ const SourcesList: React.FC = () => {
         return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
     };
 
+    const buttonClickAllSources = () => {
+        if (sessionStorage.getItem('filtersBySource')) {
+            sessionStorage.setItem('filtersBySource', JSON.stringify({}));
+        }
+        router.push("/sources")
+    }
+
     return (
         <>
             {loading && (
@@ -411,7 +418,7 @@ const SourcesList: React.FC = () => {
                             <Box sx={{display: "flex", justifyContent: "end", gap: 2, mt: 2, alignItems: "center"}}>
                                 <Button
                                     variant="outlined"
-                                    onClick={() => router.push("/sources")}
+                                    onClick={ buttonClickAllSources }
                                     sx={{
                                         height: '40px',
                                         borderRadius: '4px',
