@@ -3,7 +3,8 @@ from fastapi import APIRouter, Depends, Query, Body
 from dependencies import get_audience_sources_service, get_domain_service, check_user_authorization
 from services.audience_sources import AudienceSourceService
 from services.domains import UserDomainsService
-from schemas.audience import HeadingSubstitutionRequest, NewSource, SourcesObjectResponse, SourceResponse, SourceIDs, DomainsLeads
+from schemas.audience import HeadingSubstitutionRequest, NewSource, SourcesObjectResponse, SourceResponse, \
+    DomainsLeads, DomainsSourceResponse
 from uuid import UUID
 from typing import Optional, List
 from datetime import datetime
@@ -19,9 +20,9 @@ def get_sources(
         sort_by: str = Query(None, description="Field to sort by"),
         sort_order: str = Query(None, description="Sort order: 'asc' or 'desc'"),
         name: Optional[str] = Query(None, description="Filter by source name"),
-        status: Optional[str] = Query(None, description="Source type"),
-        type_customer: Optional[str] = Query(None, description="Type of customers"),
-        domain_id: Optional[int] = Query(None, description="Domain of customers"),
+        source_type: Optional[str] = Query(None, description="Source type"),
+        source_origin: Optional[str] = Query(None, description="Type of customers"),
+        domain_name: Optional[str] = Query(None, description="Domain of customers"),
         created_date_start: Optional[datetime] = Query(None, description="Start date of creation interval"),
         created_date_end: Optional[datetime] = Query(None, description="End date of creation interval"),
         sources_service: AudienceSourceService = Depends(get_audience_sources_service)
@@ -33,9 +34,9 @@ def get_sources(
         page=page,
         per_page=per_page,
         name=name,
-        status=status,
-        type_customer=type_customer,
-        domain_id=domain_id,
+        source_type=source_type,
+        source_origin=source_origin,
+        domain_name=domain_name,
         created_date_start=created_date_start,
         created_date_end=created_date_end,
     )
@@ -91,9 +92,18 @@ def get_sample_customers_list(
                         headers={"Content-Disposition": "attachment; filename=sample-customers-list.csv"})
 
 
-@router.post("/get-processing-sources")
-def get_processing_sources(
-        data: SourceIDs,
-        user=Depends(check_user_authorization),
+@router.get("/get-processing-source", response_model=SourceResponse)
+def get_processing_source(
+        id: str = Query(...),
         sources_service: AudienceSourceService = Depends(get_audience_sources_service)):
-    return sources_service.get_processing_sources(data.sources_ids, user=user)
+    return sources_service.get_processing_source(id)
+
+
+@router.get("/domains", response_model=DomainsSourceResponse)
+def get_domains(
+        user=Depends(check_user_authorization),
+        page: int = Query(1, alias="page", ge=1, description="Page number"),
+        per_page: int = Query(10, alias="per_page", ge=1, le=500, description="Items per page"),
+        sources_service: AudienceSourceService = Depends(get_audience_sources_service),
+):
+    return sources_service.get_domains(user_id=user.get("id"), page=page, per_page=per_page)

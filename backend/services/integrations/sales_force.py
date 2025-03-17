@@ -97,7 +97,7 @@ class SalesForceIntegrationsService:
             "Accept": "application/json"
         }
         response = self.__handle_request(method='POST', url="https://login.salesforce.com/services/oauth2/token", data=data, headers=headers)
-        return response.json()["access_token"]
+        return response.json().get("access_token")
     
     def update_lead(self, instance_url: str, access_token: str, lead_id: int, data: dict):
         url = f"{instance_url}/services/data/v59.0/sobjects/Lead/{lead_id}"
@@ -184,7 +184,13 @@ class SalesForceIntegrationsService:
         }
         
         json_data = {k: v for k, v in json_data.items() if v is not None}
-        access_token = self.get_access_token(access_token)
+        try:
+            access_token = self.get_access_token(access_token)
+            if not access_token:
+                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+        except Exception:
+            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value 
+        
         response = self.create_or_update_lead(instance_url=instance_url, access_token=access_token, data=json_data)
         
         if response.status_code == 400:

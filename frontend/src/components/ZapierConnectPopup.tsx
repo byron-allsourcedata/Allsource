@@ -84,8 +84,10 @@ const ZapierConnectPopup = ({ open, handlePopupClose, boxShadow }: ApIkeyPopup) 
                 setApiKey(response.data)
             }
         }
-        fetchApiKey()
-    }, [])
+        if (open){
+            fetchApiKey()
+        }
+    }, [open])
 
 
     const handleChangeTab = (event: React.SyntheticEvent, newValue: string) => {

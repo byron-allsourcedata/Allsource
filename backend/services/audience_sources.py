@@ -5,7 +5,7 @@ from datetime import datetime
 from openai import OpenAI
 import logging
 from typing import List, Optional
-from schemas.audience import Row, SourcesObjectResponse, SourceResponse, NewSource
+from schemas.audience import Row, SourcesObjectResponse, SourceResponse, NewSource, DomainsSourceResponse
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
 from persistence.domains import UserDomainsPersistence
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
@@ -33,9 +33,9 @@ class AudienceSourceService:
             sort_by: Optional[str] = None,
             sort_order: Optional[str] = None,
             name: Optional[str] = None,
-            status: Optional[str] = None,
-            type_customer: Optional[str] = None,
-            domain_id: Optional[int] = None,
+            source_origin: Optional[str] = None,
+            source_type: Optional[str] = None,
+            domain_name: Optional[str] = None,
             created_date_start: Optional[datetime] = None,
             created_date_end: Optional[datetime] = None
     ) -> SourcesObjectResponse:
@@ -46,9 +46,9 @@ class AudienceSourceService:
             sort_by=sort_by,
             sort_order=sort_order,
             name=name,
-            status=status,
-            type_customer=type_customer,
-            domain_id=domain_id,
+            source_origin=source_origin,
+            source_type=source_type,
+            domain_name=domain_name,
             created_date_start=created_date_start,
             created_date_end=created_date_end
         )
@@ -162,6 +162,23 @@ class AudienceSourceService:
     def get_sample_customers_list(self, source_type: str):
         return os.path.join(os.getcwd(), "data/sample-source-" + source_type + ".csv")
 
-    def get_processing_sources(self, sources_ids, user: User):
-        sources = self.audience_sources_persistence.get_processing_sources(sources_ids, user.get("id"))
-        return sources
+    def get_domains(self, user_id: int, page: int, per_page: int):
+        result, has_more = self.audience_sources_persistence.get_domains_source(user_id=user_id, page=page, per_page=per_page)
+        domains = [domain for _, domain in result]
+        return DomainsSourceResponse(domains=domains, has_more=has_more)
+
+    def get_processing_source(self, id: str) -> SourceResponse:
+        source = self.audience_sources_persistence.get_processing_sources(id)
+        return {
+            'id': source[0],
+            'name': source[1],
+            'source_origin': source[2],
+            'source_type': source[3],
+            'created_at': source[5],
+            'created_by': source[4],
+            'domain': source[6],
+            'total_records': source[7],
+            'matched_records': source[8],
+            'matched_records_status': source[9],
+            'processed_records': source[10],
+            }

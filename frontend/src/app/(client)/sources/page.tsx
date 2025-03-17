@@ -50,7 +50,7 @@ interface FilterParams {
     from_date: number | null;
     to_date: number | null;
     searchQuery: string | null;
-    selectedStatus: string[];
+    selectedSource: string[];
     selectedTypes: string[];
     selectedDomains: string[];
     createdDate: string[];
@@ -89,7 +89,7 @@ const Sources: React.FC = () => {
     const [selectedName, setSelectedName] = React.useState<string | null>(null);
     const isOpen = Boolean(anchorEl);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
+    
     useEffect(() => {
         fetchSources({
             sortBy: orderBy,
@@ -154,16 +154,16 @@ const Sources: React.FC = () => {
             if (filters.from_date || filters.to_date) {
                 url += `&created_date_start=${filters.from_date || ''}&created_date_end=${filters.to_date || ''}`;
             }
-            if (filters.selectedStatus?.length > 0) {
-                url += `&status=${filters.selectedStatus.map((status: string) => status.toLowerCase()).join(',')}`;
+            if (filters.selectedSource?.length > 0) {
+                url += `&source_origin=${filters.selectedSource.map((source: string) => source.toLowerCase()).join(',')}`;
             }
             if (filters.selectedTypes?.length > 0) {
-                url += `&type_customer=${filters.selectedTypes
+                url += `&source_type=${filters.selectedTypes
                     .map((type: string) => type.toLowerCase().replace(/\s+/g, '_'))
                     .join(',')}`;
             }
             if (filters.selectedDomains?.length > 0) {
-                url += `&domain_id=${filters.selectedDomains.join(',')}`;
+                url += `&domain_name=${filters.selectedDomains.join(',')}`;
             }
             if (filters.searchQuery) {
                 url += `&name=${filters.searchQuery}`;
@@ -194,7 +194,6 @@ const Sources: React.FC = () => {
             setRowsPerPageOptions(RowsPerPageOptions);
             const selectedValue = RowsPerPageOptions.includes(rowsPerPage) ? rowsPerPage : 10;
             setRowsPerPage(selectedValue);
-
         } catch {
         } finally {
             if (isFirstLoad) {
@@ -292,10 +291,10 @@ const Sources: React.FC = () => {
             { condition: filters.from_date, label: 'From Date', value: () => dayjs.unix(filters.from_date!).format(dateFormat) },
             { condition: filters.to_date, label: 'To Date', value: () => dayjs.unix(filters.to_date!).format(dateFormat) },
             { condition: filters.searchQuery, label: 'Search', value: filters.searchQuery! },
-            { condition: filters.selectedStatus.length > 0, label: 'Status', value: () => filters.selectedStatus.join(', ') },
-            { condition: filters.selectedTypes.length > 0, label: 'Types', value: () => filters.selectedTypes.join(', ') },
-            { condition: filters.selectedDomains.length > 0, label: 'Domains', value: () => filters.selectedDomains.join(', ') },
-            { condition: filters.createdDate.length > 0, label: 'Created Date', value: () => filters.createdDate.join(', ') },
+            { condition: filters.selectedSource?.length > 0, label: 'Source', value: () => filters.selectedSource.join(', ') },
+            { condition: filters.selectedTypes?.length > 0, label: 'Types', value: () => filters.selectedTypes.join(', ') },
+            { condition: filters.selectedDomains?.length > 0, label: 'Domains', value: () => filters.selectedDomains.join(', ') },
+            { condition: filters.createdDate?.length > 0, label: 'Created Date', value: () => filters.createdDate.join(', ') },
             {
                 condition: filters.dateRange.fromDate || filters.dateRange.toDate, label: 'Date Range', value: () => {
                     const from = dayjs.unix(filters.dateRange.fromDate!).format(dateFormat);
@@ -321,39 +320,44 @@ const Sources: React.FC = () => {
             from_date: null,
             to_date: null,
             searchQuery: null,
-            selectedStatus: [],
+            selectedSource: [],
             selectedTypes: [],
             selectedDomains: [],
             createdDate: [],
             dateRange: { fromDate: null, toDate: null },
         };
 
-        sessionStorage.setItem('filtersBySource', JSON.stringify({}));
+        sessionStorage.setItem('filtersBySource', JSON.stringify(filters));
 
         handleApplyFilters(filters);
     };
 
-
     const handleDeleteFilter = (filterToDelete: { label: string; value: string }) => {
-        const updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
+        let updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
         setSelectedFilters(updatedFilters);
-        
-        const filters = JSON.parse(sessionStorage.getItem('filters') || '{}');
+    
+        let filters = JSON.parse(sessionStorage.getItem('filtersBySource') || '{}');
+    
+        const deleteDate = (filters: FilterParams) => {
+            filters.createdDate = [];
+            filters.from_date = null;
+            filters.to_date = null;
+            filters.dateRange = { fromDate: null, toDate: null };
+            setSelectedDates({ start: null, end: null });
+        };
     
         switch (filterToDelete.label) {
             case 'From Date':
-                filters.from_date = null;
-                setSelectedDates({ start: null, end: null });
-                break;
             case 'To Date':
-                filters.to_date = null;
-                setSelectedDates({ start: null, end: null });
+            case 'Created Date':
+            case 'Date Range':
+                deleteDate(filters);
                 break;
             case 'Search':
                 filters.searchQuery = '';
                 break;
-            case 'Status':
-                filters.selectedStatus = [];
+            case 'Source':
+                filters.selectedSource = [];
                 break;
             case 'Types':
                 filters.selectedTypes = [];
@@ -361,21 +365,10 @@ const Sources: React.FC = () => {
             case 'Domains':
                 filters.selectedDomains = [];
                 break;
-            case 'Created Date':
-                filters.createdDate = [];
-                filters.from_date = null;
-                setSelectedDates({ start: null, end: null });
-                filters.to_date = null;
-                setSelectedDates({ start: null, end: null });
-                filters.dateRange = { fromDate: null, toDate: null };
-                break;
-            case 'Date Range':
-                filters.dateRange = { fromDate: null, toDate: null };
-                break;
             default:
                 break;
         }
-        
+    
         if (!filters.from_date && !filters.to_date) {
             filters.checkedFilters = {
                 lastWeek: false,
@@ -385,17 +378,20 @@ const Sources: React.FC = () => {
             };
         }
     
-        sessionStorage.setItem('filters', JSON.stringify(filters));
+        sessionStorage.setItem('filtersBySource', JSON.stringify(filters));
     
-        if (filterToDelete.label === 'Dates') {
-            setSelectedDates({ start: null, end: null });
+        updatedFilters = updatedFilters.filter(f => !['From Date', 'To Date', 'Date Range'].includes(f.label));
+        setSelectedFilters(updatedFilters);
+    
+        if (updatedFilters.length === 0) {
+            setSelectedFilters([]);
         }
     
-        // Обновляем фильтры для применения
         const newFilters: FilterParams = {
             from_date: updatedFilters.find(f => f.label === 'From Date') ? dayjs(updatedFilters.find(f => f.label === 'From Date')!.value).unix() : null,
             to_date: updatedFilters.find(f => f.label === 'To Date') ? dayjs(updatedFilters.find(f => f.label === 'To Date')!.value).unix() : null,
-            searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',selectedStatus: updatedFilters.find(f => f.label === 'Status') ? updatedFilters.find(f => f.label === 'Status')!.value.split(', ') : [],
+            searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',
+            selectedSource: updatedFilters.find(f => f.label === 'Source') ? updatedFilters.find(f => f.label === 'Source')!.value.split(', ') : [],
             selectedTypes: updatedFilters.find(f => f.label === 'Types') ? updatedFilters.find(f => f.label === 'Types')!.value.split(', ') : [],
             selectedDomains: updatedFilters.find(f => f.label === 'Domains') ? updatedFilters.find(f => f.label === 'Domains')!.value.split(', ') : [],
             createdDate: updatedFilters.find(f => f.label === 'Created Date') ? updatedFilters.find(f => f.label === 'Created Date')!.value.split(', ') : [],
@@ -405,9 +401,8 @@ const Sources: React.FC = () => {
             },
         };
     
-        // Применяем обновленные фильтры
         handleApplyFilters(newFilters);
-    };
+    };    
 
 
     const setSourceOrigin = (sourceOrigin: string) => {
@@ -552,7 +547,7 @@ const Sources: React.FC = () => {
                         </Box>
 
                         <Box sx={{
-                            flex: 1, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 4.25rem)', pr: 2, overflow: 'auto', maxWidth: '100%',
+                            flex: 1, display: 'flex', flexDirection: 'column', pr: 2, overflow: 'auto', maxWidth: '100%',
                             '@media (max-width: 900px)': {
                                 pt: '2px',
                                 pb: '18px'
@@ -610,7 +605,7 @@ const Sources: React.FC = () => {
                                         })}
                                     </Box>
                                     <Box sx={{
-                                        flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px', pb: '20px',
+                                        flex: 1, display: 'flex', flexGrow:1, flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px',
                                         '@media (max-width: 900px)': {
                                             pt: '2px',
                                             pb: '18px'
@@ -666,7 +661,7 @@ const Sources: React.FC = () => {
                                                         component={Paper}
                                                         sx={{
                                                             border: '1px solid rgba(235, 235, 235, 1)',
-                                                            overflowX: 'scroll',
+                                                            overflowX: 'auto',
                                                             maxHeight: selectedFilters.length > 0
                                                                 ? (hasNotification ? '63vh' : '68vh')
                                                                 : '72vh',
@@ -849,27 +844,26 @@ const Sources: React.FC = () => {
                                                                             <TableCell
                                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                                             >
-                                                                                {row.matched_records_status === "pending" 
-                                                                                ? progress?.total
+                                                                                {progress?.total && progress?.total > 0 || row?.total_records > 0
+                                                                                ? progress?.total > 0
                                                                                     ? progress?.total.toLocaleString('en-US')
-                                                                                    : <ThreeDotsLoader />
-                                                                                : row.total_records.toLocaleString('en-US') ?? '--'}
+                                                                                    : row?.total_records?.toLocaleString('en-US')
+                                                                                :  <ThreeDotsLoader />
+                                                                                }
                                                                             </TableCell>
 
                                                                             {/* Matched Records  Column */}
                                                                             <TableCell
                                                                                 sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                                             >
-                                                                                {row.matched_records_status === "pending" 
-                                                                                ? progress?.processed == progress?.total && progress?.processed
+                                                                                {(progress?.processed && progress?.processed == progress?.total) || (row?.processed_records == row?.total_records && row?.processed_records !== 0)
+                                                                                ? progress?.matched > row?.matched_records 
                                                                                     ? progress?.matched.toLocaleString('en-US')
-                                                                                    : <ProgressBar progress={progress}/>
-                                                                                : row.matched_records.toLocaleString('en-US') ?? '--'}
-                                                                                {/* {row.processed 
-                                                                                ? progress?.processed == progress?.total && progress?.processed
-                                                                                    ? progress?.matched
-                                                                                    : <ProgressBar progress={progress}/>
-                                                                                : row.matched_records ?? '--'} */}
+                                                                                    : row.matched_records.toLocaleString('en-US')
+                                                                                :  row?.processed_records !== 0 
+                                                                                    ? <ProgressBar progress={{total: row?.total_records, processed: row?.processed_records, matched: row?.matched_records}}/> 
+                                                                                    : <ProgressBar progress={progress}/> 
+                                                                                }
                                                                             </TableCell>
 
                                                                             <TableCell sx={{ ...sourcesStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>

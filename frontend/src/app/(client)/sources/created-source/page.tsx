@@ -13,6 +13,19 @@ import { SliderProvider } from '../../../../context/SliderContext';
 import ProgressBar from '../components/ProgressLoader';
 import { showToast, showErrorToast } from '@/components/ToastNotification';
 
+interface Source {
+    id: string
+    name: string
+    source_origin: string
+    source_type: string
+    created_at: Date
+    domain: string
+    created_by: string
+    processed_records: number
+    total_records: number
+    matched_records: number
+    matched_records_status: string
+}
 
 const SourcesList: React.FC = () => {
     const router = useRouter();
@@ -21,7 +34,7 @@ const SourcesList: React.FC = () => {
     const createdSource = data ? JSON.parse(data) : null;
     const { hasNotification } = useNotification();
     const [loading, setLoading] = useState(false);
-    const [createdData, setCreatedData] = useState(false);
+    const [createdData, setCreatedData] = useState<Source>(createdSource);
     const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [anchorElFullName, setAnchorElFullName] = React.useState<null | HTMLElement>(null);
@@ -41,47 +54,47 @@ const SourcesList: React.FC = () => {
         setSelectedName(null);
     };
 
-    // useEffect(() => {
-    //     console.log("longpol");
+    useEffect(() => {
+        console.log("longpol");
     
-    //     if (!intervalRef.current) {
-    //         console.log("longpol started");
-    //         intervalRef.current = setInterval(() => {
-    //             const hasPending = createdSource?.matched_records_status === "pending";
+        if (!intervalRef.current) {
+            console.log("longpol started");
+            intervalRef.current = setInterval(() => {
+                const hasPending = createdData?.matched_records_status === "pending";
     
-    //             if (hasPending) {
-    //                 console.log("Fetching due to pending records");
-    //                 fetchData();
-    //             } else {
-    //                 console.log("No pending records, stopping interval");
-    //                 if (intervalRef.current) {
-    //                     clearInterval(intervalRef.current);
-    //                     intervalRef.current = null;
-    //                 }
-    //             }
-    //         }, 2000);
-    //     }
+                if (hasPending) {
+                    console.log("Fetching due to pending records");
+                    fetchData();
+                } else {
+                    console.log("No pending records, stopping interval");
+                    if (intervalRef.current) {
+                        clearInterval(intervalRef.current);
+                        intervalRef.current = null;
+                    }
+                }
+            }, 2000);
+        }
     
-    //     return () => {
-    //         if (intervalRef.current) {
-    //             clearInterval(intervalRef.current);
-    //             intervalRef.current = null;
-    //             console.log("interval cleared");
-    //         }
-    //     };
-    // }, [createdSource]);
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+                console.log("interval cleared");
+            }
+        };
+    }, [createdData]);
       
 
-    // const fetchData = async () => {
-    //     try {
-    //         const response = await axiosInstance.post(`/audience-sources/get-processing-sources/${createdSource.id}`)
-    //         const updatedItem = response.data
+    const fetchData = async () => {
+        try {
+            const response = await axiosInstance.get(`/audience-sources/get-processing-source?&id=${createdSource.id}`)
+            const updatedItem = response.data
 
-    //         setCreatedData(updatedItem);
-    //     } catch (error) {
-    //         console.error('Failed to fetch data:', error);
-    //     }
-    // };
+            setCreatedData(updatedItem);
+        } catch (error) {
+            console.error('Failed to fetch data:', error);
+        }
+    };
 
 
     const handleOpenPopover = (event: React.MouseEvent<HTMLElement>) => {
@@ -358,11 +371,12 @@ const SourcesList: React.FC = () => {
                                             Number of Customers
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
-                                        {createdSource?.id && (
-                                            sourceProgress[createdSource.id]?.total
-                                            ? sourceProgress[createdSource.id].total.toLocaleString('en-US')
-                                            : <ThreeDotsLoader />
-                                        )}
+                                        {sourceProgress[createdSource.id]?.total && sourceProgress[createdSource.id]?.total > 0 || createdData?.total_records > 0
+                                            ? sourceProgress[createdSource.id]?.total > 0
+                                                ? sourceProgress[createdSource.id]?.total.toLocaleString('en-US')
+                                                : createdData?.total_records?.toLocaleString('en-US')
+                                            :  <ThreeDotsLoader />
+                                            }
                                         </Typography>
                                     </Box>
                                     <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
@@ -374,11 +388,14 @@ const SourcesList: React.FC = () => {
                                             Matched Records
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
-                                            {createdSource?.id && (
-                                                sourceProgress[createdSource.id]?.processed === sourceProgress[createdSource.id]?.total && sourceProgress[createdSource.id]?.processed /*need chnage >= on ===*/
-                                                ? sourceProgress[createdSource.id]?.matched.toLocaleString('en-US')
-                                                : <ProgressBar progress={sourceProgress[createdSource.id]} />
-                                            )}
+                                            {createdSource?.id && (sourceProgress[createdSource.id]?.processed && sourceProgress[createdSource.id]?.processed == sourceProgress[createdSource.id]?.total) || (createdData?.processed_records == createdData?.total_records && createdData?.processed_records !== 0)
+                                                ? sourceProgress[createdSource.id]?.matched > createdData?.matched_records 
+                                                    ? sourceProgress[createdSource.id]?.matched.toLocaleString('en-US')
+                                                    : createdData.matched_records.toLocaleString('en-US')
+                                                :  createdData?.processed_records !== 0 
+                                                    ? <ProgressBar progress={{total: createdData?.total_records, processed: createdData?.processed_records, matched: createdData?.matched_records}}/> 
+                                                    : <ProgressBar progress={sourceProgress[createdSource.id]}/> 
+                                            }
                                         </Typography>
                                     </Box>
                                     {/* need chnage < on !== */}
