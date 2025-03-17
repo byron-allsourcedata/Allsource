@@ -42,9 +42,8 @@ class PaymentCard(BaseModel):
 
 
 class SendBilling(BaseModel):
-    invoice_id: str = Field(...)
-    email: str = Field(...)
-
+    invoice_id: str
+    email: str
 
 class ApiKeysRequest(BaseModel):
     id: Optional[str] = None
