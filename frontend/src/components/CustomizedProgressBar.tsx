@@ -17,7 +17,7 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
 const PageWithLoader: React.FC = () => {
   const { hasNotification } = useNotification();
   return (
-        <Box sx={{ width: '100%', position: 'fixed', top: hasNotification ? '6.85rem' : '4.25rem', zIndex: 1200, left:'154px','@media (min-height: 900px)': { top:'4.25rem'} , '@media (max-width: 899px)': { left: 0, top:'4.5rem'}, }}>
+        <Box sx={{ width: '100%', position: 'fixed', top: hasNotification ? '6.85rem' : '4.25rem', zIndex: 1200, left:'170px','@media (min-height: 900px)': { top:'4.25rem'} , '@media (max-width: 899px)': { left: 0, top:'4.5rem'}, }}>
           <BorderLinearProgress
             variant="indeterminate"
           />
