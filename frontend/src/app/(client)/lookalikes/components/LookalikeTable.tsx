@@ -48,35 +48,30 @@ interface LookalikeTableProps {
 
 const audienceSize = [
     {
-        id: "almost",
         label: "Almost identical",
         text: "Lookalike size 0-3%",
         min_value: 0,
         max_value: 3,
     },
     {
-        id: "extremely",
         label: "Extremely Similar",
         text: "Lookalike size 0-7%",
         min_value: 0,
         max_value: 7,
     },
     {
-        id: "very",
         label: "Very similar",
         text: "Lookalike size 0-10%",
         min_value: 0,
         max_value: 10,
     },
     {
-        id: "quite",
         label: "Quite similar",
         text: "Lookalike size 0-15%",
         min_value: 0,
         max_value: 15,
     },
     {
-        id: "broad",
         label: "Broad",
         text: "Lookalike size 0-20%",
         min_value: 0,
@@ -150,6 +145,13 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, order
     const handleCloseConfirm = () => {
         setIsConfirmOpen(false);
     };
+
+    const formatString = (input: string): string =>
+        input
+          .split('_')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+      
 
     return (
         <TableContainer
@@ -357,7 +359,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, order
                             </Popover>
 
                             <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>{row.source}</TableCell>
-                            <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>{row.source_type}</TableCell>
+                            <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>{formatString(row.source_type)}</TableCell>
                             <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>
                                 {(() => {
                                     const size = audienceSize.find(size => size.label === row.lookalike_size);
