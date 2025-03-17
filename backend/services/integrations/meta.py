@@ -156,8 +156,17 @@ class MetaIntegrationsService:
             return
         return [self.__mapped_ad_account(ad_account) for ad_account in response.json().get('data')]
     
-    def __get_list(self, ad_account_id, access_token: str):
+    def __get_audience_list(self, ad_account_id, access_token: str):
         url = f'https://graph.facebook.com/v20.0/{ad_account_id}/customaudiences?fields=name'
+        params = {
+            'fields': 'name',
+            'access_token': access_token
+        }
+        response = self.__handle_request(url=url, params=params, method="GET")
+        return response
+    
+    def __get_campaigns_list(self, ad_account_id, access_token: str):
+        url = f'https://graph.facebook.com/v20.0/{ad_account_id}/campaigns?fields=name'
         params = {
             'fields': 'name',
             'access_token': access_token
@@ -169,30 +178,33 @@ class MetaIntegrationsService:
         credentials = self.get_credentials(domain_id)
         if not credentials:
             return
-        response = self.__get_list(ad_account_id, credentials.access_token)
-        if not response:
+        response_audience = self.__get_audience_list(ad_account_id, credentials.access_token)
+        response_campaign = self.__get_campaigns_list(ad_account_id, credentials.access_token)
+        if not response_audience or not response_campaign:
             credentials.is_failed = True
             credentials.error_message = 'Connection Error'
             self.integrations_persisntece.db.commit()
             return
-        return [self.__mapped_meta_list(ad_account) for ad_account in response.json().get('data')]
-    
-
+        audience_lists = [self.__mapped_meta_list(audience) for audience in response_audience.json().get('data')]
+        campaign_lists = [self.__mapped_meta_list(campaign) for campaign in response_campaign.json().get('data')]
+        return {
+            'audience_lists': audience_lists,
+            'campaign_lists': campaign_lists
+        }
 
     def create_list(self, list, domain_id: int, description: str = None):
         credential = self.get_credentials(domain_id)
         if not credential:
             raise HTTPException(status_code=403, detail={'status': IntegrationsStatus.CREDENTIALS_NOT_FOUND.value})
         FacebookAdsApi.init(access_token=credential.access_token)
-        fields = [
-        ]
+        fields = []
+        id_account = None
         params = {
             'name': list.name,
             'subtype': 'CUSTOM',
             'description': description if description else None,
             'customer_file_source': 'USER_PROVIDED_ONLY',
         }
-        id_account = None
         try:
             id_account = AdAccount(f'{list.ad_account_id}').create_custom_audience(
                     fields=fields,

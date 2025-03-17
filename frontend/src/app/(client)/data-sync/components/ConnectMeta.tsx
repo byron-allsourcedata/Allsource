@@ -28,6 +28,11 @@ interface MetaAuidece {
     list_name: string
 }
 
+interface MetaCampaign {
+    id: string
+    list_name: string
+}
+
 const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isEdit }) => {
     const { triggerSync } = useIntegrationContext();
     const [value, setValue] = React.useState('1');
@@ -54,9 +59,11 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
     const [loading, setLoading] = useState(true)
     const [adAccounts, setAdAccounts] = useState<adAccount[]>([])
     const [optionAdAccount, setOptionAdAccount] = useState<adAccount | null>(null)
-    const [metaAuidence, setMetaAuidence] = useState<MetaAuidece[]>([])
+    const [metaAudienceList, setMetaAudience] = useState<MetaAuidece[]>([])
+    const [metaCampaign, setMetaCampaign] = useState<MetaCampaign[]>([])
     const [tab2Error, setTab2Error] = useState(false)
     const [UpdateKlaviuo, setUpdateKlaviuo] = useState<any>(null);
+    const [selectedMode, setSelectedMode] = useState('Audience');
     const [anchorElAdAccount, setAnchorElAdAccount] = useState<null | HTMLElement>(null);
     const [isDropdownOpenAdAccount, setIsDropdownOpenAdAccount] = useState(false);
 
@@ -111,8 +118,9 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
                 }
             })
             if (response.status === 200) {
-                setMetaAuidence(response.data)
-                const foundItem = response.data?.find((item: any) => item.list_name === data?.name);
+                setMetaAudience(response.data.audience_lists)
+                setMetaCampaign(response.data.campaign_lists)
+                const foundItem = response.data.audience_lists?.find((item: any) => item.list_name === data?.name);
                 if (foundItem) {
                     setUpdateKlaviuo(data.id)
                     setSelectedOption({
@@ -430,6 +438,11 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
     const handleClickOpen = (event: React.MouseEvent<HTMLElement>, id: number) => {
         setDeleteAnchorEl(event.currentTarget);  // Set the current target as the anchor
         setSelectedRowId(id);  // Set the ID of the row to delete
+    };
+
+    const handleModeChange = (mode: string) => {
+        setSelectedMode(mode);
+        setSelectedOption(null);
     };
 
     const handleDeleteClose = () => {
@@ -903,237 +916,354 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
                                                         ))}
                                                     </Menu>
                                                 </Box>
-                                                <Box>
-                                                    <TextField
-                                                        ref={textFieldRef}
-                                                        variant="outlined"
-                                                        disabled={data?.customer_id}
-                                                        value={selectedOption?.list_name}
-                                                        onClick={handleClick}
-                                                        size="small"
-                                                        fullWidth
-                                                        label={selectedOption ? '' : 'Select or Create new list'}
-                                                        InputLabelProps={{
-                                                            shrink: selectedOption ? false : isShrunk,
-                                                            sx: {
-                                                                fontFamily: 'Nunito Sans',
-                                                                fontSize: '15px',
-                                                                lineHeight: '16px',
-                                                                color: 'rgba(17, 17, 19, 0.60)',
-                                                                pl: '3px',
-                                                                '&.Mui-focused': {
-                                                                    color: '#0000FF',
-                                                                },
-                                                            }
-                                                        }}
-                                                        InputProps={{
-
-                                                            endAdornment: (
-                                                                <InputAdornment position="end">
-                                                                    <IconButton onClick={handleDropdownToggle} edge="end">
-                                                                        {isDropdownOpen ? <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} /> : <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />}
-                                                                    </IconButton>
-                                                                </InputAdornment>
-                                                            ),
-                                                            sx: metaStyles.formInput
-                                                        }}
-                                                        sx={{
-                                                            '& input': {
-                                                                caretColor: 'transparent', // Hide caret with transparent color
+                                                {!data?.customer_id && 
+                                                    <Box sx={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+                                                        <Button
+                                                            variant={selectedMode === 'audience' ? 'outlined' : undefined}
+                                                            onClick={() => handleModeChange('audience')}
+                                                            sx={{
                                                                 fontFamily: "Nunito Sans",
                                                                 fontSize: "14px",
-                                                                color: "rgba(0, 0, 0, 0.89)",
-                                                                fontWeight: "600",
-                                                                lineHeight: "normal",
-                                                            },
-                                                            '& .MuiOutlinedInput-input': {
-                                                                cursor: 'default', // Prevent showing caret on input field
-                                                                top: '5px'
-                                                            },
+                                                                color: "#202124",
+                                                                fontWeight: "500",
+                                                                lineHeight: "20px",
+                                                            }}
+                                                        >
+                                                            Audience
+                                                        </Button>
+                                                        <Button
+                                                            variant={selectedMode === 'campaign' ? 'outlined' : undefined}
+                                                            onClick={() => handleModeChange('campaign')}
+                                                            sx={{
+                                                                fontFamily: "Nunito Sans",
+                                                                fontSize: "14px",
+                                                                color: "#202124",
+                                                                fontWeight: "500",
+                                                                lineHeight: "20px",
+                                                            }}
+                                                        >
+                                                            Campaign
+                                                        </Button>
+                                                    </Box>
+                                                    }
 
-                                                        }}
-                                                    />
-
-                                                    <Menu
-                                                        anchorEl={anchorEl}
-                                                        open={Boolean(anchorEl) && isDropdownOpen && !data?.customer_id}
-                                                        onClose={handleClose}
-                                                        PaperProps={{
-                                                            sx: {
-                                                                width: anchorEl ? `${anchorEl.clientWidth}px` : '538px', borderRadius: '4px',
-                                                                border: '1px solid #e4e4e4'
-                                                            }, // Match dropdown width to input
-                                                        }}
-                                                    >
-                                                        {/* Show "Create New List" option */}
-                                                        <MenuItem onClick={() => handleSelectOption('createNew')} sx={{
-                                                            borderBottom: showCreateForm ? "none" : "1px solid #cdcdcd",
-                                                            '&:hover': {
-                                                                background: 'rgba(80, 82, 178, 0.10)'
-                                                            }
-                                                        }}>
-                                                            <ListItemText primary={`+ Create new list`} primaryTypographyProps={{
-                                                                sx: {
-                                                                    fontFamily: "Nunito Sans",
-                                                                    fontSize: "14px",
-                                                                    color: showCreateForm ? "#5052B2" : "#202124",
-                                                                    fontWeight: "500",
-                                                                    lineHeight: "20px",
-
-                                                                }
-                                                            }} />
-                                                        </MenuItem>
-
-                                                        {/* Show Create New List form if 'showCreateForm' is true */}
-                                                        {showCreateForm && (
-                                                            <Box>
-                                                                <Box sx={{
-                                                                    display: 'flex',
-                                                                    flexDirection: 'column',
-                                                                    gap: '24px',
-                                                                    p: 2,
-                                                                    width: anchorEl ? `${anchorEl.clientWidth}px` : '538px',
-                                                                    pt: 0
-                                                                }}>
-                                                                    <Box
-                                                                        sx={{
-
-
-                                                                            mt: 1, // Margin-top to separate form from menu item
-                                                                            display: 'flex',
-                                                                            justifyContent: 'space-between',
-                                                                            gap: '16px',
-                                                                            '@media (max-width: 600px)': {
-                                                                                flexDirection: 'column'
-                                                                            },
-                                                                        }}
-                                                                    >
-                                                                        <TextField
-                                                                            label="List Name"
-                                                                            variant="outlined"
-                                                                            value={newListName}
-                                                                            onChange={(e) => setNewListName(e.target.value)}
-                                                                            size="small"
-                                                                            fullWidth
-                                                                            onKeyDown={(e) => e.stopPropagation()}
-                                                                            error={listNameError}
-                                                                            helperText={listNameError ? 'List Name is required' : ''}
-                                                                            InputLabelProps={{
-                                                                                sx: {
-                                                                                    fontFamily: 'Nunito Sans',
-                                                                                    fontSize: '12px',
-                                                                                    lineHeight: '16px',
-                                                                                    fontWeight: '400',
-                                                                                    color: 'rgba(17, 17, 19, 0.60)',
-                                                                                    '&.Mui-focused': {
-                                                                                        color: '#0000FF',
-                                                                                    },
-                                                                                }
-                                                                            }}
-                                                                            InputProps={{
-
-                                                                                endAdornment: (
-                                                                                    newListName && ( // Conditionally render close icon if input is not empty
-                                                                                        <InputAdornment position="end">
-                                                                                            <IconButton
-                                                                                                edge="end"
-                                                                                                onClick={() => setNewListName('')} // Clear the text field when clicked
-                                                                                            >
-                                                                                                <Image
-                                                                                                    src='/close-circle.svg'
-                                                                                                    alt='close-circle'
-                                                                                                    height={18}
-                                                                                                    width={18} // Adjust the size as needed
-                                                                                                />
-                                                                                            </IconButton>
-                                                                                        </InputAdornment>
-                                                                                    )
-                                                                                ),
-                                                                                sx: {
-                                                                                    '&.MuiOutlinedInput-root': {
-                                                                                        height: '32px',
-                                                                                        '& .MuiOutlinedInput-input': {
-                                                                                            padding: '5px 16px 4px 16px',
-                                                                                            fontFamily: 'Roboto',
-                                                                                            color: '#202124',
-                                                                                            fontSize: '14px',
-                                                                                            fontWeight: '400',
-                                                                                            lineHeight: '20px'
-                                                                                        },
-                                                                                        '& .MuiOutlinedInput-notchedOutline': {
-                                                                                            borderColor: '#A3B0C2',
-                                                                                        },
-                                                                                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                                            borderColor: '#A3B0C2',
-                                                                                        },
-                                                                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                                            borderColor: '#0000FF',
-                                                                                        },
-                                                                                    },
-                                                                                    '&+.MuiFormHelperText-root': {
-                                                                                        marginLeft: '0',
-                                                                                    },
-                                                                                }
-                                                                            }}
-                                                                        />
-
-                                                                    </Box>
-                                                                    <Box sx={{ textAlign: 'right' }}>
-                                                                        <Button variant="contained" onClick={handleSave}
-                                                                            disabled={listNameError || !newListName}
-                                                                            sx={{
-                                                                                borderRadius: '4px',
-                                                                                border: '1px solid #5052B2',
-                                                                                background: '#fff',
-                                                                                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                                                                fontFamily: 'Nunito Sans',
-                                                                                fontSize: '14px',
-                                                                                fontWeight: '600',
-                                                                                lineHeight: '20px',
-                                                                                color: '#5052b2',
-                                                                                textTransform: 'none',
-                                                                                padding: '4px 22px',
-                                                                                '&:hover': {
-                                                                                    background: 'transparent'
-                                                                                },
-                                                                                '&.Mui-disabled': {
-                                                                                    background: 'transparent',
-                                                                                    color: '#5052b2'
-                                                                                }
-                                                                            }}>
-                                                                            Save
-                                                                        </Button>
-                                                                    </Box>
-
-                                                                </Box>
-
-
-                                                                {/* Add a Divider to separate form from options */}
-                                                                <Divider sx={{ borderColor: '#cdcdcd' }} />
-                                                            </Box>
-                                                        )}
-
-                                                        {/* Show static options */}
-                                                        {metaAuidence && metaAuidence.map((klaviyo, option) => (
-                                                            <MenuItem key={klaviyo.id} onClick={() => handleSelectOption(klaviyo)} sx={{
-                                                                '&:hover': {
-                                                                    background: 'rgba(80, 82, 178, 0.10)'
-                                                                }
-                                                            }}>
-                                                                <ListItemText primary={klaviyo.list_name} primaryTypographyProps={{
+                                                    {/* AudienceList */}
+                                                    {selectedMode === 'audience' ? (
+                                                        <Box>
+                                                            <TextField
+                                                                ref={textFieldRef}
+                                                                variant="outlined"
+                                                                disabled={data?.customer_id}
+                                                                value={selectedOption?.list_name}
+                                                                onClick={handleClick}
+                                                                size="medium"
+                                                                fullWidth
+                                                                label={selectedOption ? '' : 'Select or Create new list'}
+                                                                InputLabelProps={{
+                                                                    shrink: selectedOption ? false : isShrunk,
                                                                     sx: {
+                                                                        fontFamily: 'Nunito Sans',
+                                                                        fontSize: '15px',
+                                                                        lineHeight: '16px',
+                                                                        color: 'rgba(17, 17, 19, 0.60)',
+                                                                        pl: '3px',
+                                                                        '&.Mui-focused': {
+                                                                            color: '#0000FF',
+                                                                        },
+                                                                    }
+                                                                }}
+                                                                InputProps={{
+                                                                    endAdornment: (
+                                                                        <InputAdornment position="end">
+                                                                            <IconButton onClick={handleDropdownToggle} edge="end">
+                                                                                {isDropdownOpen ? <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} /> : <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />}
+                                                                            </IconButton>
+                                                                        </InputAdornment>
+                                                                    ),
+                                                                    sx: metaStyles.formInput
+                                                                }}
+                                                                sx={{
+                                                                    '& input': {
+                                                                        caretColor: 'transparent',
                                                                         fontFamily: "Nunito Sans",
                                                                         fontSize: "14px",
-                                                                        color: "#202124",
-                                                                        fontWeight: "500",
-                                                                        lineHeight: "20px"
+                                                                        color: "rgba(0, 0, 0, 0.89)",
+                                                                        fontWeight: "600",
+                                                                        lineHeight: "normal",
+                                                                    },
+                                                                    '& .MuiOutlinedInput-input': {
+                                                                        cursor: 'default', // Prevent showing caret on input field
+                                                                        top: '5px'
+                                                                    },
+                                                                    // marginBottom: '24px'
+                                                                }}
+                                                            />
+
+                                                            <Menu
+                                                                anchorEl={anchorEl}
+                                                                open={Boolean(anchorEl) && isDropdownOpen && !data?.customer_id}
+                                                                onClose={handleClose}
+                                                                PaperProps={{
+                                                                    sx: {
+                                                                        width: anchorEl ? `${anchorEl.clientWidth}px` : '538px', borderRadius: '4px',
+                                                                        border: '1px solid #e4e4e4'
+                                                                    }, // Match dropdown width to input
+                                                                }}
+                                                            >
+                                                                {/* Show "Create New List" option */}
+                                                                <MenuItem onClick={() => handleSelectOption('createNew')} sx={{
+                                                                    borderBottom: showCreateForm ? "none" : "1px solid #cdcdcd",
+                                                                    '&:hover': {
+                                                                        background: 'rgba(80, 82, 178, 0.10)'
                                                                     }
-                                                                }} />
-                                                            </MenuItem>
-                                                        ))}
-                                                    </Menu>
-                                                </Box>
-                                            </>
+                                                                }}>
+                                                                    <ListItemText primary={`+ Create new list`} primaryTypographyProps={{
+                                                                        sx: {
+                                                                            fontFamily: "Nunito Sans",
+                                                                            fontSize: "14px",
+                                                                            color: showCreateForm ? "#5052B2" : "#202124",
+                                                                            fontWeight: "500",
+                                                                            lineHeight: "20px",
+
+                                                                        }
+                                                                    }} />
+                                                                </MenuItem>
+
+                                                                {/* Show Create New List form if 'showCreateForm' is true */}
+                                                                {showCreateForm && (
+                                                                    <Box>
+                                                                        <Box sx={{
+                                                                            display: 'flex',
+                                                                            flexDirection: 'column',
+                                                                            gap: '24px',
+                                                                            p: 2,
+                                                                            width: anchorEl ? `${anchorEl.clientWidth}px` : '538px',
+                                                                            pt: 0,
+                                                                        }}>
+                                                                            <Box
+                                                                                sx={{
+
+
+                                                                                    mt: 1, // Margin-top to separate form from menu item
+                                                                                    display: 'flex',
+                                                                                    justifyContent: 'space-between',
+                                                                                    gap: '16px',
+                                                                                    '@media (max-width: 600px)': {
+                                                                                        flexDirection: 'column'
+                                                                                    },
+                                                                                }}
+                                                                            >
+                                                                                <TextField
+                                                                                    label="Audience Name"
+                                                                                    variant="outlined"
+                                                                                    value={newListName}
+                                                                                    onChange={(e) => setNewListName(e.target.value)}
+                                                                                    size="small"
+                                                                                    fullWidth
+                                                                                    onKeyDown={(e) => e.stopPropagation()}
+                                                                                    error={listNameError}
+                                                                                    helperText={listNameError ? 'Audience Name is required' : ''}
+                                                                                    InputLabelProps={{
+                                                                                        sx: {
+                                                                                            fontFamily: 'Nunito Sans',
+                                                                                            fontSize: '12px',
+                                                                                            lineHeight: '16px',
+                                                                                            fontWeight: '400',
+                                                                                            color: 'rgba(17, 17, 19, 0.60)',
+                                                                                            '&.Mui-focused': {
+                                                                                                color: '#0000FF',
+                                                                                            },
+                                                                                        }
+                                                                                    }}
+                                                                                    InputProps={{
+
+                                                                                        endAdornment: (
+                                                                                            newListName && ( // Conditionally render close icon if input is not empty
+                                                                                                <InputAdornment position="end">
+                                                                                                    <IconButton
+                                                                                                        edge="end"
+                                                                                                        onClick={() => setNewListName('')} // Clear the text field when clicked
+                                                                                                    >
+                                                                                                        <Image
+                                                                                                            src='/close-circle.svg'
+                                                                                                            alt='close-circle'
+                                                                                                            height={18}
+                                                                                                            width={18} // Adjust the size as needed
+                                                                                                        />
+                                                                                                    </IconButton>
+                                                                                                </InputAdornment>
+                                                                                            )
+                                                                                        ),
+                                                                                        sx: {
+                                                                                            '&.MuiOutlinedInput-root': {
+                                                                                                height: '32px',
+                                                                                                '& .MuiOutlinedInput-input': {
+                                                                                                    padding: '5px 16px 4px 16px',
+                                                                                                    fontFamily: 'Roboto',
+                                                                                                    color: '#202124',
+                                                                                                    fontSize: '14px',
+                                                                                                    fontWeight: '400',
+                                                                                                    lineHeight: '20px'
+                                                                                                },
+                                                                                                '& .MuiOutlinedInput-notchedOutline': {
+                                                                                                    borderColor: '#A3B0C2',
+                                                                                                },
+                                                                                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                                                    borderColor: '#A3B0C2',
+                                                                                                },
+                                                                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                                                    borderColor: '#0000FF',
+                                                                                                },
+                                                                                            },
+                                                                                            '&+.MuiFormHelperText-root': {
+                                                                                                marginLeft: '0',
+                                                                                            },
+                                                                                        }
+                                                                                    }}
+                                                                                />
+
+                                                                            </Box>
+                                                                            <Box sx={{ textAlign: 'right' }}>
+                                                                                <Button variant="contained" onClick={handleSave}
+                                                                                    disabled={listNameError || !newListName}
+                                                                                    sx={{
+                                                                                        borderRadius: '4px',
+                                                                                        border: '1px solid #5052B2',
+                                                                                        background: '#fff',
+                                                                                        boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                                                                        fontFamily: 'Nunito Sans',
+                                                                                        fontSize: '14px',
+                                                                                        fontWeight: '600',
+                                                                                        lineHeight: '20px',
+                                                                                        color: '#5052b2',
+                                                                                        textTransform: 'none',
+                                                                                        padding: '4px 22px',
+                                                                                        '&:hover': {
+                                                                                            background: 'transparent'
+                                                                                        },
+                                                                                        '&.Mui-disabled': {
+                                                                                            background: 'transparent',
+                                                                                            color: '#5052b2'
+                                                                                        }
+                                                                                    }}>
+                                                                                    Save
+                                                                                </Button>
+                                                                            </Box>
+
+                                                                        </Box>
+
+
+                                                                        {/* Add a Divider to separate form from options */}
+                                                                        <Divider sx={{ borderColor: '#cdcdcd' }} />
+                                                                    </Box>
+                                                                )}
+
+                                                                {/* Show static options */}
+                                                                {metaAudienceList && metaAudienceList.map((klaviyo, option) => (
+                                                                    <MenuItem key={klaviyo.id} onClick={() => handleSelectOption(klaviyo)} sx={{
+                                                                        '&:hover': {
+                                                                            background: 'rgba(80, 82, 178, 0.10)'
+                                                                        }
+                                                                    }}>
+                                                                        <ListItemText primary={klaviyo.list_name} primaryTypographyProps={{
+                                                                            sx: {
+                                                                                fontFamily: "Nunito Sans",
+                                                                                fontSize: "14px",
+                                                                                color: "#202124",
+                                                                                fontWeight: "500",
+                                                                                lineHeight: "20px",
+                                                                            }
+                                                                        }} />
+                                                                    </MenuItem>
+                                                                ))}
+                                                            </Menu>
+                                                        </Box>
+                                                    ) : (
+                                                        <Box>
+                                                            <TextField
+                                                                ref={textFieldRef}
+                                                                variant="outlined"
+                                                                disabled={data?.customer_id}
+                                                                value={selectedOption?.list_name}
+                                                                onClick={handleClick}
+                                                                size="medium"
+                                                                fullWidth
+                                                                label={selectedOption ? '' : 'Select campaign'}
+                                                                InputLabelProps={{
+                                                                    shrink: selectedOption ? false : isShrunk,
+                                                                    sx: {
+                                                                        fontFamily: 'Nunito Sans',
+                                                                        fontSize: '15px',
+                                                                        lineHeight: '16px',
+                                                                        color: 'rgba(17, 17, 19, 0.60)',
+                                                                        pl: '3px',
+                                                                        '&.Mui-focused': {
+                                                                            color: '#0000FF',
+                                                                        },
+                                                                    }
+                                                                }}
+                                                                InputProps={{
+
+                                                                    endAdornment: (
+                                                                        <InputAdornment position="end">
+                                                                            <IconButton onClick={handleDropdownToggle} edge="end">
+                                                                                {isDropdownOpen ? <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} /> : <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />}
+                                                                            </IconButton>
+                                                                        </InputAdornment>
+                                                                    ),
+                                                                    sx: metaStyles.formInput
+                                                                }}
+                                                                sx={{
+                                                                    '& input': {
+                                                                        caretColor: 'transparent', // Hide caret with transparent color
+                                                                        fontFamily: "Nunito Sans",
+                                                                        fontSize: "14px",
+                                                                        color: "rgba(0, 0, 0, 0.89)",
+                                                                        fontWeight: "600",
+                                                                        lineHeight: "normal",
+                                                                    },
+                                                                    '& .MuiOutlinedInput-input': {
+                                                                        cursor: 'default', // Prevent showing caret on input field
+                                                                        top: '5px'
+                                                                    },
+
+                                                                }}
+                                                            />
+
+                                                            <Menu
+                                                                anchorEl={anchorEl}
+                                                                open={Boolean(anchorEl) && isDropdownOpen && !data?.customer_id}
+                                                                onClose={handleClose}
+                                                                PaperProps={{
+                                                                    sx: {
+                                                                        width: anchorEl ? `${anchorEl.clientWidth}px` : '538px', borderRadius: '4px',
+                                                                        border: '1px solid #e4e4e4'
+                                                                    }, // Match dropdown width to input
+                                                                }}
+                                                            >
+
+                                                                {/* Show static options */}
+                                                                {metaCampaign && metaCampaign.map((klaviyo, option) => (
+                                                                    <MenuItem key={klaviyo.id} onClick={() => handleSelectOption(klaviyo)} sx={{
+                                                                        '&:hover': {
+                                                                            background: 'rgba(80, 82, 178, 0.10)'
+                                                                        }
+                                                                    }}>
+                                                                        <ListItemText primary={klaviyo.list_name} primaryTypographyProps={{
+                                                                            sx: {
+                                                                                fontFamily: "Nunito Sans",
+                                                                                fontSize: "14px",
+                                                                                color: "#202124",
+                                                                                fontWeight: "500",
+                                                                                lineHeight: "20px"
+                                                                            }
+                                                                        }} />
+                                                                    </MenuItem>
+                                                                ))}
+                                                            </Menu>
+                                                        </Box>
+                                                    )}
+                                                </>
                                         </ClickAwayListener>
                                     </Box>
                                 </Box>

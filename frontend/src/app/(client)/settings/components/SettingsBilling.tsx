@@ -1397,7 +1397,6 @@ export const SettingsBilling: React.FC = () => {
                                     >
                                         <TableCell className="sticky-cell table-data" sx={{
                                             ...billingStyles.tableBodyColumn,
-                                            cursor: 'pointer',
                                             backgroundColor: '#fff'
                                         }}>{history.date}</TableCell>
 
