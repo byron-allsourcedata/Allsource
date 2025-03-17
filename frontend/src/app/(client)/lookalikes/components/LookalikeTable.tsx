@@ -26,6 +26,7 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { showErrorToast, showToast } from "@/components/ToastNotification";
+import { audienceStyles } from "../../audience/audienceStyles";
 
 interface TableRowData {
     id: string;
@@ -108,11 +109,11 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, order
                 uuid_of_lookalike: editingRowId,
                 name_of_lookalike: editedName
             });
-            if(response.data.status === "SUCCESS"){
+            if (response.data.status === "SUCCESS") {
                 showToast("Lookalike has been successfully updated")
                 refreshData()
             }
-            else{
+            else {
                 showErrorToast("An error occurred while trying to rename lookalike")
             }
             setEditingRowId(null);
@@ -123,12 +124,12 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, order
 
     const handleDelete = async (rowId: string) => {
         try {
-            const response = await axiosInstance.delete(`/audience-lookalikes/delete-lookalike`, {params: {uuid_of_lookalike: rowId }});
-            if(response.data.status === "SUCCESS"){
+            const response = await axiosInstance.delete(`/audience-lookalikes/delete-lookalike`, { params: { uuid_of_lookalike: rowId } });
+            if (response.data.status === "SUCCESS") {
                 showToast("Lookalike has been successfully removed")
                 refreshData()
             }
-            else{
+            else {
                 showErrorToast("An error occurred while trying to remove lookalike")
             }
         } catch (error) {
@@ -146,12 +147,22 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, order
         setIsConfirmOpen(false);
     };
 
-    const formatString = (input: string): string =>
-        input
-          .split('_')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ');
-      
+    const setSourceType = (sourceType: string) => {
+        return sourceType
+            .split(',')
+            .map(item =>
+                item
+                    .split('_')
+                    .map(subItem => subItem.charAt(0).toUpperCase() + subItem.slice(1))
+                    .join(' ')
+            )
+            .join(', ');
+    }
+
+    const truncateText = (text: string, maxLength: number) => {
+        return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
+    };
+
 
     return (
         <TableContainer
@@ -238,8 +249,8 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, order
                                             opacity: 0,
                                             pointerEvents: 'none',
                                             transition: 'opacity 0.2s ease-in-out',
-                                            '@media (max-width: 900px)':{
-                                                opacity:1
+                                            '@media (max-width: 900px)': {
+                                                opacity: 1
                                             }
                                         }}
                                         onClick={(event) => handleRename(event, row.id, row.name)}
@@ -282,36 +293,36 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, order
                                         label='Lookalike Name'
                                         size="small"
                                         fullWidth
-                                          sx={{
+                                        sx={{
                                             "& label.Mui-focused": {
-                                              color: "rgba(80, 82, 178, 1)",
+                                                color: "rgba(80, 82, 178, 1)",
                                             },
                                             "& .MuiOutlinedInput-root:hover fieldset": {
                                                 color: "rgba(80, 82, 178, 1)",
                                             },
                                             "& .MuiOutlinedInput-root": {
-                                              "&:hover fieldset": {
-                                                borderColor: "rgba(80, 82, 178, 1)",
-                                                border: "1px solid rgba(80, 82, 178, 1)",
-                                              },
-                                              "&.Mui-focused fieldset": {
-                                                borderColor: "rgba(80, 82, 178, 1)",
-                                                border: "1px solid rgba(80, 82, 178, 1)",
-                                              },
+                                                "&:hover fieldset": {
+                                                    borderColor: "rgba(80, 82, 178, 1)",
+                                                    border: "1px solid rgba(80, 82, 178, 1)",
+                                                },
+                                                "&.Mui-focused fieldset": {
+                                                    borderColor: "rgba(80, 82, 178, 1)",
+                                                    border: "1px solid rgba(80, 82, 178, 1)",
+                                                },
                                             },
-                                          }}
-                                          InputProps={{
+                                        }}
+                                        InputProps={{
                                             style: {
-                                              fontFamily: "Roboto",
-                                              fontSize: "14px",
+                                                fontFamily: "Roboto",
+                                                fontSize: "14px",
                                             },
-                                          }}
-                                          InputLabelProps={{
+                                        }}
+                                        InputLabelProps={{
                                             style: {
-                                              fontSize: "14px",
-                                              fontFamily: "Roboto",
+                                                fontSize: "14px",
+                                                fontFamily: "Roboto",
                                             },
-                                          }}
+                                        }}
                                     />
                                     <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
                                         <Button
@@ -324,7 +335,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, order
                                                 padding: "0.75em 1em",
                                                 maxWidth: "50px",
                                                 maxHeight: "30px",
-                                                mr:0.5,
+                                                mr: 0.5,
                                                 "&:hover": {
                                                     backgroundColor: "#fff",
                                                     boxShadow: "0 0px 1px 1px rgba(0, 0, 0, 0.3)",
@@ -359,7 +370,49 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, order
                             </Popover>
 
                             <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>{row.source}</TableCell>
-                            <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>{formatString(row.source_type)}</TableCell>
+                            <TableCell
+                                sx={{ ...audienceStyles.table_array, position: 'relative', cursor: 'default' }}
+                            >
+                                <Box sx={{ display: 'flex' }}>
+                                    <Tooltip
+                                        title={
+                                            <Box sx={{ backgroundColor: '#fff', margin: 0, padding: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', }}>
+                                                <Typography className='table-data' component='div' sx={{ fontSize: '12px !important', }}>
+                                                    {setSourceType(row.source_type)}
+                                                </Typography>
+                                            </Box>
+                                        }
+                                        sx={{ marginLeft: '0.5rem !important' }}
+                                        componentsProps={{
+                                            tooltip: {
+                                                sx: {
+                                                    backgroundColor: '#fff',
+                                                    color: '#000',
+                                                    boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
+                                                    border: '0.2px solid rgba(255, 255, 255, 1)',
+                                                    borderRadius: '4px',
+                                                    maxHeight: '100%',
+                                                    maxWidth: '500px',
+                                                    padding: '11px 10px',
+                                                    marginLeft: '0.5rem !important',
+                                                },
+                                            },
+                                        }}
+                                        placement='right'
+                                    >
+                                        <Typography className='table-data'
+                                            sx={{
+                                                whiteSpace: 'nowrap',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                maxWidth: '150px',
+                                            }}
+                                        >
+                                            {truncateText(setSourceType(row.source_type), 30)}
+                                        </Typography>
+                                    </Tooltip>
+                                </Box>
+                            </TableCell>
                             <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>
                                 {(() => {
                                     const size = audienceSize.find(size => size.label === row.lookalike_size);
@@ -369,7 +422,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, order
                             <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>{dayjs(row.created_date).format('MMM D, YYYY')}</TableCell>
                             <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>{row.created_by}</TableCell>
                             <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>{row.size}</TableCell>
-                            <TableCell sx={{ ...lookalikesStyles.table_array, maxWidth: '40px', padding:'8px', pr:0 }}>
+                            <TableCell sx={{ ...lookalikesStyles.table_array, maxWidth: '40px', padding: '8px', pr: 0 }}>
                                 <IconButton sx={{ pl: 0, pr: 0, pt: 0.25, pb: 0.25, margin: 0 }} onClick={(event) => handleOpenConfirm(event, row.id, row.name)}>
                                     <DeleteIcon sx={{ maxHeight: "18px" }} />
                                 </IconButton>
