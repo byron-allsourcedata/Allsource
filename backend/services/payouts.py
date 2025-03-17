@@ -55,7 +55,6 @@ class PayoutsService:
                 'count_invites': len(user_ids),
                 'payout_date': payout_date_formatted
             })
-        print(monthly_info)
         
         return monthly_info
     
