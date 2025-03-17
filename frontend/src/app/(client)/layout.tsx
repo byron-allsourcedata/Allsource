@@ -110,10 +110,10 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
         <Grid item xs={12} md="auto" lg="auto" sx={{
           padding: "0px",
           display: { xs: 'none', md: 'block' },
-          flexBasis: '154px',
+          flexBasis: '170px',
           flexShrink: 0,
-          minWidth: '154px',
-          maxWidth: '154px',
+          minWidth: '170px',
+          maxWidth: '170px',
           position: 'fixed',
           top: latestNotification || newNotification ? 'calc(7.125rem)' : '4.25rem',
         }}>
@@ -128,7 +128,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
             padding: '0px 0px 0px 24px',
             minWidth: 0,
             overflowY: 'auto',
-            marginLeft: '154px',
+            marginLeft: '170px',
             '@media (max-width: 899px)': {
               overflowY: 'hidden',
               padding: '0 0 16px 16px',

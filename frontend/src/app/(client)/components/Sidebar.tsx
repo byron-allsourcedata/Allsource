@@ -126,7 +126,7 @@ const containerStyles = (hasNotification: boolean) => ({
         backgroundColor: 'rgba(255, 255, 255, 1)',
         borderRight: '1px solid rgba(228, 228, 228, 1)',
         height: hasNotification ? 'calc(100vh - 6.85rem)' : 'calc(100vh - 4.25rem)',
-        maxWidth: '154px',
+        maxWidth: '170px',
         display: 'flex',
         overflow: 'hidden',
         flexDirection: 'column',
@@ -295,6 +295,12 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                         <ContactsIcon />
                     </ListItemIcon>
                     <ListItemText primary="Lookalikes" />
+                </ListItem>
+                <ListItem button onClick={() => handleNavigation('/smart-audiences')} sx={isActive(`/smart-audiences`) ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                        <Image src={ isActive(`/smart-audiences`) ? "./magic-stick_active.svg" : "./magic-stick.svg"} alt="Smart Audiences" width={22} height={22}/>
+                    </ListItemIcon>
+                    <ListItemText primary="Smart Audiences" sx={{ whiteSpace: 'nowrap' }} />
                 </ListItem>
                 <ListItem button onClick={() => handleNavigation('/leads')} sx={isActive('/leads') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>

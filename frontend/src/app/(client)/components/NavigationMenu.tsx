@@ -360,6 +360,17 @@ const NavigationMenu: React.FC<NavigationProps> = ({ NewRequestNotification }) =
             <ListItemText
               primary="Lookalikes" />
           </ListItem>
+          <ListItem onClick={() => handleNavigation('/smart-audiences')}
+            sx={{
+              ...(isActive('/smart-audiences') ? navigationmenuStyles.activeItem : {}),
+              ...navigationmenuStyles.mobileDrawerList
+            }}>
+            <ListItemIcon>
+              <Image src={ isActive(`/smart-audiences`) ? "./magic-stick_active.svg" : "./magic-stick.svg"} alt="Smart Audiences" width={22} height={22}/>
+            </ListItemIcon>
+            <ListItemText
+              primary="Smart Audiences"/>
+          </ListItem>
           <ListItem button onClick={() => handleNavigation('/leads')}
             sx={{
               ...(isActive('/leads') ? navigationmenuStyles.activeItem : {}),
