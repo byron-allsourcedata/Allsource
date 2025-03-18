@@ -227,13 +227,45 @@ class MetaIntegrationsService:
             'created_by': created_by,
         }, integrations_users_sync_id)
         return sync
+    
+    def create_campaign(self, campaign_name, daily_budget, access_token, list_id, campaign_objective, bid_amount, ad_account_id):
+        url = f'https://graph.facebook.com/v20.0/{ad_account_id}/campaigns'
+        campaign_data = {
+            'name': campaign_name,
+            'objective': 'OUTCOME_TRAFFIC',
+            'status': 'ACTIVE',
+            'buying_type': 'AUCTION',
+            'daily_budget': daily_budget,
+            'start_time': '2025-03-20T00:00:00',
+            'end_time': '2026-03-20T00:00:00',
+            'access_token': access_token,
+            'special_ad_categories': []
+        }
+        response = self.__handle_request(method='POST', url=url, json=campaign_data)
+        response = response.json()
+        campaign_id = response['id']
 
-    async def create_sync(self, customer_id: int, domain_id: int, created_by: str, data_map: List[DataMap] = None, leads_type: str = None, list_id: str = None, list_name: str = None,):
+        url = f'https://graph.facebook.com/v20.0/{ad_account_id}/adsets'
+        ad_set_data = {
+            'name': f"{campaign_name}_ad",
+            'optimization_goal': campaign_objective,
+            'billing_event': 'IMPRESSIONS',
+            'bid_amount': bid_amount,
+            'targeting': {
+                'custom_audiences': [{'id': list_id}],
+                'geo_locations': {'countries': ['US']}
+            },
+            'campaign_id': campaign_id,
+            'access_token': access_token,
+            'status': 'PAUSED',
+        }
+        response = self.__handle_request(method='POST', url=url, json=ad_set_data)
+
+    async def create_sync(self, customer_id: int, domain_id: int, campaign, created_by: str, data_map: List[DataMap] = None, leads_type: str = None, list_id: str = None, list_name: str = None,):
         credentials = self.get_credentials(domain_id)
-        data_syncs = self.sync_persistence.get_data_sync_filter_by(domain_id=domain_id)
-        for sync in data_syncs:
-            if sync.id == credentials.id and sync.leads_type == leads_type:
-                return
+        if campaign.get('campaign_name'):
+            self.create_campaign(campaign['campaign_name'], campaign['daily_budget'], credentials.access_token, list_id, campaign['campaign_objective'], campaign['bid_amount'], customer_id)
+        
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'list_id': list_id,
@@ -244,9 +276,10 @@ class MetaIntegrationsService:
             'data_map': [data.model_dump_json() for data in data_map] if data_map else None,
             'created_by': created_by
         })
+        return sync
         
     async def process_data_sync(self, five_x_five_user, user_integration, integration_data_sync, lead_user):
-        profile = self.__create_user(five_x_five_user, integration_data_sync.list_id, user_integration.access_token)
+        profile = self.__create_user(five_x_five_user=five_x_five_user, custom_audience_id=integration_data_sync.list_id, access_token=user_integration.access_token)
         
         if profile in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return profile
@@ -258,10 +291,9 @@ class MetaIntegrationsService:
         return ProccessDataSyncResult.SUCCESS.value
 
     def __create_user(self, five_x_five_user, custom_audience_id: str, access_token: str):
-        profile = self.__mapped_meta_user(five_x_five_user)
+        profile = self.__hash_mapped_meta_user(five_x_five_user)
         if profile in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return profile
-        
         payload = {
             "schema": [
                 "EMAIL",
@@ -282,7 +314,7 @@ class MetaIntegrationsService:
             })
         return response.json()
 
-    def __mapped_meta_user(self, five_x_five_user: FiveXFiveUser):
+    def __hash_mapped_meta_user(self, five_x_five_user: FiveXFiveUser):
         email_fields = [
             'business_email', 
             'personal_emails', 
