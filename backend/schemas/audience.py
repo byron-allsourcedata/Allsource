@@ -71,7 +71,25 @@ class SourceResponse(BaseModel):
         "from_attributes": True
     }
 
+class SmartsResponse(BaseModel):
+    id: UUID
+    name: str
+    use_case_alias: str
+    created_by: str
+    created_at: datetime
+    total_records: int
+    validated_records: int
+    active_segment_records: int
+    status: str
+
+    model_config = {
+        "from_attributes": True
+    }
 
 class SourcesObjectResponse(BaseModel):
     source_list: List[SourceResponse]
+    count: int
+
+class SmartsAudienceObjectResponse(BaseModel):
+    audience_smarts_list: List[SmartsResponse]
     count: int
