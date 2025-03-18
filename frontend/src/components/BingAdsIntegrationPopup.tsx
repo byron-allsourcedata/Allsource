@@ -30,7 +30,6 @@ interface IntegrationsCredentials {
 const BingAdsIntegrationPopup = ({ handleClose, open, boxShadow }: CreateSalesForceProps) => {
     const [value, setValue] = useState("1");
 
-    // Функция для генерации случайной строки (code verifier)
     const generateRandomString = (length: number): string => {
         const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
         let result = '';
@@ -40,7 +39,6 @@ const BingAdsIntegrationPopup = ({ handleClose, open, boxShadow }: CreateSalesFo
         return result;
     };
 
-    // Функция для генерации code challenge из code verifier с помощью SHA-256
     async function generateCodeChallenge(codeVerifier: string): Promise<string> {
         const encoder = new TextEncoder();
         const data = encoder.encode(codeVerifier);
@@ -80,8 +78,7 @@ const BingAdsIntegrationPopup = ({ handleClose, open, boxShadow }: CreateSalesFo
             `code_challenge=${codeChallenge}&` +
             `code_challenge_method=S256&` +
             `prompt=consent`;
-
-
+            
         window.open(authorizationUrl, '_blank');
     }
 

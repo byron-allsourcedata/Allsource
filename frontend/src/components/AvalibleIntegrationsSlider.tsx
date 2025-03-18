@@ -54,7 +54,6 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
     const [openSlackConnect, setOpenSlackConnect] = useState(false)
     const [openHubspotConnect, setOpenHubspotConnect] = useState(false)
     const [openGoogleAdsConnect, setOpenGoogleAdsConnect] = useState(false)
-    const [openSalesForceConnect, setOpenSalesForceConnect] = useState(false)
     const [openWebhookConnect, setOpenWebhookConnect] = useState(false)
     const [searchQuery, setSearchQuery] = useState("");
     const handleClose = () => {
