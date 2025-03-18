@@ -9,7 +9,7 @@ import { useUser } from '../../../context/UserContext'; // Assuming you have a U
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 
-const PlanCard = ({ plan, onChoose }: { plan: any; onChoose: (stripePriceId: string) => void }) => {
+const PlanCard = ({ plan, onChoose }: { plan: any; onChoose: (alias: string) => void }) => {
   return (
     <Box sx={planStyles.card}>
       <Typography variant="h6" component="div" sx={planStyles.planName}>
@@ -28,7 +28,7 @@ const PlanCard = ({ plan, onChoose }: { plan: any; onChoose: (stripePriceId: str
         variant="outlined"
         sx={planStyles.submitButton}
         fullWidth
-        onClick={() => onChoose(plan.stripe_price_id)}
+        onClick={() => onChoose(plan.alias)}
       >
         Choose plan
       </Button>
@@ -38,7 +38,7 @@ const PlanCard = ({ plan, onChoose }: { plan: any; onChoose: (stripePriceId: str
 
 const PlanPage: React.FC = () => {
   const router = useRouter();
-  const { full_name, email } = useUser(); 
+  const { full_name, email } = useUser();
   const [plans, setPlans] = useState<any[]>([]);
 
   useEffect(() => {
@@ -61,9 +61,9 @@ const PlanPage: React.FC = () => {
     fetchData();
   }, []);
 
-  const handleChoosePlan = async (stripePriceId: string) => {
+  const handleChoosePlan = async (alias: string) => {
     try {
-      const response = await axiosInterceptorInstance.get(`/subscriptions/session/new?price_id=${stripePriceId}`);
+      const response = await axiosInterceptorInstance.get(`/subscriptions/session/new?alias=${alias}`);
       if (response.status === 200) {
         window.location.href = response.data.link;
       }

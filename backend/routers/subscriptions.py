@@ -30,7 +30,7 @@ async def get_subscription_plans(plans_service: PlansService = Depends(get_plans
 
 
 @router.get("/session/new")
-async def create_customer_session(price_id: str, payments_service: PaymentsService = Depends(get_payments_service),
+async def create_customer_session(alias: str, payments_service: PaymentsService = Depends(get_payments_service),
                                   user: Users = Depends(check_user_authentication)):
     
     if user.get('team_member'):
@@ -41,7 +41,7 @@ async def create_customer_session(price_id: str, payments_service: PaymentsServi
                 detail="Access denied. Admins only."
             )
             
-    return payments_service.create_customer_session(price_id=price_id, user=user)
+    return payments_service.create_customer_session(alias=alias, user=user)
 
 
 @router.post("/update-subscription-webhook")
@@ -142,7 +142,7 @@ def cancel_user_subscription(unsubscribe_request: UnsubscribeRequest,
 
 
 @router.get("/upgrade-and-downgrade-user-subscription")
-def upgrade_and_downgrade_user_subscription(price_id: str,
+def upgrade_and_downgrade_user_subscription(alias: str,
                                             payments_service: PaymentsService = Depends(get_payments_service),
                                             user: dict = Depends(check_user_authentication)):
     if user.get('team_member'):
@@ -153,7 +153,7 @@ def upgrade_and_downgrade_user_subscription(price_id: str,
                 detail="Access denied. Admins only."
             )
 
-    return payments_service.upgrade_and_downgrade_user_subscription(price_id=price_id, user=user)
+    return payments_service.upgrade_and_downgrade_user_subscription(alias=alias, user=user)
 
 
 @router.get("/cancel-downgrade")
