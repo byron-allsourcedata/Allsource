@@ -59,7 +59,7 @@ class PlansService:
                     "price": stripe_plan.price,
                     "title": stripe_plan.title,
                     "description": stripe_plan.description,
-                    "stripe_price_id": stripe_plan.stripe_price_id,
+                    "alias": stripe_plan.alias,
                     "currency": stripe_plan.currency,
                     "domains_limit": stripe_plan.domains_limit,
                     "integrations_limit": stripe_plan.integrations_limit,

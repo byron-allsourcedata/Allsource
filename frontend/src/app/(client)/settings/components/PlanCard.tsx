@@ -3,7 +3,7 @@ import { Box, Typography, Button, Divider } from '@mui/material';
 import Image from 'next/image';
 import CustomTooltip from '../../../../components/customToolTip';
 
-const PlanCard: React.FC<{ plan: any; activePlanTitle: string, activePlanPeriod: string, tabValue: number, onChoose: (stripePriceId: string) => void }> = ({ plan, activePlanTitle, tabValue, onChoose, activePlanPeriod }) => {
+const PlanCard: React.FC<{ plan: any; activePlanTitle: string, activePlanPeriod: string, tabValue: number, onChoose: (alias: string) => void }> = ({ plan, activePlanTitle, tabValue, onChoose, activePlanPeriod }) => {
     const getButtonLabel = () => {
         if (plan.is_active) return 'Current Plan';
     
@@ -85,7 +85,7 @@ const PlanCard: React.FC<{ plan: any; activePlanTitle: string, activePlanPeriod:
                         className='hyperlink-red'
                         variant="outlined"
                         fullWidth
-                        onClick={() => onChoose(plan.stripe_price_id)}
+                        onClick={() => onChoose(plan.alias)}
                         disabled={plan.is_active}
                         sx={{
                             color: plan.is_active ? '#5f6368 !important' : '#5052B2 !important',

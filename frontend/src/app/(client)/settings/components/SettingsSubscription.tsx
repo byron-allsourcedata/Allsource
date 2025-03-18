@@ -249,13 +249,13 @@ export const SettingsSubscription: React.FC = () => {
     };
 
 
-    const handleChoosePlan = async (stripePriceId: string) => {
+    const handleChoosePlan = async (alias: string) => {
         let path = hasActivePlan
             ? '/subscriptions/upgrade-and-downgrade-user-subscription'
             : '/subscriptions/session/new';
         try {
             setIsLoading(true)
-            const response = await axiosInterceptorInstance.get(`${path}?price_id=${stripePriceId}`);
+            const response = await axiosInterceptorInstance.get(`${path}?alias=${alias}`);
             if (response.status === 200) {
                 if (response.data.link !== null && response.data.link !== undefined) {
                     if (response.data?.source_platform == 'big_commerce') {
