@@ -1,1159 +1,1083 @@
 "use client";
-import React, { ChangeEvent, useState, useEffect } from 'react';
-import { Box, Grid, Typography, TextField, Button, FormControl, MenuItem, Select, LinearProgress, SelectChangeEvent, IconButton } from '@mui/material';
+import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
+import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText, LinearProgress, Chip, Tooltip } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { smartAudiences } from "./smartAudiences"
-import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
+import axiosInstance from '../../../axios/axiosInterceptorInstance';
+import { smartAudiences } from './smartAudiences';
+import Slider from '../../../components/Slider';
+import { SliderProvider } from '../../../context/SliderContext';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import ArrowDownwardRoundedIcon from '@mui/icons-material/ArrowDownwardRounded';
+import ArrowUpwardRoundedIcon from '@mui/icons-material/ArrowUpwardRounded';
+import SwapVertIcon from '@mui/icons-material/SwapVert';
+import dayjs from 'dayjs';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
-import { showErrorToast, showToast } from '@/components/ToastNotification';
-import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
-import { styled } from '@mui/material/styles';
 import CustomToolTip from '@/components/customToolTip';
+import CustomTablePagination from '@/components/CustomTablePagination';
 import { useNotification } from '@/context/NotificationContext';
-import Papa, { ParseResult } from "papaparse";
+import { showErrorToast, showToast } from '@/components/ToastNotification';
+// import ThreeDotsLoader from './components/ThreeDotsLoader';
+// import ProgressBar from './components/ProgressLoader';
+import { MoreVert } from '@mui/icons-material'
+import { useSSE } from '../../../context/SSEContext';
+import FilterPopup from './components/SmartAudienceFilter';
+import CloseIcon from '@mui/icons-material/Close';
 
-interface Row {
-    id: number;
-    type: string;
-    value: string;
-    canDelete: boolean;
-    isHidden: boolean
-}
-
-interface EventTypeInterface {
-    id: number;
-    name: string;
-    title: string;
-}
-
-interface NewSource {
-    source_type: string;
-    source_origin: string;
-    source_name: string;
-    file_url?: string;
-    rows?: { type: string; value: string }[];
-    domain_id?: number;
-}
-
-interface DomainsLeads {
-    id: number;
+interface Source {
+    id: string
     name: string
-    pixel_installed: boolean
-    converted_sales_count: number
-    viewed_product_count: number
-    visitor_count: number
-    abandoned_cart_count: number
-    total_count: number
+    source_origin: string
+    source_type: string
+    created_at: Date
+    domain: string
+    created_by: string
+    processed_records: number
+    total_records: number
+    matched_records: number
+    matched_records_status: string
 }
 
-const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
-    height: 4,
-    borderRadius: 0,
-    backgroundColor: '#c6dafc',
-    '& .MuiLinearProgress-bar': {
-      borderRadius: 5,
-      backgroundColor: '#4285f4',
-    },
-  }));
+interface FetchDataParams {
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+    page: number;
+    rowsPerPage: number;
+}
+
+interface FilterParams {
+    from_date: number | null;
+    to_date: number | null;
+    searchQuery: string | null;
+    selectedSource: string[];
+    selectedTypes: string[];
+    selectedDomains: string[];
+    createdDate: string[];
+    dateRange: { fromDate: number | null; toDate: number | null };
+}
 
 
-const SourcesImport: React.FC = () => {
+const Sources: React.FC = () => {
     const router = useRouter();
-    const [isChatGPTProcessing, setIsChatGPTProcessing] = useState(false);
-    const [isDomainSearchProcessing, setIsDomainSearchProcessing] = useState(false);
-    const [file, setFile] = useState<File | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [sourceType, setSourceType] = useState<string>("");
-    const [selectedDomain, setSelectedDomain] = useState<string>("");
-    const [sourceName, setSourceName] = useState<string>("");
-    const [fileSizeStr, setFileSizeStr] = useState<string>("");
-    const [fileName, setFileName] = useState<string>("");
-    const [fileUrl, setFileUrl] = useState<string>("");
-    const [sourceMethod, setSourceMethod] = useState<number>(0);
-    const [selectedDomainId, setSelectedDomainId] = useState<number>(0);
-    const [dragActive, setDragActive] = useState(false);
-    const [emailNotSubstitution, setEmailNotSubstitution] = useState(false);
-    const [pixelNotInstalled, setPixelNotInstalled] = useState(false);
-    const [uploadProgress, setUploadProgress] = useState<number | null>(null);
-    const [headersinCSV, setHeadersinCSV] = useState<string[]>([]);
     const { hasNotification } = useNotification();
+    const [data, setData] = useState<Source[]>([]);
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [count_sources, setCount] = useState<number | null>(null);
+    const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
+    const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
+    const [status, setStatus] = useState<string | null>(null);
+    const [showSlider, setShowSlider] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isFirstLoad, setIsFirstLoad] = useState(true);
+    const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
+    const dropdownOpen = Boolean(dropdownEl);
+    const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+    const [activeFilter, setActiveFilter] = useState<string>('');
+    const [selectedDates, setSelectedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
+    const [filterPopupOpen, setFilterPopupOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [selectedFilters, setSelectedFilters] = useState<{ label: string, value: string }[]>([]);
+    const { sourceProgress } = useSSE();
+    const [loaderForTable, setLoaderForTable] = useState(false);
+    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const [anchorElFullName, setAnchorElFullName] = React.useState<null | HTMLElement>(null);
+    const [selectedRowData, setSelectedRowData] = useState<Source | null>(null);
+    const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+    const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
+    const [selectedName, setSelectedName] = React.useState<string | null>(null);
+    const isOpen = Boolean(anchorEl);
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    
+    useEffect(() => {
+        fetchSources({
+            sortBy: orderBy,
+            sortOrder: order,
+            page,
+            rowsPerPage,
+        });
+    }, [orderBy, order, page, rowsPerPage, selectedFilters]);
 
-    const [eventType, setEventType] = useState<number[]>([]);
-    const [domains, setDomains] = useState<DomainsLeads[]>([]);
-    const [totalLeads, setTotalLeads] = useState(0);
-    const [matchedLeads, setMatchedLeads] = useState(0);
-
-    const eventTypes: EventTypeInterface[] = [
-        { id: 1, name: "visitor_count", title: "visitor"},
-        { id: 2, name: "viewed_product_count", title: "viewed_product" },
-        { id: 3, name: "abandoned_cart_count", title: "abandoned_cart"},
-        { id: 4, name: "converted_sales_count", title: "converted_sales"}
-    ];
-
-    const defaultRows: Row[] = [
-        { id: 1, type: 'Email', value: '', canDelete: false, isHidden: false },
-        { id: 2, type: 'Phone number', value: '', canDelete: true, isHidden: false },
-        { id: 3, type: 'Last Name', value: '', canDelete: true, isHidden: false },
-        { id: 4, type: 'First Name', value: '', canDelete: true, isHidden: false },
-        { id: 5, type: 'Transaction Date', value: '', canDelete: true, isHidden: false },
-    ];
-    const [rows, setRows] = useState<Row[]>(defaultRows);
-
-    const handleMapListChange = (id: number, value: string) => {
-        setRows(rows.map(row =>
-            row.id === id ? { ...row, value } : row
-        ));
-
-        if (id === 1) {
-            setEmailNotSubstitution(false);
+    const fetchSourcesMemoized = useCallback(() => {
+        fetchSources({
+            sortBy: orderBy,
+            sortOrder: order,
+            page,
+            rowsPerPage,
+        });
+    }, [orderBy, order, page, rowsPerPage]);
+    
+    useEffect(() => {
+        console.log("longpol");
+    
+        if (!intervalRef.current) {
+            console.log("longpol started");
+            intervalRef.current = setInterval(() => {
+                const hasPending = data.some(item => item.matched_records_status === "pending");
+    
+                if (hasPending) {
+                    console.log("Fetching due to pending records");
+                    fetchSourcesMemoized();
+                } else {
+                    console.log("No pending records, stopping interval");
+                    if (intervalRef.current) {
+                        clearInterval(intervalRef.current);
+                        intervalRef.current = null;
+                    }
+                }
+            }, 2000);
         }
+    
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+                console.log("interval cleared");
+            }
+        };
+    }, [data, fetchSourcesMemoized]);
+
+    const fetchSources = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
+        try {
+            isFirstLoad ? setLoading(true)  : setLoaderForTable(true);
+            const accessToken = localStorage.getItem("token");
+            if (!accessToken) {
+                router.push('/signin');
+                return;
+            }
+
+            const filters = JSON.parse(sessionStorage.getItem('filtersBySource') || '{}');
+
+            let url = `/audience-sources?&page=${page + 1}&per_page=${rowsPerPage}`;
+
+            if (filters.from_date || filters.to_date) {
+                url += `&created_date_start=${filters.from_date || ''}&created_date_end=${filters.to_date || ''}`;
+            }
+            if (filters.selectedSource?.length > 0) {
+                url += `&source_origin=${filters.selectedSource.map((source: string) => source.toLowerCase()).join(',')}`;
+            }
+            if (filters.selectedTypes?.length > 0) {
+                url += `&source_type=${filters.selectedTypes
+                    .map((type: string) => type.toLowerCase().replace(/\s+/g, '_'))
+                    .join(',')}`;
+            }
+            if (filters.selectedDomains?.length > 0) {
+                url += `&domain_name=${filters.selectedDomains.join(',')}`;
+            }
+            if (filters.searchQuery) {
+                url += `&name=${filters.searchQuery}`;
+            }
+
+            if (sortBy) {
+                setPage(0)
+                url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
+            }
+
+            if (sortBy) {
+                setPage(0)
+                url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
+            }
+
+            const response = await axiosInstance.get(url)
+
+            const { source_list, count } = response.data;
+            setData(source_list);
+            setCount(count || 0);
+            setStatus("");
+
+            const options = [10, 20, 50, 100, 300, 500];
+            let RowsPerPageOptions = options.filter(option => option <= count);
+            if (RowsPerPageOptions.length < options.length) {
+                RowsPerPageOptions = [...RowsPerPageOptions, options[RowsPerPageOptions.length]];
+            }
+            setRowsPerPageOptions(RowsPerPageOptions);
+            const selectedValue = RowsPerPageOptions.includes(rowsPerPage) ? rowsPerPage : 10;
+            setRowsPerPage(selectedValue);
+        } catch {
+        } finally {
+            if (isFirstLoad) {
+                setLoading(false);
+                setIsFirstLoad(false);
+            } else {
+                setLoaderForTable(false);
+            }
+        }
+    }
+
+    const isOpenFullName = Boolean(anchorElFullName);
+
+    const handleClosePopoverFullName = () => {
+        setAnchorElFullName(null);
+        setSelectedName(null);
+    };
+
+    const handleFilterPopupOpen = () => {
+        setFilterPopupOpen(true);
+    };
+
+    const handleFilterPopupClose = () => {
+        setFilterPopupOpen(false);
+    };
+
+    const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, rowData: Source) => {
+        setAnchorEl(event.currentTarget);
+        setSelectedRowData(rowData);
+    };
+
+    const handleClosePopover = () => {
+        setAnchorEl(null);
+    };
+
+    const handleSortRequest = (property: string) => {
+        const isAsc = orderBy === property && order === 'asc';
+        setOrder(isAsc ? 'desc' : 'asc');
+        setOrderBy(property);
+    };
+
+    const handleDeleteSource = async () => {
+        setLoaderForTable(true);
+        handleClosePopover();
+        handleCloseConfirmDialog();
+        try {
+            if (selectedRowData?.id) {
+                const response = await axiosInstance.delete(`/audience-sources/${selectedRowData.id}`);
+                if (response.status === 200 && response.data) {
+                    showToast("Source successfully deleted!");
+                    setData((prevAccounts: Source[]) =>
+                        prevAccounts.filter((item: Source) => item.id !== selectedRowData.id)
+                    );
+                }
+            }
+        } catch {
+            showErrorToast("Error deleting source")
+        } finally {
+            setLoaderForTable(false);
+        }
+    };
+
+    const handleOpenConfirmDialog = () => {
+        setOpenConfirmDialog(true);
+    };
+
+    const handleCloseConfirmDialog = () => {
+        setOpenConfirmDialog(false);
+    };
+
+    const handleChangePage = (event: unknown, newPage: number) => {
+        setPage(newPage);
+    };
+
+    const handleChangeRowsPerPage = (event: React.ChangeEvent<{ value: unknown }>) => {
+        setRowsPerPage(parseInt(event.target.value as string, 10));
+        setPage(0);
     };
 
     useEffect(() => {
-        let updatedRows = defaultRows.map(row => {
-            if (row.type === 'Transaction Date') {
-                let newType = row.type;
-                if (sourceType === "Customer conversion") newType = "Transaction Date";
-                if (sourceType === "Failed Leads") newType = "Lead Date";
-                if (sourceType === "Interest") newType = "Interest Date";
+        const storedFilters = sessionStorage.getItem('filtersBySource');
 
-                return { ...row, type: newType };
-            }
-            return row;
-        });
-        if (sourceType === "Customer conversion") {
-            updatedRows = [
-                ...updatedRows,
-                { id: 6, type: 'Order Amount', value: '', canDelete: true, isHidden: false },
-            ];
+        if (storedFilters) {
+            const filters = JSON.parse(storedFilters);
+
+            handleApplyFilters(filters);
         }
+    }, []);
 
-        setRows(updatedRows);
-    }, [sourceType]);
+    const handleApplyFilters = (filters: FilterParams) => {
+        const newSelectedFilters: { label: string; value: string }[] = [];
+        const dateFormat = 'YYYY-MM-DD';
 
-    const handleChangeSourceType = (event: SelectChangeEvent<string>) => {
-        handleDeleteFile()
-        setSourceType(event.target.value);
-    };
-
-
-    const handleDelete = (id: number) => {
-        setRows(rows.map(row => (row.id === id ? { ...row, isHidden: true } : row)));
-    };
-
-    const handleAdd = () => {
-        const hiddenRowIndex = rows.findIndex(row => row.isHidden);
-        if (hiddenRowIndex !== -1) {
-            const updatedRows = [...rows];
-            updatedRows[hiddenRowIndex].isHidden = false;
-            setRows(updatedRows);
-        }
-    };
-
-    const handleDeleteFile = () => {
-        setFile(null);
-        setFileName('')
-        setEmailNotSubstitution(false)
-        setRows(defaultRows)
-    };
-
-    const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault();
-        setDragActive(true);
-    };
-
-    const handleDragLeave = () => {
-        setDragActive(false);
-    };
-
-
-    const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault();
-        setDragActive(false);
-
-        const uploadedFile = event.dataTransfer.files[0];
-        if (uploadedFile) {
-            handleFileUpload(uploadedFile)
-        }
-    };
-
-    const convertToDBFormat = (sourceType: string) => {
-        return sourceType.split(' ').join('_').toLowerCase()
-    }
-
-    const convertToDBFormat2 = (eventTypesArr: number[]) => {
-        return eventTypesArr
-            .map(id => {
-                const eventType = eventTypes.find(event => event.id === id);
-                return eventType?.title
-            })
-            .filter(name => name)
-            .join(',');
-    };
-    const handleSumbit = async () => {
-        setLoading(true)
-
-        const rowsToSubmit = rows.map(({ id, canDelete, isHidden, ...rest }) => rest);
-
-        const newSource: NewSource = {
-            source_type: sourceMethod === 1  ? convertToDBFormat(sourceType) : convertToDBFormat2(eventType),
-            source_origin: sourceMethod === 1 ? "csv" : "pixel",
-            source_name: sourceName,
-        }
-
-        if (sourceMethod === 1) {
-            newSource.file_url = fileUrl
-            newSource.rows = rowsToSubmit
-        }
-
-
-        if (sourceMethod === 2) {
-            newSource.domain_id = selectedDomainId;
-        }
-        
-        try {
-            const response = await axiosInstance.post(`/audience-sources/create`, newSource, {
-                headers: { 'Content-Type': 'application/json' },
-            })
-            if (response.status === 200){
-                const dataString = encodeURIComponent(JSON.stringify(response.data));
-                router.push(`/sources/created-source?data=${dataString}`)
-            }
-        }
-        catch {
-        }
-        finally {
-            setLoading(false)
-        }
-    }
-
-    const downloadSampleFile = async () => {
-        try {
-            setLoading(true)
-            if (sourceType !== ""){
-                const response = await axiosInstance.get(`/audience-sources/sample-customers-list?&source_type=${convertToDBFormat(sourceType)}`, {
-                    responseType: 'blob',
-                });
-                const url = window.URL.createObjectURL(new Blob([response.data]));
-                const link = document.createElement('a');
-                link.href = url;
-                link.setAttribute('download', 'sample-customers-list.csv');
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
-            else {
-                showErrorToast("Please select source type")
-            }
-
-        } catch (error) {
-            showErrorToast('Error downloading the file.');
-        } finally {
-            setLoading(false)
-        }
-    };
-    
-    const validateFileSize = (file: File, maxSizeMB: number): boolean => {
-        const fileSize = parseFloat((file.size / (1024 * 1024)).toFixed(2));
-        if (fileSize > maxSizeMB) {
-            handleDeleteFile();
-            showErrorToast("The uploaded CSV file exceeds the 100MB limit. Please reduce the file size and try again.");
-            return false;
-        }
-        setFileSizeStr(fileSize + " MB");
-        setFileName(file.name);
-        return true;
-    };
-
-    const getFileUploadUrl = async (fileType: string): Promise<string> => {
-        try {
-            const response = await fetch("/api/upload", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ fileType }),
-            });
-
-            const { url } = await response.json();
-    
-            if (!url) {
-                throw new Error("Storage access error!");
-            }
-
-            setFileUrl(url);
-            return url
-
-        } catch (error: unknown) {
-            throw error;
-        }
-    };
-
-    const uploadFile = (file: File, url: string, onProgress: (progress: number) => void): Promise<void> => {
-        return new Promise((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-            xhr.open("PUT", url);
-
-            xhr.upload.onprogress = (event) => {
-                if (event.lengthComputable) {
-                    const percentCompleted = Math.round((event.loaded * 100) / event.total);
-                    onProgress(percentCompleted);
+        const filterMappings: { condition: boolean | string | string[] | number | null, label: string, value: string | ((f: any) => string) }[] = [
+            { condition: filters.from_date, label: 'From Date', value: () => dayjs.unix(filters.from_date!).format(dateFormat) },
+            { condition: filters.to_date, label: 'To Date', value: () => dayjs.unix(filters.to_date!).format(dateFormat) },
+            { condition: filters.searchQuery, label: 'Search', value: filters.searchQuery! },
+            { condition: filters.selectedSource?.length > 0, label: 'Source', value: () => filters.selectedSource.join(', ') },
+            { condition: filters.selectedTypes?.length > 0, label: 'Types', value: () => filters.selectedTypes.join(', ') },
+            { condition: filters.selectedDomains?.length > 0, label: 'Domains', value: () => filters.selectedDomains.join(', ') },
+            { condition: filters.createdDate?.length > 0, label: 'Created Date', value: () => filters.createdDate.join(', ') },
+            {
+                condition: filters.dateRange.fromDate || filters.dateRange.toDate, label: 'Date Range', value: () => {
+                    const from = dayjs.unix(filters.dateRange.fromDate!).format(dateFormat);
+                    const to = dayjs.unix(filters.dateRange.toDate!).format(dateFormat);
+                    return `${from} to ${to}`;
                 }
+            }
+        ];
+
+        filterMappings.forEach(({ condition, label, value }) => {
+            if (condition) {
+                newSelectedFilters.push({ label, value: typeof value === 'function' ? value(filters) : value });
+            }
+        });
+
+        setSelectedFilters(newSelectedFilters);
+    };
+
+    const handleResetFilters = () => {
+        setSelectedFilters([]);
+
+        const filters = {
+            from_date: null,
+            to_date: null,
+            searchQuery: null,
+            selectedSource: [],
+            selectedTypes: [],
+            selectedDomains: [],
+            createdDate: [],
+            dateRange: { fromDate: null, toDate: null },
+        };
+
+        sessionStorage.setItem('filtersBySource', JSON.stringify(filters));
+
+        handleApplyFilters(filters);
+    };
+
+    const handleDeleteFilter = (filterToDelete: { label: string; value: string }) => {
+        let updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
+        setSelectedFilters(updatedFilters);
+    
+        let filters = JSON.parse(sessionStorage.getItem('filtersBySource') || '{}');
+    
+        const deleteDate = (filters: FilterParams) => {
+            filters.createdDate = [];
+            filters.from_date = null;
+            filters.to_date = null;
+            filters.dateRange = { fromDate: null, toDate: null };
+            setSelectedDates({ start: null, end: null });
+        };
+    
+        switch (filterToDelete.label) {
+            case 'From Date':
+            case 'To Date':
+            case 'Created Date':
+            case 'Date Range':
+                deleteDate(filters);
+                break;
+            case 'Search':
+                filters.searchQuery = '';
+                break;
+            case 'Source':
+                filters.selectedSource = [];
+                break;
+            case 'Types':
+                filters.selectedTypes = [];
+                break;
+            case 'Domains':
+                filters.selectedDomains = [];
+                break;
+            default:
+                break;
+        }
+    
+        if (!filters.from_date && !filters.to_date) {
+            filters.checkedFilters = {
+                lastWeek: false,
+                last30Days: false,
+                last6Months: false,
+                allTime: false,
             };
-
-            xhr.onload = () => resolve();
-            xhr.onerror = () => reject(new Error("Failed to upload file. Please contact our Support team"));
-
-            xhr.setRequestHeader("Content-Type", file.type);
-            xhr.send(file);
-        });
-    };
-
-    const processFileContent = async (parsedData: ParseResult<string[]>): Promise<void> => {
-        try {
-            const { data } = parsedData;
-            const headers = data[0]
-            setHeadersinCSV(headers);
-
-            if (headers.length === 0 || headers.every((header: string) => header === "")) {
-                throw new Error("CSV file doesn't contain headers!");
-            }
-
-            const newHeadings = await smartSubstitutionHeaders(headers);
-
-            if (newHeadings[0] === "None") {
-                setEmailNotSubstitution(true);
-            }
-
-            const updatedRows = rows.map((row, index) => ({
-                ...row,
-                value: newHeadings[index] === "None" ? "" : newHeadings[index],
-            }));
-
-            setRows(updatedRows);
-        } catch (error: unknown) {
-            throw error;
         }
-    };
-
-    const readFileContent = (file: File): Promise<ParseResult<string[]>> => {
-        return new Promise((resolve, reject) => {
-            Papa.parse<string[]>(file, {
-                complete: (result: any) => {
-                    if (result.data && result.data.length > 0) {
-                        resolve(result);
-                    } else {
-                        reject(new Error("CSV file is empty or couldn't be parsed."));
-                    }
-                },
-                error: () => {
-                    reject(new Error(`Error parsing CSV file`));
-                },
-                skipEmptyLines: true,
-            });
-        });
-    };
-
-    const handleFileUpload = async (file: File) => {
-        try {
-            if (!file) return;
-
-            if (!validateFileSize(file, 100)) return;
-
-            const url = await getFileUploadUrl(file.type);
-
-            await uploadFile(file, url, setUploadProgress);
-            setUploadProgress(null);
-
-            setFile(file);
-
-            const content = await readFileContent(file);
-            await processFileContent(content);
-
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-                showErrorToast(error.message);
-            } else {
-                showErrorToast("An unexpected error occurred during file upload.");
-            }
-            setUploadProgress(null);
-        }
-    };
-
-    const smartSubstitutionHeaders = async (headings: string[]) => {
-        setIsChatGPTProcessing(true)
-        try {
-            const response = await axiosInstance.post(`/audience-sources/heading-substitution`, {source_type: sourceType, headings}, {
-                headers: { 'Content-Type': 'application/json' },
-            })
-            if (response.status === 200){
-                const updateEmployee = response.data
-                return updateEmployee
-            }
-        } 
-        catch {
-        }
-        finally {
-            setIsChatGPTProcessing(false)
-        }
-    } 
-
-
-    const toggleEventType = (id: number) => { 
-        const isCurrentlyActive = eventType.includes(id);
     
-        const typeCount = eventTypes.find(event => event.id === id)?.name as keyof DomainsLeads;
-        const countChange = Number(domains.find(domain => domain.name === selectedDomain)?.[typeCount] || 0);
-
-        setEventType((prev) => {
-            if (isCurrentlyActive) {
-                return prev.filter((item) => item !== id);
-            } else {
-                return [...prev, id];
-            }
-        });
+        sessionStorage.setItem('filtersBySource', JSON.stringify(filters));
     
-        setMatchedLeads((prevLeads) => {
-            if (isCurrentlyActive) {
-                return prevLeads - countChange;
-            } else {
-                return prevLeads + countChange;
-            }
-        });
-    };
+        updatedFilters = updatedFilters.filter(f => !['From Date', 'To Date', 'Date Range'].includes(f.label));
+        setSelectedFilters(updatedFilters);
     
-    
-
-    const handleChangeDomain = (event: SelectChangeEvent<string>) => {
-        const domainName = event.target.value;
-        setSelectedDomain(domainName);
-    
-        const selectedDomainData = domains.find((domain: DomainsLeads) => domain.name === domainName);
-        if (selectedDomainData) {
-            setTotalLeads(selectedDomainData.total_count || 0);
-            setSelectedDomainId(selectedDomainData.id);
-            setMatchedLeads(0)
-            setEventType([])
-            if (!selectedDomainData.pixel_installed) {
-                setPixelNotInstalled(true);
-            }
-            else {
-                setPixelNotInstalled(false);
-            }
+        if (updatedFilters.length === 0) {
+            setSelectedFilters([]);
         }
-    };
+    
+        const newFilters: FilterParams = {
+            from_date: updatedFilters.find(f => f.label === 'From Date') ? dayjs(updatedFilters.find(f => f.label === 'From Date')!.value).unix() : null,
+            to_date: updatedFilters.find(f => f.label === 'To Date') ? dayjs(updatedFilters.find(f => f.label === 'To Date')!.value).unix() : null,
+            searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',
+            selectedSource: updatedFilters.find(f => f.label === 'Source') ? updatedFilters.find(f => f.label === 'Source')!.value.split(', ') : [],
+            selectedTypes: updatedFilters.find(f => f.label === 'Types') ? updatedFilters.find(f => f.label === 'Types')!.value.split(', ') : [],
+            selectedDomains: updatedFilters.find(f => f.label === 'Domains') ? updatedFilters.find(f => f.label === 'Domains')!.value.split(', ') : [],
+            createdDate: updatedFilters.find(f => f.label === 'Created Date') ? updatedFilters.find(f => f.label === 'Created Date')!.value.split(', ') : [],
+            dateRange: {
+                fromDate: updatedFilters.find(f => f.label === 'Date Range') ? dayjs(updatedFilters.find(f => f.label === 'Date Range')!.value.split(', ')[0]).unix() : null,
+                toDate: updatedFilters.find(f => f.label === 'Date Range') ? dayjs(updatedFilters.find(f => f.label === 'Date Range')!.value.split(', ')[1]).unix() : null,
+            },
+        };
+    
+        handleApplyFilters(newFilters);
+    };    
 
-    const fetchDomainsAndLeads = async () => {
-        setIsDomainSearchProcessing(true)
-        try {
-            const response = await axiosInstance.get(`/audience-sources/domains-with-leads`)
-            if (response.status === 200){
-                const domains = response.data
-                setDomains(domains)
-            }
-        } 
-        catch {
-        }
-        finally {
-            setIsDomainSearchProcessing(false)
-        }
+
+    const setSourceOrigin = (sourceOrigin: string) => {
+        return sourceOrigin === "pixel" ? "Pixel" : "CSV File"
     }
 
+    const setSourceType = (sourceType: string) => {
+        return sourceType
+            .split(',')
+            .map(item =>
+                item
+                    .split('_')
+                    .map(subItem => subItem.charAt(0).toUpperCase() + subItem.slice(1))
+                    .join(' ')
+            )
+            .join(', ');
+    }
+
+
+    const truncateText = (text: string, maxLength: number) => {
+        return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
+    };
 
 
     return (
         <>
             {loading && (
-                <CustomizedProgressBar/>
+                <CustomizedProgressBar />
             )}
             <Box sx={{
-                display: 'flex', flexDirection: 'column', height: 'calc(100vh - 4.25rem)', overflow: 'auto',
-                '@media (max-width: 1024px)': {
-                    pr: 2,
+                display: 'flex', flexDirection: 'column', height: '100%',
+                '@media (max-width: 900px)': {
+                    minHeight: '100vh'
+
                 }
             }}>
-                <Box sx={{display: "flex", flexDirection: 'column', alignItems: "center"}}>
-                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', }}>
+                    <Box>
                         <Box
                             sx={{
                                 display: 'flex',
+                                flexDirection: 'row',
                                 alignItems: 'center',
-                                marginTop: hasNotification ? '1rem' : 4,
+                                justifyContent: 'space-between',
+                                marginTop: hasNotification ? '1rem' : '0.5rem',
                                 flexWrap: 'wrap',
+                                pl: '0.5rem',
                                 gap: '15px',
                                 '@media (max-width: 900px)': {
-                                    marginTop: hasNotification ? '3rem' : '1rem',
+                                    marginTop: hasNotification ? '3rem' : '1.125rem',
+                                },
+                                '@media (max-width: 600px)': {
+                                    marginTop: hasNotification ? '2rem' : '0rem',
                                 },
                             }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Typography className='first-sub-title'>
-                                        Import Source
-                                    </Typography>
-                                    <CustomToolTip title={'Here you can upload new ones to expand your data.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
-                                </Box>
-                        </Box>
-                        <Box sx={{
-                            flex: 1, gap: 2, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '16px', pb: '20px',
-                        }}>
-                            <Box sx={{display: "flex", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
-                                <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
-                                    <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500}}>Choose your data source</Typography>
-                                    <Typography sx={{fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Choose your data source, and let Maximia AI Audience Algorithm identify high-intent leads and create lookalike audiences to slash your acquisition costs.</Typography>
-                                </Box>
-                                <Box sx={{display: "flex",  gap: 2, "@media (max-width: 420px)": { display: "grid", gridTemplateColumns: "1fr" }}}>
-                                    <Button
-                                        variant="outlined"
-                                        startIcon={<Image src="../upload-minimalistic.svg" alt="upload" width={20} height={20} />}
-                                        sx={{
-                                            fontFamily: "Nunito Sans",
-                                            border: "1px solid rgba(208, 213, 221, 1)",
-                                            borderRadius: "4px",
-                                            color: "rgba(32, 33, 36, 1)",
-                                            textTransform: "none",
-                                            fontSize: "14px",
-                                            padding: "8px 12px",
-                                            backgroundColor: sourceMethod === 1 ? "rgba(246, 248, 250, 1)" : "rgba(255, 255, 255, 1)",
-                                            borderColor: sourceMethod === 1 ? "rgba(117, 168, 218, 1)" : "rgba(208, 213, 221, 1)",
-                                            ":hover": {
-                                                borderColor: "rgba(208, 213, 221, 1)",
-                                                backgroundColor: "rgba(236, 238, 241, 1)"
-                                            },
-                                        }}
-                                        onClick={() => {
-                                            setSourceMethod(1)
-                                            handleDeleteFile()
-                                            setSourceType('')
-                                        }}
-                                        >
-                                        Manually upload
-                                    </Button>
-                                    <Button
-                                        variant="outlined"
-                                        startIcon={<Image src="../website-icon.svg" alt="upload" width={20} height={20} />}
-                                        sx={{
-                                            fontFamily: "Nunito Sans",
-                                            border: "1px solid rgba(208, 213, 221, 1)",
-                                            borderRadius: "4px",
-                                            color: "rgba(32, 33, 36, 1)",
-                                            textTransform: "none",
-                                            fontSize: "14px",
-                                            padding: "8px 12px",
-                                            backgroundColor: sourceMethod === 2 ? "rgba(246, 248, 250, 1)" : "rgba(255, 255, 255, 1)",
-                                            borderColor: sourceMethod === 2 ? "rgba(117, 168, 218, 1)" : "rgba(208, 213, 221, 1)",
-                                            ":hover": {
-                                                borderColor: "rgba(208, 213, 221, 1)",
-                                                backgroundColor: "rgba(236, 238, 241, 1)"
-                                            },
-                                        }}
-                                        onClick={() => {
-                                            setSourceMethod(2)
-                                            handleDeleteFile()
-                                            setSourceType('')
-                                            fetchDomainsAndLeads()
-                                        }}
-                                        >
-                                        Website - Pixel
-                                    </Button>
-                                </Box>
+                            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                                <Typography className='first-sub-title'>
+                                    Sources
+                                </Typography>
+                                <CustomToolTip title={'Here you can view your active sources.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
                             </Box>
-                            
-                            {sourceMethod === 1 && 
-                                <Box sx={{display: "flex", flexDirection: "column", gap: 2, position: "relative", flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
-                                    {uploadProgress !== null && (
-                                                    <Box sx={{ width: "100%", position: "absolute", top: 0, left: 0, zIndex: 1200  }}>
-                                                        <LinearProgress variant="determinate" value={uploadProgress} sx={{borderRadius: "6px", backgroundColor: '#c6dafc', '& .MuiLinearProgress-bar': {borderRadius: 5, backgroundColor: '#4285f4'}}} />
-                                                    </Box>
-                                    )}
-                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
-                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500}}>Select your Source File</Typography>
-                                        <Typography sx={{fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Please upload a CSV file containing the list of customers who have successfully completed an order on your website.</Typography>
-                                    </Box>
-                                    <FormControl
-                                        variant="outlined"
-                                        >
-                                        <Select
-                                            value={sourceType}
-                                            onChange={handleChangeSourceType}
-                                            displayEmpty
-                                            sx={{   
-                                                ...smartAudiences.text,
-                                                width: "316px",
-                                                borderRadius: "4px",
-                                                "@media (max-width: 390px)": { width: "calc(100vw - 74px)" },
+                            <Box sx={{
+                                display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px', pr: 2,
+                                '@media (max-width: 900px)': {
+                                    gap: '8px'
+                                }
+                            }}>
+                                <Button
+                                    variant="outlined"
+                                    sx={{
+                                        height: '40px',
+                                        borderRadius: '4px',
+                                        textTransform: 'none',
+                                        fontSize: '14px',
+                                        lineHeight: "19.6px",
+                                        fontWeight: '500',
+                                        color: '#5052B2',
+                                        borderColor: '#5052B2',
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(80, 82, 178, 0.1)',
+                                            borderColor: '#5052B2',
+                                        },
+                                    }}
+                                    onClick={() => {
+                                        router.push("/sources/builder")
+                                    }}
+                                >
+                                    Import Source
+                                </Button>
+                                <Button
+                                    onClick={handleFilterPopupOpen}
+                                    disabled={data?.length === 0}
+                                    aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
+                                    aria-haspopup="true"
+                                    aria-expanded={dropdownOpen ? 'true' : undefined}
+                                    sx={{
+                                        textTransform: 'none',
+                                        color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
+                                        border: selectedFilters.length > 0 ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
+                                        borderRadius: '4px',
+                                        padding: '8px',
+                                        opacity: data?.length === 0 ? '0.5' : '1',
+                                        minWidth: 'auto',
+                                        maxHeight: '40px',
+                                        maxWidth:'40px',
+                                        position: 'relative',
+                                        '@media (max-width: 900px)': {
+                                            border: 'none',
+                                            padding: 0
+                                        },
+                                        '&:hover': {
+                                            backgroundColor: 'transparent',
+                                            border: '1px solid rgba(80, 82, 178, 1)',
+                                            color: 'rgba(80, 82, 178, 1)',
+                                            '& .MuiSvgIcon-root': {
+                                                color: 'rgba(80, 82, 178, 1)'
+                                            }
+                                        }
+                                    }}
+                                >
+                                    <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }} />
+
+                                    {selectedFilters.length > 0 && (
+                                        <Box
+                                            sx={{
+                                                position: 'absolute',
+                                                top: 6,
+                                                right: 8,
+                                                width: '10px',
+                                                height: '10px',
+                                                backgroundColor: 'red',
+                                                borderRadius: '50%',
+                                                '@media (max-width: 900px)': {
+                                                    top: -1,
+                                                    right: 1
+                                                }
                                             }}
-                                        >
-                                            <MenuItem value="" disabled sx={{display: "none"}}>
-                                                Select a Source Type
-                                            </MenuItem>
-                                            <MenuItem value={"Customer Conversions"}>Customer Conversions</MenuItem>
-                                            <MenuItem value={"Failed Leads"}>Failed Leads</MenuItem>
-                                            <MenuItem value={"Interest"}>Interest</MenuItem>
-                                        </Select>
-                                    </FormControl>
-                                    {sourceType !== "" && !file &&
-                                        <Box sx={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            width: "316px",
-                                            border: dragActive
-                                                ? "2px dashed rgba(80, 82, 178, 1)"
-                                                : "1px dashed rgba(80, 82, 178, 1)",
-                                            borderRadius: "4px",
-                                            padding: "8px 16px",
-                                            height: "80px",
-                                            gap: "16px",
-                                            cursor: "pointer",
-                                            backgroundColor: dragActive
-                                                ? "rgba(80, 82, 178, 0.1)"
-                                                : "rgba(246, 248, 250, 1)",
-                                            transition: "background-color 0.3s, border-color 0.3s",
-                                            "@media (max-width: 390px)": { width: "calc(100vw - 74px)" },
-                                        }}
-                                            onDragOver={handleDragOver}
-                                            onDragLeave={handleDragLeave}
-                                            onDrop={handleDrop}
-                                            onClick={() => document.getElementById("fileInput")?.click()}>
-                                            <IconButton sx={{ width: "40px", height: "40px", borderRadius: "4px", backgroundColor: "rgba(234, 235, 255, 1)",  }} >
-                                            <FileUploadOutlinedIcon sx={{
-                                                color: "rgba(80, 82, 178, 1)" }} />
-                                            </IconButton>
-                                            <Box sx={{ flexGrow: 1 }}>
-                                                <Typography
-                                                sx={{
-                                                    fontFamily: "Nunito Sans",
-                                                    fontSize: "16px",
-                                                    fontWeight: "600",
-                                                    color: "rgba(80, 82, 178, 1)"
-                                                }}
-                                                >
-                                                Upload a file
-                                                </Typography>
-                                                <Typography
-                                                sx={{
-                                                    fontFamily: "Nunito Sans",
-                                                    fontSize: "14px",
-                                                    fontWeight: "500",
-                                                    color: "rgba(32, 33, 36, 1)",
-                                                }}
-                                                >
-                                                CSV.Max 100MB
-                                                </Typography>
-                                            </Box>
-                                            <input
-                                                id="fileInput"
-                                                type="file"
-                                                hidden
-                                                accept=".csv"
-                                                onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                                                    const file = event.target.files?.[0];
-                                                    if (file) {
-                                                        handleFileUpload(file);
-                                                    }
-                                                    event.target.value = "";
-                                                }}
-                                            />
-                                        </Box>
-                                    }
-                                    {sourceType !== "" && file &&
-                                        <Box sx={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            width: "316px",
-                                            border: "1px solid rgba(228, 228, 228, 1)",
-                                            borderRadius: "4px",
-                                            padding: "8px 16px",
-                                            height: "80px",
-                                            backgroundColor: "rgba(246, 248, 250, 1)",
-                                            gap: "16px",
-                                            "@media (max-width: 390px)": { width: "calc(100vw - 74px)" }
-                                        }}>
-                                            <Box sx={{ flexGrow: 1 }}>
-                                                <Typography
-                                                sx={{
-                                                    fontFamily: "Nunito Sans",
-                                                    fontSize: "16px",
-                                                    fontWeight: "600",
-                                                    color: "rgba(32, 33, 36, 1)"
-                                                }}
-                                                >
-                                                {fileName}
-                                                </Typography>
-                                                <Typography
-                                                sx={{
-                                                    fontFamily: "Nunito Sans",
-                                                    fontSize: "12px",
-                                                    fontWeight: "600",
-                                                    color: "rgba(74, 74, 74, 1)",
-                                                }}
-                                                >
-                                                {fileSizeStr}
-                                                </Typography>
-                                            </Box>
-                                            <IconButton onClick={handleDeleteFile}>
-                                                <DeleteOutlinedIcon />
-                                            </IconButton>
-                                        </Box>
-                                    }
-                                    <Typography className="main-text" component="div"
-                                            sx={{ ...smartAudiences.text, gap: 0.25, pt: 1, "@media (max-width: 700px)": { mb: 1 } }}
-                                        >
-                                            Sample doc: <Typography onClick={downloadSampleFile} component="span" sx={{ ...smartAudiences.text, color: 'rgba(80, 82, 178, 1)', cursor: 'pointer', fontWeight: 400 }}>sample recent customers-list.csv</Typography>
-                                        </Typography>
-                                </Box>
+                                        />
+                                    )}
+                                </Button>
+                            </Box>
+                        </Box>
+
+                        <Box sx={{
+                            flex: 1, display: 'flex', flexDirection: 'column', pr: 2, overflow: 'auto', maxWidth: '100%',
+                            '@media (max-width: 900px)': {
+                                pt: '2px',
+                                pb: '18px'
                             }
+                        }}>
 
-                            {sourceMethod === 1 && 
-                                <Box sx={{display: file ? "flex" : "none", flexDirection: "column", position: 'relative', gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
-                                    {isChatGPTProcessing && <Box
-                                        sx={{
-                                        width: '100%',
-                                        position: 'absolute',
-                                        top: 0,
-                                        left: 0,
-                                        zIndex: 1200,   
-                                        }}
-                                    >
-                                        <BorderLinearProgress variant="indeterminate" sx={{borderRadius: "6px"}} />
-                                    </Box>}
-                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
-                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500}}>Data Maping</Typography>
-                                        <Typography sx={{fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Map your Field from your Source to the destination data base.</Typography>
-                                    </Box>
-                                    <Grid container alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' }, }}>
-                                        <Grid item xs={5} sm={3} sx={{textAlign: "center"}}>
-                                            <Image src='/logo.svg' alt='logo' height={22} width={34} />
-                                        </Grid>
-                                        <Grid item xs={1} sm={0.5}>&nbsp;</Grid>
-                                        <Grid item xs={5} sm={3} sx={{textAlign: "center"}}>
-                                            <Image src='/csv-icon.svg' alt='scv' height={22} width={34} />
-                                        </Grid>
-                                    </Grid>
-                                    {rows?.filter(row => !row.isHidden).map((row, index) => (
-                                        <Box key={index} sx={{
-                                            mt: index === 1 && emailNotSubstitution ? "10px" : 0,
-                                        }}>
-                                            <Grid container spacing={2} alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' } }}>
-                                                {/* Left Input Field */}
-                                                <Grid item xs={5} sm={3}>
-                                                    <TextField
-                                                        fullWidth
-                                                        variant="outlined"
-                                                        value={row.type}
-                                                        disabled={true}
-                                                        InputLabelProps={{
-                                                            sx: {
-                                                                fontFamily: 'Nunito Sans',
-                                                                fontSize: '12px',
-                                                                lineHeight: '16px',
-                                                                color: 'rgba(17, 17, 19, 0.60)',
-                                                                top: '-5px',
-                                                                '&.Mui-focused': {
-                                                                    color: 'rgba(80, 82, 178, 1)',
-                                                                    top: 0
-                                                                },
-                                                                '&.MuiInputLabel-shrink': {
-                                                                    top: 0
-                                                                }
-                                                            }
-                                                        }}
-                                                        InputProps={{
-                                                            sx: {
-                                                                '&.MuiOutlinedInput-root': {
-                                                                    height: '36px',
-                                                                    '& .MuiOutlinedInput-input': {
-                                                                        padding: '6.5px 8px',
-                                                                        fontFamily: 'Roboto',
-                                                                        color: '#202124',
-                                                                        fontSize: '12px',
-                                                                        fontWeight: '400',
-                                                                        lineHeight: '20px'
-                                                                    },
-                                                                    '& .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: '#A3B0C2',
-                                                                    },
-                                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: '#A3B0C2',
-                                                                    },
-                                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: 'rgba(80, 82, 178, 1)',
-                                                                    },
-                                                                },
-                                                                '&+.MuiFormHelperText-root': {
-                                                                    marginLeft: '0',
-                                                                },
-                                                            }
-                                                        }}
-                                                    />
-                                                </Grid>
+                            <Box sx={{
+                                display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
+                                '@media (max-width: 900px)': {
+                                    paddingRight: 0,
+                                    minHeight: '100vh'
 
-                                                {/* Middle Icon Toggle (Right Arrow or Close Icon) */}
-                                                <Grid item xs={1} sm={0.5} container justifyContent="center">
-                                                    <Image
-                                                        src='/chevron-right-purple.svg'
-                                                        alt='chevron-right-purple'
-                                                        height={18}
-                                                        width={18}
-                                                    /> 
-                                                </Grid>
-                                                
-                                                <Grid item xs={5} sm={3}>
-                                                    <FormControl fullWidth sx={{ height: '36px'}}>
-                                                        <Select
-                                                            value={row.value || ''}
-                                                            onChange={(e) => handleMapListChange(row.id, e.target.value)}
-                                                            displayEmpty
-                                                            inputProps={{
-                                                                sx: {
-                                                                    height: '36px',
-                                                                    padding: '6.5px 8px',
-                                                                    fontFamily: 'Roboto',
-                                                                    fontSize: '12px',
-                                                                    fontWeight: '400',
-                                                                    color: '#202124',
-                                                                    lineHeight: '20px',
-                                                                },
-                                                            }}
+                                }
+                            }}>
+                                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+                                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, overflowX: 'auto', "@media (max-width: 600px)": { mb: 1 } }}>
+                                        {/* CHIPS */}
+                                        {selectedFilters.length > 0 && (
+                                            <Chip
+                                                className='second-sub-title'
+                                                label="Clear all"
+                                                onClick={handleResetFilters}
+                                                sx={{ color: '#5052B2 !important', backgroundColor: 'transparent', lineHeight: '20px !important', fontWeight: '400 !important', borderRadius: '4px' }}
+                                            />
+                                        )}
+                                        {selectedFilters.map(filter => {
+                                            if (filter.label === 'From Date' || filter.label === 'To Date' || filter.label === 'Date Range') {
+                                                return null;
+                                            }
+                                            let displayValue = filter.value;
+                                            return (
+                                                <Chip
+                                                    className='paragraph'
+                                                    key={filter.label}
+                                                    label={`${filter.label}: ${displayValue.charAt(0).toUpperCase() + displayValue.slice(1)}`}
+                                                    onDelete={() => handleDeleteFilter(filter)}
+                                                    deleteIcon={
+                                                        <CloseIcon
                                                             sx={{
-                                                                '&.MuiOutlinedInput-root': {
-                                                                    height: '36px',
-                                                                    '& .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: '#A3B0C2',
-                                                                    },
-                                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: '#A3B0C2',
-                                                                    },
-                                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: 'rgba(80, 82, 178, 1)',
-                                                                    },
-                                                                },
+                                                                backgroundColor: 'transparent',
+                                                                color: '#828282 !important',
+                                                                fontSize: '14px !important'
+                                                            }}
+                                                        />
+                                                    }
+                                                    sx={{
+                                                        borderRadius: '4.5px',
+                                                        backgroundColor: 'rgba(80, 82, 178, 0.10)',
+                                                        color: '#5F6368 !important',
+                                                        lineHeight: '16px !important'
+                                                    }}
+                                                />
+                                            );
+                                        })}
+                                    </Box>
+                                    <Box sx={{
+                                        flex: 1, display: 'flex', flexGrow:1, flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px',
+                                        '@media (max-width: 900px)': {
+                                            pt: '2px',
+                                            pb: '18px'
+                                        }
+                                    }}>
+                                        {data.length === 0 &&
+                                            <Box sx={smartAudiences.centerContainerStyles}>
+                                                <Typography variant="h5" sx={{
+                                                    mb: 3,
+                                                    fontFamily: 'Nunito Sans',
+                                                    fontSize: "20px",
+                                                    color: "#4a4a4a",
+                                                    fontWeight: "600",
+                                                    lineHeight: "28px"
+                                                }}>
+                                                    Import Your First Source
+                                                </Typography>
+                                                <Image src='/no-data.svg' alt='No Data' height={250} width={300} />
+                                                <Typography variant="body1" color="textSecondary"
+                                                    sx={{
+                                                        mt: 3,
+                                                        fontFamily: 'Nunito Sans',
+                                                        fontSize: "14px",
+                                                        color: "#808080",
+                                                        fontWeight: "600",
+                                                        lineHeight: "20px"
+                                                    }}>
+                                                    Import your first source to generate lookalikes.
+                                                </Typography>
+                                                <Button
+                                                    variant="contained"
+                                                    onClick={() => router.push("/sources/builder")}
+                                                    className='second-sub-title'
+                                                    sx={{
+                                                        backgroundColor: 'rgba(80, 82, 178, 1)',
+                                                        textTransform: 'none',
+                                                        padding: '10px 24px',
+                                                        mt: 3,
+                                                        color: '#fff !important',
+                                                        ':hover': {
+                                                            backgroundColor: 'rgba(80, 82, 178, 1)'
+                                                        }
+                                                    }}
+                                                >
+                                                    Import Your First Source
+                                                </Button>
+                                            </Box>
+                                        }
+                                        {data.length !== 0 &&
+                                            <Grid container spacing={1} sx={{ flex: 1 }}>
+                                                <Grid item xs={12}>
+                                                    <TableContainer
+                                                        component={Paper}
+                                                        sx={{
+                                                            border: '1px solid rgba(235, 235, 235, 1)',
+                                                            overflowX: 'auto',
+                                                            maxHeight: selectedFilters.length > 0
+                                                                ? (hasNotification ? '63vh' : '68vh')
+                                                                : '72vh',
+                                                            overflowY: 'auto',
+                                                            "@media (max-height: 800px)": {
+                                                                maxHeight: selectedFilters.length > 0
+                                                                    ? (hasNotification ? '53vh' : '57vh')
+                                                                    : '70vh',
+                                                            },
+                                                            "@media (max-width: 400px)": {
+                                                                maxHeight: selectedFilters.length > 0
+                                                                    ? (hasNotification ? '53vh' : '60vh')
+                                                                    : '67vh',
+                                                            },
+                                                        }}
+                                                    >
+                                                        <Table stickyHeader aria-label="leads table">
+                                                            <TableHead sx={{ position: "relative" }}>
+                                                                <TableRow>
+                                                                    {[
+                                                                        { key: 'name', label: 'Name' },
+                                                                        { key: 'use_case', label: 'Use Case' },
+                                                                        { key: 'validations', label: 'Validations' },
+                                                                        { key: 'type', label: 'Type' },
+                                                                        { key: 'created_date', label: 'Created Date', sortable: true },
+                                                                        { key: 'created_by', label: 'Created By' },
+                                                                        { key: 'number_of_customers', label: 'Number of Customers', sortable: true },
+                                                                        { key: 'matched_records', label: 'Matched Records', sortable: true },
+                                                                        { key: 'actions', label: 'Actions' }
+                                                                    ].map(({ key, label, sortable = false }) => (
+                                                                        <TableCell
+                                                                            key={key}
+                                                                            sx={{
+                                                                                ...smartAudiences.table_column,
+                                                                                ...(key === 'name' && {
+                                                                                    position: 'sticky',
+                                                                                    left: 0,
+                                                                                    zIndex: 10,
+                                                                                    top: 0,
+                                                                                }),
+                                                                                ...(key === 'average_time_sec' && {
+                                                                                    "::after": { content: 'none' }
+                                                                                })
+                                                                            }}
+
+                                                                            onClick={sortable ? () => handleSortRequest(key) : undefined}
+                                                                            style={{ cursor: sortable ? 'pointer' : 'default' }}
+                                                                        >
+                                                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: "space-between", }}>
+                                                                                <Typography variant="body2" sx={{ ...smartAudiences.table_column, borderRight: '0' }}>{label}</Typography>
+                                                                                {sortable && (
+                                                                                    <IconButton size="small">
+                                                                                        {orderBy === key ? (
+                                                                                            order === 'asc' ? (
+                                                                                                <ArrowUpwardRoundedIcon fontSize="inherit" />
+                                                                                            ) : (
+                                                                                                <ArrowDownwardRoundedIcon fontSize="inherit" />
+                                                                                            )
+                                                                                        ) : (
+                                                                                            <SwapVertIcon fontSize="inherit" />
+                                                                                        )}
+                                                                                    </IconButton>
+                                                                                )}
+                                                                            </Box>
+                                                                        </TableCell>
+                                                                    ))}
+                                                                </TableRow>
+                                                                {loaderForTable && (
+                                                                    <TableRow sx={{
+                                                                        position: "sticky",
+                                                                        top: '56px',
+                                                                        zIndex: 11,
+                                                                    }}>
+                                                                        <TableCell colSpan={9} sx={{ p: 0, pb: "4px" }}>
+                                                                            <LinearProgress variant="indeterminate" sx={{ width: "100%", position: "absolute" }} />
+                                                                        </TableCell>
+                                                                    </TableRow>
+                                                                )}
+                                                            </TableHead>
+                                                            <TableBody>
+                                                                {data.map((row: Source) => {
+                                                                    const progress = sourceProgress[row.id];
+                                                                    return (
+                                                                        <TableRow
+                                                                            key={row.id}
+                                                                            selected={selectedRows.has(row.id)}
+                                                                            sx={{
+                                                                                backgroundColor: selectedRows.has(row.id) && !loaderForTable ? 'rgba(247, 247, 247, 1)' : '#fff',
+                                                                                '&:hover': {
+                                                                                    backgroundColor: 'rgba(247, 247, 247, 1)',
+                                                                                    '& .sticky-cell': {
+                                                                                        backgroundColor: 'rgba(247, 247, 247, 1)',
+                                                                                    }
+                                                                                }
+                                                                            }}
+                                                                        >
+                                                                            {/* Name Column */}
+                                                                            <TableCell className="sticky-cell"
+                                                                                sx={{
+                                                                                    ...smartAudiences.table_array, position: 'sticky', left: '0', zIndex: 9, backgroundColor: loaderForTable ? 'transparent' : '#fff',
+                                                                                }}>
+                                                                                {row.name}
+                                                                            </TableCell>
+
+                                                                            {/* Source Column */}
+                                                                            <TableCell
+                                                                                sx={{ ...smartAudiences.table_array, position: 'relative' }}
+                                                                            >
+                                                                                {setSourceOrigin(row.source_type)}
+                                                                            </TableCell>
+
+                                                                            {/* Domain Column */}
+                                                                            <TableCell
+                                                                                sx={{ ...smartAudiences.table_array, position: 'relative' }}
+                                                                            >
+                                                                                {row.domain ?? "--"}
+                                                                            </TableCell>
+
+                                                                            {/* Type Column */}
+                                                                            <TableCell
+                                                                                sx={{ ...smartAudiences.table_array, position: 'relative', cursor: 'default' }}
+                                                                            >
+                                                                                <Box sx={{display: 'flex'}}>
+                                                                                <Tooltip
+                                                                                    title={
+                                                                                        <Box sx={{ backgroundColor: '#fff', margin: 0, padding: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', }}>
+                                                                                          <Typography className='table-data' component='div' sx={{ fontSize: '12px !important', }}>
+                                                                                            {setSourceType(row.source_origin)}
+                                                                                          </Typography>
+                                                                                        </Box>
+                                                                                      }
+                                                                                    sx={{marginLeft:'0.5rem !important'}}
+                                                                                    componentsProps={{
+                                                                                        tooltip: {
+                                                                                            sx: {
+                                                                                                backgroundColor: '#fff',
+                                                                                                color: '#000',
+                                                                                                boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
+                                                                                                border: '0.2px solid rgba(255, 255, 255, 1)',
+                                                                                                borderRadius: '4px',
+                                                                                                maxHeight: '100%',
+                                                                                                maxWidth: '500px',
+                                                                                                padding: '11px 10px',
+                                                                                                marginLeft: '0.5rem !important',
+                                                                                            },
+                                                                                        },
+                                                                                    }}
+                                                                                    placement='right'
+                                                                                >
+                                                                                    <Typography className='table-data'
+                                                                                        sx={{
+                                                                                            whiteSpace: 'nowrap',
+                                                                                            overflow: 'hidden',
+                                                                                            textOverflow: 'ellipsis',
+                                                                                            maxWidth:'150px',
+                                                                                        }}
+                                                                                    >
+                                                                                        {truncateText(setSourceType(row.source_origin), 20)}
+                                                                                    </Typography>
+                                                                                </Tooltip>
+                                                                                </Box>
+                                                                            </TableCell>
+
+
+                                                                            {/* Created date Column */}
+                                                                            <TableCell
+                                                                                sx={{ ...smartAudiences.table_array, position: 'relative' }}
+                                                                            >
+                                                                                {dayjs(row.created_at).isValid() ? dayjs(row.created_at).format('MMM D, YYYY') : '--'}
+                                                                            </TableCell>
+
+                                                                            {/* Created By Column */}
+                                                                            <TableCell
+                                                                                sx={{ ...smartAudiences.table_array, position: 'relative' }}
+                                                                            >
+                                                                                {row.created_by}
+                                                                            </TableCell>
+
+                                                                            {/* Number of Customers Column */}
+                                                                            <TableCell
+                                                                                sx={{ ...smartAudiences.table_array, position: 'relative' }}
+                                                                            >
+                                                                                {/* {progress?.total && progress?.total > 0 || row?.total_records > 0
+                                                                                ? progress?.total > 0
+                                                                                    ? progress?.total.toLocaleString('en-US')
+                                                                                    : row?.total_records?.toLocaleString('en-US')
+                                                                                :  <ThreeDotsLoader />
+                                                                                } */}
+                                                                            </TableCell>
+
+                                                                            {/* Matched Records  Column */}
+                                                                            <TableCell
+                                                                                sx={{ ...smartAudiences.table_array, position: 'relative' }}
+                                                                            >
+                                                                                {/* {(progress?.processed && progress?.processed == progress?.total) || (row?.processed_records == row?.total_records && row?.processed_records !== 0)
+                                                                                ? progress?.matched > row?.matched_records 
+                                                                                    ? progress?.matched.toLocaleString('en-US')
+                                                                                    : row.matched_records.toLocaleString('en-US')
+                                                                                :  row?.processed_records !== 0 
+                                                                                    ? <ProgressBar progress={{total: row?.total_records, processed: row?.processed_records, matched: row?.matched_records}}/> 
+                                                                                    : <ProgressBar progress={progress}/> 
+                                                                                } */}
+                                                                            </TableCell>
+
+                                                                            <TableCell sx={{ ...smartAudiences.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
+                                                                                <IconButton onClick={(event) => handleOpenPopover(event, row)} sx={{ ':hover': { backgroundColor: 'transparent' } }} >
+                                                                                    <MoreVert sx={{ color: "rgba(32, 33, 36, 1)" }} height={8} width={24} />
+                                                                                </IconButton>
+
+                                                                                <Popover
+                                                                                    open={isOpen}
+                                                                                    anchorEl={anchorEl}
+                                                                                    onClose={handleClosePopover}
+                                                                                    slotProps={{
+                                                                                        paper: {
+                                                                                            sx: {
+                                                                                                boxShadow: 0,
+                                                                                                borderRadius: "4px",
+                                                                                                border: "0.5px solid rgba(175, 175, 175, 1)",
+                                                    
+                                                                                            },
+                                                                                        }}}
+                                                                                        anchorOrigin={{
+                                                                                            vertical: "center",
+                                                                                            horizontal: "center",
+                                                                                        }}
+                                                                                    transformOrigin={{
+                                                                                        vertical: "top",
+                                                                                        horizontal: "right",
+                                                                                    }}
+                                                                                    
+                                                                                >
+                                                                                    <List
+                                                                                        sx={{
+                                                                                            width: '100%', maxWidth: 360, boxShadow: 'none'
+                                                                                        }}
+                                                                                    >
+                                                                                        <ListItemButton sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
+                                                                                            handleClosePopover()
+                                                                                            router.push(`/lookalikes/${row.id}/builder`)
+                                                                                        }}>
+                                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Lookalike" />
+                                                                                        </ListItemButton>
+                                                                                        <ListItemButton
+                                                                                            sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }}
+                                                                                            onClick={() => {
+                                                                                                handleOpenConfirmDialog();
+                                                                                            }}
+                                                                                        >
+                                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Remove" />
+                                                                                        </ListItemButton>
+                                                                                        <Popover
+                                                                                            open={openConfirmDialog}
+                                                                                            onClose={handleCloseConfirmDialog}
+                                                                                            anchorEl={anchorEl}
+                                                                                            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                                                                                            transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+                                                                                            slotProps={{
+                                                                                                paper: {
+                                                                                                    sx: {
+                                                                                                        padding: '0.125rem',
+                                                                                                        width: '15.875rem',
+                                                                                                        boxShadow: 0,
+                                                                                                        borderRadius: '8px',
+                                                                                                        border: '0.5px solid rgba(175, 175, 175, 1)'
+                                                                                                    }
+                                                                                                }
+                                                                                            }}
+                                                                                        >
+                                                                                            <Typography className="first-sub-title" sx={{ paddingLeft: 2, pt: 1, pb: 0 }}>
+                                                                                                Confirm Deletion
+                                                                                            </Typography>
+                                                                                            <DialogContent sx={{ padding: 2 }}>
+                                                                                                <DialogContentText className="table-data">
+                                                                                                    Are you sure you want to delete this source?
+                                                                                                </DialogContentText>
+                                                                                            </DialogContent>
+                                                                                            <DialogActions>
+                                                                                                <Button
+                                                                                                    className="second-sub-title"
+                                                                                                    onClick={handleCloseConfirmDialog}
+                                                                                                    sx={{
+                                                                                                        backgroundColor: '#fff',
+                                                                                                        color: 'rgba(80, 82, 178, 1) !important',
+                                                                                                        fontSize: '14px',
+                                                                                                        textTransform: 'none',
+                                                                                                        padding: '0.75em 1em',
+                                                                                                        border: '1px solid rgba(80, 82, 178, 1)',
+                                                                                                        maxWidth: '50px',
+                                                                                                        maxHeight: '30px',
+                                                                                                        '&:hover': { backgroundColor: '#fff', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
+                                                                                                    }}
+                                                                                                >
+                                                                                                    Cancel
+                                                                                                </Button>
+                                                                                                <Button
+                                                                                                    className="second-sub-title"
+                                                                                                    onClick={handleDeleteSource}
+                                                                                                    sx={{
+                                                                                                        backgroundColor: 'rgba(80, 82, 178, 1)',
+                                                                                                        color: '#fff !important',
+                                                                                                        fontSize: '14px',
+                                                                                                        textTransform: 'none',
+                                                                                                        padding: '0.75em 1em',
+                                                                                                        border: '1px solid rgba(80, 82, 178, 1)',
+                                                                                                        maxWidth: '60px',
+                                                                                                        maxHeight: '30px',
+                                                                                                        '&:hover': { backgroundColor: 'rgba(80, 82, 178, 1)', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
+                                                                                                    }}
+                                                                                                >
+                                                                                                    Delete
+                                                                                                </Button>
+                                                                                            </DialogActions>
+                                                                                        </Popover>
+                                                                                    </List>
+                                                                                </Popover>
+                                                                            </TableCell>
+
+                                                                        </TableRow>
+                                                                    )
+                                                                })}
+                                                            </TableBody>
+                                                        </Table>
+                                                    </TableContainer>
+                                                    {count_sources && count_sources > 10
+                                                        ?
+                                                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0', "@media (max-width: 600px)": { padding: '12px 0 0' } }}>
+                                                            <CustomTablePagination
+                                                                count={count_sources ?? 0}
+                                                                page={page}
+                                                                rowsPerPage={rowsPerPage}
+                                                                onPageChange={handleChangePage}
+                                                                onRowsPerPageChange={handleChangeRowsPerPage}
+                                                                rowsPerPageOptions={rowsPerPageOptions}
+                                                            />
+                                                        </Box>
+                                                        :
+                                                        <Box
+                                                            display="flex"
+                                                            justifyContent="flex-end"
+                                                            alignItems="center"
+                                                            sx={{
+                                                                padding: '16px',
+                                                                backgroundColor: '#fff',
+                                                                borderRadius: '4px',
+                                                                "@media (max-width: 600px)": { padding: '12px' }
                                                             }}
                                                         >
-                                                            {headersinCSV.map((item: string, index: number) => (
-                                                                <MenuItem key={index} value={item}>
-                                                                    {item}
-                                                                </MenuItem>
-                                                            ))}
-                                                        </Select>
-                                                        {row.type === "Email" && emailNotSubstitution && <Typography sx={{fontFamily: "Nunito", fontSize: "12px", color: "rgba(224, 49, 48, 1)"}}>Please match email</Typography>}
-                                                    </FormControl>
-                                                </Grid>
-
-                                                {/* Delete Icon */}
-                                                <Grid item xs={1} sm={0.5} container justifyContent="center">
-                                                    {row.canDelete && (
-                                                        <>
-                                                            <IconButton onClick={() => handleDelete(row.id)}>
-                                                                <Image
-                                                                    src='/trash-icon-filled.svg'
-                                                                    alt='trash-icon-filled'
-                                                                    height={18}
-                                                                    width={18}
-                                                                />
-                                                            </IconButton>
-                                                        </>
-                                                    )}
+                                                            <Typography
+                                                                sx={{
+                                                                    fontFamily: 'Nunito Sans',
+                                                                    fontWeight: '400',
+                                                                    fontSize: '12px',
+                                                                    lineHeight: '16px',
+                                                                    marginRight: '16px',
+                                                                }}
+                                                            >
+                                                                {`${count_sources} - ${rowsPerPage} of ${rowsPerPage}`}
+                                                            </Typography>
+                                                        </Box>
+                                                    }
                                                 </Grid>
                                             </Grid>
-                                        </Box>
-                                    ))}
-                                    {rows.some(row => row.isHidden) && (
-                                        <Box sx={{ display: 'flex', justifyContent: 'flex-start'}} onClick={handleAdd}>
-                                                <Typography sx={{
-                                                    fontFamily: 'Nunito Sans',
-                                                    lineHeight: '22.4px',
-                                                    fontSize: '14px',
-                                                    fontWeight: '600',
-                                                    color: 'rgba(80, 82, 178, 1)',
-                                                    cursor: 'pointer'
-                                                }}>
-                                                    + Add more
-                                                </Typography>
-                                        </Box>
-                                    )}
-                                </Box>
-                            }
-
-
-                            {sourceMethod === 2 && 
-                                <Box sx={{display: "flex", flexDirection: "column", gap: 2, position: "relative", flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
-                                    {isDomainSearchProcessing && <Box
-                                        sx={{
-                                        width: '100%',
-                                        position: 'absolute',
-                                        top: 0,
-                                        left: 0,
-                                        zIndex: 1200,   
-                                        }}
-                                    >
-                                        <BorderLinearProgress variant="indeterminate" sx={{borderRadius: "6px"}} />
-                                    </Box>}
-                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
-                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500}}>Select your Domain</Typography>
-                                        <Typography sx={{fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Please Select your domain.</Typography>
+                                        }
+                                        {showSlider && <Slider />}
+                                        <Popover
+                                            open={isOpenFullName}
+                                            anchorEl={anchorElFullName}
+                                            onClose={handleClosePopoverFullName}
+                                            anchorOrigin={{
+                                                vertical: "bottom",
+                                                horizontal: "left",
+                                            }}
+                                            transformOrigin={{
+                                                vertical: "top",
+                                                horizontal: "left",
+                                            }}
+                                            PaperProps={{
+                                                sx: {
+                                                    width: "184px",
+                                                    height: "108px",
+                                                    borderRadius: "4px 0px 0px 0px",
+                                                    border: "0.2px solid #ddd",
+                                                    padding: "8px",
+                                                    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+                                                },
+                                            }}
+                                        >
+                                            <Box sx={{ maxHeight: "92px", overflowY: "auto", backgroundColor: 'rgba(255, 255, 255, 1)' }}>
+                                                {selectedName?.split(",").map((part, index) => (
+                                                    <Typography
+                                                        key={index}
+                                                        variant="body2"
+                                                        className='second-sub-title'
+                                                        sx={{
+                                                            wordBreak: "break-word",
+                                                            backgroundColor: 'rgba(243, 243, 243, 1)',
+                                                            borderRadius: '4px',
+                                                            color: 'rgba(95, 99, 104, 1) !important',
+                                                            marginBottom: index < selectedName?.split(",").length - 1 ? "4px" : 0,
+                                                        }}
+                                                    >
+                                                        {part.trim()}
+                                                    </Typography>
+                                                ))}
+                                            </Box>
+                                        </Popover>
                                     </Box>
-                                    <FormControl
-                                        variant="outlined"
-                                        >
-                                        <Select
-                                            value={selectedDomain}
-                                            onChange={handleChangeDomain}
-                                            displayEmpty
-                                            sx={{   
-                                                ...smartAudiences.text,
-                                                width: "316px",
-                                                borderRadius: "4px",
-                                                "@media (max-width: 390px)": { width: "calc(100vw - 74px)" },
-                                            }}
-                                        >
-                                            <MenuItem value="" disabled sx={{display: "none", fontFamily: "Roboto", fontSize: "12px", color: "rgba(205, 40, 43, 1)"}}>
-                                                Select domain
-                                            </MenuItem>
-                                            {domains.map((item: DomainsLeads, index) => (
-                                                <MenuItem sx={{fontFamily: "Nunito Sans", "fontWeight": 600, fontSize: "14px"}} key={index} value={item.name}>{item.name}</MenuItem>
-                                            ))}
-                                        </Select>
-                                    </FormControl>
-                                    {pixelNotInstalled && 
-                                        <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
-                                            <Typography sx={{fontFamily: "Roboto", fontSize: "12px", color: "rgba(205, 40, 43, 1)"}}>✗ The selected domain does not have the pixel installed. Please install the pixel first to continue.</Typography>
-                                            <Button
-                                                variant="contained"
-                                                onClick={() => router.push('/dashboard')}
-                                                className='second-sub-title'
-                                                sx={{
-                                                    alignSelf: "flex-end",
-                                                    width: "130px",
-                                                    backgroundColor: 'rgba(80, 82, 178, 1)',
-                                                    textTransform: 'none',
-                                                    padding: '10px 24px',
-                                                    mt: 3,
-                                                    color: '#fff !important',
-                                                    ':hover': {
-                                                        backgroundColor: 'rgba(80, 82, 178, 1)'
-                                                    }
-                                                }}
-                                            >
-                                                Install Pixel
-                                            </Button>
-                                        </Box>
-                                    }
-                                    {!pixelNotInstalled && selectedDomain &&
-                                        <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
-                                            <Typography sx={{fontFamily: "Roboto", fontSize: "14px", color: "rgba(32, 33, 36, 1)"}}>Total Leads</Typography> 
-                                            <Typography className='second-sub-title' sx={{fontFamily: "Nunino Sans", fontWeight: 600, fontSize: "16px", color: "rgba(33, 33, 33, 1))"}}>{totalLeads}</Typography>
-                                        </Box>
-                                    }
-                                </Box>
-                            }
-                            {/* { sourceMethod === 2 && !pixelNotInstalled && selectedDomainId &&  */}
-                            <Box sx={{display: sourceMethod === 2 && !pixelNotInstalled && selectedDomainId ? "flex" : "none", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
-                                <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
-                                    <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500}}>Choose your data source</Typography>
-                                    <Typography sx={{fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Please Select your event type.</Typography>
-                                </Box>
-                                <Box sx={{display: "flex",  gap: 2, "@media (max-width: 420px)": { display: "grid", gridTemplateColumns: "1fr" }}}>
-                                    <Button
-                                        variant="outlined"
-                                        sx={{
-                                            fontFamily: "Nunito Sans",
-                                            border: "1px solid rgba(208, 213, 221, 1)",
-                                            borderRadius: "4px",
-                                            color: "rgba(32, 33, 36, 1)",
-                                            textTransform: "none",
-                                            fontSize: "14px",
-                                            padding: "8px 12px",
-                                            backgroundColor: eventType.includes(1) ? "rgba(246, 248, 250, 1)" : "rgba(255, 255, 255, 1)",
-                                            borderColor: eventType.includes(1)? "rgba(117, 168, 218, 1)" : "rgba(208, 213, 221, 1)",
-                                            ":hover": {
-                                                borderColor: "rgba(208, 213, 221, 1)",
-                                                backgroundColor: "rgba(236, 238, 241, 1)"
-                                            },
-                                        }}
-                                        onClick={() => {
-                                            toggleEventType(1)
-                                        }}
-                                        >
-                                        Visitor
-                                    </Button>
-                                    <Button
-                                        variant="outlined"
-                                        sx={{
-                                            fontFamily: "Nunito Sans",
-                                            border: "1px solid rgba(208, 213, 221, 1)",
-                                            borderRadius: "4px",
-                                            color: "rgba(32, 33, 36, 1)",
-                                            textTransform: "none",
-                                            fontSize: "14px",
-                                            padding: "8px 12px",
-                                            backgroundColor: eventType.includes(2) ? "rgba(246, 248, 250, 1)" : "rgba(255, 255, 255, 1)",
-                                            borderColor: eventType.includes(2)? "rgba(117, 168, 218, 1)" : "rgba(208, 213, 221, 1)",
-                                            ":hover": {
-                                                borderColor: "rgba(208, 213, 221, 1)",
-                                                backgroundColor: "rgba(236, 238, 241, 1)"
-                                            },
-                                        }}
-                                        onClick={() => {
-                                            toggleEventType(2)
-                                        }}
-                                        >
-                                            View Product
-                                    </Button>
-                                    <Button
-                                        variant="outlined"
-                                        sx={{
-                                            fontFamily: "Nunito Sans",
-                                            border: "1px solid rgba(208, 213, 221, 1)",
-                                            borderRadius: "4px",
-                                            color: "rgba(32, 33, 36, 1)",
-                                            textTransform: "none",
-                                            fontSize: "14px",
-                                            padding: "8px 12px",
-                                            backgroundColor: eventType.includes(3) ? "rgba(246, 248, 250, 1)" : "rgba(255, 255, 255, 1)",
-                                            borderColor: eventType.includes(3)? "rgba(117, 168, 218, 1)" : "rgba(208, 213, 221, 1)",
-                                            ":hover": {
-                                                    borderColor: "rgba(208, 213, 221, 1)",
-                                                    backgroundColor: "rgba(236, 238, 241, 1)"
-                                            },
-                                        }}
-                                        onClick={() => {
-                                            toggleEventType(3)
-                                        }}
-                                        >
-                                            Abandoned Cart
-                                    </Button>
-                                    <Button
-                                        variant="outlined"
-                                        sx={{
-                                            fontFamily: "Nunito Sans",
-                                            border: "1px solid rgba(208, 213, 221, 1)",
-                                            borderRadius: "4px",
-                                            color: "rgba(32, 33, 36, 1)",
-                                            textTransform: "none",
-                                            fontSize: "14px",
-                                            padding: "8px 12px",
-                                            backgroundColor: eventType.includes(4) ? "rgba(246, 248, 250, 1)" : "rgba(255, 255, 255, 1)",
-                                            borderColor: eventType.includes(4)? "rgba(117, 168, 218, 1)" : "rgba(208, 213, 221, 1)",
-                                            ":hover": {
-                                                borderColor: "rgba(208, 213, 221, 1)",
-                                                backgroundColor: "rgba(236, 238, 241, 1)"
-                                            },
-                                        }}
-                                        onClick={() => {
-                                            toggleEventType(4)
-                                        }}
-                                        >
-                                            Converted Sales
-                                    </Button>
-                                </Box>
-                                <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
-                                    <Typography sx={{fontFamily: "Roboto", fontSize: "14px", color: "rgba(32, 33, 36, 1)"}}>Matched Leads</Typography> 
-                                    <Typography className='second-sub-title' sx={{fontFamily: "Nunino Sans", fontWeight: 600, fontSize: "16px", color: "rgba(32, 33, 36, 1)"}}>{eventType.includes(1 || 2|| 3 || 4) ?  matchedLeads : totalLeads }</Typography>
-                                </Box>
-                            </Box>
-                            {/* } */}
-                            
-                            <Box sx={{display: sourceMethod !== 0 && file || selectedDomain !== "" && !pixelNotInstalled ? "flex" : "none", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
-                                <Box sx={{display: "flex", alignItems: "center", gap: 2, "@media (max-width: 400px)": { justifyContent: "space-between" },}}>
-                                    <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500}}>Create Name</Typography>
-                                    <TextField
-                                        id="outlined"
-                                        label="Name"
-                                        InputLabelProps={{
-                                            sx: {
-                                                color: 'rgba(17, 17, 19, 0.6)',
-                                                fontFamily: 'Nunito Sans',
-                                                fontWeight: 400,
-                                                fontSize: '15px',
-                                                padding:0,
-                                                top: '-1px',
-                                                margin:0,
-                                        }}}
-                                        sx={{
-                                            width: "250px",
-                                            "@media (max-width: 400px)": { width: "150px" },
-                                            "& .MuiInputLabel-root.Mui-focused": {
-                                                color: "rgba(17, 17, 19, 0.6)",
-                                            },
-                                            "& .MuiInputLabel-root[data-shrink='false']": {
-                                                transform: "translate(16px, 50%) scale(1)",
-                                            },
-                                            "& .MuiOutlinedInput-root":{
-                                                maxHeight: '40px'
-                                            }
-                                        }}
-                                        InputProps={{
-                                            className: "form-input"
-                                        }}
-                                        value={sourceName}
-                                        onChange={(e) => setSourceName(e.target.value)}
-                                        />
-                                </Box>
-                            </Box>
-                            <Box sx={{display: "flex", gap: 2, flexWrap: "wrap", justifyContent: "flex-end", borderRadius: "6px"}}>
-                                <Box sx={{display: "flex", alignItems: "center", gap: 3}}>
-                                    <Button variant="outlined" onClick={() => {
-                                        setSourceMethod(0)
-                                        handleDeleteFile()
-                                        setSourceName('')
-                                        setSourceType('')
-                                        router.push("/sources")
 
-                                    }} sx={{
-                                        borderColor: "rgba(80, 82, 178, 1)",
-                                        width: "92px",
-                                        height: "40px",
-                                        ":hover": {
-                                            borderColor: "rgba(62, 64, 142, 1)"},
-                                        ":active": {
-                                            borderColor: "rgba(80, 82, 178, 1)"},
-                                        ":disabled": {
-                                            borderColor: "rgba(80, 82, 178, 1)",
-                                            opacity: 0.4,
-                                        },
-                                    }}>
-                                        <Typography
-                                            sx={{
-                                            textAlign: "center",
-                                            color: "rgba(80, 82, 178, 1)",
-                                            textTransform: "none",
-                                            fontFamily: "Nunito Sans",
-                                            fontWeight: "600",
-                                            fontSize: "14px",
-                                            lineHeight: "19.6px",
-                                            }}
-                                        >
-                                            Cancel
-                                        </Typography>
-                                    </Button> 
-                                    <Button variant="contained" onClick={handleSumbit} disabled={sourceName.trim() === "" || emailNotSubstitution || pixelNotInstalled} sx={{
-                                        backgroundColor: "rgba(80, 82, 178, 1)",
-                                        width: "120px",
-                                        height: "40px",
-                                        ":hover": {
-                                            backgroundColor: "rgba(62, 64, 142, 1)"},
-                                        ":active": {
-                                            backgroundColor: "rgba(80, 82, 178, 1)"},
-                                        ":disabled": {
-                                            backgroundColor: "rgba(80, 82, 178, 1)",
-                                            opacity: 0.6,
-                                        },
-                                    }}>
-                                        <Typography
-                                            sx={{
-                                            textAlign: "center",
-                                            color: "rgba(255, 255, 255, 1)",
-                                            fontFamily: "Nunito Sans",
-                                            textTransform: "none",
-                                            fontWeight: "600",
-                                            fontSize: "14px",
-                                            lineHeight: "19.6px",
-                                            }}
-                                        >
-                                            Create
-                                        </Typography>
-                                    </Button> 
+                                    <FilterPopup open={filterPopupOpen}
+                                        onClose={handleFilterPopupClose}
+                                        onApply={handleApplyFilters}
+                                    />
+
                                 </Box>
                             </Box>
+                            {/* {showSlider && <Slider />} */}
                         </Box>
                     </Box>
                 </Box>
@@ -1162,4 +1086,14 @@ const SourcesImport: React.FC = () => {
     );
 };
 
-export default SourcesImport;
+const SmartAudiencesPage: React.FC = () => {
+    return (
+        <Suspense fallback={<CustomizedProgressBar />}>
+            <SliderProvider>
+                <SmartAudiencesPage />
+            </SliderProvider>
+        </Suspense>
+    );
+};
+
+export default SmartAudiencesPage;
