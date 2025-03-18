@@ -210,8 +210,8 @@ async def process_user_integrations(rmq_connection, session):
     user_integrations, data_syncs = fetch_data_syncs(session)
     for i, data_sync in enumerate(data_syncs):
         if (data_sync.sync_status == False or user_integrations[i].is_failed == True):
-            if user_integrations[i].service_name == SourcePlatformEnum.WEBHOOK.value and data_syncs.last_sync_date is not None and data_syncs.last_sync_date < (datetime.now(timezone.utc) - timedelta(hours=24)):
-                logging.info(f"service name is webhook, data sync last_sync_date < 24 hours {data_syncs.last_sync_date}")
+            if user_integrations[i].service_name == SourcePlatformEnum.WEBHOOK.value and data_syncs.last_sync_date is not None and data_syncs.last_sync_date > (datetime.now(timezone.utc) - timedelta(hours=24)):
+                logging.info(f"Attempt after failed Webhook, last_sync_date = {data_syncs.last_sync_date}")
             else:
                 logging.info(f"Skip, Integration is failed {user_integrations[i].is_failed}, Data sync status {data_sync.sync_status}")
                 continue
