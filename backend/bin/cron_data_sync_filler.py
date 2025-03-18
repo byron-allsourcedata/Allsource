@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from models.leads_visits import LeadsVisits
 from sqlalchemy.orm import sessionmaker, Session
 from datetime import datetime, timezone, timedelta
-from enums import DataSyncImportedStatus, ProccessDataSyncResult
+from enums import DataSyncImportedStatus, ProccessDataSyncResult, SourcePlatformEnum
 from utils import get_utc_aware_date
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
 from models.leads_users_ordered import LeadsUsersOrdered
@@ -209,9 +209,12 @@ async def send_leads_to_rmq(session, rmq_connection, lead_users, data_sync, user
 async def process_user_integrations(rmq_connection, session):
     user_integrations, data_syncs = fetch_data_syncs(session)
     for i, data_sync in enumerate(data_syncs):
-        if data_sync.sync_status == False or user_integrations[i].is_failed == True:
-            logging.info(f"Skip, Integration is failed {user_integrations[i].is_failed}, Data sync status {data_sync.sync_status}")
-            continue
+        if (data_sync.sync_status == False or user_integrations[i].is_failed == True):
+            if user_integrations[i].service_name == SourcePlatformEnum.WEBHOOK.value and data_syncs.last_sync_date is not None and data_syncs.last_sync_date > (datetime.now(timezone.utc) - timedelta(hours=24)):
+                logging.info(f"Attempt after failed Webhook, last_sync_date = {data_syncs.last_sync_date}")
+            else:
+                logging.info(f"Skip, Integration is failed {user_integrations[i].is_failed}, Data sync status {data_sync.sync_status}")
+                continue
         
         if data_sync.is_active == False:
             continue
