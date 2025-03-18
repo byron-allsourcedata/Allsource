@@ -5,7 +5,6 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '../../../axios/axiosInterceptorInstance';
 import { smartAudiences } from './smartAudiences';
-import Slider from '../../../components/Slider';
 import { SliderProvider } from '../../../context/SliderContext';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import ArrowDownwardRoundedIcon from '@mui/icons-material/ArrowDownwardRounded';
@@ -23,19 +22,20 @@ import { MoreVert } from '@mui/icons-material'
 import { useSSE } from '../../../context/SSEContext';
 import FilterPopup from './components/SmartAudienceFilter';
 import CloseIcon from '@mui/icons-material/Close';
+import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
+import DateRangeIcon from '@mui/icons-material/DateRange';
+import CalendarPopup from "@/components/CustomCalendar";
 
-interface Source {
+interface Smarts {
     id: string
     name: string
-    source_origin: string
-    source_type: string
-    created_at: Date
-    domain: string
+    use_case_alias: string
     created_by: string
-    processed_records: number
+    created_at: Date
     total_records: number
-    matched_records: number
-    matched_records_status: string
+    validated_records: number
+    active_segment_records: number
+    status: string
 }
 
 interface FetchDataParams {
@@ -43,6 +43,7 @@ interface FetchDataParams {
     sortOrder?: 'asc' | 'desc';
     page: number;
     rowsPerPage: number;
+    appliedDates: { start: Date | null; end: Date | null };
 }
 
 interface FilterParams {
@@ -56,14 +57,61 @@ interface FilterParams {
     dateRange: { fromDate: number | null; toDate: number | null };
 }
 
+const getStatusStyle = (status: string) => {
+    switch (status) {
+        case 'Synced':
+            return {
+                background: 'rgba(234, 248, 221, 1)',
+                color: 'rgba(43, 91, 0, 1)',
+            };
+        case 'Unvalidated':
+            return {
+                background: 'rgba(236, 236, 236, 1)',
+                color: 'rgba(74, 74, 74, 1)',
+            };
+        case 'Ready':
+            return {
+                background: 'rgba(254, 243, 205, 1)',
+                color: 'rgba(179, 151, 9, 1)',
+            };
+        case 'Validating':
+            return {
+                background: 'rgba(0, 129, 251, 0.2)',
+                color: 'rgba(0, 129, 251, 1)',
+            };
+        default:
+            return {
+                background: 'transparent',
+                color: 'inherit',
+            };
+    }
+};
 
-const Sources: React.FC = () => {
+const getUseCaseStyle = (status: string) => {
+    switch (status) {
+        case 'postal':
+            return <MailOutlinedIcon />
+        case 'google':
+            return <Image src="./google-mail.svg" alt="google icon"/>
+        case 'meta':
+            return <MailOutlinedIcon />
+        case 'bing':
+            return <MailOutlinedIcon />
+        case 'tele_marketing':
+            return <MailOutlinedIcon />
+        default:
+            return <MailOutlinedIcon />
+    }
+};
+
+
+const SmartAudiences: React.FC = () => {
     const router = useRouter();
     const { hasNotification } = useNotification();
-    const [data, setData] = useState<Source[]>([]);
+    const [data, setData] = useState<Smarts[]>([]);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [count_sources, setCount] = useState<number | null>(null);
+    const [count_smarts_audience, setCount] = useState<number | null>(null);
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
     const [status, setStatus] = useState<string | null>(null);
@@ -74,7 +122,6 @@ const Sources: React.FC = () => {
     const dropdownOpen = Boolean(dropdownEl);
     const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
     const [activeFilter, setActiveFilter] = useState<string>('');
-    const [selectedDates, setSelectedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
     const [filterPopupOpen, setFilterPopupOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [selectedFilters, setSelectedFilters] = useState<{ label: string, value: string }[]>([]);
@@ -82,62 +129,72 @@ const Sources: React.FC = () => {
     const [loaderForTable, setLoaderForTable] = useState(false);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [anchorElFullName, setAnchorElFullName] = React.useState<null | HTMLElement>(null);
-    const [selectedRowData, setSelectedRowData] = useState<Source | null>(null);
+    const [selectedRowData, setSelectedRowData] = useState<Smarts | null>(null);
     const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
     const [selectedName, setSelectedName] = React.useState<string | null>(null);
     const isOpen = Boolean(anchorEl);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
-    
-    useEffect(() => {
-        fetchSources({
-            sortBy: orderBy,
-            sortOrder: order,
-            page,
-            rowsPerPage,
-        });
-    }, [orderBy, order, page, rowsPerPage, selectedFilters]);
 
-    const fetchSourcesMemoized = useCallback(() => {
-        fetchSources({
+    const [selectedDates, setSelectedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
+    const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
+    const [formattedDates, setFormattedDates] = useState<string>('');
+    const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
+    const isCalendarOpen = Boolean(calendarAnchorEl);
+    
+    useEffect(() => {
+        fetchSmarts({
             sortBy: orderBy,
             sortOrder: order,
             page,
             rowsPerPage,
-        });
-    }, [orderBy, order, page, rowsPerPage]);
-    
-    useEffect(() => {
-        console.log("longpol");
-    
-        if (!intervalRef.current) {
-            console.log("longpol started");
-            intervalRef.current = setInterval(() => {
-                const hasPending = data.some(item => item.matched_records_status === "pending");
-    
-                if (hasPending) {
-                    console.log("Fetching due to pending records");
-                    fetchSourcesMemoized();
-                } else {
-                    console.log("No pending records, stopping interval");
-                    if (intervalRef.current) {
-                        clearInterval(intervalRef.current);
-                        intervalRef.current = null;
-                    }
-                }
-            }, 2000);
-        }
-    
-        return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-                intervalRef.current = null;
-                console.log("interval cleared");
+            appliedDates: {
+                start: appliedDates.start,
+                end: appliedDates.end,
             }
-        };
-    }, [data, fetchSourcesMemoized]);
+        });
+    }, [orderBy, order, page, rowsPerPage, appliedDates]);
 
-    const fetchSources = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
+    // const fetchSmartsMemoized = useCallback(() => {
+    //     fetchSmarts({
+    //         sortBy: orderBy,
+    //         sortOrder: order,
+    //         page,
+    //         rowsPerPage,
+    //     });
+    // }, [orderBy, order, page, rowsPerPage]);
+    
+    // useEffect(() => {
+    //     console.log("longpol");
+    
+    //     if (!intervalRef.current) {
+    //         console.log("longpol started");
+    //         intervalRef.current = setInterval(() => {
+    //             const hasPending = data.some(item => item.matched_records_status === "pending");
+    
+    //             if (hasPending) {
+    //                 console.log("Fetching due to pending records");
+    //                 fetchSmartsMemoized();
+    //             } else {
+    //                 console.log("No pending records, stopping interval");
+    //                 if (intervalRef.current) {
+    //                     clearInterval(intervalRef.current);
+    //                     intervalRef.current = null;
+    //                 }
+    //             }
+    //         }, 2000);
+    //     }
+    
+    //     return () => {
+    //         if (intervalRef.current) {
+    //             clearInterval(intervalRef.current);
+    //             intervalRef.current = null;
+    //             console.log("interval cleared");
+    //         }
+    //     };
+    // }, [data, fetchSmartsMemoized]);
+
+    const fetchSmarts = async ({ sortBy, sortOrder, page, rowsPerPage, appliedDates }: FetchDataParams) => {
         try {
             isFirstLoad ? setLoading(true)  : setLoaderForTable(true);
             const accessToken = localStorage.getItem("token");
@@ -146,31 +203,38 @@ const Sources: React.FC = () => {
                 return;
             }
 
-            const filters = JSON.parse(sessionStorage.getItem('filtersBySource') || '{}');
+            const filters = JSON.parse(sessionStorage.getItem('filtersBySmarts') || '{}');
 
-            let url = `/audience-sources?&page=${page + 1}&per_page=${rowsPerPage}`;
+            let url = `/audience-smarts?&page=${page + 1}&per_page=${rowsPerPage}`;
 
-            if (filters.from_date || filters.to_date) {
-                url += `&created_date_start=${filters.from_date || ''}&created_date_end=${filters.to_date || ''}`;
-            }
-            if (filters.selectedSource?.length > 0) {
-                url += `&source_origin=${filters.selectedSource.map((source: string) => source.toLowerCase()).join(',')}`;
-            }
-            if (filters.selectedTypes?.length > 0) {
-                url += `&source_type=${filters.selectedTypes
-                    .map((type: string) => type.toLowerCase().replace(/\s+/g, '_'))
-                    .join(',')}`;
-            }
-            if (filters.selectedDomains?.length > 0) {
-                url += `&domain_name=${filters.selectedDomains.join(',')}`;
-            }
-            if (filters.searchQuery) {
-                url += `&name=${filters.searchQuery}`;
-            }
+            const startEpoch = appliedDates.start
+                ? Math.floor(new Date(appliedDates.start.toISOString()).getTime() / 1000)
+                : null;
 
-            if (sortBy) {
-                setPage(0)
-                url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
+            const endEpoch = appliedDates.end
+                ? Math.floor(new Date(appliedDates.end.toISOString()).getTime() / 1000)
+                : null;
+
+            // if (filters.from_date || filters.to_date) {
+            //     url += `&created_date_start=${filters.from_date || ''}&created_date_end=${filters.to_date || ''}`;
+            // }
+            // if (filters.selectedSource?.length > 0) {
+            //     url += `&source_origin=${filters.selectedSource.map((source: string) => source.toLowerCase()).join(',')}`;
+            // }
+            // if (filters.selectedTypes?.length > 0) {
+            //     url += `&source_type=${filters.selectedTypes
+            //         .map((type: string) => type.toLowerCase().replace(/\s+/g, '_'))
+            //         .join(',')}`;
+            // }
+            // if (filters.selectedDomains?.length > 0) {
+            //     url += `&domain_name=${filters.selectedDomains.join(',')}`;
+            // }
+            // if (filters.searchQuery) {
+            //     url += `&name=${filters.searchQuery}`;
+            // }
+
+            if (startEpoch !== null && endEpoch !== null) {
+                url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
             }
 
             if (sortBy) {
@@ -180,8 +244,8 @@ const Sources: React.FC = () => {
 
             const response = await axiosInstance.get(url)
 
-            const { source_list, count } = response.data;
-            setData(source_list);
+            const { audience_smarts_list, count } = response.data;
+            setData(audience_smarts_list);
             setCount(count || 0);
             setStatus("");
 
@@ -204,11 +268,52 @@ const Sources: React.FC = () => {
         }
     }
 
-    const isOpenFullName = Boolean(anchorElFullName);
+    const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setCalendarAnchorEl(event.currentTarget);
+    };
 
-    const handleClosePopoverFullName = () => {
-        setAnchorElFullName(null);
-        setSelectedName(null);
+    const handleApply = (dates: { start: Date | null; end: Date | null }) => {
+        if (dates.start && dates.end) {
+            const formattedStart = dates.start.toLocaleDateString();
+            const formattedEnd = dates.end.toLocaleDateString();
+
+            const dateRange = `${formattedStart} - ${formattedEnd}`;
+
+            setAppliedDates(dates);
+            setCalendarAnchorEl(null);
+
+            setSelectedFilters(prevFilters => {
+                const existingIndex = prevFilters.findIndex(filter => filter.label === 'Dates');
+                const newFilter = { label: 'Dates', value: dateRange };
+
+                if (existingIndex !== -1) {
+                    const updatedFilters = [...prevFilters];
+                    updatedFilters[existingIndex] = newFilter;
+                    return updatedFilters;
+                } else {
+                    return [...prevFilters, newFilter];
+                }
+            });
+            handleCalendarClose();
+        }
+    };
+
+    const handleCalendarClose = () => {
+        setCalendarAnchorEl(null);
+    };
+
+    const handleDateChange = (dates: { start: Date | null; end: Date | null }) => {
+        setSelectedDates(dates);
+        const { start, end } = dates;
+        if (start && end) {
+            setFormattedDates(`${start.toLocaleDateString()} - ${end.toLocaleDateString()}`);
+        } else if (start) {
+            setFormattedDates(`${start.toLocaleDateString()}`);
+        } else {
+            setFormattedDates('');
+        }
+    };
+    const handleDateLabelChange = (label: string) => {
     };
 
     const handleFilterPopupOpen = () => {
@@ -219,7 +324,7 @@ const Sources: React.FC = () => {
         setFilterPopupOpen(false);
     };
 
-    const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, rowData: Source) => {
+    const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, rowData: Smarts) => {
         setAnchorEl(event.currentTarget);
         setSelectedRowData(rowData);
     };
@@ -234,22 +339,22 @@ const Sources: React.FC = () => {
         setOrderBy(property);
     };
 
-    const handleDeleteSource = async () => {
+    const handleDeleteSmartAudience = async () => {
         setLoaderForTable(true);
         handleClosePopover();
         handleCloseConfirmDialog();
         try {
             if (selectedRowData?.id) {
-                const response = await axiosInstance.delete(`/audience-sources/${selectedRowData.id}`);
+                const response = await axiosInstance.delete(`/audience-smarts/${selectedRowData.id}`);
                 if (response.status === 200 && response.data) {
-                    showToast("Source successfully deleted!");
-                    setData((prevAccounts: Source[]) =>
-                        prevAccounts.filter((item: Source) => item.id !== selectedRowData.id)
+                    showToast("Smart audience successfully deleted!");
+                    setData((prevAccounts: Smarts[]) =>
+                        prevAccounts.filter((item: Smarts) => item.id !== selectedRowData.id)
                     );
                 }
             }
         } catch {
-            showErrorToast("Error deleting source")
+            showErrorToast("Error deleting smart audience")
         } finally {
             setLoaderForTable(false);
         }
@@ -272,15 +377,15 @@ const Sources: React.FC = () => {
         setPage(0);
     };
 
-    useEffect(() => {
-        const storedFilters = sessionStorage.getItem('filtersBySource');
+    // useEffect(() => {
+    //     const storedFilters = sessionStorage.getItem('filtersBySmarts');
 
-        if (storedFilters) {
-            const filters = JSON.parse(storedFilters);
+    //     if (storedFilters) {
+    //         const filters = JSON.parse(storedFilters);
 
-            handleApplyFilters(filters);
-        }
-    }, []);
+    //         handleApplyFilters(filters);
+    //     }
+    // }, []);
 
     const handleApplyFilters = (filters: FilterParams) => {
         const newSelectedFilters: { label: string; value: string }[] = [];
@@ -314,6 +419,9 @@ const Sources: React.FC = () => {
 
     const handleResetFilters = () => {
         setSelectedFilters([]);
+        setSelectedDates({start: null, end: null})
+        setAppliedDates({ start: null, end: null })
+        setFormattedDates('')
 
         const filters = {
             from_date: null,
@@ -326,16 +434,21 @@ const Sources: React.FC = () => {
             dateRange: { fromDate: null, toDate: null },
         };
 
-        sessionStorage.setItem('filtersBySource', JSON.stringify(filters));
+        sessionStorage.setItem('filtersBySmarts', JSON.stringify(filters));
 
         handleApplyFilters(filters);
     };
 
+
     const handleDeleteFilter = (filterToDelete: { label: string; value: string }) => {
+        setSelectedFilters([]);
+        setSelectedDates({start: null, end: null})
+        setAppliedDates({ start: null, end: null })
+        setFormattedDates('')
         let updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
         setSelectedFilters(updatedFilters);
     
-        let filters = JSON.parse(sessionStorage.getItem('filtersBySource') || '{}');
+        let filters = JSON.parse(sessionStorage.getItem('filtersBySmarts') || '{}');
     
         const deleteDate = (filters: FilterParams) => {
             filters.createdDate = [];
@@ -377,7 +490,7 @@ const Sources: React.FC = () => {
             };
         }
     
-        sessionStorage.setItem('filtersBySource', JSON.stringify(filters));
+        sessionStorage.setItem('filtersBySmarts', JSON.stringify(filters));
     
         updatedFilters = updatedFilters.filter(f => !['From Date', 'To Date', 'Date Range'].includes(f.label));
         setSelectedFilters(updatedFilters);
@@ -402,23 +515,6 @@ const Sources: React.FC = () => {
     
         handleApplyFilters(newFilters);
     };    
-
-
-    const setSourceOrigin = (sourceOrigin: string) => {
-        return sourceOrigin === "pixel" ? "Pixel" : "CSV File"
-    }
-
-    const setSourceType = (sourceType: string) => {
-        return sourceType
-            .split(',')
-            .map(item =>
-                item
-                    .split('_')
-                    .map(subItem => subItem.charAt(0).toUpperCase() + subItem.slice(1))
-                    .join(' ')
-            )
-            .join(', ');
-    }
 
 
     const truncateText = (text: string, maxLength: number) => {
@@ -459,9 +555,9 @@ const Sources: React.FC = () => {
                             }}>
                             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
                                 <Typography className='first-sub-title'>
-                                    Sources
+                                    Smart Audience
                                 </Typography>
-                                <CustomToolTip title={'Here you can view your active sources.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
+                                <CustomToolTip title={'Discover AI-powered Smart Audiences based on your sorces and lookalikes.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
                             </Box>
                             <Box sx={{
                                 display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px', pr: 2,
@@ -486,10 +582,10 @@ const Sources: React.FC = () => {
                                         },
                                     }}
                                     onClick={() => {
-                                        router.push("/sources/builder")
+                                        router.push("/smart-audiences/builder")
                                     }}
                                 >
-                                    Import Source
+                                    Generate Smart Audience
                                 </Button>
                                 <Button
                                     onClick={handleFilterPopupOpen}
@@ -541,6 +637,49 @@ const Sources: React.FC = () => {
                                             }}
                                         />
                                     )}
+                                </Button>
+                                <Button
+                                    disabled={data?.length === 0}
+                                    aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
+                                    aria-haspopup="true"
+                                    aria-expanded={isCalendarOpen ? 'true' : undefined}
+                                    onClick={handleCalendarClick}
+                                    sx={{
+                                        textTransform: 'none',
+                                        color: 'rgba(128, 128, 128, 1)',
+                                        border: formattedDates ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
+                                        borderRadius: '4px',
+                                        padding: '8px',
+                                        opacity: data?.length === 0 ? '0.5' : '1',
+                                        minWidth: 'auto',
+                                        '@media (max-width: 900px)': {
+                                            border: 'none',
+                                            padding: 0
+                                        },
+                                        '&:hover': {
+                                            backgroundColor: 'transparent',
+                                            border: '1px solid rgba(80, 82, 178, 1)',
+                                            color: 'rgba(80, 82, 178, 1)',
+                                            '& .MuiSvgIcon-root': {
+                                                color: 'rgba(80, 82, 178, 1)'
+                                            }
+                                        }
+                                    }}
+                                >
+                                    <DateRangeIcon fontSize='medium' sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)', }} />
+                                    <Typography variant="body1" sx={{
+                                        fontFamily: 'Nunito Sans',
+                                        fontSize: '14px',
+                                        fontWeight: '600',
+                                        lineHeight: '19.6px',
+                                        textAlign: 'left',
+                                        color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
+                                        "@media (max-width: 600px)": {
+                                            display: 'none'
+                                        },
+                                    }}>
+                                        {formattedDates}
+                                    </Typography>
                                 </Button>
                             </Box>
                         </Box>
@@ -620,7 +759,7 @@ const Sources: React.FC = () => {
                                                     fontWeight: "600",
                                                     lineHeight: "28px"
                                                 }}>
-                                                    Import Your First Source
+                                                    Get Started with Your First Audience 
                                                 </Typography>
                                                 <Image src='/no-data.svg' alt='No Data' height={250} width={300} />
                                                 <Typography variant="body1" color="textSecondary"
@@ -632,11 +771,11 @@ const Sources: React.FC = () => {
                                                         fontWeight: "600",
                                                         lineHeight: "20px"
                                                     }}>
-                                                    Import your first source to generate lookalikes.
+                                                    Supercharge your ad campaigns with high-performing lookalikes. Target those most likely to purchase, optimize your ad spend, and scale your profitability like never before.
                                                 </Typography>
                                                 <Button
                                                     variant="contained"
-                                                    onClick={() => router.push("/sources/builder")}
+                                                    onClick={() => router.push("/smart-audiences/builder")}
                                                     className='second-sub-title'
                                                     sx={{
                                                         backgroundColor: 'rgba(80, 82, 178, 1)',
@@ -649,13 +788,13 @@ const Sources: React.FC = () => {
                                                         }
                                                     }}
                                                 >
-                                                    Import Your First Source
+                                                    Generate Smart Audience
                                                 </Button>
                                             </Box>
                                         }
                                         {data.length !== 0 &&
                                             <Grid container spacing={1} sx={{ flex: 1 }}>
-                                                <Grid item xs={12}>
+                                                <Grid item xs={12} sx={{display: "flex", flexDirection: "column", justifyContent: "space-between"}}>
                                                     <TableContainer
                                                         component={Paper}
                                                         sx={{
@@ -681,14 +820,13 @@ const Sources: React.FC = () => {
                                                             <TableHead sx={{ position: "relative" }}>
                                                                 <TableRow>
                                                                     {[
-                                                                        { key: 'name', label: 'Name' },
+                                                                        { key: 'name', label: 'Smart Audience Name' },
                                                                         { key: 'use_case', label: 'Use Case' },
                                                                         { key: 'validations', label: 'Validations' },
-                                                                        { key: 'type', label: 'Type' },
-                                                                        { key: 'created_date', label: 'Created Date', sortable: true },
-                                                                        { key: 'created_by', label: 'Created By' },
-                                                                        { key: 'number_of_customers', label: 'Number of Customers', sortable: true },
-                                                                        { key: 'matched_records', label: 'Matched Records', sortable: true },
+                                                                        { key: 'created_date', label: 'Created', sortable: true },
+                                                                        { key: 'number_of_customers', label: 'Total Universe', sortable: true },
+                                                                        { key: 'matched_records', label: 'Active Segment', sortable: true },
+                                                                        { key: 'status', label: 'Status' },
                                                                         { key: 'actions', label: 'Actions' }
                                                                     ].map(({ key, label, sortable = false }) => (
                                                                         <TableCell
@@ -741,7 +879,7 @@ const Sources: React.FC = () => {
                                                                 )}
                                                             </TableHead>
                                                             <TableBody>
-                                                                {data.map((row: Source) => {
+                                                                {data.map((row: Smarts) => {
                                                                     const progress = sourceProgress[row.id];
                                                                     return (
                                                                         <TableRow
@@ -762,33 +900,12 @@ const Sources: React.FC = () => {
                                                                                 sx={{
                                                                                     ...smartAudiences.table_array, position: 'sticky', left: '0', zIndex: 9, backgroundColor: loaderForTable ? 'transparent' : '#fff',
                                                                                 }}>
-                                                                                {row.name}
-                                                                            </TableCell>
-
-                                                                            {/* Source Column */}
-                                                                            <TableCell
-                                                                                sx={{ ...smartAudiences.table_array, position: 'relative' }}
-                                                                            >
-                                                                                {setSourceOrigin(row.source_type)}
-                                                                            </TableCell>
-
-                                                                            {/* Domain Column */}
-                                                                            <TableCell
-                                                                                sx={{ ...smartAudiences.table_array, position: 'relative' }}
-                                                                            >
-                                                                                {row.domain ?? "--"}
-                                                                            </TableCell>
-
-                                                                            {/* Type Column */}
-                                                                            <TableCell
-                                                                                sx={{ ...smartAudiences.table_array, position: 'relative', cursor: 'default' }}
-                                                                            >
                                                                                 <Box sx={{display: 'flex'}}>
                                                                                 <Tooltip
                                                                                     title={
                                                                                         <Box sx={{ backgroundColor: '#fff', margin: 0, padding: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', }}>
                                                                                           <Typography className='table-data' component='div' sx={{ fontSize: '12px !important', }}>
-                                                                                            {setSourceType(row.source_origin)}
+                                                                                            {row.name}
                                                                                           </Typography>
                                                                                         </Box>
                                                                                       }
@@ -818,51 +935,70 @@ const Sources: React.FC = () => {
                                                                                             maxWidth:'150px',
                                                                                         }}
                                                                                     >
-                                                                                        {truncateText(setSourceType(row.source_origin), 20)}
+                                                                                        {truncateText(row.name, 20)}
                                                                                     </Typography>
                                                                                 </Tooltip>
                                                                                 </Box>
+                                                                                {/* {row.name} */}
                                                                             </TableCell>
 
+                                                                            {/* Use Case Column */}
+                                                                            <TableCell
+                                                                                sx={{ ...smartAudiences.table_array, position: 'relative', textAlign: "center" }}
+                                                                            >
+                                                                                {getUseCaseStyle(row.use_case_alias)}
+                                                                            </TableCell>
 
-                                                                            {/* Created date Column */}
+                                                                            {/* Validations Column */}
+                                                                            <TableCell
+                                                                                sx={{ ...smartAudiences.table_array, position: 'relative', textAlign: "center" }}
+                                                                            >
+                                                                                {row.validated_records.toLocaleString('en-US')}
+                                                                            </TableCell>
+
+                                                                            {/* Created Column */}
+                                                                            <TableCell
+                                                                                sx={{ ...smartAudiences.table_array, position: 'relative'}}
+                                                                            >
+                                                                                <Box>{dayjs(row.created_at).format('MMM D, YYYY')}</Box>
+                                                                                <Box>{row.created_by}</Box>
+                                                                            </TableCell>
+
+                                                                            {/* Total Universe Column */}
+                                                                            <TableCell
+                                                                                sx={{ ...smartAudiences.table_array, position: 'relative'}}
+                                                                            >
+                                                                                {row.total_records.toLocaleString('en-US')}
+                                                                            </TableCell>
+
+                                                                            {/* Active Segment Column */}
                                                                             <TableCell
                                                                                 sx={{ ...smartAudiences.table_array, position: 'relative' }}
                                                                             >
-                                                                                {dayjs(row.created_at).isValid() ? dayjs(row.created_at).format('MMM D, YYYY') : '--'}
+                                                                                {row.active_segment_records.toLocaleString('en-US')}
                                                                             </TableCell>
 
-                                                                            {/* Created By Column */}
+                                                                            {/* Status Column */}
                                                                             <TableCell
                                                                                 sx={{ ...smartAudiences.table_array, position: 'relative' }}
                                                                             >
-                                                                                {row.created_by}
-                                                                            </TableCell>
-
-                                                                            {/* Number of Customers Column */}
-                                                                            <TableCell
-                                                                                sx={{ ...smartAudiences.table_array, position: 'relative' }}
-                                                                            >
-                                                                                {/* {progress?.total && progress?.total > 0 || row?.total_records > 0
-                                                                                ? progress?.total > 0
-                                                                                    ? progress?.total.toLocaleString('en-US')
-                                                                                    : row?.total_records?.toLocaleString('en-US')
-                                                                                :  <ThreeDotsLoader />
-                                                                                } */}
-                                                                            </TableCell>
-
-                                                                            {/* Matched Records  Column */}
-                                                                            <TableCell
-                                                                                sx={{ ...smartAudiences.table_array, position: 'relative' }}
-                                                                            >
-                                                                                {/* {(progress?.processed && progress?.processed == progress?.total) || (row?.processed_records == row?.total_records && row?.processed_records !== 0)
-                                                                                ? progress?.matched > row?.matched_records 
-                                                                                    ? progress?.matched.toLocaleString('en-US')
-                                                                                    : row.matched_records.toLocaleString('en-US')
-                                                                                :  row?.processed_records !== 0 
-                                                                                    ? <ProgressBar progress={{total: row?.total_records, processed: row?.processed_records, matched: row?.matched_records}}/> 
-                                                                                    : <ProgressBar progress={progress}/> 
-                                                                                } */}
+                                                                                <Box sx={{ display: "flex", justifyContent: "center" }}>
+                                                                                    <Typography component="div" sx={{
+                                                                                        width: "100px",
+                                                                                        margin: 0,
+                                                                                        background: getStatusStyle(row.status.charAt(0).toUpperCase() + row.status.slice(1)).background,
+                                                                                        padding: '3px 8px',
+                                                                                        borderRadius: '2px',
+                                                                                        fontFamily: 'Roboto',
+                                                                                        fontSize: '12px',
+                                                                                        fontWeight: '400',
+                                                                                        lineHeight: '16px',
+                                                                                        textAlign: "center",
+                                                                                        color: getStatusStyle(row.status.charAt(0).toUpperCase() + row.status.slice(1)).color,
+                                                                                    }}>
+                                                                                        {row.status.charAt(0).toUpperCase() + row.status.slice(1)}
+                                                                                    </Typography>
+                                                                                </Box>
                                                                             </TableCell>
 
                                                                             <TableCell sx={{ ...smartAudiences.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
@@ -900,9 +1036,8 @@ const Sources: React.FC = () => {
                                                                                     >
                                                                                         <ListItemButton sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
                                                                                             handleClosePopover()
-                                                                                            router.push(`/lookalikes/${row.id}/builder`)
                                                                                         }}>
-                                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Lookalike" />
+                                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Sync" />
                                                                                         </ListItemButton>
                                                                                         <ListItemButton
                                                                                             sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }}
@@ -935,7 +1070,7 @@ const Sources: React.FC = () => {
                                                                                             </Typography>
                                                                                             <DialogContent sx={{ padding: 2 }}>
                                                                                                 <DialogContentText className="table-data">
-                                                                                                    Are you sure you want to delete this source?
+                                                                                                    Are you sure you want to delete this smart audience?
                                                                                                 </DialogContentText>
                                                                                             </DialogContent>
                                                                                             <DialogActions>
@@ -958,7 +1093,7 @@ const Sources: React.FC = () => {
                                                                                                 </Button>
                                                                                                 <Button
                                                                                                     className="second-sub-title"
-                                                                                                    onClick={handleDeleteSource}
+                                                                                                    onClick={handleDeleteSmartAudience}
                                                                                                     sx={{
                                                                                                         backgroundColor: 'rgba(80, 82, 178, 1)',
                                                                                                         color: '#fff !important',
@@ -985,11 +1120,11 @@ const Sources: React.FC = () => {
                                                             </TableBody>
                                                         </Table>
                                                     </TableContainer>
-                                                    {count_sources && count_sources > 10
+                                                    {count_smarts_audience && count_smarts_audience > 10
                                                         ?
                                                         <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0', "@media (max-width: 600px)": { padding: '12px 0 0' } }}>
                                                             <CustomTablePagination
-                                                                count={count_sources ?? 0}
+                                                                count={count_smarts_audience ?? 0}
                                                                 page={page}
                                                                 rowsPerPage={rowsPerPage}
                                                                 onPageChange={handleChangePage}
@@ -1018,66 +1153,31 @@ const Sources: React.FC = () => {
                                                                     marginRight: '16px',
                                                                 }}
                                                             >
-                                                                {`${count_sources} - ${rowsPerPage} of ${rowsPerPage}`}
+                                                                {`${count_smarts_audience} - ${rowsPerPage} of ${rowsPerPage}`}
                                                             </Typography>
                                                         </Box>
                                                     }
                                                 </Grid>
                                             </Grid>
                                         }
-                                        {showSlider && <Slider />}
-                                        <Popover
-                                            open={isOpenFullName}
-                                            anchorEl={anchorElFullName}
-                                            onClose={handleClosePopoverFullName}
-                                            anchorOrigin={{
-                                                vertical: "bottom",
-                                                horizontal: "left",
-                                            }}
-                                            transformOrigin={{
-                                                vertical: "top",
-                                                horizontal: "left",
-                                            }}
-                                            PaperProps={{
-                                                sx: {
-                                                    width: "184px",
-                                                    height: "108px",
-                                                    borderRadius: "4px 0px 0px 0px",
-                                                    border: "0.2px solid #ddd",
-                                                    padding: "8px",
-                                                    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
-                                                },
-                                            }}
-                                        >
-                                            <Box sx={{ maxHeight: "92px", overflowY: "auto", backgroundColor: 'rgba(255, 255, 255, 1)' }}>
-                                                {selectedName?.split(",").map((part, index) => (
-                                                    <Typography
-                                                        key={index}
-                                                        variant="body2"
-                                                        className='second-sub-title'
-                                                        sx={{
-                                                            wordBreak: "break-word",
-                                                            backgroundColor: 'rgba(243, 243, 243, 1)',
-                                                            borderRadius: '4px',
-                                                            color: 'rgba(95, 99, 104, 1) !important',
-                                                            marginBottom: index < selectedName?.split(",").length - 1 ? "4px" : 0,
-                                                        }}
-                                                    >
-                                                        {part.trim()}
-                                                    </Typography>
-                                                ))}
-                                            </Box>
-                                        </Popover>
                                     </Box>
 
                                     <FilterPopup open={filterPopupOpen}
                                         onClose={handleFilterPopupClose}
                                         onApply={handleApplyFilters}
                                     />
+                                    <CalendarPopup
+                                        anchorEl={calendarAnchorEl}
+                                        open={isCalendarOpen}
+                                        onClose={handleCalendarClose}
+                                        onDateChange={handleDateChange}
+                                        onApply={handleApply}
+                                        onDateLabelChange={handleDateLabelChange}
+                                        selectedDates={selectedDates}
+                                    />
 
                                 </Box>
                             </Box>
-                            {/* {showSlider && <Slider />} */}
                         </Box>
                     </Box>
                 </Box>
@@ -1090,7 +1190,7 @@ const SmartAudiencesPage: React.FC = () => {
     return (
         <Suspense fallback={<CustomizedProgressBar />}>
             <SliderProvider>
-                <SmartAudiencesPage />
+                <SmartAudiences />
             </SliderProvider>
         </Suspense>
     );

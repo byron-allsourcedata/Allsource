@@ -1,16 +1,15 @@
 import logging
 from datetime import datetime
 
-from sqlalchemy import desc, asc, select
+import pytz
+from sqlalchemy import desc, asc
 from sqlalchemy.orm import Session
 
 from models.audience_smarts import AudienceSmart
 from models.audience_smarts_use_cases import AudienceSmartsUseCase
 from models.users import Users
-from models.users_domains import UserDomains
 from typing import Optional, Tuple, List
 from sqlalchemy.engine.row import Row
-from sqlalchemy.orm import Query
 
 from persistence.utils import apply_filters
 
@@ -26,12 +25,13 @@ class AudienceSmartsPersistence:
             user_id: int,
             page: int,
             per_page: int,
+            from_date: Optional[int] = None, 
+            to_date: Optional[int] = None, 
             sort_by: Optional[str] = None,
             sort_order: Optional[str] = None,
             name: Optional[str] = None,
-            source_origin: Optional[str] = None,
-            source_type: Optional[str] = None,
-            domain_name: Optional[str] = None,
+            status: Optional[str] = None,
+            use_cases: Optional[str] = None,
             created_date_start: Optional[datetime] = None,
             created_date_end: Optional[datetime] = None
     ) -> Tuple[List[Row], int]:
@@ -40,10 +40,9 @@ class AudienceSmartsPersistence:
             self.db.query(
                 AudienceSmart.id,
                 AudienceSmart.name,
-                AudienceSmartsUseCase.name,
+                AudienceSmartsUseCase.alias,
                 Users.full_name,
                 AudienceSmart.created_at,
-                UserDomains.domain,
                 AudienceSmart.total_records,
                 AudienceSmart.validated_records,
                 AudienceSmart.active_segment_records,
@@ -54,19 +53,28 @@ class AudienceSmartsPersistence:
                 .filter(AudienceSmart.user_id == user_id)
         )
 
-        source_type_list = source_type.split(',') if source_type else []
-        source_origin_list = source_origin.split(',') if source_origin else []
-        domain_name_list = domain_name.split(',') if domain_name else []
+        # source_type_list = source_type.split(',') if source_type else []
+        # source_origin_list = source_origin.split(',') if source_origin else []
+        # domain_name_list = domain_name.split(',') if domain_name else []
 
-        query = apply_filters(
-            query,
-            name=name,
-            source_type_list=source_type_list,
-            source_origin_list=source_origin_list,
-            domain_name_list=domain_name_list,
-            created_date_start=created_date_start,
-            created_date_end=created_date_end
-        )
+        # query = apply_filters(
+        #     query,
+        #     name=name,
+        #     source_type_list=source_type_list,
+        #     source_origin_list=source_origin_list,
+        #     domain_name_list=domain_name_list,
+        #     created_date_start=created_date_start,
+        #     created_date_end=created_date_end
+        # )
+
+        if from_date and to_date:
+            start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
+            end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
+
+            query = query.filter(
+                AudienceSmart.created_at >= start_date,
+                AudienceSmart.created_at <= end_date
+            )
 
         sort_options = {
             'number_of_customers': AudienceSmart.total_records,
@@ -86,3 +94,11 @@ class AudienceSmartsPersistence:
         count = query.count()
         
         return smarts, count
+
+
+    def delete_audience_smart(self, audience_smart: int) -> int:
+        deleted_count = self.db.query(AudienceSmart).filter(
+            AudienceSmart.id == audience_smart
+        ).delete()
+        self.db.commit()
+        return deleted_count

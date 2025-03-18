@@ -20,6 +20,7 @@ from enums import DomainStatus, UserAuthorizationStatus, TeamAccessLevel
 from exceptions import InvalidToken
 from models.users import Users as User
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
+from persistence.audience_smarts import AudienceSmartsPersistence
 from persistence.company_persistence import CompanyPersistence
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.referral_user import ReferralUserPersistence
@@ -49,6 +50,7 @@ from persistence.integrations.external_apps_installations import ExternalAppsIns
 from persistence.referral_discount_code_persistence import ReferralDiscountCodesPersistence
 from schemas.auth_token import Token
 from services.audience_sources import AudienceSourceService
+from services.audience_smarts import AudienceSmartsService
 from services.accounts import AccountsService
 from services.admin_customers import AdminCustomersService
 from services.audience import AudienceService
@@ -96,6 +98,9 @@ async def verify_signature(request: Request):
 
 def get_audience_sources_persistence(db: Session = Depends(get_db)):
     return AudienceSourcesPersistence(db)
+
+def get_audience_smarts_persistence(db: Session = Depends(get_db)):
+    return AudienceSmartsPersistence(db)
 
 def get_partners_asset_persistence(db: Session = Depends(get_db)) -> PartnersAssetPersistence:
     return PartnersAssetPersistence(db)
@@ -197,6 +202,10 @@ def get_audience_sources_service(
         audience_sources_persistence: AudienceSourcesPersistence = Depends(get_audience_sources_persistence),
         domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)):
     return AudienceSourceService(audience_sources_persistence=audience_sources_persistence, domain_persistence=domain_persistence)
+
+def get_audience_smarts_service(
+        audience_smarts_persistence: AudienceSmartsPersistence = Depends(get_audience_smarts_persistence)):
+    return AudienceSmartsService(audience_smarts_persistence=audience_smarts_persistence)
 
 
 def get_slack_service(

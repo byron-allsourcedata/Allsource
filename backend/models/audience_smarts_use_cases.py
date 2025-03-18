@@ -9,6 +9,7 @@ class AudienceSmartsUseCase(Base):
     created_at = Column(TIMESTAMP, nullable=False)
     updated_at = Column(TIMESTAMP, nullable=False)
     validations = Column(JSON, nullable=True)
+    alias = Column(VARCHAR(64), nullable=False, unique=True)
 
 Index('audience_smarts_use_cases_pkey', AudienceSmartsUseCase.id)
 
