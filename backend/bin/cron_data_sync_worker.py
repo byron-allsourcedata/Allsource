@@ -165,7 +165,6 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
             result = None
             try:
                 result = await service.process_data_sync(five_x_five_user, user_integration, integration_data_sync, lead_user)
-                print(result)
             except requests.HTTPError as e:
                 logging.error(f"{e}", exc_info=True)
                 await message.ack()
