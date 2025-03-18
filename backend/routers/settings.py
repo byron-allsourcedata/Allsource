@@ -181,7 +181,6 @@ def download_billing(invoice_id: str = Query(...), settings_service: SettingsSer
             )
     return settings_service.download_billing(invoice_id=invoice_id)
 
-
 @router.post("/billing/send-billing")
 def send_billing(send_billing: SendBilling, settings_service: SettingsService = Depends(get_settings_service),
                  user: dict = Depends(check_user_authorization_without_pixel)):
@@ -194,7 +193,6 @@ def send_billing(send_billing: SendBilling, settings_service: SettingsService = 
                 detail="Access denied. Admins only."
             )
     return settings_service.send_billing(invoice_id=send_billing.invoice_id, email=send_billing.email, user=user)
-
 
 @router.put("/billing/default-card")
 def default_card(payment_card: PaymentCard, settings_service: SettingsService = Depends(get_settings_service),

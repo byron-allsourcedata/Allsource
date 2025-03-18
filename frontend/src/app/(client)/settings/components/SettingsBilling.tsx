@@ -427,8 +427,17 @@ export const SettingsBilling: React.FC = () => {
         }
     };
 
+    const isFormValidThird = () => {
+        if (!email || email.trim() === '') {
+            return false;
+        }
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(email)) {
+            return false;
+        }
+        return true;
+    };
 
-    // Handler for page change
     const handleChangePage = (_: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
         setPage(newPage);
     };
@@ -585,7 +594,7 @@ export const SettingsBilling: React.FC = () => {
 
 
     return (
-        <Box sx={{pr:2, pt:1}}>
+        <Box sx={{ pr: 2, pt: 1 }}>
             <Grid container spacing={3} sx={{ mb: 3 }}>
                 <Grid item xs={12} md={6} sx={{ padding: '0px' }}>
                     <Box sx={{ border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', p: 3, height: '100%' }}>
@@ -883,16 +892,18 @@ export const SettingsBilling: React.FC = () => {
                                                     gap: '12px'
                                                 }
                                             }}>
-                                                <Box sx={{display: 'flex', flexDirection: 'row', width: '130px', gap:0.5, alignItems: 'center', '@media (max-width: 600px)': {
+                                                <Box sx={{
+                                                    display: 'flex', flexDirection: 'row', width: '130px', gap: 0.5, alignItems: 'center', '@media (max-width: 600px)': {
                                                         width: '110px'
-                                                    }}}> 
-                                                <Typography className="third-sub-title" sx={{
-                                                    fontWeight: '600 !important',
-                                                    lineHeight: '16px !important',
+                                                    }
                                                 }}>
-                                                    Overage
-                                                </Typography>
-                                                <CustomTooltip title='How overage works.' linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/settings/enable-overage" />
+                                                    <Typography className="third-sub-title" sx={{
+                                                        fontWeight: '600 !important',
+                                                        lineHeight: '16px !important',
+                                                    }}>
+                                                        Overage
+                                                    </Typography>
+                                                    <CustomTooltip title='How overage works.' linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/settings/enable-overage" />
                                                 </Box>
                                                 <Typography className="second-text" sx={{
                                                     fontSize: '12px',
@@ -1386,7 +1397,6 @@ export const SettingsBilling: React.FC = () => {
                                     >
                                         <TableCell className="sticky-cell table-data" sx={{
                                             ...billingStyles.tableBodyColumn,
-                                            cursor: 'pointer',
                                             backgroundColor: '#fff'
                                         }}>{history.date}</TableCell>
 
@@ -1445,7 +1455,7 @@ export const SettingsBilling: React.FC = () => {
                     </Table>
                 </TableContainer>
                 {/* Pagination Component */}
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '42px 0 0px', mb:1 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '42px 0 0px', mb: 1 }}>
                     <CustomTablePagination
                         count={totalRows}
                         page={page}
@@ -1619,20 +1629,27 @@ export const SettingsBilling: React.FC = () => {
                                 }}>
                                     Cancel
                                 </Button>
-                                <Button className='hyperlink-red' onClick={handleSendInvoice} sx={{
-                                    background: '#5052B2',
-                                    borderRadius: '4px',
-                                    border: '1px solid #5052b2',
-                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    color: '#fff !important',
-                                    textTransform: 'none',
-                                    padding: '10px 24px',
-                                    '&:hover': {
-                                        color: '#5052B2 !important'
-                                    }
-                                }}>
+                                <Button
+                                    className='hyperlink-red'
+                                    disabled={!isFormValidThird()}
+                                    onClick={handleSendInvoice}
+                                    sx={{
+                                        background: isFormValidThird() ? '#5052B2' : '#D3D3D3',
+                                        borderRadius: '4px',
+                                        border: '1px solid',
+                                        borderColor: isFormValidThird() ? '#5052b2' : '#D3D3D3',
+                                        boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                        color: isFormValidThird() ? '#fff !important' : '#A9A9A9',
+                                        textTransform: 'none',
+                                        padding: '10px 24px',
+                                        '&:hover': {
+                                            color: isFormValidThird() ? '#5052B2 !important' : '#A9A9A9'
+                                        }
+                                    }}
+                                >
                                     Send
                                 </Button>
+
                             </Box>
                         </Box>
                     </Box>

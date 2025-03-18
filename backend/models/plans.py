@@ -28,7 +28,7 @@ class SubscriptionPlan(Base):
     features = Column(JSONB, nullable=True)
     priority = Column(INTEGER, nullable=False)
     full_price = Column(NUMERIC(18, 2), nullable=True)
-    alias = Column(VARCHAR(64), nullable=True)
+    alias = Column(VARCHAR(64), nullable=True, unique=True)
     platform = Column(VARCHAR(64), nullable=True)
     
 Index('subscription_plans_title_interval_idx', SubscriptionPlan.title, SubscriptionPlan.interval)

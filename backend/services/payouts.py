@@ -44,16 +44,15 @@ class PayoutsService:
             payout_date_formatted = payout_date.strftime('%b %d, %Y') if payout_date else None
             
             month_name = datetime.strptime(month_year, '%Y-%m').strftime('%B')
-            user_ids = {month_payout.parent_id for month_payout in month_payouts}
-            partners = self.partners_persistence.get_partners_by_user_ids(user_ids)
+            user_ids = {month_payout.user_id for month_payout in month_payouts}
+            
     
             monthly_info.append({
                 'month': month_name,
                 'total_rewards': round(total_rewards, 2),
                 'rewards_approved': round(rewards_approved, 2),
                 'rewards_paid': round(rewards_paid, 2),
-                'count_accounts': len(partners),
-                'count_invites': len(payouts),
+                'count_invites': len(user_ids),
                 'payout_date': payout_date_formatted
             })
         
@@ -184,8 +183,6 @@ class PayoutsService:
     def get_total_payouts(self, year, month, partner_id, reward_type):
         payouts = self.referral_payouts_persistence.get_total_payouts_to_refferal(year=year, month=month, partner_id=partner_id, reward_type=reward_type)
         return self.process_monthly_payouts(payouts)
-
-
         
     def get_payouts_partners(self, year, month, partner_id, search_query, is_master, reward_type, from_date, to_date, sort_by, sort_order):
         if year and month and partner_id:

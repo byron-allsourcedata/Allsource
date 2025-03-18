@@ -104,24 +104,25 @@ class PaymentsService:
         schedule = stripe.SubscriptionSchedule.retrieve(current_subscription.get("schedule"))
         stripe.SubscriptionSchedule.release(schedule.id)
 
-    def create_customer_session(self, price_id: str, user: dict):
+    def create_customer_session(self, alias: str, user: dict):
         if user.get('source_platform') == SourcePlatformEnum.SHOPIFY.value:
-            plan = self.plan_persistence.get_plan_by_price_id(price_id)
+            plan = self.plan_persistence.get_plan_by_alias(alias)
             with self.integration_service as service:
                 return service.shopify.initialize_subscription_charge(plan=plan, user=user)
             
         customer_id = self.plans_service.get_customer_id(user)
         trial_period = 0
         discount_code = None
+        plan = self.plan_persistence.get_plan_by_alias(alias)
         if not self.plan_persistence.get_user_subscription(user.get('id')):
-            trial_period = self.plan_persistence.get_plan_by_price_id(price_id).trial_days
+            trial_period = plan.trial_days
             discount_code = self.referral_discount_codes_persistence.get_discount_code(user_id=user.get('id'))
         if get_default_payment_method(customer_id):
-            status_subscription = renew_subscription(price_id, customer_id)
+            status_subscription = renew_subscription(plan.stripe_price_id, customer_id)
             return {"status_subscription": status_subscription}
         result_url = create_stripe_checkout_session(
             customer_id=self.plans_service.get_customer_id(user),
-            line_items=[{"price": price_id, "quantity": 1}],
+            line_items=[{"price": plan.stripe_price_id, "quantity": 1}],
             mode="subscription",
             trial_period=trial_period,
             coupon=discount_code
@@ -164,23 +165,24 @@ class PaymentsService:
             self.plans_service.save_reason_unsubscribe(reason_unsubscribe, user.get('id'), time_now)
             return SubscriptionStatus.SUCCESS
 
-    def upgrade_and_downgrade_user_subscription(self, price_id: str, user) -> dict[str, SubscriptionStatus] | dict[
+    def upgrade_and_downgrade_user_subscription(self, alias: str, user) -> dict[str, SubscriptionStatus] | dict[
         str, str] | dict[str, str]:
         subscription = self.plan_persistence.get_user_subscription(user_id=user.get('id'))
         if subscription is None:
             return {'status': SubscriptionStatus.INCOMPLETE}
         if user.get('source_platform') == SourcePlatformEnum.SHOPIFY.value:
-            plan = self.plan_persistence.get_plan_by_price_id(price_id)
+            plan = self.plan_persistence.get_plan_by_alias(alias)
             with self.integration_service as service:
                 return service.shopify.initialize_subscription_charge(plan=plan, user=user)
             
         platform_subscription_id = subscription.platform_subscription_id
         current_subscription = stripe.Subscription.retrieve(platform_subscription_id)
-        is_downgrade = self.is_downgrade(price_id, user.get('current_subscription_id'))
+        plan = self.plan_persistence.get_plan_by_alias(alias)
+        is_downgrade = self.is_downgrade(plan.stripe_price_id, user.get('current_subscription_id'))
         if is_downgrade:
-            return self.downgrade_subscription(current_subscription, platform_subscription_id, price_id, subscription)
+            return self.downgrade_subscription(current_subscription, platform_subscription_id, plan.stripe_price_id, subscription)
         else:
-            return self.upgrade_subscription(current_subscription, platform_subscription_id, price_id)
+            return self.upgrade_subscription(current_subscription, platform_subscription_id, plan.stripe_price_id)
 
     def cancel_downgrade(self, user: dict):
         subscription = self.plan_persistence.get_user_subscription(user_id=user.get('id'))
