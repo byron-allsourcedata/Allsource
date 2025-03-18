@@ -89,6 +89,7 @@ const Sources: React.FC = () => {
     const [selectedName, setSelectedName] = React.useState<string | null>(null);
     const isOpen = Boolean(anchorEl);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const [isMakeRequest, setIsMakeRequest] = useState(false);
 
     useEffect(() => {
         fetchSources({
@@ -108,6 +109,14 @@ const Sources: React.FC = () => {
         });
     }, [orderBy, order, page, rowsPerPage]);
 
+    const clearPollingInterval = () => {
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+            console.log("interval cleared");
+        }
+    }
+
     useEffect(() => {
         console.log("longpol");
 
@@ -121,24 +130,18 @@ const Sources: React.FC = () => {
                     fetchSourcesMemoized();
                 } else {
                     console.log("No pending records, stopping interval");
-                    if (intervalRef.current) {
-                        clearInterval(intervalRef.current);
-                        intervalRef.current = null;
-                    }
+                    clearPollingInterval();
                 }
             }, 2000);
         }
 
         return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-                intervalRef.current = null;
-                console.log("interval cleared");
-            }
+            clearPollingInterval();
         };
-    }, [data, fetchSourcesMemoized]);
+    }, [data, fetchSourcesMemoized, page, rowsPerPage]);
 
     const fetchSources = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
+        setIsMakeRequest(false);
         try {
             !intervalRef.current
                 ? isFirstLoad ? setLoading(true) : setLoaderForTable(true)
@@ -198,6 +201,7 @@ const Sources: React.FC = () => {
             setRowsPerPage(selectedValue);
         } catch {
         } finally {
+            setIsMakeRequest(true);
             if (isFirstLoad) {
                 setLoading(false);
                 setIsFirstLoad(false);
@@ -241,6 +245,7 @@ const Sources: React.FC = () => {
         setLoaderForTable(true);
         handleClosePopover();
         handleCloseConfirmDialog();
+        clearPollingInterval();
         try {
             if (selectedRowData?.id) {
                 const response = await axiosInstance.delete(`/audience-sources/${selectedRowData.id}`);
@@ -249,6 +254,8 @@ const Sources: React.FC = () => {
                     setData((prevAccounts: Source[]) =>
                         prevAccounts.filter((item: Source) => item.id !== selectedRowData.id)
                     );
+
+                    setCount((prevCount) => (prevCount ? Math.max(prevCount - 1, 0) : 0));
                 }
             }
         } catch {
@@ -326,11 +333,16 @@ const Sources: React.FC = () => {
             selectedTypes: [],
             selectedDomains: [],
             createdDate: [],
+            checkedFilters: {
+                today: false,
+                last7Days: false,
+                last30Days: false,
+                last6Months: false
+            },
             dateRange: { fromDate: null, toDate: null },
         };
 
         sessionStorage.setItem('filtersBySource', JSON.stringify(filters));
-
         handleApplyFilters(filters);
     };
 
@@ -373,10 +385,10 @@ const Sources: React.FC = () => {
 
         if (!filters.from_date && !filters.to_date) {
             filters.checkedFilters = {
-                lastWeek: false,
+                today: false,
+                last7Days: false,
                 last30Days: false,
-                last6Months: false,
-                allTime: false,
+                last6Months: false
             };
         }
 
@@ -613,7 +625,7 @@ const Sources: React.FC = () => {
                                             pb: '18px'
                                         }
                                     }}>
-                                        {(data.length === 0 && !(selectedFilters.length > 0)) &&
+                                        {(data.length === 0 && isMakeRequest && !(selectedFilters.length > 0)) &&
                                             <Box sx={sourcesStyles.centerContainerStyles}>
                                                 <Typography variant="h5" sx={{
                                                     mb: 3,
@@ -656,7 +668,7 @@ const Sources: React.FC = () => {
                                                 </Button>
                                             </Box>
                                         }
-                                        {(data.length === 0 && selectedFilters.length > 0) && (
+                                        {(data.length === 0 && selectedFilters.length > 0 && !loaderForTable) && (
                                             <Box sx={{
                                                 ...sourcesStyles.centerContainerStyles,
                                                 border: '1px solid rgba(235, 235, 235, 1)',
@@ -666,7 +678,7 @@ const Sources: React.FC = () => {
                                                 <TableContainer
                                                     component={Paper}
                                                     sx={{
-                                                        borderBottom: 'none', // Убираем нижнюю границу у контейнера таблицы
+                                                        borderBottom: 'none',
                                                         overflowX: 'auto',
                                                         maxHeight: selectedFilters.length > 0
                                                             ? (hasNotification ? '63vh' : '68vh')
@@ -748,7 +760,6 @@ const Sources: React.FC = () => {
                                                     </Table>
                                                 </TableContainer>
 
-                                                {/* Отступ между таблицей и сообщением */}
                                                 <Box sx={{ p: 3, textAlign: 'center', width: '100%' }}>
                                                     <Typography variant="h5" sx={{
                                                         mb: 3,
