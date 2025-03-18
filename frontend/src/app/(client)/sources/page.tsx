@@ -706,7 +706,7 @@ const Sources: React.FC = () => {
                                                                     { key: 'type', label: 'Type' },
                                                                     { key: 'created_date', label: 'Created Date', sortable: true },
                                                                     { key: 'created_by', label: 'Created By' },
-                                                                    { key: 'number_of_customers', label: 'Number of Customers', sortable: true },
+                                                                    { key: 'number_of_customers', label: 'No of Customers', sortable: true },
                                                                     { key: 'matched_records', label: 'Matched Records', sortable: true },
                                                                     { key: 'actions', label: 'Actions' }
                                                                 ].map(({ key, label, sortable = false }) => (
@@ -820,7 +820,7 @@ const Sources: React.FC = () => {
                                                                         { key: 'type', label: 'Type' },
                                                                         { key: 'created_date', label: 'Created Date', sortable: true },
                                                                         { key: 'created_by', label: 'Created By' },
-                                                                        { key: 'number_of_customers', label: 'Number of Customers', sortable: true },
+                                                                        { key: 'number_of_customers', label: 'No of Customers', sortable: true },
                                                                         { key: 'matched_records', label: 'Matched Records', sortable: true },
                                                                         { key: 'actions', label: 'Actions' }
                                                                     ].map(({ key, label, sortable = false }) => (
