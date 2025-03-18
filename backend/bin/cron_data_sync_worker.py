@@ -13,6 +13,7 @@ sys.path.append(parent_dir)
 from sqlalchemy import create_engine
 from sqlalchemy.exc import PendingRollbackError
 from dotenv import load_dotenv
+from utils import get_utc_aware_date
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 from config.aws import get_s3_client
 from enums import ProccessDataSyncResult, DataSyncImportedStatus, SourcePlatformEnum, NotificationTitles
@@ -96,10 +97,20 @@ def update_users_integrations(session, status, integration_data_sync_id, service
             })
         session.commit()
         
-def update_data_sync_imported_leads(session, status, data_sync_id):
-    session.query(DataSyncImportedLeads).filter(DataSyncImportedLeads.id == data_sync_id).update({
+def update_data_sync_imported_leads(session, status, data_sync_imported_id, integration_data_sync: IntegrationUserSync, user_integration: UserIntegration):
+    session.query(DataSyncImportedLeads).filter(DataSyncImportedLeads.id == data_sync_imported_id).update({
             'status': status
             })
+    session.flush()
+    if status == ProccessDataSyncResult.SUCCESS.value:
+        integration_data_sync.last_sync_date = get_utc_aware_date()
+        if integration_data_sync.sync_status == False:
+            integration_data_sync.sync_status = True
+            
+        if user_integration.is_failed == True:
+            user_integration.is_failed = False
+            user_integration.error_message = None
+        
     session.commit()
     
 async def send_error_msg(user_id: int, service_name: str, notification_persistence: NotificationPersistence, title: str):
@@ -154,6 +165,7 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
             result = None
             try:
                 result = await service.process_data_sync(five_x_five_user, user_integration, integration_data_sync, lead_user)
+                print(result)
             except requests.HTTPError as e:
                 logging.error(f"{e}", exc_info=True)
                 await message.ack()
@@ -179,7 +191,7 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
                     
                 case ProccessDataSyncResult.LIST_NOT_EXISTS.value:
                     logging.debug(f"list_not_exists: {service_name}")
-                    update_users_integrations(session=session, status=ProccessDataSyncResult.LIST_NOT_EXISTS.value,integration_data_sync_id=integration_data_sync.id,  service_name=service_name)
+                    update_users_integrations(session=session, status=ProccessDataSyncResult.LIST_NOT_EXISTS.value, integration_data_sync_id=integration_data_sync.id, service_name=service_name)
                     await send_error_msg(lead_user.user_id, service_name, notification_persistence, NotificationTitles.DATA_SYNC_ERROR.value)
                     
                 case ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
@@ -188,7 +200,7 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
                     await send_error_msg(lead_user.user_id, service_name, notification_persistence, NotificationTitles.AUTHENTICATION_INTEGRATION_FAILED.value)
                 
             if import_status != DataSyncImportedStatus.SENT.value:
-                update_data_sync_imported_leads(session, import_status, data_sync_imported_id)
+                update_data_sync_imported_leads(session, import_status, data_sync_imported_id, integration_data_sync, user_integration)
                 
             logging.info(f"Processed message for service: {service_name}")
             await message.ack()
