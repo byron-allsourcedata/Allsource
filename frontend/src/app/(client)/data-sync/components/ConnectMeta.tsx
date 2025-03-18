@@ -1256,8 +1256,9 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
                                                         <DialogTitle>Create a campaign for your new audience</DialogTitle>
                                                         <DialogContent>
                                                             <Typography variant="body2" paragraph>
-                                                                We'll set up a campaign that's optimized to target your audience. You can always change these settings in your ad account.
+                                                                We&apos;ll set up a campaign that&apos;s optimized to target your audience. You can always change these settings in your ad account.
                                                             </Typography>
+
                                                             <TextField
                                                                 label="Campaign Name"
                                                                 variant="outlined"
@@ -1306,7 +1307,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
                                                                 }}
                                                             />
                                                             <Typography variant="body2" color="textSecondary" paragraph>
-                                                                We will not run your campaign. Maximiz will create a campaign template in your ad account. We won't run anything without your confirmation.
+                                                                We will not run your campaign. Maximiz will create a campaign template in your ad account. We won&apos;t run anything without your confirmation.
                                                             </Typography>
                                                         </DialogContent>
                                                         <DialogActions>
