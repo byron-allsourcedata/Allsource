@@ -146,6 +146,22 @@ body {
   color: #5F6368;
 }
 
+.black-table-data {
+  font-family: 'Roboto';
+  font-size: 12px;
+  line-height: normal;
+  font-weight: 400;
+  color: #202124;
+}
+
+.black-table-header {
+  font-family: 'Roboto';
+  font-size: 14px;
+  line-height: normal;
+  font-weight: 400;
+  color: #202124;
+}
+
 .left-nav {
   font-family: 'Nunito Sans';
   font-size: 14px;

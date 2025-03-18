@@ -17,6 +17,7 @@ import { AxiosError } from 'axios';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { useUser } from '@/context/UserContext';
 import ContactsIcon from '@mui/icons-material/Contacts';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 
 const sidebarStyles = {
     container: {
@@ -298,7 +299,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                 </ListItem>
                 <ListItem button onClick={() => handleNavigation('/smart-audiences')} sx={isActive(`/smart-audiences`) ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <Image src={ isActive(`/smart-audiences`) ? "./magic-stick_active.svg" : "./magic-stick.svg"} alt="Smart Audiences" width={22} height={22}/>
+                        <AutoFixHighIcon sx={{rotate:'275deg', mb:1}}/>
                     </ListItemIcon>
                     <ListItemText primary="Smart Audiences" sx={{ whiteSpace: 'nowrap' }} />
                 </ListItem>

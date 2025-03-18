@@ -26,7 +26,7 @@ export const smartAudiences: { [key: string]: SxProps<Theme> } = {
   page_number: {
     backgroundColor: 'rgba(255, 255, 255, 1)',
     color: 'rgba(80, 82, 178, 1)',
-    
+
   },
 
   centerContainerStyles: {
@@ -42,9 +42,9 @@ export const smartAudiences: { [key: string]: SxProps<Theme> } = {
     textAlign: 'center',
     flex: 1,
     '& img': {
-        width: 'auto',
-        height: 'auto',
-        maxWidth: '100%'
+      width: 'auto',
+      height: 'auto',
+      maxWidth: '100%'
     }
   },
 
@@ -64,7 +64,7 @@ export const smartAudiences: { [key: string]: SxProps<Theme> } = {
       width: '1px',
       height: 'calc(100% - 30px)', // Full height minus top and bottom spacing
       backgroundColor: 'rgba(235, 235, 235, 1)', // Border color
-  }
+    }
   },
   table_array_status: {
     fontFamily: 'Nunito Sans', fontSize: '12px', border: '1px solid rgba(235, 235, 235, 1)', fontWeight: '400',
@@ -91,7 +91,7 @@ export const smartAudiences: { [key: string]: SxProps<Theme> } = {
       width: '1px',
       height: 'calc(100% - 30px)', // Full height minus top and bottom spacing
       backgroundColor: 'rgba(235, 235, 235, 1)', // Border color
-  }
+    }
   },
   table_column: {
     fontFamily: 'Nunito Sans', fontSize: '12px', fontWeight: '600',
@@ -109,7 +109,7 @@ export const smartAudiences: { [key: string]: SxProps<Theme> } = {
       width: '1px',
       height: 'calc(100% - 30px)', // Full height minus top and bottom spacing
       backgroundColor: 'rgba(235, 235, 235, 1)', // Border color
-  }
+    }
 
   }
   ,
@@ -257,13 +257,13 @@ export const smartAudiences: { [key: string]: SxProps<Theme> } = {
     lineHeight: '19.1px',
     color: 'rgba(74, 74, 74, 1)',
     display: 'flex',
-    pt:0.5,
+    pt: 0.5,
     flexDirection: 'row',
     gap: 1,
     pb: 1.5,
     borderBottom: '1px solid rgba(240, 240, 240, 1)',
     paddingLeft: 3,
-    '@media (max-width:600px)': {pt:1, pl:1.5}
+    '@media (max-width:600px)': { pt: 1, pl: 1.5 }
   },
   headers_title: {
     textTransform: 'none',
@@ -281,7 +281,7 @@ export const smartAudiences: { [key: string]: SxProps<Theme> } = {
     paddingRight: 3,
     borderBottom: '1px solid rgba(240, 240, 240, 1)',
     pb: 1,
-    '@media (max-width:600px)': {pl:1.5, pr: 1.5}
+    '@media (max-width:600px)': { pl: 1.5, pr: 1.5 }
   },
   box_param: {
     mt: 2,
@@ -300,7 +300,25 @@ export const smartAudiences: { [key: string]: SxProps<Theme> } = {
     },
   },
   textLink: {
-    color: 'rgba(80, 82, 178, 1)', 
+    color: 'rgba(80, 82, 178, 1)',
     textDecorationColor: 'rgba(80, 82, 178, 1)'
+  },
+  textButton: {
+    fontFamily: "Nunito Sans",
+    textTransform: "none",
+    fontWeight: "600",
+    fontSize: "14px",
+    lineHeight: "19.6px",
+    textAlign: "center",
+  },
+  buttonform: {
+    height: "40px",
+    ":active": {
+      backgroundColor: "rgba(80, 82, 178, 1)"
+    },
+    ":disabled": {
+      backgroundColor: "rgba(80, 82, 178, 1)",
+      opacity: 0.6,
+    },
   }
 };
