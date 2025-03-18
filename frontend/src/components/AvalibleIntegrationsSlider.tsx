@@ -54,6 +54,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
     const [openSlackConnect, setOpenSlackConnect] = useState(false)
     const [openHubspotConnect, setOpenHubspotConnect] = useState(false)
     const [openGoogleAdsConnect, setOpenGoogleAdsConnect] = useState(false)
+    const [openSalesForceConnect, setOpenSalesForceConnect] = useState(false)
     const [openWebhookConnect, setOpenWebhookConnect] = useState(false)
     const [searchQuery, setSearchQuery] = useState("");
     const handleClose = () => {
@@ -71,6 +72,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
         setOpenHubspotConnect(false)
         setOpenGoogleAdsConnect(false)
         setOpenWebhookConnect(false)
+        setOpenSalesForceConnect(false)
     }
 
     const saveIntegration = (new_integration: any) => {
@@ -535,6 +537,26 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                             </ListItemButton>
                                         </ListItem>
                                     )}
+                                    {filteredIntegrations.some(integration => integration.service_name === 'sales_force') && (
+                                    !integrationsCredentials.some(integration => integration.service_name === 'sales_force')) && (
+                                        <ListItem sx={{
+                                            p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                            '@media (max-width:600px)': {
+                                                flexBasis: 'calc(50% - 8px)'
+                                            }
+                                        }}>
+                                            <ListItemButton onClick={() => setOpenSalesForceConnect(true)} sx={{ p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center' }}>
+                                                <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                    <Image src="/salesforce-icon.svg" alt="salesforce" height={24} width={24} />
+                                                </ListItemIcon>
+                                                <ListItemText primary="SalesForce" primaryTypographyProps={{
+                                                    sx: {
+                                                        ...intergrations.integrate
+                                                    }
+                                                }} />
+                                            </ListItemButton>
+                                        </ListItem>
+                                    )}
                             </List>
                         </Box>
                     </Box>
@@ -557,6 +579,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
             <SlackConnectPopup open={openSlackConnect} handlePopupClose={() => setOpenSlackConnect(false)} onSave={saveIntegration} />
             <HubspotIntegrationPopup open={openHubspotConnect} handleClose={handleClose} onSave={saveIntegration} />
             <GoogleADSConnectPopup open={openGoogleAdsConnect} handlePopupClose={() => setOpenGoogleAdsConnect(false)} onSave={saveIntegration} />
+            <SalesForceIntegrationPopup open={openSalesForceConnect} handleClose={() => setOpenSalesForceConnect(false)} onSave={saveIntegration} />
             <WebhookConnectPopup open={openWebhookConnect} handleClose={() => setOpenWebhookConnect(false)} onSave={saveIntegration} />
         </>
     )

@@ -154,7 +154,6 @@ class HubspotIntegrationsService:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
         properties = self.__map_properties(five_x_five_user, data_map) if data_map else {}
-        print(self.__map_properties(five_x_five_user, data_map))
         json_data = {
             "properties": {
                 "email": profile.email,
@@ -180,9 +179,6 @@ class HubspotIntegrationsService:
         }
 
         json_data["properties"] = {k: v for k, v in json_data["properties"].items() if v is not None}
-
-        print("TOKEN: " + access_token)
-        print("DATA: " + str(json_data))
 
         response = self.__handle_request(
             url="https://api.hubapi.com/crm/v3/objects/contacts",

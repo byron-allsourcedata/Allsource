@@ -87,6 +87,12 @@ class DataMap(BaseModel):
     type: str
     value: str
 
+class Campaign(BaseModel):
+    campaign_name: str
+    campaign_objective: str
+    bid_amount: int
+    daily_budget: int
+
 class SyncCreate(BaseModel):
     list_id: Optional[str] = None
     tags_id: Optional[str] = None
@@ -97,7 +103,7 @@ class SyncCreate(BaseModel):
     integrations_users_sync_id: Optional[int] = None
     leads_type: Optional[str] = 'allContacts' 
     data_map: Optional[List[DataMap]] = None
-
+    campaign: Optional[Campaign] = None
 
 class CreateListOrTags(BaseModel):
     name: str

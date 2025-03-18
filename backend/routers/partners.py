@@ -21,6 +21,7 @@ def get_payouts_partners(
     reward_type: Optional[str] = Query(default='partner'),
     search_query: str = Query(None, description="Search for email, first name"),
     sort_by: str = Query(None, description="Field"),
+    user: dict = Depends(check_user_partner),
     sort_order: str = Query('desc', description="Field to sort by: 'asc' or 'desc'")):
 
     return referral_service.get_payouts_partners(year=year, month=month, partner_id=partner_id,
@@ -36,9 +37,8 @@ def get_payouts_partners(
     year: Optional[int] = Query(None),
     month: Optional[int] = Query(None),
     partner_id: Optional[int] = Query(None),
-    is_master: Optional[bool] = Query(default=False),
     reward_type: Optional[str] = Query(default='partner'),
-    search_query: str = Query(None, description="Search for email, first name")):
+    user: dict = Depends(check_user_partner)):
     
     return referral_service.get_total_payouts(year=year, month=month, partner_id=partner_id, reward_type=reward_type)
 

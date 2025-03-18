@@ -1,7 +1,8 @@
 import logging
 import os
 import hashlib
-
+import google.api_core.exceptions
+from google.auth.exceptions import RefreshError
 from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
@@ -196,14 +197,23 @@ class GoogleAdsIntegrationsService:
                 ad_user_data_consent=ad_user_data_consent,
                 ad_personalization_consent=ad_personalization_consent,
             )
-            return True
+        except google.api_core.exceptions.ServiceUnavailable as ex:
+            logger.error(f"Google Ads API error: {ex}")
+            return False
+        except RefreshError as ex:
+            logger.error(f"Google Ads API error: {ex}")
+            return False
         except GoogleAdsException as ex:
             logger.error(
                 f"Request with ID '{ex.request_id}' failed with status "
                 f"'{ex.error.code().name}' and includes the following errors:"
             )
             return False
-    
+        except Exception as ex:
+            logger.error(f"GoogleAds error: {ex}")
+            return False
+        
+        return True
                 
     def set_suppression(self, suppression: bool, domain_id: int):
             credential = self.get_credentials(domain_id)
@@ -455,18 +465,17 @@ class GoogleAdsIntegrationsService:
                             customer
                     """
                     response = googleads_service.search(customer_id=customer_id, query=query)
+                    for row in response:
+                        customer_id = row.customer.id
+                        customer_name = row.customer.descriptive_name
+                        customer_data.append({
+                            'customer_id': customer_id,
+                            'customer_name': customer_name,
+                        })
                 except GoogleAdsException as ex:
-                    logger.error(f"Ошибка при запросе данных для customer_id {customer_id}")
+                    logger.error(f"Error requesting data for customer_id {customer_id}")
                     for error in ex.failure.errors:
-                        logger.error(f"Код ошибки: {error.error_code}, Сообщение: {error.message}")
-                
-                for row in response:
-                    customer_id = row.customer.id
-                    customer_name = row.customer.descriptive_name
-                    customer_data.append({
-                        'customer_id': customer_id,
-                        'customer_name': customer_name,
-                    })
+                        logger.error(f"Error code: {error.error_code}, msg: {error.message}")
             
             return {'status': IntegrationsStatus.SUCCESS.value, 'customers': customer_data}
         except GoogleAdsException as googleads_error:
