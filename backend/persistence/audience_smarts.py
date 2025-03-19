@@ -96,9 +96,16 @@ class AudienceSmartsPersistence:
         return smarts, count
 
 
-    def delete_audience_smart(self, audience_smart: int) -> int:
+    def delete_audience_smart(self, id: int) -> int:
         deleted_count = self.db.query(AudienceSmart).filter(
-            AudienceSmart.id == audience_smart
+            AudienceSmart.id == id
         ).delete()
         self.db.commit()
         return deleted_count
+    
+    def update_audience_smart(self, id, new_name) -> int:
+        updated_count = self.db.query(AudienceSmart).filter(
+            AudienceSmart.id == id
+        ).update({AudienceSmart.name: new_name}, synchronize_session=False)
+        self.db.commit()
+        return updated_count

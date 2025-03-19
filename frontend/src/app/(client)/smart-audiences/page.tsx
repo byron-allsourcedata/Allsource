@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
-import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText, LinearProgress, Chip, Tooltip } from '@mui/material';
+import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, 
+        IconButton, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText,
+        LinearProgress, Chip, Tooltip, TextField } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '../../../axios/axiosInterceptorInstance';
@@ -25,6 +27,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import CalendarPopup from "@/components/CustomCalendar";
+import EditIcon from '@mui/icons-material/Edit';
 
 interface Smarts {
     id: string
@@ -141,6 +144,11 @@ const SmartAudiences: React.FC = () => {
     const [formattedDates, setFormattedDates] = useState<string>('');
     const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
     const isCalendarOpen = Boolean(calendarAnchorEl);
+
+    const [editingRowId, setEditingRowId] = useState<string | null>(null);
+    const [editedName, setEditedName] = useState<string>("");
+    const [editPopoverAnchorEl, setEditPopoverAnchorEl] = useState<null | HTMLElement>(null);
+    const [isEditPopoverOpen, setIsEditPopoverOpen] = useState(false);
     
     useEffect(() => {
         fetchSmarts({
@@ -378,6 +386,49 @@ const SmartAudiences: React.FC = () => {
         setPage(0);
     };
 
+    const handleRename = (event: React.MouseEvent<HTMLElement>, rowId: string, rowName: string) => {
+        setEditingRowId(rowId);
+        setEditedName(rowName)
+        setEditPopoverAnchorEl(event.currentTarget);
+        setIsEditPopoverOpen(true);
+    };
+
+    const handleCloseEditPopover = () => {
+        setIsEditPopoverOpen(false);
+        setEditPopoverAnchorEl(null);
+    };
+
+    const handleConfirmRename = async () => {
+        if (!editingRowId || !editedName.trim()) return
+        if (editedName.trim().length > 128) {
+            showErrorToast("The new name is too long")
+            return
+        }
+        setLoaderForTable(true)
+        try {
+            const response = await axiosInstance.put(`/audience-smarts/${editingRowId}`, {
+                new_name: editedName
+            });
+            if (response.status === 200) {
+                showToast("Smart audience has been successfully updated")
+                setData((prevAccounts: Smarts[]) =>
+                    prevAccounts.map((item: Smarts) =>
+                        item.id === editingRowId ? { ...item, name: editedName } : item
+                    )
+                );
+            }
+            else {
+                showErrorToast("An error occurred while trying to rename smart audience")
+            }
+            setEditingRowId(null);
+            setIsEditPopoverOpen(false);
+        } catch {
+        } finally {
+            setLoaderForTable(false)
+        }
+        
+    };
+
     // useEffect(() => {
     //     const storedFilters = sessionStorage.getItem('filtersBySmarts');
 
@@ -545,7 +596,6 @@ const SmartAudiences: React.FC = () => {
                                 justifyContent: 'space-between',
                                 marginTop: hasNotification ? '1rem' : '0.5rem',
                                 flexWrap: 'wrap',
-                                pl: '0.5rem',
                                 gap: '15px',
                                 '@media (max-width: 900px)': {
                                     marginTop: hasNotification ? '3rem' : '1.125rem',
@@ -867,17 +917,28 @@ const SmartAudiences: React.FC = () => {
                                                                         </TableCell>
                                                                     ))}
                                                                 </TableRow>
-                                                                {loaderForTable && (
-                                                                    <TableRow sx={{
-                                                                        position: "sticky",
-                                                                        top: '56px',
-                                                                        zIndex: 11,
-                                                                    }}>
-                                                                        <TableCell colSpan={9} sx={{ p: 0, pb: "4px" }}>
-                                                                            <LinearProgress variant="indeterminate" sx={{ width: "100%", position: "absolute" }} />
-                                                                        </TableCell>
-                                                                    </TableRow>
-                                                                )}
+                                                                {loaderForTable 
+                                                                    ? (
+                                                                        <TableRow sx={{
+                                                                            position: "sticky",
+                                                                            top: '56px',
+                                                                            zIndex: 11,
+                                                                        }}>
+                                                                            <TableCell colSpan={9} sx={{ p: 0, pb: "4px" }}>
+                                                                                <LinearProgress variant="indeterminate" sx={{ width: "100%", position: "absolute" }} />
+                                                                            </TableCell>
+                                                                        </TableRow>
+                                                                    )
+                                                                    : (
+                                                                        <TableRow sx={{
+                                                                            position: "sticky",
+                                                                            top: '56px',
+                                                                            zIndex: 11,
+                                                                        }}>
+                                                                            <TableCell colSpan={9} sx={{ p: 0, pb: "4px", borderColor: "#fff" }}/>
+                                                                        </TableRow>
+                                                                    )
+                                                                }
                                                             </TableHead>
                                                             <TableBody>
                                                                 {data.map((row: Smarts) => {
@@ -899,49 +960,173 @@ const SmartAudiences: React.FC = () => {
                                                                             {/* Name Column */}
                                                                             <TableCell className="sticky-cell"
                                                                                 sx={{
-                                                                                    ...smartAudiences.table_array, position: 'sticky', left: '0', zIndex: 9, backgroundColor: loaderForTable ? 'transparent' : '#fff',
+                                                                                    ...smartAudiences.table_array, position: 'sticky', left: '0', zIndex: 9, backgroundColor: loaderForTable ? 'transparent' : '#fff', '&:hover .edit-icon': { opacity: 1, pointerEvents: 'auto' }
                                                                                 }}>
-                                                                                <Box sx={{display: 'flex'}}>
-                                                                                <Tooltip
-                                                                                    title={
-                                                                                        <Box sx={{ backgroundColor: '#fff', margin: 0, padding: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', }}>
-                                                                                          <Typography className='table-data' component='div' sx={{ fontSize: '12px !important', }}>
-                                                                                            {row.name}
-                                                                                          </Typography>
-                                                                                        </Box>
-                                                                                      }
-                                                                                    sx={{marginLeft:'0.5rem !important'}}
-                                                                                    componentsProps={{
-                                                                                        tooltip: {
-                                                                                            sx: {
-                                                                                                backgroundColor: '#fff',
-                                                                                                color: '#000',
-                                                                                                boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
-                                                                                                border: '0.2px solid rgba(255, 255, 255, 1)',
-                                                                                                borderRadius: '4px',
-                                                                                                maxHeight: '100%',
-                                                                                                maxWidth: '500px',
-                                                                                                padding: '11px 10px',
-                                                                                                marginLeft: '0.5rem !important',
+                                                                                <Box sx={{display: 'flex', justifyContent: "space-between"}}>
+                                                                                    <Tooltip
+                                                                                        title={
+                                                                                            <Box sx={{ backgroundColor: '#fff', margin: 0, padding: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', }}>
+                                                                                            <Typography className='table-data' component='div' sx={{ fontSize: '12px !important', }}>
+                                                                                                {row.name}
+                                                                                            </Typography>
+                                                                                            </Box>
+                                                                                        }
+                                                                                        sx={{marginLeft:'0.5rem !important'}}
+                                                                                        componentsProps={{
+                                                                                            tooltip: {
+                                                                                                sx: {
+                                                                                                    backgroundColor: '#fff',
+                                                                                                    color: '#000',
+                                                                                                    boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
+                                                                                                    border: '0.2px solid rgba(255, 255, 255, 1)',
+                                                                                                    borderRadius: '4px',
+                                                                                                    maxHeight: '100%',
+                                                                                                    maxWidth: '500px',
+                                                                                                    padding: '11px 10px',
+                                                                                                    marginLeft: '0.5rem !important',
+                                                                                                },
                                                                                             },
-                                                                                        },
-                                                                                    }}
-                                                                                    placement='right'
-                                                                                >
-                                                                                    <Typography className='table-data'
-                                                                                        sx={{
-                                                                                            whiteSpace: 'nowrap',
-                                                                                            overflow: 'hidden',
-                                                                                            textOverflow: 'ellipsis',
-                                                                                            maxWidth:'150px',
                                                                                         }}
+                                                                                        placement='right'
                                                                                     >
-                                                                                        {truncateText(row.name, 20)}
-                                                                                    </Typography>
-                                                                                </Tooltip>
+                                                                                        <Typography className='table-data'
+                                                                                            sx={{
+                                                                                                whiteSpace: 'nowrap',
+                                                                                                overflow: 'hidden',
+                                                                                                textOverflow: 'ellipsis',
+                                                                                                maxWidth:'150px',
+                                                                                            }}
+                                                                                        >
+                                                                                            {truncateText(row.name, 20)}
+                                                                                        </Typography>
+                                                                                    </Tooltip>
+                                                                                    <IconButton
+                                                                                        className="edit-icon"
+                                                                                        sx={{
+                                                                                            pl: 0, pr: 0, pt: 0.25, pb: 0.25,
+                                                                                            margin: 0,
+                                                                                            opacity: 0,
+                                                                                            pointerEvents: 'none',
+                                                                                            transition: 'opacity 0.2s ease-in-out',
+                                                                                            '@media (max-width: 900px)': {
+                                                                                                opacity: 1
+                                                                                            }
+                                                                                        }}
+                                                                                        onClick={(event) => handleRename(event, row.id, row.name)}
+                                                                                    >
+                                                                                        <EditIcon sx={{ maxHeight: "18px" }} />
+                                                                                    </IconButton>
                                                                                 </Box>
                                                                                 {/* {row.name} */}
                                                                             </TableCell>
+
+                                                                            <Popover
+                                                                                open={isEditPopoverOpen}
+                                                                                anchorEl={editPopoverAnchorEl}
+                                                                                onClose={handleCloseEditPopover}
+                                                                                anchorOrigin={{
+                                                                                    vertical: "center",
+                                                                                    horizontal: "center",
+                                                                                }}
+                                                                                transformOrigin={{
+                                                                                    vertical: "top",
+                                                                                    horizontal: "left",
+                                                                                }}
+                                                                                slotProps={{
+                                                                                    paper: {
+                                                                                        sx: {
+                                                                                            width: "15.875rem",
+                                                                                            boxShadow: 0,
+                                                                                            borderRadius: "4px",
+                                                                                            border: "0.5px solid rgba(175, 175, 175, 1)",
+
+                                                                                        },
+                                                                                    }
+                                                                                }}
+                                                                            >
+                                                                                <Box sx={{ p: 2 }}>
+                                                                                    <TextField
+                                                                                        value={editedName}
+                                                                                        onChange={(e) => setEditedName(e.target.value)}
+                                                                                        variant="outlined"
+                                                                                        label='Smart Audience Name'
+                                                                                        size="small"
+                                                                                        fullWidth
+                                                                                        sx={{
+                                                                                            "& label.Mui-focused": {
+                                                                                                color: "rgba(80, 82, 178, 1)",
+                                                                                            },
+                                                                                            "& .MuiOutlinedInput-root:hover fieldset": {
+                                                                                                color: "rgba(80, 82, 178, 1)",
+                                                                                            },
+                                                                                            "& .MuiOutlinedInput-root": {
+                                                                                                "&:hover fieldset": {
+                                                                                                    borderColor: "rgba(80, 82, 178, 1)",
+                                                                                                    border: "1px solid rgba(80, 82, 178, 1)",
+                                                                                                },
+                                                                                                "&.Mui-focused fieldset": {
+                                                                                                    borderColor: "rgba(80, 82, 178, 1)",
+                                                                                                    border: "1px solid rgba(80, 82, 178, 1)",
+                                                                                                },
+                                                                                            },
+                                                                                        }}
+                                                                                        InputProps={{
+                                                                                            style: {
+                                                                                                fontFamily: "Roboto",
+                                                                                                fontSize: "14px",
+                                                                                            },
+                                                                                        }}
+                                                                                        InputLabelProps={{
+                                                                                            style: {
+                                                                                                fontSize: "14px",
+                                                                                                fontFamily: "Roboto",
+                                                                                            },
+                                                                                        }}
+                                                                                    />
+                                                                                    <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+                                                                                        <Button
+                                                                                            onClick={handleCloseEditPopover}
+                                                                                            sx={{
+                                                                                                backgroundColor: "#fff",
+                                                                                                color: "rgba(80, 82, 178, 1) !important",
+                                                                                                fontSize: "14px",
+                                                                                                textTransform: "none",
+                                                                                                padding: "0.75em 1em",
+                                                                                                maxWidth: "50px",
+                                                                                                maxHeight: "30px",
+                                                                                                mr: 0.5,
+                                                                                                "&:hover": {
+                                                                                                    backgroundColor: "#fff",
+                                                                                                    boxShadow: "0 0px 1px 1px rgba(0, 0, 0, 0.3)",
+                                                                                                },
+                                                                                            }}
+                                                                                        >
+                                                                                            <Typography className="second-sub-title" sx={{ color: 'rgba(80, 82, 178, 1) !important' }}>Cancel</Typography>
+                                                                                        </Button>
+                                                                                        <Button
+                                                                                            onClick={() => {
+                                                                                                handleConfirmRename();
+                                                                                                handleCloseEditPopover();
+                                                                                            }}
+                                                                                            sx={{
+                                                                                                backgroundColor: "#fff",
+                                                                                                color: "rgba(80, 82, 178, 1) !important",
+                                                                                                fontSize: "14px",
+                                                                                                textTransform: "none",
+                                                                                                padding: "0.75em 1em",
+                                                                                                maxWidth: "50px",
+                                                                                                maxHeight: "30px",
+                                                                                                "&:hover": {
+                                                                                                    backgroundColor: "#fff",
+                                                                                                    boxShadow: "0 0px 1px 1px rgba(0, 0, 0, 0.3)",
+                                                                                                },
+                                                                                            }}
+                                                                                        >
+                                                                                            <Typography className="second-sub-title" sx={{ color: 'rgba(80, 82, 178, 1) !important' }}>Save</Typography>
+                                                                                        </Button>
+                                                                                    </Box>
+                                                                                </Box>
+                                                                            </Popover>
 
                                                                             {/* Use Case Column */}
                                                                             <TableCell

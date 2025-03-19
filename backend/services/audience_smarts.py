@@ -60,3 +60,7 @@ class AudienceSmartsService:
     def delete_audience_smart(self, id) -> bool:
         count_deleted = self.audience_smarts_persistence.delete_audience_smart(id)
         return count_deleted > 0
+
+    def update_audience_smart(self, id, new_name) -> bool:
+        count_updated = self.audience_smarts_persistence.update_audience_smart(id, new_name)
+        return count_updated > 0
