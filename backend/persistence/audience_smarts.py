@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 
 import pytz
-from sqlalchemy import desc, asc
+from sqlalchemy import desc, asc, or_
 from sqlalchemy.orm import Session
 
 from models.audience_smarts import AudienceSmart
@@ -10,6 +10,7 @@ from models.audience_smarts_use_cases import AudienceSmartsUseCase
 from models.users import Users
 from typing import Optional, Tuple, List
 from sqlalchemy.engine.row import Row
+from urllib.parse import unquote
 
 from persistence.utils import apply_filters
 
@@ -30,10 +31,8 @@ class AudienceSmartsPersistence:
             sort_by: Optional[str] = None,
             sort_order: Optional[str] = None,
             name: Optional[str] = None,
-            status: Optional[str] = None,
+            statuses: Optional[str] = None,
             use_cases: Optional[str] = None,
-            created_date_start: Optional[datetime] = None,
-            created_date_end: Optional[datetime] = None
     ) -> Tuple[List[Row], int]:
 
         query = (
@@ -52,20 +51,14 @@ class AudienceSmartsPersistence:
                 .join(AudienceSmartsUseCase, AudienceSmartsUseCase.id == AudienceSmart.use_case_id)
                 .filter(AudienceSmart.user_id == user_id)
         )
-
-        # source_type_list = source_type.split(',') if source_type else []
-        # source_origin_list = source_origin.split(',') if source_origin else []
-        # domain_name_list = domain_name.split(',') if domain_name else []
-
-        # query = apply_filters(
-        #     query,
-        #     name=name,
-        #     source_type_list=source_type_list,
-        #     source_origin_list=source_origin_list,
-        #     domain_name_list=domain_name_list,
-        #     created_date_start=created_date_start,
-        #     created_date_end=created_date_end
-        # )
+        
+        if statuses:
+            status_list = [i.strip() for i in statuses.split(',')]
+            query = query.filter(AudienceSmart.status.in_(status_list))
+        
+        if use_cases:
+            use_case_aliases = [unquote(i.strip()) for i in use_cases.split(',')]
+            query = query.filter(AudienceSmartsUseCase.alias.in_(use_case_aliases))
 
         if from_date and to_date:
             start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
@@ -95,6 +88,28 @@ class AudienceSmartsPersistence:
         
         return smarts, count
 
+
+    def search_audience_smart(self, start_letter: str, user_id: int):
+        query = (
+            self.db.query(
+                AudienceSmart.name,
+                Users.full_name
+            )
+                .join(Users, Users.id == AudienceSmart.created_by_user_id)
+                .filter(AudienceSmart.user_id == user_id)
+        )
+
+        if start_letter:
+            query = query.filter(
+                or_(
+                    AudienceSmart.name.ilike(f"{start_letter}%"),
+                    Users.full_name.ilike(f"{start_letter}%")
+                )
+            )
+
+        smarts = query.all()
+        return smarts
+    
 
     def delete_audience_smart(self, id: int) -> int:
         deleted_count = self.db.query(AudienceSmart).filter(

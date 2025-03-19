@@ -28,6 +28,7 @@ import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import CalendarPopup from "@/components/CustomCalendar";
 import EditIcon from '@mui/icons-material/Edit';
+import HeadsetMicOutlinedIcon from '@mui/icons-material/HeadsetMicOutlined';
 
 interface Smarts {
     id: string
@@ -50,14 +51,9 @@ interface FetchDataParams {
 }
 
 interface FilterParams {
-    from_date: number | null;
-    to_date: number | null;
     searchQuery: string | null;
-    selectedSource: string[];
-    selectedTypes: string[];
-    selectedDomains: string[];
-    createdDate: string[];
-    dateRange: { fromDate: number | null; toDate: number | null };
+    selectedUseCases: Record<string, boolean>;
+    selectedStatuses: Record<string, boolean>;
 }
 
 const getStatusStyle = (status: string) => {
@@ -93,15 +89,15 @@ const getStatusStyle = (status: string) => {
 const getUseCaseStyle = (status: string) => {
     switch (status) {
         case 'postal':
-            return <MailOutlinedIcon />
+            return <Image src="./postal.svg" alt="google icon" width={20} height={20}/>
         case 'google':
-            return <Image src="./google-mail.svg" alt="google icon"/>
+            return <Image src="./google.svg" alt="google icon" width={20} height={20}/>
         case 'meta':
-            return <MailOutlinedIcon />
+            return <Image src="./meta.svg" alt="meta icon" width={20} height={20}/>
         case 'bing':
-            return <MailOutlinedIcon />
+            return <Image src="./bing.svg" alt="bing icon" width={20} height={20}/>
         case 'tele_marketing':
-            return <MailOutlinedIcon />
+            return <HeadsetMicOutlinedIcon />
         default:
             return <MailOutlinedIcon />
     }
@@ -161,7 +157,7 @@ const SmartAudiences: React.FC = () => {
                 end: appliedDates.end,
             }
         });
-    }, [orderBy, order, page, rowsPerPage, appliedDates]);
+    }, [orderBy, order, page, rowsPerPage, appliedDates, selectedFilters]);
 
     // const fetchSmartsMemoized = useCallback(() => {
     //     fetchSmarts({
@@ -223,24 +219,6 @@ const SmartAudiences: React.FC = () => {
                 ? Math.floor(new Date(appliedDates.end.toISOString()).getTime() / 1000)
                 : null;
 
-            // if (filters.from_date || filters.to_date) {
-            //     url += `&created_date_start=${filters.from_date || ''}&created_date_end=${filters.to_date || ''}`;
-            // }
-            // if (filters.selectedSource?.length > 0) {
-            //     url += `&source_origin=${filters.selectedSource.map((source: string) => source.toLowerCase()).join(',')}`;
-            // }
-            // if (filters.selectedTypes?.length > 0) {
-            //     url += `&source_type=${filters.selectedTypes
-            //         .map((type: string) => type.toLowerCase().replace(/\s+/g, '_'))
-            //         .join(',')}`;
-            // }
-            // if (filters.selectedDomains?.length > 0) {
-            //     url += `&domain_name=${filters.selectedDomains.join(',')}`;
-            // }
-            // if (filters.searchQuery) {
-            //     url += `&name=${filters.searchQuery}`;
-            // }
-
             if (startEpoch !== null && endEpoch !== null) {
                 url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
             }
@@ -249,6 +227,19 @@ const SmartAudiences: React.FC = () => {
                 setPage(0)
                 url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
             }
+
+            const processMultiFilter = (label: string, paramName: string) => {
+                const toSnakeCase = (str: string) => str.toLowerCase();
+                const filter = selectedFilters.find(filter => filter.label === label)?.value;
+                if (filter) {
+                    const snakeCaseParam = toSnakeCase(filter);
+                    url += `&${paramName}=${encodeURIComponent(snakeCaseParam?.split(', ').join(','))}`;
+                }
+            };
+    
+            processMultiFilter('Use Case', 'use_cases');
+            processMultiFilter('Status', 'statuses');
+            // processMultiFilter('Search', 'search_query')
 
             const response = await axiosInstance.get(url)
 
@@ -429,38 +420,36 @@ const SmartAudiences: React.FC = () => {
         
     };
 
-    // useEffect(() => {
-    //     const storedFilters = sessionStorage.getItem('filtersBySmarts');
-
-    //     if (storedFilters) {
-    //         const filters = JSON.parse(storedFilters);
-
-    //         handleApplyFilters(filters);
-    //     }
-    // }, []);
+    const getSelectedValues = (obj: Record<string, boolean>): string => {
+        return Object.entries(obj)
+            .filter(([_, value]) => value)
+            .map(([key]) => key)
+            .join(', ');
+    };
 
     const handleApplyFilters = (filters: FilterParams) => {
+        console.log(filters)
         const newSelectedFilters: { label: string; value: string }[] = [];
-        const dateFormat = 'YYYY-MM-DD';
+
 
         const filterMappings: { condition: boolean | string | string[] | number | null, label: string, value: string | ((f: any) => string) }[] = [
-            { condition: filters.from_date, label: 'From Date', value: () => dayjs.unix(filters.from_date!).format(dateFormat) },
-            { condition: filters.to_date, label: 'To Date', value: () => dayjs.unix(filters.to_date!).format(dateFormat) },
-            { condition: filters.searchQuery, label: 'Search', value: filters.searchQuery! },
-            { condition: filters.selectedSource?.length > 0, label: 'Source', value: () => filters.selectedSource.join(', ') },
-            { condition: filters.selectedTypes?.length > 0, label: 'Types', value: () => filters.selectedTypes.join(', ') },
-            { condition: filters.selectedDomains?.length > 0, label: 'Domains', value: () => filters.selectedDomains.join(', ') },
-            { condition: filters.createdDate?.length > 0, label: 'Created Date', value: () => filters.createdDate.join(', ') },
             {
-                condition: filters.dateRange.fromDate || filters.dateRange.toDate, label: 'Date Range', value: () => {
-                    const from = dayjs.unix(filters.dateRange.fromDate!).format(dateFormat);
-                    const to = dayjs.unix(filters.dateRange.toDate!).format(dateFormat);
-                    return `${from} to ${to}`;
-                }
-            }
+                condition: filters.selectedStatuses && Object.values(filters.selectedStatuses).some(Boolean),
+                label: 'Status',
+                value: () => getSelectedValues(filters.selectedStatuses!)
+            },
+            {
+                condition: filters.selectedUseCases && Object.values(filters.selectedUseCases).some(Boolean),
+                label: 'Use Case',
+                value: () => getSelectedValues(filters.selectedUseCases!)
+            },
+            { condition: filters.searchQuery, label: 'Search', value: filters.searchQuery! }
         ];
 
+        console.log(filterMappings)
+
         filterMappings.forEach(({ condition, label, value }) => {
+            
             if (condition) {
                 newSelectedFilters.push({ label, value: typeof value === 'function' ? value(filters) : value });
             }
@@ -475,20 +464,9 @@ const SmartAudiences: React.FC = () => {
         setAppliedDates({ start: null, end: null })
         setFormattedDates('')
 
-        const filters = {
-            from_date: null,
-            to_date: null,
-            searchQuery: null,
-            selectedSource: [],
-            selectedTypes: [],
-            selectedDomains: [],
-            createdDate: [],
-            dateRange: { fromDate: null, toDate: null },
-        };
+        sessionStorage.removeItem('filtersBySmarts');
 
-        sessionStorage.setItem('filtersBySmarts', JSON.stringify(filters));
-
-        handleApplyFilters(filters);
+        setSelectedFilters([]);
     };
 
 
@@ -502,44 +480,18 @@ const SmartAudiences: React.FC = () => {
     
         let filters = JSON.parse(sessionStorage.getItem('filtersBySmarts') || '{}');
     
-        const deleteDate = (filters: FilterParams) => {
-            filters.createdDate = [];
-            filters.from_date = null;
-            filters.to_date = null;
-            filters.dateRange = { fromDate: null, toDate: null };
-            setSelectedDates({ start: null, end: null });
-        };
-    
         switch (filterToDelete.label) {
-            case 'From Date':
-            case 'To Date':
-            case 'Created Date':
-            case 'Date Range':
-                deleteDate(filters);
-                break;
             case 'Search':
                 filters.searchQuery = '';
                 break;
-            case 'Source':
-                filters.selectedSource = [];
+            case 'Use Case':
+                filters.selectedUseCases = [];
                 break;
-            case 'Types':
-                filters.selectedTypes = [];
-                break;
-            case 'Domains':
-                filters.selectedDomains = [];
+            case 'Status':
+                filters.selectedStatuses = [];
                 break;
             default:
                 break;
-        }
-    
-        if (!filters.from_date && !filters.to_date) {
-            filters.checkedFilters = {
-                lastWeek: false,
-                last30Days: false,
-                last6Months: false,
-                allTime: false,
-            };
         }
     
         sessionStorage.setItem('filtersBySmarts', JSON.stringify(filters));
@@ -552,17 +504,9 @@ const SmartAudiences: React.FC = () => {
         }
     
         const newFilters: FilterParams = {
-            from_date: updatedFilters.find(f => f.label === 'From Date') ? dayjs(updatedFilters.find(f => f.label === 'From Date')!.value).unix() : null,
-            to_date: updatedFilters.find(f => f.label === 'To Date') ? dayjs(updatedFilters.find(f => f.label === 'To Date')!.value).unix() : null,
             searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',
-            selectedSource: updatedFilters.find(f => f.label === 'Source') ? updatedFilters.find(f => f.label === 'Source')!.value.split(', ') : [],
-            selectedTypes: updatedFilters.find(f => f.label === 'Types') ? updatedFilters.find(f => f.label === 'Types')!.value.split(', ') : [],
-            selectedDomains: updatedFilters.find(f => f.label === 'Domains') ? updatedFilters.find(f => f.label === 'Domains')!.value.split(', ') : [],
-            createdDate: updatedFilters.find(f => f.label === 'Created Date') ? updatedFilters.find(f => f.label === 'Created Date')!.value.split(', ') : [],
-            dateRange: {
-                fromDate: updatedFilters.find(f => f.label === 'Date Range') ? dayjs(updatedFilters.find(f => f.label === 'Date Range')!.value.split(', ')[0]).unix() : null,
-                toDate: updatedFilters.find(f => f.label === 'Date Range') ? dayjs(updatedFilters.find(f => f.label === 'Date Range')!.value.split(', ')[1]).unix() : null,
-            },
+            selectedUseCases: Object.fromEntries(Object.keys(filters.selectedUseCases).map(key => [key, updatedFilters.some(f => f.label === 'Use Case' && f.value.includes(key))])),
+            selectedStatuses: Object.fromEntries(Object.keys(filters.selectedStatuses).map(key => [key, updatedFilters.some(f => f.label === 'Status' && f.value.includes(key))]))
         };
     
         handleApplyFilters(newFilters);
@@ -884,6 +828,7 @@ const SmartAudiences: React.FC = () => {
                                                                             key={key}
                                                                             sx={{
                                                                                 ...smartAudiences.table_column,
+                                                                                borderBottom: 0,
                                                                                 ...(key === 'name' && {
                                                                                     position: 'sticky',
                                                                                     left: 0,
@@ -924,7 +869,7 @@ const SmartAudiences: React.FC = () => {
                                                                             top: '56px',
                                                                             zIndex: 11,
                                                                         }}>
-                                                                            <TableCell colSpan={9} sx={{ p: 0, pb: "4px" }}>
+                                                                            <TableCell colSpan={9} sx={{ p: 0, pb: "2px" }}>
                                                                                 <LinearProgress variant="indeterminate" sx={{ width: "100%", position: "absolute" }} />
                                                                             </TableCell>
                                                                         </TableRow>
@@ -935,13 +880,13 @@ const SmartAudiences: React.FC = () => {
                                                                             top: '56px',
                                                                             zIndex: 11,
                                                                         }}>
-                                                                            <TableCell colSpan={9} sx={{ p: 0, pb: "4px", borderColor: "#fff" }}/>
+                                                                            <TableCell colSpan={9} sx={{ p: 0, pb: "2px", backgroundColor: "rgba(235, 235, 235, 1)", borderColor: "rgba(235, 235, 235, 1)" }}/>
                                                                         </TableRow>
                                                                     )
                                                                 }
                                                             </TableHead>
                                                             <TableBody>
-                                                                {data.map((row: Smarts) => {
+                                                                {data.map((row: Smarts, index) => {
                                                                     const progress = sourceProgress[row.id];
                                                                     return (
                                                                         <TableRow
@@ -949,6 +894,7 @@ const SmartAudiences: React.FC = () => {
                                                                             selected={selectedRows.has(row.id)}
                                                                             sx={{
                                                                                 backgroundColor: selectedRows.has(row.id) && !loaderForTable ? 'rgba(247, 247, 247, 1)' : '#fff',
+                                                                                borderTop: index === 0 ? 0 : "default",
                                                                                 '&:hover': {
                                                                                     backgroundColor: 'rgba(247, 247, 247, 1)',
                                                                                     '& .sticky-cell': {
@@ -1339,7 +1285,7 @@ const SmartAudiences: React.FC = () => {
                                                                     marginRight: '16px',
                                                                 }}
                                                             >
-                                                                {`${count_smarts_audience} - ${rowsPerPage} of ${rowsPerPage}`}
+                                                                {`1 - ${count_smarts_audience} of ${count_smarts_audience}`}
                                                             </Typography>
                                                         </Box>
                                                     }
