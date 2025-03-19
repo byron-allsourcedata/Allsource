@@ -23,15 +23,9 @@ interface FilterPopupProps {
 }
 
 const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => {
-  const [isCreatedDateOpen, setIsCreatedDateOpen] = useState(false);
   const [isLookalikeSize, setIsLookalikeSize] = useState(false);
   const [isLookalikeType, setIsLookalikeType] = useState(false);
   const [contacts, setContacts] = useState<{ name: string }[]>([]);
-  const [selectedTags, setSelectedTags] = useState<{ [key: string]: string[] }>(
-    {
-      CreatedDate: [],
-    }
-  );
   const [selectedSize, setSelectedSize] = useState<string[]>([]);
   const [buttonFilters, setButtonFilters] = useState<ButtonFilters>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,79 +51,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     );
   };
 
-
-  const addTag = (category: string, tag: string) => {
-    setSelectedTags((prevTags) => {
-      const newTags = [...prevTags[category]];
-      if (!newTags.includes(tag)) {
-        newTags.push(tag);
-      }
-      return { ...prevTags, [category]: newTags };
-    });
-
-    updateCheckedFilters(category, tag, true);
-  };
-
-  const removeTag = (category: string, tag: string) => {
-    setSelectedTags((prevTags) => {
-      const updatedTags = prevTags[category].filter((t) => t !== tag);
-
-      const isLastTagRemoved = updatedTags.length === 0;
-
-      // If the last tag and category "CreatedDate" are deleted, clear the state
-      if (category === "CreatedDate" && isLastTagRemoved) {
-        setDateRange({ fromDate: null, toDate: null });
-      }
-
-      // Update checkbox states if necessary
-      if (category === "CreatedDate") {
-        const tagMap: { [key: string]: string } = {
-          "Last week": "lastWeek",
-          "Last 30 days": "last30Days",
-          "Last 6 months": "last6Months",
-          "All time": "allTime",
-        };
-
-        const filterName = tagMap[tag];
-        if (filterName) {
-          setCheckedFilters((prevFilters) => ({
-            ...prevFilters,
-            [filterName]: false,
-          }));
-        }
-      }
-
-      return { ...prevTags, [category]: updatedTags };
-    });
-  };
-
-  interface TagMap {
-    [key: string]: string;
-  }
-
-  const updateCheckedFilters = (
-    category: string,
-    tag: string,
-    isChecked: boolean
-  ) => {
-    const tagMap: TagMap = {
-      "Last week": "lastWeek",
-      "Last 30 days": "last30Days",
-      "Last 6 months": "last6Months",
-      "All time": "allTime",
-    };
-
-    const filterName = tagMap[tag];
-
-    if (filterName) {
-      if (category === "CreatedDate") {
-        setCheckedFilters((prevFilters) => ({
-          ...prevFilters,
-          [filterName]: isChecked,
-        }));
-      }
-    }
-  };
 
   interface CustomChipProps {
     label: string;
@@ -201,145 +122,13 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     return Object.values(checkedFiltersTypes).some(value => value);
   };
 
-
-  ///// Date
-
-  interface DateRange {
-    fromDate: Dayjs | null;
-    toDate: Dayjs | null;
-  }
-  const [dateRange, setDateRange] = useState<DateRange>({
-    fromDate: null,
-    toDate: null,
-  });
-  const [checkedFilters, setCheckedFilters] = useState({
-    lastWeek: false,
-    last30Days: false,
-    last6Months: false,
-    allTime: false,
-  });
-
-
-  const handleDateChange = (name: string) => (newValue: any) => {
-    setDateRange((prevRange) => {
-      const updatedRange = {
-        ...prevRange,
-        [name]: newValue,
-      };
-
-      setCheckedFilters({
-        lastWeek: false,
-        last30Days: false,
-        last6Months: false,
-        allTime: false,
-      });
-
-      const oldFromDate = prevRange.fromDate
-        ? dayjs(prevRange.fromDate).format('MMM DD, YYYY')
-        : '';
-      const oldToDate = prevRange.toDate
-        ? dayjs(prevRange.toDate).format('MMM DD, YYYY')
-        : '';
-
-      const fromDate = updatedRange.fromDate
-        ? dayjs(updatedRange.fromDate).format('MMM DD, YYYY')
-        : '';
-      const toDate = updatedRange.toDate
-        ? dayjs(updatedRange.toDate).format('MMM DD, YYYY')
-        : '';
-
-      const newTag = fromDate && toDate ? `From ${fromDate} to ${toDate}` : null;
-
-
-      setSelectedTags((prevTags) => {
-        const updatedTags = {
-          ...prevTags,
-          CreatedDate: newTag ? [newTag] : [],
-        };
-
-        // If a new label exists, add it
-        if (newTag) {
-          addTag("CreatedDate", newTag);
-        }
-
-        // If the label has been replaced or removed, clear the date range
-        if (!newTag && prevTags.CreatedDate.length > 0) {
-          setDateRange({ fromDate: null, toDate: null });
-        } else if (newTag && oldFromDate && oldToDate) {
-          removeTag("CreatedDate", `From ${oldFromDate} to ${oldToDate}`);
-        }
-
-        return updatedTags;
-      });
-
-      return updatedRange;
-    });
-  };
-
-  const getFilterDates = () => {
-    const today = dayjs();
-    return {
-      lastWeek: {
-        from: today.subtract(1, "week").startOf("day").unix(),
-        to: today.endOf("day").unix(),
-      },
-      last30Days: {
-        from: today.subtract(30, "day").startOf("day").unix(),
-        to: today.endOf("day").unix(),
-      },
-      last6Months: {
-        from: today.subtract(6, "month").startOf("day").unix(),
-        to: today.endOf("day").unix(),
-      },
-      allTime: {
-        from: null,
-        to: today.endOf("day").unix(),
-      },
-    };
-  };
-
   const handleFilters = () => {
-    const filterDates = getFilterDates(); // Function to get date ranges like lastWeek, last30Days, etc.
 
-    // Check that at least one of the time filters is active
-    const isDateFilterChecked = Object.values(checkedFilters).some((value) => value);
-
-    // Determine from_date and to_date values ​​based on active filters
-    let fromDateTime = null;
-    let toDateTime = null;
-
-    // If at least one date filter is active, use its ranges
-    if (isDateFilterChecked) {
-      if (checkedFilters.lastWeek) {
-        fromDateTime = filterDates.lastWeek.from;
-        toDateTime = filterDates.lastWeek.to;
-      } else if (checkedFilters.last30Days) {
-        fromDateTime = filterDates.last30Days.from;
-        toDateTime = filterDates.last30Days.to;
-      } else if (checkedFilters.last6Months) {
-        fromDateTime = filterDates.last6Months.from;
-        toDateTime = filterDates.last6Months.to;
-      } else if (checkedFilters.allTime) {
-        fromDateTime = filterDates.allTime.from;
-        toDateTime = filterDates.allTime.to;
-      }
-    } else {
-      // If no filter is selected, use the range from dateRange
-      fromDateTime = dateRange.fromDate
-        ? dayjs(dateRange.fromDate).startOf("day").unix()
-        : null;
-      toDateTime = dateRange.toDate
-        ? dayjs(dateRange.toDate).endOf("day").unix()
-        : null;
-    }
 
 
     // Составление объекта с фильтрами
     const filters = {
-      from_date: fromDateTime, // Set value from_date
-      to_date: toDateTime, // Set value of to_date
       size: buttonFilters ? buttonFilters.selectedSize : selectedSize,
-      checkedFilters,
       type: checkedFiltersTypes,
       searchQuery,
     };
@@ -352,8 +141,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
 
 
   const saveFiltersToSessionStorage = (filters: {
-    from_date: number | null;
-    to_date: number | null;
     size: string[];
     type: typeof checkedFiltersTypes;
     searchQuery: string;
@@ -373,44 +160,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     const savedFilters = loadFiltersFromSessionStorage();
     if (savedFilters) {
 
-      setCheckedFilters(savedFilters.checkedFilters || {
-        lastWeek: false,
-        last30Days: false,
-        last6Months: false,
-        allTime: false,
-      });
-
       setSelectedSize(savedFilters.size || []);
       setcheckedFiltersTypes(savedFilters.type || {})
       setSearchQuery(savedFilters.searchQuery || '');
-
-
-      const isDateFilterActive = Object.values(savedFilters.checkedFilters || {}).some(value => value === true);
-      if (isDateFilterActive) {
-        setButtonFilters(savedFilters.button);
-        const tagMap: { [key: string]: string } = {
-          lastWeek: "Last week",
-          last30Days: "Last 30 days",
-          last6Months: "Last 6 months",
-          allTime: "All time",
-        };
-        const activeFilter = Object.keys(savedFilters.checkedFilters).find(key => savedFilters.checkedFilters[key]);
-
-        if (activeFilter) {
-          addTag("CreatedDate", tagMap[activeFilter]);
-        }
-      } else {
-        const fromDate = savedFilters.from_date ? dayjs.unix(savedFilters.from_date).format('MMM DD, YYYY') : null;
-        const toDate = savedFilters.to_date ? dayjs.unix(savedFilters.to_date).format('MMM DD, YYYY') : null;
-        const newTag = fromDate && toDate ? `From ${fromDate} to ${toDate}` : null;
-        if (newTag) {
-          addTag("CreatedDate", newTag);
-        }
-        setDateRange({
-          fromDate: savedFilters.from_date ? dayjs.unix(savedFilters.from_date) : null,
-          toDate: savedFilters.to_date ? dayjs.unix(savedFilters.to_date) : null,
-        });
-      }
       setButtonFilters(savedFilters.button)
     };
   }
@@ -429,14 +181,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     onClose();
   };
 
-  // Check active filters
-  const isDateFilterActive = () => {
-    return (
-      Object.values(checkedFilters).some(value => value) || // Checking checkboxes for dates
-      (dateRange.fromDate && dateRange.toDate) // Validate user's date range selection
-    );
-  };
-
 
   // Lead Funnel
   const isLookalikeSizeActive = () => {
@@ -444,72 +188,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   };
 
 
-
-
-  const handleRadioChange = (event: { target: { name: string } }) => {
-    const { name } = event.target;
-
-    setCheckedFilters((prevFilters) => {
-      // Explicitly type `prevFilters` for better TypeScript support
-      const prevFiltersTyped = prevFilters as Record<string, boolean>;
-
-      // Find the previously selected radio button
-      const previouslySelected = Object.keys(prevFiltersTyped).find((key) => prevFiltersTyped[key]);
-
-      // Reset all filters and select the new one
-      const newFilters = {
-        lastWeek: false,
-        last30Days: false,
-        last6Months: false,
-        allTime: false,
-        [name]: true,
-      };
-
-      const tagMap: { [key: string]: string } = {
-        lastWeek: "Last week",
-        last30Days: "Last 30 days",
-        last6Months: "Last 6 months",
-        allTime: "All time",
-      };
-
-      // Remove the tag for the previously selected radio button, if any
-      if (previouslySelected && previouslySelected !== name) {
-        removeTag("CreatedDate", tagMap[previouslySelected]);
-      }
-
-      setDateRange({ fromDate: null, toDate: null });
-
-      // Add the tag for the currently selected radio button
-      addTag("CreatedDate", tagMap[name]);
-
-      return newFilters;
-    });
-  };
-
   const handleClearFilters = () => {
 
-    setIsCreatedDateOpen(false);
     setIsLookalikeSize(false);
     setIsLookalikeType(false);
 
     // Reset date
-    setDateRange({
-      fromDate: null,
-      toDate: null,
-    });
-
-    setCheckedFilters({
-      lastWeek: false,
-      last30Days: false,
-      last6Months: false,
-      allTime: false,
-    });
-
-    // Reset filter values
-    setSelectedTags({
-      CreatedDate: [],
-    });
     setcheckedFiltersTypes({})
+    setSelectedSize([])
     setButtonFilters(null);
     setSearchQuery("");
 
@@ -519,7 +205,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   const fetchContacts = debounce(async (query: string) => {
     if (query.length >= 3) {
       try {
-        const response = await axiosInstance.get('/audience-lookalikes/search-lookalike', {
+        const response = await axiosInstance.get('/audience-lookalikes/search-lookalikes', {
           params: { start_letter: query },
         });
         const formattedContacts = response.data.map((contact: string) => ({ name: contact }));
@@ -741,7 +427,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                       },
                     }}
                   >
-                    {["Customer Conversions", "Lead Failures", "Intent", "Visitor", "View Product", "Abandoned Cart", "Converted sales"].map((item) => (
+                    {["Customer Conversions", "Lead Failures", "Interest", "Visitor", "Viewed Product", "Abandoned Cart", "Converted sales"].map((item) => (
                       <MenuItem
                         key={item}
                         value={item}
@@ -883,203 +569,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             </Collapse>
           </Box>
           {/* Created date */}
-          <Box
-            sx={{
-              width: "100%",
-              padding: "0.5em",
-              border: "1px solid rgba(228, 228, 228, 1)",
-            }}
-          >
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                width: "100%",
-                mb: 0,
-                gap: 1,
-                cursor: 'pointer'
-              }}
-              onClick={() => setIsCreatedDateOpen(!isCreatedDateOpen)}
-            >
-              <Box
-                sx={{
-                  ...filterStyles.active_filter_dote,
-                  visibility: isDateFilterActive() ? "visible" : "hidden"
-                }}
-              />
-              <EventIcon sx={{ width: '18px', height: '18px', color: 'rgba(95, 99, 104, 1)' }} />
-              <Typography
-                sx={{
-                  ...filterStyles.filter_name
-                }}
-              >
-                Created date
-              </Typography>
-              {selectedTags.CreatedDate.map((tag, index) => (
-                <CustomChip
-                  key={index}
-                  label={tag}
-                  onDelete={() => removeTag("CreatedDate", tag)}
-                />
-              ))}
-              <IconButton
-                onClick={() => setIsCreatedDateOpen(!isCreatedDateOpen)}
-                aria-label="toggle-content"
-              >
-                {isCreatedDateOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-              </IconButton>
-            </Box>
-            <Collapse in={isCreatedDateOpen}>
-              <Box
-                sx={{
-                  ...filterStyles.filter_dropdown
-                }}
-              >
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                  <FormControlLabel
-                    control={
-                      <Radio
-                        checked={checkedFilters.lastWeek}
-                        onChange={handleRadioChange}
-                        name="lastWeek"
-                        size='small'
-                        sx={{
-                          '&.Mui-checked': {
-                            color: "rgba(80, 82, 178, 1)",
-                          },
-                        }}
-                      />
-                    }
-                    label={<Typography className='table-data' sx={{ color: checkedFilters.lastWeek ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last week</Typography>}
-                  />
-                  <FormControlLabel
-                    control={
-                      <Radio
-                        checked={checkedFilters.last30Days}
-                        onChange={handleRadioChange}
-                        name="last30Days"
-                        size='small'
-                        sx={{
-                          '&.Mui-checked': {
-                            color: "rgba(80, 82, 178, 1)",
-                          },
-                        }}
-                      />
-                    }
-                    label={<Typography className='table-data' sx={{ color: checkedFilters.last30Days ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last 30 days</Typography>}
-                  />
-                </Box>
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                  <FormControlLabel
-                    control={
-                      <Radio
-                        checked={checkedFilters.last6Months}
-                        onChange={handleRadioChange}
-                        name="last6Months"
-                        size='small'
-                        sx={{
-                          '&.Mui-checked': {
-                            color: "rgba(80, 82, 178, 1)",
-                          },
-                        }}
-                      />
-                    }
-                    label={<Typography className='table-data' sx={{ color: checkedFilters.last6Months ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last 6 months</Typography>}
-                  />
-                  <FormControlLabel
-                    control={
-                      <Radio
-                        checked={checkedFilters.allTime}
-                        onChange={handleRadioChange}
-                        name="allTime"
-                        size='small'
-                        sx={{
-                          '&.Mui-checked': {
-                            color: "rgba(80, 82, 178, 1)",
-                          },
-                        }}
-                      />
-                    }
-                    label={<Typography className='table-data' sx={{ color: checkedFilters.allTime ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>All time</Typography>}
-                  />
-                </Box>
-              </Box>
-              <Box sx={filterStyles.date_time_formatted}>
-                <Box sx={{ borderBottom: '1px solid #e4e4e4', flexGrow: 1 }} />
-                <Typography variant="body1"
-                  sx={filterStyles.or_text}
-                >
-                  OR
-                </Typography>
-                <Box sx={{ borderBottom: '1px solid #e4e4e4', flexGrow: 1 }} />
-              </Box>
-              <Box
-                sx={{ display: "flex", gap: 2, justifyContent: "flex-start" }}
-              >
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <DatePicker
-                    label="From date"
-                    value={dateRange.fromDate}
-                    onChange={(newValue) => handleDateChange("fromDate")(newValue)}
-                    sx={{ width: '100%' }}
-                    slotProps={{
-                      textField: {
-                        variant: "outlined",
-                        fullWidth: true,
-                        sx: {
-                          '& .MuiInputBase-input': {
-                            fontFamily: 'Roboto',
-                            fontSize: '14px',
-                            fontWeight: 400,
-                            lineHeight: '19.6px',
-                            textAlign: 'left',
-                          },
-                          '& .MuiInputLabel-root': {
-                            fontFamily: 'Roboto',
-                            fontSize: '14px',
-                            fontWeight: 400,
-                            lineHeight: '19.6px',
-                            textAlign: 'left',
-                          }
-                        }
-                      }
-                    }}
-                  />
-                  <DatePicker
-                    label="To date"
-                    value={dateRange.toDate}
-                    onChange={(newValue) =>
-                      handleDateChange("toDate")(newValue)
-                    }
-                    sx={{ width: "100%" }}
-                    slotProps={{
-                      textField: {
-                        variant: "outlined",
-                        fullWidth: true,
-                        sx: {
-                          '& .MuiInputBase-input': {
-                            fontFamily: 'Roboto',
-                            fontSize: '14px',
-                            fontWeight: 400,
-                            lineHeight: '19.6px',
-                            textAlign: 'left',
-                          },
-                          '& .MuiInputLabel-root': {
-                            fontFamily: 'Roboto',
-                            fontSize: '14px',
-                            fontWeight: 400,
-                            lineHeight: '19.6px',
-                            textAlign: 'left',
-                          }
-                        }
-                      }
-                    }}
-                  />
-                </LocalizationProvider>
-              </Box>
-            </Collapse>
-          </Box>
           <Box
             sx={{
               mb: 0,

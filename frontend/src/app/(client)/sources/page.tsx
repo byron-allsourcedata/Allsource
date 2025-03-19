@@ -1019,7 +1019,7 @@ const Sources: React.FC = () => {
                                                                     marginRight: '16px',
                                                                 }}
                                                             >
-                                                                {`${count_sources} - ${rowsPerPage} of ${rowsPerPage}`}
+                                                                {`1 - ${count_sources} of ${count_sources}`}
                                                             </Typography>
                                                         </Box>
                                                     }

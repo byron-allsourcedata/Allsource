@@ -371,7 +371,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, order
 
                             <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>{row.source}</TableCell>
                             <TableCell
-                                sx={{ ...audienceStyles.table_array, position: 'relative', cursor: 'default' }}
+                                sx={{ ...lookalikesStyles.table_array, position: 'relative', cursor: 'default' }}
                             >
                                 <Box sx={{ display: 'flex' }}>
                                     <Tooltip

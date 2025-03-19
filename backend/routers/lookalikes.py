@@ -33,6 +33,7 @@ async def get_lookalikes(
         sort_order: str = Query(None, description="Field to sort by: 'asc' or 'desc'"),
         timezone_offset: float = Query(0, description="timezone offset in integer format"),
         lookalike_service: AudienceLookalikesService = Depends(get_lookalikes_service),
+        search_query: str = Query(None, description="Search by lookalikes name, source or creator"),
 ):
     return lookalike_service.get_lookalikes(
         user=user,
@@ -44,7 +45,7 @@ async def get_lookalikes(
         per_page=per_page,
         from_date=from_date,
         to_date=to_date,
-        timezone_offset=timezone_offset
+        search_query=search_query
     )
 
 
@@ -93,3 +94,10 @@ async def update_lookalike(
         lookalike_service: AudienceLookalikesService = Depends(get_lookalikes_service),
 ):
     return lookalike_service.update_lookalike(data.uuid_of_lookalike, data.name_of_lookalike, user=user)
+
+
+@router.get("/search-lookalikes")
+async def search_lookalikes(start_letter: str = Query(..., min_length=3),
+                            lookalike_service: AudienceLookalikesService = Depends(get_lookalikes_service),
+                            user: dict = Depends(check_user_authorization_without_pixel)):
+    return lookalike_service.search_lookalikes(start_letter, user=user)

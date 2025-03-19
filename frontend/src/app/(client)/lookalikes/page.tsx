@@ -25,18 +25,12 @@ import dayjs from "dayjs";
 
 
 interface FilterParams {
-        from_date: number | null;
-        to_date: number | null;
-        type: Record<string, boolean>;
-        size: string[];
-        searchQuery: string | null;
-        checkedFilters: {
-            lastWeek: boolean;
-            last30Days: boolean;
-            last6Months: boolean;
-            allTime: boolean;
-        };
-    }
+    from_date: number | null;
+    to_date: number | null;
+    type: Record<string, boolean>;
+    size: string[];
+    searchQuery: string | null;
+}
 
 interface FetchDataParams {
     sortBy?: string;
@@ -66,7 +60,7 @@ const CreateLookalikePage: React.FC = () => {
     // Pagination and Sorting
     const [count_lookalikes, setCountLookalike] = useState<number | null>(null);
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(15);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
     const [orderBy, setOrderBy] = useState<keyof TableRowData>();
     const [order, setOrder] = useState<"asc" | "desc">();
@@ -153,43 +147,54 @@ const CreateLookalikePage: React.FC = () => {
                 }
             });
             handleCalendarClose();
+        } else {
+            setAppliedDates({ start: null, end: null });
+            setFormattedDates('');
+            setSelectedDates({ start: null, end: null })
+            setSelectedFilters(prevFilters => {
+                return prevFilters.filter(filter => filter.label !== 'Dates');
+            });
         }
     };
 
     const handleApplyFilters = (filters: FilterParams) => {
-            const newSelectedFilters: { label: string; value: string }[] = [];
-            const getSelectedValues = (obj: Record<string, boolean>): string => {
-                return Object.entries(obj)
-                    .filter(([_, value]) => value)
-                    .map(([key]) => key)
-                    .join(', ');
-            };
-    
-            const dateFormat = 'YYYY-MM-DD';
-    
-            // Map of filter conditions to their labels
-            const filterMappings: { condition: boolean | string | string[] | number | null, label: string, value: string | ((f: any) => string) }[] = [
-                { condition: filters.from_date, label: 'From Date', value: () => dayjs.unix(filters.from_date!).format(dateFormat) },
-                { condition: filters.to_date, label: 'To Date', value: () => dayjs.unix(filters.to_date!).format(dateFormat) },
-                { 
-                    condition: filters.type && Object.values(filters.type).some(Boolean), 
-                    label: 'Type', 
-                    value: () => getSelectedValues(filters.type!) 
-                },
-                { condition: filters.size?.length, label: 'Size', value: () => filters.size!.join(', ') },
-                { condition: filters.searchQuery?.trim() !== '', label: 'Search', value: filters.searchQuery || '' },
-            ];
-    
-            // Iterate over the mappings to populate newSelectedFilters
-            filterMappings.forEach(({ condition, label, value }) => {
-                if (condition) {
-                    newSelectedFilters.push({ label, value: typeof value === 'function' ? value(filters) : value });
-                }
-            });
-    
-    
-            setSelectedFilters(newSelectedFilters);
+        const newSelectedFilters: { label: string; value: string }[] = [];
+        const getSelectedValues = (obj: Record<string, boolean>): string => {
+            return Object.entries(obj)
+                .filter(([_, value]) => value)
+                .map(([key]) => key)
+                .join(', ');
         };
+
+        const dateFormat = 'MM/DD/YYYY';
+        if (appliedDates.start && appliedDates.end) {
+            newSelectedFilters.push({
+                label: 'Dates',
+                value: `${dayjs(appliedDates.start).format(dateFormat)} - ${dayjs(appliedDates.end).format(dateFormat)}`
+            });
+        }
+
+        // Map of filter conditions to their labels
+        const filterMappings: { condition: boolean | string | string[] | number | null, label: string, value: string | ((f: any) => string) }[] = [
+            {
+                condition: filters.type && Object.values(filters.type).some(Boolean),
+                label: 'Type',
+                value: () => getSelectedValues(filters.type!)
+            },
+            { condition: filters.size?.length, label: 'Size', value: () => filters.size!.join(', ') },
+            { condition: filters.searchQuery?.trim() !== '', label: 'Search', value: filters.searchQuery || '' },
+        ];
+
+        // Iterate over the mappings to populate newSelectedFilters
+        filterMappings.forEach(({ condition, label, value }) => {
+            if (condition) {
+                newSelectedFilters.push({ label, value: typeof value === 'function' ? value(filters) : value });
+            }
+        });
+
+
+        setSelectedFilters(newSelectedFilters);
+    };
 
     const handleFetchLookalikes = async ({ sortBy, sortOrder, page, rowsPerPage, appliedDates }: FetchDataParams) => {
         try {
@@ -212,38 +217,20 @@ const CreateLookalikePage: React.FC = () => {
                 url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
             }
 
-            // Processing "From Date"
-            if (selectedFilters.some(filter => filter.label === 'From Date')) {
-                const fromDate = selectedFilters.find(filter => filter.label === 'From Date')?.value || '';
-                if (fromDate) {
-                    const fromDateUtc = new Date(fromDate);
-                    fromDateUtc.setHours(0, 0, 0, 0);
-                    const fromDateEpoch = Math.floor(fromDateUtc.getTime() / 1000);
-                    url += `&from_date=${fromDateEpoch}`;
-                }
-            }
-
-            // Processing "To Date"
-            if (selectedFilters.some(filter => filter.label === 'To Date')) {
-                const toDate = selectedFilters.find(filter => filter.label === 'To Date')?.value || '';
-                if (toDate) {
-                    const toDateUtc = new Date(toDate);
-                    toDateUtc.setHours(23, 59, 59, 999);
-                    const toDateEpoch = Math.floor(toDateUtc.getTime() / 1000);
-                    url += `&to_date=${toDateEpoch}`;
-                }
-            }
 
             // filter with checkbox or radio button
             const processMultiFilter = (label: string, paramName: string) => {
+                const toSnakeCase = (str: string) => str.toLowerCase();
                 const filter = selectedFilters.find(filter => filter.label === label)?.value;
                 if (filter) {
-                    url += `&${paramName}=${encodeURIComponent(filter?.split(', ').join(','))}`;
+                    const snakeCaseParam = toSnakeCase(filter);
+                    url += `&${paramName}=${encodeURIComponent(snakeCaseParam?.split(', ').join(','))}`;
                 }
             };
-    
+
             processMultiFilter('Size', 'lookalike_size');
             processMultiFilter('Type', 'lookalike_type');
+            processMultiFilter('Search', 'search_query')
 
             const response = await axiosInstance.get(url);
             const [leads, count] = response.data;
@@ -294,7 +281,7 @@ const CreateLookalikePage: React.FC = () => {
 
             setLookalikeData(Array.isArray(leads) ? leads : []);
             setCountLookalike(count || 0);
-            setSelectedDates({start: null, end: null})
+            setSelectedDates({ start: null, end: null })
             setSelectedFilters([]);
         } catch (error) {
             console.error('Error fetching leads:', error);
@@ -313,14 +300,6 @@ const CreateLookalikePage: React.FC = () => {
 
 
         switch (filterToDelete.label) {
-            case 'From Date':
-                filters.from_date = null;
-                setSelectedDates({start: null, end: null})
-                break;
-            case 'To Date':
-                filters.to_date = null;
-                setSelectedDates({start: null, end: null})
-                break;
             case 'Type':
                 filters.type = []
                 break;
@@ -331,24 +310,12 @@ const CreateLookalikePage: React.FC = () => {
                 break;
         }
 
-        if (!filters.from_date) {
-            if (!filters.to_date) {
-                filters.checkedFilters = {
-                    lastWeek: false,
-                    last30Days: false,
-                    last6Months: false,
-                    allTime: false,
-                };
-            }
-        }
-
-
         sessionStorage.setItem('lookalike_filters', JSON.stringify(filters));
 
         if (filterToDelete.label === 'Dates') {
             setAppliedDates({ start: null, end: null });
             setFormattedDates('');
-            setSelectedDates({start: null, end: null})
+            setSelectedDates({ start: null, end: null })
         }
 
         // Обновляем фильтры для применения
@@ -358,14 +325,6 @@ const CreateLookalikePage: React.FC = () => {
             type: Object.fromEntries(Object.keys(filters.type).map(key => [key, updatedFilters.some(f => f.label === 'Type' && f.value.includes(key))])),
             size: updatedFilters.find(f => f.label === 'Size') ? updatedFilters.find(f => f.label === 'Size')!.value.split(', ') : [],
             searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',
-
-            // Сбрасываем флаги фильтров, если они удалены
-            checkedFilters: {
-                lastWeek: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'lastWeek'),
-                last30Days: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'last30Days'),
-                last6Months: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'last6Months'),
-                allTime: updatedFilters.some(f => f.label === 'Date Range' && f.value === 'allTime')
-            },
         };
 
 
@@ -420,7 +379,7 @@ const CreateLookalikePage: React.FC = () => {
                         }
                     }}>
                         {isLookalikeGenerated &&
-                            <Box sx={{display: 'flex', flexDirection: 'row', gap:2, alignItems: 'center', width: '100%'}}>
+                            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, alignItems: 'center', width: '100%' }}>
                                 <Button
                                     onClick={handleFilterPopupOpen}
                                     aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
@@ -428,8 +387,8 @@ const CreateLookalikePage: React.FC = () => {
                                     aria-expanded={dropdownOpen ? 'true' : undefined}
                                     sx={{
                                         textTransform: 'none',
-                                        color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
-                                        border: selectedFilters.length > 0 ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
+                                        color: (selectedFilters && selectedFilters.length > 0) ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
+                                        border: (selectedFilters && selectedFilters.length > 0) ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
                                         borderRadius: '4px',
                                         padding: '8px',
                                         minWidth: 'auto',
@@ -448,27 +407,31 @@ const CreateLookalikePage: React.FC = () => {
                                         }
                                     }}
                                 >
-                                    <FilterListIcon fontSize='medium' sx={{
-                                        color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' 
-                                    }} />
-
-                                    {selectedFilters.length > 0 && (
-                                    <Box
+                                    <FilterListIcon
+                                        fontSize="medium"
                                         sx={{
-                                            position: 'absolute',
-                                            top: 6,
-                                            right: 8,
-                                            width: '10px',
-                                            height: '10px',
-                                            backgroundColor: 'red',
-                                            borderRadius: '50%',
-                                            '@media (max-width: 900px)': {
-                                                top: -1,
-                                                right: 1
-                                            }
+                                            color: (selectedFilters && selectedFilters.length > 0) ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)'
                                         }}
                                     />
-                                )}
+
+                                    {(selectedFilters && selectedFilters.length > 0) && (
+                                        <Box
+                                            sx={{
+                                                position: 'absolute',
+                                                top: 6,
+                                                right: 8,
+                                                width: '10px',
+                                                height: '10px',
+                                                backgroundColor: 'red',
+                                                borderRadius: '50%',
+                                                '@media (max-width: 900px)': {
+                                                    top: -1,
+                                                    right: 1
+                                                }
+                                            }}
+                                        />
+                                    )}
+
                                 </Button>
 
                                 <Button
@@ -517,54 +480,83 @@ const CreateLookalikePage: React.FC = () => {
                     </Box>
                 </Box>
                 <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, overflowX: 'auto', "@media (max-width: 600px)": { mb: 1 } }}>
-                        {selectedFilters.length > 0 && (
+                    {selectedFilters.length > 0 && (
+                        <Chip
+                            className='second-sub-title'
+                            label="Clear all"
+                            onClick={handleResetFilters}
+                            sx={{ color: '#5052B2 !important', backgroundColor: 'transparent', lineHeight: '20px !important', fontWeight: '400 !important', borderRadius: '4px' }}
+                        />
+                    )}
+                    {selectedFilters.map(filter => {
+                        let displayValue = filter.value;
+                        return (
                             <Chip
-                                className='second-sub-title'
-                                label="Clear all"
-                                onClick={handleResetFilters}
-                                sx={{ color: '#5052B2 !important', backgroundColor: 'transparent', lineHeight: '20px !important', fontWeight: '400 !important', borderRadius: '4px' }}
+                                className='paragraph'
+                                key={filter.label}
+                                label={`${filter.label}: ${displayValue.charAt(0).toUpperCase() + displayValue.slice(1)}`}
+                                onDelete={() => handleDeleteFilter(filter)}
+                                deleteIcon={
+                                    <CloseIcon
+                                        sx={{
+                                            backgroundColor: 'transparent',
+                                            color: '#828282 !important',
+                                            fontSize: '14px !important'
+                                        }}
+                                    />
+                                }
+                                sx={{
+                                    borderRadius: '4.5px',
+                                    backgroundColor: 'rgba(80, 82, 178, 0.10)',
+                                    color: '#5F6368 !important',
+                                    lineHeight: '16px !important',
+                                }}
                             />
-                        )}
-                        {selectedFilters.map(filter => {
-                            let displayValue = filter.value;
-                            return (
-                                <Chip
-                                    className='paragraph'
-                                    key={filter.label}
-                                    label={`${filter.label}: ${displayValue.charAt(0).toUpperCase() + displayValue.slice(1)}`}
-                                    onDelete={() => handleDeleteFilter(filter)}
-                                    deleteIcon={
-                                        <CloseIcon
-                                            sx={{
-                                                backgroundColor: 'transparent',
-                                                color: '#828282 !important',
-                                                fontSize: '14px !important'
-                                            }}
-                                        />
-                                    }
-                                    sx={{
-                                        borderRadius: '4.5px',
-                                        backgroundColor: 'rgba(80, 82, 178, 0.10)',
-                                        color: '#5F6368 !important',
-                                        lineHeight: '16px !important',
-                                    }}
-                                />
-                            );
-                        })}
-                    </Box>
+                        );
+                    })}
+                </Box>
                 <Box sx={{ flexGrow: 1, display: 'flex', }}>
                     {isLookalikeGenerated ? (
                         <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', width: '100%', alignItems: 'end' }}>
                             <LookalikeTable tableData={lookalikesData} order={order} orderBy={orderBy} onSort={handleSort} refreshData={refreshData} />
-                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0', "@media (max-width: 600px)": { padding: '12px 0 0' } }}>
-                                <CustomTablePagination
-                                    count={count_lookalikes ?? 0}
-                                    page={page}
-                                    rowsPerPage={rowsPerPage}
-                                    onPageChange={handleChangePage}
-                                    onRowsPerPageChange={handleChangeRowsPerPage}
-                                    rowsPerPageOptions={rowsPerPageOptions}
-                                />
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', flexGrow: 1, alignItems: 'end', padding: '24px 0 0', "@media (max-width: 600px)": { padding: '12px 0 0' } }}>
+                                {count_lookalikes && count_lookalikes > 10
+                                    ?
+                                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0', "@media (max-width: 600px)": { padding: '12px 0 0' } }}>
+                                        <CustomTablePagination
+                                            count={count_lookalikes ?? 0}
+                                            page={page}
+                                            rowsPerPage={rowsPerPage}
+                                            onPageChange={handleChangePage}
+                                            onRowsPerPageChange={handleChangeRowsPerPage}
+                                            rowsPerPageOptions={rowsPerPageOptions}
+                                        />
+                                    </Box>
+                                    :
+                                    <Box
+                                        display="flex"
+                                        justifyContent="flex-end"
+                                        alignItems="center"
+                                        sx={{
+                                            padding: '16px',
+                                            backgroundColor: '#fff',
+                                            borderRadius: '4px',
+                                            "@media (max-width: 600px)": { padding: '12px' }
+                                        }}
+                                    >
+                                        <Typography
+                                            sx={{
+                                                fontFamily: 'Nunito Sans',
+                                                fontWeight: '400',
+                                                fontSize: '12px',
+                                                lineHeight: '16px',
+                                                marginRight: '16px',
+                                            }}
+                                        >
+                                            {`1 - ${count_lookalikes} of ${count_lookalikes}`}
+                                        </Typography>
+                                    </Box>
+                                }
                             </Box>
                         </Box>
                     ) : (
@@ -631,14 +623,14 @@ const CreateLookalikePage: React.FC = () => {
                 </Box>
                 <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose} onApply={handleApplyFilters} />
                 <CalendarPopup
-                        anchorEl={calendarAnchorEl}
-                        open={isCalendarOpen}
-                        onClose={handleCalendarClose}
-                        onDateChange={handleDateChange}
-                        onApply={handleApply}
-                        onDateLabelChange={handleDateLabelChange}
-                        selectedDates={selectedDates}
-                    />
+                    anchorEl={calendarAnchorEl}
+                    open={isCalendarOpen}
+                    onClose={handleCalendarClose}
+                    onDateChange={handleDateChange}
+                    onApply={handleApply}
+                    onDateLabelChange={handleDateLabelChange}
+                    selectedDates={selectedDates}
+                />
             </Box>
         </Box>
     );

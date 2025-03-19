@@ -7,7 +7,7 @@ from models.audience_lookalikes import AudienceLookalikes
 from sqlalchemy.orm import Session
 from typing import Optional
 import math
-from sqlalchemy import asc, desc
+from sqlalchemy import asc, desc, or_
 from fastapi import HTTPException
 from urllib.parse import unquote
 
@@ -26,12 +26,22 @@ class AudienceLookalikesPersistence:
 
     def get_lookalikes(self, user_id: int, page: int, per_page: int, from_date: int, to_date: int,
                        sort_by: Optional[str] = None, sort_order: Optional[str] = None,
-                       lookalike_size: Optional[str] = None, lookalike_type: Optional[str] = None):
+                       lookalike_size: Optional[str] = None, lookalike_type: Optional[str] = None,
+                       search_query: Optional[str] = None):
         query = self.db.query(
-            AudienceLookalikes, AudienceSource.source_type, AudienceSource.source_origin, Users.full_name)\
+            AudienceLookalikes, AudienceSource.name, AudienceSource.source_type, Users.full_name)\
             .join(AudienceSource, AudienceLookalikes.source_uuid == AudienceSource.id)\
             .join(Users, Users.id == AudienceSource.created_by_user_id)\
-            .filter(AudienceSource.user_id == user_id)
+            .filter(AudienceLookalikes.user_id == user_id)
+
+        if search_query:
+            query = query.filter(
+                or_(
+                    AudienceLookalikes.name.ilike(f"%{search_query}%"),
+                    AudienceSource.name.ilike(f"%{search_query}%"),
+                    Users.full_name.ilike(f"%{search_query}%")
+                )
+            )
 
         sort_options = {
             'name': AudienceLookalikes.name,
@@ -60,8 +70,9 @@ class AudienceLookalikesPersistence:
             query = query.filter(AudienceLookalikes.lookalike_size.in_(sizes))
 
         if lookalike_type:
-            types = [unquote(i.strip()) for i in lookalike_type.split(',')]
-            query = query.filter(AudienceSource.source_type.in_(types))
+            types = [unquote(i.strip()).replace(' ', '_') for i in lookalike_type.split(',')]
+            filters = [AudienceSource.source_type.ilike(f"%{t}%") for t in types]
+            query = query.filter(or_(*filters))
 
         offset = (page - 1) * per_page
         lookalikes = query.limit(per_page).offset(offset).all()
@@ -70,11 +81,11 @@ class AudienceLookalikesPersistence:
         result = [
             {
                 **lookalike.__dict__,
-                "source": source_origin,
+                "source": source_name,
                 "source_type": source_type,
                 "created_by": created_by
             }
-            for lookalike, source_type, source_origin, created_by in lookalikes
+            for lookalike, source_name, source_type, created_by in lookalikes
         ]
 
         return result, count, max_page
@@ -125,4 +136,24 @@ class AudienceLookalikesPersistence:
         self.db.commit()
 
         return updated_rows > 0
+
+    def search_lookalikes(self, start_letter, user_id):
+        query = self.db.query(
+            AudienceLookalikes, AudienceSource.name.label('source_name'), AudienceSource.source_type, Users.full_name) \
+            .join(AudienceSource, AudienceLookalikes.source_uuid == AudienceSource.id) \
+            .join(Users, Users.id == AudienceSource.created_by_user_id) \
+            .filter(AudienceLookalikes.user_id == user_id)
+
+        if start_letter:
+            query = query.filter(
+                or_(
+                    AudienceLookalikes.name.ilike(f"{start_letter}%"),
+                    AudienceSource.name.ilike(f"{start_letter}%"),
+                    Users.full_name.ilike(f"{start_letter}%")
+                )
+            )
+
+        lookalike_data = query.all()
+
+        return lookalike_data
 

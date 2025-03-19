@@ -189,7 +189,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification, NotificationDat
             </Button>
           )}
           <Box sx={{display: 'flex', ml:3}}>
-            {!pathname.includes('sources') && !pathname.includes('lookalikes') && <DomainButton />}
+            {!pathname.includes('sources') && !pathname.includes('lookalikes') && !pathname.includes('smart-audiences') && <DomainButton />}
           </Box>
         </Box>
         <Box sx={{ display: "flex", alignItems: "center" }}>

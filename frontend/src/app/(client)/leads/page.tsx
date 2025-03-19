@@ -196,6 +196,13 @@ const Leads: React.FC = () => {
                 }
             });
             handleCalendarClose();
+        } else {
+            setAppliedDates({ start: null, end: null });
+            setFormattedDates('');
+            setSelectedDates({ start: null, end: null })
+            setSelectedFilters(prevFilters => {
+                return prevFilters.filter(filter => filter.label !== 'Dates');
+            });
         }
     };
 
