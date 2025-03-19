@@ -210,14 +210,14 @@ class KlaviyoIntegrationsService:
         })
         if tags_id: 
             self.create_tag_relationships_lists(tags_id=tags_id, list_id=list_id, api_key=credentials.access_token)
-
+            
     async def process_data_sync(self, five_x_five_user, user_integration, data_sync, lead_user):
         data_map = data_sync.data_map if data_sync.data_map else None
         profile = self.__create_profile(five_x_five_user, user_integration.access_token, data_map)
         if profile in (ProccessDataSyncResult.AUTHENTICATION_FAILED.value, ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return profile
 
-        list_response = self.__add_profile_to_list(data_sync.list_id, profile.get('id'), user_integration.access_token)
+        list_response = self.__add_profile_to_list(data_sync.list_id, profile['id'], user_integration.access_token, profile['email'], profile['phone_number'])
         if list_response.status_code == 404:
             return ProccessDataSyncResult.LIST_NOT_EXISTS.value
             
@@ -255,12 +255,13 @@ class KlaviyoIntegrationsService:
             properties = {}
     
         phone_number = validate_and_format_phone(profile.phone_number)
+        phone_number = phone_number.split(', ')[-1] if phone_number else None
         json_data = {
             'data': {
                 'type': 'profile',
                 'attributes': {
                     'email': profile.email,
-                    'phone_number': phone_number.split(', ')[-1] if phone_number else None,
+                    'phone_number': phone_number,
                     'first_name': profile.first_name or None,
                     'last_name': profile.last_name or None,
                     'organization': profile.organization or None,
@@ -294,25 +295,69 @@ class KlaviyoIntegrationsService:
                 api_key=api_key,
                 json=json_data
             )
+
         if response.status_code in (200, 201):
-                return response.json().get('data')
+                return {
+                    **response.json().get('data', {}),
+                    'phone_number': phone_number,
+                    'email': profile.email
+                }
         if response.status_code == 400:
                 return ProccessDataSyncResult.INCORRECT_FORMAT.value
         if response.status_code == 401:
                 return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
         if response.status_code == 409:
-            return {'id': response.json().get('errors')[0].get('meta').get('duplicate_profile_id')}
-        
+            return {'id': response.json().get('errors')[0].get('meta').get('duplicate_profile_id'),
+                    'phone_number': phone_number,
+                    'email': profile.email
+                    }
 
-    def __add_profile_to_list(self, list_id: str, profile_id: str, api_key: str):
-        response = self.__handle_request(method='POST', url=f'https://a.klaviyo.com/api/lists/{list_id}/relationships/profiles/',api_key=api_key, json={
-            "data": [
-                {
-                "type": "profile",
-                "id": profile_id
+    def __add_profile_to_list(self, list_id: str, profile_id: str, api_key: str, email, phone_number):
+        payload = {
+            "data": {
+                "type": "profile-subscription-bulk-create-job",
+                "attributes": {
+                    "profiles": {
+                        "data": [
+                            {
+                                "type": "profile",
+                                "attributes": {
+                                    "subscriptions": {
+                                        "email": {
+                                            "marketing": {
+                                                "consent": "SUBSCRIBED"
+                                            }
+                                        },
+                                        "sms": {
+                                            "marketing": {
+                                                "consent": "SUBSCRIBED"
+                                            },
+                                            "transactional": {
+                                                "consent": "SUBSCRIBED"
+                                            }
+                                        }
+                                    },
+                                    "email": email,
+                                    "phone_number": phone_number
+                                },
+                                "id": f"{profile_id}"
+                            }
+                        ]
+                    },
+                    "historical_import": False
+                },
+                "relationships": {
+                    "list": {
+                        "data": {
+                            "type": "list",
+                            "id": f"{list_id}"
+                        }
+                    }
                 }
-            ]
-            })
+            }
+        }
+        
+        response = self.__handle_request(method='POST', url="https://a.klaviyo.com/api/profile-subscription-bulk-create-jobs",api_key=api_key, data=json.dumps(payload))
         return response
         
     def set_suppression(self, suppression: bool, domain_id: int):
