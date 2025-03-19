@@ -251,6 +251,7 @@ const Sources: React.FC = () => {
                 const response = await axiosInstance.delete(`/audience-sources/${selectedRowData.id}`);
                 if (response.status === 200 && response.data) {
                     showToast("Source successfully deleted!");
+                    setCount((prev) => (prev ? prev - 1 : 0))
                     setData((prevAccounts: Source[]) =>
                         prevAccounts.filter((item: Source) => item.id !== selectedRowData.id)
                     );

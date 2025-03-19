@@ -348,6 +348,7 @@ const SmartAudiences: React.FC = () => {
                 const response = await axiosInstance.delete(`/audience-smarts/${selectedRowData.id}`);
                 if (response.status === 200 && response.data) {
                     showToast("Smart audience successfully deleted!");
+                    setCount((prev) => (prev ? prev - 1 : 0))
                     setData((prevAccounts: Smarts[]) =>
                         prevAccounts.filter((item: Smarts) => item.id !== selectedRowData.id)
                     );

@@ -694,11 +694,12 @@ const SourcesImport: React.FC = () => {
                                             </IconButton>
                                         </Box>
                                     }
-                                    <Typography className="main-text" component="div"
+                                    
+                                    {sourceType !== "" && <Typography className="main-text" component="div"
                                             sx={{ ...sourcesStyles.text, gap: 0.25, pt: 1, "@media (max-width: 700px)": { mb: 1 } }}
                                         >
                                             Sample doc: <Typography onClick={downloadSampleFile} component="span" sx={{ ...sourcesStyles.text, color: 'rgba(80, 82, 178, 1)', cursor: 'pointer', fontWeight: 400 }}>sample recent customers-list.csv</Typography>
-                                        </Typography>
+                                    </Typography>}
                                 </Box>
                             }
 
