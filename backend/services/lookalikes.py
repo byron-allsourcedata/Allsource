@@ -6,12 +6,12 @@ class AudienceLookalikesService:
     def __init__(self, lookalikes_persistence_service: AudienceLookalikesPersistence):
         self.lookalikes_persistence_service = lookalikes_persistence_service
 
-    def get_lookalikes(self, user, page, per_page, from_date, to_date, sort_by, sort_order, timezone_offset,
-                       lookalike_size, lookalike_type):
+    def get_lookalikes(self, user, page, per_page, from_date, to_date, sort_by, sort_order,
+                       lookalike_size, lookalike_type, search_query):
         lookalikes, count, max_page = self.lookalikes_persistence_service.\
             get_lookalikes(user_id=user.get('id'), page=page, per_page=per_page, sort_by=sort_by, sort_order=sort_order,
                            from_date=from_date, to_date=to_date, lookalike_size=lookalike_size,
-                           lookalike_type=lookalike_type)
+                           lookalike_type=lookalike_type, search_query=search_query)
         return lookalikes, count, max_page
 
     def get_source_info(self, uuid_of_source, user):
@@ -51,3 +51,19 @@ class AudienceLookalikesService:
         if update:
             return {'status': 'SUCCESS'}
         return {'status': 'FAILURE'}
+
+    def search_lookalikes(self, start_letter, user):
+        lookalike_data = self.lookalikes_persistence_service.search_lookalikes(start_letter=start_letter,
+                                                                               user_id=user.get('id'))
+        results = set()
+        for lookalike, source_name, source_type, creator_name in lookalike_data:
+                if start_letter.lower() in lookalike.name.lower():
+                    results.add(lookalike.name)
+                if start_letter.lower() in source_name.lower():
+                    results.add(source_name)
+                if start_letter.lower() in creator_name.lower():
+                    results.add(creator_name)
+
+        limited_results = list(results)[:10]
+        return limited_results
+

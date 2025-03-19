@@ -130,9 +130,7 @@ const CreateLookalikePage: React.FC = () => {
     };
 
     const handleCancel = () => {
-        setSelectedSize("");
-        setSliderValue([0, 0]);
-        setCurrentStep(1);
+        router.push('/sources')
     };
 
     const handleNext = () => {
