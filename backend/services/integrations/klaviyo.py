@@ -325,15 +325,18 @@ class KlaviyoIntegrationsService:
                                     "subscriptions": {
                                         "email": {
                                             "marketing": {
-                                                "consent": "SUBSCRIBED"
+                                                "consent": "SUBSCRIBED",
+                                                "consented_at": "2025-01-01T12:00:00Z"
                                             }
                                         },
                                         "sms": {
                                             "marketing": {
-                                                "consent": "SUBSCRIBED"
+                                                "consent": "SUBSCRIBED",
+                                                "consented_at": "2025-01-01T12:00:00Z"
                                             },
                                             "transactional": {
-                                                "consent": "SUBSCRIBED"
+                                                "consent": "SUBSCRIBED",
+                                                "consented_at": "2025-01-01T12:00:00Z"
                                             }
                                         }
                                     },
@@ -344,7 +347,7 @@ class KlaviyoIntegrationsService:
                             }
                         ]
                     },
-                    "historical_import": False
+                    "historical_import": True
                 },
                 "relationships": {
                     "list": {
