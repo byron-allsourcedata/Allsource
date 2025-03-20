@@ -203,51 +203,71 @@ const SmartAudiences: React.FC = () => {
 
     const fetchSmarts = async ({ sortBy, sortOrder, page, rowsPerPage, appliedDates }: FetchDataParams) => {
         try {
-            isFirstLoad ? setLoading(true)  : setLoaderForTable(true);
+            isFirstLoad ? setLoading(true) : setLoaderForTable(true);
+    
             const accessToken = localStorage.getItem("token");
             if (!accessToken) {
                 router.push('/signin');
                 return;
             }
-
+    
             let url = `/audience-smarts?&page=${page + 1}&per_page=${rowsPerPage}`;
-
+    
             const startEpoch = appliedDates.start
                 ? Math.floor(new Date(appliedDates.start.toISOString()).getTime() / 1000)
                 : null;
-
             const endEpoch = appliedDates.end
                 ? Math.floor(new Date(appliedDates.end.toISOString()).getTime() / 1000)
                 : null;
-
             if (startEpoch !== null && endEpoch !== null) {
                 url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
             }
-
+    
             if (sortBy) {
-                setPage(0)
+                setPage(0);
                 url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
             }
+    
+            const savedFilters = sessionStorage.getItem('filtersBySmarts');
+            let parsedFilters = null;
+            if (savedFilters) {
+                try {
+                    parsedFilters = JSON.parse(savedFilters);
+                } catch (error) {
+                    console.error("Ошибка при разборе данных sessionStorage", error);
+                }
+            }
 
-            const processMultiFilter = (label: string, paramName: string) => {
+            const selectedStatuses = parsedFilters?.selectedStatuses || {};
+            const selectedUseCases = parsedFilters?.selectedUseCases || {};
+            const searchQuery = parsedFilters?.searchQuery || "";
+    
+            const processMultiFilter = (label: string, paramName: string, filterData: { [s: string]: unknown; } | ArrayLike<unknown>) => {
                 const toSnakeCase = (str: string) => str.toLowerCase();
-                const filter = selectedFilters.find(filter => filter.label === label)?.value;
-                if (filter) {
-                    const snakeCaseParam = toSnakeCase(filter);
-                    url += `&${paramName}=${encodeURIComponent(snakeCaseParam?.split(', ').join(','))}`;
+                let filterValues = [];
+                
+                filterValues = Object.entries(filterData)
+                    .filter(([key, value]) => value)
+                    .map(([key]) => key);
+                
+                if (filterValues.length) {
+                    const snakeCaseParam = filterValues.map(val => toSnakeCase(val)).join(',');
+                    url += `&${paramName}=${encodeURIComponent(snakeCaseParam)}`;
                 }
             };
     
-            processMultiFilter('Use Case', 'use_cases');
-            processMultiFilter('Status', 'statuses');
-            processMultiFilter('Search', 'search_query')
-
-            const response = await axiosInstance.get(url)
-
+            processMultiFilter('Use Case', 'use_cases', selectedUseCases);
+            processMultiFilter('Status', 'statuses', selectedStatuses);
+    
+            if (searchQuery) {
+                url += `&search_query=${encodeURIComponent(searchQuery)}`;
+            }
+    
+            const response = await axiosInstance.get(url);
             const { audience_smarts_list, count } = response.data;
             setData(audience_smarts_list);
             setCount(count || 0);
-
+    
             const options = [10, 20, 50, 100, 300, 500];
             let RowsPerPageOptions = options.filter(option => option <= count);
             if (RowsPerPageOptions.length < options.length) {
@@ -256,7 +276,8 @@ const SmartAudiences: React.FC = () => {
             setRowsPerPageOptions(RowsPerPageOptions);
             const selectedValue = RowsPerPageOptions.includes(rowsPerPage) ? rowsPerPage : 10;
             setRowsPerPage(selectedValue);
-        } catch {
+        } catch (error) {
+            console.error("Ошибка при загрузке данных", error);
         } finally {
             if (isFirstLoad) {
                 setLoading(false);
@@ -265,7 +286,8 @@ const SmartAudiences: React.FC = () => {
                 setLoaderForTable(false);
             }
         }
-    }
+    };
+    
 
     const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setCalendarAnchorEl(event.currentTarget);
@@ -421,15 +443,15 @@ const SmartAudiences: React.FC = () => {
         
     };
 
-    // useEffect(() => {
-    //     const storedFilters = sessionStorage.getItem('filtersBySmarts');
+    useEffect(() => {
+        const storedFilters = sessionStorage.getItem('filtersBySmarts');
 
-    //     if (storedFilters) {
-    //         const filters = JSON.parse(storedFilters);
+        if (storedFilters) {
+            const filters = JSON.parse(storedFilters);
 
-    //         handleApplyFilters(filters);
-    //     }
-    // }, []);
+            handleApplyFilters(filters);
+        }
+    }, []);
 
     const getSelectedValues = (obj: Record<string, boolean>): string => {
         return Object.entries(obj)
@@ -713,9 +735,6 @@ const SmartAudiences: React.FC = () => {
                                             />
                                         )}
                                         {selectedFilters.map(filter => {
-                                            if (filter.label === 'From Date' || filter.label === 'To Date' || filter.label === 'Date Range') {
-                                                return null;
-                                            }
                                             let displayValue = filter.value;
                                             return (
                                                 <Chip
