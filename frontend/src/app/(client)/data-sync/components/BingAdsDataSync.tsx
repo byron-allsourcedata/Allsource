@@ -616,7 +616,7 @@ const BingAdsDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
         >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                 <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
-                    Connect to Omnisend
+                    Connect to BingAds
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
                     <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-omnisend-to-maximiz" className="main-text"

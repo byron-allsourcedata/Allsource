@@ -262,7 +262,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                         }}>
                                             <ListItemButton onClick={() => setOpenSalesForceConnect(true)} sx={{ p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center' }}>
                                                 <ListItemIcon sx={{ minWidth: 'auto' }}>
-                                                    <Image src="/salesforce.svg" alt="salesforce" height={26} width={32} />
+                                                    <Image src="/salesforce-icon.svg" alt="salesforce" height={26} width={32} />
                                                 </ListItemIcon>
                                                 <ListItemText primary="salesforce" primaryTypographyProps={{
                                                     sx: {
@@ -529,26 +529,6 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                                     <Image src="/google-ads.svg" alt="google_ads" height={24} width={24} />
                                                 </ListItemIcon>
                                                 <ListItemText primary="GoogleAds" primaryTypographyProps={{
-                                                    sx: {
-                                                        ...intergrations.integrate
-                                                    }
-                                                }} />
-                                            </ListItemButton>
-                                        </ListItem>
-                                    )}
-                                    {filteredIntegrations.some(integration => integration.service_name === 'sales_force') && (
-                                    !integrationsCredentials.some(integration => integration.service_name === 'sales_force')) && (
-                                        <ListItem sx={{
-                                            p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
-                                            '@media (max-width:600px)': {
-                                                flexBasis: 'calc(50% - 8px)'
-                                            }
-                                        }}>
-                                            <ListItemButton onClick={() => setOpenSalesForceConnect(true)} sx={{ p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center' }}>
-                                                <ListItemIcon sx={{ minWidth: 'auto' }}>
-                                                    <Image src="/salesforce-icon.svg" alt="salesforce" height={24} width={24} />
-                                                </ListItemIcon>
-                                                <ListItemText primary="SalesForce" primaryTypographyProps={{
                                                     sx: {
                                                         ...intergrations.integrate
                                                     }

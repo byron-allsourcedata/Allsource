@@ -568,7 +568,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                     </ListItem>
                                 )}
                                 {/* BingAds */}
-                                {integrationsCredentials.some(integration => integration.service_name === 'bing_ads') && (
+                                {/* {integrationsCredentials.some(integration => integration.service_name === 'bing_ads') && (
                                     <ListItem sx={{
                                         p: 0,
                                         borderRadius: '4px',
@@ -605,7 +605,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                             }} />
                                         </ListItemButton>
                                     </ListItem>
-                                )}
+                                )} */}
                                 {/* SalesForce */}
                                 {integrationsCredentials.some(integration => integration.service_name === 'sales_force') && (
                                     <ListItem sx={{

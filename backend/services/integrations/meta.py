@@ -218,8 +218,14 @@ class MetaIntegrationsService:
             'list_name': list.name
         }
     
-    def edit_sync(self, leads_type: str, integrations_users_sync_id: int, domain_id: int, created_by: str):
+    def edit_sync(self, leads_type: str, integrations_users_sync_id: int, domain_id: int, created_by: str, campaign = {}, customer_id = None, list_id = None):
         credentials = self.get_credentials(domain_id)
+        campaign_id = campaign.get('campaign_id')
+        if campaign_id == -1 and campaign.get('campaign_name'):
+            campaign_id = self.create_campaign(campaign['campaign_name'], campaign['daily_budget'], credentials.access_token, customer_id)
+        if campaign_id and campaign_id != -1:
+            self.create_adset(customer_id, campaign['campaign_name'], campaign_id, credentials.access_token, list_id, campaign['campaign_objective'], campaign['bid_amount'])
+        
         sync = self.sync_persistence.edit_sync({
             'integration_id': credentials.id,
             'domain_id': domain_id,

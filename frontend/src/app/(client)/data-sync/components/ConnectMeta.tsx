@@ -86,7 +86,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
         const numericValue = (name === 'bidAmount' || name === 'dailyBudget') ? Number(value) : value;
         if (
             (name === 'bidAmount' && (isNaN(numericValue) || numericValue < 1 || numericValue > 918)) ||
-            (name === 'dailyBudget' && (isNaN(numericValue) || numericValue < 100))
+            (name === 'dailyBudget' && (isNaN(numericValue) || numericValue < 100 || numericValue > 1000000000))
         ) {
             return;
         }
@@ -228,30 +228,12 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
         };
     }, [selectedOption]);
 
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (textFieldRefCampaign.current && !textFieldRefCampaign.current.contains(event.target as Node)) {
-                if (selectedOptionCampaign?.list_name === '') {
-                    setIsShrunkCampaign(false);
-                }
-                if (isDropdownOpenCampaign) {
-                    setIsDropdownOpenCampaign(false); // Close dropdown when clicking outside
-                }
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
 
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [selectedOptionCampaign]);
-
-    // Handle menu open
     const handleClick = (event: React.MouseEvent<HTMLInputElement>) => {
         setIsShrunk(true);
         setIsDropdownOpen(prev => !prev);
         setAnchorEl(event.currentTarget);
-        setShowCreateForm(false); // Reset form when menu opens
+        setShowCreateForm(false);
     };
 
     const handleClickCampaign = (event: React.MouseEvent<HTMLInputElement>) => {
@@ -272,6 +254,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
         event.stopPropagation();
         setIsDropdownOpenCampaign(prev => !prev);
         setAnchorElCampaign(textFieldRefCampaign.current);
+        setShowCreateFormCampaign(false);
     };
 
     const handleDropdownToggleAdAccount = (event: React.MouseEvent) => {
@@ -280,7 +263,6 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
         setAnchorElAdAccount(textFieldRefAdAccount.current);
     };
 
-    // Handle menu close
     const handleClose = () => {
         setAnchorEl(null);
         setAnchorElAdAccount(null)
@@ -347,11 +329,9 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
             'list_name' in value;
     };
 
-    // Handle Save action for the create new list form
     const handleSave = async () => {
         let valid = true;
 
-        // Validate List Name
         if (newListName.trim() === '') {
             setListNameError(true);
             valid = false;
@@ -456,7 +436,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
                     <Button
                         variant="contained"
                         onClick={handleNextTab}
-                        disabled={!isDropdownValid}
+                        disabled={!isDropdownValid || inputValue == ''}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito Sans",
@@ -540,8 +520,8 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
     };
 
     const handleClickOpen = (event: React.MouseEvent<HTMLElement>, id: number) => {
-        setDeleteAnchorEl(event.currentTarget);  // Set the current target as the anchor
-        setSelectedRowId(id);  // Set the ID of the row to delete
+        setDeleteAnchorEl(event.currentTarget);
+        setSelectedRowId(id);
     };
 
     const handleDeleteClose = () => {
@@ -585,14 +565,30 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
             }
 
             if (UpdateKlaviuo) {
-                const response = await axiosInstance.put(`/data-sync/sync`, {
+
+                const requestData: any = {
+                    customer_id: String(optionAdAccount?.id),
+                    list_id: list?.id,
                     integrations_users_sync_id: UpdateKlaviuo,
                     leads_type: selectedRadioValue,
-                }, {
+                };
+
+                if (selectedOptionCampaign?.id || formValues?.campaignName) {
+                    requestData.campaign = {
+                        campaign_id: selectedOptionCampaign?.id,
+                        campaign_name: formValues?.campaignName,
+                        campaign_objective: formValues?.campaignObjective,
+                        bid_amount: formValues?.bidAmount,
+                        daily_budget: formValues?.dailyBudget
+                    };
+                }
+
+                const response = await axiosInstance.put('/data-sync/sync', requestData, {
                     params: {
                         service_name: 'meta'
                     }
                 });
+
                 if (response.status === 201 || response.status === 200) {
                     resetToDefaultValues();
                     onClose();
@@ -615,13 +611,13 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
                         daily_budget: formValues?.dailyBudget
                     };
                 }
-                
+
                 const response = await axiosInstance.post('/data-sync/sync', requestData, {
                     params: {
                         service_name: 'meta'
                     }
                 });
-                
+
                 if (response.status === 201 || response.status === 200) {
                     resetToDefaultValues();
                     onClose();
@@ -646,7 +642,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
         });
         setInputValueCampaign('')
     };
-    
+
     const resetToDefaultValues = () => {
         setValue('1');
         setSelectedRadioValue('');
@@ -1277,7 +1273,6 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
                                                         <TextField
                                                             ref={textFieldRefCampaign}
                                                             variant="outlined"
-                                                            disabled={data?.customer_id}
                                                             value={inputValueCampaign}
                                                             onClick={handleClickCampaign}
                                                             size="medium"
@@ -1331,7 +1326,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
 
                                                         <Menu
                                                             anchorEl={anchorElCampaign}
-                                                            open={Boolean(anchorElCampaign) && isDropdownOpenCampaign && !data?.customer_id}
+                                                            open={Boolean(anchorElCampaign) && isDropdownOpenCampaign}
                                                             onClose={handleCloseCampaign}
                                                             PaperProps={{
                                                                 sx: {
@@ -1376,6 +1371,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
                                                                                 variant="outlined"
                                                                                 name="campaignName"
                                                                                 value={formValues.campaignName}
+                                                                                onKeyDown={(e) => e.stopPropagation()}
                                                                                 onChange={handleInputChange}
                                                                                 fullWidth
                                                                                 margin="normal"
@@ -1477,7 +1473,6 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
                                                                                 Save
                                                                             </Button>
                                                                         </Box>
-
                                                                     </Box>
 
 
@@ -1798,20 +1793,6 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
                                             </Grid>
                                         </Box>
                                     ))}
-
-                                    {/* <Button color="primary" onClick={handleAddRow} sx={{
-                                    fontFamily: 'Nunito Sans',
-                                    fontSize: '14px',
-                                    fontWeight: '600',
-                                    color: '#5052B2',
-                                    lineHeight: '22px',
-                                    textTransform: 'none',
-                                    '&:hover': {
-                                        background: '#fff'
-                                    }
-                                }}>
-                                    Add Row +
-                                    </Button> */}
 
                                 </Box>
                             </TabPanel>

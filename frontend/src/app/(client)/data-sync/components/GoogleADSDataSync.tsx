@@ -50,8 +50,8 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
     const [notAdsUser, setNotAdsUser] = useState<boolean>(false);
     const [anchorElAdAccount, setAnchorElAdAccount] = useState<null | HTMLElement>(null);
     const [isDropdownOpenAdAccount, setIsDropdownOpenAdAccount] = useState(false);
-    const [inputCustomerName, setInputCustomerName] = useState('');
-    const [inputListName, setInputListName] = useState('');
+    const [inputCustomerName, setInputCustomerName] = useState(data?.customer_id ?? '');
+    const [inputListName, setInputListName] = useState(data?.name ?? '');
     const [googleList, setGoogleAdsList] = useState<ChannelList[]>([]);
 
     const [customersInfo, setCustomersInfo] = useState<Customers[]>([
