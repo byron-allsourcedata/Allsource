@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Drawer, Box, Typography, IconButton, List, ListItem, ListItemIcon, ListItemButton, Button, ListItemText, Popover, Tooltip, Tab } from '@mui/material';
 import TabList from "@mui/lab/TabList";
+import TabPanel from '@mui/lab/TabPanel';
 import TabContext from "@mui/lab/TabContext";
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
@@ -858,574 +859,585 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, selected
                         <CloseIcon sx={{ width: '20px', height: '20px' }} />
                     </IconButton>
                 </Box>
-                <Box sx={{ pb: 4 }}>
                     <TabContext value={value}>
-                        <TabList centered aria-label="Connect to Klaviyo Tabs"
-                            TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
-                            sx={{
-                                "& .MuiTabs-scroller": {
-                                    overflowX: 'auto !important',
-                                },
-                                "& .MuiTabs-flexContainer": {
-                                    justifyContent: 'center',
-                                    '@media (max-width: 600px)': {
-                                        gap: '16px',
-                                        justifyContent: 'flex-start'
-                                    }
-                                }
-                            }} onChange={handleChangeTab}>
-                            <Tab label="Destination" value="1" className='tab-heading' sx={klaviyoStyles.tabHeading} />
-                            <Tab label="Contact Sync" value="2" className='tab-heading' sx={klaviyoStyles.tabHeading} />
-                            <Tab label="Map data" value="3" className='tab-heading' sx={klaviyoStyles.tabHeading} />
-                        </TabList>
-                    </TabContext>
-                </Box>
-                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
-                    <Box sx={{ p:0, width: '100%' }}>
-                        <Box sx={{ px: 2, py: 3, border: '1px solid #f0f0f0', borderRadius: '4px' }}>
-                            <Typography variant="h6" className="first-sub-title">
-                                Choose where you want to sync
-                            </Typography>
-                            <List sx={{ display: 'flex', gap: '16px', py: 2, flexWrap: 'wrap', border: 'none' }}>
-                                {integrationsAvailable
-                                    .filter(integration => {
-                                        if (search) {
-                                        return integration.service_name.toLowerCase().includes(search.toLowerCase());
-                                        }
-                                        return true;
-                                    })
-                                    .sort((a, b) => {
-                                        const isAIntegrated = integratedServices.includes(a.service_name);
-                                        const isBIntegrated = integratedServices.includes(b.service_name);
-
-                                        if (isAIntegrated === isBIntegrated) {
-                                        return a.service_name.localeCompare(b.service_name);
-                                        }
-                                        return isAIntegrated ? -1 : 1;
-                                    })
-                                    .map((integration) => {
-                                        const isIntegrated = integratedServices.includes(integration.service_name);
-                                        const integrationCred = integrationsCredentials.find(cred => cred.service_name === integration.service_name);
-
-                                        if (isIntegrated) {
-                                        return (
-                                            <Box key={integration.service_name} onClick={() => handleActive(integration.service_name)}>
-                                            <IntegrationBox
-                                                image={`/${integration.image}`}
-                                                service_name={integration.service_name}
-                                                active={activeService === integration.service_name}
-                                                handleClick={() => setOpenModal(integration.service_name)}
-                                                is_integrated={true}
-                                                handleDelete={handleDeleteOpen}
-                                                is_failed={integrationCred?.is_failed}
-                                            />
-                                            </Box>
-                                        );
-                                        }
-
-                                        return (// <Box key={integration.service_name} onClick={() => {}}>
-                                        <Box key={integration.service_name} onClick={() => handleAddIntegration(integration.service_name)}>
-                                            <IntegrationBox
-                                            image={`/${integration.image}`}
-                                            service_name={integration.service_name}
-                                            is_avalible={true}
-                                            is_integrated={false}
-                                            />
-                                        </Box>
-                                        );
-                                    })
-                                }
-                            </List>
-                            <List sx={{ display: 'flex', gap: '16px', py: 2, flexWrap: 'wrap' }}>
-                                {/* Meta */}
-                                {integrationsCredentials.some(integration => integration.service_name === 'meta') && (
-                                    <ListItem sx={{
-                                        p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
-                                        '@media (max-width:600px)': {
-                                            flexBasis: 'calc(50% - 8px)'
-                                        }
-                                    }}>
-                                        <ListItemButton onClick={() => setMetaIconPopupOpen(true)} sx={{ p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center' }}>
-                                            <ListItemIcon sx={{ minWidth: 'auto' }}>
-                                                <Image src="/meta-icon.svg" alt="meta" height={26} width={32} />
-                                            </ListItemIcon>
-                                            <ListItemText primary="Meta" primaryTypographyProps={{
-                                                sx: {
-                                                    fontFamily: "Nunito Sans",
-                                                    fontSize: "14px",
-                                                    color: "#4a4a4a",
-                                                    fontWeight: "500",
-                                                    lineHeight: "20px"
-                                                }
-                                            }} />
-                                        </ListItemButton>
-                                    </ListItem>)}
-                                {/* HubSpot */}
-                                {integrationsCredentials.some(integration => integration.service_name === 'hubspot') && (
-                                    <ListItem sx={{
-                                        p: 0, borderRadius: '4px', border: selectedIntegration === 'hubspot' ? '1px solid #5052B2' : '1px solid #e4e4e4', width: 'auto',
-                                        '@media (max-width:600px)': {
-                                            flexBasis: 'calc(50% - 8px)'
-                                        }
-                                    }}>
-                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'hubspot')?.is_failed
-                                            ? handleHubspotIconPopupOpen
-                                            : handleCreateHubspotOpen
-                                        } sx={{
-                                            p: 0,
-                                            flexDirection: 'column',
-                                            px: 3,
-                                            py: 1.5,
-                                            width: '102px',
-                                            height: '72px',
-                                            justifyContent: 'center',
-                                            backgroundColor: selectedIntegration === 'hubspot' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
-                                        }}>
-                                            <ListItemIcon sx={{ minWidth: 'auto' }}>
-                                                <Image src="/hubspot.svg" alt="hubspot" height={28} width={27} />
-                                            </ListItemIcon>
-                                            <ListItemText primary="hubspot" primaryTypographyProps={{
-                                                sx: {
-                                                    fontFamily: "Nunito Sans",
-                                                    fontSize: "14px",
-                                                    color: "#4a4a4a",
-                                                    fontWeight: "500",
-                                                    lineHeight: "20px"
-                                                }
-                                            }} />
-                                        </ListItemButton>
-                                    </ListItem>
-                                )}
-                                {/* Klaviyo */}
-                                {integrationsCredentials.some(integration => integration.service_name === 'klaviyo') && (
-                                    <ListItem sx={{
-                                        p: 0,
-                                        borderRadius: '4px',
-                                        border: selectedIntegration === 'klaviyo' ? '1px solid #5052B2' : '1px solid #e4e4e4',
-                                        width: 'auto',
-                                        '@media (max-width:600px)': {
-                                            flexBasis: 'calc(50% - 8px)',
-                                        },
-                                    }}>
-                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'klaviyo')?.is_failed
-                                            ? handleKlaviyoIconPopupOpen
-                                            : handleCreateKlaviyoOpen
-                                        } sx={{
-                                            p: 0,
-                                            flexDirection: 'column',
-                                            px: 3,
-                                            py: 1.5,
-                                            width: '102px',
-                                            height: '72px',
-                                            justifyContent: 'center',
-                                            backgroundColor: selectedIntegration === 'klaviyo' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
-                                        }}>
-                                            <ListItemIcon sx={{ minWidth: 'auto' }}>
-                                                <Image src="/klaviyo.svg" alt="klaviyo" height={26} width={32} />
-                                            </ListItemIcon>
-                                            <ListItemText primary="Klaviyo" primaryTypographyProps={{
-                                                sx: {
-                                                    fontFamily: "Nunito Sans",
-                                                    fontSize: "14px",
-                                                    color: "#4a4a4a",
-                                                    fontWeight: "500",
-                                                    lineHeight: "20px",
-                                                },
-                                            }} />
-                                        </ListItemButton>
-                                    </ListItem>
-                                )}
-                                {/* SalesForce */}
-                                {integrationsCredentials.some(integration => integration.service_name === 'sales_force') && (
-                                    <ListItem sx={{
-                                        p: 0,
-                                        borderRadius: '4px',
-                                        border: selectedIntegration === 'sales_force' ? '1px solid #5052B2' : '1px solid #e4e4e4',
-                                        width: 'auto',
-                                        '@media (max-width:600px)': {
-                                            flexBasis: 'calc(50% - 8px)',
-                                        },
-                                    }}>
-                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'sales_force')?.is_failed
-                                            ? handleSalesForceIconPopupOpen
-                                            : handleCreateSalesForceOpen
-                                        } sx={{
-                                            p: 0,
-                                            flexDirection: 'column',
-                                            px: 3,
-                                            py: 1.5,
-                                            width: '102px',
-                                            height: '72px',
-                                            justifyContent: 'center',
-                                            backgroundColor: selectedIntegration === 'sales_force' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
-                                        }}>
-                                            <ListItemIcon sx={{ minWidth: 'auto' }}>
-                                                <Image src="/salesforce-icon.svg" alt="salesforse" height={26} width={32} />
-                                            </ListItemIcon>
-                                            <ListItemText primary="SalesForce" primaryTypographyProps={{
-                                                sx: {
-                                                    fontFamily: "Nunito Sans",
-                                                    fontSize: "14px",
-                                                    color: "#4a4a4a",
-                                                    fontWeight: "500",
-                                                    lineHeight: "20px",
-                                                },
-                                            }} />
-                                        </ListItemButton>
-                                    </ListItem>
-                                )}
-                                {/* Webhook */}
-                                {integrationsCredentials.some(integration => integration.service_name === 'webhook') && (
-                                    <ListItem sx={{
-                                        p: 0,
-                                        borderRadius: '4px',
-                                        border: selectedIntegration === 'webhook' ? '1px solid #5052B2' : '1px solid #e4e4e4',
-                                        width: 'auto',
-                                        '@media (max-width:600px)': {
-                                            flexBasis: 'calc(50% - 8px)',
-                                        },
-                                    }}>
-                                        <ListItemButton onClick={handleWebhookIconPopupOpen} sx={{
-                                            p: 0,
-                                            flexDirection: 'column',
-                                            px: 3,
-                                            py: 1.5,
-                                            width: '102px',
-                                            height: '72px',
-                                            justifyContent: 'center',
-                                            backgroundColor: selectedIntegration === 'webhook' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
-                                        }}>
-                                            <ListItemIcon sx={{ minWidth: 'auto' }}>
-                                                <Image src="/webhook-icon.svg" alt="webhook" height={26} width={32} />
-                                            </ListItemIcon>
-                                            <ListItemText primary="Webhook" primaryTypographyProps={{
-                                                sx: {
-                                                    fontFamily: "Nunito Sans",
-                                                    fontSize: "14px",
-                                                    color: "#4a4a4a",
-                                                    fontWeight: "500",
-                                                    lineHeight: "20px",
-                                                },
-                                            }} />
-                                        </ListItemButton>
-                                    </ListItem>
-                                )}
-                                {/* Omnisend */}
-                                {integrationsCredentials.some(integration => integration.service_name === 'omnisend') && (
-                                    <ListItem sx={{
-                                        p: 0,
-                                        borderRadius: '4px',
-                                        border: selectedIntegration === 'omnisend' ? '1px solid #5052B2' : '1px solid #e4e4e4',
-                                        width: 'auto',
-                                        '@media (max-width:600px)': {
-                                            flexBasis: 'calc(50% - 8px)',
-                                        },
-                                    }}>
-                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'omnisend')?.is_failed
-                                            ? handleOmnisendIconPopupOpen
-                                            : handleOmnisendConnectOpen
-                                        } sx={{
-                                            p: 0,
-                                            flexDirection: 'column',
-                                            px: 3,
-                                            py: 1.5,
-                                            width: '102px',
-                                            height: '72px',
-                                            justifyContent: 'center',
-                                            backgroundColor: selectedIntegration === 'omnisend' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
-                                        }}>
-                                            <ListItemIcon sx={{ minWidth: 'auto' }}>
-                                                <Image src="/omnisend_icon_black.svg" alt="omnisend" height={26} width={32} />
-                                            </ListItemIcon>
-                                            <ListItemText primary="Omnisend" primaryTypographyProps={{
-                                                sx: {
-                                                    fontFamily: "Nunito Sans",
-                                                    fontSize: "14px",
-                                                    color: "#4a4a4a",
-                                                    fontWeight: "500",
-                                                    lineHeight: "20px",
-                                                },
-                                            }} />
-                                        </ListItemButton>
-                                    </ListItem>
-                                )}
-                                {/* Slack */}
-                                {integrationsCredentials.some(integration => integration.service_name === 'slack') && (
-                                    <ListItem sx={{
-                                        p: 0,
-                                        borderRadius: '4px',
-                                        border: selectedIntegration === 'omnisend' ? '1px solid #5052B2' : '1px solid #e4e4e4',
-                                        width: 'auto',
-                                        '@media (max-width:600px)': {
-                                            flexBasis: 'calc(50% - 8px)',
-                                        },
-                                    }}>
-                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'slack')?.is_failed
-                                            ? handleSlackIconPopupIconOpen
-                                            : handleSlackConnectOpen
-                                        } sx={{
-                                            p: 0,
-                                            flexDirection: 'column',
-                                            px: 3,
-                                            py: 1.5,
-                                            width: '102px',
-                                            height: '72px',
-                                            justifyContent: 'center',
-                                            backgroundColor: selectedIntegration === 'omnisend' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
-                                        }}>
-                                            <ListItemIcon sx={{ minWidth: 'auto' }}>
-                                                <Image src="/slack-icon.svg" alt="slack" height={26} width={32} />
-                                            </ListItemIcon>
-                                            <ListItemText primary="Slack" primaryTypographyProps={{
-                                                sx: {
-                                                    fontFamily: "Nunito Sans",
-                                                    fontSize: "14px",
-                                                    color: "#4a4a4a",
-                                                    fontWeight: "500",
-                                                    lineHeight: "20px",
-                                                },
-                                            }} />
-                                        </ListItemButton>
-                                    </ListItem>
-                                )}
-                                {/* GoogleAds */}
-                                {integrationsCredentials.some(integration => integration.service_name === 'google_ads') && (
-                                    <ListItem sx={{
-                                        p: 0,
-                                        borderRadius: '4px',
-                                        border: selectedIntegration === 'google_ads' ? '1px solid #5052B2' : '1px solid #e4e4e4',
-                                        width: 'auto',
-                                        '@media (max-width:600px)': {
-                                            flexBasis: 'calc(50% - 8px)',
-                                        },
-                                    }}>
-                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'google_ads')?.is_failed
-                                            ? handleGoogleAdsIconPopupIconOpen
-                                            : handleGoogleAdsConnectOpen
-                                        } sx={{
-                                            p: 0,
-                                            flexDirection: 'column',
-                                            px: 3,
-                                            py: 1.5,
-                                            width: '102px',
-                                            height: '72px',
-                                            justifyContent: 'center',
-                                            backgroundColor: selectedIntegration === 'google_ads' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
-                                        }}>
-                                            <ListItemIcon sx={{ minWidth: 'auto' }}>
-                                                <Image src="/google-ads.svg" alt="slack" height={26} width={32} />
-                                            </ListItemIcon>
-                                            <ListItemText primary="GoogleAds" primaryTypographyProps={{
-                                                sx: {
-                                                    fontFamily: "Nunito Sans",
-                                                    fontSize: "14px",
-                                                    color: "#4a4a4a",
-                                                    fontWeight: "500",
-                                                    lineHeight: "20px",
-                                                },
-                                            }} />
-                                        </ListItemButton>
-                                    </ListItem>
-                                )}
-                                {/* Mailchimp */}
-                                {integrationsCredentials.some(integration => integration.service_name === 'mailchimp') && (
-                                    <ListItem sx={{
-                                        p: 0,
-                                        borderRadius: '4px',
-                                        border: selectedIntegration === 'mailchimp' ? '1px solid #5052B2' : '1px solid #e4e4e4',
-                                        width: 'auto',
-                                        '@media (max-width:600px)': {
-                                            flexBasis: 'calc(50% - 8px)',
-                                        },
-                                    }}>
-                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'mailchimp')?.is_failed
-                                            ? handleMailchimpIconPopupIconOpen
-                                            : handleOpenMailchimpConnect
-                                        } sx={{
-                                            p: 0,
-                                            flexDirection: 'column',
-                                            px: 3,
-                                            py: 1.5,
-                                            width: '102px',
-                                            height: '72px',
-                                            justifyContent: 'center',
-                                            backgroundColor: selectedIntegration === 'mailchimp' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
-                                        }}>
-                                            <ListItemIcon sx={{ minWidth: 'auto' }}>
-                                                <Image src="/mailchimp-icon.svg" alt="mailchimp" height={26} width={32} />
-                                            </ListItemIcon>
-                                            <ListItemText primary="Mailchimp" primaryTypographyProps={{
-                                                sx: {
-                                                    fontFamily: "Nunito Sans",
-                                                    fontSize: "14px",
-                                                    color: "#4a4a4a",
-                                                    fontWeight: "500",
-                                                    lineHeight: "20px",
-                                                },
-                                            }} />
-                                        </ListItemButton>
-                                    </ListItem>
-                                )}
-                                {/* Sendlane */}
-                                {integrationsCredentials.some(integration => integration.service_name === 'sendlane') && (
-                                    <ListItem sx={{
-                                        p: 0,
-                                        borderRadius: '4px',
-                                        border: selectedIntegration === 'sendlane' ? '1px solid #5052B2' : '1px solid #e4e4e4',
-                                        width: 'auto',
-                                        '@media (max-width:600px)': {
-                                            flexBasis: 'calc(50% - 8px)',
-                                        },
-                                    }}>
-                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'sendlane')?.is_failed
-                                            ? handleSendlaneIconPopupOpen
-                                            : handleSendlaneConnectOpen
-                                        } sx={{
-                                            p: 0,
-                                            flexDirection: 'column',
-                                            px: 3,
-                                            py: 1.5,
-                                            width: '102px',
-                                            height: '72px',
-                                            justifyContent: 'center',
-                                            backgroundColor: selectedIntegration === 'sendlane' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
-                                        }}>
-                                            <ListItemIcon sx={{ minWidth: 'auto' }}>
-                                                <Image src="/sendlane-icon.svg" alt="sendlane" height={26} width={32} />
-                                            </ListItemIcon>
-                                            <ListItemText primary="Sendlane" primaryTypographyProps={{
-                                                sx: {
-                                                    fontFamily: "Nunito Sans",
-                                                    fontSize: "14px",
-                                                    color: "#4a4a4a",
-                                                    fontWeight: "500",
-                                                    lineHeight: "20px",
-                                                },
-                                            }} />
-                                        </ListItemButton>
-                                    </ListItem>
-                                )}
-                                {/* Zapier */}
-                                {integrationsCredentials.some(integration => integration.service_name === 'zapier') && (
-                                    <ListItem sx={{
-                                        p: 0,
-                                        borderRadius: '4px',
-                                        border: selectedIntegration === 'sendlane' ? '1px solid #5052B2' : '1px solid #e4e4e4',
-                                        width: 'auto',
-                                        '@media (max-width:600px)': {
-                                            flexBasis: 'calc(50% - 8px)',
-                                        },
-                                    }}>
-                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'zapier')?.is_failed
-                                            ? handleOpenZapierDataSync
-                                            : handleOpenZapierConnect
-                                        } sx={{
-                                            p: 0,
-                                            flexDirection: 'column',
-                                            px: 3,
-                                            py: 1.5,
-                                            width: '102px',
-                                            height: '72px',
-                                            justifyContent: 'center',
-                                            backgroundColor: selectedIntegration === 'zapier' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
-                                        }}>
-                                            <ListItemIcon sx={{ minWidth: 'auto' }}>
-                                                <Image src="/zapier-icon.svg" alt="zapier" height={26} width={26} />
-                                            </ListItemIcon>
-                                            <ListItemText primary="Zapier" primaryTypographyProps={{
-                                                sx: {
-                                                    fontFamily: "Nunito Sans",
-                                                    fontSize: "14px",
-                                                    color: "#4a4a4a",
-                                                    fontWeight: "500",
-                                                    lineHeight: "20px",
-                                                },
-                                            }} />
-                                        </ListItemButton>
-                                    </ListItem>
-                                )}
-                                
-
-                                {/* <ListItem sx={{
-                                    p: 0,
-                                    borderRadius: '4px',
-                                    border: '1px dotted #5052B2',
-                                    width: 'auto',
-                                    '@media (max-width:600px)': {
-                                        flexBasis: 'calc(50% - 8px)',
+                        <Box sx={{ pb: 4 }}>
+                            <TabList centered aria-label="Connect to Klaviyo Tabs"
+                                TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
+                                sx={{
+                                    "& .MuiTabs-scroller": {
+                                        overflowX: 'auto !important',
                                     },
-                                }}>
-                                    <ListItemButton onClick={handlePlusIconPopupOpen} sx={{
-                                        p: 0,
-                                        flexDirection: 'column',
-                                        px: 3,
-                                        py: 1.5,
-                                        width: '102px',
-                                        height: '72px',
+                                    "& .MuiTabs-flexContainer": {
                                         justifyContent: 'center',
-                                    }}>
-                                        <ListItemIcon sx={{ minWidth: 'auto' }}>
-                                            <Image src="/add-square.svg" alt="add-square" height={36} width={40} />
-                                        </ListItemIcon>
-                                    </ListItemButton>
-                                </ListItem> */}
-
-                            </List>
-
+                                        '@media (max-width: 600px)': {
+                                            gap: '16px',
+                                            justifyContent: 'flex-start'
+                                        }
+                                    }
+                                }} onChange={handleChangeTab}>
+                                <Tab label="Destination" value="1" className='tab-heading' sx={klaviyoStyles.tabHeading} />
+                                <Tab label="Contact Sync" value="2" className='tab-heading' sx={klaviyoStyles.tabHeading} />
+                                <Tab label="Map data" value="3" className='tab-heading' sx={klaviyoStyles.tabHeading} />
+                            </TabList>
                         </Box>
-                        <Box
-                            sx={{
-                            position: 'absolute',
-                            bottom: 0,
-                            width: "100%",
-                            zIndex: 1302,
-                            backgroundColor: 'rgba(255, 255, 255, 1)',
-                            display: 'flex',
-                            justifyContent: 'flex-end',
-                            marginTop: '1em',
-                            padding: '1em',
-                            gap: 3,
-                            borderTop: '1px solid rgba(228, 228, 228, 1)',
-                            "@media (max-width: 600px)":
-                                { width: '100%' }
-                            }}
-                        >
-                            <Button
-                            variant="contained"
-                            onClick={onClose}
-                            className='second-sub-title'
-                            sx={{
-                                color: "rgba(80, 82, 178, 1) !important",
-                                backgroundColor: '#fff',
-                                border: ' 1px solid rgba(80, 82, 178, 1)',
-                                textTransform: "none",
-                                padding: "0.75em 2.5em",
-                                '&:hover': {
-                                backgroundColor: 'transparent'
-                                }
-                            }}
-                            >
-                            Clear all
-                            </Button>
-                            <Button
-                            variant="contained"
-                            onClick={onClose}
-                            className='second-sub-title'
-                            sx={{
-                                backgroundColor: "rgba(80, 82, 178, 1)",
-                                color: 'rgba(255, 255, 255, 1) !important',
-                                textTransform: "none",
-                                padding: "0.75em 2.5em",
-                                '&:hover': {
-                                backgroundColor: 'rgba(80, 82, 178, 1)'
-                                }
-                            }}
-                            >
-                            Apply
-                            </Button>
-                        </Box>
-                    </Box>
-                </Box>
+                        <TabPanel value="1" sx={{ p: 0 }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
+                                <Box sx={{ p:0, width: '100%' }}>
+                                    <Box sx={{ px: 2, py: 3, border: '1px solid #f0f0f0', borderRadius: '4px' }}>
+                                        <Typography variant="h6" className="first-sub-title">
+                                            Choose where you want to sync
+                                        </Typography>
+                                        <List sx={{ display: 'flex', gap: '16px', py: 2, flexWrap: 'wrap', border: 'none' }}>
+                                            {integrationsAvailable
+                                                .filter(integration => {
+                                                    if (search) {
+                                                    return integration.service_name.toLowerCase().includes(search.toLowerCase());
+                                                    }
+                                                    return true;
+                                                })
+                                                .sort((a, b) => {
+                                                    const isAIntegrated = integratedServices.includes(a.service_name);
+                                                    const isBIntegrated = integratedServices.includes(b.service_name);
+
+                                                    if (isAIntegrated === isBIntegrated) {
+                                                    return a.service_name.localeCompare(b.service_name);
+                                                    }
+                                                    return isAIntegrated ? -1 : 1;
+                                                })
+                                                .map((integration) => {
+                                                    const isIntegrated = integratedServices.includes(integration.service_name);
+                                                    const integrationCred = integrationsCredentials.find(cred => cred.service_name === integration.service_name);
+
+                                                    if (isIntegrated) {
+                                                    return (
+                                                        <Box key={integration.service_name} onClick={() => handleActive(integration.service_name)}>
+                                                        <IntegrationBox
+                                                            image={`/${integration.image}`}
+                                                            service_name={integration.service_name}
+                                                            active={activeService === integration.service_name}
+                                                            handleClick={() => setOpenModal(integration.service_name)}
+                                                            is_integrated={true}
+                                                            handleDelete={handleDeleteOpen}
+                                                            is_failed={integrationCred?.is_failed}
+                                                        />
+                                                        </Box>
+                                                    );
+                                                    }
+
+                                                    return (
+                                                    <Box key={integration.service_name} onClick={() => handleAddIntegration(integration.service_name)}>
+                                                        <IntegrationBox
+                                                        image={`/${integration.image}`}
+                                                        service_name={integration.service_name}
+                                                        is_avalible={true}
+                                                        is_integrated={false}
+                                                        />
+                                                    </Box>
+                                                    );
+                                                })
+                                            }
+                                        </List>
+                                        <List sx={{ display: 'flex', gap: '16px', py: 2, flexWrap: 'wrap' }}>
+                                            {/* Meta */}
+                                            {integrationsCredentials.some(integration => integration.service_name === 'meta') && (
+                                                <ListItem sx={{
+                                                    p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                                    '@media (max-width:600px)': {
+                                                        flexBasis: 'calc(50% - 8px)'
+                                                    }
+                                                }}>
+                                                    <ListItemButton onClick={() => setMetaIconPopupOpen(true)} sx={{ p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center' }}>
+                                                        <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                            <Image src="/meta-icon.svg" alt="meta" height={26} width={32} />
+                                                        </ListItemIcon>
+                                                        <ListItemText primary="Meta" primaryTypographyProps={{
+                                                            sx: {
+                                                                fontFamily: "Nunito Sans",
+                                                                fontSize: "14px",
+                                                                color: "#4a4a4a",
+                                                                fontWeight: "500",
+                                                                lineHeight: "20px"
+                                                            }
+                                                        }} />
+                                                    </ListItemButton>
+                                                </ListItem>)}
+                                            {/* HubSpot */}
+                                            {integrationsCredentials.some(integration => integration.service_name === 'hubspot') && (
+                                                <ListItem sx={{
+                                                    p: 0, borderRadius: '4px', border: selectedIntegration === 'hubspot' ? '1px solid #5052B2' : '1px solid #e4e4e4', width: 'auto',
+                                                    '@media (max-width:600px)': {
+                                                        flexBasis: 'calc(50% - 8px)'
+                                                    }
+                                                }}>
+                                                    <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'hubspot')?.is_failed
+                                                        ? handleHubspotIconPopupOpen
+                                                        : handleCreateHubspotOpen
+                                                    } sx={{
+                                                        p: 0,
+                                                        flexDirection: 'column',
+                                                        px: 3,
+                                                        py: 1.5,
+                                                        width: '102px',
+                                                        height: '72px',
+                                                        justifyContent: 'center',
+                                                        backgroundColor: selectedIntegration === 'hubspot' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
+                                                    }}>
+                                                        <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                            <Image src="/hubspot.svg" alt="hubspot" height={28} width={27} />
+                                                        </ListItemIcon>
+                                                        <ListItemText primary="hubspot" primaryTypographyProps={{
+                                                            sx: {
+                                                                fontFamily: "Nunito Sans",
+                                                                fontSize: "14px",
+                                                                color: "#4a4a4a",
+                                                                fontWeight: "500",
+                                                                lineHeight: "20px"
+                                                            }
+                                                        }} />
+                                                    </ListItemButton>
+                                                </ListItem>
+                                            )}
+                                            {/* Klaviyo */}
+                                            {integrationsCredentials.some(integration => integration.service_name === 'klaviyo') && (
+                                                <ListItem sx={{
+                                                    p: 0,
+                                                    borderRadius: '4px',
+                                                    border: selectedIntegration === 'klaviyo' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                                    width: 'auto',
+                                                    '@media (max-width:600px)': {
+                                                        flexBasis: 'calc(50% - 8px)',
+                                                    },
+                                                }}>
+                                                    <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'klaviyo')?.is_failed
+                                                        ? handleKlaviyoIconPopupOpen
+                                                        : handleCreateKlaviyoOpen
+                                                    } sx={{
+                                                        p: 0,
+                                                        flexDirection: 'column',
+                                                        px: 3,
+                                                        py: 1.5,
+                                                        width: '102px',
+                                                        height: '72px',
+                                                        justifyContent: 'center',
+                                                        backgroundColor: selectedIntegration === 'klaviyo' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
+                                                    }}>
+                                                        <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                            <Image src="/klaviyo.svg" alt="klaviyo" height={26} width={32} />
+                                                        </ListItemIcon>
+                                                        <ListItemText primary="Klaviyo" primaryTypographyProps={{
+                                                            sx: {
+                                                                fontFamily: "Nunito Sans",
+                                                                fontSize: "14px",
+                                                                color: "#4a4a4a",
+                                                                fontWeight: "500",
+                                                                lineHeight: "20px",
+                                                            },
+                                                        }} />
+                                                    </ListItemButton>
+                                                </ListItem>
+                                            )}
+                                            {/* SalesForce */}
+                                            {integrationsCredentials.some(integration => integration.service_name === 'sales_force') && (
+                                                <ListItem sx={{
+                                                    p: 0,
+                                                    borderRadius: '4px',
+                                                    border: selectedIntegration === 'sales_force' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                                    width: 'auto',
+                                                    '@media (max-width:600px)': {
+                                                        flexBasis: 'calc(50% - 8px)',
+                                                    },
+                                                }}>
+                                                    <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'sales_force')?.is_failed
+                                                        ? handleSalesForceIconPopupOpen
+                                                        : handleCreateSalesForceOpen
+                                                    } sx={{
+                                                        p: 0,
+                                                        flexDirection: 'column',
+                                                        px: 3,
+                                                        py: 1.5,
+                                                        width: '102px',
+                                                        height: '72px',
+                                                        justifyContent: 'center',
+                                                        backgroundColor: selectedIntegration === 'sales_force' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
+                                                    }}>
+                                                        <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                            <Image src="/salesforce-icon.svg" alt="salesforse" height={26} width={32} />
+                                                        </ListItemIcon>
+                                                        <ListItemText primary="SalesForce" primaryTypographyProps={{
+                                                            sx: {
+                                                                fontFamily: "Nunito Sans",
+                                                                fontSize: "14px",
+                                                                color: "#4a4a4a",
+                                                                fontWeight: "500",
+                                                                lineHeight: "20px",
+                                                            },
+                                                        }} />
+                                                    </ListItemButton>
+                                                </ListItem>
+                                            )}
+                                            {/* Webhook */}
+                                            {integrationsCredentials.some(integration => integration.service_name === 'webhook') && (
+                                                <ListItem sx={{
+                                                    p: 0,
+                                                    borderRadius: '4px',
+                                                    border: selectedIntegration === 'webhook' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                                    width: 'auto',
+                                                    '@media (max-width:600px)': {
+                                                        flexBasis: 'calc(50% - 8px)',
+                                                    },
+                                                }}>
+                                                    <ListItemButton onClick={handleWebhookIconPopupOpen} sx={{
+                                                        p: 0,
+                                                        flexDirection: 'column',
+                                                        px: 3,
+                                                        py: 1.5,
+                                                        width: '102px',
+                                                        height: '72px',
+                                                        justifyContent: 'center',
+                                                        backgroundColor: selectedIntegration === 'webhook' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
+                                                    }}>
+                                                        <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                            <Image src="/webhook-icon.svg" alt="webhook" height={26} width={32} />
+                                                        </ListItemIcon>
+                                                        <ListItemText primary="Webhook" primaryTypographyProps={{
+                                                            sx: {
+                                                                fontFamily: "Nunito Sans",
+                                                                fontSize: "14px",
+                                                                color: "#4a4a4a",
+                                                                fontWeight: "500",
+                                                                lineHeight: "20px",
+                                                            },
+                                                        }} />
+                                                    </ListItemButton>
+                                                </ListItem>
+                                            )}
+                                            {/* Omnisend */}
+                                            {integrationsCredentials.some(integration => integration.service_name === 'omnisend') && (
+                                                <ListItem sx={{
+                                                    p: 0,
+                                                    borderRadius: '4px',
+                                                    border: selectedIntegration === 'omnisend' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                                    width: 'auto',
+                                                    '@media (max-width:600px)': {
+                                                        flexBasis: 'calc(50% - 8px)',
+                                                    },
+                                                }}>
+                                                    <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'omnisend')?.is_failed
+                                                        ? handleOmnisendIconPopupOpen
+                                                        : handleOmnisendConnectOpen
+                                                    } sx={{
+                                                        p: 0,
+                                                        flexDirection: 'column',
+                                                        px: 3,
+                                                        py: 1.5,
+                                                        width: '102px',
+                                                        height: '72px',
+                                                        justifyContent: 'center',
+                                                        backgroundColor: selectedIntegration === 'omnisend' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
+                                                    }}>
+                                                        <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                            <Image src="/omnisend_icon_black.svg" alt="omnisend" height={26} width={32} />
+                                                        </ListItemIcon>
+                                                        <ListItemText primary="Omnisend" primaryTypographyProps={{
+                                                            sx: {
+                                                                fontFamily: "Nunito Sans",
+                                                                fontSize: "14px",
+                                                                color: "#4a4a4a",
+                                                                fontWeight: "500",
+                                                                lineHeight: "20px",
+                                                            },
+                                                        }} />
+                                                    </ListItemButton>
+                                                </ListItem>
+                                            )}
+                                            {/* Slack */}
+                                            {integrationsCredentials.some(integration => integration.service_name === 'slack') && (
+                                                <ListItem sx={{
+                                                    p: 0,
+                                                    borderRadius: '4px',
+                                                    border: selectedIntegration === 'omnisend' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                                    width: 'auto',
+                                                    '@media (max-width:600px)': {
+                                                        flexBasis: 'calc(50% - 8px)',
+                                                    },
+                                                }}>
+                                                    <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'slack')?.is_failed
+                                                        ? handleSlackIconPopupIconOpen
+                                                        : handleSlackConnectOpen
+                                                    } sx={{
+                                                        p: 0,
+                                                        flexDirection: 'column',
+                                                        px: 3,
+                                                        py: 1.5,
+                                                        width: '102px',
+                                                        height: '72px',
+                                                        justifyContent: 'center',
+                                                        backgroundColor: selectedIntegration === 'omnisend' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
+                                                    }}>
+                                                        <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                            <Image src="/slack-icon.svg" alt="slack" height={26} width={32} />
+                                                        </ListItemIcon>
+                                                        <ListItemText primary="Slack" primaryTypographyProps={{
+                                                            sx: {
+                                                                fontFamily: "Nunito Sans",
+                                                                fontSize: "14px",
+                                                                color: "#4a4a4a",
+                                                                fontWeight: "500",
+                                                                lineHeight: "20px",
+                                                            },
+                                                        }} />
+                                                    </ListItemButton>
+                                                </ListItem>
+                                            )}
+                                            {/* GoogleAds */}
+                                            {integrationsCredentials.some(integration => integration.service_name === 'google_ads') && (
+                                                <ListItem sx={{
+                                                    p: 0,
+                                                    borderRadius: '4px',
+                                                    border: selectedIntegration === 'google_ads' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                                    width: 'auto',
+                                                    '@media (max-width:600px)': {
+                                                        flexBasis: 'calc(50% - 8px)',
+                                                    },
+                                                }}>
+                                                    <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'google_ads')?.is_failed
+                                                        ? handleGoogleAdsIconPopupIconOpen
+                                                        : handleGoogleAdsConnectOpen
+                                                    } sx={{
+                                                        p: 0,
+                                                        flexDirection: 'column',
+                                                        px: 3,
+                                                        py: 1.5,
+                                                        width: '102px',
+                                                        height: '72px',
+                                                        justifyContent: 'center',
+                                                        backgroundColor: selectedIntegration === 'google_ads' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
+                                                    }}>
+                                                        <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                            <Image src="/google-ads.svg" alt="slack" height={26} width={32} />
+                                                        </ListItemIcon>
+                                                        <ListItemText primary="GoogleAds" primaryTypographyProps={{
+                                                            sx: {
+                                                                fontFamily: "Nunito Sans",
+                                                                fontSize: "14px",
+                                                                color: "#4a4a4a",
+                                                                fontWeight: "500",
+                                                                lineHeight: "20px",
+                                                            },
+                                                        }} />
+                                                    </ListItemButton>
+                                                </ListItem>
+                                            )}
+                                            {/* Mailchimp */}
+                                            {integrationsCredentials.some(integration => integration.service_name === 'mailchimp') && (
+                                                <ListItem sx={{
+                                                    p: 0,
+                                                    borderRadius: '4px',
+                                                    border: selectedIntegration === 'mailchimp' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                                    width: 'auto',
+                                                    '@media (max-width:600px)': {
+                                                        flexBasis: 'calc(50% - 8px)',
+                                                    },
+                                                }}>
+                                                    <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'mailchimp')?.is_failed
+                                                        ? handleMailchimpIconPopupIconOpen
+                                                        : handleOpenMailchimpConnect
+                                                    } sx={{
+                                                        p: 0,
+                                                        flexDirection: 'column',
+                                                        px: 3,
+                                                        py: 1.5,
+                                                        width: '102px',
+                                                        height: '72px',
+                                                        justifyContent: 'center',
+                                                        backgroundColor: selectedIntegration === 'mailchimp' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
+                                                    }}>
+                                                        <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                            <Image src="/mailchimp-icon.svg" alt="mailchimp" height={26} width={32} />
+                                                        </ListItemIcon>
+                                                        <ListItemText primary="Mailchimp" primaryTypographyProps={{
+                                                            sx: {
+                                                                fontFamily: "Nunito Sans",
+                                                                fontSize: "14px",
+                                                                color: "#4a4a4a",
+                                                                fontWeight: "500",
+                                                                lineHeight: "20px",
+                                                            },
+                                                        }} />
+                                                    </ListItemButton>
+                                                </ListItem>
+                                            )}
+                                            {/* Sendlane */}
+                                            {integrationsCredentials.some(integration => integration.service_name === 'sendlane') && (
+                                                <ListItem sx={{
+                                                    p: 0,
+                                                    borderRadius: '4px',
+                                                    border: selectedIntegration === 'sendlane' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                                    width: 'auto',
+                                                    '@media (max-width:600px)': {
+                                                        flexBasis: 'calc(50% - 8px)',
+                                                    },
+                                                }}>
+                                                    <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'sendlane')?.is_failed
+                                                        ? handleSendlaneIconPopupOpen
+                                                        : handleSendlaneConnectOpen
+                                                    } sx={{
+                                                        p: 0,
+                                                        flexDirection: 'column',
+                                                        px: 3,
+                                                        py: 1.5,
+                                                        width: '102px',
+                                                        height: '72px',
+                                                        justifyContent: 'center',
+                                                        backgroundColor: selectedIntegration === 'sendlane' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
+                                                    }}>
+                                                        <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                            <Image src="/sendlane-icon.svg" alt="sendlane" height={26} width={32} />
+                                                        </ListItemIcon>
+                                                        <ListItemText primary="Sendlane" primaryTypographyProps={{
+                                                            sx: {
+                                                                fontFamily: "Nunito Sans",
+                                                                fontSize: "14px",
+                                                                color: "#4a4a4a",
+                                                                fontWeight: "500",
+                                                                lineHeight: "20px",
+                                                            },
+                                                        }} />
+                                                    </ListItemButton>
+                                                </ListItem>
+                                            )}
+                                            {/* Zapier */}
+                                            {integrationsCredentials.some(integration => integration.service_name === 'zapier') && (
+                                                <ListItem sx={{
+                                                    p: 0,
+                                                    borderRadius: '4px',
+                                                    border: selectedIntegration === 'sendlane' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                                    width: 'auto',
+                                                    '@media (max-width:600px)': {
+                                                        flexBasis: 'calc(50% - 8px)',
+                                                    },
+                                                }}>
+                                                    <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'zapier')?.is_failed
+                                                        ? handleOpenZapierDataSync
+                                                        : handleOpenZapierConnect
+                                                    } sx={{
+                                                        p: 0,
+                                                        flexDirection: 'column',
+                                                        px: 3,
+                                                        py: 1.5,
+                                                        width: '102px',
+                                                        height: '72px',
+                                                        justifyContent: 'center',
+                                                        backgroundColor: selectedIntegration === 'zapier' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
+                                                    }}>
+                                                        <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                            <Image src="/zapier-icon.svg" alt="zapier" height={26} width={26} />
+                                                        </ListItemIcon>
+                                                        <ListItemText primary="Zapier" primaryTypographyProps={{
+                                                            sx: {
+                                                                fontFamily: "Nunito Sans",
+                                                                fontSize: "14px",
+                                                                color: "#4a4a4a",
+                                                                fontWeight: "500",
+                                                                lineHeight: "20px",
+                                                            },
+                                                        }} />
+                                                    </ListItemButton>
+                                                </ListItem>
+                                            )}
+                                            
+
+                                            {/* <ListItem sx={{
+                                                p: 0,
+                                                borderRadius: '4px',
+                                                border: '1px dotted #5052B2',
+                                                width: 'auto',
+                                                '@media (max-width:600px)': {
+                                                    flexBasis: 'calc(50% - 8px)',
+                                                },
+                                            }}>
+                                                <ListItemButton onClick={handlePlusIconPopupOpen} sx={{
+                                                    p: 0,
+                                                    flexDirection: 'column',
+                                                    px: 3,
+                                                    py: 1.5,
+                                                    width: '102px',
+                                                    height: '72px',
+                                                    justifyContent: 'center',
+                                                }}>
+                                                    <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                        <Image src="/add-square.svg" alt="add-square" height={36} width={40} />
+                                                    </ListItemIcon>
+                                                </ListItemButton>
+                                            </ListItem> */}
+
+                                        </List>
+
+                                    </Box>
+                                    <Box
+                                        sx={{
+                                        position: 'absolute',
+                                        bottom: 0,
+                                        width: "100%",
+                                        zIndex: 1302,
+                                        backgroundColor: 'rgba(255, 255, 255, 1)',
+                                        display: 'flex',
+                                        justifyContent: 'flex-end',
+                                        marginTop: '1em',
+                                        padding: '1em',
+                                        gap: 3,
+                                        borderTop: '1px solid rgba(228, 228, 228, 1)',
+                                        "@media (max-width: 600px)":
+                                            { width: '100%' }
+                                        }}
+                                    >
+                                        <Button
+                                        variant="contained"
+                                        onClick={onClose}
+                                        className='second-sub-title'
+                                        sx={{
+                                            color: "rgba(80, 82, 178, 1) !important",
+                                            backgroundColor: '#fff',
+                                            border: ' 1px solid rgba(80, 82, 178, 1)',
+                                            textTransform: "none",
+                                            padding: "0.75em 2.5em",
+                                            '&:hover': {
+                                            backgroundColor: 'transparent'
+                                            }
+                                        }}
+                                        >
+                                        Clear all
+                                        </Button>
+                                        <Button
+                                        variant="contained"
+                                        onClick={onClose}
+                                        className='second-sub-title'
+                                        sx={{
+                                            backgroundColor: "rgba(80, 82, 178, 1)",
+                                            color: 'rgba(255, 255, 255, 1) !important',
+                                            textTransform: "none",
+                                            padding: "0.75em 2.5em",
+                                            '&:hover': {
+                                            backgroundColor: 'rgba(80, 82, 178, 1)'
+                                            }
+                                        }}
+                                        >
+                                        Apply
+                                        </Button>
+                                    </Box>
+                                </Box>
+                            </Box>
+                        </TabPanel>
+                        <TabPanel value="2" sx={{ p: 0 }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
+                                <Typography className="first-sub-title">Сhoose number of contacts that you want to sync</Typography>
+                                <Box>
+                                <Typography className="first-sub-title">Active segment</Typography>
+                                <Typography className="second-sub-title">Сhoose number of contacts that you want to sync</Typography>
+                                </Box>
+                            </Box>
+                        </TabPanel>
+                    </TabContext>
             </Drawer>
 
             {/* Data Sync */}
