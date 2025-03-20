@@ -746,17 +746,28 @@ const Sources: React.FC = () => {
                                                                     </TableCell>
                                                                 ))}
                                                             </TableRow>
-                                                            {loaderForTable && (
-                                                                <TableRow sx={{
-                                                                    position: "sticky",
-                                                                    top: '56px',
-                                                                    zIndex: 11,
-                                                                }}>
-                                                                    <TableCell colSpan={9} sx={{ p: 0, pb: "4px" }}>
-                                                                        <LinearProgress variant="indeterminate" sx={{ width: "100%", position: "absolute" }} />
-                                                                    </TableCell>
-                                                                </TableRow>
-                                                            )}
+                                                            {loaderForTable 
+                                                                ? (
+                                                                    <TableRow sx={{
+                                                                        position: "sticky",
+                                                                        top: '56px',
+                                                                        zIndex: 11,
+                                                                    }}>
+                                                                        <TableCell colSpan={9} sx={{ p: 0, pb: "4px" }}>
+                                                                            <LinearProgress variant="indeterminate" sx={{ width: "100%", position: "absolute" }} />
+                                                                        </TableCell>
+                                                                    </TableRow>
+                                                                )
+                                                                : (
+                                                                    <TableRow sx={{
+                                                                        position: "sticky",
+                                                                        top: '56px',
+                                                                        zIndex: 11,
+                                                                    }}>
+                                                                        <TableCell colSpan={9} sx={{ p: 0, pb: "4px", borderColor: "#fff" }}/>
+                                                                    </TableRow>
+                                                                )
+                                                            }
                                                         </TableHead>
                                                     </Table>
                                                 </TableContainer>
@@ -1035,7 +1046,7 @@ const Sources: React.FC = () => {
                                                                                     >
                                                                                         <ListItemButton sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
                                                                                             handleClosePopover()
-                                                                                            router.push(`/lookalikes/${row.id}/builder`)
+                                                                                            router.push(`/lookalikes/${selectedRowData?.id}/builder`)
                                                                                         }}>
                                                                                             <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Lookalike" />
                                                                                         </ListItemButton>

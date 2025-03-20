@@ -93,3 +93,6 @@ class SourcesObjectResponse(BaseModel):
 class SmartsAudienceObjectResponse(BaseModel):
     audience_smarts_list: List[SmartsResponse]
     count: int
+
+class UpdateSmartAudienceRequest(BaseModel):
+    new_name: str

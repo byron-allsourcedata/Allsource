@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
-import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText, LinearProgress, Chip, Tooltip } from '@mui/material';
+import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, 
+        IconButton, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText,
+        LinearProgress, Chip, Tooltip, TextField } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '../../../axios/axiosInterceptorInstance';
@@ -25,6 +27,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import CalendarPopup from "@/components/CustomCalendar";
+import EditIcon from '@mui/icons-material/Edit';
+import HeadsetMicOutlinedIcon from '@mui/icons-material/HeadsetMicOutlined';
 
 interface Smarts {
     id: string
@@ -47,14 +51,9 @@ interface FetchDataParams {
 }
 
 interface FilterParams {
-    from_date: number | null;
-    to_date: number | null;
     searchQuery: string | null;
-    selectedSource: string[];
-    selectedTypes: string[];
-    selectedDomains: string[];
-    createdDate: string[];
-    dateRange: { fromDate: number | null; toDate: number | null };
+    selectedUseCases: Record<string, boolean>;
+    selectedStatuses: Record<string, boolean>;
 }
 
 const getStatusStyle = (status: string) => {
@@ -90,15 +89,15 @@ const getStatusStyle = (status: string) => {
 const getUseCaseStyle = (status: string) => {
     switch (status) {
         case 'postal':
-            return <MailOutlinedIcon />
+            return <Image src="./postal.svg" alt="google icon" width={20} height={20}/>
         case 'google':
-            return <Image src="./google-mail.svg" alt="google icon"/>
+            return <Image src="./google.svg" alt="google icon" width={20} height={20}/>
         case 'meta':
-            return <MailOutlinedIcon />
+            return <Image src="./meta.svg" alt="meta icon" width={20} height={20}/>
         case 'bing':
-            return <MailOutlinedIcon />
+            return <Image src="./bing.svg" alt="bing icon" width={20} height={20}/>
         case 'tele_marketing':
-            return <MailOutlinedIcon />
+            return <HeadsetMicOutlinedIcon />
         default:
             return <MailOutlinedIcon />
     }
@@ -108,39 +107,47 @@ const getUseCaseStyle = (status: string) => {
 const SmartAudiences: React.FC = () => {
     const router = useRouter();
     const { hasNotification } = useNotification();
+    const { sourceProgress } = useSSE();
     const [data, setData] = useState<Smarts[]>([]);
+    const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
+    const [selectedRowData, setSelectedRowData] = useState<Smarts | null>(null);
+
+    const [loading, setLoading] = useState(false);
+    const [loaderForTable, setLoaderForTable] = useState(false);
+    const [isFirstLoad, setIsFirstLoad] = useState(true);
+
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [count_smarts_audience, setCount] = useState<number | null>(null);
+    const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
+
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
-    const [status, setStatus] = useState<string | null>(null);
-    const [showSlider, setShowSlider] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
-    const [isFirstLoad, setIsFirstLoad] = useState(true);
+
+    //xz cho eto
     const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
     const dropdownOpen = Boolean(dropdownEl);
-    const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
-    const [activeFilter, setActiveFilter] = useState<string>('');
+
     const [filterPopupOpen, setFilterPopupOpen] = useState(false);
-    const [loading, setLoading] = useState(false);
     const [selectedFilters, setSelectedFilters] = useState<{ label: string, value: string }[]>([]);
-    const { sourceProgress } = useSSE();
-    const [loaderForTable, setLoaderForTable] = useState(false);
+
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-    const [anchorElFullName, setAnchorElFullName] = React.useState<null | HTMLElement>(null);
-    const [selectedRowData, setSelectedRowData] = useState<Smarts | null>(null);
+    const isOpeMorePopover = Boolean(anchorEl);
+
     const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
-    const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
-    const [selectedName, setSelectedName] = React.useState<string | null>(null);
-    const isOpen = Boolean(anchorEl);
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     const [selectedDates, setSelectedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
     const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
     const [formattedDates, setFormattedDates] = useState<string>('');
     const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
     const isCalendarOpen = Boolean(calendarAnchorEl);
+
+    const [editingRowId, setEditingRowId] = useState<string | null>(null);
+    const [editedName, setEditedName] = useState<string>("");
+    const [editPopoverAnchorEl, setEditPopoverAnchorEl] = useState<null | HTMLElement>(null);
+    const [isEditPopoverOpen, setIsEditPopoverOpen] = useState(false);
+
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
     
     useEffect(() => {
         fetchSmarts({
@@ -153,7 +160,7 @@ const SmartAudiences: React.FC = () => {
                 end: appliedDates.end,
             }
         });
-    }, [orderBy, order, page, rowsPerPage, appliedDates]);
+    }, [orderBy, order, page, rowsPerPage, appliedDates, selectedFilters]);
 
     // const fetchSmartsMemoized = useCallback(() => {
     //     fetchSmarts({
@@ -196,59 +203,72 @@ const SmartAudiences: React.FC = () => {
 
     const fetchSmarts = async ({ sortBy, sortOrder, page, rowsPerPage, appliedDates }: FetchDataParams) => {
         try {
-            isFirstLoad ? setLoading(true)  : setLoaderForTable(true);
+            isFirstLoad ? setLoading(true) : setLoaderForTable(true);
+    
             const accessToken = localStorage.getItem("token");
             if (!accessToken) {
                 router.push('/signin');
                 return;
             }
-
-            const filters = JSON.parse(sessionStorage.getItem('filtersBySmarts') || '{}');
-
+    
             let url = `/audience-smarts?&page=${page + 1}&per_page=${rowsPerPage}`;
-
+    
             const startEpoch = appliedDates.start
                 ? Math.floor(new Date(appliedDates.start.toISOString()).getTime() / 1000)
                 : null;
-
             const endEpoch = appliedDates.end
                 ? Math.floor(new Date(appliedDates.end.toISOString()).getTime() / 1000)
                 : null;
-
-            // if (filters.from_date || filters.to_date) {
-            //     url += `&created_date_start=${filters.from_date || ''}&created_date_end=${filters.to_date || ''}`;
-            // }
-            // if (filters.selectedSource?.length > 0) {
-            //     url += `&source_origin=${filters.selectedSource.map((source: string) => source.toLowerCase()).join(',')}`;
-            // }
-            // if (filters.selectedTypes?.length > 0) {
-            //     url += `&source_type=${filters.selectedTypes
-            //         .map((type: string) => type.toLowerCase().replace(/\s+/g, '_'))
-            //         .join(',')}`;
-            // }
-            // if (filters.selectedDomains?.length > 0) {
-            //     url += `&domain_name=${filters.selectedDomains.join(',')}`;
-            // }
-            // if (filters.searchQuery) {
-            //     url += `&name=${filters.searchQuery}`;
-            // }
-
             if (startEpoch !== null && endEpoch !== null) {
                 url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
             }
-
+    
             if (sortBy) {
-                setPage(0)
+                setPage(0);
                 url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
             }
+    
+            const savedFilters = sessionStorage.getItem('filtersBySmarts');
+            let parsedFilters = null;
+            if (savedFilters) {
+                try {
+                    parsedFilters = JSON.parse(savedFilters);
+                } catch (error) {
+                    console.error("Ошибка при разборе данных sessionStorage", error);
+                }
+            }
 
-            const response = await axiosInstance.get(url)
-
+            const selectedStatuses = parsedFilters?.selectedStatuses || {};
+            const selectedUseCases = parsedFilters?.selectedUseCases || {};
+            const searchQuery = parsedFilters?.searchQuery || "";
+    
+            const processMultiFilter = (paramName: string, filterData: { [s: string]: unknown }) => {
+                const toSnakeCase = (str: string) => str.trim().toLowerCase().replace(/\s+/g, '_');
+            
+                const filterValues = Object.entries(filterData)
+                    .filter(([key, value]) => value)
+                    .map(([key]) => toSnakeCase(key));
+            
+            
+                if (filterValues.length) {
+                    filterValues.forEach((value) => {
+                        url += `&${paramName}=${encodeURIComponent(value)}`;
+                    });
+                }
+            };
+    
+            processMultiFilter('use_cases', selectedUseCases);
+            processMultiFilter('statuses', selectedStatuses);
+    
+            if (searchQuery) {
+                url += `&search_query=${encodeURIComponent(searchQuery)}`;
+            }
+    
+            const response = await axiosInstance.get(url);
             const { audience_smarts_list, count } = response.data;
             setData(audience_smarts_list);
             setCount(count || 0);
-            setStatus("");
-
+    
             const options = [10, 20, 50, 100, 300, 500];
             let RowsPerPageOptions = options.filter(option => option <= count);
             if (RowsPerPageOptions.length < options.length) {
@@ -266,7 +286,8 @@ const SmartAudiences: React.FC = () => {
                 setLoaderForTable(false);
             }
         }
-    }
+    };
+    
 
     const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setCalendarAnchorEl(event.currentTarget);
@@ -313,6 +334,7 @@ const SmartAudiences: React.FC = () => {
             setFormattedDates('');
         }
     };
+
     const handleDateLabelChange = (label: string) => {
     };
 
@@ -324,12 +346,12 @@ const SmartAudiences: React.FC = () => {
         setFilterPopupOpen(false);
     };
 
-    const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, rowData: Smarts) => {
+    const handleOpenMorePopover = (event: React.MouseEvent<HTMLElement>, rowData: Smarts) => {
         setAnchorEl(event.currentTarget);
         setSelectedRowData(rowData);
     };
 
-    const handleClosePopover = () => {
+    const handleCloseMorePopover = () => {
         setAnchorEl(null);
     };
 
@@ -341,7 +363,7 @@ const SmartAudiences: React.FC = () => {
 
     const handleDeleteSmartAudience = async () => {
         setLoaderForTable(true);
-        handleClosePopover();
+        handleCloseMorePopover();
         handleCloseConfirmDialog();
         try {
             if (selectedRowData?.id) {
@@ -378,35 +400,82 @@ const SmartAudiences: React.FC = () => {
         setPage(0);
     };
 
-    // useEffect(() => {
-    //     const storedFilters = sessionStorage.getItem('filtersBySmarts');
+    const handleRename = (event: React.MouseEvent<HTMLElement>, rowId: string, rowName: string) => {
+        setEditingRowId(rowId);
+        setEditedName(rowName)
+        setEditPopoverAnchorEl(event.currentTarget);
+        setIsEditPopoverOpen(true);
+    };
 
-    //     if (storedFilters) {
-    //         const filters = JSON.parse(storedFilters);
+    const handleCloseEditPopover = () => {
+        setIsEditPopoverOpen(false);
+        setEditPopoverAnchorEl(null);
+    };
 
-    //         handleApplyFilters(filters);
-    //     }
-    // }, []);
+    const handleConfirmRename = async () => {
+        if (!editingRowId || !editedName.trim()) return
+        if (editedName.trim().length > 128) {
+            showErrorToast("The new name is too long")
+            return
+        }
+        setLoaderForTable(true)
+        try {
+            const response = await axiosInstance.put(`/audience-smarts/${editingRowId}`, {
+                new_name: editedName
+            });
+            if (response.status === 200) {
+                showToast("Smart audience has been successfully updated")
+                setData((prevAccounts: Smarts[]) =>
+                    prevAccounts.map((item: Smarts) =>
+                        item.id === editingRowId ? { ...item, name: editedName } : item
+                    )
+                );
+            }
+            else {
+                showErrorToast("An error occurred while trying to rename smart audience")
+            }
+            setEditingRowId(null);
+            setIsEditPopoverOpen(false);
+        } catch {
+        } finally {
+            setLoaderForTable(false)
+        }
+        
+    };
+
+    useEffect(() => {
+        const storedFilters = sessionStorage.getItem('filtersBySmarts');
+
+        if (storedFilters) {
+            const filters = JSON.parse(storedFilters);
+
+            handleApplyFilters(filters);
+        }
+    }, []);
+
+    const getSelectedValues = (obj: Record<string, boolean>): string => {
+        return Object.entries(obj)
+            .filter(([_, value]) => value)
+            .map(([key]) => key)
+            .join(', ');
+    };
 
     const handleApplyFilters = (filters: FilterParams) => {
         const newSelectedFilters: { label: string; value: string }[] = [];
-        const dateFormat = 'YYYY-MM-DD';
+
 
         const filterMappings: { condition: boolean | string | string[] | number | null, label: string, value: string | ((f: any) => string) }[] = [
-            { condition: filters.from_date, label: 'From Date', value: () => dayjs.unix(filters.from_date!).format(dateFormat) },
-            { condition: filters.to_date, label: 'To Date', value: () => dayjs.unix(filters.to_date!).format(dateFormat) },
-            { condition: filters.searchQuery, label: 'Search', value: filters.searchQuery! },
-            { condition: filters.selectedSource?.length > 0, label: 'Source', value: () => filters.selectedSource.join(', ') },
-            { condition: filters.selectedTypes?.length > 0, label: 'Types', value: () => filters.selectedTypes.join(', ') },
-            { condition: filters.selectedDomains?.length > 0, label: 'Domains', value: () => filters.selectedDomains.join(', ') },
-            { condition: filters.createdDate?.length > 0, label: 'Created Date', value: () => filters.createdDate.join(', ') },
             {
-                condition: filters.dateRange.fromDate || filters.dateRange.toDate, label: 'Date Range', value: () => {
-                    const from = dayjs.unix(filters.dateRange.fromDate!).format(dateFormat);
-                    const to = dayjs.unix(filters.dateRange.toDate!).format(dateFormat);
-                    return `${from} to ${to}`;
-                }
-            }
+                condition: filters.selectedStatuses && Object.values(filters.selectedStatuses).some(Boolean),
+                label: 'Status',
+                value: () => getSelectedValues(filters.selectedStatuses!)
+            },
+            {
+                condition: filters.selectedUseCases && Object.values(filters.selectedUseCases).some(Boolean),
+                label: 'Use Case',
+                value: () => getSelectedValues(filters.selectedUseCases!)
+            },
+            { condition: filters.searchQuery, label: 'Search', value: filters.searchQuery! }
         ];
 
         filterMappings.forEach(({ condition, label, value }) => {
@@ -424,25 +493,12 @@ const SmartAudiences: React.FC = () => {
         setAppliedDates({ start: null, end: null })
         setFormattedDates('')
 
-        const filters = {
-            from_date: null,
-            to_date: null,
-            searchQuery: null,
-            selectedSource: [],
-            selectedTypes: [],
-            selectedDomains: [],
-            createdDate: [],
-            dateRange: { fromDate: null, toDate: null },
-        };
-
-        sessionStorage.setItem('filtersBySmarts', JSON.stringify(filters));
-
-        handleApplyFilters(filters);
+        sessionStorage.removeItem('filtersBySmarts');
     };
 
 
     const handleDeleteFilter = (filterToDelete: { label: string; value: string }) => {
-        setSelectedFilters([]);
+        // setSelectedFilters([]);
         setSelectedDates({start: null, end: null})
         setAppliedDates({ start: null, end: null })
         setFormattedDates('')
@@ -451,44 +507,18 @@ const SmartAudiences: React.FC = () => {
     
         let filters = JSON.parse(sessionStorage.getItem('filtersBySmarts') || '{}');
     
-        const deleteDate = (filters: FilterParams) => {
-            filters.createdDate = [];
-            filters.from_date = null;
-            filters.to_date = null;
-            filters.dateRange = { fromDate: null, toDate: null };
-            setSelectedDates({ start: null, end: null });
-        };
-    
         switch (filterToDelete.label) {
-            case 'From Date':
-            case 'To Date':
-            case 'Created Date':
-            case 'Date Range':
-                deleteDate(filters);
-                break;
             case 'Search':
                 filters.searchQuery = '';
                 break;
-            case 'Source':
-                filters.selectedSource = [];
+            case 'Use Case':
+                filters.selectedUseCases = [];
                 break;
-            case 'Types':
-                filters.selectedTypes = [];
-                break;
-            case 'Domains':
-                filters.selectedDomains = [];
+            case 'Status':
+                filters.selectedStatuses = [];
                 break;
             default:
                 break;
-        }
-    
-        if (!filters.from_date && !filters.to_date) {
-            filters.checkedFilters = {
-                lastWeek: false,
-                last30Days: false,
-                last6Months: false,
-                allTime: false,
-            };
         }
     
         sessionStorage.setItem('filtersBySmarts', JSON.stringify(filters));
@@ -501,17 +531,9 @@ const SmartAudiences: React.FC = () => {
         }
     
         const newFilters: FilterParams = {
-            from_date: updatedFilters.find(f => f.label === 'From Date') ? dayjs(updatedFilters.find(f => f.label === 'From Date')!.value).unix() : null,
-            to_date: updatedFilters.find(f => f.label === 'To Date') ? dayjs(updatedFilters.find(f => f.label === 'To Date')!.value).unix() : null,
             searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',
-            selectedSource: updatedFilters.find(f => f.label === 'Source') ? updatedFilters.find(f => f.label === 'Source')!.value.split(', ') : [],
-            selectedTypes: updatedFilters.find(f => f.label === 'Types') ? updatedFilters.find(f => f.label === 'Types')!.value.split(', ') : [],
-            selectedDomains: updatedFilters.find(f => f.label === 'Domains') ? updatedFilters.find(f => f.label === 'Domains')!.value.split(', ') : [],
-            createdDate: updatedFilters.find(f => f.label === 'Created Date') ? updatedFilters.find(f => f.label === 'Created Date')!.value.split(', ') : [],
-            dateRange: {
-                fromDate: updatedFilters.find(f => f.label === 'Date Range') ? dayjs(updatedFilters.find(f => f.label === 'Date Range')!.value.split(', ')[0]).unix() : null,
-                toDate: updatedFilters.find(f => f.label === 'Date Range') ? dayjs(updatedFilters.find(f => f.label === 'Date Range')!.value.split(', ')[1]).unix() : null,
-            },
+            selectedUseCases: Object.fromEntries(Object.keys(filters.selectedUseCases).map(key => [key, updatedFilters.some(f => f.label === 'Use Case' && f.value.includes(key))])),
+            selectedStatuses: Object.fromEntries(Object.keys(filters.selectedStatuses).map(key => [key, updatedFilters.some(f => f.label === 'Status' && f.value.includes(key))]))
         };
     
         handleApplyFilters(newFilters);
@@ -545,7 +567,6 @@ const SmartAudiences: React.FC = () => {
                                 justifyContent: 'space-between',
                                 marginTop: hasNotification ? '1rem' : '0.5rem',
                                 flexWrap: 'wrap',
-                                pl: '0.5rem',
                                 gap: '15px',
                                 '@media (max-width: 900px)': {
                                     marginTop: hasNotification ? '3rem' : '1.125rem',
@@ -714,9 +735,6 @@ const SmartAudiences: React.FC = () => {
                                             />
                                         )}
                                         {selectedFilters.map(filter => {
-                                            if (filter.label === 'From Date' || filter.label === 'To Date' || filter.label === 'Date Range') {
-                                                return null;
-                                            }
                                             let displayValue = filter.value;
                                             return (
                                                 <Chip
@@ -834,6 +852,7 @@ const SmartAudiences: React.FC = () => {
                                                                             key={key}
                                                                             sx={{
                                                                                 ...smartAudiences.table_column,
+                                                                                borderBottom: 0,
                                                                                 ...(key === 'name' && {
                                                                                     position: 'sticky',
                                                                                     left: 0,
@@ -867,20 +886,31 @@ const SmartAudiences: React.FC = () => {
                                                                         </TableCell>
                                                                     ))}
                                                                 </TableRow>
-                                                                {loaderForTable && (
-                                                                    <TableRow sx={{
-                                                                        position: "sticky",
-                                                                        top: '56px',
-                                                                        zIndex: 11,
-                                                                    }}>
-                                                                        <TableCell colSpan={9} sx={{ p: 0, pb: "4px" }}>
-                                                                            <LinearProgress variant="indeterminate" sx={{ width: "100%", position: "absolute" }} />
-                                                                        </TableCell>
-                                                                    </TableRow>
-                                                                )}
+                                                                {loaderForTable 
+                                                                    ? (
+                                                                        <TableRow sx={{
+                                                                            position: "sticky",
+                                                                            top: '56px',
+                                                                            zIndex: 11,
+                                                                        }}>
+                                                                            <TableCell colSpan={9} sx={{ p: 0, pb: "2px" }}>
+                                                                                <LinearProgress variant="indeterminate" sx={{ width: "100%", position: "absolute" }} />
+                                                                            </TableCell>
+                                                                        </TableRow>
+                                                                    )
+                                                                    : (
+                                                                        <TableRow sx={{
+                                                                            position: "sticky",
+                                                                            top: '56px',
+                                                                            zIndex: 11,
+                                                                        }}>
+                                                                            <TableCell colSpan={9} sx={{ p: 0, pb: "2px", backgroundColor: "rgba(235, 235, 235, 1)", borderColor: "rgba(235, 235, 235, 1)" }}/>
+                                                                        </TableRow>
+                                                                    )
+                                                                }
                                                             </TableHead>
                                                             <TableBody>
-                                                                {data.map((row: Smarts) => {
+                                                                {data.map((row: Smarts, index) => {
                                                                     const progress = sourceProgress[row.id];
                                                                     return (
                                                                         <TableRow
@@ -888,6 +918,7 @@ const SmartAudiences: React.FC = () => {
                                                                             selected={selectedRows.has(row.id)}
                                                                             sx={{
                                                                                 backgroundColor: selectedRows.has(row.id) && !loaderForTable ? 'rgba(247, 247, 247, 1)' : '#fff',
+                                                                                borderTop: index === 0 ? 0 : "default",
                                                                                 '&:hover': {
                                                                                     backgroundColor: 'rgba(247, 247, 247, 1)',
                                                                                     '& .sticky-cell': {
@@ -899,49 +930,173 @@ const SmartAudiences: React.FC = () => {
                                                                             {/* Name Column */}
                                                                             <TableCell className="sticky-cell"
                                                                                 sx={{
-                                                                                    ...smartAudiences.table_array, position: 'sticky', left: '0', zIndex: 9, backgroundColor: loaderForTable ? 'transparent' : '#fff',
+                                                                                    ...smartAudiences.table_array, position: 'sticky', left: '0', zIndex: 9, backgroundColor: loaderForTable ? 'transparent' : '#fff', '&:hover .edit-icon': { opacity: 1, pointerEvents: 'auto' }
                                                                                 }}>
-                                                                                <Box sx={{display: 'flex'}}>
-                                                                                <Tooltip
-                                                                                    title={
-                                                                                        <Box sx={{ backgroundColor: '#fff', margin: 0, padding: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', }}>
-                                                                                          <Typography className='table-data' component='div' sx={{ fontSize: '12px !important', }}>
-                                                                                            {row.name}
-                                                                                          </Typography>
-                                                                                        </Box>
-                                                                                      }
-                                                                                    sx={{marginLeft:'0.5rem !important'}}
-                                                                                    componentsProps={{
-                                                                                        tooltip: {
-                                                                                            sx: {
-                                                                                                backgroundColor: '#fff',
-                                                                                                color: '#000',
-                                                                                                boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
-                                                                                                border: '0.2px solid rgba(255, 255, 255, 1)',
-                                                                                                borderRadius: '4px',
-                                                                                                maxHeight: '100%',
-                                                                                                maxWidth: '500px',
-                                                                                                padding: '11px 10px',
-                                                                                                marginLeft: '0.5rem !important',
+                                                                                <Box sx={{display: 'flex', justifyContent: "space-between"}}>
+                                                                                    <Tooltip
+                                                                                        title={
+                                                                                            <Box sx={{ backgroundColor: '#fff', margin: 0, padding: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', }}>
+                                                                                            <Typography className='table-data' component='div' sx={{ fontSize: '12px !important', }}>
+                                                                                                {row.name}
+                                                                                            </Typography>
+                                                                                            </Box>
+                                                                                        }
+                                                                                        sx={{marginLeft:'0.5rem !important'}}
+                                                                                        componentsProps={{
+                                                                                            tooltip: {
+                                                                                                sx: {
+                                                                                                    backgroundColor: '#fff',
+                                                                                                    color: '#000',
+                                                                                                    boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
+                                                                                                    border: '0.2px solid rgba(255, 255, 255, 1)',
+                                                                                                    borderRadius: '4px',
+                                                                                                    maxHeight: '100%',
+                                                                                                    maxWidth: '500px',
+                                                                                                    padding: '11px 10px',
+                                                                                                    marginLeft: '0.5rem !important',
+                                                                                                },
                                                                                             },
-                                                                                        },
-                                                                                    }}
-                                                                                    placement='right'
-                                                                                >
-                                                                                    <Typography className='table-data'
-                                                                                        sx={{
-                                                                                            whiteSpace: 'nowrap',
-                                                                                            overflow: 'hidden',
-                                                                                            textOverflow: 'ellipsis',
-                                                                                            maxWidth:'150px',
                                                                                         }}
+                                                                                        placement='right'
                                                                                     >
-                                                                                        {truncateText(row.name, 20)}
-                                                                                    </Typography>
-                                                                                </Tooltip>
+                                                                                        <Typography className='table-data'
+                                                                                            sx={{
+                                                                                                whiteSpace: 'nowrap',
+                                                                                                overflow: 'hidden',
+                                                                                                textOverflow: 'ellipsis',
+                                                                                                maxWidth:'150px',
+                                                                                            }}
+                                                                                        >
+                                                                                            {truncateText(row.name, 20)}
+                                                                                        </Typography>
+                                                                                    </Tooltip>
+                                                                                    <IconButton
+                                                                                        className="edit-icon"
+                                                                                        sx={{
+                                                                                            pl: 0, pr: 0, pt: 0.25, pb: 0.25,
+                                                                                            margin: 0,
+                                                                                            opacity: 0,
+                                                                                            pointerEvents: 'none',
+                                                                                            transition: 'opacity 0.2s ease-in-out',
+                                                                                            '@media (max-width: 900px)': {
+                                                                                                opacity: 1
+                                                                                            }
+                                                                                        }}
+                                                                                        onClick={(event) => handleRename(event, row.id, row.name)}
+                                                                                    >
+                                                                                        <EditIcon sx={{ maxHeight: "18px" }} />
+                                                                                    </IconButton>
                                                                                 </Box>
                                                                                 {/* {row.name} */}
                                                                             </TableCell>
+
+                                                                            <Popover
+                                                                                open={isEditPopoverOpen}
+                                                                                anchorEl={editPopoverAnchorEl}
+                                                                                onClose={handleCloseEditPopover}
+                                                                                anchorOrigin={{
+                                                                                    vertical: "center",
+                                                                                    horizontal: "center",
+                                                                                }}
+                                                                                transformOrigin={{
+                                                                                    vertical: "top",
+                                                                                    horizontal: "left",
+                                                                                }}
+                                                                                slotProps={{
+                                                                                    paper: {
+                                                                                        sx: {
+                                                                                            width: "15.875rem",
+                                                                                            boxShadow: 0,
+                                                                                            borderRadius: "4px",
+                                                                                            border: "0.5px solid rgba(175, 175, 175, 1)",
+
+                                                                                        },
+                                                                                    }
+                                                                                }}
+                                                                            >
+                                                                                <Box sx={{ p: 2 }}>
+                                                                                    <TextField
+                                                                                        value={editedName}
+                                                                                        onChange={(e) => setEditedName(e.target.value)}
+                                                                                        variant="outlined"
+                                                                                        label='Smart Audience Name'
+                                                                                        size="small"
+                                                                                        fullWidth
+                                                                                        sx={{
+                                                                                            "& label.Mui-focused": {
+                                                                                                color: "rgba(80, 82, 178, 1)",
+                                                                                            },
+                                                                                            "& .MuiOutlinedInput-root:hover fieldset": {
+                                                                                                color: "rgba(80, 82, 178, 1)",
+                                                                                            },
+                                                                                            "& .MuiOutlinedInput-root": {
+                                                                                                "&:hover fieldset": {
+                                                                                                    borderColor: "rgba(80, 82, 178, 1)",
+                                                                                                    border: "1px solid rgba(80, 82, 178, 1)",
+                                                                                                },
+                                                                                                "&.Mui-focused fieldset": {
+                                                                                                    borderColor: "rgba(80, 82, 178, 1)",
+                                                                                                    border: "1px solid rgba(80, 82, 178, 1)",
+                                                                                                },
+                                                                                            },
+                                                                                        }}
+                                                                                        InputProps={{
+                                                                                            style: {
+                                                                                                fontFamily: "Roboto",
+                                                                                                fontSize: "14px",
+                                                                                            },
+                                                                                        }}
+                                                                                        InputLabelProps={{
+                                                                                            style: {
+                                                                                                fontSize: "14px",
+                                                                                                fontFamily: "Roboto",
+                                                                                            },
+                                                                                        }}
+                                                                                    />
+                                                                                    <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+                                                                                        <Button
+                                                                                            onClick={handleCloseEditPopover}
+                                                                                            sx={{
+                                                                                                backgroundColor: "#fff",
+                                                                                                color: "rgba(80, 82, 178, 1) !important",
+                                                                                                fontSize: "14px",
+                                                                                                textTransform: "none",
+                                                                                                padding: "0.75em 1em",
+                                                                                                maxWidth: "50px",
+                                                                                                maxHeight: "30px",
+                                                                                                mr: 0.5,
+                                                                                                "&:hover": {
+                                                                                                    backgroundColor: "#fff",
+                                                                                                    boxShadow: "0 0px 1px 1px rgba(0, 0, 0, 0.3)",
+                                                                                                },
+                                                                                            }}
+                                                                                        >
+                                                                                            <Typography className="second-sub-title" sx={{ color: 'rgba(80, 82, 178, 1) !important' }}>Cancel</Typography>
+                                                                                        </Button>
+                                                                                        <Button
+                                                                                            onClick={() => {
+                                                                                                handleConfirmRename();
+                                                                                                handleCloseEditPopover();
+                                                                                            }}
+                                                                                            sx={{
+                                                                                                backgroundColor: "#fff",
+                                                                                                color: "rgba(80, 82, 178, 1) !important",
+                                                                                                fontSize: "14px",
+                                                                                                textTransform: "none",
+                                                                                                padding: "0.75em 1em",
+                                                                                                maxWidth: "50px",
+                                                                                                maxHeight: "30px",
+                                                                                                "&:hover": {
+                                                                                                    backgroundColor: "#fff",
+                                                                                                    boxShadow: "0 0px 1px 1px rgba(0, 0, 0, 0.3)",
+                                                                                                },
+                                                                                            }}
+                                                                                        >
+                                                                                            <Typography className="second-sub-title" sx={{ color: 'rgba(80, 82, 178, 1) !important' }}>Save</Typography>
+                                                                                        </Button>
+                                                                                    </Box>
+                                                                                </Box>
+                                                                            </Popover>
 
                                                                             {/* Use Case Column */}
                                                                             <TableCell
@@ -1003,14 +1158,14 @@ const SmartAudiences: React.FC = () => {
                                                                             </TableCell>
 
                                                                             <TableCell sx={{ ...smartAudiences.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
-                                                                                <IconButton onClick={(event) => handleOpenPopover(event, row)} sx={{ ':hover': { backgroundColor: 'transparent' } }} >
+                                                                                <IconButton onClick={(event) => handleOpenMorePopover(event, row)} sx={{ ':hover': { backgroundColor: 'transparent' } }} >
                                                                                     <MoreVert sx={{ color: "rgba(32, 33, 36, 1)" }} height={8} width={24} />
                                                                                 </IconButton>
 
                                                                                 <Popover
-                                                                                    open={isOpen}
+                                                                                    open={isOpeMorePopover}
                                                                                     anchorEl={anchorEl}
-                                                                                    onClose={handleClosePopover}
+                                                                                    onClose={handleCloseMorePopover}
                                                                                     slotProps={{
                                                                                         paper: {
                                                                                             sx: {
@@ -1036,7 +1191,7 @@ const SmartAudiences: React.FC = () => {
                                                                                         }}
                                                                                     >
                                                                                         <ListItemButton sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
-                                                                                            handleClosePopover()
+                                                                                            handleCloseMorePopover()
                                                                                         }}>
                                                                                             <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Sync" />
                                                                                         </ListItemButton>
@@ -1154,7 +1309,7 @@ const SmartAudiences: React.FC = () => {
                                                                     marginRight: '16px',
                                                                 }}
                                                             >
-                                                                {`${count_smarts_audience} - ${rowsPerPage} of ${rowsPerPage}`}
+                                                                {`1 - ${count_smarts_audience} of ${count_smarts_audience}`}
                                                             </Typography>
                                                         </Box>
                                                     }

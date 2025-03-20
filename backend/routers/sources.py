@@ -1,6 +1,5 @@
-from dependencies import get_audience_sources_service, check_user_authorization
-from fastapi import APIRouter, Depends, Query, Body
-from dependencies import get_audience_sources_service, get_domain_service, check_user_authorization
+from fastapi import APIRouter, Depends, Query
+from dependencies import get_audience_sources_service, get_domain_service, check_user_authorization_without_pixel
 from services.audience_sources import AudienceSourceService
 from services.domains import UserDomainsService
 from schemas.audience import HeadingSubstitutionRequest, NewSource, SourcesObjectResponse, SourceResponse, \
@@ -10,11 +9,11 @@ from typing import Optional, List
 from datetime import datetime
 from fastapi.responses import FileResponse
 
-router = APIRouter(dependencies=[Depends(check_user_authorization)])
+router = APIRouter(dependencies=[Depends(check_user_authorization_without_pixel)])
 
 @router.get("", response_model=SourcesObjectResponse)
 def get_sources(
-        user=Depends(check_user_authorization),
+        user=Depends(check_user_authorization_without_pixel),
         page: int = Query(1, alias="page", ge=1, description="Page number"),
         per_page: int = Query(10, alias="per_page", ge=1, le=500, description="Items per page"),
         sort_by: str = Query(None, description="Field to sort by"),
@@ -48,7 +47,7 @@ def get_sources(
 
 @router.get("/domains-with-leads", response_model=List[DomainsLeads])
 def get_domains_with_leads(
-        user=Depends(check_user_authorization),
+        user=Depends(check_user_authorization_without_pixel),
         domains_service: UserDomainsService = Depends(get_domain_service)
 ):
     domain_list = domains_service.get_domains_with_leads(user=user)
@@ -67,7 +66,7 @@ def substitution_headings(
 @router.post("/create", response_model=SourceResponse)
 async def create_source(
         payload: NewSource,
-        user=Depends(check_user_authorization),
+        user=Depends(check_user_authorization_without_pixel),
         sources_service: AudienceSourceService = Depends(get_audience_sources_service)
 ):
     return await sources_service.create_source(user=user, payload=payload)
@@ -101,7 +100,7 @@ def get_processing_source(
 
 @router.get("/domains", response_model=DomainsSourceResponse)
 def get_domains(
-        user=Depends(check_user_authorization),
+        user=Depends(check_user_authorization_without_pixel),
         page: int = Query(1, alias="page", ge=1, description="Page number"),
         per_page: int = Query(10, alias="per_page", ge=1, le=500, description="Items per page"),
         sources_service: AudienceSourceService = Depends(get_audience_sources_service),

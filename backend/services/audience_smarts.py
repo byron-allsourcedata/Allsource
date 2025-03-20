@@ -1,6 +1,5 @@
-from datetime import datetime
 import logging
-from typing import Optional
+from typing import Optional, List
 from schemas.audience import SmartsAudienceObjectResponse
 from persistence.audience_smarts import AudienceSmartsPersistence
 from models.users import User
@@ -20,11 +19,9 @@ class AudienceSmartsService:
             sort_order: Optional[str] = None,
             from_date: Optional[str] = None,
             to_date: Optional[str] = None,
-            name: Optional[str] = None,
-            status: Optional[str] = None,
-            use_cases: Optional[str] = None,
-            created_date_start: Optional[datetime] = None,
-            created_date_end: Optional[datetime] = None
+            search_query: Optional[str] = None,
+            statuses: Optional[List[str]] = None, 
+            use_cases:Optional[List[str]] = None, 
     ) -> SmartsAudienceObjectResponse:
         audience_smarts, count = self.audience_smarts_persistence.get_audience_smarts(
             user_id=user.get("id"),
@@ -34,11 +31,9 @@ class AudienceSmartsService:
             sort_order=sort_order,
             from_date=from_date,
             to_date=to_date,
-            name=name,
-            status=status,
-            use_cases=use_cases,
-            created_date_start=created_date_start,
-            created_date_end=created_date_end
+            search_query=search_query,
+            statuses=statuses,
+            use_cases=use_cases
         )
 
         audience_smarts_list = []
@@ -56,7 +51,28 @@ class AudienceSmartsService:
             })
 
         return audience_smarts_list, count
+    
+
+    def search_audience_smart(self, start_letter, user):
+        smarts = self.audience_smarts_persistence.search_audience_smart(
+            user_id=user.get('id'),
+            start_letter=start_letter
+        )
+        results = set()
+        for smart_audience_name, creator_name in smarts:
+                if start_letter.lower() in smart_audience_name.lower():
+                    results.add(smart_audience_name)
+                if start_letter.lower() in creator_name.lower():
+                    results.add(creator_name)
+
+        limited_results = list(results)[:10]
+        return limited_results
+
 
     def delete_audience_smart(self, id) -> bool:
         count_deleted = self.audience_smarts_persistence.delete_audience_smart(id)
         return count_deleted > 0
+
+    def update_audience_smart(self, id, new_name) -> bool:
+        count_updated = self.audience_smarts_persistence.update_audience_smart(id, new_name)
+        return count_updated > 0
