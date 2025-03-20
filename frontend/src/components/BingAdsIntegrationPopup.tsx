@@ -66,9 +66,10 @@ const BingAdsIntegrationPopup = ({ handleClose, open, boxShadow }: CreateSalesFo
         const state = uuidv4();
         const codeVerifier: string = generateRandomString(128);
         localStorage.setItem('codeVerifier', codeVerifier);
+        const tenant_id = 'fbaec3a0-716c-44cd-87c6-2b7eafe74833';
         const codeChallenge = await generateCodeChallenge(codeVerifier);
         const authorizationUrl =
-            `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +
+            `https://login.microsoftonline.com/${tenant_id}/oauth2/v2.0/authorize?` +
             `client_id=${client_id}&` +
             `redirect_uri=${encodeURIComponent(redirect_uri)}&` +
             `response_type=code&` +
@@ -78,7 +79,7 @@ const BingAdsIntegrationPopup = ({ handleClose, open, boxShadow }: CreateSalesFo
             `code_challenge=${codeChallenge}&` +
             `code_challenge_method=S256&` +
             `prompt=consent`;
-            
+
         window.open(authorizationUrl, '_blank');
     }
 
