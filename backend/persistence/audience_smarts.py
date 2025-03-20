@@ -30,7 +30,7 @@ class AudienceSmartsPersistence:
             to_date: Optional[int] = None, 
             sort_by: Optional[str] = None,
             sort_order: Optional[str] = None,
-            name: Optional[str] = None,
+            search_query: Optional[str] = None,
             statuses: Optional[str] = None,
             use_cases: Optional[str] = None,
     ) -> Tuple[List[Row], int]:
@@ -67,6 +67,14 @@ class AudienceSmartsPersistence:
             query = query.filter(
                 AudienceSmart.created_at >= start_date,
                 AudienceSmart.created_at <= end_date
+            )
+        
+        if search_query:
+            query = query.filter(
+                or_(
+                    AudienceSmart.name.ilike(f"%{search_query}%"),
+                    Users.full_name.ilike(f"%{search_query}%")
+                )
             )
 
         sort_options = {

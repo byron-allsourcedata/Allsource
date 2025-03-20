@@ -19,7 +19,7 @@ class AudienceSmartsService:
             sort_order: Optional[str] = None,
             from_date: Optional[str] = None,
             to_date: Optional[str] = None,
-            name: Optional[str] = None,
+            search_query: Optional[str] = None,
             statuses: Optional[str] = None,
             use_cases: Optional[str] = None
     ) -> SmartsAudienceObjectResponse:
@@ -31,7 +31,7 @@ class AudienceSmartsService:
             sort_order=sort_order,
             from_date=from_date,
             to_date=to_date,
-            name=name,
+            search_query=search_query,
             statuses=statuses,
             use_cases=use_cases
         )

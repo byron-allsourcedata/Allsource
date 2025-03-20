@@ -107,33 +107,34 @@ const getUseCaseStyle = (status: string) => {
 const SmartAudiences: React.FC = () => {
     const router = useRouter();
     const { hasNotification } = useNotification();
+    const { sourceProgress } = useSSE();
     const [data, setData] = useState<Smarts[]>([]);
+    const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
+    const [selectedRowData, setSelectedRowData] = useState<Smarts | null>(null);
+
+    const [loading, setLoading] = useState(false);
+    const [loaderForTable, setLoaderForTable] = useState(false);
+    const [isFirstLoad, setIsFirstLoad] = useState(true);
+
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [count_smarts_audience, setCount] = useState<number | null>(null);
+    const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
+
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
-    const [status, setStatus] = useState<string | null>(null);
-    const [showSlider, setShowSlider] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
-    const [isFirstLoad, setIsFirstLoad] = useState(true);
+
+    //xz cho eto
     const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
     const dropdownOpen = Boolean(dropdownEl);
-    const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
-    const [activeFilter, setActiveFilter] = useState<string>('');
+
     const [filterPopupOpen, setFilterPopupOpen] = useState(false);
-    const [loading, setLoading] = useState(false);
     const [selectedFilters, setSelectedFilters] = useState<{ label: string, value: string }[]>([]);
-    const { sourceProgress } = useSSE();
-    const [loaderForTable, setLoaderForTable] = useState(false);
+
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-    const [anchorElFullName, setAnchorElFullName] = React.useState<null | HTMLElement>(null);
-    const [selectedRowData, setSelectedRowData] = useState<Smarts | null>(null);
+    const isOpeMorePopover = Boolean(anchorEl);
+
     const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
-    const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
-    const [selectedName, setSelectedName] = React.useState<string | null>(null);
-    const isOpen = Boolean(anchorEl);
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     const [selectedDates, setSelectedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
     const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
@@ -145,6 +146,8 @@ const SmartAudiences: React.FC = () => {
     const [editedName, setEditedName] = useState<string>("");
     const [editPopoverAnchorEl, setEditPopoverAnchorEl] = useState<null | HTMLElement>(null);
     const [isEditPopoverOpen, setIsEditPopoverOpen] = useState(false);
+
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
     
     useEffect(() => {
         fetchSmarts({
@@ -207,8 +210,6 @@ const SmartAudiences: React.FC = () => {
                 return;
             }
 
-            const filters = JSON.parse(sessionStorage.getItem('filtersBySmarts') || '{}');
-
             let url = `/audience-smarts?&page=${page + 1}&per_page=${rowsPerPage}`;
 
             const startEpoch = appliedDates.start
@@ -239,14 +240,13 @@ const SmartAudiences: React.FC = () => {
     
             processMultiFilter('Use Case', 'use_cases');
             processMultiFilter('Status', 'statuses');
-            // processMultiFilter('Search', 'search_query')
+            processMultiFilter('Search', 'search_query')
 
             const response = await axiosInstance.get(url)
 
             const { audience_smarts_list, count } = response.data;
             setData(audience_smarts_list);
             setCount(count || 0);
-            setStatus("");
 
             const options = [10, 20, 50, 100, 300, 500];
             let RowsPerPageOptions = options.filter(option => option <= count);
@@ -312,6 +312,7 @@ const SmartAudiences: React.FC = () => {
             setFormattedDates('');
         }
     };
+
     const handleDateLabelChange = (label: string) => {
     };
 
@@ -323,12 +324,12 @@ const SmartAudiences: React.FC = () => {
         setFilterPopupOpen(false);
     };
 
-    const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, rowData: Smarts) => {
+    const handleOpenMorePopover = (event: React.MouseEvent<HTMLElement>, rowData: Smarts) => {
         setAnchorEl(event.currentTarget);
         setSelectedRowData(rowData);
     };
 
-    const handleClosePopover = () => {
+    const handleCloseMorePopover = () => {
         setAnchorEl(null);
     };
 
@@ -340,7 +341,7 @@ const SmartAudiences: React.FC = () => {
 
     const handleDeleteSmartAudience = async () => {
         setLoaderForTable(true);
-        handleClosePopover();
+        handleCloseMorePopover();
         handleCloseConfirmDialog();
         try {
             if (selectedRowData?.id) {
@@ -420,6 +421,16 @@ const SmartAudiences: React.FC = () => {
         
     };
 
+    useEffect(() => {
+        const storedFilters = sessionStorage.getItem('filtersBySmarts');
+
+        if (storedFilters) {
+            const filters = JSON.parse(storedFilters);
+
+            handleApplyFilters(filters);
+        }
+    }, []);
+
     const getSelectedValues = (obj: Record<string, boolean>): string => {
         return Object.entries(obj)
             .filter(([_, value]) => value)
@@ -428,7 +439,6 @@ const SmartAudiences: React.FC = () => {
     };
 
     const handleApplyFilters = (filters: FilterParams) => {
-        console.log(filters)
         const newSelectedFilters: { label: string; value: string }[] = [];
 
 
@@ -446,10 +456,7 @@ const SmartAudiences: React.FC = () => {
             { condition: filters.searchQuery, label: 'Search', value: filters.searchQuery! }
         ];
 
-        console.log(filterMappings)
-
         filterMappings.forEach(({ condition, label, value }) => {
-            
             if (condition) {
                 newSelectedFilters.push({ label, value: typeof value === 'function' ? value(filters) : value });
             }
@@ -465,13 +472,11 @@ const SmartAudiences: React.FC = () => {
         setFormattedDates('')
 
         sessionStorage.removeItem('filtersBySmarts');
-
-        setSelectedFilters([]);
     };
 
 
     const handleDeleteFilter = (filterToDelete: { label: string; value: string }) => {
-        setSelectedFilters([]);
+        // setSelectedFilters([]);
         setSelectedDates({start: null, end: null})
         setAppliedDates({ start: null, end: null })
         setFormattedDates('')
@@ -1134,14 +1139,14 @@ const SmartAudiences: React.FC = () => {
                                                                             </TableCell>
 
                                                                             <TableCell sx={{ ...smartAudiences.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
-                                                                                <IconButton onClick={(event) => handleOpenPopover(event, row)} sx={{ ':hover': { backgroundColor: 'transparent' } }} >
+                                                                                <IconButton onClick={(event) => handleOpenMorePopover(event, row)} sx={{ ':hover': { backgroundColor: 'transparent' } }} >
                                                                                     <MoreVert sx={{ color: "rgba(32, 33, 36, 1)" }} height={8} width={24} />
                                                                                 </IconButton>
 
                                                                                 <Popover
-                                                                                    open={isOpen}
+                                                                                    open={isOpeMorePopover}
                                                                                     anchorEl={anchorEl}
-                                                                                    onClose={handleClosePopover}
+                                                                                    onClose={handleCloseMorePopover}
                                                                                     slotProps={{
                                                                                         paper: {
                                                                                             sx: {
@@ -1167,7 +1172,7 @@ const SmartAudiences: React.FC = () => {
                                                                                         }}
                                                                                     >
                                                                                         <ListItemButton sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
-                                                                                            handleClosePopover()
+                                                                                            handleCloseMorePopover()
                                                                                         }}>
                                                                                             <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Sync" />
                                                                                         </ListItemButton>

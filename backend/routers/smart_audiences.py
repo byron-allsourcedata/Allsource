@@ -16,7 +16,7 @@ def get_audience_smarts(
         sort_order: str = Query(None),
         from_date: int = Query(None),
         to_date: int = Query(None),
-        name: Optional[str] = Query(None),
+        search_query: Optional[str] = Query(None),
         statuses: Optional[str] = Query(None),
         use_cases: Optional[str] = Query(None),
         audience_smarts_service: AudienceSmartsService = Depends(get_audience_smarts_service)
@@ -29,7 +29,7 @@ def get_audience_smarts(
         per_page=per_page,
         from_date=from_date,
         to_date=to_date,
-        name=name,
+        search_query=search_query,
         statuses=statuses,
         use_cases=use_cases
     )
