@@ -1102,7 +1102,11 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                   >
                     <Typography
                       sx={{
-                        fontFamily: "Nunito Sans",
+                        fontFamily: "Roboto",
+                        fontSize: "14px",
+                        fontWeight: 400,
+                        lineHeight: "19.6px",
+                        textAlign: "left",
                         color: selectedTypes.length
                           ? "rgba(220, 220, 239, 1)"
                           : "#5F6368",
@@ -1269,7 +1273,11 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                       >
                         <Typography
                           sx={{
-                            fontFamily: "Nunito Sans",
+                            fontFamily: "Roboto",
+                            fontSize: "14px",
+                            fontWeight: 400,
+                            lineHeight: "19.6px",
+                            textAlign: "left",
                             color: selectedDomains.length
                               ? "rgba(220, 220, 239, 1)"
                               : "#5F6368",
