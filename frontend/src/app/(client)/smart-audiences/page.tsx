@@ -242,22 +242,23 @@ const SmartAudiences: React.FC = () => {
             const selectedUseCases = parsedFilters?.selectedUseCases || {};
             const searchQuery = parsedFilters?.searchQuery || "";
     
-            const processMultiFilter = (label: string, paramName: string, filterData: { [s: string]: unknown; } | ArrayLike<unknown>) => {
-                const toSnakeCase = (str: string) => str.toLowerCase();
-                let filterValues = [];
-                
-                filterValues = Object.entries(filterData)
+            const processMultiFilter = (paramName: string, filterData: { [s: string]: unknown }) => {
+                const toSnakeCase = (str: string) => str.trim().toLowerCase().replace(/\s+/g, '_');
+            
+                const filterValues = Object.entries(filterData)
                     .filter(([key, value]) => value)
-                    .map(([key]) => key);
-                
+                    .map(([key]) => toSnakeCase(key));
+            
+            
                 if (filterValues.length) {
-                    const snakeCaseParam = filterValues.map(val => toSnakeCase(val)).join(',');
-                    url += `&${paramName}=${encodeURIComponent(snakeCaseParam)}`;
+                    filterValues.forEach((value) => {
+                        url += `&${paramName}=${encodeURIComponent(value)}`;
+                    });
                 }
             };
     
-            processMultiFilter('Use Case', 'use_cases', selectedUseCases);
-            processMultiFilter('Status', 'statuses', selectedStatuses);
+            processMultiFilter('use_cases', selectedUseCases);
+            processMultiFilter('statuses', selectedStatuses);
     
             if (searchQuery) {
                 url += `&search_query=${encodeURIComponent(searchQuery)}`;
@@ -276,8 +277,7 @@ const SmartAudiences: React.FC = () => {
             setRowsPerPageOptions(RowsPerPageOptions);
             const selectedValue = RowsPerPageOptions.includes(rowsPerPage) ? rowsPerPage : 10;
             setRowsPerPage(selectedValue);
-        } catch (error) {
-            console.error("Ошибка при загрузке данных", error);
+        } catch {
         } finally {
             if (isFirstLoad) {
                 setLoading(false);

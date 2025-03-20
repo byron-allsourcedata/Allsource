@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Optional, List
 from schemas.audience import SmartsAudienceObjectResponse
 from persistence.audience_smarts import AudienceSmartsPersistence
 from models.users import User
@@ -20,8 +20,8 @@ class AudienceSmartsService:
             from_date: Optional[str] = None,
             to_date: Optional[str] = None,
             search_query: Optional[str] = None,
-            statuses: Optional[str] = None,
-            use_cases: Optional[str] = None
+            statuses: Optional[List[str]] = None, 
+            use_cases:Optional[List[str]] = None, 
     ) -> SmartsAudienceObjectResponse:
         audience_smarts, count = self.audience_smarts_persistence.get_audience_smarts(
             user_id=user.get("id"),

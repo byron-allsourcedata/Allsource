@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from dependencies import get_audience_smarts_service, check_user_authorization_without_pixel
 from services.audience_smarts import AudienceSmartsService
 from schemas.audience import SmartsAudienceObjectResponse, UpdateSmartAudienceRequest
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 
 router = APIRouter(dependencies=[Depends(check_user_authorization_without_pixel)])
@@ -17,8 +17,8 @@ def get_audience_smarts(
         from_date: int = Query(None),
         to_date: int = Query(None),
         search_query: Optional[str] = Query(None),
-        statuses: Optional[str] = Query(None),
-        use_cases: Optional[str] = Query(None),
+        statuses: List[str] = Query([]),
+        use_cases: List[str] = Query([]),
         audience_smarts_service: AudienceSmartsService = Depends(get_audience_smarts_service)
 ):
     smarts_audience_list, count = audience_smarts_service.get_audience_smarts(

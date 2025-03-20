@@ -31,8 +31,8 @@ class AudienceSmartsPersistence:
             sort_by: Optional[str] = None,
             sort_order: Optional[str] = None,
             search_query: Optional[str] = None,
-            statuses: Optional[str] = None,
-            use_cases: Optional[str] = None,
+            statuses: Optional[List[str]] = None, 
+            use_cases: Optional[List[str]] = None
     ) -> Tuple[List[Row], int]:
 
         query = (
@@ -53,12 +53,10 @@ class AudienceSmartsPersistence:
         )
         
         if statuses:
-            status_list = [i.strip() for i in statuses.split(',')]
-            query = query.filter(AudienceSmart.status.in_(status_list))
+            query = query.filter(AudienceSmart.status.in_(statuses))
         
         if use_cases:
-            use_case_aliases = [unquote(i.strip()) for i in use_cases.split(',')]
-            query = query.filter(AudienceSmartsUseCase.alias.in_(use_case_aliases))
+            query = query.filter(AudienceSmartsUseCase.alias.in_(use_cases))
 
         if from_date and to_date:
             start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
