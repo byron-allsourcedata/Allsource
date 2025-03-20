@@ -470,7 +470,7 @@ class GoogleAdsIntegrationsService:
                         customer_name = row.customer.descriptive_name
                         customer_data.append({
                             'customer_id': customer_id,
-                            'customer_name': customer_name,
+                            'customer_name': customer_name if customer_name else "Unnamed",
                         })
                 except GoogleAdsException as ex:
                     logger.error(f"Error requesting data for customer_id {customer_id}")

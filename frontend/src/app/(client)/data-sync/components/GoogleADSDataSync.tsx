@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Drawer, Box, Typography, IconButton, TextField, Divider, InputLabel, Select, FormControlLabel, FormControl, FormLabel, Radio, Button, Link, Tab, Tooltip, RadioGroup, MenuItem, Popover, Menu, ListItemText, ClickAwayListener, InputAdornment, Grid, LinearProgress, Checkbox } from '@mui/material';
+import { Drawer, Box, Typography, IconButton, TextField, Divider, FormControlLabel, FormControl, FormLabel, Radio, Button, Link, Tab, Tooltip, RadioGroup, MenuItem, Popover, Menu, ListItemText, ClickAwayListener, InputAdornment, Grid, LinearProgress } from '@mui/material';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
@@ -26,12 +26,6 @@ type Customers = {
     customer_name: string;
 }
 
-interface CustomField {
-    type: string;
-    value: string;
-}
-
-
 const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose, data, isEdit }) => {
     const { triggerSync } = useIntegrationContext();
     const [loading, setLoading] = useState(false)
@@ -49,19 +43,15 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
     const [isShrunk, setIsShrunk] = useState<boolean>(false);
     const textFieldRef = useRef<HTMLDivElement>(null);
     const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
-    const [apiKeyError, setApiKeyError] = useState(false);
     const [tab2Error, setTab2Error] = useState(false);
     const [isDropdownValid, setIsDropdownValid] = useState(false);
     const [listNameError, setListNameError] = useState(false);
-    const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(null)
-    const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
-    const [newMapListName, setNewMapListName] = useState<string>('');
     const textFieldRefAdAccount = useRef<HTMLDivElement>(null);
-    const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
     const [notAdsUser, setNotAdsUser] = useState<boolean>(false);
-    const [maplistNameError, setMapListNameError] = useState(false);
     const [anchorElAdAccount, setAnchorElAdAccount] = useState<null | HTMLElement>(null);
     const [isDropdownOpenAdAccount, setIsDropdownOpenAdAccount] = useState(false);
+    const [inputCustomerName, setInputCustomerName] = useState('');
+    const [inputListName, setInputListName] = useState('');
     const [googleList, setGoogleAdsList] = useState<ChannelList[]>([]);
 
     const [customersInfo, setCustomersInfo] = useState<Customers[]>([
@@ -72,14 +62,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
     ] ?? []);
 
     const [selectedAccountId, setSelectedAccountId] = useState<string>(data?.customer_id ?? '');
-    const [optionAdAccount, setOptionAdAccount] = useState<Customers>(
-        {
-            customer_id: data?.customer_id ?? '',
-            customer_name: data?.customer_id ?? '',
-        }
-        ?? '');
     const [listNameErrorMessage, setListNameErrorMessage] = useState('')
-    const [customFieldsList, setCustomFieldsList] = useState<CustomField[]>([]);
     const [savedList, setSavedList] = useState<ChannelList | null>({
         list_id: data?.list_id ?? '',
         list_name: data?.name ?? '',
@@ -88,12 +71,11 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (textFieldRef.current && !textFieldRef.current.contains(event.target as Node)) {
-                // If clicked outside, reset shrink only if there is no input value
                 if (selectedOption?.list_name === '') {
                     setIsShrunk(false);
                 }
                 if (isDropdownOpen) {
-                    setIsDropdownOpen(false); // Close dropdown when clicking outside
+                    setIsDropdownOpen(false);
                 }
             }
         };
@@ -103,17 +85,6 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [selectedOption]);
-
-
-    const [customFields, setCustomFields] = useState<{ type: string, value: string }[]>([]);
-
-    useEffect(() => {
-        if (data?.data_map) {
-            setCustomFields(data?.data_map);
-        } else {
-            setCustomFields(customFieldsList.map(field => ({ type: field?.value, value: field?.type })))
-        }
-    }, [open])
 
     const handleCloseAdAccount = () => {
         setAnchorElAdAccount(null);
@@ -127,19 +98,16 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
         setSelectedRadioValue('');
         setAnchorEl(null);
         setSelectedOption(null);
+        setInputListName('')
         setShowCreateForm(false);
         setNewListName('');
         setIsShrunk(false);
         setIsDropdownOpen(false);
-        setApiKeyError(false);
         setTab2Error(false);
         setIsDropdownValid(false);
         setListNameError(false);
-        setDeleteAnchorEl(null);
-        setSelectedRowId(null);
-        setNewMapListName('');
-        setShowCreateMapForm(false);
-        setMapListNameError(false);
+        setAnchorElAdAccount(null)
+        setIsDropdownOpenAdAccount(false)
     }, [open])
 
     const getGoogleAdsList = async () => {
@@ -150,6 +118,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                     customer_id: selectedAccountId
                 }
             });
+            setInputListName('')
             setGoogleAdsList(response.data.user_lists || [])
             if (response.data.status !== 'SUCCESS') {
                 showErrorToast(response.data.message)
@@ -160,10 +129,10 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
         }
     }
     useEffect(() => {
-        if (open && !data?.name) {
-            getGoogleAdsList()
+        if (open && selectedAccountId && !data?.name) {
+            getGoogleAdsList();
         }
-    }, [selectedAccountId])
+    }, [open, selectedAccountId]);
 
     const getCustomersInfo = async () => {
         try {
@@ -302,9 +271,9 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                 });
 
                 if (response.status === 201 || response.status === 200) {
-                    onClose();
                     showToast('Data sync updated successfully');
                     triggerSync();
+                    onClose();
                 }
             } else {
                 const response = await axiosInstance.post('/data-sync/sync', {
@@ -318,9 +287,9 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                 });
 
                 if (response.status === 201 || response.status === 200) {
-                    onClose();
                     showToast('Data sync created successfully');
                     triggerSync();
+                    onClose();
                 }
             }
         } catch (error) {
@@ -349,7 +318,6 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
         setIsDropdownOpenAdAccount(false)
         setShowCreateForm(false);
         setIsDropdownOpen(false);
-        setNewListName('');
     };
 
     const handleSelectOption = (value: ChannelList | string) => {
@@ -363,8 +331,9 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                 list_id: value.list_id,
                 list_name: value.list_name,
             });
+            setInputListName(value.list_name)
             setIsDropdownValid(true);
-            handleClose();
+            handleClose()
         } else {
             setIsDropdownValid(false);
             setSelectedOption(null);
@@ -391,6 +360,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
         if (valid) {
             const newSlackList = { list_id: '-1', list_name: newListName }
             setSelectedOption(newSlackList);
+            setInputListName(newSlackList.list_name)
             if (isKlaviyoList(newSlackList)) {
                 setIsDropdownValid(true);
             }
@@ -475,7 +445,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                 return (
                     <Button
                         variant="contained"
-                        disabled={!selectedOption}
+                        disabled={inputListName === "" || inputCustomerName === ""}
                         onClick={handleSaveList}
                         sx={{
                             backgroundColor: '#5052B2',
@@ -502,7 +472,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                     <Button
                         variant="contained"
                         onClick={handleSaveSync}
-                        disabled={!selectedOption || !selectedRadioValue.trim()}
+                        disabled={!inputListName || !selectedRadioValue.trim()}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito Sans",
@@ -556,7 +526,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
     };
 
     const handleSelectAdAccount = async (value: Customers) => {
-        setOptionAdAccount(value);
+        setInputCustomerName(value.customer_name)
         setSelectedAccountId(value.customer_id)
         handleClose();
     }
@@ -619,8 +589,6 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
             }
         }
     };
-
-    const deleteOpen = Boolean(deleteAnchorEl);
 
     const handleChangeTab = (event: React.SyntheticEvent, newValue: string) => {
         setValue(newValue);
@@ -920,16 +888,13 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                 <TextField
                                                     ref={textFieldRefAdAccount}
                                                     variant="outlined"
-                                                    value={
-                                                        optionAdAccount?.customer_name || null
-                                                    }
+                                                    value={inputCustomerName}
                                                     onClick={handleClickAdAccount}
                                                     size="small"
-
                                                     fullWidth
-                                                    label={optionAdAccount?.customer_name ? '' : 'Select An Account'}
+                                                    label={inputCustomerName ? '' : 'Select An Account'}
                                                     InputLabelProps={{
-                                                        shrink: isShrunk || optionAdAccount?.customer_name !== "",
+                                                        shrink: isShrunk || inputCustomerName !== "",
                                                         sx: {
                                                             fontFamily: 'Nunito Sans',
                                                             fontSize: '12px',
@@ -1006,14 +971,14 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                     <TextField
                                                         ref={textFieldRef}
                                                         variant="outlined"
-                                                        value={selectedOption?.list_name}
+                                                        value={inputListName}
                                                         onClick={handleClick}
                                                         disabled={data?.name}
                                                         size="small"
                                                         fullWidth
-                                                        label={selectedOption ? '' : 'Select or Create new list'}
+                                                        label={inputListName ? '' : 'Select or Create new list'}
                                                         InputLabelProps={{
-                                                            shrink: selectedOption ? false : isShrunk,
+                                                            shrink: inputListName ? false : isShrunk,
                                                             sx: {
                                                                 fontFamily: 'Nunito Sans',
                                                                 fontSize: '12px',
@@ -1238,7 +1203,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                     }}>
                                         <Box sx={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
                                             <Typography variant="h6" className='first-sub-title'>Map list</Typography>
-                                            {selectedOption?.list_name &&
+                                            {inputListName &&
                                                 <Typography variant='h6' sx={{
                                                     background: '#EDEDF7',
                                                     borderRadius: '3px',
@@ -1249,7 +1214,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                     padding: '2px 4px',
                                                     lineHeight: '16px'
                                                 }}>
-                                                    {selectedOption?.list_name}
+                                                    {inputListName}
                                                 </Typography>}
                                         </Box>
 
