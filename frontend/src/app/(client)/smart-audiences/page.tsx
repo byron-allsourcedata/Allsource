@@ -421,15 +421,15 @@ const SmartAudiences: React.FC = () => {
         
     };
 
-    useEffect(() => {
-        const storedFilters = sessionStorage.getItem('filtersBySmarts');
+    // useEffect(() => {
+    //     const storedFilters = sessionStorage.getItem('filtersBySmarts');
 
-        if (storedFilters) {
-            const filters = JSON.parse(storedFilters);
+    //     if (storedFilters) {
+    //         const filters = JSON.parse(storedFilters);
 
-            handleApplyFilters(filters);
-        }
-    }, []);
+    //         handleApplyFilters(filters);
+    //     }
+    // }, []);
 
     const getSelectedValues = (obj: Record<string, boolean>): string => {
         return Object.entries(obj)
