@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List
 from enum import Enum
 
@@ -82,6 +82,7 @@ class DataMap(BaseModel):
     value: str
 
 class Campaign(BaseModel):
+    campaign_id: int
     campaign_name: str
     campaign_objective: str
     bid_amount: int

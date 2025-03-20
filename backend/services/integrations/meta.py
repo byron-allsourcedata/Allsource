@@ -228,23 +228,7 @@ class MetaIntegrationsService:
         }, integrations_users_sync_id)
         return sync
     
-    def create_campaign(self, campaign_name, daily_budget, access_token, list_id, campaign_objective, bid_amount, ad_account_id):
-        url = f'https://graph.facebook.com/v20.0/{ad_account_id}/campaigns'
-        campaign_data = {
-            'name': campaign_name,
-            'objective': 'OUTCOME_TRAFFIC',
-            'status': 'ACTIVE',
-            'buying_type': 'AUCTION',
-            'daily_budget': daily_budget,
-            'start_time': '2025-03-20T00:00:00',
-            'end_time': '2026-03-20T00:00:00',
-            'access_token': access_token,
-            'special_ad_categories': []
-        }
-        response = self.__handle_request(method='POST', url=url, json=campaign_data)
-        response = response.json()
-        campaign_id = response['id']
-
+    def create_adset(self, ad_account_id, campaign_name, campaign_id, access_token, list_id, campaign_objective, bid_amount):
         url = f'https://graph.facebook.com/v20.0/{ad_account_id}/adsets'
         ad_set_data = {
             'name': f"{campaign_name}_ad",
@@ -260,12 +244,32 @@ class MetaIntegrationsService:
             'status': 'PAUSED',
         }
         response = self.__handle_request(method='POST', url=url, json=ad_set_data)
+    
+    def create_campaign(self, campaign_name, daily_budget, access_token, ad_account_id):
+        url = f'https://graph.facebook.com/v20.0/{ad_account_id}/campaigns'
+        campaign_data = {
+            'name': campaign_name,
+            'objective': 'OUTCOME_TRAFFIC',
+            'status': 'ACTIVE',
+            'buying_type': 'AUCTION',
+            'daily_budget': daily_budget,
+            'start_time': '2025-03-20T00:00:00',
+            'end_time': '2026-03-20T00:00:00',
+            'access_token': access_token,
+            'special_ad_categories': []
+        }
+        response = self.__handle_request(method='POST', url=url, json=campaign_data)
+        response = response.json()
+        campaign_id = response['id']
+        return campaign_id
 
-    async def create_sync(self, customer_id: int, domain_id: int, campaign, created_by: str, data_map: List[DataMap] = None, leads_type: str = None, list_id: str = None, list_name: str = None,):
+    async def create_sync(self, customer_id: int, domain_id: int, created_by: str, campaign = {}, data_map: List[DataMap] = None, leads_type: str = None, list_id: str = None, list_name: str = None,):
         credentials = self.get_credentials(domain_id)
-        if campaign.get('campaign_name'):
-            self.create_campaign(campaign['campaign_name'], campaign['daily_budget'], credentials.access_token, list_id, campaign['campaign_objective'], campaign['bid_amount'], customer_id)
-        
+        campaign_id = campaign.get('campaign_id')
+        if campaign_id == -1 and campaign.get('campaign_name'):
+            campaign_id = self.create_campaign(campaign['campaign_name'], campaign['daily_budget'], credentials.access_token, customer_id)
+        if campaign_id and campaign_id != -1:
+            self.create_adset(customer_id, campaign['campaign_name'], campaign_id, credentials.access_token, list_id, campaign['campaign_objective'], campaign['bid_amount'])
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'list_id': list_id,
