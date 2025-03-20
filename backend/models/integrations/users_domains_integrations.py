@@ -1,5 +1,6 @@
 from models.base import Base
-from sqlalchemy import VARCHAR, Integer, Column, JSON, Boolean, TIMESTAMP, Index
+
+from sqlalchemy import VARCHAR, Integer, Column, JSON, Boolean, TIMESTAMP, Index, func
 
 class UserIntegration(Base):
     __tablename__ = 'users_domains_integrations'
@@ -20,6 +21,7 @@ class UserIntegration(Base):
     is_failed = Column(Boolean, default=False)
     shop_id = Column(VARCHAR(32))
     slack_team_id = Column(VARCHAR(32))
+    created_at = Column(TIMESTAMP, default=func.now(), nullable=True)
     
     __table_args__ = (
         Index('users_domains_integrations_pkey', 'id'),
