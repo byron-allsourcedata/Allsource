@@ -225,10 +225,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         }
     }, [open])
 
-    const handleActive = (service: string) => {
-        setActiveService(service);
-      };
-
     const handleOmnisendIconPopupOpenClose = () => {
         setOpenOmnisendConnect(false)
         setOpenOmnisendIconPopupOpen(false)
@@ -500,6 +496,41 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     const handleCloseZapierDataSync = () => {
         setOpenZapierDataSync(false)
     }
+
+    type ServiceHandlers = {
+        hubspot: () => void;
+        mailchimp: () => void;
+        salesForce: () => void;
+        googleAds: () => void;
+      };
+
+    const handlers: ServiceHandlers = {
+        hubspot: handleHubspotIconPopupOpen,
+        mailchimp: handleMailchimpIconPopupIconOpen,
+        salesForce: handleSalesForceIconPopupOpen,
+        googleAds: handleGoogleAdsIconPopupIconOpen,
+      };
+
+    const toCamelCase = (name: string) => {
+        const updatedName = name.split('-').map((word, index) =>
+            index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)
+        )
+        .join('');
+        return updatedName
+    }
+
+    const handleActive = (service: string) => {
+        setActiveService(service);
+        const handlerPart = toCamelCase(service)
+        if (service === "meta") {
+            setMetaIconPopupOpen(true)
+        } else if (handlerPart in handlers) {
+            handlers[handlerPart as keyof ServiceHandlers]();
+          } else {
+            console.error(`Handler for ${handlerPart} не найден`);
+          }
+      };
+
 
     const handleAddIntegration = async (service_name: string) => {
         try {
