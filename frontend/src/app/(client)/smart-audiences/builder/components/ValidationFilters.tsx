@@ -145,6 +145,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                                         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                                             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                                 <Checkbox
+                                                    size="small"
                                                     checked={selectedOptionsPersonalEmail.includes("MX")}
                                                     onChange={() => handleOptionClick(setSelectedOptionsPersonalEmail, "MX")}
                                                     sx={{ padding: 0, '&.Mui-checked': { color: "rgba(80, 82, 178, 1)" } }}
@@ -165,6 +166,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                                         <Box onClick={() => toggleNestedExpand("Last seen Personal")} sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                                             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                                 <Checkbox
+                                                    size="small"
                                                     checked={selectedOptionsPersonalEmail.includes("Recency")}
                                                     onChange={() => {
                                                         if (nestedSelections["Recency"]) {
@@ -219,6 +221,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                                         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                                             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                                 <Checkbox
+                                                    size="small"
                                                     checked={selectedOptionsPersonalEmail.includes("Delivery")}
                                                     onChange={() => handleOptionClick(setSelectedOptionsPersonalEmail, "Delivery")}
                                                     sx={{ padding: 0, '&.Mui-checked': { color: "rgba(80, 82, 178, 1)" } }}
@@ -255,6 +258,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                                         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                                             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                                 <Checkbox
+                                                    size="small"
                                                     checked={selectedOptionsBusinessEmail.includes("MX")}
                                                     onChange={() => handleOptionClick(setSelectedOptionsBusinessEmail, "MX")}
                                                     sx={{ padding: 0, '&.Mui-checked': { color: "rgba(80, 82, 178, 1)" } }}
@@ -274,6 +278,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                                         <Box onClick={() => toggleNestedExpand("Last seen Business")} sx={{ display: "flex", cursor: 'pointer', alignItems: "center", justifyContent: "space-between" }}>
                                             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                                 <Checkbox
+                                                    size="small"
                                                     checked={selectedOptionsBusinessEmail.includes("RecencyBusiness")}
                                                     onChange={() => {
                                                         if (nestedSelections["RecencyBusiness"]) {
@@ -328,6 +333,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                                         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                                             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                                 <Checkbox
+                                                    size="small"
                                                     checked={selectedOptionsBusinessEmail.includes("Delivery")}
                                                     onChange={() => handleOptionClick(setSelectedOptionsBusinessEmail, "Delivery")}
                                                     sx={{ padding: 0, '&.Mui-checked': { color: "rgba(80, 82, 178, 1)" } }}
@@ -372,6 +378,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                                                 <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                                                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                                         <Checkbox
+                                                            size="small"
                                                             checked={selectedOptionsPhone.includes(option)}
                                                             onChange={() => handleOptionClick(setSelectedOptionsPhone, option)}
                                                             sx={{ padding: 0, '&.Mui-checked': { color: "rgba(80, 82, 178, 1)" } }}
@@ -425,6 +432,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                                                 <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                                                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                                         <Checkbox
+                                                            size="small"
                                                             checked={selectedOptionsPostalCAS.includes(option)}
                                                             onChange={() => handleOptionClick(setSelectedOptionsPostalCAS, option)}
                                                             sx={{ padding: 0, "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" } }}
@@ -471,6 +479,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                                         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                                             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                                 <Checkbox
+                                                    size="small"
                                                     checked={selectedOptionsLinkedIn.includes("Relevance")}
                                                     onChange={() => handleOptionClick(setSelectedOptionsLinkedIn, "Relevance")}
                                                     sx={{ padding: 0, '&.Mui-checked': { color: "rgba(80, 82, 178, 1)" } }}
