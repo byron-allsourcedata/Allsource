@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Drawer, Box, Typography, IconButton, List, ListItem, ListItemIcon, ListItemButton, Button, ListItemText, Popover, Tooltip, Tab, Slider, TextField, Card,
+import { Drawer, Box, Typography, IconButton, List, LinearProgress, ListItem, ListItemIcon, ListItemButton, Button, ListItemText, Popover, Tooltip, Tab, Slider, TextField, Card,
     CardContent } from '@mui/material';
 import TabList from "@mui/lab/TabList";
 import TabPanel from '@mui/lab/TabPanel';
@@ -34,6 +34,7 @@ import HubspotDataSync from '../../data-sync/components/HubspotDataSync';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import AddIcon from '@mui/icons-material/Add';
+import { styled } from '@mui/material/styles';
 
 interface AudiencePopupProps {
     open: boolean;
@@ -182,7 +183,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                 },
             });
             if (response.status === 200) {
-                console.log(response)
                 setIntegrations(response.data);
             }
         };
@@ -652,7 +652,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
             alignItems: 'center',
             cursor: 'pointer',
           }}>
-            {isLoading && <CustomizedProgressBar />}
             <Tooltip
               open={openToolTip || isHovered}
               ref={tooltipRef}
@@ -849,6 +848,16 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         );
       };
 
+    const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
+        height: 4,
+        borderRadius: 0,
+        backgroundColor: '#c6dafc',
+        '& .MuiLinearProgress-bar': {
+          borderRadius: 5,
+          backgroundColor: '#4285f4',
+        },
+      }));
+
     return (
         <>
             <Drawer
@@ -875,6 +884,18 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                     }
                 }}
             >
+                {isLoading && (
+                    <Box
+                        sx={{
+                        width: '100%',
+                        position: 'fixed',
+                        top: '4.2rem',
+                        zIndex: 1200,   
+                        }}
+                    >
+                        <BorderLinearProgress variant="indeterminate" />
+                    </Box>
+                )}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                     <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center', }}>
                         Create contact sync
