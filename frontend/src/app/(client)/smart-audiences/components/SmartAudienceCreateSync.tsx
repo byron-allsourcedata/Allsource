@@ -178,7 +178,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         const fetchData = async () => {
             const response = await axiosInstance.get('/integrations/smart-audience-sync/', {
                 params: {
-                    integration_list: 'salesforce,hubspot,mailchimp',
+                    integration_list: integ.join(","),
                 },
             });
             if (response.status === 200) {
@@ -927,7 +927,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                     return isAIntegrated ? -1 : 1;
                                                 })
                                                 .map((integration) => {
-                                                    const isIntegrated = integratedServices.includes(integration.service_name);
+                                                    let isIntegrated = integratedServices.includes(integration.service_name);
+                                                    if (integration.service_name === 'csv') {
+                                                        isIntegrated = true
+                                                    }
                                                     const integrationCred = integrationsCredentials.find(cred => cred.service_name === integration.service_name);
 
                                                     if (isIntegrated) {
