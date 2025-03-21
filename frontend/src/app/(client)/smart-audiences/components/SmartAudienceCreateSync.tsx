@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Drawer, Box, Typography, IconButton, List, LinearProgress, ListItem, ListItemIcon, ListItemButton, Button, ListItemText, Popover, Tooltip, Tab, Slider, TextField, Card,
+import { Drawer, Box, Typography, IconButton, List, LinearProgress, Grid, ListItem, ListItemIcon, ListItemButton, Button, ListItemText, Popover, Tooltip, Tab, Slider, TextField, Card,
     CardContent } from '@mui/material';
 import TabList from "@mui/lab/TabList";
 import TabPanel from '@mui/lab/TabPanel';
@@ -66,6 +66,14 @@ interface Integrations {
     data_sync: boolean
 }
 
+interface Row {
+    id: number;
+    type: string;
+    value: string;
+    selectValue?: string;
+    canDelete?: boolean;
+}
+
 interface IntegrationBoxProps {
     image: string;
     handleClick?: () => void;
@@ -78,6 +86,11 @@ interface IntegrationBoxProps {
     is_integrated?: boolean;
     isEdit?: boolean;
   }
+
+interface MetaAuidece {
+    id: string
+    list_name: string
+}
 
 const klaviyoStyles = {
     tabHeading: {
@@ -125,7 +138,7 @@ const klaviyoStyles = {
 }
 
 const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrationsList: integ = [], selectedLeads }) => {
-    const integrationsList = [...integ, "csv", "s3"]
+    const integrationsList = [...integ, "CSV", "s3"]
     const [selectedOption, setSelectedOption] = useState<string | null>(null);
     const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
     const [isExistingListsOpen, setIsExistingListsOpen] = useState<boolean>(false);
@@ -170,6 +183,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     const [isLoading, setIsLoading] = useState(false);
     const [value, setValue] = useState('1');
     const [isDropdownValid, setIsDropdownValid] = useState(false);
+    const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(null)
+    const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
+
+    const [selectedOptionMap, setSelectedOptionMap] = useState<MetaAuidece | null>(null);
 
     const handleDeleteOpen = () => {
         setOpenDeletePopup(true);
@@ -555,7 +572,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         { image: 'google-ads.svg', service_name: 'google_ads' },
         { image: 'salesforce-icon.svg', service_name: 'sales_force' },
         { image: 's3.svg', service_name: 's3' },
-        { image: 'csv-icon.svg', service_name: 'csv' }
+        { image: 'csv-icon.svg', service_name: 'CSV' }
       ];
 
       const [valueContactSync, setValueContactSync] = useState<number>(1000);
@@ -858,6 +875,45 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         },
       }));
 
+    const defaultRows: Row[] = [
+        { id: 1, type: 'Email', value: '' },
+        { id: 2, type: 'Phone number', value: '' },
+        { id: 3, type: 'Gender', value: 'Gender' },
+        { id: 4, type: 'Last Name', value: 'Last Name' },
+        { id: 5, type: 'First Name', value: 'First Name' },
+        { id: 6, type: 'Personal State', value: 'Personal State' },
+        { id: 7, type: 'Personal City', value: 'Personal City' },
+        { id: 8, type: 'Personal Zip', value: 'Personal Zip' }
+    ];
+
+    const [rows, setRows] = useState<Row[]>(defaultRows);
+
+    const handleMapListChange = (id: number, field: 'value' | 'selectValue', value: string) => {
+        setRows(rows.map(row =>
+            row.id === id ? { ...row, [field]: value } : row
+        ));
+    };
+
+    const handleClickOpen = (event: React.MouseEvent<HTMLElement>, id: number) => {
+        setDeleteAnchorEl(event.currentTarget);
+        setSelectedRowId(id);
+    };
+
+    const handleDeleteClose = () => {
+        setDeleteAnchorEl(null);
+        setSelectedRowId(null);
+    };
+
+    const handleDelete = () => {
+        if (selectedRowId !== null) {
+            setRows(rows.filter(row => row.id !== selectedRowId));
+            handleDeleteClose();
+        }
+    };
+
+    const deleteOpen = Boolean(deleteAnchorEl);
+    const deleteId = deleteOpen ? 'delete-popover' : undefined;
+
     return (
         <>
             <Drawer
@@ -905,7 +961,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                     </IconButton>
                 </Box>
                     <TabContext value={value}>
-                        <Box sx={{ pb: 4 }}>
+                        <Box sx={{ pb: 2}}>
                             <TabList centered aria-label="Connect to Klaviyo Tabs"
                                 TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
                                 sx={{
@@ -928,11 +984,11 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                         <TabPanel value="1" sx={{ p: 0 }}>
                             <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
                                 <Box sx={{ p:0, width: '100%' }}>
-                                    <Box sx={{ px: 2, py: 3, borderRadius: '4px' }}>
+                                    <Box sx={{ px: 2, py: 3, display: "flex", flexDirection: "column", gap: 3, borderRadius: '4px' }}>
                                         <Typography variant="h6" className="first-sub-title">
                                             Choose where you want to sync
                                         </Typography>
-                                        <List sx={{ display: 'flex', gap: '16px', py: 2, flexWrap: 'wrap', border: 'none' }}>
+                                        <List sx={{ display: 'flex', gap: '16px', flexWrap: 'wrap', border: 'none' }}>
                                             {integrationsAvailable
                                                 .filter((integration) => 
                                                     integrationsList?.includes(integration.service_name) && 
@@ -949,7 +1005,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                 })
                                                 .map((integration) => {
                                                     let isIntegrated = integratedServices.includes(integration.service_name);
-                                                    if (integration.service_name === 'csv') {
+                                                    if (integration.service_name === 'CSV') {  
                                                         isIntegrated = true
                                                     }
                                                     const integrationCred = integrationsCredentials.find(cred => cred.service_name === integration.service_name);
@@ -1092,6 +1148,284 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                         </Box>
                                     </CardContent>
                                 </Card>
+                            </Box>
+                        </TabPanel>
+                        <TabPanel value="3" sx={{ p: 0 }}>
+                            <Box sx={{
+                                    borderRadius: '4px',
+                                    padding: '16px 24px',
+                                    overflowX: 'auto'
+                                }}>
+                                    <Box sx={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+                                        <Typography variant="h6" className='first-sub-title'>Map list</Typography>
+                                        {selectedOptionMap?.list_name && <Typography variant='h6' sx={{
+                                            background: '#EDEDF7',
+                                            borderRadius: '3px',
+                                            fontFamily: 'Roboto',
+                                            fontSize: '12px',
+                                            fontWeight: '400',
+                                            color: '#5f6368',
+                                            padding: '2px 4px',
+                                            lineHeight: '16px'
+                                        }}>
+                                            {selectedOptionMap?.list_name}
+                                        </Typography>}
+                                    </Box>
+
+                                    <Grid container alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' }, marginBottom: '14px' }}>
+                                        <Grid item xs="auto" sm={5} sx={{
+                                            textAlign: 'center',
+                                            '@media (max-width:599px)': {
+                                                minWidth: '196px'
+                                            }
+                                        }}>
+                                            <Image src='/logo.svg' alt='logo' height={22} width={34} />
+                                        </Grid>
+                                        <Grid item xs="auto" sm={1} sx={{
+                                            '@media (max-width:599px)': {
+                                                minWidth: '50px'
+                                            }
+                                        }}>&nbsp;</Grid>
+                                        <Grid item xs="auto" sm={5} sx={{
+                                            textAlign: 'center',
+                                            '@media (max-width:599px)': {
+                                                minWidth: '196px'
+                                            }
+                                        }}>
+                                            <Image src='/meta-icon.svg' alt='meta-icon' height={20} width={30} />
+                                        </Grid>
+                                        <Grid item xs="auto" sm={1}>&nbsp;</Grid>
+                                    </Grid>
+
+                                    {rows.map((row, index) => (
+                                        <Box key={row.id} sx={{ mb: 2 }}> {/* Add margin between rows */}
+                                            <Grid container spacing={2} alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' } }}>
+                                                {/* Left Input Field */}
+                                                <Grid item xs="auto" sm={5}>
+                                                    <TextField
+                                                        fullWidth
+                                                        variant="outlined"
+                                                        disabled={true}
+                                                        // label={row.type}
+                                                        value={row.type}
+                                                        onChange={(e) => handleMapListChange(row.id, 'value', e.target.value)}
+                                                        InputLabelProps={{
+                                                            sx: {
+                                                                fontFamily: 'Nunito Sans',
+                                                                fontSize: '12px',
+                                                                lineHeight: '16px',
+                                                                color: 'rgba(17, 17, 19, 0.60)',
+                                                                top: '-5px',
+                                                                '&.Mui-focused': {
+                                                                    color: '#0000FF',
+                                                                    top: 0
+                                                                },
+                                                                '&.MuiInputLabel-shrink': {
+                                                                    top: 0
+                                                                }
+                                                            }
+                                                        }}
+                                                        InputProps={{
+
+                                                            sx: {
+                                                                '&.MuiOutlinedInput-root': {
+                                                                    height: '36px',
+                                                                    '& .MuiOutlinedInput-input': {
+                                                                        padding: '6.5px 8px',
+                                                                        fontFamily: 'Roboto',
+                                                                        color: '#202124',
+                                                                        fontSize: '12px',
+                                                                        fontWeight: '400',
+                                                                        lineHeight: '20px'
+                                                                    },
+                                                                    '& .MuiOutlinedInput-notchedOutline': {
+                                                                        borderColor: '#A3B0C2',
+                                                                    },
+                                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                        borderColor: '#A3B0C2',
+                                                                    },
+                                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                        borderColor: '#0000FF',
+                                                                    },
+                                                                },
+                                                                '&+.MuiFormHelperText-root': {
+                                                                    marginLeft: '0',
+                                                                },
+                                                            }
+                                                        }}
+                                                    />
+                                                </Grid>
+
+                                                {/* Middle Icon Toggle (Right Arrow or Close Icon) */}
+                                                <Grid item xs="auto" sm={1} container justifyContent="center">
+                                                    {row.selectValue !== undefined ? (
+                                                        row.selectValue ? (
+                                                            <Image
+                                                                src='/chevron-right-purple.svg'
+                                                                alt='chevron-right-purple'
+                                                                height={18}
+                                                                width={18} // Adjust the size as needed
+                                                            />
+
+                                                        ) : (
+                                                            <Image
+                                                                src='/close-circle.svg'
+                                                                alt='close-circle'
+                                                                height={18}
+                                                                width={18} // Adjust the size as needed
+                                                            />
+                                                        )
+                                                    ) : (
+                                                        <Image
+                                                            src='/chevron-right-purple.svg'
+                                                            alt='chevron-right-purple'
+                                                            height={18}
+                                                            width={18} // Adjust the size as needed
+                                                        /> // For the first two rows, always show the right arrow
+                                                    )}
+                                                </Grid>
+                                                <Grid item xs="auto" sm={5}>
+                                                    <TextField
+                                                        fullWidth
+                                                        variant="outlined"
+                                                        disabled={true}
+                                                        value={row.type}
+                                                        InputLabelProps={{
+                                                            sx: {
+                                                                fontFamily: 'Nunito Sans',
+                                                                fontSize: '12px',
+                                                                lineHeight: '16px',
+                                                                color: 'rgba(17, 17, 19, 0.60)',
+                                                                top: '-5px',
+                                                                '&.Mui-focused': {
+                                                                    color: '#0000FF',
+                                                                    top: 0
+                                                                },
+                                                                '&.MuiInputLabel-shrink': {
+                                                                    top: 0
+                                                                }
+                                                            }
+                                                        }}
+                                                        InputProps={{
+
+                                                            sx: {
+                                                                '&.MuiOutlinedInput-root': {
+                                                                    height: '36px',
+                                                                    '& .MuiOutlinedInput-input': {
+                                                                        padding: '6.5px 8px',
+                                                                        fontFamily: 'Roboto',
+                                                                        color: '#202124',
+                                                                        fontSize: '12px',
+                                                                        fontWeight: '400',
+                                                                        lineHeight: '20px'
+                                                                    },
+                                                                    '& .MuiOutlinedInput-notchedOutline': {
+                                                                        borderColor: '#A3B0C2',
+                                                                    },
+                                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                        borderColor: '#A3B0C2',
+                                                                    },
+                                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                        borderColor: '#0000FF',
+                                                                    },
+                                                                },
+                                                                '&+.MuiFormHelperText-root': {
+                                                                    marginLeft: '0',
+                                                                },
+                                                            }
+                                                        }}
+                                                    />
+                                                </Grid>
+
+
+                                                {/* Delete Icon */}
+                                                <Grid item xs="auto" sm={1} container justifyContent="center">
+                                                    {row.canDelete && (
+                                                        <>
+                                                            <IconButton onClick={(event) => handleClickOpen(event, row.id)}>
+                                                                <Image
+                                                                    src='/trash-icon-filled.svg'
+                                                                    alt='trash-icon-filled'
+                                                                    height={18}
+                                                                    width={18} // Adjust the size as needed
+                                                                />
+                                                            </IconButton>
+                                                            <Popover
+                                                                id={deleteId}
+                                                                open={deleteOpen}
+                                                                anchorEl={deleteAnchorEl}
+                                                                onClose={handleDeleteClose}
+                                                                anchorOrigin={{
+                                                                    vertical: 'bottom',
+                                                                    horizontal: 'center',
+                                                                }}
+                                                                transformOrigin={{
+                                                                    vertical: 'top',
+                                                                    horizontal: 'right',
+                                                                }}
+                                                            >
+                                                                <Box sx={{
+                                                                    minWidth: '254px',
+                                                                    borderRadius: '4px',
+                                                                    border: '0.2px solid #afafaf',
+                                                                    background: '#fff',
+                                                                    boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
+                                                                    padding: '16px 21px 16px 16px'
+                                                                }}>
+                                                                    <Typography variant="body1" className='first-sub-title' sx={{
+                                                                        paddingBottom: '12px'
+                                                                    }}>Confirm Deletion</Typography>
+                                                                    <Typography variant="body2" sx={{
+                                                                        color: '#5f6368',
+                                                                        fontFamily: 'Roboto',
+                                                                        fontSize: '12px',
+                                                                        fontWeight: '400',
+                                                                        lineHeight: '16px',
+                                                                        paddingBottom: '26px'
+                                                                    }}>
+                                                                        Are you sure you want to delete this <br /> map data?
+                                                                    </Typography>
+                                                                    <Box display="flex" justifyContent="flex-end" mt={2}>
+                                                                        <Button onClick={handleDeleteClose} sx={{
+                                                                            borderRadius: '4px',
+                                                                            border: '1px solid #5052b2',
+                                                                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                                                            color: '#5052b2',
+                                                                            fontFamily: 'Nunito Sans',
+                                                                            fontSize: '14px',
+                                                                            fontWeight: '600',
+                                                                            lineHeight: '20px',
+                                                                            marginRight: '16px',
+                                                                            textTransform: 'none'
+                                                                        }}>
+                                                                            Clear
+                                                                        </Button>
+                                                                        <Button onClick={handleDelete} sx={{
+                                                                            background: '#5052B2',
+                                                                            borderRadius: '4px',
+                                                                            border: '1px solid #5052b2',
+                                                                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                                                            color: '#fff',
+                                                                            fontFamily: 'Nunito Sans',
+                                                                            fontSize: '14px',
+                                                                            fontWeight: '600',
+                                                                            lineHeight: '20px',
+                                                                            textTransform: 'none',
+                                                                            '&:hover': {
+                                                                                color: '#5052B2'
+                                                                            }
+                                                                        }}>
+                                                                            Delete
+                                                                        </Button>
+                                                                    </Box>
+                                                                </Box>
+                                                            </Popover>
+                                                        </>
+                                                    )}
+                                                </Grid>
+                                            </Grid>
+                                        </Box>
+                                    ))}
                             </Box>
                         </TabPanel>
                     </TabContext>
