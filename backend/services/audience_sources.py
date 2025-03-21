@@ -167,9 +167,9 @@ class AudienceSourceService:
         domains = [domain for _, domain in result]
         return DomainsSourceResponse(domains=domains, has_more=has_more)
 
-    def get_processing_source(self, id: str) -> SourceResponse:
+    def get_processing_source(self, id: str) -> Optional[SourceResponse]:
         source = self.audience_sources_persistence.get_processing_sources(id)
-        return {
+        return None if not source else {
             'id': source[0],
             'name': source[1],
             'source_origin': source[2],
@@ -181,4 +181,4 @@ class AudienceSourceService:
             'matched_records': source[8],
             'matched_records_status': source[9],
             'processed_records': source[10],
-            }
+        }

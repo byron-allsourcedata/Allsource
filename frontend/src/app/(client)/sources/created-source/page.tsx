@@ -64,6 +64,7 @@ const SourcesList: React.FC = () => {
     
                 if (hasPending) {
                     console.log("Fetching due to pending records");
+                
                     fetchData();
                 } else {
                     console.log("No pending records, stopping interval");
@@ -72,6 +73,12 @@ const SourcesList: React.FC = () => {
                         intervalRef.current = null;
                     }
                 }
+                console.log(sourceProgress[createdSource.id]?.processed);
+                console.log(sourceProgress[createdSource.id]?.total);
+                console.log(createdData?.processed_records );
+                console.log(createdData?.total_records)
+                console.log(sourceProgress[createdSource.id]?.total === createdData?.processed_records);
+                console.log(createdData?.id);
             }, 2000);
         }
     
@@ -438,7 +445,7 @@ const SourcesList: React.FC = () => {
                                 </Button>
                                 <Button
                                     variant="contained"/* need chnage < on !== */
-                                    disabled={createdSource?.id && sourceProgress[createdSource.id]?.processed !== sourceProgress[createdSource.id]?.total}
+                                    disabled={ (createdData?.processed_records === 0) || (createdData?.processed_records !== createdData?.total_records) }
                                     onClick={() => router.push(`/lookalikes/${createdSource?.id}/builder`)}
                                     className='second-sub-title'
                                     sx={{
