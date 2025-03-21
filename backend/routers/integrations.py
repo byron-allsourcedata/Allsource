@@ -42,6 +42,27 @@ async def get_integrations_service(type: str | None = Query(None), data_sync: bo
     return persistence.get_integrations_service(**filter)
 
 
+@router.get('/smart-audience-sync')
+@router.get('/smart-audience-sync/')
+async def get_integrations_smart_audinece_sync(
+        type: str | None = Query(None), 
+        data_sync: bool | None = Query(None), 
+        integration_list: str | None = Query(None),
+        user=Depends(check_user_authentication),
+        persistence: IntegrationsPresistence = Depends(get_user_integrations_presistence)
+    ):
+    filter = {}
+    if type:
+        filter['type'] = type
+    if data_sync is not None:
+        filter['data_sync'] = data_sync
+    
+    if integration_list:
+        filter['service_name'] = integration_list.split(',')
+
+    return persistence.get_integrations_service(**filter)
+
+
 @router.get('/credentials/')
 async def get_integrations_credentials(integration_serivce: IntegrationService = Depends(get_integration_service),
                                        user=Depends(check_user_authorization),

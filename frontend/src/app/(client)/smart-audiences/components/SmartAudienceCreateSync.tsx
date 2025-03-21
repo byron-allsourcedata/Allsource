@@ -39,6 +39,7 @@ import AddIcon from '@mui/icons-material/Add';
 interface AudiencePopupProps {
     open: boolean;
     onClose: () => void;
+    integrationsList?: string[]; // Changed to match 'integrationsList'
     selectedLeads?: number[];
 }
 
@@ -123,7 +124,8 @@ const klaviyoStyles = {
     },
 }
 
-const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLeads }) => {
+const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrationsList: integ = [], selectedLeads }) => {
+    const integrationsList = [...integ, "csv", "s3"]
     const [selectedOption, setSelectedOption] = useState<string | null>(null);
     const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
     const [isExistingListsOpen, setIsExistingListsOpen] = useState<boolean>(false);
@@ -175,15 +177,21 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, selected
 
     useEffect(() => {
         const fetchData = async () => {
-            const response = await axiosInstance.get('/integrations/')
+            const response = await axiosInstance.get('/integrations/smart-audience-sync/', {
+                params: {
+                    integration_list: 'salesforce,hubspot,mailchimp',
+                },
+            });
             if (response.status === 200) {
-                setIntegrations(response.data)
+                console.log(response)
+                setIntegrations(response.data);
             }
-        }
+        };
         if (open) {
-            fetchData()
+            fetchData();
         }
-    }, [open])
+    }, [open]);
+    
 
     useEffect(() => {
         const fetchData = async () => {
@@ -546,7 +554,9 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, selected
         { image: 'webhook-icon.svg', service_name: 'webhook' },
         { image: 'hubspot.svg', service_name: 'hubspot' },
         { image: 'google-ads.svg', service_name: 'google_ads' },
-        { image: 'salesforce-icon.svg', service_name: 'sales_force' }
+        { image: 'salesforce-icon.svg', service_name: 'sales_force' },
+        { image: 's3.png', service_name: 's3' },
+        { image: 'csv-icon.svg', service_name: 'csv' }
       ];
 
       const [valueContactSync, setValueContactSync] = useState<number>(1000);
@@ -904,12 +914,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, selected
                                         </Typography>
                                         <List sx={{ display: 'flex', gap: '16px', py: 2, flexWrap: 'wrap', border: 'none' }}>
                                             {integrationsAvailable
-                                                .filter(integration => {
-                                                    if (search) {
-                                                    return integration.service_name.toLowerCase().includes(search.toLowerCase());
-                                                    }
-                                                    return true;
-                                                })
+                                                .filter((integration) => 
+                                                    integrationsList?.includes(integration.service_name) && 
+                                                    (!search || integration.service_name.toLowerCase().includes(search.toLowerCase()))
+                                                )
                                                 .sort((a, b) => {
                                                     const isAIntegrated = integratedServices.includes(a.service_name);
                                                     const isBIntegrated = integratedServices.includes(b.service_name);

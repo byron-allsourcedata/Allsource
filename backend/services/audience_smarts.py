@@ -1,4 +1,5 @@
 import logging
+import json
 from typing import Optional
 from schemas.audience import SmartsAudienceObjectResponse
 from persistence.audience_smarts import AudienceSmartsPersistence
@@ -38,6 +39,7 @@ class AudienceSmartsService:
 
         audience_smarts_list = []
         for item in audience_smarts:
+            integrations = json.loads(item[9]) if item[9] else []
             audience_smarts_list.append({
                 'id': item[0],
                 'name': item[1],
@@ -48,6 +50,7 @@ class AudienceSmartsService:
                 'validated_records': item[6],
                 'active_segment_records': item[7],
                 'status': item[8],
+                'integrations': integrations,
             })
 
         return audience_smarts_list, count

@@ -46,6 +46,7 @@ class AudienceSmartsPersistence:
                 AudienceSmart.validated_records,
                 AudienceSmart.active_segment_records,
                 AudienceSmart.status,
+                AudienceSmartsUseCase.integrations,
             )
                 .join(Users, Users.id == AudienceSmart.created_by_user_id)
                 .join(AudienceSmartsUseCase, AudienceSmartsUseCase.id == AudienceSmart.use_case_id)
