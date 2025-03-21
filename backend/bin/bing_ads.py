@@ -5,6 +5,7 @@ from bingads import ServiceClient, AuthorizationData, OAuthWebAuthCodeGrant
 from suds import WebFault
 from bingads.authorization import OAuthDesktopMobileAuthCodeGrant
 import sys
+from bingads.authorization import AuthorizationData, OAuthWebAuthCodeGrant
 import requests
 import xml.etree.ElementTree as ET
 from bingads.service_client import ServiceClient
@@ -17,8 +18,6 @@ CLIENT_ID = 'a9a7ed83-a423-4713-9d34-232646858381'
 CLIENT_SECRET = 'DpX8Q~Ur~HQJUHF53lvtQil~uqrWknS3oSZkldlL'
 DEVELOPER_TOKEN = '1451H5GIKV096293'
 REDIRECT_URI = 'http://localhost:3000/bing-ads-landing'
-ACCOUNT_ID = '187022038'
-CUSTOMER_ID = '254340122'
 SCOPE = 'https://ads.microsoft.com/.default'
 
 
@@ -42,158 +41,130 @@ def get_access_token():
         exit()
         
         
-access_token = get_access_token()
 
-from bingads.authorization import AuthorizationData, OAuthWebAuthCodeGrant
+import requests
+import xml.etree.ElementTree as ET
 
+CUSTOMER_MGMT_ENDPOINT = "https://api.bingads.microsoft.com/Api/CustomerManagement/v13/CustomerManagementService.svc"
 
-def authenticate(access_token):
-    authorization_data = AuthorizationData(
-        developer_token=DEVELOPER_TOKEN,
-        authentication=None,
-        customer_id=CUSTOMER_ID,
-        account_id=ACCOUNT_ID,
-    )
+import requests
+import xml.etree.ElementTree as ET
 
-    oauth_authentication = OAuthWebAuthCodeGrant(
-        client_id=CLIENT_ID,
-        client_secret=CLIENT_SECRET,
-        redirection_uri=REDIRECT_URI
-    )
+def get_user_info(developer_token, access_token):
+    get_user_request = f'''<?xml version="1.0" encoding="utf-8"?>
+    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:v13="https://bingads.microsoft.com/Customer/v13">
+        <soapenv:Header>
+            <v13:DeveloperToken>{developer_token}</v13:DeveloperToken>
+            <v13:AuthenticationToken>{access_token}</v13:AuthenticationToken>
+        </soapenv:Header>
+        <soapenv:Body>
+            <v13:GetUserRequest>
+                <v13:UserId xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+            </v13:GetUserRequest>
+        </soapenv:Body>
+    </soapenv:Envelope>'''
+
+    headers = {
+        "Content-Type": "text/xml",
+        "SOAPAction": "GetUser"
+    }
+
+    uri = "https://clientcenter.api.bingads.microsoft.com/Api/CustomerManagement/v13/CustomerManagementService.svc"
+
+    response = requests.post(uri, data=get_user_request, headers=headers)
     
-    oauth_authentication.state = 'YourState'
-    oauth_authentication.token = {
-        'access_token': access_token,
-        'refresh_token': REFRESH_TOKEN,
-        'expires_in': 3600,
-        'token_type': 'Bearer'
+    if response.status_code != 200:
+        raise Exception(f"Ошибка HTTP {response.status_code}: {response.text}")
+
+    # Парсинг XML-ответа
+    root = ET.fromstring(response.content)
+    ns = {
+        "s": "http://schemas.xmlsoap.org/soap/envelope/",
+        "c": "https://bingads.microsoft.com/Customer/v13",
+        "a": "https://bingads.microsoft.com/Customer/v13/Entities"
+    }
+    print(response.text)
+    user_id_elem = root.find(".//a:Id", ns)
+    if user_id_elem is None:
+        raise Exception("Не удалось найти UserId в ответе GetUser")
+    
+    user_id = user_id_elem.text
+    return {"UserId": user_id, "RawResponse": response.text}
+
+
+def search_accounts(user_id, developer_token, auth_token, page_index=0, page_size=10):
+    """
+    Выполняет поиск аккаунтов для указанного user_id через операцию SearchAccounts.
+    Возвращает список аккаунтов с идентификаторами CustomerId и AccountId.
+    """
+    soap_envelope = f'''<?xml version="1.0" encoding="utf-8"?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+  <s:Header>
+    <h:ApplicationToken xmlns:h="https://bingads.microsoft.com/Customer/v13" i:nil="true"/>
+    <h:AuthenticationToken xmlns:h="https://bingads.microsoft.com/Customer/v13">{auth_token}</h:AuthenticationToken>
+    <h:DeveloperToken xmlns:h="https://bingads.microsoft.com/Customer/v13">{developer_token}</h:DeveloperToken>
+  </s:Header>
+  <s:Body>
+    <SearchAccountsRequest xmlns="https://bingads.microsoft.com/Customer/v13">
+      <Predicates xmlns:a="https://bingads.microsoft.com/Customer/v13/Entities">
+        <a:Predicate>
+          <a:Field>UserId</a:Field>
+          <a:Operator>Equals</a:Operator>
+          <a:Value>{user_id}</a:Value>
+        </a:Predicate>
+      </Predicates>
+      <Ordering i:nil="true" xmlns:a="https://bingads.microsoft.com/Customer/v13/Entities"/>
+      <PageInfo xmlns:a="https://bingads.microsoft.com/Customer/v13/Entities">
+        <a:Index>{page_index}</a:Index>
+        <a:Size>{page_size}</a:Size>
+      </PageInfo>
+    </SearchAccountsRequest>
+  </s:Body>
+</s:Envelope>'''
+
+    headers = {
+        "Content-Type": "text/xml; charset=utf-8",
+        "SOAPAction": "SearchAccounts"
     }
     
-    authorization_data.authentication = oauth_authentication
-    return authorization_data
+    response = requests.post(CUSTOMER_MGMT_ENDPOINT, data=soap_envelope, headers=headers)
+    if response.status_code != 200:
+        raise Exception(f"Ошибка SearchAccounts: {response.status_code} - {response.text}")
+    
+    # Парсинг XML-ответа для извлечения информации об аккаунтах
+    root = ET.fromstring(response.content)
+    ns = {"s": "http://schemas.xmlsoap.org/soap/envelope/",
+          "c": "https://bingads.microsoft.com/Customer/v13",
+          "a": "https://bingads.microsoft.com/Customer/v13/Entities"}
+    
+    accounts = []
+    # Ожидается, что в ответе вернется список AccountInfo элементов
+    for account_elem in root.findall(".//a:AccountInfo", ns):
+        customer_id = account_elem.find("a:CustomerId", ns).text if account_elem.find("a:CustomerId", ns) is not None else None
+        account_id = account_elem.find("a:AccountId", ns).text if account_elem.find("a:AccountId", ns) is not None else None
+        account_name = account_elem.find("a:AccountName", ns).text if account_elem.find("a:AccountName", ns) is not None else None
+        accounts.append({
+            "CustomerId": customer_id,
+            "AccountId": account_id,
+            "AccountName": account_name
+        })
+    return accounts
 
-
-from bingads.service_client import ServiceClient
-
-def create_campaign(authorization_data, campaign_name, daily_budget, language='English', time_zone='PacificTimeUSCanadaTijuana'):
-    """
-    Создаёт кампанию с заданными параметрами.
-    """
-    campaign_service = ServiceClient(
-        service='CampaignManagementService',
-        version=13,
-        authorization_data=authorization_data,
-        environment='production'
-    )
-
-    campaign = {
-        'Name': campaign_name,
-        'Description': 'Описание кампании',
-        'BudgetType': 'DailyBudgetStandard',
-        'DailyBudget': daily_budget,
-        'TimeZone': time_zone,
-        'Language': language
-        # Можно добавить и другие параметры по необходимости
-    }
-
+# Пример использования:
+if __name__ == "__main__":
+    # Эти значения должны быть получены заранее (из настроек или переменных окружения)
+    DEV_TOKEN = DEVELOPER_TOKEN
+    AUTH_TOKEN = get_access_token()
+    
     try:
-        response = campaign_service.AddCampaigns(
-            AccountId=authorization_data.account_id,
-            Campaigns=[campaign]
-        )
-        campaign_ids = response['CampaignIds']
-        print(f'Кампания создана с ID: {campaign_ids[0]}')
-        return campaign_ids[0]
-    except Exception as ex:
-        print(f'Ошибка при создании кампании: {ex}')
-        return None
+        user_info = get_user_info(DEV_TOKEN, AUTH_TOKEN)
+        user_id = user_info["UserId"]
+        print("Получен UserId:", user_id)
+        
+        accounts = search_accounts(user_id, DEV_TOKEN, AUTH_TOKEN)
+        print("Найденные аккаунты:")
+        for acc in accounts:
+            print(f"AccountName: {acc['AccountName']}, CustomerId: {acc['CustomerId']}, AccountId: {acc['AccountId']}")
+    except Exception as e:
+        print("Ошибка:", e)
 
-def create_audience(authorization_data, audience_name, description, membership_duration, scope):
-    """
-    Создаёт список аудитории (remarketing list) с заданными параметрами.
-    - membership_duration: продолжительность членства (например, 30 дней)
-    - scope: область применения, например, 'Account' или 'Customer'
-    """
-    audience_service = ServiceClient(
-        service='AudienceManagementService',
-        version=13,
-        authorization_data=authorization_data,
-        environment='production'
-    )
-
-    audience = {
-        'Name': audience_name,
-        'Description': description,
-        'MembershipDuration': membership_duration,
-        'Scope': scope,
-        'AudienceType': 'RemarketingList'
-    }
-
-    try:
-        response = audience_service.AddAudiences(Audiences=[audience])
-        audience_ids = response['AudienceIds']
-        print(f'Список аудитории создан с ID: {audience_ids[0]}')
-        return audience_ids[0]
-    except Exception as ex:
-        print(f'Ошибка при создании списка аудитории: {ex}')
-        return None
-
-def update_audience_memberships(authorization_data, audience_id, members_to_add, members_to_remove=None):
-    """
-    Обновляет список аудитории, добавляя (и/или удаляя) участников.
-    - members_to_add: список значений (например, email-адресов или других идентификаторов, возможно, в хешированном виде)
-    - members_to_remove: опционально, список значений для удаления
-    """
-    audience_service = ServiceClient(
-        service='AudienceManagementService',
-        version=13,
-        authorization_data=authorization_data,
-        environment='production'
-    )
-
-    membership_changes = {
-        'AudienceId': audience_id,
-        'AddMembers': members_to_add,
-        'RemoveMembers': members_to_remove if members_to_remove else []
-    }
-
-    try:
-        response = audience_service.UpdateAudienceMemberships(MembershipChanges=[membership_changes])
-        print(f'Обновление списка аудитории (ID: {audience_id}) прошло успешно.')
-        return response
-    except Exception as ex:
-        print(f'Ошибка при обновлении списка аудитории: {ex}')
-        return None
-
-authorization_data = authenticate(access_token=access_token)
-
-# Создание кампании
-campaign_id = create_campaign(
-    authorization_data=authorization_data,
-    campaign_name='Тестовая кампания',
-    daily_budget=50.0,
-    language='English',
-    time_zone='PacificTimeUSCanadaTijuana'
-)
-
-# Создание списка аудитории
-# audience_id = create_audience(
-#     authorization_data=authorization_data,
-#     audience_name='Тестовый список аудитории',
-#     description='Описание тестового списка',
-#     membership_duration=30,
-#     scope='Account'
-# )
-
-# # Заполнение списка аудитории
-# # Пример: список участников (здесь значения могут требовать хеширования)
-# members_to_add = [
-#     'example1@example.com',
-#     'example2@example.com'
-# ]
-
-# update_audience_memberships(
-#     authorization_data=authorization_data,
-#     audience_id=audience_id,
-#     members_to_add=members_to_add
-# )
