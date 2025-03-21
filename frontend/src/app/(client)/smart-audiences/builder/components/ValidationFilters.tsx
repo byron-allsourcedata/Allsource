@@ -33,6 +33,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
     const [expandedNested, setExpandedNested] = useState<{ [key: string]: boolean }>({});
 
     const [openPopup, setOpenPopup] = useState(false);
+    const [isValidate, setValidate] = useState(false)
 
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
@@ -525,7 +526,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                             Cancel
                         </Typography>
                     </Button>
-                    <Button variant="contained" onClick={handleValidate} sx={{
+                    <Button variant="contained" disabled={!isValidate} onClick={handleValidate} sx={{
                         ...smartAudiences.buttonform,
                         backgroundColor: "rgba(80, 82, 178, 1)",
                         width: "237px",
@@ -550,7 +551,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                 open={openPopup}
                 onClose={() => setOpenPopup(false)}
                 onContinue={() => { console.log("Continue validation"); setOpenPopup(false); }}
-                onSkip={() => { setOpenPopup(false); onSkip() }}
+                onSkip={() => { setOpenPopup(false); onSkip(), setValidate(true) }}
             />
         </Box>
     );
