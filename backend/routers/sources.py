@@ -91,7 +91,7 @@ def get_sample_customers_list(
                         headers={"Content-Disposition": "attachment; filename=sample-customers-list.csv"})
 
 
-@router.get("/get-processing-source", response_model=SourceResponse)
+@router.get("/get-processing-source", response_model=Optional[SourceResponse])
 def get_processing_source(
         id: str = Query(...),
         sources_service: AudienceSourceService = Depends(get_audience_sources_service)):
