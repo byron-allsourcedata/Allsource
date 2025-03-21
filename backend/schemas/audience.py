@@ -81,6 +81,7 @@ class SmartsResponse(BaseModel):
     validated_records: int
     active_segment_records: int
     status: str
+    integrations: List[str]
 
     model_config = {
         "from_attributes": True
@@ -93,3 +94,6 @@ class SourcesObjectResponse(BaseModel):
 class SmartsAudienceObjectResponse(BaseModel):
     audience_smarts_list: List[SmartsResponse]
     count: int
+
+class UpdateSmartAudienceRequest(BaseModel):
+    new_name: str

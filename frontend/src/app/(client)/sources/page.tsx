@@ -441,6 +441,19 @@ const Sources: React.FC = () => {
         return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
     };
 
+    const commonCellStyles = {
+        minWidth: "15vw",
+        width: "15vw",
+        maxWidth: "15vw",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap",
+        '@media (max-width: 600px)': {
+            minWidth: "20vw",
+            width: "20vw",
+            maxWidth: "20vw"
+        },
+    };
 
     return (
         <>
@@ -746,17 +759,28 @@ const Sources: React.FC = () => {
                                                                     </TableCell>
                                                                 ))}
                                                             </TableRow>
-                                                            {loaderForTable && (
-                                                                <TableRow sx={{
-                                                                    position: "sticky",
-                                                                    top: '56px',
-                                                                    zIndex: 11,
-                                                                }}>
-                                                                    <TableCell colSpan={9} sx={{ p: 0, pb: "4px" }}>
-                                                                        <LinearProgress variant="indeterminate" sx={{ width: "100%", position: "absolute" }} />
-                                                                    </TableCell>
-                                                                </TableRow>
-                                                            )}
+                                                            {loaderForTable 
+                                                                    ? (
+                                                                        <TableRow sx={{
+                                                                            position: "sticky",
+                                                                            top: '56px',
+                                                                            zIndex: 11,
+                                                                        }}>
+                                                                            <TableCell colSpan={9} sx={{ p: 0, pb: "1px" }}>
+                                                                                <LinearProgress variant="indeterminate" sx={{ width: "100%", height: "2px", position: "absolute" }} />
+                                                                            </TableCell>
+                                                                        </TableRow>
+                                                                    )
+                                                                    : (
+                                                                        <TableRow sx={{
+                                                                            position: "sticky",
+                                                                            top: '56px',
+                                                                            zIndex: 11,
+                                                                        }}>
+                                                                            <TableCell colSpan={9} sx={{ p: 0, pb: "1px", backgroundColor: "rgba(235, 235, 235, 1)", borderColor: "rgba(235, 235, 235, 1)" }}/>
+                                                                        </TableRow>
+                                                                    )
+                                                                }
                                                         </TableHead>
                                                     </Table>
                                                 </TableContainer>
@@ -812,7 +836,7 @@ const Sources: React.FC = () => {
                                                         }}
                                                     >
                                                         <Table stickyHeader aria-label="leads table">
-                                                            <TableHead sx={{ position: "relative" }}>
+                                                        <TableHead sx={{ position: "relative" }}>
                                                                 <TableRow>
                                                                     {[
                                                                         { key: 'name', label: 'Name' },
@@ -837,7 +861,8 @@ const Sources: React.FC = () => {
                                                                                 }),
                                                                                 ...(key === 'average_time_sec' && {
                                                                                     "::after": { content: 'none' }
-                                                                                })
+                                                                                }),
+                                                                                borderBottom: "none",
                                                                             }}
 
                                                                             onClick={sortable ? () => handleSortRequest(key) : undefined}
@@ -862,17 +887,33 @@ const Sources: React.FC = () => {
                                                                         </TableCell>
                                                                     ))}
                                                                 </TableRow>
-                                                                {loaderForTable && (
-                                                                    <TableRow sx={{
+                                                                <TableRow
+                                                                    sx={{
                                                                         position: "sticky",
-                                                                        top: '56px',
+                                                                        top: "56px",
                                                                         zIndex: 11,
-                                                                    }}>
-                                                                        <TableCell colSpan={9} sx={{ p: 0, pb: "4px" }}>
-                                                                            <LinearProgress variant="indeterminate" sx={{ width: "100%", position: "absolute" }} />
-                                                                        </TableCell>
-                                                                    </TableRow>
-                                                                )}
+                                                                        borderTop: "none",
+                                                                    }}
+                                                                >
+                                                                    <TableCell
+                                                                        colSpan={9}
+                                                                        sx={{
+                                                                            p: 0, 
+                                                                            pb: "2px",
+                                                                            borderTop: "none",
+                                                                            backgroundColor: "rgba(235, 235, 235, 1)", borderColor: "rgba(235, 235, 235, 1)"
+                                                                        }}
+                                                                    >
+                                                                        {loaderForTable && (
+                                                                            <LinearProgress
+                                                                                variant="indeterminate"
+                                                                                sx={{
+                                                                                    width: "100%", height: "2px", position: "absolute"
+                                                                                }}
+                                                                            />
+                                                                        )}
+                                                                    </TableCell>
+                                                                </TableRow>
                                                             </TableHead>
                                                             <TableBody>
                                                                 {data.map((row: Source) => {
@@ -894,9 +935,53 @@ const Sources: React.FC = () => {
                                                                             {/* Name Column */}
                                                                             <TableCell className="sticky-cell"
                                                                                 sx={{
-                                                                                    ...sourcesStyles.table_array, position: 'sticky', left: '0', zIndex: 9, backgroundColor: loaderForTable ? 'transparent' : '#fff',
-                                                                                }}>
-                                                                                {row.name}
+                                                                                    ...sourcesStyles.table_array,
+                                                                                    ...commonCellStyles,
+                                                                                    position: 'sticky',
+                                                                                    left: '0',
+                                                                                    zIndex: 9,
+                                                                                    backgroundColor: loaderForTable ? 'transparent' : '#fff',
+                                                                                }}
+                                                                            >
+                                                                                <Box sx={{ display: 'flex' }}>
+                                                                                    <Tooltip
+                                                                                        title={
+                                                                                            <Box sx={{ backgroundColor: '#fff', margin: 0, padding: 0, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                                                                                                <Typography className='table-data' component='div' sx={{ fontSize: '12px !important' }}>
+                                                                                                    {row.name}
+                                                                                                </Typography>
+                                                                                            </Box>
+                                                                                        }
+                                                                                        sx={{ marginLeft: '0.5rem !important' }}
+                                                                                        componentsProps={{
+                                                                                            tooltip: {
+                                                                                                sx: {
+                                                                                                    backgroundColor: '#fff',
+                                                                                                    color: '#000',
+                                                                                                    boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
+                                                                                                    border: '0.2px solid rgba(255, 255, 255, 1)',
+                                                                                                    borderRadius: '4px',
+                                                                                                    maxHeight: '100%',
+                                                                                                    maxWidth: '500px',
+                                                                                                    padding: '11px 10px',
+                                                                                                    marginLeft: '0.5rem !important',
+                                                                                                },
+                                                                                            },
+                                                                                        }}
+                                                                                        placement='right'
+                                                                                    >
+                                                                                        <Typography className='table-data'
+                                                                                            sx={{
+                                                                                                whiteSpace: 'nowrap',
+                                                                                                overflow: 'hidden',
+                                                                                                textOverflow: 'ellipsis',
+                                                                                                maxWidth: '15vw',
+                                                                                            }}
+                                                                                        >
+                                                                                            {row.name}
+                                                                                        </Typography>
+                                                                                    </Tooltip>
+                                                                                </Box>
                                                                             </TableCell>
 
                                                                             {/* Source Column */}
@@ -908,9 +993,56 @@ const Sources: React.FC = () => {
 
                                                                             {/* Domain Column */}
                                                                             <TableCell
-                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative' }}
+                                                                                sx={{
+                                                                                    ...sourcesStyles.table_array,
+                                                                                    ...commonCellStyles,
+                                                                                    position: 'relative',
+                                                                                }}
                                                                             >
-                                                                                {row.domain ?? "--"}
+                                                                                <Box sx={{ display: 'flex' }}>
+                                                                                    {row.domain && (
+                                                                                        <Tooltip
+                                                                                            title={
+                                                                                                <Box sx={{ backgroundColor: '#fff', margin: 0, padding: 0, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                                                                                                    <Typography className='table-data' component='div' sx={{ fontSize: '12px !important' }}>
+                                                                                                        {row.domain}
+                                                                                                    </Typography>
+                                                                                                </Box>
+                                                                                            }
+                                                                                            sx={{ marginLeft: '0.5rem !important' }}
+                                                                                            componentsProps={{
+                                                                                                tooltip: {
+                                                                                                    sx: {
+                                                                                                        backgroundColor: '#fff',
+                                                                                                        color: '#000',
+                                                                                                        boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
+                                                                                                        border: '0.2px solid rgba(255, 255, 255, 1)',
+                                                                                                        borderRadius: '4px',
+                                                                                                        maxHeight: '100%',
+                                                                                                        maxWidth: '500px',
+                                                                                                        padding: '11px 10px',
+                                                                                                        marginLeft: '0.5rem !important',
+                                                                                                    },
+                                                                                                },
+                                                                                            }}
+                                                                                            placement='right'
+                                                                                        >
+                                                                                            <Typography className='table-data'
+                                                                                                sx={{
+                                                                                                    whiteSpace: 'nowrap',
+                                                                                                    overflow: 'hidden',
+                                                                                                    textOverflow: 'ellipsis',
+                                                                                                    maxWidth: '15vw',
+                                                                                                }}
+                                                                                            >
+                                                                                                {row.domain ?? "--"}
+                                                                                            </Typography>
+                                                                                        </Tooltip>
+                                                                                    )}
+                                                                                    {!row.domain && (
+                                                                                        <Typography className='table-data'>{row.domain ?? "--"}</Typography>
+                                                                                    )}
+                                                                                </Box>
                                                                             </TableCell>
 
                                                                             {/* Type Column */}
@@ -1035,7 +1167,7 @@ const Sources: React.FC = () => {
                                                                                     >
                                                                                         <ListItemButton sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
                                                                                             handleClosePopover()
-                                                                                            router.push(`/lookalikes/${row.id}/builder`)
+                                                                                            router.push(`/lookalikes/${selectedRowData?.id}/builder`)
                                                                                         }}>
                                                                                             <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Lookalike" />
                                                                                         </ListItemButton>

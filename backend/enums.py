@@ -64,6 +64,7 @@ class SourcePlatformEnum(Enum):
     GOOGLE_ADS = 'google_ads'
     WEBHOOK = 'webhook'
     SALES_FORCE = 'sales_force'
+    BING_ADS= 'bing_ads'
 
 
 class UserPaymentStatusEnum(Enum):

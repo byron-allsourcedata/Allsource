@@ -9,6 +9,7 @@ import ConnectSalesForce from '@/app/(client)/data-sync/components/ConnectSalesF
 import ConnectMeta from './SyncMetaSlider';
 import KlaviyoIntegrationPopup from '@/components/KlaviyoIntegrationPopup';
 import SalesForceIntegrationPopup from '@/components/SalesForceIntegrationPopup';
+import BingAdsIntegrationPopup from '@/components/BingAdsIntegrationPopup';
 import SlackIntegrationPopup from '@/components//SlackIntegrationPopup';
 import GoogleADSConnectPopup from '@/components//GoogleADSConnectPopup';
 import MetaConnectButton from '@/components//MetaConnectButton';
@@ -23,6 +24,7 @@ import SlackDatasync from '@/app/(client)/data-sync/components/SlackDataSync';
 import GoogleADSDatasync from '@/app/(client)/data-sync/components/GoogleADSDataSync';
 import SendlaneConnect from '@/components/SendlaneConnect';
 import SendlaneDatasync from '@/app/(client)/data-sync/components/SendlaneDatasync';
+import BingAdsDataSync from '@/app/(client)/data-sync/components/BingAdsDataSync';
 import ZapierDataSync from '@/app/(client)/data-sync/components/ZapierDataSync';
 
 interface AudiencePopupProps {
@@ -55,12 +57,7 @@ interface Integrations {
 }
 
 const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLeads }) => {
-    const [selectedOption, setSelectedOption] = useState<string | null>(null);
-    const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
-    const [isExistingListsOpen, setIsExistingListsOpen] = useState<boolean>(false);
     const [listItems, setListItems] = useState<ListItem[]>([]);
-    const [checkedItems, setCheckedItems] = useState<Set<number>>(new Set());
-    const [listName, setListName] = useState<string>('');
     const [plusIconPopupOpen, setPlusIconPopupOpen] = useState(false);
     const [klaviyoIconPopupOpen, setKlaviyoIconPopupOpen] = useState(false);
     const [salesForceIconPopupOpen, setSalesForceIconPopupOpen] = useState(false);
@@ -70,14 +67,15 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [integrationsCredentials, setIntegrationsCredentials] = useState<IntegrationsCredentials[]>([])
     const [createKlaviyo, setCreateKlaviyo] = useState<boolean>(false)
     const [createSalesForce, setCreateSalesForce] = useState<boolean>(false)
+    const [createBingAds, setCreateBingAds] = useState<boolean>(false)
     const [createSlack, setCreateSlack] = useState<boolean>(false)
     const [createGoogleADS, setCreateGoogleADS] = useState<boolean>(false)
     const [createWebhook, setCreateWebhook] = useState<boolean>(false)
     const [integrations, setIntegrations] = useState<Integrations[]>([])
     const [metaConnectApp, setMetaConnectApp] = useState(false)
-    const [openBigcommrceConnect, setOpenBigcommerceConnect] = useState(false)
     const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false)
     const [omnisendIconPopupOpen, setOpenOmnisendIconPopupOpen] = useState(false)
+    const [bingAdsIconPopupOpen, setOpenBingAdsIconPopupOpen] = useState(false)
     const [mailchimpIconPopupOpen, setOpenMailchimpIconPopup] = useState(false)
     const [webhookIconPopupOpen, setOpenWebhookIconPopup] = useState(false)
     const [slackIconPopupOpen, setOpenSlackIconPopup] = useState(false)
@@ -86,7 +84,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [openSendlaneIconPopupOpen, setOpenSendlaneIconPopupOpen] = useState(false)
     const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
     const [openZapierDataSync, setOpenZapierDataSync] = useState(false)
-    const [openZapierConnect, setOpenZapierConnect] = useState(false)
+
     const fetchListItems = async () => {
         try {
             const response = await axiosInstance.get('/audience/list');
@@ -136,43 +134,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setOpenOmnisendIconPopupOpen(false)
     }
 
-    const toggleFormVisibility = () => {
-        setIsFormOpen(!isFormOpen);
-    };
-
-    const toggleExistingListsVisibility = () => {
-        setIsExistingListsOpen(!isExistingListsOpen);
-    };
-
-    const handleCheckboxChange = (audience_id: number) => {
-        setCheckedItems(prev => {
-            const newCheckedItems = new Set(prev);
-            if (newCheckedItems.has(audience_id)) {
-                newCheckedItems.delete(audience_id);
-            } else {
-                newCheckedItems.add(audience_id);
-            }
-            return newCheckedItems;
-        });
-    };
-
-    const handleListNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setListName(event.target.value);
-    };
-
-    const isSaveButtonDisabled = () => {
-        if (selectedOption === 'create' && listName.trim() === '') {
-            return true;
-        }
-        if (selectedOption === 'existing' && checkedItems.size === 0) {
-            return true;
-        }
-        if (selectedOption === null) {
-            return true;
-        }
-        return false;
-    };
-
+    const handleBingAdsIconPopupOpenClose = () => {
+        setOpenBingAdsIconPopupOpen(false)
+    }
 
     const handlePlusIconPopupOpen = () => {
         setPlusIconPopupOpen(true);
@@ -184,19 +148,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const handlePlusIconPopupClose = () => {
         setPlusIconPopupOpen(false);
     };
-    
+
     const handleKlaviyoIconPopupOpen = () => {
         setKlaviyoIconPopupOpen(true);
     };
-
-    const handleOmnisendConnectOpen = () => {
-        setOpenOmnisendConnect(true)
-    }
-
-    const handleOmnisendConnectClose = () => {
-        setOpenOmnisendConnect(false)
-        handleOmnisendIconPopupOpen()
-    }
 
     const handleOmnisendIconPopupOpen = () => {
         setOpenOmnisendIconPopupOpen(true);
@@ -204,7 +159,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
     const handleKlaviyoIconPopupClose = () => {
         setKlaviyoIconPopupOpen(false);
-        setOpenOmnisendConnect(false)
         setPlusIconPopupOpen(false)
     };
 
@@ -213,10 +167,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setPlusIconPopupOpen(false)
     };
 
-    const handleOpenMailchimpConnect = () => {
-        setOpenmailchimpConnect(true)
-    }
-
     const handleSlackIconPopupIconOpen = () => {
         setOpenSlackIconPopup(true)
     }
@@ -224,17 +174,17 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const handleGoogleAdsIconPopupIconOpen = () => {
         setOpenGoogleADSIconPopup(true)
     }
-    
+
     const handleWebhookIconPopupIconOpen = () => {
         setOpenWebhookIconPopup(true)
     }
 
-    const handleMailchimpIconPopupIconOpen = () => {
-        setOpenMailchimpIconPopup(true)
+    const handleBingAdsIconPopupIconOpen = () => {
+        setOpenBingAdsIconPopupOpen(true)
     }
 
-    const handleSlackConnectOpen = () => {
-        setOpenSlackIconPopup(true)
+    const handleMailchimpIconPopupIconOpen = () => {
+        setOpenMailchimpIconPopup(true)
     }
 
     const handleMailchimpIconPopupIconClose = () => {
@@ -269,11 +219,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const handleOpenMailchimpConnectClose = () => {
         setOpenmailchimpConnect(false)
     }
-
-    const handleIntegrationSelect = (integration: string) => {
-        setSelectedIntegration(integration);
-        setIsExportDisabled(false); // Enable export button when an integration is selected
-    };
 
     const handleSaveSettings = (newIntegration: any) => {
         setIntegrationsCredentials(prevIntegrations => {
@@ -310,7 +255,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                 break
             case 'Webhook':
                 handleWebhookIconPopupIconOpen()
-                break  
+                break
+            case 'BingAds':
+                handleBingAdsIconPopupIconOpen()
+                break
         }
     };
 
@@ -322,16 +270,8 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setOpenSendlaneIconPopupOpen(false)
     }
 
-    const handleSendlaneConnectOpen = () => {
-        setOpenSendlaneConnect(true)
-    }
-
     const handleSendlaneConnectClose = () => {
         setOpenSendlaneConnect(false)
-    }
-
-    const handleCreateKlaviyoOpen = () => {
-        setCreateKlaviyo(true)
     }
 
     const handleCreateKlaviyoClose = () => {
@@ -342,6 +282,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setCreateSalesForce(false)
     }
 
+    const handleCreateBingAdsClose = () => {
+        setCreateBingAds(false)
+    }
+
     const handleCreateSlackClose = () => {
         setCreateSlack(false)
     }
@@ -349,21 +293,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const handleCreateADSClose = () => {
         setCreateGoogleADS(false)
     }
-    
+
     const handleCreateWebhookClose = () => {
         setCreateWebhook(false)
-    }
-
-    const handleOpenZapierDataSync = () => {
-        setOpenZapierDataSync(true)
-    }
-
-    const handleOpenZapierConnect = () => {
-        setOpenZapierConnect(true)
-    }
-
-    const handleCloseZapierConnect = () => {
-        setOpenZapierConnect(false)
     }
 
     const handleCloseZapierDataSync = () => {
@@ -478,9 +410,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             <ConnectSalesForce data={null} open={salesForceIconPopupOpen} onClose={handleSalesForceIconPopupClose} />
             <ConnectMeta data={null} open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} />
             <OnmisendDataSync open={omnisendIconPopupOpen} onClose={handleOmnisendIconPopupOpenClose} isEdit={false} data={null} />
+            <BingAdsDataSync open={bingAdsIconPopupOpen} onClose={handleBingAdsIconPopupOpenClose} isEdit={false} data={null} />
             <SendlaneDatasync open={openSendlaneIconPopupOpen} onClose={handleSendlaneIconPopupClose} data={null} isEdit={false} />
             <MailchimpDatasync open={mailchimpIconPopupOpen} onClose={handleMailchimpIconPopupIconClose} data={null} />
-            <WebhookDatasync open={webhookIconPopupOpen} onClose={handleWebhookIconPopupIconClose} data={null} isEdit={false}/>
+            <WebhookDatasync open={webhookIconPopupOpen} onClose={handleWebhookIconPopupIconClose} data={null} isEdit={false} />
             <SlackDatasync open={slackIconPopupOpen} onClose={handleSlackIconPopupIconClose} data={null} isEdit={false} />
             <GoogleADSDatasync open={googleADSIconPopupOpen} onClose={handleGoogleADSIconPopupIconClose} data={null} isEdit={false} />
             <ZapierDataSync open={openZapierDataSync} handleClose={handleCloseZapierDataSync} />
@@ -492,6 +425,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             <GoogleADSConnectPopup open={createGoogleADS} handlePopupClose={handleCreateADSClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'google_ads')?.access_token} />
             <KlaviyoIntegrationPopup open={createKlaviyo} handleClose={handleCreateKlaviyoClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token} />
             <SalesForceIntegrationPopup open={createSalesForce} handleClose={handleCreateSalesForceClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sales_force')?.access_token} />
+            <BingAdsIntegrationPopup open={createBingAds} handleClose={handleCreateBingAdsClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'bing_ads')?.access_token} />
             <MailchimpConnect onSave={handleSaveSettings} open={openMailchimpConnect} handleClose={handleOpenMailchimpConnectClose} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Mailchimp')?.access_token} />
             <SendlaneConnect open={openSendlaneConnect} handleClose={handleSendlaneConnectClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Sendlane')?.access_token} />
             <OmnisendConnect open={openOmnisendConnect} handleClose={() => setOpenOmnisendConnect(false)} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Omnisend')?.access_token} />

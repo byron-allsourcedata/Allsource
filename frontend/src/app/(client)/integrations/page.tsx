@@ -43,6 +43,7 @@ import WebhookConnectPopup from "@/components/WebhookConnectPopup";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import HubspotIntegrationPopup from "@/components/HubspotIntegrationPopup"
 import GoogleADSConnectPopup from "@/components/GoogleADSConnectPopup";
+import BingAdsIntegrationPopup from "@/components/BingAdsIntegrationPopup";
 
 
 interface IntegrationBoxProps {
@@ -158,6 +159,9 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
     }
     if (name === "sales_force") {
       return "SalesForce";
+    }
+    if (name === "bing_ads") {
+      return "BingAds";
     }
     return name
       .split("_")
@@ -558,7 +562,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
       const response = await axiosInstance.get('/integrations/check-limit-reached')
       if (response.status === 200 && response.data == true) {
         setUpgradePlanPopup(true)
-        return 
+        return
       }
     } catch (error) {
     }
@@ -605,13 +609,13 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
     { image: 'omnisend_icon_black.svg', service_name: 'omnisend' },
     { image: 'mailchimp-icon.svg', service_name: 'mailchimp' },
     { image: 'sendlane-icon.svg', service_name: 'sendlane' },
-    //{ image: 'attentive.svg', service_name: 'attentive' },
     { image: 'zapier-icon.svg', service_name: 'zapier' },
     { image: 'slack-icon.svg', service_name: 'slack' },
     { image: 'webhook-icon.svg', service_name: 'webhook' },
     { image: 'hubspot.svg', service_name: 'hubspot' },
     { image: 'google-ads.svg', service_name: 'google_ads' },
-    { image: 'salesforce-icon.svg', service_name: 'sales_force' }
+    { image: 'salesforce-icon.svg', service_name: 'sales_force' },
+    { image: 'bingads-icon.svg', service_name: 'bing_ads' }
   ];
 
   const integratedServices = integrationsCredentials.map(cred => cred.service_name);
@@ -812,6 +816,14 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
         <GoogleADSConnectPopup
           open={true}
           handlePopupClose={handleClose}
+          boxShadow="rgba(0, 0, 0, 0.1)"
+        />
+      )}
+
+      {openModal === 'bing_ads' && (
+        <BingAdsIntegrationPopup
+          open={true}
+          handleClose={handleClose}
           boxShadow="rgba(0, 0, 0, 0.1)"
         />
       )}

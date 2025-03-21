@@ -1,12 +1,11 @@
 import React from "react";
 import TabContext from "@mui/lab/TabContext";
 import TabPanel from "@mui/lab/TabPanel";
-import { Box, Typography, Drawer, IconButton, Button, LinearProgress } from "@mui/material";
+import { Box, Typography, Drawer, IconButton, Button } from "@mui/material";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { v4 as uuidv4 } from 'uuid';
 import CloseIcon from '@mui/icons-material/Close';
-import { useAxiosHook } from "@/hooks/AxiosHooks";
-import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface CreateSalesForceProps {
     handleClose: () => void
@@ -28,22 +27,61 @@ interface IntegrationsCredentials {
     is_with_suppression?: boolean
 }
 
-const SalesForceIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxShadow, Invalid_api_key }: CreateSalesForceProps) => {
-    const [apiKey, setApiKey] = useState('');
-
-
+const BingAdsIntegrationPopup = ({ handleClose, open, boxShadow }: CreateSalesForceProps) => {
     const [value, setValue] = useState("1");
 
-    useEffect(() => {
-        setApiKey(initApiKey || '')
-    }, [initApiKey])
-
-    const handleLogin = async () => {
-        const client_id = process.env.NEXT_PUBLIC_SALES_FORCE_TOKEN;
-        const redirect_uri = `${process.env.NEXT_PUBLIC_BASE_URL}/sales-force-landing`;
-        const auth_url = `https://login.salesforce.com/services/oauth2/authorize?response_type=code&client_id=${client_id}&redirect_uri=${encodeURIComponent(redirect_uri)}`;
-        window.open(auth_url, '_blank');
+    const generateRandomString = (length: number): string => {
+        const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += charset.charAt(Math.floor(Math.random() * charset.length));
+        }
+        return result;
     };
+
+    async function generateCodeChallenge(codeVerifier: string): Promise<string> {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(codeVerifier);
+        const digest = await crypto.subtle.digest('SHA-256', data);
+
+        const uint8Array = new Uint8Array(digest);
+        let base64Digest = '';
+        for (let i = 0; i < uint8Array.length; i++) {
+            base64Digest += String.fromCharCode(uint8Array[i]);
+        }
+
+        const base64String = btoa(base64Digest);
+
+        // Преобразование в URL-safe base64
+        return base64String
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=+$/, '');
+    }
+
+    async function handleLogin(): Promise<void> {
+        const client_id = process.env.NEXT_PUBLIC_AZURE_CLIENT_ID;
+        const redirect_uri = `${process.env.NEXT_PUBLIC_BASE_URL}/bing-ads-landing`;
+        const scope = 'openid offline_access https://ads.microsoft.com/msads.manage';
+        const state = uuidv4();
+        const codeVerifier: string = generateRandomString(128);
+        localStorage.setItem('codeVerifier', codeVerifier);
+        const tenant_id = 'fbaec3a0-716c-44cd-87c6-2b7eafe74833';
+        const codeChallenge = await generateCodeChallenge(codeVerifier);
+        const authorizationUrl =
+            `https://login.microsoftonline.com/${tenant_id}/oauth2/v2.0/authorize?` +
+            `client_id=${client_id}&` +
+            `redirect_uri=${encodeURIComponent(redirect_uri)}&` +
+            `response_type=code&` +
+            `scope=${encodeURIComponent(scope)}&` +
+            `state=${state}&` +
+            `response_mode=query&` +
+            `code_challenge=${codeChallenge}&` +
+            `code_challenge_method=S256&` +
+            `prompt=consent`;
+
+        window.open(authorizationUrl, '_blank');
+    }
 
     return (
         <>
@@ -79,7 +117,7 @@ const SalesForceIntegrationPopup = ({ handleClose, open, onSave, initApiKey, box
             >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4' }}>
                     <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
-                        Connect to SalesForce
+                        Connect to BingAds
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
                         {/* <Link href={initApiKey ?
@@ -107,7 +145,7 @@ const SalesForceIntegrationPopup = ({ handleClose, open, onSave, initApiKey, box
                             <TabPanel value="1" sx={{ p: 0 }}>
                                 <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }} mt={2} mb={2}>
-                                        <Image src='/salesforce-icon.svg' alt='salesforce' height={24} width={24} />
+                                        <Image src='/bingads-icon.svg' alt='bingads' height={24} width={24} />
                                         <Typography variant="h6" sx={{
                                             fontFamily: 'Nunito Sans',
                                             fontSize: '16px',
@@ -115,7 +153,7 @@ const SalesForceIntegrationPopup = ({ handleClose, open, onSave, initApiKey, box
                                             color: '#202124',
                                             lineHeight: 'normal'
                                         }}>
-                                            Login to your SalesForce
+                                            Login to your BingAds
                                         </Typography>
                                     </Box>
                                     <Box>
@@ -123,9 +161,9 @@ const SalesForceIntegrationPopup = ({ handleClose, open, onSave, initApiKey, box
                                             fullWidth
                                             onClick={handleLogin}
                                             variant="contained"
-                                            startIcon={<Image src='/salesforce-icon.svg' alt='salesforce' height={24} width={24} />}
+                                            startIcon={<Image src='/bingads-icon.svg' alt='bingads' height={24} width={24} />}
                                             sx={{
-                                                backgroundColor: '#f24e1e',
+                                                backgroundColor: '#040404;',
                                                 fontFamily: "Nunito Sans",
                                                 fontSize: '14px',
                                                 fontWeight: '600',
@@ -135,13 +173,13 @@ const SalesForceIntegrationPopup = ({ handleClose, open, onSave, initApiKey, box
                                                 textTransform: 'none',
                                                 padding: '14.5px 24px',
                                                 '&:hover': {
-                                                    backgroundColor: '#f24e1e'
+                                                    backgroundColor: '#4a4545'
                                                 },
                                                 borderRadius: '6px',
-                                                border: '1px solid #f24e1e',
+                                                border: '1px solid #040404;',
                                             }}
                                         >
-                                            Connect to SalesForce
+                                            Connect to BingAds
                                         </Button>
                                     </Box>
                                 </Box>
@@ -154,4 +192,4 @@ const SalesForceIntegrationPopup = ({ handleClose, open, onSave, initApiKey, box
     );
 }
 
-export default SalesForceIntegrationPopup;
+export default BingAdsIntegrationPopup;

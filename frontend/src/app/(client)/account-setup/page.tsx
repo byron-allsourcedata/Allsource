@@ -41,6 +41,7 @@ import SendlaneConnect from "@/components/SendlaneConnect";
 import ZapierConnectPopup from "@/components/ZapierConnectPopup";
 import SlackConnectPopup from "@/components/SlackConnectPopup";
 import GoogleADSConnectPopup from "@/components/GoogleADSConnectPopup";
+import BingAdsIntegrationPopup from "@/components/BingAdsIntegrationPopup";
 import EditIcon from '@mui/icons-material/Edit';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
@@ -91,7 +92,8 @@ const AccountSetup = () => {
   const [mailChimpPopupOpen, setMailchimpPopupOpen] = useState(false)
   const [attentivePopupOpen, setAttentivePopupOpen] = useState(false)
   const [slackPopupOpen, setSlackPopupOpen] = useState(false)
-  const [GoogleADSPopupOpen, setGoogleADSPopupOpen] = useState(false)
+  const [googleADSPopupOpen, setGoogleADSPopupOpen] = useState(false)
+  const [bingAdsPopupOpen, setBingAdsPopupOpen] = useState(false)
   const [klaviyoPopupOpen, setKlaviyoPopupOpen] = useState(false)
   const [salesForcePopupOpen, setSalesForcePopupOpen] = useState(false)
   const [zapierPopupOpen, setZapierPopupOpen] = useState(false)
@@ -840,13 +842,14 @@ const AccountSetup = () => {
   ];
   const integrations = [
     { label: "Klaviyo", src: "klaviyo.svg", setState: setKlaviyoPopupOpen },
-    { label: "SalesForce", sr: "salesforce-icon.svg", setState: setSalesForcePopupOpen },
+    { label: "SalesForce", src: "salesforce-icon.svg", setState: setSalesForcePopupOpen },
     { label: "Mailchimp", src: "mailchimp-icon.svg", setState: setMailchimpPopupOpen },
     { label: "Meta", src: "meta-icon.svg", setState: setMetaPopupOpen },
     { label: "Omnisend", src: "omnisend_icon_black.svg", setState: setOmnisendPopupOpen },
     { label: "Sendlane", src: "sendlane-icon.svg", setState: setSendlanePopupOpen },
     { label: "Slack", src: "slack-icon.svg", setState: setSlackPopupOpen },
     { label: "GoogleAds", src: "google-ads.svg", setState: setGoogleADSPopupOpen },
+    { label: "BingAds", src: "bingads-icon.svg", setState: setBingAdsPopupOpen },
     { label: "Zapier", src: "zapier-icon.svg", setState: setZapierPopupOpen },
   ];
   const roles = [
@@ -2291,7 +2294,7 @@ const AccountSetup = () => {
                   </Box>
                 }
                 {googletagInstall &&
-                  <Box sx={{ alignItems:'start' }}>
+                  <Box sx={{ alignItems: 'start' }}>
                     <Box display="flex" justifyContent="space-between" sx={{ width: '100%', alignItems: 'center', paddingBottom: '1rem' }}>
                       <Box display="flex" gap="16px">
                         <Image src="install_gtm.svg" alt="Google tag install pixel" width={24} height={24} />
@@ -2373,7 +2376,7 @@ const AccountSetup = () => {
                           </Button>
                         </Box>
                       ) : (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginBottom:20 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginBottom: 20 }}>
                           <Box sx={{
                             width: '100%',
                             height: 'auto',
@@ -2848,8 +2851,13 @@ const AccountSetup = () => {
                   boxShadow="rgba(0, 0, 0, 0.1)"
                 />
                 <GoogleADSConnectPopup
-                  open={GoogleADSPopupOpen}
+                  open={googleADSPopupOpen}
                   handlePopupClose={() => setGoogleADSPopupOpen(false)}
+                  boxShadow="rgba(0, 0, 0, 0.1)"
+                />
+                <BingAdsIntegrationPopup
+                  open={bingAdsPopupOpen}
+                  handleClose={() => setBingAdsPopupOpen(false)}
                   boxShadow="rgba(0, 0, 0, 0.1)"
                 />
 
