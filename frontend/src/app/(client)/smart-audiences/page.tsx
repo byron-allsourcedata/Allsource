@@ -41,6 +41,7 @@ interface Smarts {
     validated_records: number
     active_segment_records: number
     status: string
+    integrations: string[]
 }
 
 interface FetchDataParams {
@@ -92,7 +93,7 @@ const getUseCaseStyle = (status: string) => {
         case 'postal':
             return <Image src="./postal.svg" alt="google icon" width={20} height={20}/>
         case 'google':
-            return <Image src="./google.svg" alt="google icon" width={20} height={20}/>
+            return <Image src="./google-ads.svg" alt="google icon" width={20} height={20}/>
         case 'meta':
             return <Image src="./meta.svg" alt="meta icon" width={20} height={20}/>
         case 'bing':
@@ -111,7 +112,7 @@ const SmartAudiences: React.FC = () => {
     const { sourceProgress } = useSSE();
     const [data, setData] = useState<Smarts[]>([]);
     const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
-    const [selectedRowData, setSelectedRowData] = useState<Smarts | null>(null);
+    const [selectedRowData, setSelectedRowData] = useState<Smarts>();
 
     const [loading, setLoading] = useState(false);
     const [loaderForTable, setLoaderForTable] = useState(false);
@@ -1332,6 +1333,7 @@ const SmartAudiences: React.FC = () => {
 
                                     <CreateSyncPopup open={dataSyncPopupOpen}
                                         onClose={handleDataSyncPopupClose}
+                                        integrationsList={selectedRowData?.integrations }
                                     />
                                     <FilterPopup open={filterPopupOpen}
                                         onClose={handleFilterPopupClose}

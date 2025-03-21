@@ -81,6 +81,7 @@ class SmartsResponse(BaseModel):
     validated_records: int
     active_segment_records: int
     status: str
+    integrations: List[str]
 
     model_config = {
         "from_attributes": True
