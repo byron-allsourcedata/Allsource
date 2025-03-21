@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '../../../axios/axiosInterceptorInstance';
 import { smartAudiences } from './smartAudiences';
+import CreateSyncPopup from './components/SmartAudienceCreateSync';
 import { SliderProvider } from '../../../context/SliderContext';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import ArrowDownwardRoundedIcon from '@mui/icons-material/ArrowDownwardRounded';
@@ -148,6 +149,8 @@ const SmartAudiences: React.FC = () => {
     const [isEditPopoverOpen, setIsEditPopoverOpen] = useState(false);
 
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+    const [dataSyncPopupOpen, setDataSyncPopupOpen] = useState(false);
     
     useEffect(() => {
         fetchSmarts({
@@ -344,6 +347,14 @@ const SmartAudiences: React.FC = () => {
 
     const handleFilterPopupClose = () => {
         setFilterPopupOpen(false);
+    };
+
+    const handleDataSyncPopupOpen = () => {
+        setDataSyncPopupOpen(true);
+    };
+
+    const handleDataSyncPopupClose = () => {
+        setDataSyncPopupOpen(false);
     };
 
     const handleOpenMorePopover = (event: React.MouseEvent<HTMLElement>, rowData: Smarts) => {
@@ -1192,6 +1203,7 @@ const SmartAudiences: React.FC = () => {
                                                                                     >
                                                                                         <ListItemButton sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
                                                                                             handleCloseMorePopover()
+                                                                                            handleDataSyncPopupOpen()
                                                                                         }}>
                                                                                             <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Sync" />
                                                                                         </ListItemButton>
@@ -1318,6 +1330,9 @@ const SmartAudiences: React.FC = () => {
                                         }
                                     </Box>
 
+                                    <CreateSyncPopup open={dataSyncPopupOpen}
+                                        onClose={handleDataSyncPopupClose}
+                                    />
                                     <FilterPopup open={filterPopupOpen}
                                         onClose={handleFilterPopupClose}
                                         onApply={handleApplyFilters}
