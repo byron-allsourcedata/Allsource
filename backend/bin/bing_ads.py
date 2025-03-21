@@ -41,12 +41,6 @@ def get_access_token():
         exit()
         
         
-
-import requests
-import xml.etree.ElementTree as ET
-
-CUSTOMER_MGMT_ENDPOINT = "https://api.bingads.microsoft.com/Api/CustomerManagement/v13/CustomerManagementService.svc"
-
 import requests
 import xml.etree.ElementTree as ET
 
@@ -92,79 +86,88 @@ def get_user_info(developer_token, access_token):
     return {"UserId": user_id, "RawResponse": response.text}
 
 
-def search_accounts(user_id, developer_token, auth_token, page_index=0, page_size=10):
-    """
-    Выполняет поиск аккаунтов для указанного user_id через операцию SearchAccounts.
-    Возвращает список аккаунтов с идентификаторами CustomerId и AccountId.
-    """
-    soap_envelope = f'''<?xml version="1.0" encoding="utf-8"?>
-<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
-  <s:Header>
-    <h:ApplicationToken xmlns:h="https://bingads.microsoft.com/Customer/v13" i:nil="true"/>
-    <h:AuthenticationToken xmlns:h="https://bingads.microsoft.com/Customer/v13">{auth_token}</h:AuthenticationToken>
-    <h:DeveloperToken xmlns:h="https://bingads.microsoft.com/Customer/v13">{developer_token}</h:DeveloperToken>
-  </s:Header>
-  <s:Body>
-    <SearchAccountsRequest xmlns="https://bingads.microsoft.com/Customer/v13">
-      <Predicates xmlns:a="https://bingads.microsoft.com/Customer/v13/Entities">
-        <a:Predicate>
-          <a:Field>UserId</a:Field>
-          <a:Operator>Equals</a:Operator>
-          <a:Value>{user_id}</a:Value>
-        </a:Predicate>
-      </Predicates>
-      <Ordering i:nil="true" xmlns:a="https://bingads.microsoft.com/Customer/v13/Entities"/>
-      <PageInfo xmlns:a="https://bingads.microsoft.com/Customer/v13/Entities">
-        <a:Index>{page_index}</a:Index>
-        <a:Size>{page_size}</a:Size>
-      </PageInfo>
-    </SearchAccountsRequest>
-  </s:Body>
-</s:Envelope>'''
+import requests
+import xml.etree.ElementTree as ET
+
+def get_campaigns(developer_token, access_token, customer_account_id, customer_id):
+    get_campaigns_request = f'''<?xml version="1.0" encoding="utf-8"?>
+    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:v13="https://bingads.microsoft.com/CampaignManagement/v13">
+        <soapenv:Header>
+            <v13:DeveloperToken>{developer_token}</v13:DeveloperToken>
+            <v13:AuthenticationToken>{access_token}</v13:AuthenticationToken>
+            <v13:CustomerAccountId>{customer_account_id}</v13:CustomerAccountId>
+            <v13:CustomerId>{customer_id}</v13:CustomerId>
+        </soapenv:Header>
+        <soapenv:Body>
+            <v13:GetCampaignsByAccountIdRequest>
+                <v13:AccountId>{customer_account_id}</v13:AccountId>
+                <v13:CampaignType>Search</v13:CampaignType>
+            </v13:GetCampaignsByAccountIdRequest>
+        </soapenv:Body>
+    </soapenv:Envelope>'''
 
     headers = {
-        "Content-Type": "text/xml; charset=utf-8",
-        "SOAPAction": "SearchAccounts"
+        "Content-Type": "text/xml",
+        "SOAPAction": "GetCampaignsByAccountId"
     }
+
+    uri = "https://clientcenter.api.bingads.microsoft.com/Api/CampaignManagement/v13/CampaignManagementService.svc"
+
+    response = requests.post(uri, data=get_campaigns_request, headers=headers)
     
-    response = requests.post(CUSTOMER_MGMT_ENDPOINT, data=soap_envelope, headers=headers)
     if response.status_code != 200:
-        raise Exception(f"Ошибка SearchAccounts: {response.status_code} - {response.text}")
-    
-    # Парсинг XML-ответа для извлечения информации об аккаунтах
+        raise Exception(f"Ошибка HTTP {response.status_code}: {response.text}")
+
+    # Парсинг XML-ответа
     root = ET.fromstring(response.content)
-    ns = {"s": "http://schemas.xmlsoap.org/soap/envelope/",
-          "c": "https://bingads.microsoft.com/Customer/v13",
-          "a": "https://bingads.microsoft.com/Customer/v13/Entities"}
-    
-    accounts = []
-    # Ожидается, что в ответе вернется список AccountInfo элементов
-    for account_elem in root.findall(".//a:AccountInfo", ns):
-        customer_id = account_elem.find("a:CustomerId", ns).text if account_elem.find("a:CustomerId", ns) is not None else None
-        account_id = account_elem.find("a:AccountId", ns).text if account_elem.find("a:AccountId", ns) is not None else None
-        account_name = account_elem.find("a:AccountName", ns).text if account_elem.find("a:AccountName", ns) is not None else None
-        accounts.append({
-            "CustomerId": customer_id,
-            "AccountId": account_id,
-            "AccountName": account_name
-        })
-    return accounts
+    ns = {
+        "s": "http://schemas.xmlsoap.org/soap/envelope/",
+        "c": "https://bingads.microsoft.com/CampaignManagement/v13",
+        "a": "https://bingads.microsoft.com/CampaignManagement/v13/Entities"
+    }
+    campaigns = []
+    for campaign_elem in root.findall(".//a:Campaign", ns):
+        campaign_id = campaign_elem.find("a:Id", ns).text
+        campaign_name = campaign_elem.find("a:Name", ns).text
+        campaigns.append({"Id": campaign_id, "Name": campaign_name})
+    return campaigns
 
-# Пример использования:
-if __name__ == "__main__":
-    # Эти значения должны быть получены заранее (из настроек или переменных окружения)
-    DEV_TOKEN = DEVELOPER_TOKEN
-    AUTH_TOKEN = get_access_token()
-    
-    try:
-        user_info = get_user_info(DEV_TOKEN, AUTH_TOKEN)
-        user_id = user_info["UserId"]
-        print("Получен UserId:", user_id)
-        
-        accounts = search_accounts(user_id, DEV_TOKEN, AUTH_TOKEN)
-        print("Найденные аккаунты:")
-        for acc in accounts:
-            print(f"AccountName: {acc['AccountName']}, CustomerId: {acc['CustomerId']}, AccountId: {acc['AccountId']}")
-    except Exception as e:
-        print("Ошибка:", e)
 
+get_campaigns(developer_token=DEVELOPER_TOKEN, access_token=get_access_token(), customer_account_id=1, customer_id=1)
+
+def create_customer_list(developer_token, access_token, customer_account_id, customer_id, list_name, emails):
+    create_list_request = f'''<?xml version="1.0" encoding="utf-8"?>
+    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:v13="https://bingads.microsoft.com/Bulk/v13">
+        <soapenv:Header>
+            <v13:DeveloperToken>{developer_token}</v13:DeveloperToken>
+            <v13:AuthenticationToken>{access_token}</v13:AuthenticationToken>
+            <v13:CustomerAccountId>{customer_account_id}</v13:CustomerAccountId>
+            <v13:CustomerId>{customer_id}</v13:CustomerId>
+        </soapenv:Header>
+        <soapenv:Body>
+            <v13:UploadFileRequest>
+                <v13:FileName>CustomerList.csv</v13:FileName>
+                <v13:FileContent>{generate_csv_content(list_name, emails)}</v13:FileContent>
+            </v13:UploadFileRequest>
+        </soapenv:Body>
+    </soapenv:Envelope>'''
+
+    headers = {
+        "Content-Type": "text/xml",
+        "SOAPAction": "UploadFile"
+    }
+
+    uri = "https://clientcenter.api.bingads.microsoft.com/Api/Bulk/v13/BulkService.svc"
+
+    response = requests.post(uri, data=create_list_request, headers=headers)
+    
+    if response.status_code != 200:
+        raise Exception(f"Ошибка HTTP {response.status_code}: {response.text}")
+
+    # Дополнительная обработка ответа по мере необходимости
+
+def generate_csv_content(list_name, emails):
+    header = "Type,Status,Id,Parent Id,Client Id,Modified Time,Name,Description,Scope,Audience,Action Type\n"
+    list_row = f"Customer List,Active,-10,,ClientIdGoesHere,,,New customer list description,Customer,{list_name},Add\n"
+    email_rows = "\n".join([f"Customer List Item,,,,,{email},,Email,Add" for email in emails])
+    return header + list_row + email_rows
