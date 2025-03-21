@@ -320,5 +320,49 @@ export const smartAudiences: { [key: string]: SxProps<Theme> } = {
       backgroundColor: "rgba(80, 82, 178, 1)",
       opacity: 0.6,
     },
+  },
+  inputStyle: {
+    width: "146px",
+    height: "40px",
+    padding: "8px",
+    borderRadius: "4px",
+    textAlign: "start",
+    "&:focus": {
+      borderColor: "rgba(80, 82, 178, 1)",
+      "&::before": {
+        borderBottom: "none",
+      },
+      "&::after": {
+        borderBottom: "none",
+      },
+    },
+    "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
+      display: "none",
+    },
+    "& input[type=number]": {
+      MozAppearance: "textfield",
+    },
+
+    "&::before": {
+      borderBottom: "none",
+    },
+    "&::after": {
+      borderBottom: "none",
+    },
+    "& .MuiOutlinedInput-root": {
+      "& fieldset": {
+        borderColor: "none" // this is the original border color
+      },
+      "&:hover fieldset": {
+        borderColor: "none" // use the original border color on hover
+      },
+    }
+  },
+  labelText: {
+    color: 'rgba(43, 91, 0, 1) !important',
+    fontSize: '14px !important',
+    backgroundColor: 'rgba(234, 248, 221, 1) !important',
+    borderRadius: '3px',
+    padding: '4px 12px'
   }
-};
+  };
