@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List
 from enum import Enum
 
@@ -28,6 +28,11 @@ class MailchimpCredentials(BaseModel):
 class GoogleAdsCredentials(BaseModel):
     code: str
     scope: str
+    
+class BingAdsCredentials(BaseModel):
+    code: str
+    state: str
+    code_verifier: str
 
 class SalesForceCredentials(BaseModel):
     code: str
@@ -51,6 +56,7 @@ class IntegrationCredentials(BaseModel):
     omnisend: Optional[ApiKeyCredentials] = None
     hubspot: Optional[HubSpotCredentials] = None
     google_ads: Optional[GoogleAdsCredentials] = None
+    bing_ads: Optional[BingAdsCredentials] = None
     sales_force: Optional[SalesForceCredentials] = None
     pixel_install: bool = False
     supperssion: bool = False
@@ -82,6 +88,7 @@ class DataMap(BaseModel):
     value: str
 
 class Campaign(BaseModel):
+    campaign_id: int
     campaign_name: str
     campaign_objective: str
     bid_amount: int

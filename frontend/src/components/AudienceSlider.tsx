@@ -10,6 +10,7 @@ import ConnectSalesForce from '@/app/(client)/data-sync/components/ConnectSalesF
 import ConnectMeta from '@/app/(client)/data-sync/components/ConnectMeta';
 import KlaviyoIntegrationPopup from './KlaviyoIntegrationPopup';
 import SalesForceIntegrationPopup from './SalesForceIntegrationPopup';
+import BingAdsIntegrationPopup from './BingAdsIntegrationPopup';
 import SlackIntegrationPopup from './SlackIntegrationPopup';
 import GoogleADSConnectPopup from './GoogleADSConnectPopup';
 import WebhookConnectPopup from './WebhookConnectPopup';
@@ -17,6 +18,7 @@ import MetaConnectButton from './MetaConnectButton';
 import AlivbleIntagrationsSlider from './AvalibleIntegrationsSlider';
 import OmnisendConnect from './OmnisendConnect';
 import OnmisendDataSync from '../app/(client)/data-sync/components/OmnisendDataSync';
+import BingAdsDataSync from '../app/(client)/data-sync/components/BingAdsDataSync';
 import MailchimpConnect from './MailchimpConnect';
 import MailchimpDatasync from '../app/(client)/data-sync/components/MailchimpDatasync';
 import SlackDatasync from '../app/(client)/data-sync/components/SlackDataSync';
@@ -66,12 +68,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [listName, setListName] = useState<string>('');
     const [plusIconPopupOpen, setPlusIconPopupOpen] = useState(false);
     const [klaviyoIconPopupOpen, setKlaviyoIconPopupOpen] = useState(false);
+    const [bingAdsIconPopupOpen, setBingAdsIconPopupOpen] = useState(false);
     const [salesForceIconPopupOpen, setSalesForceIconPopupOpen] = useState(false);
     const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
     const [selectedIntegration, setSelectedIntegration] = useState<string | null>(null);
     const [isExportDisabled, setIsExportDisabled] = useState(true);
     const [integrationsCredentials, setIntegrationsCredentials] = useState<IntegrationsCredentials[]>([])
     const [createKlaviyo, setCreateKlaviyo] = useState<boolean>(false)
+    const [createBingAds, setCreateBingAds] = useState<boolean>(false)
     const [createHubspot, setCreateHubspot] = useState<boolean>(false)
     const [createSalesForce, setCreateSalesForce] = useState<boolean>(false)
     const [createWebhook, setCreateWebhook] = useState<boolean>(false)
@@ -91,6 +95,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [openZapierDataSync, setOpenZapierDataSync] = useState(false)
     const [openZapierConnect, setOpenZapierConnect] = useState(false)
     const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false)
+    const [openBingAdsConnect, setOpenBingAdsConnect] = useState(false)
     const [omnisendIconPopupOpen, setOpenOmnisendIconPopupOpen] = useState(false)
     const [openHubspotConnect, setOpenHubspotConnect] = useState(false)
     const [hubspotIconPopupOpen, setOpenHubspotIconPopupOpen] = useState(false)
@@ -185,6 +190,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
     const handleKlaviyoIconPopupOpen = () => {
         setKlaviyoIconPopupOpen(true);
+    };
+
+    const handleBingAdsIconPopupOpen = () => {
+        setBingAdsIconPopupOpen(true);
+    };
+
+    const handleBingAdsIconPopupClose = () => {
+        setBingAdsIconPopupOpen(false);
     };
 
     const handleSalesForceIconPopupOpen = () => {
@@ -297,6 +310,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             case 'Klaviyo':
                 handleKlaviyoIconPopupOpen()
                 break
+            case 'BingAds':
+                handleBingAdsIconPopupOpen()
+                break
             case 'Mailchimp':
                 handleMailchimpIconPopupIconOpen()
                 break
@@ -346,6 +362,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
     const handleCreateKlaviyoOpen = () => {
         setCreateKlaviyo(true)
+    }
+
+    const handleCreateBingAdsOpen = () => {
+        setCreateBingAds(true)
+    }
+
+    const handleCreateBingAdsClose = () => {
+        setCreateBingAds(false)
     }
 
     const handleCreateHubspotOpen = () => {
@@ -543,6 +567,45 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                         </ListItemButton>
                                     </ListItem>
                                 )}
+                                {/* BingAds */}
+                                {/* {integrationsCredentials.some(integration => integration.service_name === 'bing_ads') && (
+                                    <ListItem sx={{
+                                        p: 0,
+                                        borderRadius: '4px',
+                                        border: selectedIntegration === 'klaviyo' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                        width: 'auto',
+                                        '@media (max-width:600px)': {
+                                            flexBasis: 'calc(50% - 8px)',
+                                        },
+                                    }}>
+                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'bing_ads')?.is_failed
+                                            ? handleBingAdsIconPopupOpen
+                                            : handleCreateBingAdsOpen
+                                        } sx={{
+                                            p: 0,
+                                            flexDirection: 'column',
+                                            px: 3,
+                                            py: 1.5,
+                                            width: '102px',
+                                            height: '72px',
+                                            justifyContent: 'center',
+                                            backgroundColor: selectedIntegration === 'bing_ads' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
+                                        }}>
+                                            <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                <Image src="/bingads-icon.svg" alt="bingads" height={26} width={32} />
+                                            </ListItemIcon>
+                                            <ListItemText primary="BingAds" primaryTypographyProps={{
+                                                sx: {
+                                                    fontFamily: "Nunito Sans",
+                                                    fontSize: "14px",
+                                                    color: "#4a4a4a",
+                                                    fontWeight: "500",
+                                                    lineHeight: "20px",
+                                                },
+                                            }} />
+                                        </ListItemButton>
+                                    </ListItem>
+                                )} */}
                                 {/* SalesForce */}
                                 {integrationsCredentials.some(integration => integration.service_name === 'sales_force') && (
                                     <ListItem sx={{
@@ -884,6 +947,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
             {/* Data Sync */}
             <ConnectKlaviyo data={null} open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose} />
+            <BingAdsDataSync open={bingAdsIconPopupOpen} onClose={handleBingAdsIconPopupClose} isEdit={false} data={null} />
             <ConnectSalesForce data={null} open={salesForceIconPopupOpen} onClose={handleSalesForceIconPopupClose} />
             <ConnectMeta data={null} open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} isEdit={false} />
             <OnmisendDataSync open={omnisendIconPopupOpen} onClose={handleOmnisendIconPopupOpenClose} isEdit={false} data={null} />
@@ -901,6 +965,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             <GoogleADSConnectPopup open={createGoogleAds} handlePopupClose={handleCreateGoogleAdsClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'google_ads')?.access_token} />
             <WebhookConnectPopup open={createWebhook} handleClose={handleCreateWebhookClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'webhook')?.access_token} />
             <KlaviyoIntegrationPopup open={createKlaviyo} handleClose={handleCreateKlaviyoClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token} />
+            <BingAdsIntegrationPopup open={createBingAds} handleClose={handleCreateBingAdsClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'bing_ads')?.access_token} />
             <SalesForceIntegrationPopup open={createSalesForce} handleClose={handleCreateSalesForceClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sales_force')?.access_token} />
             <MailchimpConnect onSave={handleSaveSettings} open={openMailchimpConnect} handleClose={handleOpenMailchimpConnectClose} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Mailchimp')?.access_token} />
             <SendlaneConnect open={openSendlaneConnect} handleClose={handleSendlaneConnectClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Sendlane')?.access_token} />

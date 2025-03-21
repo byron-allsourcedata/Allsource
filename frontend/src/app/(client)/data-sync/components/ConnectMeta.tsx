@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Drawer, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, Select, Box, Typography, IconButton, TextField, Divider, FormControlLabel, FormControl, FormLabel, Radio, Button, Link, Tab, Tooltip, Switch, RadioGroup, InputLabel, MenuItem, Popover, Menu, SelectChangeEvent, ListItemText, ClickAwayListener, InputAdornment, Grid } from '@mui/material';
+import { Drawer, Select, Box, Typography, IconButton, TextField, Divider, FormControlLabel, FormControl, FormLabel, Radio, Button, Link, Tab, Tooltip, Switch, RadioGroup, InputLabel, MenuItem, Popover, Menu, SelectChangeEvent, ListItemText, ClickAwayListener, InputAdornment, Grid } from '@mui/material';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
@@ -44,35 +44,33 @@ interface FormValues {
 const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isEdit }) => {
     const { triggerSync } = useIntegrationContext();
     const [value, setValue] = React.useState('1');
-    const [listID, setListID] = useState<string>('')
-    const [checked, setChecked] = useState(false);
     const [selectedRadioValue, setSelectedRadioValue] = useState(data?.type);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const [anchorElCampaign, setAnchorElCampaign] = useState<null | HTMLElement>(null);
     const [selectedOption, setSelectedOption] = useState<MetaAuidece | null>(null);
+    const [selectedOptionCampaign, setSelectedOptionCampaign] = useState<MetaCampaign | null>(null);
     const [inputValue, setInputValue] = useState('');
+    const [inputValueCampaign, setInputValueCampaign] = useState('');
     const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
+    const [showCreateFormCampaign, setShowCreateFormCampaign] = useState<boolean>(false);
     const [newListName, setNewListName] = useState<string>('');
-    const [tagName, setTagName] = useState<string>('');
     const [isShrunk, setIsShrunk] = useState<boolean>(false);
+    const [isShrunkCampaign, setIsShrunkCampaign] = useState<boolean>(false);
     const textFieldRef = useRef<HTMLDivElement>(null);
+    const textFieldRefCampaign = useRef<HTMLDivElement>(null);
     const textFieldRefAdAccount = useRef<HTMLDivElement>(null);
     const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
-    const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+    const [isDropdownOpenCampaign, setIsDropdownOpenCampaign] = useState<boolean>(false);
     const [isDropdownValid, setIsDropdownValid] = useState(false);
     const [listNameError, setListNameError] = useState(false);
     const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(null)
     const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
-    const [newMapListName, setNewMapListName] = useState<string>('');
-    const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
-    const [maplistNameError, setMapListNameError] = useState(false);
     const [loading, setLoading] = useState(true)
     const [adAccounts, setAdAccounts] = useState<adAccount[]>([])
     const [optionAdAccount, setOptionAdAccount] = useState<adAccount | null>(null)
     const [metaAudienceList, setMetaAudience] = useState<MetaAuidece[]>([])
     const [metaCampaign, setMetaCampaign] = useState<MetaCampaign[]>([])
-    const [tab2Error, setTab2Error] = useState(false)
     const [UpdateKlaviuo, setUpdateKlaviuo] = useState<any>(null);
-    const [selectedMode, setSelectedMode] = useState('audience');
     const [anchorElAdAccount, setAnchorElAdAccount] = useState<null | HTMLElement>(null);
     const [isDropdownOpenAdAccount, setIsDropdownOpenAdAccount] = useState(false);
     const [formValues, setFormValues] = useState<FormValues>({
@@ -82,15 +80,13 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
         dailyBudget: 100,
     });
     const [isChecked, setIsChecked] = useState(false);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-
 
     const handleInputChange = (e: any) => {
         const { name, value } = e.target;
         const numericValue = (name === 'bidAmount' || name === 'dailyBudget') ? Number(value) : value;
         if (
             (name === 'bidAmount' && (isNaN(numericValue) || numericValue < 1 || numericValue > 918)) ||
-            (name === 'dailyBudget' && (isNaN(numericValue) || numericValue < 100))
+            (name === 'dailyBudget' && (isNaN(numericValue) || numericValue < 100 || numericValue > 1000000000))
         ) {
             return;
         }
@@ -105,33 +101,16 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
         setIsChecked(allFieldsFilled);
     }, [formValues]);
 
-    const handleCheckboxChange = (e: any) => {
-        if (e.target.checked) {
-            setIsModalOpen(true);
-        } else {
-            setFormValues({
-                campaignName: '',
-                campaignObjective: '',
-                bidAmount: 1,
-                dailyBudget: 100
-            });
-        }
-    };
-
-    const handleCloseCampaign = () => {
-        setIsModalOpen(false);
-        if (!isChecked) {
-            setFormValues({
-                campaignName: '',
-                campaignObjective: '',
-                bidAmount: 1,
-                dailyBudget: 100
-            });
-        }
-    };
-
     const handleSaveCampaign = () => {
-        setIsModalOpen(false);
+        if (isChecked) {
+            const newKlaviyoList = { id: '-1', list_name: formValues.campaignName }
+            setSelectedOptionCampaign(newKlaviyoList);
+            if (isKlaviyoList(newKlaviyoList)) {
+                setIsDropdownValid(true);
+            }
+            setInputValueCampaign(newKlaviyoList.list_name)
+            handleCloseCampaign();
+        }
     };
 
     useEffect(() => {
@@ -234,7 +213,6 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (textFieldRef.current && !textFieldRef.current.contains(event.target as Node)) {
-                // If clicked outside, reset shrink only if there is no input value
                 if (selectedOption?.list_name === '') {
                     setIsShrunk(false);
                 }
@@ -250,12 +228,19 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
         };
     }, [selectedOption]);
 
-    // Handle menu open
+
     const handleClick = (event: React.MouseEvent<HTMLInputElement>) => {
         setIsShrunk(true);
         setIsDropdownOpen(prev => !prev);
         setAnchorEl(event.currentTarget);
-        setShowCreateForm(false); // Reset form when menu opens
+        setShowCreateForm(false);
+    };
+
+    const handleClickCampaign = (event: React.MouseEvent<HTMLInputElement>) => {
+        setIsShrunkCampaign(true);
+        setIsDropdownOpenCampaign(prev => !prev);
+        setAnchorElCampaign(event.currentTarget);
+        setShowCreateFormCampaign(false);
     };
 
     // Handle dropdown toggle specifically when clicking on the arrow
@@ -265,13 +250,19 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
         setAnchorEl(textFieldRef.current);
     };
 
+    const handleDropdownToggleCampaign = (event: React.MouseEvent) => {
+        event.stopPropagation();
+        setIsDropdownOpenCampaign(prev => !prev);
+        setAnchorElCampaign(textFieldRefCampaign.current);
+        setShowCreateFormCampaign(false);
+    };
+
     const handleDropdownToggleAdAccount = (event: React.MouseEvent) => {
         event.stopPropagation(); // Prevent triggering the input field click
         setIsDropdownOpenAdAccount(prev => !prev);
         setAnchorElAdAccount(textFieldRefAdAccount.current);
     };
 
-    // Handle menu close
     const handleClose = () => {
         setAnchorEl(null);
         setAnchorElAdAccount(null)
@@ -279,6 +270,13 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
         setShowCreateForm(false);
         setIsDropdownOpen(false);
         setNewListName(''); // Clear new list name when closing
+    };
+
+    const handleCloseCampaign = () => {
+        setAnchorElCampaign(null);
+        setIsDropdownOpenAdAccount(false)
+        setShowCreateForm(false);
+        setIsDropdownOpenCampaign(false);
     };
 
     const handleSelectAdAccount = async (value: any) => {
@@ -306,6 +304,24 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
         }
     };
 
+    const handleSelectOptionCampaign = (value: MetaAuidece | string) => {
+        if (value === 'createNewAudience') {
+            setShowCreateFormCampaign(prev => !prev);
+            if (!showCreateFormCampaign) {
+                setAnchorElCampaign(textFieldRefCampaign.current);
+            }
+        } else if (isKlaviyoList(value)) {
+            setSelectedOptionCampaign({
+                id: value.id,
+                list_name: value.list_name
+            });
+            setInputValueCampaign(value.list_name)
+            handleCloseCampaign();
+        } else {
+            setSelectedOptionCampaign(null);
+        }
+    };
+
     const isKlaviyoList = (value: any): value is MetaAuidece => {
         return value !== null &&
             typeof value === 'object' &&
@@ -313,11 +329,9 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
             'list_name' in value;
     };
 
-    // Handle Save action for the create new list form
     const handleSave = async () => {
         let valid = true;
 
-        // Validate List Name
         if (newListName.trim() === '') {
             setListNameError(true);
             valid = false;
@@ -422,7 +436,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
                     <Button
                         variant="contained"
                         onClick={handleNextTab}
-                        disabled={!isDropdownValid}
+                        disabled={!isDropdownValid || inputValue == ''}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito Sans",
@@ -506,30 +520,8 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
     };
 
     const handleClickOpen = (event: React.MouseEvent<HTMLElement>, id: number) => {
-        setDeleteAnchorEl(event.currentTarget);  // Set the current target as the anchor
-        setSelectedRowId(id);  // Set the ID of the row to delete
-    };
-
-    const handleModeChange = (mode: string) => {
-        setSelectedMode(mode);
-        setListID('');
-        setChecked(false);
-        setAnchorEl(null);
-        setSelectedOption(null);
-        setInputValue('')
-        setShowCreateForm(false);
-        setNewListName('');
-        setTagName('');
-        setIsShrunk(false);
-        setIsDropdownOpen(false);
-        setOpenDropdown(null);
-        setIsDropdownValid(false);
-        setListNameError(false);
-        setDeleteAnchorEl(null);
-        setSelectedRowId(null);
-        setNewMapListName('');
-        setShowCreateMapForm(false);
-        setMapListNameError(false);
+        setDeleteAnchorEl(event.currentTarget);
+        setSelectedRowId(id);
     };
 
     const handleDeleteClose = () => {
@@ -573,36 +565,59 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
             }
 
             if (UpdateKlaviuo) {
-                const response = await axiosInstance.put(`/data-sync/sync`, {
+
+                const requestData: any = {
+                    customer_id: String(optionAdAccount?.id),
+                    list_id: list?.id,
                     integrations_users_sync_id: UpdateKlaviuo,
                     leads_type: selectedRadioValue,
-                }, {
+                };
+
+                if (selectedOptionCampaign?.id || formValues?.campaignName) {
+                    requestData.campaign = {
+                        campaign_id: selectedOptionCampaign?.id,
+                        campaign_name: formValues?.campaignName,
+                        campaign_objective: formValues?.campaignObjective,
+                        bid_amount: formValues?.bidAmount,
+                        daily_budget: formValues?.dailyBudget
+                    };
+                }
+
+                const response = await axiosInstance.put('/data-sync/sync', requestData, {
                     params: {
                         service_name: 'meta'
                     }
                 });
+
                 if (response.status === 201 || response.status === 200) {
                     resetToDefaultValues();
                     onClose();
                     showToast('Data sync updated successfully');
                 }
             } else {
-                const response = await axiosInstance.post('/data-sync/sync', {
+                const requestData: any = {
                     customer_id: String(optionAdAccount?.id),
                     list_id: list?.id,
                     list_name: list?.list_name,
                     leads_type: selectedRadioValue,
-                    campaign: {
-                        campaign_name: formValues.campaignName,
-                        campaign_objective: formValues.campaignObjective,
-                        bid_amount: formValues.bidAmount,
-                        daily_budget: formValues.dailyBudget
-                    }
-                }, {
+                };
+
+                if (selectedOptionCampaign?.id && formValues?.campaignName) {
+                    requestData.campaign = {
+                        campaign_id: selectedOptionCampaign?.id,
+                        campaign_name: formValues?.campaignName,
+                        campaign_objective: formValues?.campaignObjective,
+                        bid_amount: formValues?.bidAmount,
+                        daily_budget: formValues?.dailyBudget
+                    };
+                }
+
+                const response = await axiosInstance.post('/data-sync/sync', requestData, {
                     params: {
                         service_name: 'meta'
                     }
                 });
+
                 if (response.status === 201 || response.status === 200) {
                     resetToDefaultValues();
                     onClose();
@@ -617,28 +632,37 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
         }
     };
 
+    const handleClearCampaign = () => {
+        setSelectedOptionCampaign(null)
+        setFormValues({
+            campaignName: '',
+            campaignObjective: '',
+            bidAmount: 1,
+            dailyBudget: 100
+        });
+        setInputValueCampaign('')
+    };
 
     const resetToDefaultValues = () => {
         setValue('1');
-        setListID('');
-        setChecked(false);
         setSelectedRadioValue('');
         setAnchorEl(null);
+        setAnchorElCampaign(null)
         setSelectedOption(null);
+        setSelectedOptionCampaign(null)
+        setShowCreateFormCampaign(false)
         setShowCreateForm(false);
         setNewListName('');
-        setTagName('');
         setInputValue('')
+        setInputValueCampaign('')
         setIsShrunk(false);
+        setIsShrunkCampaign(false)
         setIsDropdownOpen(false);
-        setOpenDropdown(null);
+        setIsDropdownOpenCampaign(false)
         setIsDropdownValid(false);
         setListNameError(false);
         setDeleteAnchorEl(null);
         setSelectedRowId(null);
-        setNewMapListName('');
-        setShowCreateMapForm(false);
-        setMapListNameError(false);
         setLoading(false);
         setOptionAdAccount(null);
         setFormValues({
@@ -761,7 +785,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
                                     <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                         <Typography variant="subtitle1" className='paragraph'>Synchronise all data in real-time from this moment forward for seamless integration and continuous updates.</Typography>
 
-                                        <FormControl sx={{ gap: '16px' }} error={tab2Error}>
+                                        <FormControl sx={{ gap: '16px' }}>
                                             <FormLabel id="contact-type-radio-buttons-group-label" className='first-sub-title' sx={{
                                                 '&.Mui-focused': {
                                                     color: '#000',
@@ -935,21 +959,18 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
                                                             optionAdAccount?.name || null
                                                         }
                                                         onClick={handleClickAdAccount}
-                                                        size="small"
+                                                        size="medium"
                                                         disabled={data?.customer_id}
                                                         fullWidth
                                                         label={optionAdAccount?.name ? '' : 'Select Ad Account'}
                                                         InputLabelProps={{
-                                                            shrink: isShrunk || optionAdAccount?.name !== "", // Shrinks label if clicked or if value is not empty
+                                                            shrink: optionAdAccount?.name || optionAdAccount?.name != '' ? false : true,
                                                             sx: {
                                                                 fontFamily: 'Nunito Sans',
                                                                 fontSize: '15px',
                                                                 lineHeight: '16px',
                                                                 color: 'rgba(17, 17, 19, 0.60)',
-
-                                                                padding: 0,
-                                                                margin: 0,
-                                                                left: '3px',
+                                                                pl: '3px',
                                                                 '&.Mui-focused': {
                                                                     color: '#0000FF',
                                                                 },
@@ -1028,7 +1049,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
                                                         fullWidth
                                                         label={selectedOption ? '' : 'Select or Create new list'}
                                                         InputLabelProps={{
-                                                            shrink: selectedOption ? false : isShrunk,
+                                                            shrink: selectedOption?.list_name ? false : isShrunk,
                                                             sx: {
                                                                 fontFamily: 'Nunito Sans',
                                                                 fontSize: '15px',
@@ -1063,7 +1084,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
                                                                 cursor: 'default', // Prevent showing caret on input field
                                                                 top: '5px'
                                                             },
-                                                            // marginBottom: '24px'
+                                                            marginBottom: '24px'
                                                         }}
                                                     />
 
@@ -1075,7 +1096,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
                                                             sx: {
                                                                 width: anchorEl ? `${anchorEl.clientWidth}px` : '538px', borderRadius: '4px',
                                                                 border: '1px solid #e4e4e4'
-                                                            }, // Match dropdown width to input
+                                                            },
                                                         }}
                                                     >
                                                         {/* Show "Create New List" option */}
@@ -1097,7 +1118,6 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
                                                             }} />
                                                         </MenuItem>
 
-                                                        {/* Show Create New List form if 'showCreateForm' is true */}
                                                         {showCreateForm && (
                                                             <Box>
                                                                 <Box sx={{
@@ -1247,80 +1267,249 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
                                                     </Menu>
                                                 </Box>
 
-                                                <Box>
-                                                    <FormControlLabel
-                                                        control={<Checkbox checked={isChecked} onChange={handleCheckboxChange} />}
-                                                        label="Create a campaign on Meta"
-                                                    />
-                                                    <Dialog open={isModalOpen} onClose={handleCloseCampaign} fullWidth maxWidth="sm">
-                                                        <DialogTitle>Create a campaign for your new audience</DialogTitle>
-                                                        <DialogContent>
-                                                            <Typography variant="body2" paragraph>
-                                                                We&apos;ll set up a campaign that&apos;s optimized to target your audience. You can always change these settings in your ad account.
-                                                            </Typography>
+                                                {/* CampaignList */}
+                                                {selectedOption && (
+                                                    <Box>
+                                                        <TextField
+                                                            ref={textFieldRefCampaign}
+                                                            variant="outlined"
+                                                            value={inputValueCampaign}
+                                                            onClick={handleClickCampaign}
+                                                            size="medium"
+                                                            fullWidth
+                                                            label={selectedOptionCampaign ? '' : 'Select or Create new Campaign'}
+                                                            InputLabelProps={{
+                                                                shrink: selectedOptionCampaign ? false : isShrunkCampaign,
+                                                                sx: {
+                                                                    fontFamily: 'Nunito Sans',
+                                                                    fontSize: '15px',
+                                                                    lineHeight: '16px',
+                                                                    color: 'rgba(17, 17, 19, 0.60)',
+                                                                    pl: '3px',
+                                                                    '&.Mui-focused': {
+                                                                        color: '#0000FF',
+                                                                    },
+                                                                }
+                                                            }}
+                                                            InputProps={{
+                                                                endAdornment: (
+                                                                    <InputAdornment position="end">
+                                                                        <IconButton onClick={handleDropdownToggleCampaign} edge="end">
+                                                                            {isDropdownOpenCampaign ?
+                                                                                <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} />
+                                                                                : <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />}
+                                                                        </IconButton>
+                                                                        {selectedOptionCampaign && (
+                                                                            <IconButton onClick={handleClearCampaign} edge="end">
+                                                                                <CloseIcon />
+                                                                            </IconButton>
+                                                                        )}
+                                                                    </InputAdornment>
+                                                                ),
+                                                                sx: metaStyles.formInput
+                                                            }}
+                                                            sx={{
+                                                                '& input': {
+                                                                    caretColor: 'transparent',
+                                                                    fontFamily: "Nunito Sans",
+                                                                    fontSize: "14px",
+                                                                    color: "rgba(0, 0, 0, 0.89)",
+                                                                    fontWeight: "600",
+                                                                    lineHeight: "normal",
+                                                                },
+                                                                '& .MuiOutlinedInput-input': {
+                                                                    cursor: 'default',
+                                                                    top: '5px'
+                                                                },
+                                                            }}
+                                                        />
 
-                                                            <TextField
-                                                                label="Campaign Name"
-                                                                variant="outlined"
-                                                                name="campaignName"
-                                                                value={formValues.campaignName}
-                                                                onChange={handleInputChange}
-                                                                fullWidth
-                                                                margin="normal"
-                                                            />
-                                                            <FormControl variant="outlined" fullWidth margin="normal">
-                                                                <InputLabel>Campaign goal</InputLabel>
-                                                                <Select
-                                                                    name="campaignObjective"
-                                                                    value={formValues.campaignObjective}
-                                                                    onChange={handleInputChange}
-                                                                    label="Campaign goal"
+                                                        <Menu
+                                                            anchorEl={anchorElCampaign}
+                                                            open={Boolean(anchorElCampaign) && isDropdownOpenCampaign}
+                                                            onClose={handleCloseCampaign}
+                                                            PaperProps={{
+                                                                sx: {
+                                                                    width: anchorEl ? `${anchorEl.clientWidth}px` : '538px', borderRadius: '4px',
+                                                                    border: '1px solid #e4e4e4'
+                                                                },
+                                                            }}
+                                                        >
+                                                            {/* Show "Create New Campaign" option */}
+                                                            <MenuItem onClick={() => handleSelectOptionCampaign('createNewAudience')} sx={{
+                                                                borderBottom: showCreateFormCampaign ? "none" : "1px solid #cdcdcd",
+                                                                '&:hover': {
+                                                                    background: 'rgba(80, 82, 178, 0.10)'
+                                                                }
+                                                            }}>
+                                                                <ListItemText primary={`+ Create new Campaign list`} primaryTypographyProps={{
+                                                                    sx: {
+                                                                        fontFamily: "Nunito Sans",
+                                                                        fontSize: "14px",
+                                                                        color: showCreateFormCampaign ? "#5052B2" : "#202124",
+                                                                        fontWeight: "500",
+                                                                        lineHeight: "20px",
+
+                                                                    }
+                                                                }} />
+                                                            </MenuItem>
+
+                                                            {showCreateFormCampaign && (
+                                                                <Box>
+                                                                    <Box sx={{
+                                                                        display: 'flex',
+                                                                        flexDirection: 'column',
+                                                                        gap: '24px',
+                                                                        p: 2,
+                                                                        width: anchorEl ? `${anchorEl.clientWidth}px` : '538px',
+                                                                        pt: 0,
+                                                                    }}>
+
+                                                                        <Box sx={{ textAlign: 'right' }}>
+                                                                            <TextField
+                                                                                label="Campaign Name"
+                                                                                variant="outlined"
+                                                                                name="campaignName"
+                                                                                value={formValues.campaignName}
+                                                                                onKeyDown={(e) => e.stopPropagation()}
+                                                                                onChange={handleInputChange}
+                                                                                fullWidth
+                                                                                margin="normal"
+                                                                                sx={{
+                                                                                    fontFamily: 'Nunito Sans',
+                                                                                    '& .MuiInputBase-input': {
+                                                                                        fontSize: '14px',
+                                                                                        lineHeight: '16px',
+                                                                                    },
+                                                                                    '& .MuiInputLabel-root': {
+                                                                                        fontSize: '14px',
+                                                                                    },
+                                                                                    '& .MuiOutlinedInput-root': {
+                                                                                        fontSize: '14px',
+                                                                                    },
+                                                                                }}
+                                                                            />
+                                                                            <FormControl variant="outlined" fullWidth margin="normal" sx={{ fontSize: '10px' }}>
+                                                                                <InputLabel sx={{ fontSize: '14px' }}>Campaign goal</InputLabel>
+                                                                                <Select
+                                                                                    name="campaignObjective"
+                                                                                    value={formValues.campaignObjective}
+                                                                                    onChange={handleInputChange}
+                                                                                    label="Campaign goal"
+                                                                                    sx={{
+                                                                                        fontSize: '16px',
+                                                                                        textAlign: 'left',
+                                                                                        justifyContent: 'flex-start',
+                                                                                        '& .MuiSelect-select': {
+                                                                                            fontSize: '16px',
+                                                                                        },
+                                                                                    }}
+                                                                                >
+                                                                                    <MenuItem
+                                                                                        value="LINK_CLICKS"
+                                                                                        sx={{ fontSize: '14px' }}
+                                                                                    >
+                                                                                        link clicks
+                                                                                    </MenuItem>
+                                                                                    <MenuItem
+                                                                                        value="LANDING_PAGE_VIEWS"
+                                                                                        sx={{ fontSize: '14px' }}
+                                                                                    >
+                                                                                        landing page views
+                                                                                    </MenuItem>
+                                                                                </Select>
+                                                                            </FormControl>
+                                                                            <TextField
+                                                                                label="Bid Amount"
+                                                                                variant="outlined"
+                                                                                name="bidAmount"
+                                                                                type="number"
+                                                                                value={formValues.bidAmount}
+                                                                                onChange={handleInputChange}
+                                                                                fullWidth
+                                                                                margin="normal"
+                                                                                InputProps={{
+                                                                                    startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                                                                                }}
+                                                                            />
+                                                                            <TextField
+                                                                                label="Daily Budget"
+                                                                                variant="outlined"
+                                                                                name="dailyBudget"
+                                                                                type="number"
+                                                                                value={formValues.dailyBudget}
+                                                                                onChange={handleInputChange}
+                                                                                fullWidth
+                                                                                margin="normal"
+                                                                                InputProps={{
+                                                                                    startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                                                                                }}
+                                                                            />
+                                                                            <Typography variant="body2" color="textSecondary" paragraph>
+                                                                                We will not run your campaign. Maximiz will create a campaign template in your ad account. We won&apos;t run anything without your confirmation.
+                                                                            </Typography>
+                                                                            <Button variant="contained" onClick={handleSaveCampaign}
+                                                                                disabled={!isChecked}
+                                                                                sx={{
+                                                                                    borderRadius: '4px',
+                                                                                    border: '1px solid #5052B2',
+                                                                                    background: '#fff',
+                                                                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                                                                    fontFamily: 'Nunito Sans',
+                                                                                    fontSize: '14px',
+                                                                                    fontWeight: '600',
+                                                                                    lineHeight: '20px',
+                                                                                    color: '#5052b2',
+                                                                                    textTransform: 'none',
+                                                                                    padding: '4px 22px',
+                                                                                    '&:hover': {
+                                                                                        background: 'transparent'
+                                                                                    },
+                                                                                    '&.Mui-disabled': {
+                                                                                        backgroundColor: '#E4E4E4',
+                                                                                        color: '#808080'
+                                                                                    }
+                                                                                }}>
+                                                                                Save
+                                                                            </Button>
+                                                                        </Box>
+                                                                    </Box>
+
+
+                                                                    {/* Add a Divider to separate form from options */}
+                                                                    <Divider sx={{ borderColor: '#cdcdcd' }} />
+                                                                </Box>
+                                                            )}
+
+                                                            {/* Show static options */}
+                                                            {metaCampaign && metaCampaign.map((klaviyo, option) => (
+                                                                <MenuItem
+                                                                    key={klaviyo.id}
+                                                                    onClick={() => handleSelectOptionCampaign(klaviyo)}
+                                                                    sx={{
+                                                                        '&:hover': {
+                                                                            background: 'rgba(80, 82, 178, 0.10)'
+                                                                        }
+                                                                    }}
                                                                 >
-                                                                    <MenuItem value="LINK_CLICKS">link clicks</MenuItem>
-                                                                    <MenuItem value="LANDING_PAGE_VIEWS">landing page views</MenuItem>
-                                                                </Select>
-                                                            </FormControl>
-                                                            <TextField
-                                                                label="Bid Amount"
-                                                                variant="outlined"
-                                                                name="bidAmount"
-                                                                type="number"
-                                                                value={formValues.bidAmount}
-                                                                onChange={handleInputChange}
-                                                                fullWidth
-                                                                margin="normal"
-                                                                InputProps={{
-                                                                    startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                                                                }}
-                                                            />
-                                                            <TextField
-                                                                label="Daily Budget"
-                                                                variant="outlined"
-                                                                name="dailyBudget"
-                                                                type="number"
-                                                                value={formValues.dailyBudget}
-                                                                onChange={handleInputChange}
-                                                                fullWidth
-                                                                margin="normal"
-                                                                InputProps={{
-                                                                    startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                                                                }}
-                                                            />
-                                                            <Typography variant="body2" color="textSecondary" paragraph>
-                                                                We will not run your campaign. Maximiz will create a campaign template in your ad account. We won&apos;t run anything without your confirmation.
-                                                            </Typography>
-                                                        </DialogContent>
-                                                        <DialogActions>
-                                                            <Button onClick={handleCloseCampaign} color="primary">
-                                                                Cansel
-                                                            </Button>
-                                                            <Button onClick={handleSaveCampaign} color="primary" variant="contained" disabled={!isChecked}>
-                                                                Save
-                                                            </Button>
-                                                        </DialogActions>
-                                                    </Dialog>
-                                                </Box>
+                                                                    <ListItemText
+                                                                        primary={klaviyo.list_name}
+                                                                        primaryTypographyProps={{
+                                                                            sx: {
+                                                                                fontFamily: "Nunito Sans",
+                                                                                fontSize: "14px",
+                                                                                color: "#202124",
+                                                                                fontWeight: "500",
+                                                                                lineHeight: "20px",
+                                                                            }
+                                                                        }}
+                                                                    />
 
+                                                                </MenuItem>
+                                                            ))}
+                                                        </Menu>
+                                                    </Box>
+                                                )}
                                             </>
                                         </ClickAwayListener>
                                     </Box>
@@ -1604,20 +1793,6 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
                                             </Grid>
                                         </Box>
                                     ))}
-
-                                    {/* <Button color="primary" onClick={handleAddRow} sx={{
-                                    fontFamily: 'Nunito Sans',
-                                    fontSize: '14px',
-                                    fontWeight: '600',
-                                    color: '#5052B2',
-                                    lineHeight: '22px',
-                                    textTransform: 'none',
-                                    '&:hover': {
-                                        background: '#fff'
-                                    }
-                                }}>
-                                    Add Row +
-                                    </Button> */}
 
                                 </Box>
                             </TabPanel>
