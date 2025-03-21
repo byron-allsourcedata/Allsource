@@ -542,7 +542,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                 </Box>
             </Drawer>
             <MetaConnectButton open={openMetaConnect} onClose={handleClose} onSave={saveIntegration} />
-            <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={handleClose} onSave={saveIntegration} />
+            <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={handleClose} invalid_api_key={false} onSave={saveIntegration} />
             <SalesForceIntegrationPopup open={openSalesForceConnect} handleClose={handleClose} onSave={saveIntegration} />
             <BingAdsIntegrationPopup open={openBingAdsConnect} handleClose={handleClose} onSave={saveIntegration} />
             <AttentiveIntegrationPopup open={openAttentiveConnect} handleClose={handleClose} onSave={saveIntegration} />

@@ -1284,33 +1284,34 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                 />
          */}
         <MailchimpConnect open={openMailchimpConnect} handleClose={() => { setOpenMailchimpConnect(false), setIsInvalidApiKey(false) }}
-          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'mailchimp')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
+          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'mailchimp')?.access_token} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
         <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={() => { setOpenKlaviyoConnect(false), setIsInvalidApiKey(false) }}
-          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
+          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
         <SalesForceIntegrationPopup open={openSalesForceConnect} handleClose={() => { setOpenSalesForceConnect(false), setIsInvalidApiKey(false) }}
-        initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sales_force')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
+        initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sales_force')?.access_token} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
         <OmnisendConnect open={openOmnisendConnect} handleClose={() => { setOpenOmnisendConnect(false), setIsInvalidApiKey(false) }}
-          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'omnisend')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
+          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'omnisend')?.access_token} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
         <SendlaneConnect
           open={openSendlaneConnect}
           handleClose={() => { setOpenSendlaneConnect(false), setIsInvalidApiKey(false) }}
-          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sendlane')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
+          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sendlane')?.access_token} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
         />
         <SlackConnectPopup
           open={openSlackConnect}
           handlePopupClose={() => { setOpenSlackConnect(false), setIsInvalidApiKey(false) }}
-          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'slack')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
+          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'slack')?.access_token} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
         />
         <GoogleADSConnectPopup
           open={openGoogleADSConnect}
           handlePopupClose={() => { setOpenGoogleADSConnect(false), setIsInvalidApiKey(false) }}
-          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'google_ads')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
+          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'google_ads')?.access_token} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
         />
         <WebhookConnectPopup open={openWebhookConnect} handleClose={() => { setOpenWebhookConnect(false), setIsInvalidApiKey(false) }}
-          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'webhook')?.access_token} Invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
+          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'webhook')?.access_token} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
         <ZapierConnectPopup
           open={openZapierConnect}
           handlePopupClose={handleCloseIntegrate}
+          invalid_api_key={isInvalidApiKey}
           boxShadow="rgba(0, 0, 0, 0.01)"
         />
       </Box>

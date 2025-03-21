@@ -2804,6 +2804,7 @@ const AccountSetup = () => {
                   open={klaviyoPopupOpen}
                   handleClose={() => setKlaviyoPopupOpen(false)}
                   onSave={handleSaveSettings}
+                  invalid_api_key={false}
                   boxShadow="rgba(0, 0, 0, 0.1)"
                   initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'klaviyo')?.access_token}
                 />

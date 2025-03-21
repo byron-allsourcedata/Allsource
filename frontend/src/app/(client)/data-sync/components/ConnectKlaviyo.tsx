@@ -23,12 +23,6 @@ type KlaviyoList = {
     list_name: string
 }
 
-type KlaviyoTags = {
-    id: string
-    tags_name: string
-}
-
-
 
 const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, data, isEdit }) => {
     const { triggerSync } = useIntegrationContext();
@@ -44,7 +38,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
     const [isShrunk, setIsShrunk] = useState<boolean>(false);
     const textFieldRef = useRef<HTMLDivElement>(null);
     const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
-    const [openDropdown, setOpenDropdown] = useState<number | null>(null);
     const [openDropdownMaximiz, setOpenDropdownMaximiz] = useState<number | null>(null)
     const [apiKeyError, setApiKeyError] = useState(false);
     const [tab2Error, setTab2Error] = useState(false);
@@ -144,7 +137,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
         setTagName('');
         setIsShrunk(false);
         setIsDropdownOpen(false);
-        setOpenDropdown(null);
         setOpenDropdownMaximiz(null);
         setApiKeyError(false);
         setTab2Error(false);
@@ -306,12 +298,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
         setNewListName(''); // Clear new list name when closing
     };
 
-    const handleMapClose = () => {
-        setValue('1')
-        setShowCreateMapForm(false);
-        setNewMapListName('');
-    };
-
     const handleSelectOption = (value: KlaviyoList | string) => {
         if (value === 'createNew') {
             setShowCreateForm(prev => !prev);
@@ -339,10 +325,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
             'list_name' in value;
     };
 
-
-
-
-    // Handle Save action for the create new list form
     const handleSave = async () => {
         let valid = true;
 
@@ -364,18 +346,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
             handleClose();
         }
     };
-
-
-    const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setChecked(event.target.checked);
-    };
-
-    const label = { inputProps: { 'aria-label': 'Switch demo' } };
-
-    const handleChange = (event: React.SyntheticEvent, newValue: string) => {
-        setValue(newValue);
-    };
-
 
     const klaviyoStyles = {
         tabHeading: {
@@ -422,73 +392,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
         },
     }
 
-    type HighlightConfig = {
-        [keyword: string]: { color?: string; fontWeight?: string }; // keyword as the key, style options as the value
-    };
-
-    const highlightText = (text: string, highlightConfig: HighlightConfig) => {
-        // Start with the whole text as a single part.
-        let parts: (string | JSX.Element)[] = [text];
-
-        // For each keyword, split the text and insert the highlighted part.
-        Object.keys(highlightConfig).forEach((keyword, keywordIndex) => {
-            const { color, fontWeight } = highlightConfig[keyword];
-            parts = parts.flatMap((part, partIndex) =>
-                // Only split if the part is a string and contains the keyword.
-                typeof part === 'string' && part.includes(keyword)
-                    ? part.split(keyword).flatMap((segment, index, array) =>
-                        index < array.length - 1
-                            ? [
-                                segment,
-                                <span
-                                    style={{
-                                        color: color || 'inherit',
-                                        fontWeight: fontWeight || 'normal'
-                                    }}
-                                    key={`highlight-${keywordIndex}-${partIndex}-${index}`}
-                                >
-                                    {keyword}
-                                </span>
-                            ]
-                            : [segment]
-                    )
-                    : [part] // Otherwise, just keep the part as is (could be JSX).
-            );
-        });
-
-        return <>{parts}</>; // Return the array wrapped in a fragment.
-    };
-
-    const instructions = [
-        { id: 'unique-id-1', text: 'Go to the Klaviyo website and log into your account.' },
-        { id: 'unique-id-2', text: 'Click on the Settings option located in your Klaviyo account options.' },
-        { id: 'unique-id-3', text: 'Click Create Private API Key Name to Maximiz.' },
-        { id: 'unique-id-4', text: 'Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Klaviyo key.' },
-        { id: 'unique-id-5', text: 'Click Create.' },
-        { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in Maximiz Klaviyo section.' },
-        { id: 'unique-id-7', text: 'Click Connect.' },
-        { id: 'unique-id-8', text: 'Select the existing list or create a new one to integrate with Maximiz.' },
-        { id: 'unique-id-9', text: 'Click Export.' },
-
-    ]
-
-    // Define the keywords and their styles
-    const highlightConfig: HighlightConfig = {
-        'Klaviyo': { color: '#5052B2', fontWeight: '500' }, // Blue and bold
-        'Settings': { color: '#707071', fontWeight: '500' }, // Bold only
-        'Create Private API Key': { color: '#707071', fontWeight: '500' }, // Blue and bold
-        'Lists': { color: '#707071', fontWeight: '500' }, // Bold only
-        'Profiles': { color: '#707071', fontWeight: '500' }, // Bold only
-        'Metrics': { color: '#707071', fontWeight: '500' }, // Blue and bold
-        'Events': { color: '#707071', fontWeight: '500' }, // Blue and bold
-        'Templates': { color: '#707071', fontWeight: '500' }, // Blue and bold
-        'Create': { color: '#707071', fontWeight: '500' }, // Blue and bold
-        'API Key': { color: '#707071', fontWeight: '500' }, // Blue and bold
-        'Connect': { color: '#707071', fontWeight: '500' }, // Bold only
-        'Export': { color: '#707071', fontWeight: '500' } // Blue and bold
-    };
-
-    // Define buttons for each tab
     const getButton = (tabValue: string) => {
         switch (tabValue) {
             case '1':
@@ -620,32 +523,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
         }
     };
 
-    // Add row function
-    const handleAddRow = () => {
-        const newRow: Row = {
-            id: Date.now(), // Unique ID for each new row
-            type: '',
-            value: '',
-            canDelete: true, // This new row can be deleted
-        };
-        setRows([...rows, newRow]);
-    };
-    const handleDropdownOpen = (id: number) => {
-        setOpenDropdown(id); // Set the open state for the current dropdown
-    };
-
-    const handleDropdownMaximizOpen = (id: number) => {
-        setOpenDropdownMaximiz(id)
-    }
-
-    const handleDropdownClose = () => {
-        setOpenDropdown(null); // Reset when dropdown closes
-    };
-
-    const handleDropdownMaximizClose = () => {
-        setOpenDropdownMaximiz(null)
-    }
-
     const validateTab2 = () => {
         if (selectedRadioValue === null) {
             setTab2Error(true);
@@ -654,8 +531,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
         setTab2Error(false);
         return true;
     };
-
-
 
     const handleNextTab = async () => {
 
@@ -725,11 +600,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                         top: 0,
                         boxShadow: isEdit ? '0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)' : 'none',
                         bottom: 0,
-                        // msOverflowStyle: 'none',
-                        // scrollbarWidth: 'none',
-                        // '&::-webkit-scrollbar': {
-                        //     display: 'none',
-                        // },
                         '@media (max-width: 600px)': {
                             width: '100%',
                         }

@@ -10,7 +10,7 @@ import ConnectMeta from './SyncMetaSlider';
 import KlaviyoIntegrationPopup from '@/components/KlaviyoIntegrationPopup';
 import SalesForceIntegrationPopup from '@/components/SalesForceIntegrationPopup';
 import BingAdsIntegrationPopup from '@/components/BingAdsIntegrationPopup';
-import SlackIntegrationPopup from '@/components//SlackIntegrationPopup';
+import SlackConnectPopup from '@/components//SlackConnectPopup';
 import GoogleADSConnectPopup from '@/components//GoogleADSConnectPopup';
 import MetaConnectButton from '@/components//MetaConnectButton';
 import AlivbleIntagrationsSlider from '@/components//AvalibleIntegrationsSlider';
@@ -421,14 +421,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             {/* Add Integration */}
             <AlivbleIntagrationsSlider open={plusIconPopupOpen} onClose={handlePlusIconPopupClose} isContactSync={true} integrations={integrations} integrationsCredentials={integrationsCredentials} handleSaveSettings={handleSaveSettings} />
             <WebhookConnectPopup open={createWebhook} handleClose={handleCreateWebhookClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'webhook')?.access_token} />
-            <SlackIntegrationPopup open={createSlack} handleClose={handleCreateSlackClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'slack')?.access_token} />
+            <SlackConnectPopup open={createSlack} handlePopupClose={handleCreateSlackClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'slack')?.access_token} />
             <GoogleADSConnectPopup open={createGoogleADS} handlePopupClose={handleCreateADSClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'google_ads')?.access_token} />
-            <KlaviyoIntegrationPopup open={createKlaviyo} handleClose={handleCreateKlaviyoClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token} />
+            <KlaviyoIntegrationPopup open={createKlaviyo} invalid_api_key={false} handleClose={handleCreateKlaviyoClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token} />
             <SalesForceIntegrationPopup open={createSalesForce} handleClose={handleCreateSalesForceClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sales_force')?.access_token} />
             <BingAdsIntegrationPopup open={createBingAds} handleClose={handleCreateBingAdsClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'bing_ads')?.access_token} />
-            <MailchimpConnect onSave={handleSaveSettings} open={openMailchimpConnect} handleClose={handleOpenMailchimpConnectClose} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Mailchimp')?.access_token} />
-            <SendlaneConnect open={openSendlaneConnect} handleClose={handleSendlaneConnectClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Sendlane')?.access_token} />
-            <OmnisendConnect open={openOmnisendConnect} handleClose={() => setOpenOmnisendConnect(false)} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Omnisend')?.access_token} />
+            <MailchimpConnect onSave={handleSaveSettings} open={openMailchimpConnect} handleClose={handleOpenMailchimpConnectClose} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'mailchimp')?.access_token} />
+            <SendlaneConnect open={openSendlaneConnect} handleClose={handleSendlaneConnectClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sendlane')?.access_token} />
+            <OmnisendConnect open={openOmnisendConnect} handleClose={() => setOpenOmnisendConnect(false)} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'omnisend')?.access_token} />
             <MetaConnectButton open={metaConnectApp} onClose={handleCloseMetaConnectApp} onSave={handleSaveSettings} />
         </>
     );

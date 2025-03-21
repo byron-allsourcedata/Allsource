@@ -18,6 +18,7 @@ interface CreateAttentiveProps {
     initApiKey?: string 
     boxShadow?: string;
     isEdit?: boolean;
+    invalid_api_key?: boolean
 }
 
 
@@ -78,7 +79,7 @@ const attentiveStyles = {
       },
 }
 
-const AttentiveIntegrationPopup = ({ handleClose, open, onSave, initApiKey, isEdit, boxShadow}: CreateAttentiveProps) => {
+const AttentiveIntegrationPopup = ({ handleClose, open, onSave, initApiKey, isEdit, boxShadow, invalid_api_key}: CreateAttentiveProps) => {
     const { triggerSync } = useIntegrationContext();
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
@@ -354,8 +355,8 @@ const AttentiveIntegrationPopup = ({ handleClose, open, onSave, initApiKey, isEd
                                 variant="outlined"
                                 fullWidth
                                 margin="normal"
-                                error={apiKeyError}
-                                helperText={apiKeyError ? 'API Key is required' : ''}
+                                error={invalid_api_key}
+                                helperText={invalid_api_key ? 'API Key is required' : ''}
                                 value={apiKey}
                                 onChange={handleApiKeyChange}
                                 InputLabelProps={{ sx: attentiveStyles.inputLabel }}

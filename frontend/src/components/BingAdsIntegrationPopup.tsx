@@ -14,7 +14,7 @@ interface CreateSalesForceProps {
     initApiKey?: string
     boxShadow?: string;
     isEdit?: boolean;
-    Invalid_api_key?: boolean;
+    invalid_api_key?: boolean;
 }
 
 interface IntegrationsCredentials {
@@ -27,7 +27,7 @@ interface IntegrationsCredentials {
     is_with_suppression?: boolean
 }
 
-const BingAdsIntegrationPopup = ({ handleClose, open, boxShadow }: CreateSalesForceProps) => {
+const BingAdsIntegrationPopup = ({ handleClose, open, boxShadow, invalid_api_key }: CreateSalesForceProps) => {
     const [value, setValue] = useState("1");
 
     const generateRandomString = (length: number): string => {
@@ -181,6 +181,17 @@ const BingAdsIntegrationPopup = ({ handleClose, open, boxShadow }: CreateSalesFo
                                         >
                                             Connect to BingAds
                                         </Button>
+                                        {invalid_api_key && (
+                                            <Typography color="error" sx={{
+                                                fontFamily: "Nunito Sans",
+                                                fontSize: "14px",
+                                                fontWeight: "600",
+                                                lineHeight: "21.82px",
+                                                marginTop: "10px"
+                                            }}>
+                                                Invalid API Key detected. Please reconnect to BingAds and try again
+                                            </Typography>
+                                        )}
                                     </Box>
                                 </Box>
                             </TabPanel>

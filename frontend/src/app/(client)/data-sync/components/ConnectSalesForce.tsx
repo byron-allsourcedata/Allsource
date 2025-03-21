@@ -405,7 +405,7 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({ open, onClose, 
                     <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                         <TabContext value={value}>
                             <Box sx={{ pb: 4 }}>
-                                <TabList centered aria-label="Connect to Klaviyo Tabs"
+                                <TabList centered aria-label="Connect to SalesForce Tabs"
                                     TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
                                     sx={{
                                         "& .MuiTabs-scroller": {
