@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Drawer, Box, Typography, IconButton, List, ListItem, ListItemIcon, ListItemButton, Button, ListItemText, Popover, Tooltip, Tab } from '@mui/material';
+import { Drawer, Box, Typography, IconButton, List, ListItem, ListItemIcon, ListItemButton, Button, ListItemText, Popover, Tooltip, Tab, Slider, TextField, Card,
+    CardContent } from '@mui/material';
 import TabList from "@mui/lab/TabList";
 import TabPanel from '@mui/lab/TabPanel';
 import TabContext from "@mui/lab/TabContext";
@@ -165,7 +166,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, selected
     const [openModal, setOpenModal] = useState<string | null>(null);
     const [upgradePlanPopup, setUpgradePlanPopup] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [value, setValue] = React.useState('1');
+    const [value, setValue] = useState('1');
     const [isDropdownValid, setIsDropdownValid] = useState(false);
 
     const handleDeleteOpen = () => {
@@ -548,6 +549,20 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, selected
         { image: 'salesforce-icon.svg', service_name: 'sales_force' }
       ];
 
+      const [valueContactSync, setValueContactSync] = useState<number>(1000);
+      const maxContacts = 10000;
+    
+      const handleSliderChange = (event: Event, newValue: number | number[]) => {
+        setValueContactSync(newValue as number);
+      };
+    
+      const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const inputValue = Number(event.target.value);
+        if (inputValue >= 0 && inputValue <= maxContacts) {
+            setValueContactSync(inputValue);
+        }
+      };
+
       const integratedServices = integrationsCredentials.map(cred => cred.service_name);
 
     const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active, is_avalible, is_failed, is_integrated = false, isEdit }: IntegrationBoxProps) => {
@@ -883,7 +898,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, selected
                         <TabPanel value="1" sx={{ p: 0 }}>
                             <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
                                 <Box sx={{ p:0, width: '100%' }}>
-                                    <Box sx={{ px: 2, py: 3, border: '1px solid #f0f0f0', borderRadius: '4px' }}>
+                                    <Box sx={{ px: 2, py: 3, borderRadius: '4px' }}>
                                         <Typography variant="h6" className="first-sub-title">
                                             Choose where you want to sync
                                         </Typography>
@@ -1429,12 +1444,58 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, selected
                             </Box>
                         </TabPanel>
                         <TabPanel value="2" sx={{ p: 0 }}>
-                            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
-                                <Typography className="first-sub-title">Сhoose number of contacts that you want to sync</Typography>
-                                <Box>
-                                <Typography className="first-sub-title">Active segment</Typography>
-                                <Typography className="second-sub-title">Сhoose number of contacts that you want to sync</Typography>
-                                </Box>
+                            <Box sx={{display: "flex", justifyContent: "center"}}>
+                                <Card
+                                    sx={{
+                                        display: "flex",
+                                        padding: 2,
+                                        boxShadow: 2,
+                                        borderRadius: "4px",
+                                    }}
+                                    >
+                                    <CardContent>
+                                        <Typography className='first-sub-title' sx={{ marginBottom: 2 }}>
+                                            Choose number of contacts that you want to sync
+                                        </Typography>
+                                        <Typography className='black-table-header' sx={{ marginBottom: 1 }}>
+                                            Active segment
+                                        </Typography>
+                                        <Typography className='first-sub-title' sx={{ marginBottom: 3 }}>
+                                            {maxContacts.toLocaleString()}
+                                        </Typography>
+                                        <Typography className='black-table-headers' sx={{ marginBottom: 1 }}>
+                                            How many contacts do you want to sync?
+                                        </Typography>
+                                        <Typography className='table-data' sx={{ marginBottom: 2 }}>
+                                            Enter the number of contacts you want to sync. The cost will be calculated automatically.
+                                        </Typography>
+                                        <TextField
+                                            fullWidth
+                                            variant="outlined"
+                                            size="small"
+                                            value={valueContactSync}
+                                            onChange={handleInputChange}
+                                            type="number"
+                                            inputProps={{
+                                                min: 0,
+                                                max: maxContacts,
+                                                step: 1,
+                                            }}
+                                            sx={{ marginBottom: 2 }}
+                                        />
+                                        <Box>
+                                        <Slider
+                                            value={valueContactSync}
+                                            onChange={handleSliderChange}
+                                            min={0}
+                                            max={maxContacts}
+                                            aria-label="Contacts Sync Slider"
+                                            valueLabelDisplay="auto"
+                                            sx={{ color: "rgba(80, 82, 178, 1)", "&.MuiSlider-thumb": {width: "14px", height: "14px", transform: "translate(0, -50%)"},  "&.MuiSlider-rail": { backgroundColor: "rgba(231, 231, 231, 1)" }}}
+                                        />
+                                        </Box>
+                                    </CardContent>
+                                </Card>
                             </Box>
                         </TabPanel>
                     </TabContext>
