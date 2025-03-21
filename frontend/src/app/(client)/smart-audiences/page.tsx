@@ -893,8 +893,8 @@ const SmartAudiences: React.FC = () => {
                                                                             top: '56px',
                                                                             zIndex: 11,
                                                                         }}>
-                                                                            <TableCell colSpan={9} sx={{ p: 0, pb: "2px" }}>
-                                                                                <LinearProgress variant="indeterminate" sx={{ width: "100%", position: "absolute" }} />
+                                                                            <TableCell colSpan={9} sx={{ p: 0, pb: "1px" }}>
+                                                                                <LinearProgress variant="indeterminate" sx={{ width: "100%", height: "2px", position: "absolute" }} />
                                                                             </TableCell>
                                                                         </TableRow>
                                                                     )
@@ -904,7 +904,7 @@ const SmartAudiences: React.FC = () => {
                                                                             top: '56px',
                                                                             zIndex: 11,
                                                                         }}>
-                                                                            <TableCell colSpan={9} sx={{ p: 0, pb: "2px", backgroundColor: "rgba(235, 235, 235, 1)", borderColor: "rgba(235, 235, 235, 1)" }}/>
+                                                                            <TableCell colSpan={9} sx={{ p: 0, pb: "1px", backgroundColor: "rgba(235, 235, 235, 1)", borderColor: "rgba(235, 235, 235, 1)" }}/>
                                                                         </TableRow>
                                                                     )
                                                                 }

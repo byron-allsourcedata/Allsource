@@ -747,27 +747,27 @@ const Sources: React.FC = () => {
                                                                 ))}
                                                             </TableRow>
                                                             {loaderForTable 
-                                                                ? (
-                                                                    <TableRow sx={{
-                                                                        position: "sticky",
-                                                                        top: '56px',
-                                                                        zIndex: 11,
-                                                                    }}>
-                                                                        <TableCell colSpan={9} sx={{ p: 0, pb: "4px" }}>
-                                                                            <LinearProgress variant="indeterminate" sx={{ width: "100%", position: "absolute" }} />
-                                                                        </TableCell>
-                                                                    </TableRow>
-                                                                )
-                                                                : (
-                                                                    <TableRow sx={{
-                                                                        position: "sticky",
-                                                                        top: '56px',
-                                                                        zIndex: 11,
-                                                                    }}>
-                                                                        <TableCell colSpan={9} sx={{ p: 0, pb: "4px", borderColor: "#fff" }}/>
-                                                                    </TableRow>
-                                                                )
-                                                            }
+                                                                    ? (
+                                                                        <TableRow sx={{
+                                                                            position: "sticky",
+                                                                            top: '56px',
+                                                                            zIndex: 11,
+                                                                        }}>
+                                                                            <TableCell colSpan={9} sx={{ p: 0, pb: "1px" }}>
+                                                                                <LinearProgress variant="indeterminate" sx={{ width: "100%", height: "2px", position: "absolute" }} />
+                                                                            </TableCell>
+                                                                        </TableRow>
+                                                                    )
+                                                                    : (
+                                                                        <TableRow sx={{
+                                                                            position: "sticky",
+                                                                            top: '56px',
+                                                                            zIndex: 11,
+                                                                        }}>
+                                                                            <TableCell colSpan={9} sx={{ p: 0, pb: "1px", backgroundColor: "rgba(235, 235, 235, 1)", borderColor: "rgba(235, 235, 235, 1)" }}/>
+                                                                        </TableRow>
+                                                                    )
+                                                                }
                                                         </TableHead>
                                                     </Table>
                                                 </TableContainer>
@@ -873,17 +873,28 @@ const Sources: React.FC = () => {
                                                                         </TableCell>
                                                                     ))}
                                                                 </TableRow>
-                                                                {loaderForTable && (
-                                                                    <TableRow sx={{
-                                                                        position: "sticky",
-                                                                        top: '56px',
-                                                                        zIndex: 11,
-                                                                    }}>
-                                                                        <TableCell colSpan={9} sx={{ p: 0, pb: "4px" }}>
-                                                                            <LinearProgress variant="indeterminate" sx={{ width: "100%", position: "absolute" }} />
-                                                                        </TableCell>
-                                                                    </TableRow>
-                                                                )}
+                                                                {loaderForTable 
+                                                                    ? (
+                                                                        <TableRow sx={{
+                                                                            position: "sticky",
+                                                                            top: '56px',
+                                                                            zIndex: 11,
+                                                                        }}>
+                                                                            <TableCell colSpan={9} sx={{ p: 0, pb: "1px" }}>
+                                                                                <LinearProgress variant="indeterminate" sx={{ width: "100%", height: "2px", position: "absolute" }} />
+                                                                            </TableCell>
+                                                                        </TableRow>
+                                                                    )
+                                                                    : (
+                                                                        <TableRow sx={{
+                                                                            position: "sticky",
+                                                                            top: '56px',
+                                                                            zIndex: 11,
+                                                                        }}>
+                                                                            <TableCell colSpan={9} sx={{ p: 0, pb: "1px", backgroundColor: "rgba(235, 235, 235, 1)", borderColor: "rgba(235, 235, 235, 1)" }}/>
+                                                                        </TableRow>
+                                                                    )
+                                                                }
                                                             </TableHead>
                                                             <TableBody>
                                                                 {data.map((row: Source) => {
