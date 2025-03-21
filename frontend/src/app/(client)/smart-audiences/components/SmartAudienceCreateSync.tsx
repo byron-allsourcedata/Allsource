@@ -554,7 +554,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         { image: 'hubspot.svg', service_name: 'hubspot' },
         { image: 'google-ads.svg', service_name: 'google_ads' },
         { image: 'salesforce-icon.svg', service_name: 'sales_force' },
-        { image: 's3.png', service_name: 's3' },
+        { image: 's3.svg', service_name: 's3' },
         { image: 'csv-icon.svg', service_name: 'csv' }
       ];
 
