@@ -24,6 +24,7 @@ import { MoreVert } from '@mui/icons-material'
 import { useSSE } from '../../../context/SSEContext';
 import FilterPopup from './components/SearchFilter';
 import CloseIcon from '@mui/icons-material/Close';
+import CustomCell from './components/CustomCell';
 
 interface Source {
     id: string
@@ -90,6 +91,22 @@ const Sources: React.FC = () => {
     const isOpen = Boolean(anchorEl);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const [isMakeRequest, setIsMakeRequest] = useState(false);
+    const createCommonCellStyles = (
+        width: string = "15vw",
+        mobileWidth: string = "20vw"
+      ) => ({
+        minWidth: width,
+        width: width,
+        maxWidth: width,
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap",
+        // '@media (max-width: 600px)': {
+        //   minWidth: mobileWidth,
+        //   width: mobileWidth,
+        //   maxWidth: mobileWidth,
+        // },
+      });
 
     useEffect(() => {
         fetchSources({
@@ -933,181 +950,31 @@ const Sources: React.FC = () => {
                                                                             }}
                                                                         >
                                                                             {/* Name Column */}
-                                                                            <TableCell className="sticky-cell"
-                                                                                sx={{
-                                                                                    ...sourcesStyles.table_array,
-                                                                                    ...commonCellStyles,
-                                                                                    position: 'sticky',
-                                                                                    left: '0',
-                                                                                    zIndex: 9,
-                                                                                    backgroundColor: loaderForTable ? 'transparent' : '#fff',
-                                                                                }}
-                                                                            >
-                                                                                <Box sx={{ display: 'flex' }}>
-                                                                                    <Tooltip
-                                                                                        title={
-                                                                                            <Box sx={{ backgroundColor: '#fff', margin: 0, padding: 0, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                                                                                                <Typography className='table-data' component='div' sx={{ fontSize: '12px !important' }}>
-                                                                                                    {row.name}
-                                                                                                </Typography>
-                                                                                            </Box>
-                                                                                        }
-                                                                                        sx={{ marginLeft: '0.5rem !important' }}
-                                                                                        componentsProps={{
-                                                                                            tooltip: {
-                                                                                                sx: {
-                                                                                                    backgroundColor: '#fff',
-                                                                                                    color: '#000',
-                                                                                                    boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
-                                                                                                    border: '0.2px solid rgba(255, 255, 255, 1)',
-                                                                                                    borderRadius: '4px',
-                                                                                                    maxHeight: '100%',
-                                                                                                    maxWidth: '500px',
-                                                                                                    padding: '11px 10px',
-                                                                                                    marginLeft: '0.5rem !important',
-                                                                                                },
-                                                                                            },
-                                                                                        }}
-                                                                                        placement='right'
-                                                                                    >
-                                                                                        <Typography className='table-data'
-                                                                                            sx={{
-                                                                                                whiteSpace: 'nowrap',
-                                                                                                overflow: 'hidden',
-                                                                                                textOverflow: 'ellipsis',
-                                                                                                maxWidth: '15vw',
-                                                                                            }}
-                                                                                        >
-                                                                                            {row.name}
-                                                                                        </Typography>
-                                                                                    </Tooltip>
-                                                                                </Box>
-                                                                            </TableCell>
+                                                                            <CustomCell rowExample={row.name} cellWidth="10vw" loaderForTable={loaderForTable} customCellStyles={{
+                                                                                position: 'sticky',
+                                                                                left: '0',
+                                                                                zIndex: 9,
+                                                                                backgroundColor: loaderForTable ? '#fff' : '#fff',
+                                                                            }}/>
 
                                                                             {/* Source Column */}
-                                                                            <TableCell
-                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative' }}
-                                                                            >
-                                                                                {setSourceOrigin(row.source_type)}
-                                                                            </TableCell>
+                                                                            <CustomCell rowExample={setSourceOrigin(row.source_type)} cellWidth="7vw" loaderForTable={loaderForTable}/>
 
                                                                             {/* Domain Column */}
-                                                                            <TableCell
-                                                                                sx={{
-                                                                                    ...sourcesStyles.table_array,
-                                                                                    ...commonCellStyles,
-                                                                                    position: 'relative',
-                                                                                }}
-                                                                            >
-                                                                                <Box sx={{ display: 'flex' }}>
-                                                                                    {row.domain && (
-                                                                                        <Tooltip
-                                                                                            title={
-                                                                                                <Box sx={{ backgroundColor: '#fff', margin: 0, padding: 0, display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                                                                                                    <Typography className='table-data' component='div' sx={{ fontSize: '12px !important' }}>
-                                                                                                        {row.domain}
-                                                                                                    </Typography>
-                                                                                                </Box>
-                                                                                            }
-                                                                                            sx={{ marginLeft: '0.5rem !important' }}
-                                                                                            componentsProps={{
-                                                                                                tooltip: {
-                                                                                                    sx: {
-                                                                                                        backgroundColor: '#fff',
-                                                                                                        color: '#000',
-                                                                                                        boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
-                                                                                                        border: '0.2px solid rgba(255, 255, 255, 1)',
-                                                                                                        borderRadius: '4px',
-                                                                                                        maxHeight: '100%',
-                                                                                                        maxWidth: '500px',
-                                                                                                        padding: '11px 10px',
-                                                                                                        marginLeft: '0.5rem !important',
-                                                                                                    },
-                                                                                                },
-                                                                                            }}
-                                                                                            placement='right'
-                                                                                        >
-                                                                                            <Typography className='table-data'
-                                                                                                sx={{
-                                                                                                    whiteSpace: 'nowrap',
-                                                                                                    overflow: 'hidden',
-                                                                                                    textOverflow: 'ellipsis',
-                                                                                                    maxWidth: '15vw',
-                                                                                                }}
-                                                                                            >
-                                                                                                {row.domain ?? "--"}
-                                                                                            </Typography>
-                                                                                        </Tooltip>
-                                                                                    )}
-                                                                                    {!row.domain && (
-                                                                                        <Typography className='table-data'>{row.domain ?? "--"}</Typography>
-                                                                                    )}
-                                                                                </Box>
-                                                                            </TableCell>
+                                                                            <CustomCell rowExample={row.domain ?? "--"} cellWidth="10vw" loaderForTable={loaderForTable} />
 
                                                                             {/* Type Column */}
-                                                                            <TableCell
-                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative', cursor: 'default' }}
-                                                                            >
-                                                                                <Box sx={{ display: 'flex' }}>
-                                                                                    <Tooltip
-                                                                                        title={
-                                                                                            <Box sx={{ backgroundColor: '#fff', margin: 0, padding: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', }}>
-                                                                                                <Typography className='table-data' component='div' sx={{ fontSize: '12px !important', }}>
-                                                                                                    {setSourceType(row.source_origin)}
-                                                                                                </Typography>
-                                                                                            </Box>
-                                                                                        }
-                                                                                        sx={{ marginLeft: '0.5rem !important' }}
-                                                                                        componentsProps={{
-                                                                                            tooltip: {
-                                                                                                sx: {
-                                                                                                    backgroundColor: '#fff',
-                                                                                                    color: '#000',
-                                                                                                    boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
-                                                                                                    border: '0.2px solid rgba(255, 255, 255, 1)',
-                                                                                                    borderRadius: '4px',
-                                                                                                    maxHeight: '100%',
-                                                                                                    maxWidth: '500px',
-                                                                                                    padding: '11px 10px',
-                                                                                                    marginLeft: '0.5rem !important',
-                                                                                                },
-                                                                                            },
-                                                                                        }}
-                                                                                        placement='right'
-                                                                                    >
-                                                                                        <Typography className='table-data'
-                                                                                            sx={{
-                                                                                                whiteSpace: 'nowrap',
-                                                                                                overflow: 'hidden',
-                                                                                                textOverflow: 'ellipsis',
-                                                                                                maxWidth: '150px',
-                                                                                            }}
-                                                                                        >
-                                                                                            {truncateText(setSourceType(row.source_origin), 20)}
-                                                                                        </Typography>
-                                                                                    </Tooltip>
-                                                                                </Box>
-                                                                            </TableCell>
-
+                                                                            <CustomCell rowExample={setSourceType(row.source_origin)} cellWidth="14vw" loaderForTable={loaderForTable} />
 
                                                                             {/* Created date Column */}
-                                                                            <TableCell
-                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative' }}
-                                                                            >
-                                                                                {dayjs(row.created_at).isValid() ? dayjs(row.created_at).format('MMM D, YYYY') : '--'}
-                                                                            </TableCell>
+                                                                            <CustomCell rowExample={dayjs(row.created_at).isValid() ? dayjs(row.created_at).format('MMM D, YYYY') : '--'} cellWidth="12vw" loaderForTable={loaderForTable} />
 
                                                                             {/* Created By Column */}
-                                                                            <TableCell
-                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative' }}
-                                                                            >
-                                                                                {row.created_by}
-                                                                            </TableCell>
+                                                                            <CustomCell rowExample={row.created_by} cellWidth="10vw" loaderForTable={loaderForTable} />
 
                                                                             {/* Number of Customers Column */}
                                                                             <TableCell
-                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative' }}
+                                                                                sx={{ ...createCommonCellStyles("8vw"), ...sourcesStyles.table_array, position: 'relative' }}
                                                                             >
                                                                                 {progress?.total && progress?.total > 0 || row?.total_records > 0
                                                                                     ? progress?.total > 0
@@ -1119,7 +986,7 @@ const Sources: React.FC = () => {
 
                                                                             {/* Matched Records  Column */}
                                                                             <TableCell
-                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative' }}
+                                                                                sx={{ ...createCommonCellStyles("8vw"), ...sourcesStyles.table_array, position: 'relative' }}
                                                                             >
                                                                                 {(progress?.processed && progress?.processed == progress?.total) || (row?.processed_records == row?.total_records && row?.processed_records !== 0)
                                                                                     ? progress?.matched > row?.matched_records
@@ -1131,7 +998,7 @@ const Sources: React.FC = () => {
                                                                                 }
                                                                             </TableCell>
 
-                                                                            <TableCell sx={{ ...sourcesStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
+                                                                            <TableCell sx={{ ...createCommonCellStyles("2vw"), ...sourcesStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
                                                                                 <IconButton onClick={(event) => handleOpenPopover(event, row)} sx={{ ':hover': { backgroundColor: 'transparent' } }} >
                                                                                     <MoreVert sx={{ color: "rgba(32, 33, 36, 1)" }} height={8} width={24} />
                                                                                 </IconButton>
