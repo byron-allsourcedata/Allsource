@@ -37,13 +37,6 @@ import AllInboxIcon from "@mui/icons-material/AllInbox";
 import DnsIcon from "@mui/icons-material/Dns";
 import { margin } from "@mui/system";
 
-const mockDomains = [
-  "example.com",
-  "testsite.io",
-  "myblog.net",
-  "shoponline.store",
-];
-
 const csvTypes = ["Customer Conversions", "Failed Leads", "Interest"];
 const pixelTypes = [
   "Visitor",
@@ -101,7 +94,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
         : [...prev, mappedSource]
     );
   };
-  const  isSourceFilterActive = () => selectedSource.length > 0;
+  const isSourceFilterActive = () => selectedSource.length > 0;
   const sourceMapping: Record<string, string> = {
     CSV: "CSV",
     Pixel: "Pixel",
@@ -182,7 +175,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
   const addTag = (category: string, tag: string) => {
     setSelectedTags((prevTags) => {
       const newTags =
-        category === "createdDate" ? [tag] : [...prevTags[category]]; // Очистка старых значений
+        category === "createdDate" ? [tag] : [...prevTags[category]];
       if (!newTags.includes(tag)) {
         newTags.push(tag);
       }
@@ -196,12 +189,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
     setSelectedTags((prevTags) => {
       const updatedTags = prevTags[category].filter((t) => t !== tag);
 
-      // Если удалена последняя дата, очищаем состояние
       if (category === "createdDate") {
         setDateRange({ fromDate: null, toDate: null });
       }
 
-      // Сброс чекбокса, если дата удалена
       if (category === "createdDate") {
         const tagMap: { [key: string]: string } = {
           [dateTypes.today]: "today",
@@ -319,6 +310,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
         ...prevRange,
         [name]: newValue,
       };
+
+      console.log(newValue);
 
       setCheckedFilters({
         today: false,

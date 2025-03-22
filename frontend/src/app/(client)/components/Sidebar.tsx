@@ -319,7 +319,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                     <ListItemText primary="Data Sync" />
                 </ListItem>
                  {/* PIXEL */}
-                 <List sx={{ width: 250 }}>
+                 <List sx={{ width: 250, p: 0 }}>
                     <ListItem 
                     button 
                     onClick={handleClick} 
@@ -330,7 +330,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                         <ListItemIcon sx={sidebarStyles.listItemIcon}>
                             <LegendToggleIcon />
                         </ListItemIcon>
-                        <ListItemText primary="Pixel" sx={{ в: 1, marginRight: 2 }} />
+                        <ListItemText primary="Pixel" sx={{ marginRight: 2 }} />
                         {open ? (
                             <ExpandLessIcon />
                         ) : (
@@ -338,7 +338,6 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                         )}
                     </Box>
                 </ListItem>
-
                     <Collapse in={open} timeout="auto" unmountOnExit>
                         <List component="div" disablePadding>
                             {/* Contacts */}
