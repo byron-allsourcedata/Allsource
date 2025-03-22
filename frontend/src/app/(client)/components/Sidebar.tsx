@@ -1,6 +1,6 @@
 'use client';
 import React, { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
-import { Box, List, ListItem, ListItemIcon, ListItemText, LinearProgress, Typography } from '@mui/material';
+import { Box, List, ListItem, ListItemIcon, ListItemText, LinearProgress, Typography, Collapse } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
 import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard';
@@ -18,6 +18,10 @@ import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { useUser } from '@/context/UserContext';
 import ContactsIcon from '@mui/icons-material/Contacts';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import LegendToggleIcon from '@mui/icons-material/LegendToggle';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { display } from '@mui/system';
 
 const sidebarStyles = {
     container: {
@@ -273,8 +277,13 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
         }
     };
 
-
     const isActive = (path: string) => pathname.startsWith(path);
+
+    const [open, setOpen] = useState(false);
+    const isPixelActive = isActive('/leads') || isActive('/company') || isActive('/suppressions');
+    const handleClick = () => {
+        setOpen(!open);
+    };
 
     return (
         <Box sx={containerStyles(hasNotification).container} >
@@ -303,24 +312,73 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                     </ListItemIcon>
                     <ListItemText primary="Smart Audiences" sx={{ whiteSpace: 'nowrap' }} />
                 </ListItem>
-                <ListItem button onClick={() => handleNavigation('/leads')} sx={isActive('/leads') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
-                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <LeadsIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Contacts" />
-                </ListItem>
-                <ListItem button onClick={() => handleNavigation('/company')} sx={isActive('/company') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
-                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <BusinessIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Company" />
-                </ListItem>
                 <ListItem button onClick={() => handleNavigation('/data-sync')} sx={isActive('/data-sync') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <CategoryIcon />
                     </ListItemIcon>
                     <ListItemText primary="Data Sync" />
                 </ListItem>
+                 {/* PIXEL */}
+                 <List sx={{ width: 250 }}>
+                    <ListItem 
+                    button 
+                    onClick={handleClick} 
+                    sx={isPixelActive ? sidebarStyles.activeItem : sidebarStyles.ListItem}
+                >
+
+                    <Box sx={{ display: "flex", alignItems: 'center', justifyContent: 'space-between' }}>
+                        <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                            <LegendToggleIcon />
+                        </ListItemIcon>
+                        <ListItemText primary="Pixel" sx={{ в: 1, marginRight: 2 }} />
+                        {open ? (
+                            <ExpandLessIcon />
+                        ) : (
+                            <ExpandMoreIcon />
+                        )}
+                    </Box>
+                </ListItem>
+
+                    <Collapse in={open} timeout="auto" unmountOnExit>
+                        <List component="div" disablePadding>
+                            {/* Contacts */}
+                            <ListItem 
+                                button 
+                                onClick={() => handleNavigation('/leads')} 
+                                sx={isActive('/leads') ? { ...sidebarStyles.activeItem, pl: 4 } : { ...sidebarStyles.ListItem, pl: 4 }}
+                            >
+                                <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                                    <LeadsIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="Contacts" />
+                            </ListItem>
+
+                            {/* Company */}
+                            <ListItem 
+                                button 
+                                onClick={() => handleNavigation('/company')} 
+                                sx={isActive('/company') ? { ...sidebarStyles.activeItem, pl: 4 } : { ...sidebarStyles.ListItem, pl: 4 }}
+                            >
+                                <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                                    <BusinessIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="Company" />
+                            </ListItem>
+
+                            {/* Suppressions */}
+                            <ListItem 
+                                button 
+                                onClick={() => handleNavigation('/suppressions')} 
+                                sx={isActive('/suppressions') ? { ...sidebarStyles.activeItem, pl: 4 } : { ...sidebarStyles.ListItem, pl: 4 }}
+                            >
+                                <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                                    <FeaturedPlayListIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="Suppressions" />
+                            </ListItem>
+                        </List>
+                    </Collapse>
+                </List>
                 {/* <ListItem button onClick={() => handleNavigation('/prospect')} sx={isActive('/prospect') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <Image src="/profile-circle-filled.svg" alt="profile-circle" height={20} width={20} />
@@ -339,12 +397,6 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                     </ListItemIcon>
                     <ListItemText primary="Analytics" />
                 </ListItem> */}
-                <ListItem button onClick={() => handleNavigation('/suppressions')} sx={isActive('/suppressions') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
-                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <FeaturedPlayListIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Suppressions" />
-                </ListItem>
                 {isPartnerAvailable && <ListItem button onClick={() => handleNavigation('/partners')} sx={isActive('/partners') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <AccountBoxIcon />
