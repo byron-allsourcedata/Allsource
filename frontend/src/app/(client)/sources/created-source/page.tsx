@@ -73,12 +73,6 @@ const SourcesList: React.FC = () => {
                         intervalRef.current = null;
                     }
                 }
-                console.log(sourceProgress[createdSource.id]?.processed);
-                console.log(sourceProgress[createdSource.id]?.total);
-                console.log(createdData?.processed_records );
-                console.log(createdData?.total_records)
-                console.log(sourceProgress[createdSource.id]?.total === createdData?.processed_records);
-                console.log(createdData?.id);
             }, 2000);
         }
     
