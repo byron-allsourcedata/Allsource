@@ -39,7 +39,8 @@ const headerStyles = {
   logoContainer: {
     display: 'flex',
     alignItems: 'center',
-    gap: '3.45rem'
+    gap: '3.45rem',
+    paddingLeft: 2,
   },
 }
 
