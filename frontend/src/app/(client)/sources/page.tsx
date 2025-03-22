@@ -951,6 +951,8 @@ const Sources: React.FC = () => {
                                                                         >
                                                                             {/* Name Column */}
                                                                             <CustomCell rowExample={row.name} cellWidth="10vw" loaderForTable={loaderForTable} customCellStyles={{
+                                                                                position: 'sticky',
+                                                                                left: '0',
                                                                                 zIndex: 9,
                                                                                 backgroundColor: loaderForTable ? '#fff' : '#fff',
                                                                             }}/>
@@ -962,7 +964,7 @@ const Sources: React.FC = () => {
                                                                             <CustomCell rowExample={row.domain ?? "--"} cellWidth="10vw" loaderForTable={loaderForTable} />
 
                                                                             {/* Type Column */}
-                                                                            <CustomCell rowExample={truncateText(setSourceType(row.source_origin), 20)} cellWidth="14vw" loaderForTable={loaderForTable} />
+                                                                            <CustomCell rowExample={setSourceType(row.source_origin)} cellWidth="14vw" loaderForTable={loaderForTable} />
 
                                                                             {/* Created date Column */}
                                                                             <CustomCell rowExample={dayjs(row.created_at).isValid() ? dayjs(row.created_at).format('MMM D, YYYY') : '--'} cellWidth="12vw" loaderForTable={loaderForTable} />

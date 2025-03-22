@@ -45,7 +45,7 @@ const CustomCell: React.FC<MyTableCellProps> = ({ rowExample, cellWidth = "16vw"
       checkOverflow();
     };
     window.addEventListener('resize', handleResize);
-
+    
     return () => {
       window.removeEventListener('resize', handleResize);
     };
@@ -70,12 +70,13 @@ const CustomCell: React.FC<MyTableCellProps> = ({ rowExample, cellWidth = "16vw"
     <TableCell
       className="sticky-cell"
       sx={{
-        position: 'sticky',
-        left: '0',
+        position: 'relative',
+        zIndex: 1,
+        backgroundColor: 'inherit',
         ...createCommonCellStyles(cellWidth),
         ...sourcesStyles.table_array,
         ...customCellStyles,
-
+        
       }}
     >
       <Box sx={{ display: 'flex' }}>
@@ -129,7 +130,7 @@ const CustomCell: React.FC<MyTableCellProps> = ({ rowExample, cellWidth = "16vw"
             >
                 {cellContent}
             </Typography>
-
+            
           </Tooltip>
         ) : (
           cellContent
