@@ -324,13 +324,16 @@ export const smartAudiences: { [key: string]: SxProps<Theme> } = {
   inputStyle: {
     width: "146px",
     height: "40px",
-    padding: "8px",
+    padding: "4px",
     borderRadius: "4px",
     textAlign: "start",
+    mb:2,
+    fontFamily: 'Nunito Sans',
     "&:focus": {
       borderColor: "rgba(80, 82, 178, 1)",
       "&::before": {
         borderBottom: "none",
+        padding: 0,
       },
       "&::after": {
         borderBottom: "none",
@@ -351,7 +354,7 @@ export const smartAudiences: { [key: string]: SxProps<Theme> } = {
     },
     "& .MuiOutlinedInput-root": {
       "& fieldset": {
-        borderColor: "none" // this is the original border color
+        borderColor: "none", // this is the original border color
       },
       "&:hover fieldset": {
         borderColor: "none" // use the original border color on hover

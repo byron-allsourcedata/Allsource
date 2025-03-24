@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Box, Typography, IconButton, Collapse, Checkbox, FormControl, Select, MenuItem, Chip, Divider, Button, LinearProgress } from "@mui/material";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -7,16 +7,20 @@ import React from "react";
 import CloseIcon from '@mui/icons-material/Close';
 import { smartAudiences } from "../../smartAudiences";
 import ValidationPopup from "./SkipValidationPopup";
+import { useRouter } from "next/navigation";
 
 interface ExpandableFilterProps {
     targetAudience: string;
     useCaseType: string;
     onSkip: () => void;
+    onValidate: () => void;
+    onEdit: () => void;
 }
 
 
 
-const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseType, onSkip }) => {
+const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseType, onSkip, onValidate, onEdit }) => {
+    const router = useRouter();
     const [isOpenPersonalEmail, setIsOpenPersonalEmail] = useState(false);
     const [isOpenBusinessEmail, setIsOpenBusinessEmail] = useState(false);
     const [isOpenPhone, setIsOpenPhone] = useState(false);
@@ -37,58 +41,133 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
 
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
-    const toggleFilter = (setter: React.Dispatch<React.SetStateAction<boolean>>, state: boolean) => setter(!state);
+    const toggleFilter = (setter: React.Dispatch<React.SetStateAction<boolean>>, state: boolean) => {
+        if (!isValidate) setter(!state);
+    };
 
     const handleOptionClick = (setter: React.Dispatch<React.SetStateAction<string[]>>, option: string) => {
-        setter((prev) => (prev.includes(option) ? prev.filter((item) => item !== option) : [...prev, option]));
+        if (!isValidate) {
+            setter((prev) => (prev.includes(option) ? prev.filter((item) => item !== option) : [...prev, option]));
+        }
     };
 
     const handleNestedSelect = (option: string, value: string) => {
-        setNestedSelections((prev) => ({
-            ...prev,
-            [option]: value,
-        }));
-        if (value && !selectedOptionsPersonalEmail.includes(option) && !selectedOptionsBusinessEmail.includes(option)) {
-            if (option === "Recency") {
-                setSelectedOptionsPersonalEmail((prev) => [...prev, option]);
-            } else if (option === "RecencyBusiness") {
-                setSelectedOptionsBusinessEmail((prev) => [...prev, option]);
+        if (!isValidate) {
+            setNestedSelections((prev) => ({
+                ...prev,
+                [option]: value,
+            }));
+            if (value && !selectedOptionsPersonalEmail.includes(option) && !selectedOptionsBusinessEmail.includes(option)) {
+                if (option === "Recency") {
+                    setSelectedOptionsPersonalEmail((prev) => [...prev, option]);
+                } else if (option === "RecencyBusiness") {
+                    setSelectedOptionsBusinessEmail((prev) => [...prev, option]);
+                }
             }
         }
     };
 
     const toggleNestedExpand = (label: string) => {
-        setExpandedNested((prev) => ({
-            ...prev,
-            [label]: !prev[label]
-        }));
+        if (!isValidate) { // Разрешаем открывать/закрывать только если isValidate === false
+            setExpandedNested((prev) => ({
+                ...prev,
+                [label]: !prev[label]
+            }));
+        }
     };
 
     const removeChip = (setState: Function, option: string) => {
-        setState((prev: string[]) => prev.filter((item) => item !== option));
-        setNestedSelections((prev) => {
-            const updated = { ...prev };
-            delete updated[option]; // Удаляем значение параметра
-            return updated;
-        });
+        if (!isValidate) {
+            setState((prev: string[]) => prev.filter((item) => item !== option));
+            setNestedSelections((prev) => {
+                const updated = { ...prev };
+                delete updated[option];
+                return updated;
+            });
+        }
     };
 
     const getChipStyle = (label: string) => {
         if (label === "Recency" || label === "RecencyBusiness") {
-            return { backgroundColor: 'rgba(234, 248, 221, 1)', color: 'rgba(43, 91, 0, 1)', borderRadius: '3px' };
+            return { backgroundColor: 'rgba(234, 248, 221, 1)', color: 'rgba(43, 91, 0, 1)', borderRadius: '3px', maxHeight:'20px', cursor: isValidate ? 'default' : 'pointer' };
         } else if (label === "MX" || label === "Delivery") {
-            return { backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(95, 99, 104, 1)', borderRadius: '3px', border: '1px solid rgba(200, 200, 200, 1)' };
+            return { backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(95, 99, 104, 1)', borderRadius: '3px', border: '1px solid rgba(200, 200, 200, 1)', cursor: isValidate ? 'default' : 'pointer', maxHeight:'20px' };
         }
-        return { backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(95, 99, 104, 1)', borderRadius: '3px', border: '1px solid rgba(200, 200, 200, 1)' };
+        return { backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(95, 99, 104, 1)', borderRadius: '3px', border: '1px solid rgba(200, 200, 200, 1)', cursor: isValidate ? 'default' : 'pointer', maxHeight:'20px' };
     };
 
     const handleValidate = () => {
-
+        setValidate(true);
+        onValidate();
     }
 
     const handleSkip = () => {
-        setOpenPopup(true)
+        setOpenPopup(true);
     }
+
+    const handleEdit = () => {
+        setValidate(false);
+        onEdit();
+    };
+
+    const handleSkipPopup = () => {
+        setSelectedOptionsPersonalEmail([]);
+        setSelectedOptionsBusinessEmail([]);
+        setSelectedOptionsPhone([]);
+        setSelectedOptionsPostalCAS([]);
+        setSelectedOptionsLinkedIn([]);
+        setNestedSelections({});
+        setOpenPopup(false); 
+        onSkip(), 
+        setValidate(true)
+    }
+
+    useEffect(() => {
+        setSelectedOptionsPersonalEmail([]);
+        setSelectedOptionsBusinessEmail([]);
+        setSelectedOptionsPhone([]);
+        setSelectedOptionsPostalCAS([]);
+        setSelectedOptionsLinkedIn([]);
+        setNestedSelections({});
+        onEdit();
+
+        if ((targetAudience === 'B2C' || targetAudience === 'Both') && useCaseType === 'Email') {
+            setNestedSelections(prev => ({ ...prev, "Recency": "40 days" }));
+            setSelectedOptionsPersonalEmail(["MX", "Delivery", "Recency"]);
+            setValidate(false)
+        }
+
+        if ((targetAudience === 'B2B' || targetAudience === 'Both') && useCaseType === 'Email') {
+            setNestedSelections(prev => ({ ...prev, "RecencyBusiness": "40 days" }));
+            setSelectedOptionsBusinessEmail(["MX", "Delivery", "RecencyBusiness"]);
+            setValidate(false)
+        }
+
+        if (useCaseType === "Tele Marketing") {
+            if (targetAudience === "Both" || targetAudience === "B2B") {
+                setSelectedOptionsPhone(["Date", "Confirmation"]);
+            } else if (targetAudience === "B2C") {
+                setSelectedOptionsPhone(["Date"]);
+            }
+            setValidate(false)
+        }
+
+        if (useCaseType === "Postal") {
+            if (targetAudience === "Both") {
+                setSelectedOptionsPostalCAS(["CAS office address", "CAS home address"]);
+            } else if (targetAudience === "B2C") {
+                setSelectedOptionsPostalCAS(["CAS home address"]);
+            } else if (targetAudience === "B2B") {
+                setSelectedOptionsPostalCAS(["CAS office address"]);
+            }
+            setValidate(false)
+        }
+
+        if ((targetAudience === 'B2B' || targetAudience === 'Both') && useCaseType === 'LinkedIn') {
+            setSelectedOptionsLinkedIn(["Relevance"]);
+            setValidate(false)
+        }
+    }, [targetAudience, useCaseType]);
 
     return (
         <Box>
@@ -100,41 +179,32 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                 )}
                 <Box sx={{ gap: 2, display: 'flex', flexDirection: 'column' }}>
                     <Box sx={{ display: "flex", width: '100%', flexDirection: "row", justifyContent: 'space-between', gap: 1 }}>
-
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, }}>
                             <Typography sx={{ fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500 }}>Validation</Typography>
                         </Box>
-
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                             <Typography className='table-data' sx={{ color: 'rgba(43, 91, 0, 1) !important', fontSize: '14px !important', backgroundColor: 'rgba(234, 248, 221, 1) !important', padding: '4px 12px' }}>Recommended</Typography>
                         </Box>
-
                     </Box>
                     <Typography sx={{ fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)" }}>Choose parameters that you want to validate.</Typography>
                     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
                         {/* Personal Email Filter */}
-                        <Box sx={{ ...ValidationStyle.main_filter_form, borderBottom: '1px solid rgba(235, 235, 235, 1)' }}>
-                            <Box sx={{ ...ValidationStyle.filter_form, borderBottom: isOpenPersonalEmail ? '1px solid rgba(235, 235, 235, 1)' : '', }} onClick={() => toggleFilter(setIsOpenPersonalEmail, isOpenPersonalEmail)}>
+                        <Box sx={ValidationStyle.main_filter_form}>
+                            <Box sx={{ ...ValidationStyle.filter_form, alignItems: 'center', borderBottom: isOpenPersonalEmail ? '1px solid rgba(235, 235, 235, 1)' : '', cursor: isValidate ? 'default' : 'pointer' }} onClick={() => toggleFilter(setIsOpenPersonalEmail, isOpenPersonalEmail)}>
+                                <Box sx={{display: 'flex', justifyContent: 'start', gap:1.5, alignItems: 'start'}}>
                                 <Typography sx={ValidationStyle.filter_name}>Personal email</Typography>
                                 {selectedOptionsPersonalEmail.map((option) => (
                                     <Chip
                                         key={option}
-                                        label={nestedSelections[option] ? `${option}: ${nestedSelections[option]}` : option}
-                                        onDelete={() => removeChip(setSelectedOptionsPersonalEmail, option)}
-                                        deleteIcon={
-                                            <CloseIcon
-                                                sx={{
-                                                    backgroundColor: 'transparent',
-                                                    color: '#828282 !important',
-                                                    fontSize: '14px !important'
-                                                }}
-                                            />
-                                        }
-                                        sx={{ margin: "2px", mb: 1, ...getChipStyle(option) }}
+                                        label={nestedSelections[option] ? `${option} ${nestedSelections[option]}` : option}
+                                        onDelete={isValidate ? undefined : () => removeChip(setSelectedOptionsPersonalEmail, option)}
+                                        deleteIcon={!isValidate ? <CloseIcon sx={{ color: 'rgba(32, 33, 36, 1)', fontSize: '16px' }} /> : undefined}
+                                        sx={{ margin: 0, padding:0, ...getChipStyle(option) }}
                                     />
 
                                 ))}
-                                <IconButton onClick={() => toggleFilter(setIsOpenPersonalEmail, isOpenPersonalEmail)} aria-label="toggle-content">
+                                </Box>
+                                <IconButton sx={{cursor: isValidate ? 'default' : 'pointer'}} onClick={() => toggleFilter(setIsOpenPersonalEmail, isOpenPersonalEmail)} aria-label="toggle-content">
                                     {isOpenPersonalEmail ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                                 </IconButton>
                             </Box>
@@ -146,6 +216,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                                             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                                 <Checkbox
                                                     size="small"
+                                                    disabled={isValidate}
                                                     checked={selectedOptionsPersonalEmail.includes("MX")}
                                                     onChange={() => handleOptionClick(setSelectedOptionsPersonalEmail, "MX")}
                                                     sx={{ padding: 0, '&.Mui-checked': { color: "rgba(80, 82, 178, 1)" } }}
@@ -167,6 +238,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                                             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                                 <Checkbox
                                                     size="small"
+                                                    disabled={isValidate}
                                                     checked={selectedOptionsPersonalEmail.includes("Recency")}
                                                     onChange={() => {
                                                         if (nestedSelections["Recency"]) {
@@ -222,6 +294,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                                             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                                 <Checkbox
                                                     size="small"
+                                                    disabled={isValidate}
                                                     checked={selectedOptionsPersonalEmail.includes("Delivery")}
                                                     onChange={() => handleOptionClick(setSelectedOptionsPersonalEmail, "Delivery")}
                                                     sx={{ padding: 0, '&.Mui-checked': { color: "rgba(80, 82, 178, 1)" } }}
@@ -236,20 +309,32 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                         </Box>
 
                         {/* Business Email Filter */}
-                        <Box sx={{ ...ValidationStyle.main_filter_form, borderBottom: '1px solid rgba(235, 235, 235, 1)' }}>
+                        <Box sx={ValidationStyle.main_filter_form}>
                             <Box sx={ValidationStyle.filter_form} onClick={() => toggleFilter(setIsOpenBusinessEmail, isOpenBusinessEmail)}>
+                            <Box sx={{display: 'flex', justifyContent: 'start', gap:1.5, alignItems: 'center', cursor: isValidate ? 'default' : 'pointer'}}>
                                 <Typography sx={ValidationStyle.filter_name}>Business email</Typography>
                                 {selectedOptionsBusinessEmail.map((option) => (
                                     <Chip
                                         key={option}
                                         label={nestedSelections[option] ? `${option === 'RecencyBusiness' ? 'Recency' : option}: ${nestedSelections[option]}` : option === 'RecencyBusiness' ? 'Recency' : option}
-                                        onDelete={() => removeChip(setSelectedOptionsBusinessEmail, option)}
+                                        onDelete={isValidate ? undefined : () => removeChip(setSelectedOptionsBusinessEmail, option)}
+                                        deleteIcon={
+                                            <CloseIcon
+                                                sx={{
+                                                    backgroundColor: 'transparent',
+                                                    color: '#828282 !important',
+                                                    fontSize: '14px !important'
+                                                }}
+                                            />
+                                        }
                                         sx={{ margin: "2px", ...getChipStyle(option) }}
                                     />
                                 ))}
-                                <IconButton onClick={() => toggleFilter(setIsOpenBusinessEmail, isOpenBusinessEmail)} aria-label="toggle-content">
+                                </Box>
+                                <IconButton sx={{cursor: isValidate ? 'default' : 'pointer'}} onClick={() => toggleFilter(setIsOpenBusinessEmail, isOpenBusinessEmail)} aria-label="toggle-content">
                                     {isOpenBusinessEmail ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                                 </IconButton>
+                                
                             </Box>
                             <Collapse in={isOpenBusinessEmail}>
                                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1, pl: 2, pb: 0.75 }}>
@@ -259,6 +344,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                                             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                                 <Checkbox
                                                     size="small"
+                                                    disabled={isValidate}
                                                     checked={selectedOptionsBusinessEmail.includes("MX")}
                                                     onChange={() => handleOptionClick(setSelectedOptionsBusinessEmail, "MX")}
                                                     sx={{ padding: 0, '&.Mui-checked': { color: "rgba(80, 82, 178, 1)" } }}
@@ -279,6 +365,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                                             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                                 <Checkbox
                                                     size="small"
+                                                    disabled={isValidate}
                                                     checked={selectedOptionsBusinessEmail.includes("RecencyBusiness")}
                                                     onChange={() => {
                                                         if (nestedSelections["RecencyBusiness"]) {
@@ -334,6 +421,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                                             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                                 <Checkbox
                                                     size="small"
+                                                    disabled={isValidate}
                                                     checked={selectedOptionsBusinessEmail.includes("Delivery")}
                                                     onChange={() => handleOptionClick(setSelectedOptionsBusinessEmail, "Delivery")}
                                                     sx={{ padding: 0, '&.Mui-checked': { color: "rgba(80, 82, 178, 1)" } }}
@@ -350,17 +438,28 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                         </Box>
 
                         {/* Phone Filter */}
-                        <Box sx={{ ...ValidationStyle.main_filter_form, borderBottom: '1px solid rgba(235, 235, 235, 1)' }}>
+                        <Box sx={ValidationStyle.main_filter_form}>
                             <Box sx={ValidationStyle.filter_form} onClick={() => toggleFilter(setIsOpenPhone, isOpenPhone)}>
+                            <Box sx={{display: 'flex', justifyContent: 'start', gap:1.5, alignItems: 'center', cursor: isValidate ? 'default' : 'pointer'}}>
                                 <Typography sx={ValidationStyle.filter_name}>Phone</Typography>
                                 {selectedOptionsPhone.map((option) => (
                                     <Chip
                                         key={option}
                                         label={option}
-                                        onDelete={() => removeChip(setSelectedOptionsPhone, option)}
-                                        sx={{ margin: "2px", ...getChipStyle(option) }}
+                                        onDelete={isValidate ? undefined : () => removeChip(setSelectedOptionsPhone, option)}
+                                        deleteIcon={
+                                            <CloseIcon
+                                                sx={{
+                                                    backgroundColor: 'transparent',
+                                                    color: '#828282 !important',
+                                                    fontSize: '14px !important'
+                                                }}
+                                            />
+                                        }
+                                        sx={{ margin: 0, ...getChipStyle(option) }}
                                     />
                                 ))}
+                                </Box>
                                 <IconButton onClick={() => toggleFilter(setIsOpenPhone, isOpenPhone)} aria-label="toggle-content">
                                     {isOpenPhone ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                                 </IconButton>
@@ -379,6 +478,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                                                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                                         <Checkbox
                                                             size="small"
+                                                            disabled={isValidate}
                                                             checked={selectedOptionsPhone.includes(option)}
                                                             onChange={() => handleOptionClick(setSelectedOptionsPhone, option)}
                                                             sx={{ padding: 0, '&.Mui-checked': { color: "rgba(80, 82, 178, 1)" } }}
@@ -403,17 +503,28 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                         </Box>
 
                         {/* Postal CAS Verification Filter */}
-                        <Box sx={{ ...ValidationStyle.main_filter_form, borderBottom: '1px solid rgba(235, 235, 235, 1)' }}>
+                        <Box sx={ValidationStyle.main_filter_form}>
                             <Box sx={ValidationStyle.filter_form} onClick={() => toggleFilter(setIsOpenPostalCAS, isOpenPostalCAS)}>
+                            <Box sx={{display: 'flex', justifyContent: 'start', gap:1.5, alignItems: 'center'}}>
                                 <Typography sx={ValidationStyle.filter_name}>Postal CAS verification</Typography>
                                 {selectedOptionsPostalCAS.map((option) => (
                                     <Chip
                                         key={option}
                                         label={option}
-                                        onDelete={() => removeChip(setSelectedOptionsPostalCAS, option)}
+                                        onDelete={isValidate ? undefined : () => removeChip(setSelectedOptionsPostalCAS, option)}
+                                        deleteIcon={
+                                            <CloseIcon
+                                                sx={{
+                                                    backgroundColor: 'transparent',
+                                                    color: '#828282 !important',
+                                                    fontSize: '14px !important'
+                                                }}
+                                            />
+                                        }
                                         sx={{ margin: "2px", ...getChipStyle(option) }}
                                     />
                                 ))}
+                                </Box>
                                 <IconButton onClick={() => toggleFilter(setIsOpenPostalCAS, isOpenPostalCAS)} aria-label="toggle-content">
                                     {isOpenPostalCAS ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                                 </IconButton>
@@ -433,6 +544,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                                                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                                         <Checkbox
                                                             size="small"
+                                                            disabled={isValidate}
                                                             checked={selectedOptionsPostalCAS.includes(option)}
                                                             onChange={() => handleOptionClick(setSelectedOptionsPostalCAS, option)}
                                                             sx={{ padding: 0, "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" } }}
@@ -457,17 +569,28 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                             </Collapse>
                         </Box>
                         {/* LinkedIn Filter */}
-                        <Box sx={{ ...ValidationStyle.main_filter_form, border: 'none', borderBottom: '1px solid rgba(235, 235, 235, 1)' }}>
+                        <Box sx={ValidationStyle.main_filter_form}>
                             <Box sx={ValidationStyle.filter_form} onClick={() => toggleFilter(setIsOpenLinkedIn, isOpenLinkedIn)}>
+                            <Box sx={{display: 'flex', justifyContent: 'start', gap:1.5, alignItems: 'end'}}>
                                 <Typography sx={ValidationStyle.filter_name}>LinkedIn</Typography>
                                 {selectedOptionsLinkedIn.map((option) => (
                                     <Chip
                                         key={option}
                                         label={option}
-                                        onDelete={() => removeChip(setSelectedOptionsLinkedIn, option)}
+                                        onDelete={isValidate ? undefined : () => removeChip(setSelectedOptionsLinkedIn, option)}
+                                        deleteIcon={
+                                            <CloseIcon
+                                                sx={{
+                                                    backgroundColor: 'transparent',
+                                                    color: '#828282 !important',
+                                                    fontSize: '14px !important'
+                                                }}
+                                            />
+                                        }
                                         sx={{ margin: "2px", ...getChipStyle(option) }}
                                     />
                                 ))}
+                                </Box>
                                 <IconButton onClick={() => toggleFilter(setIsOpenLinkedIn, isOpenLinkedIn)} aria-label="toggle-content">
                                     {isOpenLinkedIn ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                                 </IconButton>
@@ -479,6 +602,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                                         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                                             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                                 <Checkbox
+                                                disabled={isValidate}
                                                     size="small"
                                                     checked={selectedOptionsLinkedIn.includes("Relevance")}
                                                     onChange={() => handleOptionClick(setSelectedOptionsLinkedIn, "Relevance")}
@@ -487,13 +611,40 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                                                 <Typography className="form-input">Relevance</Typography>
                                                 {((targetAudience === 'B2B' || targetAudience === 'Both') && useCaseType === 'LinkedIn') && <Typography className='table-data' sx={smartAudiences.labelText}>Recommended</Typography>}
                                             </Box>
+                                            
                                         </Box>
-
+                                        
                                     </Box>
+                                    
                                 </Box>
                             </Collapse>
                         </Box>
-                        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'end' }}>
+                        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'end', mt:1.5 }}>
+                            {isValidate ? 
+                                <Button
+                                variant="contained"
+                                onClick={handleEdit} 
+                                sx={{
+                                    ...smartAudiences.buttonform,
+                                    backgroundColor: "rgba(255, 255, 255, 1)",
+                                    border: '1px solid rgba(80, 82, 178, 1)',
+                                    boxShadow: 0,
+                                    width: "120px",
+                                    ":hover": {
+                                        backgroundColor: "rgba(255, 255, 255, 1)",
+                                    },
+                                }}>
+                                    <Typography
+                                        sx={{
+                                            ...smartAudiences.textButton,
+                                            color: "rgba(80, 82, 178, 1)",
+    
+                                        }}
+                                    >
+                                        Edit
+                                    </Typography>
+                                </Button> 
+                            : 
                             <Button variant="contained" onClick={handleSkip} sx={{
                                 ...smartAudiences.buttonform,
                                 backgroundColor: "rgba(255, 255, 255, 1)",
@@ -514,14 +665,18 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                                     Skip
                                 </Typography>
                             </Button>
+                            }
                         </Box>
                     </Box>
                 </Box>
             </Box>
 
+            {!isValidate && 
             <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mt: 2, justifyContent: "flex-end", borderRadius: "6px" }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-                    <Button variant="outlined" sx={{
+                    <Button 
+                        onClick={() => router.push('/smart-audiences')}
+                        variant="outlined" sx={{
                         ...smartAudiences.buttonform,
                         borderColor: "rgba(80, 82, 178, 1)",
                         width: "92px",
@@ -535,7 +690,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                             Cancel
                         </Typography>
                     </Button>
-                    <Button variant="contained" disabled={!isValidate} onClick={handleValidate} sx={{
+                    <Button variant="contained" disabled={nestedSelections ? false : true} onClick={handleValidate} sx={{
                         ...smartAudiences.buttonform,
                         backgroundColor: "rgba(80, 82, 178, 1)",
                         width: "237px",
@@ -547,7 +702,6 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                             sx={{
                                 ...smartAudiences.textButton,
                                 color: "rgba(255, 255, 255, 1)",
-
                             }}
                         >
                             Set validation Package
@@ -556,11 +710,12 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                     </Button>
                 </Box>
             </Box>
+            }
             <ValidationPopup
                 open={openPopup}
                 onClose={() => setOpenPopup(false)}
                 onContinue={() => { console.log("Continue validation"); setOpenPopup(false); }}
-                onSkip={() => { setOpenPopup(false); onSkip(), setValidate(true) }}
+                onSkip={handleSkipPopup}
             />
         </Box>
     );
