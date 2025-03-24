@@ -1,6 +1,10 @@
-from sqlalchemy import Column, Integer, VARCHAR, TIMESTAMP, Boolean, JSON
+from sqlalchemy import Column, Integer, VARCHAR, TIMESTAMP, Boolean, JSON, UUID, ForeignKey, Index
+from sqlalchemy.dialects.postgresql import ENUM
 from datetime import datetime
+from models.audience_smarts import AudienceSmart
 from models.base import Base
+
+data_sync_type = ENUM('pixel', 'audience', name='data_sync_type', create_type=True)
 
 class IntegrationUserSync(Base):
 
@@ -23,3 +27,13 @@ class IntegrationUserSync(Base):
     hook_url = Column(VARCHAR)
     last_sent_lead_id = Column(Integer, nullable=True)
     method = Column(VARCHAR(8))
+    result_file_url = Column(VARCHAR(256), nullable=True)
+    sync_type = Column(data_sync_type, nullable=False, default='pixel')
+    smart_audience_id = Column(UUID, ForeignKey(AudienceSmart.id, ondelete='cascade'), nullable=True)
+    sent_contacts = Column(Integer, nullable=False, default=0)
+
+    __table_args__ = (
+        Index('integrations_users_sync_domain_id_idx', 'domain_id'),
+        Index('integrations_users_sync_leads_type_idx', 'sync_type'),
+        Index('integrations_users_sync_smart_audience_id_idx', 'smart_audience_id'),
+    )

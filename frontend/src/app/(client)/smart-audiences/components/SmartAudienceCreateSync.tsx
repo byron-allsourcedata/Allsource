@@ -177,21 +177,22 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         setOpenDeletePopup(true);
       };
 
-    useEffect(() => {
-        const fetchData = async () => {
-            const response = await axiosInstance.get('/integrations/smart-audience-sync/', {
-                params: {
-                    integration_list: integ.join(","),
-                },
-            });
-            if (response.status === 200) {
-                setIntegrations(response.data);
-            }
-        };
-        if (open) {
-            fetchData();
-        }
-    }, [open]);
+    // useEffect(() => {
+    //     const fetchData = async () => {
+    //         const response = await axiosInstance.get('/integrations/smart-audience-sync/', {
+    //             params: {
+    //                 integration_list: integ.join(","),
+    //             },
+    //         });
+    //         if (response.status === 200) {
+    //             console.log("1", response.data)
+    //             setIntegrations(response.data);
+    //         }
+    //     };
+    //     if (open) {
+    //         fetchData();
+    //     }
+    // }, [open]);
     
 
     useEffect(() => {
