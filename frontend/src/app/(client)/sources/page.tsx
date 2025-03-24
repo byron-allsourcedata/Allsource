@@ -450,23 +450,35 @@ const Sources: React.FC = () => {
     }
 
 
-    const truncateText = (text: string, maxLength: number) => {
-        return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
-    };
+    const tableContainerRef = useRef<HTMLDivElement>(null);
+    const [isScrolled, setIsScrolled] = useState(false);
 
-    const commonCellStyles = {
-        minWidth: "15vw",
-        width: "15vw",
-        maxWidth: "15vw",
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap",
-        '@media (max-width: 600px)': {
-            minWidth: "20vw",
-            width: "20vw",
-            maxWidth: "20vw"
-        },
-    };
+    useEffect(() => {
+        if (tableContainerRef.current) {
+            const container = tableContainerRef.current;
+            const checkScroll = () => {
+                if (container) {
+                setIsScrolled(container.scrollLeft > 0);
+                }
+            };
+    
+            if (container) {
+                container.addEventListener('scroll', checkScroll);
+            }
+            window.addEventListener('resize', checkScroll);
+    
+            checkScroll();
+    
+            return () => {
+                if (container) {
+                container.removeEventListener('scroll', checkScroll);
+                }
+                window.removeEventListener('resize', checkScroll);
+            };
+        } else {
+          console.warn("TableContainer ref is still null");
+        }
+      }, [tableContainerRef.current]);
 
     return (
         <>
@@ -736,28 +748,14 @@ const Sources: React.FC = () => {
                                                                                 left: 0,
                                                                                 zIndex: 10,
                                                                                 top: 0,
+                                                                                boxShadow: isScrolled ? '2px 0px 6px 0px #00000033' : 'none',
                                                                             }),
                                                                         }}
-                                                                        onClick={sortable ? () => handleSortRequest(key) : undefined}
-                                                                        style={{ cursor: sortable ? 'pointer' : 'default' }}
                                                                     >
                                                                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: "space-between" }}>
                                                                             <Typography variant="body2" sx={{ ...sourcesStyles.table_column, borderRight: '0' }}>
                                                                                 {label}
                                                                             </Typography>
-                                                                            {sortable && (
-                                                                                <IconButton size="small">
-                                                                                    {orderBy === key ? (
-                                                                                        order === 'asc' ? (
-                                                                                            <ArrowUpwardRoundedIcon fontSize="inherit" />
-                                                                                        ) : (
-                                                                                            <ArrowDownwardRoundedIcon fontSize="inherit" />
-                                                                                        )
-                                                                                    ) : (
-                                                                                        <SwapVertIcon fontSize="inherit" />
-                                                                                    )}
-                                                                                </IconButton>
-                                                                            )}
                                                                         </Box>
                                                                     </TableCell>
                                                                 ))}
@@ -818,6 +816,7 @@ const Sources: React.FC = () => {
                                             <Grid container spacing={1} sx={{ flex: 1 }}>
                                                 <Grid item xs={12}>
                                                     <TableContainer
+                                                        ref={ tableContainerRef }
                                                         component={Paper}
                                                         sx={{
                                                             border: '1px solid rgba(235, 235, 235, 1)',
@@ -852,6 +851,7 @@ const Sources: React.FC = () => {
                                                                                     left: 0,
                                                                                     zIndex: 10,
                                                                                     top: 0,
+                                                                                    boxShadow: isScrolled ? '2px 0px 6px 0px #00000033' : 'none',
                                                                                 }),
                                                                                 ...(key === 'average_time_sec' && {
                                                                                     "::after": { content: 'none' }
@@ -932,6 +932,7 @@ const Sources: React.FC = () => {
                                                                                 left: '0',
                                                                                 zIndex: 9,
                                                                                 backgroundColor: loaderForTable ? '#fff' : '#fff',
+                                                                                boxShadow: isScrolled ? '2px 0px 6px 0px #00000033' : 'none',
                                                                             }}/>
 
                                                                             {/* Source Column */}
