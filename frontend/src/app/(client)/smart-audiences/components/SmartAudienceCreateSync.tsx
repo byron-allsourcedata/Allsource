@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Drawer, Box, Typography, IconButton, List, LinearProgress, Grid, ListItem, ListItemIcon, ListItemButton, Button, ListItemText, Popover, Tooltip, Tab, Slider, TextField, Card,
-    CardContent } from '@mui/material';
+import { Drawer, Box, Typography, IconButton, List, LinearProgress, Grid, ListItem, ListItemIcon, ListItemButton, 
+        Button, ListItemText, Popover, Tooltip, Tab, Slider, TextField, Card, CardContent } from '@mui/material';
 import TabList from "@mui/lab/TabList";
 import TabPanel from '@mui/lab/TabPanel';
 import TabContext from "@mui/lab/TabContext";
@@ -8,30 +8,18 @@ import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
 import Image from 'next/image';
-import SearchIcon from '@mui/icons-material/Search';
-import ConnectKlaviyo from '@/app/(client)/data-sync/components/ConnectKlaviyo';
 import ConnectSalesForce from '@/app/(client)/data-sync/components/ConnectSalesForce';
 import ConnectMeta from '@/app/(client)/data-sync/components/ConnectMeta';
-import KlaviyoIntegrationPopup from '@/components/KlaviyoIntegrationPopup';
 import SalesForceIntegrationPopup from '@/components/SalesForceIntegrationPopup';
 import GoogleADSConnectPopup from '@/components/GoogleADSConnectPopup';
-import WebhookConnectPopup from '@/components/WebhookConnectPopup';
 import MetaConnectButton from '@/components/MetaConnectButton';
 import AlivbleIntagrationsSlider from '@/components/AvalibleIntegrationsSlider';
-import OmnisendConnect from '@/components/OmnisendConnect';
 import MailchimpConnect from '@/components/MailchimpConnect';
-import SendlaneConnect from '@/components/SendlaneConnect';
 import HubspotIntegrationPopup from '@/components/HubspotIntegrationPopup';
-import OnmisendDataSync from '../../data-sync/components/OmnisendDataSync';
 import MailchimpDatasync from '../../data-sync/components/MailchimpDatasync';
-import SlackDatasync from '../../data-sync/components/SlackDataSync';
 import GoogleADSDatasync from '../../data-sync/components/GoogleADSDataSync';
-import SendlaneDatasync from '../../data-sync/components/SendlaneDatasync';
-import WebhookDatasync from '../../data-sync/components/WebhookDatasync';
-import ZapierDataSync from '../../data-sync/components/ZapierDataSync';
-import ConnectHubspot from '../../data-sync/components/HubspotDataSync';
 import HubspotDataSync from '../../data-sync/components/HubspotDataSync';
-import CustomizedProgressBar from '@/components/CustomizedProgressBar';
+import { UpgradePlanPopup } from '@/app/(client)/components/UpgradePlanPopup';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import AddIcon from '@mui/icons-material/Add';
 import { styled } from '@mui/material/styles';
@@ -137,41 +125,38 @@ const klaviyoStyles = {
     },
 }
 
+const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
+    height: 4,
+    borderRadius: 0,
+    backgroundColor: '#c6dafc',
+    '& .MuiLinearProgress-bar': {
+      borderRadius: 5,
+      backgroundColor: '#4285f4',
+    },
+  }));
+
 const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrationsList: integ = [], selectedLeads }) => {
-    const integrationsList = [...integ, "CSV", "s3"]
+    const integrationsList = ["CSV", "s3", ...integ]
     const [selectedOption, setSelectedOption] = useState<string | null>(null);
     const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
     const [isExistingListsOpen, setIsExistingListsOpen] = useState<boolean>(false);
     const [checkedItems, setCheckedItems] = useState<Set<number>>(new Set());
     const [listName, setListName] = useState<string>('');
     const [plusIconPopupOpen, setPlusIconPopupOpen] = useState(false);
-    const [klaviyoIconPopupOpen, setKlaviyoIconPopupOpen] = useState(false);
     const [salesForceIconPopupOpen, setSalesForceIconPopupOpen] = useState(false);
     const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
     const [selectedIntegration, setSelectedIntegration] = useState<string | null>(null);
     const [isExportDisabled, setIsExportDisabled] = useState(true);
     const [integrationsCredentials, setIntegrationsCredentials] = useState<IntegrationsCredentials[]>([])
-    const [createKlaviyo, setCreateKlaviyo] = useState<boolean>(false)
     const [createHubspot, setCreateHubspot] = useState<boolean>(false)
     const [createSalesForce, setCreateSalesForce] = useState<boolean>(false)
-    const [createWebhook, setCreateWebhook] = useState<boolean>(false)
-    const [createSlack, setCreateSlack] = useState<boolean>(false)
     const [createGoogleAds, setCreateGoogleAds] = useState<boolean>(false)
     const [integrations, setIntegrations] = useState<Integrations[]>([])
     const [metaConnectApp, setMetaConnectApp] = useState(false)
-    const [openBigcommrceConnect, setOpenBigcommerceConnect] = useState(false)
 
     const [mailchimpIconPopupOpen, setOpenMailchimpIconPopup] = useState(false)
-    const [slackIconPopupOpen, setOpenSlackIconPopup] = useState(false)
     const [googleAdsIconPopupOpen, setOpenGoogleAdsIconPopup] = useState(false)
     const [openMailchimpConnect, setOpenmailchimpConnect] = useState(false)
-    const [openSendlaneIconPopupOpen, setOpenSendlaneIconPopupOpen] = useState(false)
-    const [openWebhookIconPopupOpen, setOpenWebhookIconPopupOpen] = useState(false)
-    const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
-    const [openZapierDataSync, setOpenZapierDataSync] = useState(false)
-    const [openZapierConnect, setOpenZapierConnect] = useState(false)
-    const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false)
-    const [omnisendIconPopupOpen, setOpenOmnisendIconPopupOpen] = useState(false)
     const [openHubspotConnect, setOpenHubspotConnect] = useState(false)
     const [hubspotIconPopupOpen, setOpenHubspotIconPopupOpen] = useState(false)
 
@@ -212,23 +197,21 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     useEffect(() => {
         const fetchData = async () => {
             try {
+                setIsLoading(true)
                 const response = await axiosInstance.get('/integrations/credentials/')
                 if (response.status === 200) {
                     setIntegrationsCredentials(response.data)
                 }
-            } catch (error) {
-
+            } catch {
+            }
+            finally {
+                setIsLoading(false)
             }
         }
         if (open) {
             fetchData()
         }
     }, [open])
-
-    const handleOmnisendIconPopupOpenClose = () => {
-        setOpenOmnisendConnect(false)
-        setOpenOmnisendIconPopupOpen(false)
-    }
 
     const handleHubspotIconPopupOpenClose = () => {
         setOpenHubspotConnect(false)
@@ -284,39 +267,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         setPlusIconPopupOpen(false);
     };
 
-    const handleKlaviyoIconPopupOpen = () => {
-        setKlaviyoIconPopupOpen(true);
-    };
-
-    const handleSalesForceIconPopupOpen = () => {
-        setSalesForceIconPopupOpen(true);
-    };
-
-    const handleOmnisendConnectOpen = () => {
-        setOpenOmnisendConnect(true)
-    }
-
-    const handleHubspotConnectOpen = () => {
-        setOpenHubspotConnect(true)
-    }
-
-    const handleOmnisendConnectClose = () => {
-        setOpenOmnisendConnect(false)
-        handleOmnisendIconPopupOpen()
-    }
-
-    const handleOmnisendIconPopupOpen = () => {
-        setOpenOmnisendIconPopupOpen(true);
-    };
-
     const handleHubspotIconPopupOpen = () => {
         setOpenHubspotIconPopupOpen(true);
-    };
-
-    const handleKlaviyoIconPopupClose = () => {
-        setKlaviyoIconPopupOpen(false);
-        setOpenOmnisendConnect(false)
-        setPlusIconPopupOpen(false)
     };
 
     const handleSalesForceIconPopupClose = () => {
@@ -328,20 +280,12 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         setOpenmailchimpConnect(true)
     }
 
-    const handleSlackIconPopupIconOpen = () => {
-        setOpenSlackIconPopup(true)
-    }
-
     const handleGoogleAdsIconPopupIconOpen = () => {
         setOpenGoogleAdsIconPopup(true)
     }
 
     const handleMailchimpIconPopupIconOpen = () => {
         setOpenMailchimpIconPopup(true)
-    }
-
-    const handleSlackConnectOpen = () => {
-        setOpenSlackIconPopup(true)
     }
 
     const handleGoogleAdsConnectOpen = () => {
@@ -353,10 +297,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         setPlusIconPopupOpen(false)
     }
 
-    const handleSlackIconPopupIconClose = () => {
-        setOpenSlackIconPopup(false)
-        setPlusIconPopupOpen(false)
-    }
     const handleGoogleAdsIconPopupIconClose = () => {
         setOpenGoogleAdsIconPopup(false)
         setPlusIconPopupOpen(false)
@@ -395,59 +335,16 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
             case 'Meta':
                 handleMetaIconPopupOpen()
                 break
-            case 'Klaviyo':
-                handleKlaviyoIconPopupOpen()
-                break
             case 'Mailchimp':
                 handleMailchimpIconPopupIconOpen()
                 break
-            case 'Omnisend':
-                handleOmnisendIconPopupOpen()
-                break
-            case 'Sendlane':
-                handleSendlaneIconPopupOpen()
-                break
-            case 'Slack':
-                handleSlackIconPopupIconOpen()
-                break
             case 'GoogleAds':
                 handleGoogleAdsIconPopupIconOpen()
-            case 'Webhook':
-                handleWebhookIconPopupOpen()
-                break
             case 'Hubspot':
                 handleHubspotIconPopupOpen()
                 break
         }
     };
-
-    const handleSendlaneIconPopupOpen = () => {
-        setOpenSendlaneIconPopupOpen(true)
-    }
-
-    const handleWebhookIconPopupOpen = () => {
-        setOpenWebhookIconPopupOpen(true)
-    }
-
-    const handleSendlaneIconPopupClose = () => {
-        setOpenSendlaneIconPopupOpen(false)
-    }
-
-    const handleWebhookIconPopupClose = () => {
-        setOpenWebhookIconPopupOpen(false)
-    }
-
-    const handleSendlaneConnectOpen = () => {
-        setOpenSendlaneConnect(true)
-    }
-
-    const handleSendlaneConnectClose = () => {
-        setOpenSendlaneConnect(false)
-    }
-
-    const handleCreateKlaviyoOpen = () => {
-        setCreateKlaviyo(true)
-    }
 
     const handleCreateHubspotOpen = () => {
         setCreateHubspot(true)
@@ -457,44 +354,16 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         setCreateSalesForce(true)
     }
 
-    const handleCreateKlaviyoClose = () => {
-        setCreateKlaviyo(false)
-    }
-
     const handleCreateSalesForceClose = () => {
         setCreateSalesForce(false)
     }
 
-    const handleCreateWebhookOpen = () => {
-        setCreateWebhook(true)
-    }
-
-    const handleCreateWebhookClose = () => {
-        setCreateWebhook(false)
-    }
-
-    const handleCreateSlackClose = () => {
-        setCreateSlack(false)
+    const handleCreateHubspotClose = () => {
+        setCreateHubspot(false)
     }
 
     const handleCreateGoogleAdsClose = () => {
         setCreateGoogleAds(false)
-    }
-
-    const handleOpenZapierDataSync = () => {
-        setOpenZapierDataSync(true)
-    }
-
-    const handleOpenZapierConnect = () => {
-        setOpenZapierConnect(true)
-    }
-
-    const handleCloseZapierConnect = () => {
-        setOpenZapierConnect(false)
-    }
-
-    const handleCloseZapierDataSync = () => {
-        setOpenZapierDataSync(false)
     }
 
     type ServiceHandlers = {
@@ -505,14 +374,14 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
       };
 
     const handlers: ServiceHandlers = {
-        hubspot: handleHubspotIconPopupOpen,
-        mailchimp: handleMailchimpIconPopupIconOpen,
-        salesForce: handleSalesForceIconPopupOpen,
-        googleAds: handleGoogleAdsIconPopupIconOpen,
+        hubspot: handleCreateHubspotOpen,
+        mailchimp: handleOpenMailchimpConnect,
+        salesForce: handleCreateSalesForceOpen,
+        googleAds: handleCreateGoogleAdsClose,
       };
 
     const toCamelCase = (name: string) => {
-        const updatedName = name.split('-').map((word, index) =>
+        const updatedName = name.split('_').map((word, index) =>
             index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)
         )
         .join('');
@@ -520,27 +389,20 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     }
 
     const handleActive = (service: string) => {
-        setActiveService(service);
         const handlerPart = toCamelCase(service)
-        if (service === "meta") {
-            setMetaIconPopupOpen(true)
-        } else if (handlerPart in handlers) {
-            handlers[handlerPart as keyof ServiceHandlers]();
-          } else {
-            console.error(`Handler for ${handlerPart} не найден`);
-          }
-      };
+        setActiveService(handlerPart);
+    };
 
 
     const handleAddIntegration = async (service_name: string) => {
         try {
           setIsLoading(true)
           const response = await axiosInstance.get('/integrations/check-limit-reached')
-          if (response.status === 200 && response.data == true) {
+          if (response.status === 200 && response.data) {
             setUpgradePlanPopup(true)
             return 
           }
-        } catch (error) {
+        } catch {
         }
         finally {
           setIsLoading(false)
@@ -548,7 +410,13 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     
         const isIntegrated = integrationsCredentials.some(integration_cred => integration_cred.service_name === service_name);
         if (isIntegrated) return;
-        setOpenModal(service_name);
+        
+        const handlerPart = toCamelCase(service_name)
+        if (service_name === "meta") {
+            setMetaConnectApp(true)
+        } else if (handlerPart in handlers) {
+            handlers[handlerPart as keyof ServiceHandlers]();
+          }
       };
 
     const handleCloseMetaConnectApp = () => {
@@ -590,20 +458,13 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
 
 
     const integrationsAvailable = [
-        { image: 'klaviyo.svg', service_name: 'klaviyo' },
+        { image: 'csv-icon.svg', service_name: 'CSV' },
         { image: 'meta-icon.svg', service_name: 'meta' },
-        { image: 'omnisend_icon_black.svg', service_name: 'omnisend' },
         { image: 'mailchimp-icon.svg', service_name: 'mailchimp' },
-        { image: 'sendlane-icon.svg', service_name: 'sendlane' },
-        //{ image: 'attentive.svg', service_name: 'attentive' },
-        { image: 'zapier-icon.svg', service_name: 'zapier' },
-        { image: 'slack-icon.svg', service_name: 'slack' },
-        { image: 'webhook-icon.svg', service_name: 'webhook' },
         { image: 'hubspot.svg', service_name: 'hubspot' },
         { image: 'google-ads.svg', service_name: 'google_ads' },
         { image: 'salesforce-icon.svg', service_name: 'sales_force' },
-        { image: 's3.svg', service_name: 's3' },
-        { image: 'csv-icon.svg', service_name: 'CSV' }
+        { image: 's3.svg', service_name: 's3' }
       ];
 
       const [valueContactSync, setValueContactSync] = useState<number>(1000);
@@ -726,33 +587,35 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                 },
               }}
               title={is_integrated ? `A ${service_name} account is already integrated. To connect a different account, please remove the existing ${service_name} integration first.` : ""}>
-              <Box sx={{
-                backgroundColor: !is_integrated ? 'rgba(0, 0, 0, 0.04)' : active
-                  ? 'rgba(80, 82, 178, 0.1)'
-                  : 'transparent',
-                border: active ? '1px solid #5052B2' : '1px solid #E4E4E4',
-                position: 'relative',
-                display: 'flex',
-                borderRadius: '4px',
-                cursor: is_integrated ? 'default' : 'pointer',
-                width: '8rem',
-                height: '8rem',
-                filter: !is_integrated ? 'grayscale(1)' : 'none',
-                justifyContent: 'center',
-                alignItems: 'center',
-                transition: '0.2s',
-                '&:hover': {
-                  boxShadow: is_integrated ? 'none' : '0 0 4px #00000040',
-                  filter: !is_integrated ? 'none' : 'none',
-                  backgroundColor: !is_integrated ? 'transparent' : 'rgba(80, 82, 178, 0.1)',
-                },
-                '&:hover .edit-icon': {
-                  opacity: 1
-                },
-                "@media (max-width: 900px)": {
-                  width: '156px'
-                },
-              }}>
+              <Box 
+                sx={{
+                    backgroundColor: !is_integrated ? 'rgba(0, 0, 0, 0.04)' : active
+                    ? 'rgba(80, 82, 178, 0.1)'
+                    : 'transparent',
+                    border: active ? '1px solid #5052B2' : '1px solid #E4E4E4',
+                    position: 'relative',
+                    display: 'flex',
+                    borderRadius: '4px',
+                    cursor: is_integrated ? 'default' : 'pointer',
+                    // width: '8rem',
+                    width: '100%',
+                    height: '8rem',
+                    filter: !is_integrated ? 'grayscale(1)' : 'none',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    transition: '0.2s',
+                    '&:hover': {
+                    boxShadow: is_integrated ? 'none' : '0 0 4px #00000040',
+                    filter: !is_integrated ? 'none' : 'none',
+                    backgroundColor: !is_integrated ? 'transparent' : 'rgba(80, 82, 178, 0.1)',
+                    },
+                    '&:hover .edit-icon': {
+                    opacity: 1
+                    },
+                    "@media (max-width: 900px)": {
+                    width: '156px'
+                    },
+                }}>
                 {!is_avalible && (
                   <Box sx={{
                     display: 'flex',
@@ -896,16 +759,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         );
       };
 
-    const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
-        height: 4,
-        borderRadius: 0,
-        backgroundColor: '#c6dafc',
-        '& .MuiLinearProgress-bar': {
-          borderRadius: 5,
-          backgroundColor: '#4285f4',
-        },
-      }));
-
     const defaultRows: Row[] = [
         { id: 1, type: 'Email', value: '' },
         { id: 2, type: 'Phone number', value: '' },
@@ -985,7 +838,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                 )}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                     <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center', }}>
-                        Create contact sync
+                        Create smart audience sync
                     </Typography>
                     <IconButton onClick={onClose} sx={{ p: 0 }}>
                         <CloseIcon sx={{ width: '20px', height: '20px' }} />
@@ -993,17 +846,17 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                 </Box>
                     <TabContext value={value}>
                         <Box sx={{ pb: 2}}>
-                            <TabList centered aria-label="Connect to Klaviyo Tabs"
-                                TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
+                            <TabList centered
+                                TabIndicatorProps={{ sx: { backgroundColor: "#5052b2"} }}
                                 sx={{
+                                    gap: 3,
                                     "& .MuiTabs-scroller": {
                                         overflowX: 'auto !important',
                                     },
                                     "& .MuiTabs-flexContainer": {
                                         justifyContent: 'center',
                                         '@media (max-width: 600px)': {
-                                            gap: '16px',
-                                            justifyContent: 'flex-start'
+                                            gap: 2,
                                         }
                                     }
                                 }} onChange={handleChangeTab}>
@@ -1025,15 +878,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                     integrationsList?.includes(integration.service_name) && 
                                                     (!search || integration.service_name.toLowerCase().includes(search.toLowerCase()))
                                                 )
-                                                .sort((a, b) => {
-                                                    const isAIntegrated = integratedServices.includes(a.service_name);
-                                                    const isBIntegrated = integratedServices.includes(b.service_name);
-
-                                                    if (isAIntegrated === isBIntegrated) {
-                                                    return a.service_name.localeCompare(b.service_name);
-                                                    }
-                                                    return isAIntegrated ? -1 : 1;
-                                                })
                                                 .map((integration) => {
                                                     let isIntegrated = integratedServices.includes(integration.service_name);
                                                     if (integration.service_name === 'CSV') {  
@@ -1043,7 +887,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
 
                                                     if (isIntegrated) {
                                                     return (
-                                                        <Box key={integration.service_name} onClick={() => handleActive(integration.service_name)}>
+                                                        <Box key={integration.service_name} onClick={() => handleActive(integration.service_name)} sx={{width: "135px"}}>
                                                         <IntegrationBox
                                                             image={`/${integration.image}`}
                                                             service_name={integration.service_name}
@@ -1058,7 +902,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                     }
 
                                                     return (
-                                                    <Box key={integration.service_name} onClick={() => handleAddIntegration(integration.service_name)}>
+                                                    <Box key={integration.service_name} onClick={() => handleAddIntegration(integration.service_name)} sx={{width: "135px"}}>
                                                         <IntegrationBox
                                                         image={`/${integration.image}`}
                                                         service_name={integration.service_name}
@@ -1071,57 +915,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                             }
                                         </List>
 
-                                    </Box>
-                                    <Box
-                                        sx={{
-                                        position: 'absolute',
-                                        bottom: 0,
-                                        width: "100%",
-                                        zIndex: 1302,
-                                        backgroundColor: 'rgba(255, 255, 255, 1)',
-                                        display: 'flex',
-                                        justifyContent: 'flex-end',
-                                        marginTop: '1em',
-                                        padding: '1em',
-                                        gap: 3,
-                                        borderTop: '1px solid rgba(228, 228, 228, 1)',
-                                        "@media (max-width: 600px)":
-                                            { width: '100%' }
-                                        }}
-                                    >
-                                        <Button
-                                        variant="contained"
-                                        onClick={onClose}
-                                        className='second-sub-title'
-                                        sx={{
-                                            color: "rgba(80, 82, 178, 1) !important",
-                                            backgroundColor: '#fff',
-                                            border: ' 1px solid rgba(80, 82, 178, 1)',
-                                            textTransform: "none",
-                                            padding: "0.75em 2.5em",
-                                            '&:hover': {
-                                            backgroundColor: 'transparent'
-                                            }
-                                        }}
-                                        >
-                                        Cancel
-                                        </Button>
-                                        <Button
-                                        variant="contained"
-                                        onClick={onClose}
-                                        className='second-sub-title'
-                                        sx={{
-                                            backgroundColor: "rgba(80, 82, 178, 1)",
-                                            color: 'rgba(255, 255, 255, 1) !important',
-                                            textTransform: "none",
-                                            padding: "0.75em 2.5em",
-                                            '&:hover': {
-                                            backgroundColor: 'rgba(80, 82, 178, 1)'
-                                            }
-                                        }}
-                                        >
-                                        Next
-                                        </Button>
                                     </Box>
                                 </Box>
                             </Box>
@@ -1459,33 +1252,94 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                     ))}
                             </Box>
                         </TabPanel>
+                        <Box
+                            sx={{
+                            position: 'absolute',
+                            bottom: 0,
+                            width: "100%",
+                            zIndex: 1302,
+                            backgroundColor: 'rgba(255, 255, 255, 1)',
+                            display: 'flex',
+                            justifyContent: 'flex-end',
+                            marginTop: '1em',
+                            padding: '1em',
+                            gap: 3,
+                            borderTop: '1px solid rgba(228, 228, 228, 1)',
+                            "@media (max-width: 600px)":
+                                { width: '100%' }
+                            }}
+                        >
+                            <Button
+                            variant="contained"
+                            onClick={onClose}
+                            className='second-sub-title'
+                            sx={{
+                                color: "rgba(80, 82, 178, 1) !important",
+                                backgroundColor: '#fff',
+                                border: ' 1px solid rgba(80, 82, 178, 1)',
+                                textTransform: "none",
+                                padding: "0.75em 2.5em",
+                                '&:hover': {
+                                backgroundColor: 'transparent'
+                                }
+                            }}
+                            >
+                            Cancel
+                            </Button>
+                            <Button
+                            variant="contained"
+                            onClick={handleNextTab}
+                            className='second-sub-title'
+                            sx={{
+                                backgroundColor: "rgba(80, 82, 178, 1)",
+                                color: 'rgba(255, 255, 255, 1) !important',
+                                textTransform: "none",
+                                padding: "0.75em 2.5em",
+                                '&:hover': {
+                                backgroundColor: 'rgba(80, 82, 178, 1)'
+                                }
+                            }}
+                            >
+                            Next
+                        </Button>
+                        </Box>
                     </TabContext>
             </Drawer>
 
             {/* Data Sync */}
-            <ConnectKlaviyo data={null} open={klaviyoIconPopupOpen} onClose={handleKlaviyoIconPopupClose} />
             <ConnectSalesForce data={null} open={salesForceIconPopupOpen} onClose={handleSalesForceIconPopupClose} />
             <ConnectMeta data={null} open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} isEdit={false} />
-            <OnmisendDataSync open={omnisendIconPopupOpen} onClose={handleOmnisendIconPopupOpenClose} isEdit={false} data={null} />
             <HubspotDataSync open={hubspotIconPopupOpen} onClose={handleHubspotIconPopupOpenClose} isEdit={false} data={null} />
-            <SendlaneDatasync open={openSendlaneIconPopupOpen} onClose={handleSendlaneIconPopupClose} data={null} isEdit={false} />
-            <WebhookDatasync open={openWebhookIconPopupOpen} onClose={handleWebhookIconPopupClose} data={null} isEdit={false} />
             <MailchimpDatasync open={mailchimpIconPopupOpen} onClose={handleMailchimpIconPopupIconClose} data={null} />
-            <SlackDatasync open={slackIconPopupOpen} onClose={handleSlackIconPopupIconClose} data={null} isEdit={false} />
             <GoogleADSDatasync open={googleAdsIconPopupOpen} onClose={handleGoogleAdsIconPopupIconClose} data={null} isEdit={false} />
-            <ZapierDataSync open={openZapierDataSync} handleClose={handleCloseZapierDataSync} />
 
             {/* Add Integration */}
-            <AlivbleIntagrationsSlider open={plusIconPopupOpen} onClose={handlePlusIconPopupClose} isContactSync={true} integrations={integrations} integrationsCredentials={integrationsCredentials} handleSaveSettings={handleSaveSettings} />
-            <GoogleADSConnectPopup open={createGoogleAds} handlePopupClose={handleCreateGoogleAdsClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'google_ads')?.access_token} />
-            <WebhookConnectPopup open={createWebhook} handleClose={handleCreateWebhookClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'webhook')?.access_token} />
-            <KlaviyoIntegrationPopup open={createKlaviyo} handleClose={handleCreateKlaviyoClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token} />
-            <SalesForceIntegrationPopup open={createSalesForce} handleClose={handleCreateSalesForceClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sales_force')?.access_token} />
-            <MailchimpConnect onSave={handleSaveSettings} open={openMailchimpConnect} handleClose={handleOpenMailchimpConnectClose} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Mailchimp')?.access_token} />
-            <SendlaneConnect open={openSendlaneConnect} handleClose={handleSendlaneConnectClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Sendlane')?.access_token} />
-            <OmnisendConnect open={openOmnisendConnect} handleClose={() => setOpenOmnisendConnect(false)} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Omnisend')?.access_token} />
-            <HubspotIntegrationPopup open={createHubspot} handleClose={() => setOpenHubspotConnect(false)} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'hubspot')?.access_token} />
-            <MetaConnectButton open={metaConnectApp} onClose={handleCloseMetaConnectApp} onSave={handleSaveSettings} />
+            <GoogleADSConnectPopup 
+                open={createGoogleAds} 
+                handlePopupClose={handleCreateGoogleAdsClose} 
+                onSave={handleSaveSettings} 
+                initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'google_ads')?.access_token} />
+            <SalesForceIntegrationPopup 
+                open={createSalesForce} 
+                handleClose={handleCreateSalesForceClose} 
+                onSave={handleSaveSettings} 
+                initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sales_force')?.access_token} />
+            <MailchimpConnect 
+                onSave={handleSaveSettings} 
+                open={openMailchimpConnect} 
+                handleClose={handleOpenMailchimpConnectClose} 
+                initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Mailchimp')?.access_token} />
+            <HubspotIntegrationPopup 
+                open={createHubspot} 
+                handleClose={handleCreateHubspotClose} 
+                onSave={handleSaveSettings} 
+                initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'hubspot')?.access_token} />
+            <MetaConnectButton 
+                open={metaConnectApp} 
+                onClose={handleCloseMetaConnectApp} 
+                onSave={handleSaveSettings} />
+            
+            <UpgradePlanPopup open={upgradePlanPopup} limitName={'domain'} handleClose={() => setUpgradePlanPopup(false)} />
         </>
     );
 };
