@@ -273,7 +273,7 @@ async def send_pixel_contacts(*, data, source_id, db_session, connection, user_i
         if filters:
             query = query.filter(or_(*filters))
         
-        query = query.order_by(LeadUser.created_at.asc()).limit(SELECTED_ROW_COUNT)
+        query = query.order_by(LeadUser.id.asc()).limit(SELECTED_ROW_COUNT)
         results = query.all()
         persons = []
         for result in results:
