@@ -48,6 +48,7 @@ const SmartAudiencesBuilder: React.FC = () => {
                                     <MenuItem className="second-sub-title" value={"Email"}>Email</MenuItem>
                                     <MenuItem className="second-sub-title" value={"Tele Marketing"}>Tele Marketing</MenuItem>
                                     <MenuItem className="second-sub-title" value={"Postal"}>Postal</MenuItem>
+                                    <MenuItem className="second-sub-title" value={"LinkedIn"}>LinkedIn</MenuItem>
                                 </Select>
                             </FormControl>
                         </Box>
@@ -55,7 +56,7 @@ const SmartAudiencesBuilder: React.FC = () => {
                         {["Google", "Bing", "Meta"].includes(useCaseType) ? (
                             <SmartAudiencesContacts />
                         ) : (
-                            <SmartAudiencesTarget />
+                            <SmartAudiencesTarget useCaseType={useCaseType}/>
                         )}
                     </Box>
                 </Box>
