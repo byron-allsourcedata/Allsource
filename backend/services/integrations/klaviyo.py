@@ -6,6 +6,7 @@ from persistence.domains import UserDomainsPersistence
 from schemas.integrations.integrations import *
 from schemas.integrations.klaviyo import *
 from fastapi import HTTPException
+import requests
 from datetime import datetime, timedelta
 from utils import extract_first_email
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
@@ -359,8 +360,25 @@ class KlaviyoIntegrationsService:
                 }
             }
         }
-        
-        response = self.__handle_request(method='POST', url="https://a.klaviyo.com/api/profile-subscription-bulk-create-jobs",api_key=api_key, data=json.dumps(payload))
+        try:
+            response = self.__handle_request(
+                method='POST',
+                url="https://a.klaviyo.com/api/profile-subscription-bulk-create-jobs",
+                api_key=api_key,
+                data=json.dumps(payload)
+            )
+            response.raise_for_status()
+            return response
+        except Exception as http_err:
+            response = self.__handle_request(method='POST', url=f'https://a.klaviyo.com/api/lists/{list_id}/relationships/profiles/',api_key=api_key, json={
+                    "data": [
+                        {
+                        "type": "profile",
+                        "id": profile_id
+                        }
+                    ]
+                })
+            
         return response
         
     def set_suppression(self, suppression: bool, domain_id: int):
