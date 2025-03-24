@@ -1,32 +1,20 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { TableCell, Tooltip, Typography, Box, SxProps, Theme } from '@mui/material';
+import { TableCell, Tooltip, Typography, Box } from '@mui/material';
 import { sourcesStyles } from '../sourcesStyles';
 
 interface MyTableCellProps {
   rowExample: string;
-  cellWidth?: string;
   loaderForTable?: boolean;
   customCellStyles?: any;
 }
 
-const createCommonCellStyles = (
-  width: string = "15vw",
-  mobileWidth: string = "20vw"
-) => ({
-  minWidth: width,
-  width: width,
-  maxWidth: width,
+const createCommonCellStyles = () => ({
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
-  // '@media (max-width: 600px)': {
-  //   minWidth: mobileWidth,
-  //   width: mobileWidth,
-  //   maxWidth: mobileWidth,
-  // },
 });
 
-const CustomCell: React.FC<MyTableCellProps> = ({ rowExample, cellWidth = "16vw", loaderForTable, customCellStyles = {}, }) => {
+const CustomCell: React.FC<MyTableCellProps> = ({ rowExample, loaderForTable, customCellStyles = {} }) => {
   const textRef = useRef<HTMLDivElement>(null);
   const [isOverflow, setIsOverflow] = useState(false);
 
@@ -38,7 +26,7 @@ const CustomCell: React.FC<MyTableCellProps> = ({ rowExample, cellWidth = "16vw"
 
   useEffect(() => {
     checkOverflow();
-  }, [rowExample, cellWidth, checkOverflow]);
+  }, [rowExample, checkOverflow]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -59,7 +47,6 @@ const CustomCell: React.FC<MyTableCellProps> = ({ rowExample, cellWidth = "16vw"
         whiteSpace: 'nowrap',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
-        maxWidth: cellWidth,
       }}
     >
       {rowExample}
@@ -73,10 +60,9 @@ const CustomCell: React.FC<MyTableCellProps> = ({ rowExample, cellWidth = "16vw"
         position: 'relative',
         zIndex: 1,
         backgroundColor: 'inherit',
-        ...createCommonCellStyles(cellWidth),
+        ...createCommonCellStyles(),
         ...sourcesStyles.table_array,
         ...customCellStyles,
-        
       }}
     >
       <Box sx={{ display: 'flex' }}>
@@ -120,17 +106,15 @@ const CustomCell: React.FC<MyTableCellProps> = ({ rowExample, cellWidth = "16vw"
             }}
             placement="right"
           >
-            <Typography className='table-data'
-                sx={{
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    maxWidth: cellWidth,
-                }}
+            <Typography className="table-data"
+              sx={{
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
             >
-                {cellContent}
+              {cellContent}
             </Typography>
-            
           </Tooltip>
         ) : (
           cellContent
