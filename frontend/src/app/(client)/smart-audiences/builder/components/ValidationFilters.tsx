@@ -13,11 +13,19 @@ interface ExpandableFilterProps {
     targetAudience: string;
     useCaseType: string;
     onSkip: () => void;
-    onValidate: () => void;
+    onValidate: (data: FilterData) => void;
     onEdit: () => void;
 }
 
-
+interface FilterData {
+    nestedSelections: { [key: string]: string };
+    expandedNested: { [key: string]: boolean };
+    selectedOptionsPersonalEmail: string[];
+    selectedOptionsBusinessEmail: string[];
+    selectedOptionsPhone: string[];
+    selectedOptionsPostalCAS: string[];
+    selectedOptionsLinkedIn: string[];
+}
 
 const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseType, onSkip, onValidate, onEdit }) => {
     const router = useRouter();
@@ -98,7 +106,20 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
 
     const handleValidate = () => {
         setValidate(true);
-        onValidate();
+        setIsOpenPersonalEmail(false);
+        setIsOpenBusinessEmail(false);
+        setIsOpenPhone(false);
+        setIsOpenPostalCAS(false);
+        setIsOpenLinkedIn(false);
+        onValidate({
+            nestedSelections,
+            expandedNested,
+            selectedOptionsPersonalEmail,
+            selectedOptionsBusinessEmail,
+            selectedOptionsPhone,
+            selectedOptionsPostalCAS,
+            selectedOptionsLinkedIn
+        });
     }
 
     const handleSkip = () => {
@@ -145,9 +166,9 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
 
         if (useCaseType === "Tele Marketing") {
             if (targetAudience === "Both" || targetAudience === "B2B") {
-                setSelectedOptionsPhone(["Date", "Confirmation"]);
+                setSelectedOptionsPhone(["Last updated date", "Confirmation"]);
             } else if (targetAudience === "B2C") {
-                setSelectedOptionsPhone(["Date"]);
+                setSelectedOptionsPhone(["Last updated date"]);
             }
             setValidate(false)
         }
@@ -164,7 +185,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
         }
 
         if ((targetAudience === 'B2B' || targetAudience === 'Both') && useCaseType === 'LinkedIn') {
-            setSelectedOptionsLinkedIn(["Relevance"]);
+            setSelectedOptionsLinkedIn(["Job validation"]);
             setValidate(false)
         }
     }, [targetAudience, useCaseType]);
@@ -466,11 +487,11 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                             </Box>
                             <Collapse in={isOpenPhone}>
                                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1, pl: 2, pb: 0.75 }}>
-                                    {["Date", "Confirmation"].map((option, index) => {
+                                    {["Last updated date", "Confirmation"].map((option, index) => {
                                         const isRecommended =
                                             useCaseType === "Tele Marketing" &&
                                             ((targetAudience === "Both" || targetAudience === "B2B") ||
-                                                (targetAudience === "B2C" && option === "Date"));
+                                                (targetAudience === "B2C" && option === "Last updated date"));
 
                                         return (
                                             <React.Fragment key={option}>
@@ -598,17 +619,17 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                             <Collapse in={isOpenLinkedIn}>
                                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1, pl: 2, pb: 0.75 }}>
 
-                                    <Box key={"Relevance"}>
+                                    <Box key={"Job validation"}>
                                         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                                             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                                 <Checkbox
                                                 disabled={isValidate}
                                                     size="small"
-                                                    checked={selectedOptionsLinkedIn.includes("Relevance")}
-                                                    onChange={() => handleOptionClick(setSelectedOptionsLinkedIn, "Relevance")}
+                                                    checked={selectedOptionsLinkedIn.includes("Job validation")}
+                                                    onChange={() => handleOptionClick(setSelectedOptionsLinkedIn, "Job validation")}
                                                     sx={{ padding: 0, '&.Mui-checked': { color: "rgba(80, 82, 178, 1)" } }}
                                                 />
-                                                <Typography className="form-input">Relevance</Typography>
+                                                <Typography className="form-input">Job validation</Typography>
                                                 {((targetAudience === 'B2B' || targetAudience === 'Both') && useCaseType === 'LinkedIn') && <Typography className='table-data' sx={smartAudiences.labelText}>Recommended</Typography>}
                                             </Box>
                                             
@@ -714,7 +735,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
             <ValidationPopup
                 open={openPopup}
                 onClose={() => setOpenPopup(false)}
-                onContinue={() => { console.log("Continue validation"); setOpenPopup(false); }}
+                onContinue={() => setOpenPopup(false)}
                 onSkip={handleSkipPopup}
             />
         </Box>
