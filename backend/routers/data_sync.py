@@ -32,6 +32,28 @@ async def create_sync(data: SyncCreate, service_name: str = Query(...),
             domain_id=domain.id,
             created_by=user.get('full_name')
         )
+
+@router.post('/create-smart-audience-sync')
+async def create_smart_audience_sync(
+    data: SmartAudienceSyncCreate, 
+    service_name: str = Query(...),
+    integration_service: IntegrationService = Depends(get_integration_service),
+    user = Depends(check_user_authorization), domain = Depends(check_domain)):
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value, TeamAccessLevel.STANDARD.value}:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins and standard only."
+            )
+    data = {k: v for k, v in data.model_dump().items() if v}
+    with integration_service as service:
+        service = getattr(service, service_name.lower())
+        await service.create_smart_audience_sync(
+            **data,
+            domain_id=domain.id,
+            created_by=user.get('full_name')
+        )
         
 @router.delete('/sync')
 async def delete_sync(list_id: str = Query(...), 

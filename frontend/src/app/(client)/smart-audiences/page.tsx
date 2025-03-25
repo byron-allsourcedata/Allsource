@@ -1331,9 +1331,12 @@ const SmartAudiences: React.FC = () => {
                                         }
                                     </Box>
 
-                                    <CreateSyncPopup open={dataSyncPopupOpen}
+                                    <CreateSyncPopup 
+                                        open={dataSyncPopupOpen}
+                                        id={selectedRowData?.id}
+                                        activeSegmentRecords={selectedRowData?.active_segment_records}
                                         onClose={handleDataSyncPopupClose}
-                                        integrationsList={selectedRowData?.integrations }
+                                        integrationsList={selectedRowData?.integrations}
                                     />
                                     <FilterPopup open={filterPopupOpen}
                                         onClose={handleFilterPopupClose}
