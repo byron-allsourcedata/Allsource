@@ -357,6 +357,7 @@ const SmartAudiences: React.FC = () => {
 
     const handleDataSyncPopupClose = () => {
         setDataSyncPopupOpen(false);
+        setIsDownloadAction(false)
     };
 
     const handleOpenMorePopover = (event: React.MouseEvent<HTMLElement>, rowData: Smarts) => {
@@ -1203,7 +1204,7 @@ const SmartAudiences: React.FC = () => {
                                                                                             width: '100%', maxWidth: 360, boxShadow: 'none'
                                                                                         }}
                                                                                     >
-                                                                                        <ListItemButton sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
+                                                                                        <ListItemButton disabled={selectedRowData?.status === "validating"} sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
                                                                                             handleCloseMorePopover()
                                                                                             handleDataSyncPopupOpen()
                                                                                         }}>

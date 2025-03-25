@@ -10,20 +10,14 @@ import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
 import Image from 'next/image';
-import ConnectSalesForce from '@/app/(client)/data-sync/components/ConnectSalesForce';
 import ConnectMeta from '@/app/(client)/data-sync/components/ConnectMeta';
 import SalesForceIntegrationPopup from '@/components/SalesForceIntegrationPopup';
 import GoogleADSConnectPopup from '@/components/GoogleADSConnectPopup';
 import MetaConnectButton from '@/components/MetaConnectButton';
-import AlivbleIntagrationsSlider from '@/components/AvalibleIntegrationsSlider';
 import MailchimpConnect from '@/components/MailchimpConnect';
 import HubspotIntegrationPopup from '@/components/HubspotIntegrationPopup';
-import MailchimpDatasync from '../../data-sync/components/MailchimpDatasync';
-import GoogleADSDatasync from '../../data-sync/components/GoogleADSDataSync';
-import HubspotDataSync from '../../data-sync/components/HubspotDataSync';
 import { UpgradePlanPopup } from '@/app/(client)/components/UpgradePlanPopup';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import AddIcon from '@mui/icons-material/Add';
+import IntegrationBox from './IntegrationBox';
 import { styled } from '@mui/material/styles';
 import { useIntegrationContext } from "@/context/IntegrationContext";
 
@@ -71,19 +65,6 @@ interface Row {
     selectValue?: string;
     canDelete?: boolean;
 }
-
-interface IntegrationBoxProps {
-    image: string;
-    handleClick?: () => void;
-    handleDelete?: () => void;
-    service_name: string;
-    active?: boolean;
-    is_avalible?: boolean;
-    error_message?: string;
-    is_failed?: boolean;
-    is_integrated?: boolean;
-    isEdit?: boolean;
-  }
 
 interface MetaAuidece {
     id: string
@@ -135,7 +116,7 @@ const klaviyoStyles = {
     },
 }
 
-const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
+const BorderLinearProgress = styled(LinearProgress)(() => ({
     height: 4,
     borderRadius: 0,
     backgroundColor: '#c6dafc',
@@ -145,16 +126,65 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
     },
   }));
 
+const integrationsImage = [
+    { image: 'csv-icon.svg', service_name: 'CSV' },
+    { image: 'meta-icon.svg', service_name: 'meta' },
+    { image: 'mailchimp-icon.svg', service_name: 'mailchimp' },
+    { image: 'hubspot.svg', service_name: 'hubspot' },
+    { image: 'google-ads.svg', service_name: 'google_ads' },
+    { image: 'salesforce-icon.svg', service_name: 'sales_force' },
+    { image: 's3.svg', service_name: 's3' }
+  ];
+
+const customFieldsList: Row[] = [
+    { id: 7, type: 'Gender', value: 'gender' },
+    { id: 8, type: 'Company Name', value: 'company_name' },
+    { id: 9, type: 'Company Domain', value: 'company_domain' },
+    { id: 10, type: 'Company SIC', value: 'company_sic' },
+    { id: 11, type: 'Company LinkedIn URL', value: 'company_linkedin_url' },
+    { id: 12, type: 'Company Revenue', value: 'company_revenue' },
+    { id: 13, type: 'Company Employee Count', value: 'company_employee_count' },
+    { id: 14, type: 'Net Worth', value: 'net_worth' },
+    { id: 15, type: 'Last Updated', value: 'last_updated' },
+    { id: 16, type: 'Personal Emails Last Seen', value: 'personal_emails_last_seen' },
+    { id: 17, type: 'Company Last Updated', value: 'company_last_updated' },
+    { id: 18, type: 'Job Title Last Updated', value: 'job_title_last_updated' },
+    { id: 19, type: 'Age Min', value: 'age_min' },
+    { id: 20, type: 'Age Max', value: 'age_max' },
+    { id: 21, type: 'Additional Personal Emails', value: 'additional_personal_emails' },
+    { id: 22, type: 'LinkedIn URL', value: 'linkedin_url' },
+    { id: 23, type: 'Married', value: 'married' },
+    { id: 24, type: 'Children', value: 'children' },
+    { id: 25, type: 'Income Range', value: 'income_range' },
+    { id: 26, type: 'Homeowner', value: 'homeowner' },
+    { id: 27, type: 'Seniority Level', value: 'seniority_level' },
+    { id: 28, type: 'Department', value: 'department' },
+    { id: 29, type: 'Primary Industry', value: 'primary_industry' },
+    { id: 30, type: 'Work History', value: 'work_history' },
+    { id: 31, type: 'Education History', value: 'education_history' },
+    { id: 32, type: 'Company Description', value: 'company_description' },
+    { id: 33, type: 'Related Domains', value: 'related_domains' },
+    { id: 34, type: 'Social Connections', value: 'social_connections' },
+    { id: 35, type: 'URL Visited', value: 'url_visited' },
+    { id: 36, type: 'Time on site', value: 'time_on_site' },
+    { id: 37, type: 'DPV Code', value: 'dpv_code' }
+]
+
+const defaultRows: Row[] = [
+    { id: 1, type: 'Email', value: 'Email' },
+    { id: 2, type: 'Phone number', value: 'Phone number' },
+    { id: 3, type: 'First name', value: 'First name' },
+    { id: 4, type: 'Second name', value: 'Second name' },
+    { id: 5, type: 'Job Title', value: 'Job Title' },
+    { id: 6, type: 'Location', value: 'Location' }
+];
+
 const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrationsList: integ = [], id, activeSegmentRecords = 0, isDownloadAction }) => {
     const { triggerSync } = useIntegrationContext();
-    const integrationsList = ["CSV", "s3", ...integ]
-    const [selectedOption, setSelectedOption] = useState<string | null>(null);
     const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
     const [isExistingListsOpen, setIsExistingListsOpen] = useState<boolean>(false);
     const [checkedItems, setCheckedItems] = useState<Set<number>>(new Set());
     const [listName, setListName] = useState<string>('');
-    const [plusIconPopupOpen, setPlusIconPopupOpen] = useState(false);
-    const [salesForceIconPopupOpen, setSalesForceIconPopupOpen] = useState(false);
     const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
     const [selectedIntegration, setSelectedIntegration] = useState<string | null>(null);
     const [isExportDisabled, setIsExportDisabled] = useState(true);
@@ -172,8 +202,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     const [hubspotIconPopupOpen, setOpenHubspotIconPopupOpen] = useState(false)
     const [contactSyncTab, setContactSyncTab] = useState(false)
 
-    const [search, setSearch] = useState<string>('');
     const [activeService, setActiveService] = useState<string | null>(null);
+    const [activeImageService, setActiveImageService] = useState<string>("csv-icon.svg");
     const [openDeletePopup, setOpenDeletePopup] = useState(false);
     const [openModal, setOpenModal] = useState<string | null>(null);
     const [upgradePlanPopup, setUpgradePlanPopup] = useState(false);
@@ -186,8 +216,13 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     const [selectedOptionMap, setSelectedOptionMap] = useState<MetaAuidece | null>(null);
     const [customFields, setCustomFields] = useState<{ type: string, value: string }[]>([]);
 
-    const handleChangeField = (index: number, field: string, value: string) => {
+    const handleClosePopup = () => {
+        setContactSyncTab(false)
+        onClose()
+        setValue("1")
+    }
 
+    const handleChangeField = (index: number, field: string, value: string) => {
         setCustomFields(customFields.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
     };
 
@@ -199,72 +234,29 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         setCustomFields(customFields.filter((_, i) => i !== index));
     };
 
-    const customFieldsList: Row[] = [
-        { id: 7, type: 'Gender', value: 'gender' },
-        { id: 8, type: 'Company Name', value: 'company_name' },
-        { id: 9, type: 'Company Domain', value: 'company_domain' },
-        { id: 10, type: 'Company SIC', value: 'company_sic' },
-        { id: 11, type: 'Company LinkedIn URL', value: 'company_linkedin_url' },
-        { id: 12, type: 'Company Revenue', value: 'company_revenue' },
-        { id: 13, type: 'Company Employee Count', value: 'company_employee_count' },
-        { id: 14, type: 'Net Worth', value: 'net_worth' },
-        { id: 15, type: 'Last Updated', value: 'last_updated' },
-        { id: 16, type: 'Personal Emails Last Seen', value: 'personal_emails_last_seen' },
-        { id: 17, type: 'Company Last Updated', value: 'company_last_updated' },
-        { id: 18, type: 'Job Title Last Updated', value: 'job_title_last_updated' },
-        { id: 19, type: 'Age Min', value: 'age_min' },
-        { id: 20, type: 'Age Max', value: 'age_max' },
-        { id: 21, type: 'Additional Personal Emails', value: 'additional_personal_emails' },
-        { id: 22, type: 'LinkedIn URL', value: 'linkedin_url' },
-        { id: 23, type: 'Married', value: 'married' },
-        { id: 24, type: 'Children', value: 'children' },
-        { id: 25, type: 'Income Range', value: 'income_range' },
-        { id: 26, type: 'Homeowner', value: 'homeowner' },
-        { id: 27, type: 'Seniority Level', value: 'seniority_level' },
-        { id: 28, type: 'Department', value: 'department' },
-        { id: 29, type: 'Primary Industry', value: 'primary_industry' },
-        { id: 30, type: 'Work History', value: 'work_history' },
-        { id: 31, type: 'Education History', value: 'education_history' },
-        { id: 32, type: 'Company Description', value: 'company_description' },
-        { id: 33, type: 'Related Domains', value: 'related_domains' },
-        { id: 34, type: 'Social Connections', value: 'social_connections' },
-        { id: 35, type: 'URL Visited', value: 'url_visited' },
-        { id: 36, type: 'Time on site', value: 'time_on_site' },
-        { id: 37, type: 'DPV Code', value: 'dpv_code' }
-    ]
-
-    const defaultRows: Row[] = [
-        { id: 1, type: 'Email', value: 'Email' },
-        { id: 2, type: 'Phone number', value: 'Phone number' },
-        { id: 3, type: 'First name', value: 'First name' },
-        { id: 4, type: 'Second name', value: 'Second name' },
-        { id: 5, type: 'Job Title', value: 'Job Title' },
-        { id: 6, type: 'Location', value: 'Location' }
-    ];
-
     const handleDeleteOpen = () => {
         setOpenDeletePopup(true);
       };
 
-    // useEffect(() => {
-    //     const fetchData = async () => {
-    //         const response = await axiosInstance.get('/integrations/smart-audience-sync/', {
-    //             params: {
-    //                 integration_list: integ.join(","),
-    //             },
-    //         });
-    //         if (response.status === 200) {
-    //             console.log("1", response.data)
-    //             setIntegrations(response.data);
-    //         }
-    //     };
-    //     if (open) {
-    //         fetchData();
-    //     }
-    // }, [open]);
+    useEffect(() => {
+        const fetchData = async () => {
+            const response = await axiosInstance.get('/integrations/smart-audience-sync/', {
+                params: {
+                    integration_list: integ.join(","),
+                },
+            });
+            if (response.status === 200) {
+                setIntegrations([{service_name: "CSV", data_sync: true, id: 0}, {service_name: "s3", data_sync: true, id: 1}, ...response.data]);
+            }
+        };
+        if (open) {
+            fetchData();
+        }
+    }, [open]);
 
     useEffect(() => {
         if (isDownloadAction) {
+            setIsLoading(true)
             setValue("3")
         }
         else {
@@ -321,38 +313,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         setListName(event.target.value);
     };
 
-    const isSaveButtonDisabled = () => {
-        if (selectedOption === 'create' && listName.trim() === '') {
-            return true;
-        }
-        if (selectedOption === 'existing' && checkedItems.size === 0) {
-            return true;
-        }
-        if (selectedOption === null) {
-            return true;
-        }
-        return false;
-    };
-
-
-    const handlePlusIconPopupOpen = () => {
-        setPlusIconPopupOpen(true);
-        setSelectedIntegration(null); // Reset the selection
-        setIsExportDisabled(true); // Disable export button when the plus icon is clicked
-
-    };
-
-    const handlePlusIconPopupClose = () => {
-        setPlusIconPopupOpen(false);
-    };
-
     const handleHubspotIconPopupOpen = () => {
         setOpenHubspotIconPopupOpen(true);
-    };
-
-    const handleSalesForceIconPopupClose = () => {
-        setSalesForceIconPopupOpen(false);
-        setPlusIconPopupOpen(false)
     };
 
     const handleOpenMailchimpConnect = () => {
@@ -367,27 +329,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         setOpenMailchimpIconPopup(true)
     }
 
-    const handleGoogleAdsConnectOpen = () => {
-        setOpenGoogleAdsIconPopup(true)
-    }
-
-    const handleMailchimpIconPopupIconClose = () => {
-        setOpenMailchimpIconPopup(false)
-        setPlusIconPopupOpen(false)
-    }
-
-    const handleGoogleAdsIconPopupIconClose = () => {
-        setOpenGoogleAdsIconPopup(false)
-        setPlusIconPopupOpen(false)
-    }
-
     const handleMetaIconPopupOpen = () => {
         setMetaIconPopupOpen(true);
-    };
-
-    const handleMetaIconPopupClose = () => {
-        setMetaIconPopupOpen(false);
-        setPlusIconPopupOpen(false)
     };
 
     const handleOpenMailchimpConnectClose = () => {
@@ -448,19 +391,19 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     type ServiceHandlers = {
         hubspot: () => void;
         mailchimp: () => void;
-        salesForce: () => void;
-        googleAds: () => void;
+        sales_force: () => void;
+        google_ads: () => void;
       };
 
     const handlers: ServiceHandlers = {
         hubspot: handleCreateHubspotOpen,
         mailchimp: handleOpenMailchimpConnect,
-        salesForce: handleCreateSalesForceOpen,
-        googleAds: handleCreateGoogleAdsClose,
+        sales_force: handleCreateSalesForceOpen,
+        google_ads: handleCreateGoogleAdsClose,
       };
 
     const toCamelCase = (name: string) => {
-        const updatedName = name.split('_').map((word, index) =>
+        const updatedName = name?.split('_').map((word, index) =>
             index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)
         )
         .join('');
@@ -468,10 +411,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     }
 
     const handleActive = (service: string) => {
-        const handlerPart = toCamelCase(service)
-        setActiveService(handlerPart);
+        setActiveService(service);
+        setActiveImageService(integrationsImage.filter((item) => item.service_name === service)[0].image)
         handleNextTab()
-        if (handlerPart === "mailchimp") {
+        if (service === "mailchimp") {
             setContactSyncTab(true)
             getList()
             setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
@@ -496,11 +439,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         const isIntegrated = integrationsCredentials.some(integration_cred => integration_cred.service_name === service_name);
         if (isIntegrated) return;
         
-        const handlerPart = toCamelCase(service_name)
         if (service_name === "meta") {
             setMetaConnectApp(true)
-        } else if (handlerPart in handlers) {
-            handlers[handlerPart as keyof ServiceHandlers]();
+        } else if (service_name in handlers) {
+            handlers[service_name as keyof ServiceHandlers]();
           }
       };
 
@@ -527,7 +469,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                 name: selectedOptionMailchimp?.list_name
             }, {
                 params: {
-                    service_name: 'mailchimp'
+                    service_name: activeService
                 }
             });
             if (newListResponse.data.status === 'CREATED_IS_FAILED') {
@@ -566,11 +508,11 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                     data_map: customFields
                 }, {
                     params: {
-                        service_name: 'mailchimp'
+                        service_name: activeService
                     }
                 });
                 if (response.status === 201 || response.status === 200) {
-                    onClose();
+                    handleClosePopup();
                     showToast('Data sync created successfully');
                     triggerSync();
                 }
@@ -666,7 +608,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
             setIsLoading(true)
             const response = await axiosInstance.get('/integrations/sync/list/', {
                 params: {
-                    service_name: 'mailchimp'
+                    service_name: activeService
                 }
             })
             setKlaviyoList(response.data)
@@ -703,17 +645,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         setValue(newValue);
     };
 
-
-    const integrationsAvailable = [
-        { image: 'csv-icon.svg', service_name: 'CSV' },
-        { image: 'meta-icon.svg', service_name: 'meta' },
-        { image: 'mailchimp-icon.svg', service_name: 'mailchimp' },
-        { image: 'hubspot.svg', service_name: 'hubspot' },
-        { image: 'google-ads.svg', service_name: 'google_ads' },
-        { image: 'salesforce-icon.svg', service_name: 'sales_force' },
-        { image: 's3.svg', service_name: 's3' }
-      ];
-
       const [valueContactSync, setValueContactSync] = useState<number>(0);
       const maxContacts = activeSegmentRecords;
     
@@ -730,280 +661,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
 
       const integratedServices = integrationsCredentials.map(cred => cred.service_name);
 
-    const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active, is_avalible, is_failed, is_integrated = false, isEdit }: IntegrationBoxProps) => {
-        const [anchorEl, setAnchorEl] = useState(null);
-        const openPopover = Boolean(anchorEl);
-        const [isHovered, setIsHovered] = useState(false);
-        const [openToolTip, setOpenTooltip] = useState(false);
-        const tooltipRef = useRef<HTMLDivElement | null>(null);
-      
-        const altImageIntegration = [
-          'Cordial'
-        ]
-      
-        const openToolTipClick = () => {
-          const isMobile = window.matchMedia('(max-width:900px)').matches;
-          if (isMobile && !is_integrated) {
-            setOpenTooltip(true);
-          }
-        };
-      
-        const handleClickOutside = (event: MouseEvent) => {
-          if (tooltipRef.current && !tooltipRef.current.contains(event.target as Node)) {
-            setOpenTooltip(false);
-          }
-        };
-      
-        useEffect(() => {
-          document.addEventListener('click', handleClickOutside);
-          return () => {
-            document.removeEventListener('click', handleClickOutside);
-          };
-        }, []);
-      
-      
-        const handleOpen = (event: any) => {
-          setAnchorEl(event.currentTarget);
-        };
-      
-        const handleClickEdit = () => {
-          handleClose();
-          if (handleClick) {
-            handleClick();
-          }
-        };
-      
-        const handleClickDelete = () => {
-          handleClose();
-          if (handleDelete) {
-            handleDelete();
-          }
-        };
-      
-        const handleClose = () => {
-          setAnchorEl(null);
-        };
-      
-        const formatServiceName = (name: string): string => {
-          if (name === "big_commerce") {
-            return "BigCommerce";
-          }
-          if (name === "google_ads") {
-            return "GoogleAds";
-          }
-          if (name === "sales_force") {
-            return "SalesForce";
-          }
-          return name
-            .split("_")
-            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(" ");
-        };
-      
-      
-        return (
-          <Box sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            cursor: 'pointer',
-          }}>
-            <Tooltip
-              open={openToolTip || isHovered}
-              ref={tooltipRef}
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
-              onClick={openToolTipClick}
-              componentsProps={{
-                tooltip: {
-                  sx: {
-                    backgroundColor: '#f5f5f5',
-                    color: '#000',
-                    boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
-                    border: ' 0.2px rgba(0, 0, 0, 0.04)',
-                    borderRadius: '4px',
-                    maxHeight: '100%',
-                    whiteSpace: 'normal',
-                    minWidth: '200px',
-                    zIndex: 99,
-                    padding: '11px 10px',
-                    fontSize: '12px !important',
-                    fontFamily: 'Nunito Sans',
-      
-                  },
-                },
-              }}
-              title={is_integrated ? `A ${service_name} account is already integrated. To connect a different account, please remove the existing ${service_name} integration first.` : ""}>
-              <Box 
-                sx={{
-                    backgroundColor: !is_integrated ? 'rgba(0, 0, 0, 0.04)' : active
-                    ? 'rgba(80, 82, 178, 0.1)'
-                    : 'transparent',
-                    border: active ? '1px solid #5052B2' : '1px solid #E4E4E4',
-                    position: 'relative',
-                    display: 'flex',
-                    borderRadius: '4px',
-                    cursor: is_integrated ? 'default' : 'pointer',
-                    width: '100%',
-                    height: '8rem',
-                    filter: !is_integrated ? 'grayscale(1)' : 'none',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    transition: '0.2s',
-                    '&:hover': {
-                    boxShadow: is_integrated ? 'none' : '0 0 4px #00000040',
-                    filter: !is_integrated ? 'none' : 'none',
-                    backgroundColor: !is_integrated ? 'transparent' : 'rgba(80, 82, 178, 0.1)',
-                    },
-                    '&:hover .edit-icon': {
-                    opacity: 1
-                    },
-                    "@media (max-width: 900px)": {
-                    width: '156px'
-                    },
-                }}>
-                {!is_avalible && (
-                  <Box sx={{
-                    display: 'flex',
-                    justifyContent: 'center'
-                  }}>
-                    <Box onClick={handleClick} sx={{
-                      position: 'absolute',
-                      top: '0%',
-                      left: '0%',
-                      margin: '8px 0 0 8px',
-                      transition: 'opacity 0.2s',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      background: !is_failed ? '#EAF8DD' : '#FCDBDC',
-                      height: '20px',
-                      padding: '2px 8px 1px 8px',
-                      borderRadius: '4px'
-                    }}>
-                      {!is_failed ? (
-                        <Typography fontSize={'12px'} fontFamily={'Nunito Sans'} color={'#2B5B00'} fontWeight={600}>Integrated</Typography>
-                      ) : (
-                        <Typography fontSize={'12px'} fontFamily={'Nunito Sans'} color={'#4E0110'} fontWeight={600}>Failed</Typography>
-                      )}
-                    </Box>
-                    <Box className="edit-icon" onClick={handleOpen} sx={{
-                      position: 'absolute',
-                      top: '0%',
-                      right: '0%',
-                      margin: '8px 8.4px 0 0',
-                      opacity: openPopover ? 1 : 0,
-                      transition: 'opacity 0.2s',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderRadius: '50%',
-                      width: '20px',
-                      height: '20px',
-                      '&:hover': {
-                        backgroundColor: '#EDEEF7'
-                      },
-                      "@media (max-width: 900px)": {
-                        opacity: 1
-                      },
-                    }}>
-                      <MoreVertIcon sx={{ height: '20px' }} />
-                    </Box>
-                  </Box>
-                )}
-                {!is_integrated && isHovered && (
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      top: '50%',
-                      left: '50%',
-                      transform: 'translate(-50%, -50%)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '100%',
-                      height: '100%',
-      
-                    }}
-                  >
-                    <AddIcon sx={{ color: "#5052B2", fontSize: 45 }} />
-                  </Box>
-                )}
-                <Image
-                  src={image}
-                  width={altImageIntegration.some(int => int == service_name) ? 100 : 32}
-                  height={32}
-                  alt={service_name}
-                  style={{
-                    transition: '0.2s',
-                    filter: !is_integrated && isHovered ? 'blur(10px)' : 'none',
-                  }}
-                />
-              </Box>
-            </Tooltip>
-            <Typography mt={0.5} fontSize={'14px'} fontWeight={500} textAlign={'center'} fontFamily={'Nunito Sans'}>
-              {formatServiceName(service_name)}
-            </Typography>
-            <Popover
-              open={openPopover}
-              anchorEl={anchorEl}
-              onClose={handleClose}
-              anchorOrigin={{
-                vertical: "bottom",
-                horizontal: "left",
-              }}
-            >
-              <Box
-                sx={{
-                  p: 1,
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-start",
-                  width: "100%",
-                  maxWidth: "160px",
-                }}
-              >
-                <Button
-                  sx={{
-                    justifyContent: "flex-start",
-                    width: "100%",
-                    textTransform: "none",
-                    fontFamily: "Nunito Sans",
-                    fontSize: "14px",
-                    color: "rgba(32, 33, 36, 1)",
-                    fontWeight: 600,
-                    ":hover": {
-                      color: "rgba(80, 82, 178, 1)",
-                      backgroundColor: "rgba(80, 82, 178, 0.1)",
-                    },
-                  }}
-                  onClick={handleClickEdit}
-                >
-                  Edit
-                </Button>
-                <Button
-                  sx={{
-                    justifyContent: "flex-start",
-                    width: "100%",
-                    textTransform: "none",
-                    fontFamily: "Nunito Sans",
-                    fontSize: "14px",
-                    color: "rgba(32, 33, 36, 1)",
-                    fontWeight: 600,
-                    ":hover": {
-                      color: "rgba(80, 82, 178, 1)",
-                      backgroundColor: "rgba(80, 82, 178, 0.1)",
-                    },
-                  }}
-                  onClick={handleClickDelete}
-                >
-                  Delete
-                </Button>
-              </Box>
-            </Popover>
-          </Box>
-        );
-      };
 
     const [rows, setRows] = useState(defaultRows);
 
@@ -1038,7 +695,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
             <Drawer
                 anchor="right"
                 open={open}
-                onClose={onClose}
+                onClose={handleClosePopup}
                 PaperProps={{
                     sx: {
                         width: '620px',
@@ -1076,14 +733,14 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                         Create smart audience sync
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href="#" className="main-text" sx={{
+                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/data-sync" className="main-text" sx={{
                             fontSize: '14px',
                             fontWeight: '600',
                             lineHeight: '20px',
                             color: '#5052b2',
                             textDecorationColor: '#5052b2'
                         }}>Tutorial</Link>
-                        <IconButton onClick={onClose} sx={{ p: 0 }}>
+                        <IconButton onClick={handleClosePopup} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />
                         </IconButton>
                     </Box>
@@ -1091,7 +748,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
                     <Box sx={{ width: '100%', position: 'relative' }}>
                         <TabContext value={value}>
-                            <Box sx={{ pb: 2}}>
+                            <Box sx={{ pt: 3}}>
                                 <TabList centered
                                     TabIndicatorProps={{ sx: { backgroundColor: "#5052b2"} }}
                                     sx={{
@@ -1120,11 +777,17 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                 Choose where you want to sync
                                             </Typography>
                                             <List sx={{ display: 'flex', gap: '16px', flexWrap: 'wrap', border: 'none' }}>
-                                                {integrationsAvailable
-                                                    .filter((integration) => 
-                                                        integrationsList?.includes(integration.service_name) && 
-                                                        (!search || integration.service_name.toLowerCase().includes(search.toLowerCase()))
-                                                    )
+                                                {integrations
+                                                    .sort((a, b) => {
+                                                        const isIntegratedA = integratedServices.includes(a.service_name) || a.service_name === 'CSV';
+                                                        const isIntegratedB = integratedServices.includes(b.service_name) || b.service_name === 'CSV';
+                                                        
+                                                        if (a.service_name === 'CSV') return -1;
+                                                        if (b.service_name === 'CSV') return 1;
+                                                        if (isIntegratedA && !isIntegratedB) return -1;
+                                                        if (!isIntegratedA && isIntegratedB) return 1;
+                                                        return 0;
+                                                    })
                                                     .map((integration) => {
                                                         let isIntegrated = integratedServices.includes(integration.service_name);
                                                         if (integration.service_name === 'CSV') {  
@@ -1136,8 +799,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                         return (
                                                             <Box key={integration.service_name} onClick={() => handleActive(integration.service_name)} sx={{width: "135px"}}>
                                                             <IntegrationBox
-                                                                image={`/${integration.image}`}
-                                                                service_name={integration.service_name}
+                                                                image={`/${integrationsImage.filter((item) => item.service_name === integration.service_name)[0]?.image}`}
+                                                                service_name={toCamelCase(integration.service_name)}
                                                                 active={activeService === integration.service_name}
                                                                 handleClick={() => setOpenModal(integration.service_name)}
                                                                 is_integrated={true}
@@ -1151,8 +814,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                         return (
                                                         <Box key={integration.service_name} onClick={() => handleAddIntegration(integration.service_name)} sx={{width: "135px"}}>
                                                             <IntegrationBox
-                                                            image={`/${integration.image}`}
-                                                            service_name={integration.service_name}
+                                                            image={`/${integrationsImage.filter((item) => item.service_name === integration.service_name)[0]?.image}`}
+                                                            service_name={toCamelCase(integration.service_name)}
                                                             is_avalible={true}
                                                             is_integrated={false}
                                                             />
@@ -1167,13 +830,14 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                 </Box>
                             </TabPanel>
                             <TabPanel value="2" sx={{ p: 0 }}>
-                                <Box sx={{display: "flex", justifyContent: "center"}}>
+                                <Box sx={{display: "flex", px: 2, py: 3}}>
                                     <Card
                                         sx={{
                                             display: "flex",
                                             padding: 2,
                                             boxShadow: 2,
                                             borderRadius: "4px",
+                                            width: "100%"
                                         }}
                                         >
                                         <CardContent>
@@ -1223,10 +887,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                             </TabPanel>
                             {contactSyncTab && 
                                 <TabPanel value="3" sx={{ p: 0 }}>
-                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                    <Box sx={{ display: 'flex', px: 2, py: 3, flexDirection: 'column', gap: '16px' }}>
                                         <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
-                                                <Image src='/mailchimp-icon.svg' alt='mailchimp' height={26} width={32} />
+                                                <Image src={activeImageService} alt={activeService ?? "service"} height={26} width={32} />
                                                 <Typography variant="h6" className='first-sub-title'>Contact sync</Typography>
                                                 <Tooltip title="Sync data with list" placement="right">
                                                     <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
@@ -1515,7 +1179,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                     minWidth: '196px'
                                                 }
                                             }}>
-                                                <Image src='/meta-icon.svg' alt='meta-icon' height={20} width={30} />
+                                                <Image src={activeImageService} alt={activeService ?? "img service"} height={20} width={30} />
                                             </Grid>
                                             <Grid item xs="auto" sm={1}>&nbsp;</Grid>
                                         </Grid>
@@ -1938,7 +1602,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                             >
                                 <Button
                                     variant="contained"
-                                    onClick={onClose}
+                                    onClick={handleClosePopup}
                                     className='second-sub-title'
                                     sx={{
                                         color: "rgba(80, 82, 178, 1) !important",
@@ -1974,13 +1638,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                     </Box>
                 </Box>
             </Drawer>
-
-            {/* Data Sync */}
-            <ConnectSalesForce data={null} open={salesForceIconPopupOpen} onClose={handleSalesForceIconPopupClose} />
-            <ConnectMeta data={null} open={metaIconPopupOpen} onClose={handleMetaIconPopupClose} isEdit={false} />
-            <HubspotDataSync open={hubspotIconPopupOpen} onClose={handleHubspotIconPopupOpenClose} isEdit={false} data={null} />
-            <MailchimpDatasync open={mailchimpIconPopupOpen} onClose={handleMailchimpIconPopupIconClose} data={null} />
-            <GoogleADSDatasync open={googleAdsIconPopupOpen} onClose={handleGoogleAdsIconPopupIconClose} data={null} isEdit={false} />
 
             {/* Add Integration */}
             <GoogleADSConnectPopup 

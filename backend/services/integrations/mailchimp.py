@@ -9,7 +9,7 @@ import hashlib
 from fastapi import HTTPException
 from datetime import datetime, timedelta
 from schemas.integrations.mailchimp import MailchimpProfile
-from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
+from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, DataSyncType
 import json
 from utils import format_phone_number
 from utils import extract_first_email, validate_and_format_phone
@@ -192,7 +192,7 @@ class MailchimpIntegrationsService:
             'list_name': list_name,
             'domain_id': domain_id,
             'sent_contacts': sent_contacts,
-            'sync_type': "audience",
+            'sync_type': DataSyncType.AUDIENCE,
             'smart_audience_id': smart_audience_id,
             'data_map': data_map,
             'created_by': created_by,
