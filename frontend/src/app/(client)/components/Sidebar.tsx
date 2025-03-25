@@ -280,46 +280,23 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
     const isActive = (path: string) => pathname.startsWith(path);
 
     const [open, setOpen] = useState(false);
-    const isPixelActive = isActive('/leads') || isActive('/company') || isActive('/suppressions');
+    const isPixelActive = isActive('/leads') || isActive('/company') || isActive('/suppressions') || isActive('/dashboard');
     const handleClick = () => {
         setOpen(!open);
     };
 
     return (
         <Box sx={containerStyles(hasNotification).container} >
+            {/* Audience-dashboard */}
             <List sx={sidebarStyles.menu}>
-                <ListItem button onClick={() => handleNavigation('/dashboard')} sx={isActive('/dashboard') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                <ListItem button onClick={() => handleNavigation('/audience-dashboard')} sx={isActive('/audience-dashboard') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <SpaceDashboardIcon />
                     </ListItemIcon>
                     <ListItemText primary="Dashboard" />
                 </ListItem>
-                <ListItem button onClick={() => handleNavigation('/sources')} sx={isActive(`/sources`) ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
-                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <AllInboxIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Sources" />
-                </ListItem>
-                <ListItem button onClick={() => handleNavigation('/lookalikes')} sx={isActive(`/lookalikes`) ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
-                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <ContactsIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Lookalikes" />
-                </ListItem>
-                <ListItem button onClick={() => handleNavigation('/smart-audiences')} sx={isActive(`/smart-audiences`) ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
-                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <AutoFixHighIcon sx={{rotate:'275deg', mb:1}}/>
-                    </ListItemIcon>
-                    <ListItemText primary="Smart Audiences" sx={{ whiteSpace: 'nowrap' }} />
-                </ListItem>
-                <ListItem button onClick={() => handleNavigation('/data-sync')} sx={isActive('/data-sync') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
-                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <CategoryIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Data Sync" />
-                </ListItem>
-                 {/* PIXEL */}
-                 <List sx={{ width: 250, p: 0 }}>
+                {/* PIXEL */}
+                <List sx={{ width: 250, p: 0 }}>
                     <ListItem 
                     button 
                     onClick={handleClick} 
@@ -340,6 +317,18 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                 </ListItem>
                     <Collapse in={open} timeout="auto" unmountOnExit>
                         <List component="div" disablePadding>
+                            {/* Insights */}
+                            <ListItem 
+                                button 
+                                onClick={() => handleNavigation('/dashboard')} 
+                                sx={isActive('/dashboard') ? { ...sidebarStyles.activeItem, pl: 4 } : { ...sidebarStyles.ListItem, pl: 4 }}
+                            >
+                                <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                                    <LeadsIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="Insights" />
+                            </ListItem>
+                            
                             {/* Contacts */}
                             <ListItem 
                                 button 
@@ -378,12 +367,41 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                         </List>
                     </Collapse>
                 </List>
+                {/* Source */}
+                <ListItem button onClick={() => handleNavigation('/sources')} sx={isActive(`/sources`) ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                        <AllInboxIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Sources" />
+                </ListItem>
+                {/* Lookalikes */}
+                <ListItem button onClick={() => handleNavigation('/lookalikes')} sx={isActive(`/lookalikes`) ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                        <ContactsIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Lookalikes" />
+                </ListItem>
+                {/* Smart-audience */}
+                <ListItem button onClick={() => handleNavigation('/smart-audiences')} sx={isActive(`/smart-audiences`) ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                        <AutoFixHighIcon sx={{rotate:'275deg', mb:1}}/>
+                    </ListItemIcon>
+                    <ListItemText primary="Smart Audiences" sx={{ whiteSpace: 'nowrap' }} />
+                </ListItem>
+                {/* Data-synce */}
+                <ListItem button onClick={() => handleNavigation('/data-sync')} sx={isActive('/data-sync') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                        <CategoryIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Data Sync" />
+                </ListItem>
                 {/* <ListItem button onClick={() => handleNavigation('/prospect')} sx={isActive('/prospect') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <Image src="/profile-circle-filled.svg" alt="profile-circle" height={20} width={20} />
                     </ListItemIcon>
                     <ListItemText primary="Prospect" />
                 </ListItem> */}
+                {/* integrations */}
                 <ListItem button onClick={() => handleNavigation('/integrations')} sx={isActive('/integrations') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <IntegrationsIcon />
@@ -396,6 +414,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                     </ListItemIcon>
                     <ListItemText primary="Analytics" />
                 </ListItem> */}
+                {/* partners */}
                 {isPartnerAvailable && <ListItem button onClick={() => handleNavigation('/partners')} sx={isActive('/partners') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <AccountBoxIcon />

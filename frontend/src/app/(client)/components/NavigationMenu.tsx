@@ -344,59 +344,21 @@ const NavigationMenu: React.FC<NavigationProps> = ({ NewRequestNotification }) =
           </ListItem>
         }
 
-          <ListItem button onClick={() => handleNavigation('/dashboard')}
+          <ListItem button onClick={() => handleNavigation('/audience-dashboard')}
             sx={{
-              ...(isActive('/dashboard') ? navigationmenuStyles.activeItem : {}),
+              ...(isActive('/audience-dashboard') ? navigationmenuStyles.activeItem : {}),
               ...navigationmenuStyles.mobileDrawerList
             }}>
             <ListItemIcon><DashboardIcon /></ListItemIcon>
             <ListItemText
               primary="Dashboard" />
           </ListItem>
-          <ListItem button onClick={() => handleNavigation('/sources')}
-            sx={{
-              ...(isActive('/sources') ? navigationmenuStyles.activeItem : {}),
-              ...navigationmenuStyles.mobileDrawerList
-            }}>
-            <ListItemIcon><AllInboxIcon /></ListItemIcon>
-            <ListItemText
-              primary="Sources" />
-          </ListItem>
-          <ListItem button onClick={() => handleNavigation('/lookalikes')}
-            sx={{
-              ...(isActive('/lookalikes') ? navigationmenuStyles.activeItem : {}),
-              ...navigationmenuStyles.mobileDrawerList
-            }}>
-            <ListItemIcon><ContactsIcon /></ListItemIcon>
-            <ListItemText
-              primary="Lookalikes" />
-          </ListItem>
-          <ListItem button onClick={() => handleNavigation('/smart-audiences')}
-            sx={{
-              ...(isActive('/smart-audiences') ? navigationmenuStyles.activeItem : {}),
-              ...navigationmenuStyles.mobileDrawerList
-            }}>
-            <ListItemIcon>
-              <Image src={ isActive(`/smart-audiences`) ? "./magic-stick_active.svg" : "./magic-stick.svg"} alt="Smart Audiences" width={22} height={22}/>
-            </ListItemIcon>
-            <ListItemText
-              primary="Smart Audiences"/>
-          </ListItem>
-          <ListItem button onClick={() => handleNavigation('/data-sync')}
-            sx={{
-              ...(isActive('/data-sync') ? navigationmenuStyles.activeItem : {}),
-              ...navigationmenuStyles.mobileDrawerList
-            }}>
-            <ListItemIcon>
-              <CategoryIcon />
-            </ListItemIcon>
-            <ListItemText primary="Data Sync" />
-          </ListItem>
           <ListItem
             button
             onClick={handleTogglePixel}
             sx={{
               ...((isActive('/pixel') ||
+                  isActive('/dashboard') ||
                   isActive('/leads') ||
                   isActive('/company') ||
                   isActive('/supression')) 
@@ -417,6 +379,20 @@ const NavigationMenu: React.FC<NavigationProps> = ({ NewRequestNotification }) =
 
           <Collapse in={openPixel} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
+            <ListItem
+                button
+                onClick={() => handleNavigation('/dashboard')}
+                sx={{
+                  ...(isActive('/dashboard') ? navigationmenuStyles.activeItem : {}),
+                  ...navigationmenuStyles.mobileDrawerList,
+                  pl: 4,
+                }}
+              >
+                <ListItemIcon>
+                  <LeadsIcon />
+                </ListItemIcon>
+                <ListItemText primary="Insights" />
+              </ListItem>
               <ListItem
                 button
                 onClick={() => handleNavigation('/leads')}
@@ -461,6 +437,45 @@ const NavigationMenu: React.FC<NavigationProps> = ({ NewRequestNotification }) =
               </ListItem>
             </List>
           </Collapse>
+          <ListItem button onClick={() => handleNavigation('/sources')}
+            sx={{
+              ...(isActive('/sources') ? navigationmenuStyles.activeItem : {}),
+              ...navigationmenuStyles.mobileDrawerList
+            }}>
+            <ListItemIcon><AllInboxIcon /></ListItemIcon>
+            <ListItemText
+              primary="Sources" />
+          </ListItem>
+          <ListItem button onClick={() => handleNavigation('/lookalikes')}
+            sx={{
+              ...(isActive('/lookalikes') ? navigationmenuStyles.activeItem : {}),
+              ...navigationmenuStyles.mobileDrawerList
+            }}>
+            <ListItemIcon><ContactsIcon /></ListItemIcon>
+            <ListItemText
+              primary="Lookalikes" />
+          </ListItem>
+          <ListItem button onClick={() => handleNavigation('/smart-audiences')}
+            sx={{
+              ...(isActive('/smart-audiences') ? navigationmenuStyles.activeItem : {}),
+              ...navigationmenuStyles.mobileDrawerList
+            }}>
+            <ListItemIcon>
+              <Image src={ isActive(`/smart-audiences`) ? "./magic-stick_active.svg" : "./magic-stick.svg"} alt="Smart Audiences" width={22} height={22}/>
+            </ListItemIcon>
+            <ListItemText
+              primary="Smart Audiences"/>
+          </ListItem>
+          <ListItem button onClick={() => handleNavigation('/data-sync')}
+            sx={{
+              ...(isActive('/data-sync') ? navigationmenuStyles.activeItem : {}),
+              ...navigationmenuStyles.mobileDrawerList
+            }}>
+            <ListItemIcon>
+              <CategoryIcon />
+            </ListItemIcon>
+            <ListItemText primary="Data Sync" />
+          </ListItem>
           {/* <ListItem button onClick={() => handleNavigation('/prospect')}
           sx={{
             ...(isActive('/prospect') ? navigationmenuStyles.activeItem : {}),
