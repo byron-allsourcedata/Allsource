@@ -33,6 +33,7 @@ interface AudiencePopupProps {
     integrationsList?: string[];
     id?: string
     activeSegmentRecords?: number
+    isDownloadAction: boolean
 }
 
 interface ListItem {
@@ -144,7 +145,7 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
     },
   }));
 
-const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrationsList: integ = [], id, activeSegmentRecords }) => {
+const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrationsList: integ = [], id, activeSegmentRecords = 0, isDownloadAction }) => {
     const { triggerSync } = useIntegrationContext();
     const integrationsList = ["CSV", "s3", ...integ]
     const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -261,6 +262,15 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     //         fetchData();
     //     }
     // }, [open]);
+
+    useEffect(() => {
+        if (isDownloadAction) {
+            setValue("3")
+        }
+        else {
+            setValue("1")
+        }
+    }, [isDownloadAction])
     
 
     useEffect(() => {
@@ -704,8 +714,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         { image: 's3.svg', service_name: 's3' }
       ];
 
-      const [valueContactSync, setValueContactSync] = useState<number>();
-      const maxContacts = activeSegmentRecords ?? 0;
+      const [valueContactSync, setValueContactSync] = useState<number>(0);
+      const maxContacts = activeSegmentRecords;
     
       const handleSliderChange = (event: Event, newValue: number | number[]) => {
         setValueContactSync(newValue as number);
@@ -834,7 +844,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                     display: 'flex',
                     borderRadius: '4px',
                     cursor: is_integrated ? 'default' : 'pointer',
-                    // width: '8rem',
                     width: '100%',
                     height: '8rem',
                     filter: !is_integrated ? 'grayscale(1)' : 'none',

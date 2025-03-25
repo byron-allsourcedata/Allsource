@@ -135,6 +135,7 @@ const SmartAudiences: React.FC = () => {
 
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const isOpeMorePopover = Boolean(anchorEl);
+    const [isDownloadAction, setIsDownloadAction] = useState(false);
 
     const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 
@@ -1208,6 +1209,13 @@ const SmartAudiences: React.FC = () => {
                                                                                         }}>
                                                                                             <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Sync" />
                                                                                         </ListItemButton>
+                                                                                        <ListItemButton sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
+                                                                                            setIsDownloadAction(true)
+                                                                                            handleCloseMorePopover()
+                                                                                            handleDataSyncPopupOpen()
+                                                                                        }}>
+                                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Download" />
+                                                                                        </ListItemButton>
                                                                                         <ListItemButton
                                                                                             sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }}
                                                                                             onClick={() => {
@@ -1337,6 +1345,7 @@ const SmartAudiences: React.FC = () => {
                                         activeSegmentRecords={selectedRowData?.active_segment_records}
                                         onClose={handleDataSyncPopupClose}
                                         integrationsList={selectedRowData?.integrations}
+                                        isDownloadAction={isDownloadAction}
                                     />
                                     <FilterPopup open={filterPopupOpen}
                                         onClose={handleFilterPopupClose}
