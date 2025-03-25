@@ -25,7 +25,9 @@ import MailchimpDatasync from '../app/(client)/data-sync/components/MailchimpDat
 import SlackDatasync from '../app/(client)/data-sync/components/SlackDataSync';
 import GoogleADSDatasync from '../app/(client)/data-sync/components/GoogleADSDataSync';
 import SendlaneConnect from './SendlaneConnect';
+import S3Connect from './S3Connect';
 import SendlaneDatasync from '../app/(client)/data-sync/components/SendlaneDatasync';
+import S3Datasync from '../app/(client)/data-sync/components/S3Datasync';
 import WebhookDatasync from '../app/(client)/data-sync/components/WebhookDatasync';
 import ZapierDataSync from '../app/(client)/data-sync/components/ZapierDataSync';
 import ConnectHubspot from '../app/(client)/data-sync/components/HubspotDataSync';
@@ -85,8 +87,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [googleAdsIconPopupOpen, setOpenGoogleAdsIconPopup] = useState(false)
     const [openMailchimpConnect, setOpenmailchimpConnect] = useState(false)
     const [openSendlaneIconPopupOpen, setOpenSendlaneIconPopupOpen] = useState(false)
+    const [openS3IconPopupOpen, setOpenS3IconPopupOpen] = useState(false)
     const [openWebhookIconPopupOpen, setOpenWebhookIconPopupOpen] = useState(false)
     const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
+    const [openS3Connect, setOpenS3Connect] = useState(false)
     const [openZapierDataSync, setOpenZapierDataSync] = useState(false)
     const [openZapierConnect, setOpenZapierConnect] = useState(false)
     const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false)
@@ -276,6 +280,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             case 'sendlane':
                 handleSendlaneIconPopupOpen()
                 break
+            case 's3':
+                handleS3IconPopupOpen()
+                break
             case 'slack':
                 handleSlackIconPopupIconOpen()
                 break
@@ -294,12 +301,20 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setOpenSendlaneIconPopupOpen(true)
     }
 
+    const handleS3IconPopupOpen = () => {
+        setOpenS3IconPopupOpen(true)
+    }
+
     const handleWebhookIconPopupOpen = () => {
         setOpenWebhookIconPopupOpen(true)
     }
 
     const handleSendlaneIconPopupClose = () => {
         setOpenSendlaneIconPopupOpen(false)
+    }
+
+    const handleS3IconPopupClose = () => {
+        setOpenS3IconPopupOpen(false)
     }
 
     const handleWebhookIconPopupClose = () => {
@@ -313,6 +328,15 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
     const handleSendlaneConnectClose = () => {
         setOpenSendlaneConnect(false)
+    }
+
+    const handleS3ConnectOpen = () => {
+        setIsInvalidApiKey(true)
+        setOpenS3Connect(true)
+    }
+
+    const handleS3ConnectClose = () => {
+        setOpenS3Connect(false)
     }
 
     const handleCreateKlaviyoOpen = () => {
@@ -858,6 +882,45 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                         </ListItemButton>
                                     </ListItem>
                                 )}
+                                {/* S3 */}
+                                {integrationsCredentials.some(integration => integration.service_name === 's3') && (
+                                    <ListItem sx={{
+                                        p: 0,
+                                        borderRadius: '4px',
+                                        border: selectedIntegration === 's3' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                        width: 'auto',
+                                        '@media (max-width:600px)': {
+                                            flexBasis: 'calc(50% - 8px)',
+                                        },
+                                    }}>
+                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 's3')?.is_failed
+                                            ? handleS3IconPopupOpen
+                                            : handleS3ConnectOpen
+                                        } sx={{
+                                            p: 0,
+                                            flexDirection: 'column',
+                                            px: 3,
+                                            py: 1.5,
+                                            width: '102px',
+                                            height: '72px',
+                                            justifyContent: 'center',
+                                            backgroundColor: selectedIntegration === 's3' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
+                                        }}>
+                                            <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                <Image src="/s3-icon.svg" alt="s3" height={26} width={32} />
+                                            </ListItemIcon>
+                                            <ListItemText primary="S3" primaryTypographyProps={{
+                                                sx: {
+                                                    fontFamily: "Nunito Sans",
+                                                    fontSize: "14px",
+                                                    color: "#4a4a4a",
+                                                    fontWeight: "500",
+                                                    lineHeight: "20px",
+                                                },
+                                            }} />
+                                        </ListItemButton>
+                                    </ListItem>
+                                )}
                                 {integrationsCredentials.some(integration => integration.service_name === 'zapier') && (
                                     <ListItem sx={{
                                         p: 0,
@@ -935,6 +998,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             <OnmisendDataSync open={omnisendIconPopupOpen} onClose={handleOmnisendIconPopupOpenClose} isEdit={false} data={null} />
             <HubspotDataSync open={hubspotIconPopupOpen} onClose={handleHubspotIconPopupOpenClose} isEdit={false} data={null} />
             <SendlaneDatasync open={openSendlaneIconPopupOpen} onClose={handleSendlaneIconPopupClose} data={null} isEdit={false} />
+            <S3Datasync open={openS3IconPopupOpen} onClose={handleS3IconPopupClose} data={null} isEdit={false} />
             <WebhookDatasync open={openWebhookIconPopupOpen} onClose={handleWebhookIconPopupClose} data={null} isEdit={false} />
             <MailchimpDatasync open={mailchimpIconPopupOpen} onClose={handleMailchimpIconPopupIconClose} data={null} />
             <SlackDatasync open={slackIconPopupOpen} onClose={handleSlackIconPopupIconClose} data={null} isEdit={false} />
@@ -951,6 +1015,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             <BingAdsIntegrationPopup open={createBingAds} handleClose={handleCreateBingAdsClose} onSave={handleSaveSettings} invalid_api_key={isInvalidApiKey} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'bing_ads')?.access_token} />
             <SalesForceIntegrationPopup open={createSalesForce} handleClose={handleCreateSalesForceClose} onSave={handleSaveSettings} invalid_api_key={isInvalidApiKey} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sales_force')?.access_token} />
             <MailchimpConnect onSave={handleSaveSettings} open={openMailchimpConnect} handleClose={handleOpenMailchimpConnectClose} invalid_api_key={isInvalidApiKey} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'mailchimp')?.access_token} />
+            <S3Connect open={openS3Connect} handleClose={handleS3ConnectClose} onSave={handleSaveSettings} invalid_api_key={isInvalidApiKey} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 's3')?.access_token} />
             <SendlaneConnect open={openSendlaneConnect} handleClose={handleSendlaneConnectClose} onSave={handleSaveSettings} invalid_api_key={isInvalidApiKey} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sendlane')?.access_token} />
             <OmnisendConnect open={openOmnisendConnect} handleClose={handleOmnisendConnectClose} onSave={handleSaveSettings} invalid_api_key={isInvalidApiKey} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'omnisend')?.access_token} />
             <HubspotIntegrationPopup open={createHubspot} handleClose={() => setCreateHubspot(false)} onSave={handleSaveSettings} invalid_api_key={isInvalidApiKey} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'hubspot')?.access_token} />

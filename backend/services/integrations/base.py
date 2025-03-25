@@ -16,6 +16,7 @@ from enums import ProccessDataSyncResult
 from datetime import datetime, timedelta
 from utils import extract_first_email, format_phone_number
 from .sendlane import SendlaneIntegrationService
+from .s3 import S3IntegrationService
 from persistence.user_persistence import UserPersistence
 from .slack import SlackService
 from .million_verifier import MillionVerifierIntegrationsService
@@ -210,6 +211,13 @@ class IntegrationService:
                                                 self.lead_persistence,
                                                 self.integrations_user_sync_persistence,
                                                 self.client, self.million_verifier_integrations)
+        
+        self.s3 = S3IntegrationService(domain_persistence=self.domain_persistence, 
+                                                integrations_persistence=self.integration_persistence,  
+                                                leads_persistence=self.lead_persistence,
+                                                sync_persistence=self.integrations_user_sync_persistence,
+                                                client=self.client, million_verifier_integrations=self.million_verifier_integrations)
+        
         self.attentive = AttentiveIntegrationsService(self.domain_persistence,
                                                       self.integrations_user_sync_persistence,
                                                       self.client)
