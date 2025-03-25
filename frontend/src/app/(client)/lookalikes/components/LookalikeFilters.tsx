@@ -14,6 +14,7 @@ import Image from 'next/image';
 import { filterStyles } from '@/css/filterSlider';
 import debounce from 'lodash/debounce';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
+import ExpandableCheckboxFilter from '../../sources/components/ExpandableCheckboxFilter';
 
 
 interface FilterPopupProps {
@@ -29,10 +30,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   const [selectedSize, setSelectedSize] = useState<string[]>([]);
   const [buttonFilters, setButtonFilters] = useState<ButtonFilters>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [openSelect, setOpenSelect] = useState(false);
-
-
-
 
   type ButtonFilters = {
     button: string;
@@ -89,33 +86,18 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
 
   const [checkedFiltersTypes, setcheckedFiltersTypes] = useState<Record<string, boolean>>({});
 
-  const handleClose = () => {
-    setOpenSelect(false);
-  };
-
-  const handleOpen = () => {
-    setOpenSelect(true);
-  };
-
-  const handleTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { value, checked } = event.target;
-
+  const handleTypeChange = (option: string) => {
     setcheckedFiltersTypes((prev) => ({
       ...prev,
-      [value]: checked
+      [option]: !prev[option]
     }));
   };
-
-
+  
   const handleMenuItemClick = (item: string) => {
     setcheckedFiltersTypes((prevState) => ({
       ...prevState,
       [item]: !prevState[item],
     }));
-
-    handleTypeChange({
-      target: { value: item, checked: !checkedFiltersTypes[item] },
-    } as React.ChangeEvent<HTMLInputElement>);
   };
 
   const isTypesFilterActive = () => {
@@ -402,65 +384,21 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               </IconButton>
             </Box>
             <Collapse in={isLookalikeType}>
-              <Box sx={{ ...filterStyles.filter_dropdown, height: openSelect ? 250 : 50 }}>
-                <FormControl fullWidth>
-                  <Select
-                    multiple
-                    open={openSelect}
-                    onClose={handleClose}
-                    onOpen={handleOpen}
-                    value={Object.keys(checkedFiltersTypes).filter((key) => checkedFiltersTypes[key])}
-                    displayEmpty
-                    sx={{ maxHeight: '56px', pt: 1 }}
-                    renderValue={() => (
-                      <Typography className="table-data" sx={{ fontSize: '14px !important' }}>
-                        Select Type
-                      </Typography>
-                    )}
-                    MenuProps={{
-                      PaperProps: {
-                        style: {
-                          maxHeight: 200,
-                          maxWidth: 80,
-                          marginLeft: 8,
-                        },
-                      },
-                    }}
-                  >
-                    {["Customer Conversions", "Lead Failures", "Interest", "Visitor", "Viewed Product", "Abandoned Cart", "Converted sales"].map((item) => (
-                      <MenuItem
-                        key={item}
-                        value={item}
-                        sx={{ maxHeight: '40px', pl: 0, padding: 0, marginTop: 0, marginBottom: 0 }}
-                        onClick={() => handleMenuItemClick(item)}
-                      >
-                        <Checkbox
-                          checked={checkedFiltersTypes[item] || false}
-                          onChange={handleTypeChange}
-                          value={item}
-                          size="small"
-                          sx={{
-                            "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
-                          }}
-                        />
-                        <ListItemText>
-                          <Typography
-                            sx={{
-                              fontSize: "14px",
-                              fontFamily: "Nunito Sans",
-                              fontWeight: 500,
-                              lineHeight: "19.6px",
-                              color: checkedFiltersTypes[item] ? "rgba(80, 82, 178, 1)" : "rgba(32, 33, 36, 1)",
-                            }}
-                          >
-                            {item}
-                          </Typography>
-                        </ListItemText>
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Box>
+              <ExpandableCheckboxFilter
+                selectedOptions={Object.keys(checkedFiltersTypes).filter((key) => checkedFiltersTypes[key])}
+                allowedOptions={[
+                  "Customer Conversions",
+                  "Lead Failures",
+                  "Interest",
+                  "Visitor",
+                  "Viewed Product",
+                  "Abandoned Cart",
+                  "Converted sales"
+                ]}
+                onOptionToggle={handleTypeChange}
+                placeholder="Select Type"
+                sx={{ pt: 1, pl: 2 }}
+              />
             </Collapse>
           </Box>
           {/* Lookalike Size */}

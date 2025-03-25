@@ -36,6 +36,7 @@ import InsertInvitationIcon from "@mui/icons-material/InsertInvitation";
 import AllInboxIcon from "@mui/icons-material/AllInbox";
 import DnsIcon from "@mui/icons-material/Dns";
 import { margin } from "@mui/system";
+import ExpandableCheckboxFilter from "./ExpandableCheckboxFilter";
 
 const csvTypes = ["Customer Conversions", "Failed Leads", "Interest"];
 const pixelTypes = [
@@ -1072,107 +1073,12 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                   )}
                 </IconButton>
               </Box>
-
               <Collapse in={isLeadFunnelOpen}>
-                <Box
-                  sx={{ pt: 1, pl: 2 }}
-                  onClick={() => setIsFieldOpen(!isFieldOpen)}
-                >
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      border: "1px solid rgba(220, 220, 239, 1)",
-                      borderRadius: "4px",
-                      padding: "5px 10px",
-                      cursor: "pointer",
-                      backgroundColor: "#fff",
-                    }}
-                    onClick={() =>
-                      setIsFieldOpen(!isFieldOpen)
-                    }
-                  >
-                    <Typography
-                      sx={{
-                        fontFamily: "Roboto",
-                        fontSize: "14px",
-                        fontWeight: 400,
-                        lineHeight: "19.6px",
-                        textAlign: "left",
-                        color: selectedTypes.length
-                          ? "rgba(220, 220, 239, 1)"
-                          : "#5F6368",
-                      }}
-                    >
-                      {selectedTypes.length > 0
-                        ? selectedTypes.join(", ")
-                        : "Select Type"}
-                    </Typography>
-                    <IconButton size="small">
-                      {isFieldOpen ? (
-                        <ExpandLessIcon />
-                      ) : (
-                        <ExpandMoreIcon />
-                      )}
-                    </IconButton>
-                  </Box>
-                </Box>
-                <Collapse in={isFieldOpen}>
-                  <Box sx={{ pt: "2px", pl: 2 }}>
-                    <FormGroup
-                      sx={{
-                        border: "1px solid rgba(220, 220, 239, 1)",
-                        borderRadius: "4px",
-                        pl: 2,
-                      }}
-                    >
-                      {getAllowedTypes().map((label) => (
-                        <FormControlLabel
-                          sx={{
-                            fontFamily:
-                              "Nunito Sans",
-                            fontWeight: 100,
-                          }}
-                          key={label}
-                          control={
-                            <Checkbox
-                              checked={selectedTypes.includes(
-                                label
-                              )}
-                              onChange={() =>
-                                handleCheckboxChange(
-                                  label
-                                )
-                              }
-                              size="small"
-                              sx={{
-                                "&.Mui-checked":
-                                {
-                                  color: "rgba(80, 82, 178, 1)",
-                                },
-                              }}
-                            />
-                          }
-                          label={
-                            <Typography
-                              className="table-data"
-                              sx={{
-                                color: selectedTypes.includes(
-                                  label
-                                )
-                                  ? "rgba(80, 82, 178, 1) !important"
-                                  : "rgba(74, 74, 74, 1)",
-                              }}
-                            >
-                              {label}
-                            </Typography>
-                          }
-                        />
-                      ))}
-                    </FormGroup>
-                  </Box>
-                </Collapse>
+                <ExpandableCheckboxFilter selectedOptions={selectedTypes}
+                    allowedOptions={getAllowedTypes()}
+                    onOptionToggle={handleCheckboxChange}
+                    placeholder="Select Type" 
+                    sx={{ pt: 1, pl: 2 }}/>
               </Collapse>
             </Box>
             {(selectedSource.length === 0 ||
@@ -1239,108 +1145,12 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                   </Box>
 
                   <Collapse in={isDomainFilterOpen}>
-                    <Box
-                      sx={{ pt: 1, pl: 2 }}
-                      onClick={() =>
-                        setIsFieldDomainOpen(
-                          !isFieldDomainOpen
-                        )
-                      }
-                    >
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          border: "1px solid rgba(220, 220, 239, 1)",
-                          borderRadius: "4px",
-                          padding: "5px 10px",
-                          cursor: "pointer",
-                          backgroundColor: "#fff",
-                        }}
-                        onClick={() =>
-                          setIsFieldDomainOpen(
-                            !isFieldDomainOpen
-                          )
-                        }
-                      >
-                        <Typography
-                          sx={{
-                            fontFamily: "Roboto",
-                            fontSize: "14px",
-                            fontWeight: 400,
-                            lineHeight: "19.6px",
-                            textAlign: "left",
-                            color: selectedDomains.length
-                              ? "rgba(220, 220, 239, 1)"
-                              : "#5F6368",
-                          }}
-                        >
-                          {isDomainActive()
-                            ? selectedDomains.join(", ")
-                            : "Select Domain"}
-                        </Typography>
-                        <IconButton size="small">
-                          {isFieldDomainOpen ? (
-                            <ExpandLessIcon />
-                          ) : (
-                            <ExpandMoreIcon />
-                          )}
-                        </IconButton>
-                      </Box>
-                    </Box>
-
-                    <Collapse in={isFieldDomainOpen}>
-                      <Box sx={{ pt: "2px", pl: 2 }}>
-                        <FormGroup
-                          sx={{
-                            border: "1px solid rgba(220, 220, 239, 1)",
-                            borderRadius: "4px",
-                            pl: 2,
-                          }}
-                        >
-                          {domains.map((domain) => (
-        <FormControlLabel
-          sx={{
-            fontFamily: "Nunito Sans",
-            fontWeight: 100,
-          }}
-          key={domain}
-          control={
-            <Checkbox
-              checked={selectedDomains.includes(domain)}
-              onChange={() => handleDomainCheckboxChange(domain)}
-              size="small"
-              sx={{
-                "&.Mui-checked": {
-                  color: "rgba(80, 82, 178, 1)",
-                },
-              }}
-            />
-          }
-          label={
-            <Typography
-              className="table-data"
-              sx={{
-                color: selectedDomains.includes(domain)
-                  ? "rgba(80, 82, 178, 1) !important"
-                  : "rgba(74, 74, 74, 1)",
-              }}
-            >
-              {domain}
-            </Typography>
-          }
-        />
-      ))}
-
-      {hasMore && (
-        <Button onClick={loadMoreDomains} sx={{ marginTop: "10px", color: "rgba(74, 74, 74, 1)" }}>
-          Load More Domains
-        </Button>
-      )}
-                        </FormGroup>
-                      </Box>
-                    </Collapse>
+                  <ExpandableCheckboxFilter
+                    selectedOptions={selectedDomains}
+                    allowedOptions={domains}
+                    onOptionToggle={handleDomainCheckboxChange}
+                    placeholder="Select Domain"
+                    sx={{ pt: 1, pl: 2 }}/>
                   </Collapse>
                 </Box>
               )}
