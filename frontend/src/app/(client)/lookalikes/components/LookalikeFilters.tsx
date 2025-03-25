@@ -14,7 +14,7 @@ import Image from 'next/image';
 import { filterStyles } from '@/css/filterSlider';
 import debounce from 'lodash/debounce';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
-import ExpandableCheckboxFilter from '../../sources/components/ExpandableCheckboxFilter';
+import ExpandableCheckboxFilter from '@/components/filters/ExpandableCheckboxFilter';
 
 
 interface FilterPopupProps {

@@ -33,6 +33,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CheckIcon from '@mui/icons-material/Check'; 
 import LeadsIcon from '@mui/icons-material/People';
 import LegendToggleIcon from '@mui/icons-material/LegendToggle';
+import InsightsIcon from '@mui/icons-material/Insights';
 
 const navigationmenuStyles = {
   mobileMenuHeader: {
@@ -389,7 +390,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({ NewRequestNotification }) =
                 }}
               >
                 <ListItemIcon>
-                  <LeadsIcon />
+                  <InsightsIcon />
                 </ListItemIcon>
                 <ListItemText primary="Insights" />
               </ListItem>

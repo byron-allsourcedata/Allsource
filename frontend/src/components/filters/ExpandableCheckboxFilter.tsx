@@ -11,6 +11,33 @@ interface ExpandableCheckboxFilterProps {
   sx?: SxProps<Theme>;
 }
 
+/**
+ * ExpandableCheckboxFilter Component
+ *
+ * A collapsible filter component that displays a list of checkboxes inside a dropdown.
+ * Users can toggle options and the selected values will be displayed in the dropdown header.
+ *
+ * @component
+ * @param {ExpandableCheckboxFilterProps} props - The properties that define the behavior and appearance of the component.
+ *
+ * @property {string[]} selectedOptions - 
+ * An array of currently selected options. Used to determine which checkboxes are checked.
+ *
+ * @property {string[]} allowedOptions - 
+ * An array of available options that can be selected.
+ *
+ * @property {(option: string) => void} onOptionToggle - 
+ * A callback function triggered when a checkbox is clicked. 
+ * Receives the selected option as an argument.
+ *
+ * @property {string} [placeholder="Select Option"] - 
+ * A placeholder text displayed when no options are selected.
+ * Defaults to `"Select Option"`.
+ *
+ * @property {SxProps<Theme>} [sx={}] - 
+ * Optional styling prop that allows overriding the default styles of the component.
+ * Accepts Material-UI's `SxProps<Theme>` type.
+ */
 const ExpandableCheckboxFilter: React.FC<ExpandableCheckboxFilterProps> = ({
   selectedOptions,
   allowedOptions,

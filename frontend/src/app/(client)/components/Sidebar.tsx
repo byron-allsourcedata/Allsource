@@ -21,6 +21,7 @@ import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import LegendToggleIcon from '@mui/icons-material/LegendToggle';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import InsightsIcon from '@mui/icons-material/Insights';
 import { display } from '@mui/system';
 
 const sidebarStyles = {
@@ -324,7 +325,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                                 sx={isActive('/dashboard') ? { ...sidebarStyles.activeItem, pl: 4 } : { ...sidebarStyles.ListItem, pl: 4 }}
                             >
                                 <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                                    <LeadsIcon />
+                                    <InsightsIcon />
                                 </ListItemIcon>
                                 <ListItemText primary="Insights" />
                             </ListItem>

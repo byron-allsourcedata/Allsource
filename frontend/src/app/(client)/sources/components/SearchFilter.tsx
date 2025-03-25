@@ -36,7 +36,8 @@ import InsertInvitationIcon from "@mui/icons-material/InsertInvitation";
 import AllInboxIcon from "@mui/icons-material/AllInbox";
 import DnsIcon from "@mui/icons-material/Dns";
 import { margin } from "@mui/system";
-import ExpandableCheckboxFilter from "./ExpandableCheckboxFilter";
+import ExpandableCheckboxFilter from '@/components/filters/ExpandableCheckboxFilter';
+import ToggleButtons from "@/components/filters/ToggleButtons";
 
 const csvTypes = ["Customer Conversions", "Failed Leads", "Interest"];
 const pixelTypes = [
@@ -104,7 +105,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
   // Selected Type
   const [isLeadFunnelOpen, setIsLeadFunnelOpen] = useState<boolean>(false);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [isFieldOpen, setIsFieldOpen] = useState<boolean>(false);
   const handleRemoveLabel = (label: string) => {
     setSelectedTypes((prevSelected) =>
       prevSelected.filter((item) => item !== label)
@@ -123,7 +123,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
   const [isDomainFilterOpen, setIsDomainFilterOpen] =
     useState<boolean>(false);
   const [selectedDomains, setSelectedDomains] = useState<string[]>([]);
-  const [isFieldDomainOpen, setIsFieldDomainOpen] = useState<boolean>(false);
 
   const handleRemoveDomain = (domain: string) => {
     setSelectedDomains((prevDomains) =>
@@ -959,65 +958,22 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                   )}
                 </IconButton>
               </Box>
-
+              
               <Collapse in={isSource}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: 2,
-                    pt: 1,
-                    pl: 2,
-                    pb: 0.75,
-                  }}
-                >
-                  {["CSV", "Pixel"].map((label) => {
-                    const mappedSource =
-                      sourceMapping[label];
-                    const isSelected =
-                      selectedSource.includes(
-                        mappedSource
-                      );
-
-                    return (
-                      <Button
-                        key={label}
-                        onClick={() =>
-                          handleButtonSourceClick(
-                            label
-                          )
-                        }
-                        className="second-sub-title"
-                        sx={{
-                          width: "calc(25% - 5px)",
-                          height: "2em",
-                          textTransform: "none",
-                          textWrap: "nowrap",
-                          padding: "5px 0px",
-                          gap: "10px",
-                          textAlign: "center",
-                          borderRadius: "4px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          border: isSelected
-                            ? "1px solid rgba(80, 82, 178, 1)"
-                            : "1px solid rgba(220, 220, 239, 1)",
-                          color: isSelected
-                            ? "rgba(80, 82, 178, 1) !important"
-                            : "#5F6368 !important",
-                          backgroundColor: isSelected
-                            ? "rgba(237, 237, 247, 1)"
-                            : "rgba(255, 255, 255, 1)",
-                          lineHeight:
-                            "20px !important",
-                        }}
-                      >
-                        {label}
-                      </Button>
-                    );
-                  })}
-                </Box>
+              <ToggleButtons
+                buttonNames={["CSV", "Pixel"]}
+                buttonMapping={sourceMapping}
+                selectedButton={selectedSource}
+                handleButtonButtonClick={handleButtonSourceClick}
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 2,
+                  pt: 1,
+                  pl: 2,
+                  pb: 0.75,
+                }}
+              />
               </Collapse>
             </Box>
             {/* Type */}
