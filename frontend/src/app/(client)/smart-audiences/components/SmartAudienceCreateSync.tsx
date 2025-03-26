@@ -266,6 +266,54 @@ const defaultRowsMeta: Row[] = [
     { id: 8, type: 'Personal Zip', value: 'Personal Zip' }
 ];
 
+const defaultRowsHubspot: Row[] = [
+    { id: 1, type: 'Email', value: 'Email' },
+    { id: 3, type: 'First name', value: 'First name' },
+    { id: 4, type: 'Last name', value: 'Last Name' },
+    { id: 5, type: 'Phone', value: 'Phone' },
+    { id: 6, type: 'City', value: 'City' },
+    { id: 7, type: 'Gender', value: 'Gender' }
+];
+
+const customFieldsListHubspot = [
+    { type: 'Company', value: 'company_name' },
+    { type: 'Website', value: 'company_domain' },
+    { type: 'Lifecycle stage', value: 'lifecyclestage' },
+    { type: 'Job title', value: 'job_title' },
+    { type: 'Industry', value: 'primary_industry' },
+    { type: 'Annual revenue', value: 'company_revenue' },
+    { type: 'Linkedin url', value: 'linkedin_url' },
+    { type: 'Address', value: 'personal_address' },
+    { type: 'State', value: 'personal_state' },
+    { type: 'Zip', value: 'personal_zip' },
+];
+
+const defaultRowsSalesForce: Row[] = [
+    { id: 1, type: 'First Name', value: 'First Name' },
+    { id: 3, type: 'Last Name', value: 'Last Name' },
+    { id: 4, type: 'Email', value: 'Email' },
+    { id: 5, type: 'Phone', value: 'Phone' },
+    { id: 6, type: 'MobilePhone', value: 'MobilePhone' },
+    { id: 7, type: 'Company', value: 'Company' },
+    { id: 8, type: 'Title', value: 'Title' },
+    { id: 9, type: 'Industry', value: 'Industry' },
+    { id: 10, type: 'LeadSource', value: 'LeadSource' },
+    { id: 11, type: 'Street', value: 'Street' },
+    { id: 12, type: 'City', value: 'City' },
+    { id: 13, type: 'State', value: 'State' },
+    { id: 14, type: 'Country', value: 'Country' },
+    { id: 15, type: 'NumberOfEmployees', value: 'NumberOfEmployees' },
+    { id: 16, type: 'AnnualRevenue', value: 'AnnualRevenue' },
+    { id: 17, type: 'Description', value: 'Description' },
+];
+
+const defaultRowsGoogleAds: Row[] = [
+    { id: 1, type: 'Email', value: 'Email' },
+    { id: 2, type: 'Full name', value: 'Full name' },
+    { id: 3, type: 'Phone', value: 'Phone' },
+    { id: 4, type: 'Address', value: 'Address' }
+];
+
 const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrationsList: integ = [], id, activeSegmentRecords = 0, isDownloadAction }) => {
     const { triggerSync } = useIntegrationContext();
     const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
@@ -377,6 +425,20 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
             setContactSyncTab(true)
             fetchAdAccount()
             setRows(defaultRowsMeta)
+        }
+
+        if (service === "google_ads") {
+            setContactSyncTab(true)
+            setRows(defaultRowsGoogleAds)
+        }
+
+        if (service === "hubspot") {
+            setRows(defaultRowsHubspot)
+            setCustomFields(customFieldsListHubspot.map(field => ({ type: field.value, value: field.type })))
+        }
+
+        if (service === "sales_force") {
+            setRows(defaultRowsSalesForce)
         }
     };
 
