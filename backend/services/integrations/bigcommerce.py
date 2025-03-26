@@ -95,23 +95,16 @@ class BigcommerceIntegrationsService:
             credential.shop_domain = store_hash
             self.integrations_persistence.db.commit()
             return credential
-        common_integration = bool(os.getenv('COMMON_INTEGRATION'))
-        integration_data = {
+        integration = self.integrations_persistence.create_integration({
+            'domain_id': domain_id,
             'shop_domain': store_hash,
             'access_token': access_token,
             'full_name': user.get('full_name'),
             'service_name': SourcePlatformEnum.BIG_COMMERCE.value
-        }
-
-        if common_integration:
-            integration_data['user_id'] = user.get('id')
-        else:
-            integration_data['domain_id'] = domain_id
-            
-        integration = self.integrations_persistence.create_integration(integration_data)
-        
+        })
         if not integration:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
+        
         return integration
     
     def get_external_apps_installations_by_shop_hash(self, shop_hash):

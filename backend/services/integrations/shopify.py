@@ -400,31 +400,23 @@ class ShopifyIntegrationService:
             credential.shop_domain = shop_domain
             self.integration_persistence.db.commit()
             return
-            
-        common_integration = bool(os.getenv('COMMON_INTEGRATION'))
-        integration_data = {
+        credentials = {
+            'domain_id': domain_id, 
             'shop_domain': shop_domain,
             'access_token': access_token, 
             'service_name': SourcePlatformEnum.SHOPIFY.value
         }
-        
         if user:
-            integration_data['full_name'] = user.get('full_name')
+            credentials['full_name'] = user.get('full_name')
             
         if shop_id:
-            integration_data['shop_id'] = shop_id
+            credentials['shop_id'] = shop_id
 
-        if common_integration:
-            integration_data['user_id'] = user.get('id')
-        else:
-            integration_data['domain_id'] = domain_id
-            
-        integartion = self.integration_persistence.create_integration(integration_data)
-        
-        if not integartion:
+        integration = self.integration_persistence.create_integration(credentials)
+        if not integration:
             raise HTTPException(status_code=409, detail={'status': 'error', 'detail': {'message': 'Save integration failed'}})
 
-        return integartion
+        return integration
 
 
     def __save_customer(self, customer: ShopifyCustomer, user_id: int):
@@ -477,6 +469,26 @@ class ShopifyIntegrationService:
                     'currency_code': order.currency_code,
                     'platfrom_email': order.email
                 })
+
+    def create_sync(self, domain_id: int, 
+                    integration_id: int, 
+                    sync_type: str,  
+                    supression: bool,
+                    list_name: str,
+                    filter_by_contact_type: str, created_by: str):
+        data = {
+            'domain_id': domain_id,
+            'integration_id': integration_id,
+            'sync_type': sync_type,
+            'supression': supression,
+            'list_name': list_name,
+            'filter_by_contact_type': filter_by_contact_type,
+            'created_by': created_by
+        }
+
+        sync = self.integrations_user_sync_persistence.create_sync(data)
+        return {'status': 'Successfuly', 'detail': sync}
+    
 
     def __export_sync(self, domain_id: int):
         credential = self.get_credentials(domain_id)

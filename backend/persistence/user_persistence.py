@@ -132,8 +132,7 @@ class UserPersistence:
                 'is_stripe_connected': user.is_stripe_connected,
                 'stripe_connected_email': user.stripe_connected_email,
                 'stripe_connected_currently_due': user.stripe_connected_currently_due,
-                'partner_is_active': partner_is_active,
-                'api_key': user.api_key
+                'partner_is_active': partner_is_active
             }
         self.db.rollback()
         if result_as_object:
