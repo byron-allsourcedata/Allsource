@@ -44,7 +44,7 @@ class ZapierIntegrationService:
         return integartion
 
     def add_integrations(self, domain):
-        credentials = self.get_credentials(domain.id)
+        credentials = self.get_credentials(domain_id=domain.id, user_id=domain.user_id)
         if credentials:
             return
         new_integrations = self.__create_integrations(domain=domain)
