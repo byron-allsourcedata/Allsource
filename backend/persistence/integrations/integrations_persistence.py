@@ -76,9 +76,9 @@ class IntegrationsPresistence:
     def get_credential(self, **filter_by):
         return self.db.query(UserIntegration).filter_by(**filter_by).first()
     
-    def update_app_home_opened(self, slack_team_id, user_id):
+    def update_app_home_opened(self, slack_team_id):
         self.db.query(UserIntegration) \
-            .filter(UserIntegration.slack_team_id == slack_team_id, UserIntegration.user_id == user_id) \
+            .filter(UserIntegration.slack_team_id == slack_team_id) \
             .update({UserIntegration.app_home_opened: True}, synchronize_session='fetch')
         self.db.commit()
 

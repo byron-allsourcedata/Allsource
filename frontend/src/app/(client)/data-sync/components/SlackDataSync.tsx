@@ -172,15 +172,13 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         setLoading(true);
         try {
             let list: ChannelList | null = null;
-            if (!listName) {
-                if (selectedOption && selectedOption.id === '-1') {
-                    list = await createNewList();
-                } else if (selectedOption) {
-                    list = selectedOption;
-                } else {
-                    showToast('Please select a valid option.');
-                    return;
-                }
+            if (selectedOption && selectedOption.id === '-1') {
+                list = await createNewList();
+            } else if (selectedOption) {
+                list = selectedOption;
+            } else {
+                showToast('Please select a valid option.');
+                return;
             }
             if (validateTab2()) {
                 setValue((prevValue) => String(Number(prevValue) + 1));

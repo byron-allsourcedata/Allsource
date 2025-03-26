@@ -131,12 +131,12 @@ class SlackService:
         else:
             return {'status': "OAuth failed"}
      
-    def update_app_home_opened(self, team_id, user_id):
-        self.integrations_persistence.update_app_home_opened(slack_team_id=team_id, user_id=user_id)
+    def update_app_home_opened(self, team_id):
+        self.integrations_persistence.update_app_home_opened(slack_team_id=team_id)
         return True
     
     def handle_app_home_opened(self, user_id, team_id):
-        user_integration = self.integrations_persistence.get_credential(slack_team_id=team_id, user_id=user_id)
+        user_integration = self.integrations_persistence.get_credential(slack_team_id=team_id)
         if user_integration.app_home_opened:
             return
         
@@ -151,7 +151,7 @@ class SlackService:
                 channel=user_id,
                 text="Welcome to App Home! I'll share updates via Contacts using the Maximiz app."
             )
-            self.update_app_home_opened(team_id, user_id)
+            self.update_app_home_opened(team_id)
         except SlackApiError as e:
             logger.error(f"Error sending message: {e.response['error']}")
 
@@ -166,7 +166,7 @@ class SlackService:
         user_id = event.get("user")
 
         if event_type == "app_home_opened":
-            self.handle_app_home_opened(user_id, team_id)
+            self.handle_app_home_opened(team_id)
 
         elif event_type == "app_uninstalled":
             self.handle_app_uninstalled(team_id)
