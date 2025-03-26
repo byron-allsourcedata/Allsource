@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Drawer, Box, Typography, IconButton, List, LinearProgress, Grid, ListItem, ListItemIcon, ListItemButton, 
-        Button, ListItemText, Popover, Tooltip, Tab, Slider, TextField, Card, CardContent, ClickAwayListener, 
+import { Drawer, Box, Typography, IconButton, List, LinearProgress, Grid, ClickAwayListener, 
+        Button, ListItemText, Popover, Tooltip, Tab, Slider, TextField, Card, CardContent,
         InputAdornment, MenuItem, Menu, Divider, FormControl, InputLabel, Select, Link} from '@mui/material';
 import TabList from "@mui/lab/TabList";
 import TabPanel from '@mui/lab/TabPanel';
@@ -9,7 +9,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
 import Image from 'next/image';
-import ConnectMeta from '@/app/(client)/data-sync/components/ConnectMeta';
 import SalesForceIntegrationPopup from '@/components/SalesForceIntegrationPopup';
 import GoogleADSConnectPopup from '@/components/GoogleADSConnectPopup';
 import MetaConnectButton from '@/components/MetaConnectButton';
@@ -29,17 +28,10 @@ interface AudiencePopupProps {
     isDownloadAction: boolean
 }
 
-interface ListItem {
-    audience_id: number;
-    audience_name: string;
-    leads_count: number;
-}
-
 type KlaviyoList = {
     id: string
     list_name: string
 }
-
 
 interface IntegrationsCredentials {
     id?: number
@@ -94,52 +86,7 @@ type ServiceHandlers = {
     google_ads: () => void;
   };
 
-const klaviyoStyles = {
-    tabHeading: {
-        textTransform: 'none',
-        padding: 0,
-        minWidth: 'auto',
-        px: 2,
-        '@media (max-width: 600px)': {
-            alignItems: 'flex-start',
-            p: 0
-        },
-        '&.Mui-selected': {
-            color: '#5052b2',
-            fontWeight: '700'
-        }
-    },
-    inputLabel: {
-        fontFamily: 'Nunito Sans',
-        fontSize: '12px',
-        lineHeight: '16px',
-        color: 'rgba(17, 17, 19, 0.60)',
-        '&.Mui-focused': {
-            color: 'rgba(80, 82, 178, 1)',
-        },
-    },
-    formInput: {
-        '&.MuiOutlinedInput-root': {
-            height: '48px',
-            '& .MuiOutlinedInput-input': {
-                padding: '12px 16px 13px 16px',
-                fontFamily: 'Roboto',
-                color: '#202124',
-                fontSize: '14px',
-                lineHeight: '20px',
-                fontWeight: '400'
-            },
-            '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#5052B2',
-            },
-        },
-        '&+.MuiFormHelperText-root': {
-            marginLeft: '0',
-        },
-    },
-}
-
-const metaStyles = {
+const styles = {
     tabHeading: {
         textTransform: 'none',
         padding: 0,
@@ -179,9 +126,10 @@ const metaStyles = {
             },
             '&:hover .MuiOutlinedInput-notchedOutline': {
                 borderColor: '#A3B0C2',
+                // borderColor: '#5052B2',
             },
             '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'rgba(80, 82, 178, 1)',
+                borderColor: '#5052B2',
             },
         },
         '&+.MuiFormHelperText-root': {
@@ -333,8 +281,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
 
     const [activeService, setActiveService] = useState<string | null>(null);
     const [activeImageService, setActiveImageService] = useState<string>("csv-icon.svg");
-    const [openDeletePopup, setOpenDeletePopup] = useState(false);
-    const [openModal, setOpenModal] = useState<string | null>(null);
     const [upgradePlanPopup, setUpgradePlanPopup] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [value, setValue] = useState('1');
@@ -342,7 +288,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(null)
     const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
 
-    const [selectedOptionMap, setSelectedOptionMap] = useState<MetaAuidece | null>(null);
     const [customFields, setCustomFields] = useState<{ type: string, value: string }[]>([]);
     const [rows, setRows] = useState(defaultRows);
 
@@ -414,32 +359,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     const handleActive = (service: string) => {
         setActiveService(service);
         setActiveImageService(integrationsImage.filter((item) => item.service_name === service)[0].image)
-        handleNextTab()
-        if (service === "mailchimp") {
-            setContactSyncTab(true)
-            getList(service)
-            setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
-        }
-
-        if (service === "meta") {
-            setContactSyncTab(true)
-            fetchAdAccount()
-            setRows(defaultRowsMeta)
-        }
-
-        if (service === "google_ads") {
-            setContactSyncTab(true)
-            setRows(defaultRowsGoogleAds)
-        }
-
-        if (service === "hubspot") {
-            setRows(defaultRowsHubspot)
-            setCustomFields(customFieldsListHubspot.map(field => ({ type: field.value, value: field.type })))
-        }
-
-        if (service === "sales_force") {
-            setRows(defaultRowsSalesForce)
-        }
     };
 
     const validateTab2 = () => {
@@ -490,6 +409,31 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     const handleNextTab = async () => {
 
         if (value === '1') {
+            if (activeService === "mailchimp") {
+                setContactSyncTab(true)
+                getList()
+                setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
+            }
+    
+            if (activeService === "meta") {
+                setContactSyncTab(true)
+                fetchAdAccount()
+                setRows(defaultRowsMeta)
+            }
+    
+            if (activeService === "google_ads") {
+                setContactSyncTab(true)
+                setRows(defaultRowsGoogleAds)
+            }
+    
+            if (activeService === "hubspot") {
+                setRows(defaultRowsHubspot)
+                setCustomFields(customFieldsListHubspot.map(field => ({ type: field.value, value: field.type })))
+            }
+    
+            if (activeService === "sales_force") {
+                setRows(defaultRowsSalesForce)
+            }
             setValue((prevValue) => {
                 const nextValue = String(Number(prevValue) + 1);
                 return nextValue;
@@ -572,10 +516,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     const deleteId = deleteOpen ? 'delete-popover' : undefined;
     
     // Create Integration
-
-    const handleDeleteOpen = () => {
-        setOpenDeletePopup(true);
-        };
 
     const handleSaveSettings = (newIntegration: any) => {
         setIntegrationsCredentials(prevIntegrations => {
@@ -690,9 +630,9 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
 
     const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
     const [newListName, setNewListName] = useState<string>('');
-    const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
+    const [showCreateFormMailchimp, setShowCreateFormMailchimp] = useState<boolean>(false);
     const [listNameError, setListNameError] = useState(false);
-    const [isShrunk, setIsShrunk] = useState<boolean>(false);
+    const [isShrunkMailchimp, setIsShrunkMailchimp] = useState<boolean>(false);
     const [anchorElMailchimp, setAnchorElMailchimp] = useState<null | HTMLElement>(null);
     const textFieldRef = useRef<HTMLDivElement>(null);
     const [klaviyoList, setKlaviyoList] = useState<KlaviyoList[]>([])
@@ -723,8 +663,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
 
     const handleSelectOptionMailchimp = (value: KlaviyoList | string) => {
         if (value === 'createNew') {
-            setShowCreateForm(prev => !prev);
-            if (!showCreateForm) {
+            setShowCreateFormMailchimp(prev => !prev);
+            if (!showCreateFormMailchimp) {
                 setAnchorElMailchimp(textFieldRef.current);
             }
         } else if (isKlaviyoList(value)) {
@@ -743,15 +683,15 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
 
 
     const handleClickMailchimp = (event: React.MouseEvent<HTMLInputElement>) => {
-        setIsShrunk(true);
+        setIsShrunkMailchimp(true);
         setIsDropdownOpen(prev => !prev);
         setAnchorElMailchimp(event.currentTarget);
-        setShowCreateForm(false); // Reset form when menu opens
+        setShowCreateFormMailchimp(false); // Reset form when menu opens
     };
 
     const handleCloseSelectMailchimp = () => {
         setAnchorElMailchimp(null);
-        setShowCreateForm(false);
+        setShowCreateFormMailchimp(false);
         setIsDropdownOpen(false);
         setNewListName(''); // Clear new list name when closing
     };
@@ -791,12 +731,12 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         }
     };
 
-    const getList = async (service: string) => {
+    const getList = async () => {
         try {
             setIsLoading(true)
             const response = await axiosInstance.get('/integrations/sync/list/', {
                 params: {
-                    service_name: service
+                    service_name: activeService
                 }
             })
             setKlaviyoList(response.data)
@@ -834,7 +774,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         bidAmount: 1,
         dailyBudget: 100,
     });
-    const [UpdateKlaviuo, setUpdateKlaviuo] = useState<any>(null);
     const [inputValueMeta, setInputValueMeta] = useState('');
     const [optionAdAccountMeta, setOptionAdAccountMeta] = useState<adAccount | null>(null)
     const [adAccountsMeta, setAdAccountsMeta] = useState<adAccount[]>([])
@@ -856,7 +795,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     const handleCloseCampaignMeta = () => {
         setAnchorElCampaignMeta(null);
         setIsDropdownOpenAdAccountMeta(false)
-        setShowCreateForm(false);
+        setShowCreateFormCampaignMeta(false);
         setIsDropdownOpenCampaignMeta(false);
     };
 
@@ -864,7 +803,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         setAnchorElMeta(null);
         setAnchorElAdAccountMeta(null)
         setIsDropdownOpenAdAccountMeta(false)
-        setShowCreateForm(false);
+        setShowCreateFormMeta(false);
         setIsDropdownOpen(false);
         setNewListName(''); // Clear new list name when closing
     };
@@ -1063,10 +1002,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                             }
                                         }
                                     }} onChange={handleChangeTab}>
-                                    <Tab label="Destination" value="1" className='tab-heading' sx={klaviyoStyles.tabHeading} />
-                                    <Tab label="Contacts" value="2" className='tab-heading' sx={klaviyoStyles.tabHeading} />
-                                    {contactSyncTab && <Tab label="Contacts Sync" value="3" className='tab-heading' sx={klaviyoStyles.tabHeading} />}
-                                    <Tab label="Map data" value={contactSyncTab ? "4" : "3"} className='tab-heading' sx={klaviyoStyles.tabHeading} />
+                                    <Tab label="Destination" value="1" className='tab-heading' sx={styles.tabHeading} />
+                                    <Tab label="Contacts" value="2" className='tab-heading' sx={styles.tabHeading} />
+                                    {contactSyncTab && <Tab label="Contacts Sync" value="3" className='tab-heading' sx={styles.tabHeading} />}
+                                    <Tab label="Map data" value={contactSyncTab ? "4" : "3"} className='tab-heading' sx={styles.tabHeading} />
                                 </TabList>
                             </Box>
                             <TabPanel value="1" sx={{ p: 0 }}>
@@ -1074,7 +1013,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                     <Box sx={{ p:0, width: '100%' }}>
                                         <Box sx={{ px: 2, pb: 3, display: "flex", flexDirection: "column", gap: 3, borderRadius: '4px' }}>
                                             <Typography variant="h6" className="first-sub-title">
-                                                Choose where you want to sync
+                                                {integrations.length ? "Choose where you want to sync" : ''}
                                             </Typography>
                                             <List sx={{ display: 'flex', gap: '16px', flexWrap: 'wrap', border: 'none' }}>
                                                 {integrations
@@ -1095,32 +1034,20 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                         }
                                                         const integrationCred = integrationsCredentials.find(cred => cred.service_name === integration.service_name);
 
-                                                        if (isIntegrated) {
-                                                        return (
-                                                            <Box key={integration.service_name} onClick={() => handleActive(integration.service_name)} sx={{width: "135px"}}>
-                                                            <IntegrationBox
-                                                                image={`/${integrationsImage.filter((item) => item.service_name === integration.service_name)[0]?.image}`}
-                                                                service_name={toCamelCase(integration.service_name)}
-                                                                active={activeService === integration.service_name}
-                                                                handleClick={() => setOpenModal(integration.service_name)}
-                                                                is_integrated={true}
-                                                                handleDelete={handleDeleteOpen}
-                                                                is_failed={integrationCred?.is_failed}
-                                                            />
-                                                            </Box>
-                                                        );
-                                                        }
 
                                                         return (
-                                                        <Box key={integration.service_name} onClick={() => handleAddIntegration(integration.service_name)} sx={{width: "135px"}}>
+                                                        <Box key={integration.service_name} onClick={() => 
+                                                            isIntegrated ? handleActive(integration.service_name) : handleAddIntegration(integration.service_name)} sx={{width: "135px"}}>
                                                             <IntegrationBox
-                                                            image={`/${integrationsImage.filter((item) => item.service_name === integration.service_name)[0]?.image}`}
-                                                            service_name={toCamelCase(integration.service_name)}
-                                                            is_avalible={true}
-                                                            is_integrated={false}
+                                                                image={`/${integrationsImage.filter((item) => item.service_name === integration.service_name)[0]?.image}`}
+                                                                serviceName={toCamelCase(integration.service_name)}
+                                                                active={activeService === integration.service_name}
+                                                                isAvalible={isIntegrated || integrationCred?.is_failed}
+                                                                isFailed={integrationCred?.is_failed}
+                                                                isIntegrated={isIntegrated}
                                                             />
                                                         </Box>
-                                                        );
+                                                        )
                                                     })
                                                 }
                                             </List>
@@ -1209,7 +1136,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                             fullWidth
                                                             label={selectedOptionMailchimp ? '' : 'Select or Create new list'}
                                                             InputLabelProps={{
-                                                                shrink: selectedOptionMailchimp ? false : isShrunk,
+                                                                shrink: selectedOptionMailchimp ? false : isShrunkMailchimp,
                                                                 sx: {
                                                                     fontFamily: 'Nunito Sans',
                                                                     fontSize: '12px',
@@ -1231,7 +1158,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                                         </IconButton>
                                                                     </InputAdornment>
                                                                 ),
-                                                                sx: klaviyoStyles.formInput
+                                                                sx: styles.formInput
                                                             }}
                                                             sx={{
                                                                 '& input': {
@@ -1266,7 +1193,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                         >
                                                             {/* Show "Create New List" option */}
                                                             <MenuItem onClick={() => handleSelectOptionMailchimp('createNew')} sx={{
-                                                                borderBottom: showCreateForm ? "none" : "1px solid #cdcdcd",
+                                                                borderBottom: showCreateFormMailchimp ? "none" : "1px solid #cdcdcd",
                                                                 '&:hover': {
                                                                     background: 'rgba(80, 82, 178, 0.10)'
                                                                 }
@@ -1275,7 +1202,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                                     sx: {
                                                                         fontFamily: "Nunito Sans",
                                                                         fontSize: "14px",
-                                                                        color: showCreateForm ? "#5052B2" : "#202124",
+                                                                        color: showCreateFormMailchimp ? "#5052B2" : "#202124",
                                                                         fontWeight: "500",
                                                                         lineHeight: "20px",
 
@@ -1284,7 +1211,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                             </MenuItem>
 
                                                             {/* Show Create New List form if 'showCreateForm' is true */}
-                                                            {showCreateForm && (
+                                                            {showCreateFormMailchimp && (
                                                                 <Box>
                                                                     <Box sx={{
                                                                         display: 'flex',
@@ -1469,7 +1396,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                                             </IconButton>
                                                                         </InputAdornment>
                                                                     ),
-                                                                    sx: metaStyles.formInput
+                                                                    sx: styles.formInput
                                                                 }}
                                                                 sx={{
                                                                     '& input': {
@@ -1533,7 +1460,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                                 fullWidth
                                                                 label={selectedOptionMeta ? '' : 'Select or Create new list'}
                                                                 InputLabelProps={{
-                                                                    shrink: selectedOptionMeta?.list_name ? false : isShrunk,
+                                                                    shrink: selectedOptionMeta?.list_name ? false : isShrunkMeta,
                                                                     sx: {
                                                                         fontFamily: 'Nunito Sans',
                                                                         fontSize: '15px',
@@ -1553,7 +1480,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                                             </IconButton>
                                                                         </InputAdornment>
                                                                     ),
-                                                                    sx: metaStyles.formInput
+                                                                    sx: styles.formInput
                                                                 }}
                                                                 sx={{
                                                                     '& input': {
@@ -1585,7 +1512,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                             >
                                                                 {/* Show "Create New List" option */}
                                                                 <MenuItem onClick={() => handleSelectOptionMailchimp('createNew')} sx={{
-                                                                    borderBottom: showCreateForm ? "none" : "1px solid #cdcdcd",
+                                                                    borderBottom: showCreateFormMailchimp ? "none" : "1px solid #cdcdcd",
                                                                     '&:hover': {
                                                                         background: 'rgba(80, 82, 178, 0.10)'
                                                                     }
@@ -1594,7 +1521,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                                         sx: {
                                                                             fontFamily: "Nunito Sans",
                                                                             fontSize: "14px",
-                                                                            color: showCreateForm ? "#5052B2" : "#202124",
+                                                                            color: showCreateFormMailchimp ? "#5052B2" : "#202124",
                                                                             fontWeight: "500",
                                                                             lineHeight: "20px",
         
@@ -1602,7 +1529,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                                     }} />
                                                                 </MenuItem>
         
-                                                                {showCreateForm && (
+                                                                {showCreateFormMailchimp && (
                                                                     <Box>
                                                                         <Box sx={{
                                                                             display: 'flex',
@@ -1790,7 +1717,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                                                 )}
                                                                             </InputAdornment>
                                                                         ),
-                                                                        sx: metaStyles.formInput
+                                                                        sx: styles.formInput
                                                                     }}
                                                                     sx={{
                                                                         '& input': {
@@ -2010,7 +1937,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                     }}>
                                         <Box sx={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
                                             <Typography variant="h6" className='first-sub-title'>Map list</Typography>
-                                            {selectedOptionMap?.list_name && <Typography variant='h6' sx={{
+                                            {(activeService === "mailchimp" || activeService === "meta") && <Typography variant='h6' sx={{
                                                 background: '#EDEDF7',
                                                 borderRadius: '3px',
                                                 fontFamily: 'Roboto',
@@ -2020,7 +1947,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                 padding: '2px 4px',
                                                 lineHeight: '16px'
                                             }}>
-                                                {selectedOptionMap?.list_name}
+                                                {(activeService === "mailchimp" && selectedOptionMailchimp?.list_name) || (activeService === "meta" && selectedOptionMeta?.list_name) }
                                             </Typography>}
                                         </Box>
 
@@ -2449,7 +2376,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                             </TabPanel>
                         </TabContext>
                     </Box>
-                    <Box sx={{ width: '100%', position: 'sticky', bottom: 0, zIndex: 9999, border: '1px solid #e4e4e4' }}>
+                    <Box sx={{ width: '100%', position: 'sticky', bottom: 0, zIndex: 9999 }}>
                         <Box sx={{ position: 'sticky', bottom: 0, zIndex: 1302, backgroundColor: '#fff', borderTop: '1px solid #e4e4e4' }}>
                             <Box
                                 sx={{ display: 'flex', justifyContent: 'flex-end', gap: 3, p: 2 }}
