@@ -13,6 +13,7 @@ import BCommerceConnect from "./Bcommerce"
 import OmnisendConnect from "./OmnisendConnect"
 import MailchimpConnect from "./MailchimpConnect"
 import SendlaneConnect from "./SendlaneConnect"
+import S3Connect from "./S3Connect"
 import SlackConnectPopup from "./SlackConnectPopup"
 import WebhookConnectPopup from "./WebhookConnectPopup"
 import ZapierConnectPopup from "./ZapierConnectPopup"
@@ -50,6 +51,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
     const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false)
     const [openMailchimpConnect, setOpenMailchimpConnect] = useState(false)
     const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false)
+    const [openS3Connect, setOpenS3Connect] = useState(false)
     const [openZapierConnect, setOPenZapierComnect] = useState(false)
     const [openSlackConnect, setOpenSlackConnect] = useState(false)
     const [openHubspotConnect, setOpenHubspotConnect] = useState(false)
@@ -66,6 +68,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
         setOpenBigcommerceConnect(false)
         setOpenOmnisendConnect(false)
         setOpenSendlaneConnect(false)
+        setOpenS3Connect(false)
         setOPenZapierComnect(false)
         setOpenSlackConnect(false)
         setOpenHubspotConnect(false)
@@ -436,6 +439,27 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                             </ListItemButton>
                                         </ListItem>
                                     )}
+                                {filteredIntegrations.some(integration => integration.service_name === 's3') && (
+                                    !integrationsCredentials.some(integration => integration.service_name === 's3')) && (
+                                        <ListItem sx={{
+                                            p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                            '@media (max-width:600px)': {
+                                                flexBasis: 'calc(50% - 8px)'
+                                            }
+                                        }}>
+                                            <ListItemButton onClick={() => setOpenS3Connect(true)} sx={{ p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center' }}>
+                                                <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                    <Image src="/s3-icon.svg" alt="sendlane" height={24} width={24} />
+                                                </ListItemIcon>
+                                                <ListItemText primary="S3" primaryTypographyProps={{
+                                                    sx: {
+                                                        ...intergrations.integrate
+                                                    }
+                                                }} />
+                                            </ListItemButton>
+                                        </ListItem>
+                                    )}
+
                                 {filteredIntegrations.some(integration => integration.service_name === 'zapier') && (
                                     !integrationsCredentials.some(integration => integration.service_name === 'zapier')) && (
                                         <ListItem sx={{
@@ -553,6 +577,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
             />
             <OmnisendConnect open={openOmnisendConnect} handleClose={() => setOpenOmnisendConnect(false)} onSave={saveIntegration} />
             <MailchimpConnect open={openMailchimpConnect} handleClose={() => setOpenMailchimpConnect(false)} onSave={saveIntegration} />
+            <S3Connect open={openS3Connect} handleClose={() => setOpenS3Connect(false)} onSave={saveIntegration} />
             <SendlaneConnect open={openSendlaneConnect} handleClose={() => setOpenSendlaneConnect(false)} onSave={saveIntegration} />
             <ZapierConnectPopup open={openZapierConnect} handlePopupClose={handleClose} />
             <SlackConnectPopup open={openSlackConnect} handlePopupClose={() => setOpenSlackConnect(false)} onSave={saveIntegration} />

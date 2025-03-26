@@ -34,6 +34,7 @@ import { datasyncStyle } from "@/app/(client)/data-sync/datasyncStyle";
 import MailchimpDatasync from "./MailchimpDatasync";
 import OmnisendDataSync from "./OmnisendDataSync";
 import SendlaneDatasync from "./SendlaneDatasync";
+import S3Datasync from "./S3Datasync";
 import WebhookDatasync from "./WebhookDatasync";
 import SlackDatasync from "./SlackDataSync";
 import GoogleADSDatasync from "./GoogleADSDataSync";
@@ -45,6 +46,7 @@ import SalesForceIntegrationPopup from "@/components/SalesForceIntegrationPopup"
 import MailchimpConnect from "@/components/MailchimpConnect";
 import OmnisendConnect from "@/components/OmnisendConnect";
 import SendlaneConnect from "@/components/SendlaneConnect";
+import S3Connect from "@/components/S3Connect";
 import ShopifySettings from "@/components/ShopifySettings";
 import ZapierConnectPopup from "@/components/ZapierConnectPopup";
 import SlackConnectPopup from "@/components/SlackConnectPopup";
@@ -86,6 +88,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   const [totalRows, setTotalRows] = useState(0);
   const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
   const [sendlaneIconPopupOpen, setOpenSendlaneIconPopup] = useState(false);
+  const [s3IconPopupOpen, setOpenS3IconPopup] = useState(false);
   const [webhookIconPopupOpen, setOpenWebhookIconPopup] = useState(false);
   const [hubspotIconPopupOpen, setOpenHubspotIconPopup] = useState(false);
   const [slackIconPopupOpen, setOpenSlackIconPopup] = useState(false);
@@ -105,6 +108,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false);
   const [openMailchimpConnect, setOpenMailchimpConnect] = useState(false);
   const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false);
+  const [openS3Connect, setOpenS3Connect] = useState(false);
   const [openGoogleADSConnect, setOpenGoogleADSConnect] = useState(false);
   const [openZapierConnect, setOPenZapierComnect] = useState(false);
   const [openSlackConnect, setOpenSlackConnect] = useState(false);
@@ -118,6 +122,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
     setOpenBigcommerceConnect(false);
     setOpenOmnisendConnect(false);
     setOpenSendlaneConnect(false);
+    setOpenS3Connect(false);
     setOPenZapierComnect(false);
     setOpenSlackConnect(false)
   };
@@ -314,6 +319,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
         return (
           <Image src={"/zapier-icon.svg"} alt="zapier" width={18} height={18} />
         );
+      case "s3":
+        return (
+          <Image src={"/s3-icon.svg"} alt="s3" width={18} height={18} />
+        );
       case "webhook":
         return (
           <Image src={"/webhook-icon.svg"} alt="webhook" width={18} height={18} />
@@ -323,9 +332,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
           <Image src={"/slack-icon.svg"} alt="slack" width={18} height={18} />
         );
       case "hubspot":
-      return (
-        <Image src={"/hubspot.svg"} alt="hubspot" width={18} height={18} />
-      );
+        return (
+          <Image src={"/hubspot.svg"} alt="hubspot" width={18} height={18} />
+        );
       case "google_ads":
         return (
           <Image src={"/google-ads.svg"} alt="slack" width={18} height={18} />
@@ -516,6 +525,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
         setOmnisendIconPopupOpen(true);
       } else if (dataSyncPlatform === "sendlane") {
         setOpenSendlaneIconPopup(true);
+      } else if (dataSyncPlatform === "s3") {
+        setOpenS3IconPopup(true)
       } else if (dataSyncPlatform === "slack") {
         setOpenSlackIconPopup(true);
       } else if (dataSyncPlatform === "google_ads") {
@@ -527,7 +538,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
       } else if (dataSyncPlatform === "sales_force") {
         setSalesForceIconPopupOpen(true);
       }
-      
+
       setIsLoading(false);
       setAnchorEl(null);
     }
@@ -535,6 +546,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 
   const handleSendlaneIconPopupClose = () => {
     setOpenSendlaneIconPopup(false);
+  };
+
+  const handleS3IconPopupClose = () => {
+    setOpenS3IconPopup(false);
   };
 
   const handleWebhookIconPopupClose = () => {
@@ -622,6 +637,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
             setOpenOmnisendConnect(true);
           } else if (dataSyncPlatform === "sendlane") {
             setOpenSendlaneConnect(true);
+          } else if (dataSyncPlatform === "s3") {
+            setOpenS3Connect(true)
           } else if (dataSyncPlatform === "google_ads") {
             setOpenGoogleADSConnect(true);
           } else if (dataSyncPlatform === "webhook") {
@@ -656,7 +673,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
           } else if (dataSyncPlatform === "sales_force") {
             setSalesForceIconPopupOpen(true);
           }
-          
+
           setIsLoading(false);
           setAnchorEl(null);
         }
@@ -1196,14 +1213,14 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
         {metaIconPopupOpen && isEdit === true && (
           <>
             <ConnectMeta
-            open={metaIconPopupOpen}
-            onClose={handleMetaIconPopupClose}
-            data={data.find((item) => item.id === selectedId)}
-            isEdit={isEdit}
-          />
+              open={metaIconPopupOpen}
+              onClose={handleMetaIconPopupClose}
+              data={data.find((item) => item.id === selectedId)}
+              isEdit={isEdit}
+            />
           </>
         )}
-        
+
         {mailchimpIconPopupOpen && isEdit === true && (
           <>
             <MailchimpDatasync
@@ -1231,6 +1248,16 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
               open={sendlaneIconPopupOpen}
               isEdit={isEdit}
               onClose={handleSendlaneIconPopupClose}
+              data={data.find((item) => item.id === selectedId)}
+            />
+          </>
+        )}
+        {s3IconPopupOpen && isEdit && (
+          <>
+            <S3Datasync
+              open={s3IconPopupOpen}
+              isEdit={isEdit}
+              onClose={handleS3IconPopupClose}
               data={data.find((item) => item.id === selectedId)}
             />
           </>
@@ -1288,13 +1315,18 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
         <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={() => { setOpenKlaviyoConnect(false), setIsInvalidApiKey(false) }}
           initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
         <SalesForceIntegrationPopup open={openSalesForceConnect} handleClose={() => { setOpenSalesForceConnect(false), setIsInvalidApiKey(false) }}
-        initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sales_force')?.access_token} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
+          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sales_force')?.access_token} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
         <OmnisendConnect open={openOmnisendConnect} handleClose={() => { setOpenOmnisendConnect(false), setIsInvalidApiKey(false) }}
           initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'omnisend')?.access_token} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
         <SendlaneConnect
           open={openSendlaneConnect}
           handleClose={() => { setOpenSendlaneConnect(false), setIsInvalidApiKey(false) }}
           initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sendlane')?.access_token} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
+        />
+        <S3Connect
+          open={openS3Connect}
+          handleClose={() => { setOpenS3Connect(false), setIsInvalidApiKey(false) }}
+          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 's3')?.access_token} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
         />
         <SlackConnectPopup
           open={openSlackConnect}
