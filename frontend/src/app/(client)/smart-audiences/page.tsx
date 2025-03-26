@@ -135,6 +135,7 @@ const SmartAudiences: React.FC = () => {
 
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const isOpeMorePopover = Boolean(anchorEl);
+    const [isDownloadAction, setIsDownloadAction] = useState(false);
 
     const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 
@@ -356,6 +357,7 @@ const SmartAudiences: React.FC = () => {
 
     const handleDataSyncPopupClose = () => {
         setDataSyncPopupOpen(false);
+        setIsDownloadAction(false)
     };
 
     const handleOpenMorePopover = (event: React.MouseEvent<HTMLElement>, rowData: Smarts) => {
@@ -1202,11 +1204,18 @@ const SmartAudiences: React.FC = () => {
                                                                                             width: '100%', maxWidth: 360, boxShadow: 'none'
                                                                                         }}
                                                                                     >
-                                                                                        <ListItemButton sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
+                                                                                        <ListItemButton disabled={selectedRowData?.status === "validating"} sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
                                                                                             handleCloseMorePopover()
                                                                                             handleDataSyncPopupOpen()
                                                                                         }}>
                                                                                             <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Sync" />
+                                                                                        </ListItemButton>
+                                                                                        <ListItemButton sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
+                                                                                            setIsDownloadAction(true)
+                                                                                            handleCloseMorePopover()
+                                                                                            handleDataSyncPopupOpen()
+                                                                                        }}>
+                                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Download" />
                                                                                         </ListItemButton>
                                                                                         <ListItemButton
                                                                                             sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }}
@@ -1331,9 +1340,13 @@ const SmartAudiences: React.FC = () => {
                                         }
                                     </Box>
 
-                                    <CreateSyncPopup open={dataSyncPopupOpen}
+                                    <CreateSyncPopup 
+                                        open={dataSyncPopupOpen}
+                                        id={selectedRowData?.id}
+                                        activeSegmentRecords={selectedRowData?.active_segment_records}
                                         onClose={handleDataSyncPopupClose}
-                                        integrationsList={selectedRowData?.integrations }
+                                        integrationsList={selectedRowData?.integrations}
+                                        isDownloadAction={isDownloadAction}
                                     />
                                     <FilterPopup open={filterPopupOpen}
                                         onClose={handleFilterPopupClose}

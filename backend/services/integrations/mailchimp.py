@@ -9,13 +9,14 @@ import hashlib
 from fastapi import HTTPException
 from datetime import datetime, timedelta
 from schemas.integrations.mailchimp import MailchimpProfile
-from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
+from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, DataSyncType
 import json
 from utils import format_phone_number
 from utils import extract_first_email, validate_and_format_phone
 from typing import List
 import mailchimp_marketing as MailchimpMarketing
 from mailchimp_marketing.api_client import ApiClientError
+from uuid import UUID
 
 class MailchimpIntegrationsService:
 
@@ -178,6 +179,21 @@ class MailchimpIntegrationsService:
             'list_name': list_name,
             'domain_id': domain_id,
             'leads_type': leads_type,
+            'data_map': data_map,
+            'created_by': created_by,
+        })
+
+    async def create_smart_audience_sync(self, smart_audience_id: UUID, sent_contacts: int, list_id: str, list_name: str, data_map: List[DataMap], domain_id: int, created_by: str, tags_id: str = None):
+        credentials = self.get_credentials(domain_id)
+
+        sync = self.sync_persistence.create_sync({
+            'integration_id': credentials.id,
+            'list_id': list_id,
+            'list_name': list_name,
+            'domain_id': domain_id,
+            'sent_contacts': sent_contacts,
+            'sync_type': DataSyncType.AUDIENCE,
+            'smart_audience_id': smart_audience_id,
             'data_map': data_map,
             'created_by': created_by,
         })

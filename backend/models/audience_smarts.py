@@ -5,7 +5,7 @@ from models.audience_smarts_use_cases import AudienceSmartsUseCase
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.sql import func
 
-status_enum = ENUM('unvalidated', 'validating', 'ready', 'synced', name='audience_status_enum', create_type=True)
+audience_smarts_statuses = ENUM('unvalidated', 'validating', 'ready', 'synced', name='audience_smarts_statuses', create_type=True)
 
 class AudienceSmart(Base):
     __tablename__ = 'audience_smarts'
@@ -19,7 +19,7 @@ class AudienceSmart(Base):
     validated_records = Column(Integer, default=0, nullable=False)
     total_records = Column(Integer, default=0, nullable=False)
     active_segment_records = Column(Integer, default=0, nullable=False)
-    status = Column(status_enum, default='unvalidated', nullable=False)
+    status = Column(audience_smarts_statuses, default='unvalidated', nullable=False)
     validations = Column(JSON, nullable=True)
     use_case_id = Column(UUID, ForeignKey(AudienceSmartsUseCase.id), nullable=True)
 
@@ -29,6 +29,3 @@ Index('audience_smarts_total_records_idx', AudienceSmart.total_records)
 Index('audience_smarts_active_segment_records_idx', AudienceSmart.active_segment_records)
 Index('audience_smarts_use_case_id_idx', AudienceSmart.use_case_id)
 Index('audience_smarts_status_idx', AudienceSmart.status)
-
-event.listen(AudienceSmart, "before_insert", create_timestamps)
-event.listen(AudienceSmart, "before_update", update_timestamps)

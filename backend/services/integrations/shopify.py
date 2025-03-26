@@ -471,15 +471,13 @@ class ShopifyIntegrationService:
                 })
 
     def create_sync(self, domain_id: int, 
-                    integration_id: int, 
-                    sync_type: str,  
+                    integration_id: int,
                     supression: bool,
                     list_name: str,
                     filter_by_contact_type: str, created_by: str):
         data = {
             'domain_id': domain_id,
             'integration_id': integration_id,
-            'sync_type': sync_type,
             'supression': supression,
             'list_name': list_name,
             'filter_by_contact_type': filter_by_contact_type,

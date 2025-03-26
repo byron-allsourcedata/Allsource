@@ -1,6 +1,7 @@
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List
 from enum import Enum
+from uuid import UUID
 
 class ShopifyOrBigcommerceCredentials(BaseModel):
     shop_domain: str
@@ -105,6 +106,13 @@ class SyncCreate(BaseModel):
     leads_type: Optional[str] = 'allContacts' 
     data_map: Optional[List[DataMap]] = None
     campaign: Optional[Campaign] = None
+
+class SmartAudienceSyncCreate(BaseModel):
+    smart_audience_id: UUID
+    list_id: Optional[str] = None
+    sent_contacts: int
+    list_name: Optional[str] = None
+    data_map: Optional[List[DataMap]] = None
 
 class CreateListOrTags(BaseModel):
     name: str
