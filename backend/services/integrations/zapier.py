@@ -40,7 +40,6 @@ class ZapierIntegrationService:
             integration_data['domain_id'] = domain.id
             
         integartion = self.integration_persistence.create_integration(integration_data)
-        self.integration_persistence.create_integration(integartion)
         return integartion
 
     def add_integrations(self, domain):
@@ -50,6 +49,7 @@ class ZapierIntegrationService:
         new_integrations = self.__create_integrations(domain=domain)
         if not new_integrations:
             raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
+        
         return new_integrations
 
     async def create_data_sync(self, domain_id: int, leads_type: str, hook_url: str, list_name: str, created_by: str, user: dict):
