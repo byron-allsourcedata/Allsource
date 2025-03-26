@@ -24,8 +24,8 @@ class ZapierIntegrationService:
         self.integration_persistence = integration_persistence
         self.client = client
     
-    def get_credentials(self, domain_id):
-        return self.integration_persistence.get_credentials_for_service(domain_id=domain_id, service_name=SourcePlatformEnum.ZAPIER.value)
+    def get_credentials(self, domain_id, user_id = None):
+        return self.integration_persistence.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.ZAPIER.value)
 
     def __create_integrations(self, domain):
         integration = {

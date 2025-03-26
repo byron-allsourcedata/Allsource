@@ -36,8 +36,8 @@ class BigcommerceIntegrationsService:
         self.domain_persistence = domain_persistence
         self.eai_persistence = epi_persistence
 
-    def get_credentials(self, domain_id: int):
-        integration = self.integrations_persistence.get_credentials_for_service(domain_id, SourcePlatformEnum.BIG_COMMERCE.value)
+    def get_credentials(self, domain_id: int, user_id = None):
+        integration = self.integrations_persistence.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.BIG_COMMERCE.value)
         return integration
 
     def __handle_request(self, url: str, method: str = 'GET', headers: dict = None, json: dict = None, data: dict = None, params: dict = None, access_token: str = None):
