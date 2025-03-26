@@ -30,8 +30,8 @@ class S3IntegrationService:
         self.sync_persistence = sync_persistence
         self.client = client
 
-    def get_credentials(self, domain_id: int):
-        return self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, service_name=SourcePlatformEnum.S3.value)
+    def get_credentials(self, domain_id: int, user_id: int):
+        return self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.S3.value)
     
     
     def __handle_request(self, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None, api_key: str = None,  method: str = 'GET'):
@@ -101,8 +101,8 @@ class S3IntegrationService:
         response = s3_client.list_buckets()
         return response
 
-    def get_list(self, domain_id):
-        credential = self.get_credentials(domain_id)
+    def get_list(self, domain_id: int, user_id: int):
+        credential = self.get_credentials(domain_id, user_id)
         if not credential:
             return
         
@@ -143,8 +143,8 @@ class S3IntegrationService:
         
         return self.__save_integrations(secret_id=credentials.s3.secret_id, secret_key=credentials.s3.secret_key,domain_id=domain.id, user=user)
  
-    async def create_sync(self, leads_type: str, list_name: str, data_map: List[DataMap], domain_id: int, created_by: str):
-        credentials = self.get_credentials(domain_id)
+    async def create_sync(self, leads_type: str, list_name: str, data_map: List[DataMap], domain_id: int, created_by: str, user: dict):
+        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'list_name': list_name,

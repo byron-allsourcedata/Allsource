@@ -78,8 +78,8 @@ class WebhookIntegrationService:
         integration = self.save_integration(domain_id=domain.id, user=user)
         return integration
 
-    def create_list(self, list, domain_id: int):
-        credential = self.integration_persistence.get_credentials_for_service(domain_id=domain_id, service_name=SourcePlatformEnum.WEBHOOK.value)
+    def create_list(self, list, domain_id: int, user_id: int):
+        credential = self.integration_persistence.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.WEBHOOK.value)
         if not credential:
             raise HTTPException(status_code=403, detail={'status': IntegrationsStatus.CREDENTIALS_NOT_FOUND})
         response = self.__handle_request(url=list.webhook_url, method=list.method)
@@ -89,8 +89,8 @@ class WebhookIntegrationService:
         
         return list.name
                     
-    async def create_sync(self, leads_type: str, list_name: str, webhook_url: str, method: str, data_map: List[DataMap], domain_id: int, created_by: str, tags_id: str = None):
-        credential = self.integration_persistence.get_credentials_for_service(domain_id=domain_id, service_name=SourcePlatformEnum.WEBHOOK.value)
+    async def create_sync(self, leads_type: str, list_name: str, webhook_url: str, method: str, data_map: List[DataMap], domain_id: int, created_by: str, user: dict):
+        credential = self.integration_persistence.get_credentials_for_service(domain_id=domain_id, user_id=user.get('id'), service_name=SourcePlatformEnum.WEBHOOK.value)
         sync = self.sync_persistence.create_sync({
             'integration_id': credential.id,
             'list_name': list_name,
@@ -101,6 +101,7 @@ class WebhookIntegrationService:
             'hook_url': webhook_url,
             'method': method,
         })
+        return sync
     
     async def process_data_sync(self, five_x_five_user, access_token, integration_data_sync, lead_user):
         profile = self.__create_profile(five_x_five_user, integration_data_sync, lead_user)

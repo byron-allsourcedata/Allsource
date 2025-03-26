@@ -138,11 +138,15 @@ async def get_list(ad_account_id: str = Query(None),
                    integration_service: IntegrationService = Depends(get_integration_service),
                    user=Depends(check_user_authorization), domain=Depends(check_domain)):
     with integration_service as service:
-        service = getattr(service, service_name.lower())
-        _ = {'domain_id': domain.id}
+        params = {
+            'domain_id': domain.id,
+            'user_id': user.get('id')
+        }
         if ad_account_id:
-            _['ad_account_id'] = ad_account_id
-        return service.get_list(**_)
+            params['ad_account_id'] = ad_account_id
+        service = getattr(service, service_name.lower())
+        
+        return service.get_list(**params)
 
 
 @router.post('/sync/list/', status_code=201)
@@ -152,7 +156,7 @@ async def create_list(list_data: CreateListOrTags,
                       user=Depends(check_user_authorization), domain=Depends(check_domain)):
     with integrations_service as service:
         service = getattr(service, service_name)
-        return service.create_list(list_data, domain.id)
+        return service.create_list(list_data, domain.id, user.get('id'))
     
 @router.get('/sync/sender', status_code=200)
 async def get_sender(integrations_service: IntegrationService = Depends(get_integration_service), user = Depends(check_user_authorization), domain = Depends(check_domain)):

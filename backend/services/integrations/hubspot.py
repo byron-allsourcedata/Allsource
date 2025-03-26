@@ -50,8 +50,8 @@ class HubspotIntegrationsService:
                                                params=params)
         return response
 
-    def get_credentials(self, domain_id: str):
-        credential = self.integrations_persisntece.get_credentials_for_service(domain_id, SourcePlatformEnum.HUBSPOT.value)
+    def get_credentials(self, domain_id: int, user_id: int):
+        credential = self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.HUBSPOT.value)
         return credential
 
     def __save_integrations(self, api_key: str, domain_id: int, user: dict):
@@ -116,8 +116,8 @@ class HubspotIntegrationsService:
             'status': IntegrationsStatus.SUCCESS.value
         }
 
-    async def create_sync(self, domain_id: int, created_by: str, data_map: List[DataMap] = None, leads_type: str = None, list_id: str = None, list_name: str = None,):
-        credentials = self.get_credentials(domain_id)
+    async def create_sync(self, domain_id: int, created_by: str, user: dict, data_map: List[DataMap] = None, leads_type: str = None):
+        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'domain_id': domain_id,
@@ -125,6 +125,7 @@ class HubspotIntegrationsService:
             'data_map': data_map,
             'created_by': created_by,
         })
+        return sync
 
     def edit_sync(self, leads_type: str, integrations_users_sync_id: int,
                  domain_id: int, created_by: str,  data_map: List[DataMap] = None):

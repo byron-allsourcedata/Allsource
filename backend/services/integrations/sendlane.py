@@ -27,8 +27,8 @@ class SendlaneIntegrationService:
         self.sync_persistence = sync_persistence
         self.client = client
 
-    def get_credentials(self, domain_id: int):
-        return self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, service_name=SourcePlatformEnum.SENDLANE.value)
+    def get_credentials(self, domain_id: int, user_id: int):
+        return self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.SENDLANE.value)
     
     
     def __handle_request(self, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None, api_key: str = None,  method: str = 'GET'):
@@ -93,8 +93,8 @@ class SendlaneIntegrationService:
         response = self.__handle_request(url='/lists', api_key=api_key)
         return response
 
-    def get_list(self, domain_id):
-        credential = self.get_credentials(domain_id)
+    def get_list(self, domain_id: int, user_id: int):
+        credential = self.get_credentials(domain_id, user_id)
         if not credential:
             return
         lists = self.__get_list(credential.access_token)
@@ -129,8 +129,8 @@ class SendlaneIntegrationService:
             return
         return [self.__mapped_sender(sender) for sender in senders.json().get('data')]
 
-    def create_list(self, list, domain_id: int):
-        credential = self.get_credentials(domain_id)
+    def create_list(self, list, domain_id: int, user_id: int):
+        credential = self.get_credentials(domain_id, user_id)
         if not credential:
             raise HTTPException(status_code=403, detail={'status': IntegrationsStatus.CREDENTIALS_NOT_FOUND})
         json = {
@@ -147,8 +147,8 @@ class SendlaneIntegrationService:
             raise HTTPException(status_code=422, detail={'status': response.json().get('message')})
         return self.__mapped_list(response.json().get('data'))
  
-    async def create_sync(self, leads_type: str, list_id: str, list_name: str, data_map: List[DataMap], domain_id: int, created_by: str, tags_id: str = None):
-        credentials = self.get_credentials(domain_id)
+    async def create_sync(self, leads_type: str, list_id: str, list_name: str, data_map: List[DataMap], domain_id: int, created_by: str, user: dict):
+        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'list_id': list_id,
@@ -158,6 +158,7 @@ class SendlaneIntegrationService:
             'data_map': data_map,
             'created_by': created_by,
         })
+        return sync
 
     async def process_data_sync(self, five_x_five_user, user_integration, integration_data_sync, lead_user):
         profile = self.__create_contact(five_x_five_user, user_integration.access_token, integration_data_sync.list_id)

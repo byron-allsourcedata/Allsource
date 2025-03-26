@@ -76,9 +76,15 @@ class IntegrationsPresistence:
     def get_credential(self, **filter_by):
         return self.db.query(UserIntegration).filter_by(**filter_by).first()
 
-    def get_credentials_for_service(self, domain_id: int, service_name: str, **filter_by) -> UserIntegration:
+    def get_credentials_for_service(self, domain_id: int, user_id: int, service_name: str, **filter_by) -> UserIntegration:
         return self.db.query(UserIntegration) \
-            .filter(UserIntegration.domain_id == domain_id, UserIntegration.service_name == service_name).filter_by(**filter_by).first()
+            .filter(
+                UserIntegration.service_name == service_name,
+                or_(UserIntegration.domain_id == domain_id, UserIntegration.user_id == user_id)
+            ) \
+            .filter_by(**filter_by) \
+            .first()
+
         
     def delete_integration_by_slack_team_id(self, team_id: str):
         self.db.query(UserIntegration) \

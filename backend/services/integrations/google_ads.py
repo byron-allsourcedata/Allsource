@@ -52,8 +52,8 @@ class GoogleAdsIntegrationsService:
                 response = self.client.request(method, redirect_url, headers=headers, json=json, data=data, params=params)
         return response
 
-    def get_credentials(self, domain_id: str):
-        credential = self.integrations_persisntece.get_credentials_for_service(domain_id, SourcePlatformEnum.GOOGLE_ADS.value)
+    def get_credentials(self, domain_id: int, user_id: int):
+        credential = self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.GOOGLE_ADS.value)
         return credential
         
 
@@ -120,8 +120,8 @@ class GoogleAdsIntegrationsService:
         }
     
     
-    async def create_sync(self, customer_id: str, leads_type: str, list_id: str, list_name: str, domain_id: int, created_by: str, tags_id: str = None, data_map: List[DataMap] = []):
-        credentials = self.get_credentials(domain_id)
+    async def create_sync(self, customer_id: str, leads_type: str, list_id: str, list_name: str, domain_id: int, created_by: str, user: dict, data_map: List[DataMap] = []):
+        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'list_id': list_id,
@@ -132,8 +132,7 @@ class GoogleAdsIntegrationsService:
             'created_by': created_by,
             'customer_id': customer_id
         })
-        if tags_id: 
-            self.create_tag_relationships_lists(tags_id=tags_id, list_id=list_id, api_key=credentials.access_token)
+        return sync 
 
     async def process_data_sync(self, five_x_five_user, user_integration, data_sync, lead_user: LeadUser):
         profile = self.__mapped_googleads_profile(five_x_five_user, lead_user)
@@ -260,9 +259,9 @@ class GoogleAdsIntegrationsService:
         client = GoogleAdsClient(credentials=credentials, developer_token=os.getenv("GOOGLE_ADS_TOKEN"))
         return client
     
-    def create_list(self, list, domain_id):
+    def create_list(self, list, domain_id, user_id):
         try:
-            credential = self.get_credentials(domain_id)
+            credential = self.get_credentials(domain_id, user_id)
             client = self.get_google_ads_client(credential.access_token)
             channel = self.create_customer_match_user_list(client, list.customer_id, list.name)
             if not channel:

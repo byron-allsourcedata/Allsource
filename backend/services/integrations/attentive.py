@@ -60,8 +60,8 @@ class AttentiveIntegrationsService:
         return integration
 
     async def create_sync(self, leads_type: str, list_id: str, list_name: str, data_map: List[DataMap], domain_id: int,
-                          created_by: str, tags_id: str = None):
-        credentials = self.integrations_persistence.get_credentials_for_service(domain_id, SourcePlatformEnum.ATTENTIVE.value)
+                          created_by: str, user: dict):
+        credentials = self.integrations_persistence.get_credentials_for_service(domain_id=domain_id, user_id=user.get('id'), service_name=SourcePlatformEnum.ATTENTIVE.value)
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'list_id': list_id,

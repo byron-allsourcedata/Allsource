@@ -30,7 +30,8 @@ async def create_sync(data: SyncCreate, service_name: str = Query(...),
         await service.create_sync(
             **data,
             domain_id=domain.id,
-            created_by=user.get('full_name')
+            created_by=user.get('full_name'),
+            user=user
         )
         
 @router.delete('/sync')

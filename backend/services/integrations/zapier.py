@@ -25,8 +25,8 @@ class ZapierIntegrationService:
         self.integration_persistence = integration_persistence
         self.client = client
     
-    def get_credentials(self, domain_id):
-        return self.integration_persistence.get_credentials_for_service(domain_id=domain_id, service_name=SourcePlatformEnum.ZAPIER.value)
+    def get_credentials(self, domain_id: int, user_id: int):
+        return self.integration_persistence.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.ZAPIER.value)
 
     def __create_integrations(self, domain):       
         common_integration = bool(os.getenv('COMMON_INTEGRATION'))
@@ -52,8 +52,8 @@ class ZapierIntegrationService:
             raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
         return new_integrations
 
-    async def create_data_sync(self, domain_id, leads_type, hook_url, list_name, created_by):
-        credentials = self.get_credentials(domain_id)
+    async def create_data_sync(self, domain_id: int, leads_type: str, hook_url: str, list_name: str, created_by: str, user: dict):
+        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
         leads_type = self.__mapped_leads_type(leads_type)
         sync = self.sync_persistence.create_sync({
             'domain_id': domain_id,

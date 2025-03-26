@@ -44,8 +44,8 @@ class KlaviyoIntegrationsService:
                 response = self.client.request(method, redirect_url, headers=headers, json=json, data=data, params=params)
         return response
 
-    def get_credentials(self, domain_id: str):
-        credential = self.integrations_persisntece.get_credentials_for_service(domain_id, SourcePlatformEnum.KLAVIYO.value)
+    def get_credentials(self, domain_id: int, user_id: int):
+        credential = self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.KLAVIYO.value)
         return credential
         
 
@@ -81,8 +81,8 @@ class KlaviyoIntegrationsService:
     def __mapped_list(self, list) -> KlaviyoList:
         return KlaviyoList(id=list['id'], list_name=list['attributes']['name'])
     
-    def get_list(self, domain_id: int):
-        credentials = self.get_credentials(domain_id)
+    def get_list(self, domain_id: int, user_id: int):
+        credentials = self.get_credentials(domain_id, user_id)
         if not credentials:
             return
         return self.__get_list(credentials.access_token, credentials)
@@ -140,8 +140,8 @@ class KlaviyoIntegrationsService:
         if tags_id: 
             self.update_tag_relationships_lists(tags_id=tags_id, list_id=list_id, api_key=credentials.access_token)
 
-    def create_list(self, list, domain_id: int):
-        credential = self.get_credentials(domain_id)
+    def create_list(self, list, domain_id: int, user_id: int):
+        credential = self.get_credentials(domain_id, user_id)
         response = self.client.post('https://a.klaviyo.com/api/lists', headers={
             'Authorization': f'Klaviyo-API-Key {credential.access_token}',
             'revision': '2024-07-15',
@@ -208,8 +208,8 @@ class KlaviyoIntegrationsService:
             ] 
         }, api_key=api_key)
     
-    async def create_sync(self, leads_type: str, list_id: str, list_name: str, domain_id: int, created_by: str, tags_id: str = None, data_map: List[DataMap] = []):
-        credentials = self.get_credentials(domain_id)
+    async def create_sync(self, leads_type: str, list_id: str, list_name: str, domain_id: int, created_by: str, user: dict,tags_id: str = None, data_map: List[DataMap] = []):
+        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'list_id': list_id,
