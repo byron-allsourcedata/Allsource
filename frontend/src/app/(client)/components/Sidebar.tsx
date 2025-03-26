@@ -44,7 +44,7 @@ const sidebarStyles = {
     menu: {
         alignItems: 'center',
         paddingTop: '0 !important',
-        paddingBottom: '2.75rem !important',
+        pb: 0,
         '& .MuiListItem-root': {
             paddingBottom: '1rem',
             paddingTop: '1rem',
@@ -126,6 +126,7 @@ const containerStyles = (hasNotification: boolean) => ({
     container: {
         width: '100%',
         flexShrink: 0,
+        flexGrow: 1,
         fontFamily: 'Nunito Sans',
         fontSize: '14px',
         fontWeight: '400',
@@ -135,6 +136,7 @@ const containerStyles = (hasNotification: boolean) => ({
         maxWidth: '170px',
         display: 'flex',
         overflow: 'hidden',
+        overflowY: 'auto',
         flexDirection: 'column',
         justifyContent: 'start',
         position: 'relative'
@@ -211,7 +213,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
     }, []);
 
     const checkPartner = () => {
-        
+
         const storedMe = localStorage.getItem('account_info');
         let partner = false
         if (storedMe) {
@@ -287,9 +289,19 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
     };
 
     return (
-        <Box sx={containerStyles(hasNotification).container} >
+        <Box sx={{
+            ...containerStyles(hasNotification).container,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden'
+        }}>
             {/* Audience-dashboard */}
-            <List sx={sidebarStyles.menu}>
+            <List sx={{
+                ...sidebarStyles.menu,
+                flexGrow: 1,
+                overflowY: 'auto',
+                overflowX: 'hidden'
+            }}>
                 <ListItem button onClick={() => handleNavigation('/audience-dashboard')} sx={isActive('/audience-dashboard') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <SpaceDashboardIcon />
@@ -298,30 +310,30 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                 </ListItem>
                 {/* PIXEL */}
                 <List sx={{ width: 250, p: 0 }}>
-                    <ListItem 
-                    button 
-                    onClick={handleClick} 
-                    sx={isPixelActive ? sidebarStyles.activeItem : sidebarStyles.ListItem}
-                >
+                    <ListItem
+                        button
+                        onClick={handleClick}
+                        sx={isPixelActive ? sidebarStyles.activeItem : sidebarStyles.ListItem}
+                    >
 
-                    <Box sx={{ display: "flex", alignItems: 'center', justifyContent: 'space-between' }}>
-                        <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                            <LegendToggleIcon />
-                        </ListItemIcon>
-                        <ListItemText primary="Pixel" sx={{ marginRight: 2 }} />
-                        {open ? (
-                            <ExpandLessIcon />
-                        ) : (
-                            <ExpandMoreIcon />
-                        )}
-                    </Box>
-                </ListItem>
+                        <Box sx={{ display: "flex", alignItems: 'center', justifyContent: 'space-between' }}>
+                            <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                                <LegendToggleIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="Pixel" sx={{ marginRight: 2 }} />
+                            {open ? (
+                                <ExpandLessIcon />
+                            ) : (
+                                <ExpandMoreIcon />
+                            )}
+                        </Box>
+                    </ListItem>
                     <Collapse in={open} timeout="auto" unmountOnExit>
                         <List component="div" disablePadding>
                             {/* Insights */}
-                            <ListItem 
-                                button 
-                                onClick={() => handleNavigation('/dashboard')} 
+                            <ListItem
+                                button
+                                onClick={() => handleNavigation('/dashboard')}
                                 sx={isActive('/dashboard') ? { ...sidebarStyles.activeItem, pl: 4 } : { ...sidebarStyles.ListItem, pl: 4 }}
                             >
                                 <ListItemIcon sx={sidebarStyles.listItemIcon}>
@@ -329,11 +341,11 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                                 </ListItemIcon>
                                 <ListItemText primary="Insights" />
                             </ListItem>
-                            
+
                             {/* Contacts */}
-                            <ListItem 
-                                button 
-                                onClick={() => handleNavigation('/leads')} 
+                            <ListItem
+                                button
+                                onClick={() => handleNavigation('/leads')}
                                 sx={isActive('/leads') ? { ...sidebarStyles.activeItem, pl: 4 } : { ...sidebarStyles.ListItem, pl: 4 }}
                             >
                                 <ListItemIcon sx={sidebarStyles.listItemIcon}>
@@ -343,9 +355,9 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                             </ListItem>
 
                             {/* Company */}
-                            <ListItem 
-                                button 
-                                onClick={() => handleNavigation('/company')} 
+                            <ListItem
+                                button
+                                onClick={() => handleNavigation('/company')}
                                 sx={isActive('/company') ? { ...sidebarStyles.activeItem, pl: 4 } : { ...sidebarStyles.ListItem, pl: 4 }}
                             >
                                 <ListItemIcon sx={sidebarStyles.listItemIcon}>
@@ -355,9 +367,9 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                             </ListItem>
 
                             {/* Suppressions */}
-                            <ListItem 
-                                button 
-                                onClick={() => handleNavigation('/suppressions')} 
+                            <ListItem
+                                button
+                                onClick={() => handleNavigation('/suppressions')}
                                 sx={isActive('/suppressions') ? { ...sidebarStyles.activeItem, pl: 4 } : { ...sidebarStyles.ListItem, pl: 4 }}
                             >
                                 <ListItemIcon sx={sidebarStyles.listItemIcon}>
@@ -385,7 +397,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                 {/* Smart-audience */}
                 <ListItem button onClick={() => handleNavigation('/smart-audiences')} sx={isActive(`/smart-audiences`) ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <AutoFixHighIcon sx={{rotate:'275deg', mb:1}}/>
+                        <AutoFixHighIcon sx={{ rotate: '275deg', mb: 1 }} />
                     </ListItemIcon>
                     <ListItemText primary="Smart Audiences" sx={{ whiteSpace: 'nowrap' }} />
                 </ListItem>
@@ -428,26 +440,16 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                     </ListItemIcon>
                     <ListItemText primary="Rules" />
                 </ListItem> */}
-                {/* <ListItem button onClick={() => handleNavigation('/partners')} sx={isActive('/partners') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
-                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <AccountBoxIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Partners" />
-                </ListItem> */}
             </List>
             <Box sx={{
-                position: 'absolute',
-                bottom: '0',
-                left: '0',
-                right: '0',
-                width: '100%',
-                '@media (max-height: 600px)': {
-                    position: 'relative',
-                }
+                position: 'sticky',
+                bottom: 0,
+                backgroundColor: 'white',
+                zIndex: 10
             }}>
                 <SetupSection percent_steps={activatePercent ? activatePercent : 0} />
                 <Box sx={sidebarStyles.settings}>
-                    <ListItem button onClick={() => handleNavigation('settings?section=accountDetails')} sx={isActive('/settings') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                    <ListItem button onClick={() => handleNavigation('/settings?section=accountDetails')} sx={isActive('/settings') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                         <ListItemIcon sx={sidebarStyles.listItemIcon}>
                             <SettingsIcon />
                         </ListItemIcon>

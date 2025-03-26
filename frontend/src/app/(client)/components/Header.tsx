@@ -22,6 +22,7 @@ const headerStyles = {
   headers: {
     display: 'flex',
     padding: '1.125rem 1.5rem',
+    pl: '.75rem',
     justifyContent: 'space-between',
     alignItems: 'center',
     minHeight: '4.25rem',
@@ -39,8 +40,6 @@ const headerStyles = {
   logoContainer: {
     display: 'flex',
     alignItems: 'center',
-    gap: '3.45rem',
-    paddingLeft: 2,
   },
 }
 
@@ -168,8 +167,8 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification, NotificationDat
       </Box>
       <Box sx={{ ...headerStyles.headers, display: { xs: 'none', md: 'flex' } }}>
         <Box sx={headerStyles.logoContainer}>
-          <IconButton onClick={handleLogoClick} sx={{ "&:hover": { backgroundColor: 'transparent' } }}>
-            <Image priority src="/logo.svg" alt="logo" height={30} width={50} />
+          <IconButton onClick={handleLogoClick} sx={{ "&:hover": { backgroundColor: 'transparent' }, cursor: 'pointer', padding: '2px' }}>
+            <Image priority src="/logo.svg" alt="logo" height={31} width={130} />
           </IconButton>
           {visibleButton && (
             <Button

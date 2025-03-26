@@ -18,13 +18,12 @@ interface ExpandableFilterProps {
 }
 
 interface FilterData {
-    nestedSelections: { [key: string]: string };
-    expandedNested: { [key: string]: boolean };
-    selectedOptionsPersonalEmail: string[];
-    selectedOptionsBusinessEmail: string[];
-    selectedOptionsPhone: string[];
-    selectedOptionsPostalCAS: string[];
-    selectedOptionsLinkedIn: string[];
+    recency_params: { [key: string]: string };
+    personal_email: string[];
+    business_email: string[];
+    phone: string[];
+    postal_cas: string[];
+    linked_in: string[];
 }
 
 const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseType, onSkip, onValidate, onEdit }) => {
@@ -112,13 +111,12 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
         setIsOpenPostalCAS(false);
         setIsOpenLinkedIn(false);
         onValidate({
-            nestedSelections,
-            expandedNested,
-            selectedOptionsPersonalEmail,
-            selectedOptionsBusinessEmail,
-            selectedOptionsPhone,
-            selectedOptionsPostalCAS,
-            selectedOptionsLinkedIn
+            personal_email: selectedOptionsPersonalEmail,
+            business_email: selectedOptionsBusinessEmail,
+            phone: selectedOptionsPhone,
+            postal_cas: selectedOptionsPostalCAS,
+            linked_in: selectedOptionsLinkedIn,
+            recency_params: nestedSelections,
         });
     }
 
@@ -189,6 +187,14 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
             setValidate(false)
         }
     }, [targetAudience, useCaseType]);
+
+    const isAnyFilterSelected =
+    selectedOptionsPersonalEmail.length > 0 ||
+    selectedOptionsBusinessEmail.length > 0 ||
+    selectedOptionsPhone.length > 0 ||
+    selectedOptionsPostalCAS.length > 0 ||
+    selectedOptionsLinkedIn.length > 0 ||
+    Object.keys(nestedSelections).length > 0;
 
     return (
         <Box>
@@ -711,7 +717,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({ targetAudience, useCaseTy
                             Cancel
                         </Typography>
                     </Button>
-                    <Button variant="contained" disabled={nestedSelections ? false : true} onClick={handleValidate} sx={{
+                    <Button variant="contained" disabled={!isAnyFilterSelected} onClick={handleValidate} sx={{
                         ...smartAudiences.buttonform,
                         backgroundColor: "rgba(80, 82, 178, 1)",
                         width: "237px",

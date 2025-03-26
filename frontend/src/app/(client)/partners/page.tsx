@@ -196,7 +196,7 @@ const Partners: React.FC = () => {
 
     return (
         <>
-            <Box sx={{display: 'flex', flexDirection: 'column', height: 'calc(100vh - 4.25rem)'}}>
+            <Box sx={{display: 'flex', flexDirection: 'column'}}>
             <Box sx={{ 
         flexShrink: 0, 
         position: 'sticky', 
