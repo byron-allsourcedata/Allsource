@@ -74,6 +74,8 @@ class IntegrationService:
     def get_leads_for_zapier(self, domain):
         five_x_five_users = self.lead_persistence.get_last_leads_for_zapier(domain.id)
         valid_users = []
+        if not five_x_five_users:
+            return None
         for five_x_five_user in five_x_five_users:
                 email_fields = [
                     'business_email', 

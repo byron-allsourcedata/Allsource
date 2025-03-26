@@ -90,8 +90,7 @@ class SlackService:
                 "channels:join",
                 "channels:manage",
                 "channels:read",
-                "chat:write",
-                "chat:write.public"
+                "chat:write"
             ],
             user_scopes=[],
             redirect_uri=SlackConfig.redirect_url,
@@ -131,14 +130,17 @@ class SlackService:
                 return {'status': "Maximiz user not found"}
         else:
             return {'status': "OAuth failed"}
-    
-    def get_bot_token_by_slack_team_id(self, team_id, user_id):
-        user_integration = self.integrations_persistence.get_credential(slack_team_id=team_id, user_id=user_id)
-        if user_integration:
-            return user_integration.access_token
+     
+    def update_app_home_opened(self, team_id, user_id):
+        self.integrations_persistence.update_app_home_opened(slack_team_id=team_id, user_id=user_id)
+        return True
     
     def handle_app_home_opened(self, user_id, team_id):
-        bot_token = self.get_bot_token_by_slack_team_id(team_id, user_id)
+        user_integration = self.integrations_persistence.get_credential(slack_team_id=team_id, user_id=user_id)
+        if user_integration.app_home_opened:
+            return
+        
+        bot_token = user_integration.access_token
         if not bot_token:
             logger.error(f"Error: Bot token: {bot_token} not found")
             return
@@ -149,6 +151,7 @@ class SlackService:
                 channel=user_id,
                 text="Welcome to App Home! I'll share updates via Contacts using the Maximiz app."
             )
+            self.update_app_home_opened(team_id, user_id)
         except SlackApiError as e:
             logger.error(f"Error sending message: {e.response['error']}")
 
