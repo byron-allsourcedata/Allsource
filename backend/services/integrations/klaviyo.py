@@ -130,7 +130,6 @@ class KlaviyoIntegrationsService:
         credentials = self.get_credentials(domain_id, user_id)
         sync = self.sync_persistence.edit_sync({
             'integration_id': credentials.id,
-            'domain_id': domain_id,
             'leads_type': leads_type,
             'data_map': data_map,
             'created_by': created_by,

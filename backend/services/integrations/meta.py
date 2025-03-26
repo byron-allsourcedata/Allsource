@@ -238,7 +238,6 @@ class MetaIntegrationsService:
         
         sync = self.sync_persistence.edit_sync({
             'integration_id': credentials.id,
-            'domain_id': domain_id,
             'leads_type': leads_type,
             'created_by': created_by,
         }, integrations_users_sync_id)

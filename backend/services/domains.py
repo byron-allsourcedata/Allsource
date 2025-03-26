@@ -1,5 +1,6 @@
 from fastapi import HTTPException
 import uuid
+import os
 from enums import SubscriptionStatus
 from persistence.domains import UserDomainsPersistence, UserDomains
 from persistence.plans_persistence import PlansPersistence
@@ -61,7 +62,7 @@ class UserDomainsService:
         self.domain_persistence.db.commit()
         return api_key
 
-    def get_api_key(self, domain_id):
+    def get_api_key(self, domain_id: int):
         domains = self.domain_persistence.get_domain_by_filter(id=domain_id)
         if not domains:
             raise HTTPException(status_code=404, detail={'status': 'Domain not found'})

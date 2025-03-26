@@ -119,7 +119,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         try {
             setLoading(true)
             const response = await axiosInstance.get('/slack/get-channels')
-            if (response.data.status === 'authentication_failed'){
+            if (response.data.status === 'authentication_failed') {
                 showErrorToast('Key authentication failed')
                 onClose();
                 return
@@ -143,7 +143,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         }
     }
     useEffect(() => {
-        if (open) {
+        if (open && !data) {
             getChannelList()
         }
     }, [open])
@@ -155,7 +155,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                 name: selectedOption?.name
             }
             );
-            
+
 
             if (newListResponse.data.status !== 'SUCCESS') {
                 showErrorToast('Error when trying to create new list')
@@ -172,14 +172,15 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         setLoading(true);
         try {
             let list: ChannelList | null = null;
-    
-            if (selectedOption && selectedOption.id === '-1') {
-                list = await createNewList();
-            } else if (selectedOption) {
-                list = selectedOption;
-            } else {
-                showToast('Please select a valid option.');
-                return;
+            if (!listName) {
+                if (selectedOption && selectedOption.id === '-1') {
+                    list = await createNewList();
+                } else if (selectedOption) {
+                    list = selectedOption;
+                } else {
+                    showToast('Please select a valid option.');
+                    return;
+                }
             }
             if (validateTab2()) {
                 setValue((prevValue) => String(Number(prevValue) + 1));
@@ -192,40 +193,34 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
             setLoading(false);
         }
     };
-    
+
     const handleSaveSync = async () => {
-        if (!savedList) {
-            showToast('No list data found. Please save the list first.');
-            return;
-        }
-    
         setLoading(true);
         try {
             if (isEdit) {
                 const response = await axiosInstance.put('/data-sync/sync', {
                     integrations_users_sync_id: data.id,
-                    list_id: savedList.id,
-                    name: savedList.name,
                     leads_type: selectedRadioValue,
                     data_map: customFields
                 }, {
                     params: { service_name: 'slack' }
                 });
-    
+
                 if (response.status === 201 || response.status === 200) {
                     onClose();
                     showToast('Data sync updated successfully');
+                    triggerSync();
                 }
             } else {
                 const response = await axiosInstance.post('/data-sync/sync', {
-                    list_id: savedList.id,
-                    list_name: savedList.name,
+                    list_id: savedList?.id,
+                    list_name: savedList?.name,
                     leads_type: selectedRadioValue,
                     data_map: customFields
                 }, {
                     params: { service_name: 'slack' }
                 });
-    
+
                 if (response.status === 201 || response.status === 200) {
                     onClose();
                     showToast('Data sync created successfully');
@@ -238,7 +233,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
             setLoading(false);
         }
     };
-    
+
     const handleClick = (event: React.MouseEvent<HTMLInputElement>) => {
         setIsShrunk(true);
         setIsDropdownOpen(prev => !prev);
@@ -388,7 +383,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                 return (
                     <Button
                         variant="contained"
-                        disabled={!selectedOption}
+                        disabled={!selectedOption && !listName}
                         onClick={handleSaveList}
                         sx={{
                             backgroundColor: '#5052B2',
@@ -415,7 +410,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                     <Button
                         variant="contained"
                         onClick={handleSaveSync}
-                        disabled={!selectedOption || !selectedRadioValue.trim()}
+                        disabled={!listName && !selectedRadioValue.trim()}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito Sans",
@@ -808,6 +803,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                                     ref={textFieldRef}
                                                     variant="outlined"
                                                     value={listName}
+                                                    disabled={data}
                                                     onClick={handleClick}
                                                     size="small"
                                                     fullWidth
@@ -829,9 +825,13 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                                     InputProps={{
                                                         endAdornment: (
                                                             <InputAdornment position="end">
-                                                                <IconButton onClick={handleDropdownToggle} edge="end">
-                                                                    {isDropdownOpen ? <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} /> : <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />}
-                                                                </IconButton>
+                                                                {
+                                                                    !data ? (
+                                                                        <IconButton onClick={handleDropdownToggle} edge="end">
+                                                                            {isDropdownOpen ? <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} /> : <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />}
+                                                                        </IconButton>
+                                                                    ) : ''
+                                                                }
                                                             </InputAdornment>
                                                         ),
                                                         sx: klaviyoStyles.formInput
@@ -868,7 +868,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                                     }}
                                                 >
                                                     {/* Show "Create New List" option */}
-                                                    <MenuItem onClick={() => handleSelectOption('createNew')} sx={{
+                                                    <MenuItem disabled={data} onClick={() => handleSelectOption('createNew')} sx={{
                                                         borderBottom: showCreateForm ? "none" : "1px solid #cdcdcd",
                                                         '&:hover': {
                                                             background: 'rgba(80, 82, 178, 0.10)'
@@ -1053,19 +1053,19 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                 }}>
                                     <Box sx={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
                                         <Typography variant="h6" className='first-sub-title'>Map list</Typography>
-                                        {selectedOption?.name && 
-                                        <Typography variant='h6' sx={{
-                                            background: '#EDEDF7',
-                                            borderRadius: '3px',
-                                            fontFamily: 'Roboto',
-                                            fontSize: '12px',
-                                            fontWeight: '400',
-                                            color: '#5f6368',
-                                            padding: '2px 4px',
-                                            lineHeight: '16px'
-                                        }}>
-                                            {selectedOption?.name}
-                                        </Typography>}
+                                        {selectedOption?.name &&
+                                            <Typography variant='h6' sx={{
+                                                background: '#EDEDF7',
+                                                borderRadius: '3px',
+                                                fontFamily: 'Roboto',
+                                                fontSize: '12px',
+                                                fontWeight: '400',
+                                                color: '#5f6368',
+                                                padding: '2px 4px',
+                                                lineHeight: '16px'
+                                            }}>
+                                                {selectedOption?.name}
+                                            </Typography>}
                                     </Box>
 
                                     <Grid container alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' }, marginBottom: '14px' }}>

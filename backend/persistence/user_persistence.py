@@ -39,7 +39,7 @@ class UserPersistence:
         self.db.add(user_domain)
         self.db.commit()
         return user_domain
-
+    
     def charge_credit(self, user_id: int):
         user = self.db.query(Users).filter(Users.id == user_id).first()
         
@@ -132,7 +132,8 @@ class UserPersistence:
                 'is_stripe_connected': user.is_stripe_connected,
                 'stripe_connected_email': user.stripe_connected_email,
                 'stripe_connected_currently_due': user.stripe_connected_currently_due,
-                'partner_is_active': partner_is_active
+                'partner_is_active': partner_is_active,
+                'api_key': user.api_key
             }
         self.db.rollback()
         if result_as_object:

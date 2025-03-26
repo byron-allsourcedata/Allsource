@@ -84,7 +84,6 @@ class S3IntegrationService:
         sync = self.sync_persistence.edit_sync({
             'integration_id': credentials.id,
             'list_name': list_name,
-            'domain_id': domain_id,
             'leads_type': leads_type,
             'data_map': data_map,
             'created_by': created_by,

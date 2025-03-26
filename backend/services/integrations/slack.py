@@ -41,6 +41,17 @@ class SlackService:
     def get_credential(self, domain_id, user_id):
         return self.integrations_persistence.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.SLACK.value)
     
+    
+    def edit_sync(self, leads_type: str, integrations_users_sync_id: int, domain_id: int, created_by: str, user_id: int, data_map: List[DataMap] = []):
+        credentials = self.get_credential(domain_id, user_id)
+        sync = self.sync_persistence.edit_sync({
+            'integration_id': credentials.id,
+            'leads_type': leads_type,
+            'data_map': data_map,
+            'created_by': created_by,
+        }, integrations_users_sync_id)
+        return sync
+    
     def update_credential(self, domain_id, access_token):
         return self.integrations_persistence.update_credential_for_service(domain_id, SourcePlatformEnum.SLACK.value, access_token)
 
