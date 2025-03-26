@@ -543,15 +543,13 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         setCustomFields(customFields.filter((_, i) => i !== index));
     };
 
-    const handleDeleteOpen = () => {
-        setOpenDeletePopup(true);
-        };
-
     const handleMapListChange = (id: number, field: 'value' | 'type', value: string) => {
         setRows(rows.map(row =>
             row.id === id ? { ...row, [field]: value } : row
         ));
     };
+
+        // Delete default rows
 
     const handleClickOpen = (event: React.MouseEvent<HTMLElement>, id: number) => {
         setDeleteAnchorEl(event.currentTarget);
@@ -574,6 +572,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     const deleteId = deleteOpen ? 'delete-popover' : undefined;
     
     // Create Integration
+
+    const handleDeleteOpen = () => {
+        setOpenDeletePopup(true);
+        };
 
     const handleSaveSettings = (newIntegration: any) => {
         setIntegrationsCredentials(prevIntegrations => {
@@ -698,7 +700,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
 
     const createNewList = async () => {
         try {
-
             const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
                 name: selectedOptionMailchimp?.list_name
             }, {
@@ -986,6 +987,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
             getList()
         }
     }, [optionAdAccountMeta])
+    
 
     return (
         <>
@@ -1000,6 +1002,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                         zIndex: 1301,
                         top: 0,
                         bottom: 0,
+                        overflowY: "auto",
                         '@media (max-width: 600px)': {
                             width: '100%',
                         }
@@ -1025,7 +1028,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                         <BorderLinearProgress variant="indeterminate" />
                     </Box>
                 )}
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: 11, backgroundColor: '#fff' }}>
                     <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
                         Create smart audience sync
                     </Typography>
@@ -1042,10 +1045,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                         </IconButton>
                     </Box>
                 </Box>
-                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
-                    <Box sx={{ width: '100%', position: 'relative' }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: "100%"}}>
+                    <Box sx={{ width: '100%'}}>
                         <TabContext value={value}>
-                            <Box sx={{ pt: 3}}>
+                            <Box sx={{ pt: 3, pb: 3, position: "sticky", top: 60, backgroundColor: "#fff", zIndex: 10}}>
                                 <TabList centered
                                     TabIndicatorProps={{ sx: { backgroundColor: "#5052b2"} }}
                                     sx={{
@@ -1069,7 +1072,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                             <TabPanel value="1" sx={{ p: 0 }}>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
                                     <Box sx={{ p:0, width: '100%' }}>
-                                        <Box sx={{ px: 2, py: 3, display: "flex", flexDirection: "column", gap: 3, borderRadius: '4px' }}>
+                                        <Box sx={{ px: 2, pb: 3, display: "flex", flexDirection: "column", gap: 3, borderRadius: '4px' }}>
                                             <Typography variant="h6" className="first-sub-title">
                                                 Choose where you want to sync
                                             </Typography>
@@ -1127,7 +1130,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                 </Box>
                             </TabPanel>
                             <TabPanel value="2" sx={{ p: 0 }}>
-                                <Box sx={{display: "flex", px: 2, py: 3}}>
+                                <Box sx={{display: "flex", px: 2, pb: 3}}>
                                     <Card
                                         sx={{
                                             display: "flex",
@@ -1137,7 +1140,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                             width: "100%"
                                         }}
                                         >
-                                        <CardContent>
+                                        <CardContent sx={{width: "100%"}}>
                                             <Typography className='first-sub-title' sx={{ marginBottom: 2 }}>
                                                 Choose number of contacts that you want to sync
                                             </Typography>
@@ -1184,7 +1187,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                             </TabPanel>
                             {contactSyncTab && 
                                 <TabPanel value="3" sx={{ p: 0 }}>
-                                    <Box sx={{ display: 'flex', px: 2, py: 3, flexDirection: 'column', gap: '16px' }}>
+                                    <Box sx={{ display: 'flex', px: 2, pb: 3, flexDirection: 'column', gap: '16px' }}>
                                         <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
                                                 <Image src={activeImageService} alt={activeService ?? "service"} height={26} width={32} />
@@ -2002,7 +2005,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                             <TabPanel value={contactSyncTab ? "4" : "3"} sx={{ p: 0 }}>
                                 <Box sx={{
                                         borderRadius: '4px',
-                                        padding: '16px 24px',
+                                        px: 2, pb: 3,
                                         overflowX: 'auto'
                                     }}>
                                         <Box sx={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
@@ -2446,24 +2449,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                             </TabPanel>
                         </TabContext>
                     </Box>
-                    <Box sx={{ width: '100%', border: '1px solid #e4e4e4' }}>
-                        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+                    <Box sx={{ width: '100%', position: 'sticky', bottom: 0, zIndex: 9999, border: '1px solid #e4e4e4' }}>
+                        <Box sx={{ position: 'sticky', bottom: 0, zIndex: 1302, backgroundColor: '#fff', borderTop: '1px solid #e4e4e4' }}>
                             <Box
-                                sx={{
-                                position: 'sticky',
-                                bottom: 0,
-                                width: "100%",
-                                zIndex: 1302,
-                                backgroundColor: 'rgba(255, 255, 255, 1)',
-                                display: 'flex',
-                                justifyContent: 'flex-end',
-                                marginTop: '1em',
-                                padding: '1em',
-                                gap: 3,
-                                borderTop: '1px solid rgba(228, 228, 228, 1)',
-                                "@media (max-width: 600px)":
-                                    { width: '100%' }
-                                }}
+                                sx={{ display: 'flex', justifyContent: 'flex-end', gap: 3, p: 2 }}
                             >
                                 <Button
                                     variant="contained"
@@ -2503,6 +2492,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                     </Box>
                 </Box>
             </Drawer>
+
+            
 
             {/* Add Integration */}
             <GoogleADSConnectPopup 
