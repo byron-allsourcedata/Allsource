@@ -187,8 +187,8 @@ class OmnisendIntegrationService:
         )
 
     def edit_sync(self, leads_type: str, integrations_users_sync_id: int,
-                  data_map: List[DataMap], domain_id: int, created_by: str):
-        credentials = self.get_credentials(domain_id)
+                  data_map: List[DataMap], domain_id: int, created_by: str, user_id: int):
+        credentials = self.get_credentials(domain_id, user_id)
         sync = self.sync_persistence.edit_sync({
             'integration_id': credentials.id,
             'domain_id': domain_id,

@@ -126,19 +126,16 @@ class KlaviyoIntegrationsService:
             raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
         
     
-    def edit_sync(self, leads_type: str, list_id: str, list_name: str, integrations_users_sync_id: int, domain_id: int, created_by: str, data_map: List[DataMap] = [], tags_id: str = None):
-        credentials = self.get_credentials(domain_id)
+    def edit_sync(self, leads_type: str, integrations_users_sync_id: int, domain_id: int, created_by: str, user_id: int, data_map: List[DataMap] = []):
+        credentials = self.get_credentials(domain_id, user_id)
         sync = self.sync_persistence.edit_sync({
             'integration_id': credentials.id,
-            'list_id': list_id,
-            'list_name': list_name,
             'domain_id': domain_id,
             'leads_type': leads_type,
             'data_map': data_map,
             'created_by': created_by,
         }, integrations_users_sync_id)
-        if tags_id: 
-            self.update_tag_relationships_lists(tags_id=tags_id, list_id=list_id, api_key=credentials.access_token)
+        return sync
 
     def create_list(self, list, domain_id: int, user_id: int):
         credential = self.get_credentials(domain_id, user_id)

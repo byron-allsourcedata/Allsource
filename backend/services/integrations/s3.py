@@ -79,8 +79,8 @@ class S3IntegrationService:
         
         return IntegrationsStatus.SUCCESS
     
-    def edit_sync(self, leads_type: str, list_name: str, data_map: List[DataMap], integrations_users_sync_id: int, domain_id: int, created_by: str):
-        credentials = self.get_credentials(domain_id)
+    def edit_sync(self, leads_type: str, list_name: str, data_map: List[DataMap], integrations_users_sync_id: int, domain_id: int, created_by: str, user_id: int):
+        credentials = self.get_credentials(domain_id, user_id)
         sync = self.sync_persistence.edit_sync({
             'integration_id': credentials.id,
             'list_name': list_name,

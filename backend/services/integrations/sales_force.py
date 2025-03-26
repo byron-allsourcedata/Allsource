@@ -82,12 +82,10 @@ class SalesForceIntegrationsService:
             return
         return self.__get_list(credentials.access_token, credentials)
     
-    def edit_sync(self, leads_type: str, list_id: str, list_name: str, integrations_users_sync_id: int, domain_id: int, created_by: str, data_map: List[DataMap] = [], tags_id: str = None):
-        credentials = self.get_credentials(domain_id)
+    def edit_sync(self, leads_type: str, integrations_users_sync_id: int, domain_id: int, created_by: str, user_id: int, data_map: List[DataMap] = []):
+        credentials = self.get_credentials(domain_id, user_id)
         sync = self.sync_persistence.edit_sync({
             'integration_id': credentials.id,
-            'list_id': list_id,
-            'list_name': list_name,
             'domain_id': domain_id,
             'leads_type': leads_type,
             'data_map': data_map,

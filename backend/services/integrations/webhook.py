@@ -283,7 +283,7 @@ class WebhookIntegrationService:
                         
         return properties
                     
-    def edit_sync(self, list_name: str, webhook_url: str, method: str, data_map: List[DataMap], integrations_users_sync_id, leads_type: str, domain_id: int, created_by: str):
+    def edit_sync(self, list_name: str, webhook_url: str, method: str, data_map: List[DataMap], integrations_users_sync_id, leads_type: str, domain_id: int, created_by: str, user_id: int):
         sync = self.sync_persistence.edit_sync({
             'list_name': list_name,
             'domain_id': domain_id,

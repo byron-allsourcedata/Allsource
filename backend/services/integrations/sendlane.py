@@ -76,8 +76,8 @@ class SendlaneIntegrationService:
         
         return IntegrationsStatus.SUCCESS
     
-    def edit_sync(self, leads_type: str, list_id: str, list_name: str, integrations_users_sync_id: int, domain_id: int, created_by: str):
-        credentials = self.get_credentials(domain_id)
+    def edit_sync(self, leads_type: str, list_id: str, list_name: str, integrations_users_sync_id: int, domain_id: int, created_by: str, user_id: int):
+        credentials = self.get_credentials(domain_id, user_id)
         sync = self.sync_persistence.edit_sync({
             'integration_id': credentials.id,
             'list_id': list_id,

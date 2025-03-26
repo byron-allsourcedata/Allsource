@@ -93,6 +93,7 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({ open, onClose, 
                     resetToDefaultValues();
                     onClose();
                     showToast('Data sync updated successfully');
+                    triggerSync();
                 }
             } else {
                 const response = await axiosInstance.post('/data-sync/sync', {

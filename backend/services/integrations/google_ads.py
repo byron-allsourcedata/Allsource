@@ -85,17 +85,15 @@ class GoogleAdsIntegrationsService:
         
         return integartion
 
-    def edit_sync(self, leads_type: str, list_id: str, integrations_users_sync_id: int, domain_id: int, created_by: str, data_map: List[DataMap] = None ,tags_id: str = None):
-        credentials = self.get_credentials(domain_id)
+    def edit_sync(self, leads_type: str, integrations_users_sync_id: int, domain_id: int, created_by: str, user_id: int):
+        credentials = self.get_credentials(domain_id, user_id)
         sync = self.sync_persistence.edit_sync({
             'integration_id': credentials.id,
             'domain_id': domain_id,
             'leads_type': leads_type,
             'created_by': created_by,
         }, integrations_users_sync_id)
-        if tags_id: 
-            self.update_tag_relationships_lists(tags_id=tags_id, list_id=list_id, api_key=credentials.access_token)
-
+        return sync
 
     def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
         client_id = os.getenv("CLIENT_GOOGLE_ID")

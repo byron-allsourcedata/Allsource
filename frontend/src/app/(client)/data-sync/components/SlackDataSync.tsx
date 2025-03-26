@@ -34,6 +34,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
     const [selectedRadioValue, setSelectedRadioValue] = useState(data?.type);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedOption, setSelectedOption] = useState<ChannelList | null>(null);
+    const [listName, setlistName] = useState<string | null>(data?.name ?? '');
     const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
     const [newListName, setNewListName] = useState<string>('');
     const [isShrunk, setIsShrunk] = useState<boolean>(false);
@@ -98,6 +99,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         setSelectedRadioValue('');
         setAnchorEl(null);
         setSelectedOption(null);
+        setlistName('')
         setShowCreateForm(false);
         setNewListName('');
         setIsShrunk(false);
@@ -130,6 +132,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                     id: foundItem.id,
                     name: foundItem.name
                 });
+                setlistName(foundItem.name)
             } else {
                 setSelectedOption(null);
             }
@@ -267,6 +270,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                 id: value.id,
                 name: value.name,
             });
+            setlistName(value.name)
             setIsDropdownValid(true);
             handleClose();
         } else {
@@ -293,6 +297,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
         if (valid) {
             const newSlackList = { id: '-1', name: newListName }
             setSelectedOption(newSlackList);
+            setlistName(newSlackList.name)
             if (isKlaviyoList(newSlackList)) {
                 setIsDropdownValid(true);
             }
@@ -802,13 +807,13 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                                 <TextField
                                                     ref={textFieldRef}
                                                     variant="outlined"
-                                                    value={selectedOption?.name}
+                                                    value={listName}
                                                     onClick={handleClick}
                                                     size="small"
                                                     fullWidth
-                                                    label={selectedOption ? '' : 'Select or Create new list'}
+                                                    label={listName ? '' : 'Select or Create new list'}
                                                     InputLabelProps={{
-                                                        shrink: selectedOption ? false : isShrunk,
+                                                        shrink: listName ? false : isShrunk,
                                                         sx: {
                                                             fontFamily: 'Nunito Sans',
                                                             fontSize: '12px',
@@ -822,7 +827,6 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                                         }
                                                     }}
                                                     InputProps={{
-
                                                         endAdornment: (
                                                             <InputAdornment position="end">
                                                                 <IconButton onClick={handleDropdownToggle} edge="end">
