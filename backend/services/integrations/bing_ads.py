@@ -55,15 +55,24 @@ class BingAdsIntegrationsService:
             credential.error_message = None
             self.integrations_persisntece.db.commit()
             return credential
-        integartions = self.integrations_persisntece.create_integration({
-            'domain_id': domain_id,
+        
+        common_integration = bool(os.getenv('COMMON_INTEGRATION'))
+        integration_data = {
             'access_token': api_key,
             'full_name': user.get('full_name'),
             'service_name': SourcePlatformEnum.BING_ADS.value
-        })
-        if not integartions:
+        }
+
+        if common_integration:
+            integration_data['user_id'] = user.get('id')
+        else:
+            integration_data['domain_id'] = domain_id
+            
+        integartion = self.integrations_persisntece.create_integration(integration_data)
+            
+        if not integartion:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
-        return integartions
+        return integartion
     
     def get_list(self, domain_id: int):
         credentials = self.get_credentials(domain_id)

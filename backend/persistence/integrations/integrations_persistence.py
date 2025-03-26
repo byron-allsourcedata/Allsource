@@ -2,7 +2,7 @@ from models.integrations.users_domains_integrations import UserIntegration, Inte
 from models.integrations.external_apps_installations import ExternalAppsInstall
 from models.kajabi import Kajabi
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import and_, or_
 
 class IntegrationsPresistence:
 
@@ -52,10 +52,16 @@ class IntegrationsPresistence:
         self.db.query(ExternalAppsInstall).filter(ExternalAppsInstall.store_hash == shop_hash).delete()
         self.db.commit()
         
-    def get_integration_by_user(self, domain_id: int, filters) -> list[UserIntegration]:
+    def get_integration_by_user(self, domain_id: int, filters, user_id: int) -> list[UserIntegration]:
         query = self.db.query(UserIntegration).filter(
-            UserIntegration.domain_id == domain_id,
-            UserIntegration.service_name.notin_(filters)
+            and_(
+                or_(
+                    UserIntegration.domain_id == domain_id,
+                    UserIntegration.user_id == user_id
+                ),
+                UserIntegration.service_name.notin_(filters)
+            )
+            
         )
         return query.all()
     

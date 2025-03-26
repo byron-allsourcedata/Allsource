@@ -8,6 +8,7 @@ from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
 from persistence.domains import UserDomainsPersistence
 import httpx
+import os
 from datetime import datetime, timedelta
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
 from facebook_business.adobjects.adaccount import AdAccount
@@ -75,25 +76,34 @@ class MetaIntegrationsService:
             self.integrations_persisntece.db.commit()
             return
         ad_account_info = self.get_info_by_access_token(access_token.get('access_token'))
-        new_integration = self.integrations_persisntece.create_integration({
-            'domain_id': domain.id,
+        
+        common_integration = bool(os.getenv('COMMON_INTEGRATION'))
+        integration_data = {
             'ad_account_id': ad_account_info.get('id'),
             'access_token': access_token.get('access_token'),
+            'full_name': user.get('full_name'),
             'expire_access_token': access_token.get('expires_in'),
             'last_access_token_update': datetime.now(),
             'service_name': SourcePlatformEnum.META.value
-        })
+        }
+
+        if common_integration:
+            integration_data['user_id'] = user.get('id')
+        else:
+            integration_data['domain_id'] = domain.id
             
+        integartion = self.integrations_persisntece.create_integration(integration_data)
+        
         integrations = self.integrations_persisntece.get_all_integrations_filter_by(ad_account_id=ad_account_info.get('id'), domain_id=domain.id)
         for integration in integrations:
             integration.access_token == access_token.get('access_token')
             integration.expire_access_token = access_token.get('expires_in')
             integration.last_access_token_update = datetime.now()
             self.integrations_persisntece.db.commit()
-        if not new_integration:
+        if not integartion:
             raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
         
-        return new_integration
+        return integartion
     
     def check_custom_audience_terms(self, ad_account_id, access_token):
         url = f"https://graph.facebook.com/v20.0/{ad_account_id}/customaudiences"

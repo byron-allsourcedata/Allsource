@@ -6,7 +6,7 @@ from persistence.domains import UserDomainsPersistence
 from schemas.integrations.integrations import *
 from schemas.integrations.klaviyo import *
 from fastapi import HTTPException
-import requests
+import os
 from datetime import datetime, timedelta
 from utils import extract_first_email
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
@@ -57,15 +57,25 @@ class KlaviyoIntegrationsService:
             credential.error_message = None
             self.integrations_persisntece.db.commit()
             return credential
-        integartions = self.integrations_persisntece.create_integration({
-            'domain_id': domain_id,
+        
+        common_integration = bool(os.getenv('COMMON_INTEGRATION'))
+        integration_data = {
             'access_token': api_key,
             'full_name': user.get('full_name'),
             'service_name': SourcePlatformEnum.KLAVIYO.value
-        })
-        if not integartions:
+        }
+
+        if common_integration:
+            integration_data['user_id'] = user.get('id')
+        else:
+            integration_data['domain_id'] = domain_id
+            
+        integartion = self.integrations_persisntece.create_integration(integration_data)
+        
+        if not integartion:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
-        return integartions
+        
+        return integartion
 
 
     def __mapped_list(self, list) -> KlaviyoList:

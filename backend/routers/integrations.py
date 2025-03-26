@@ -51,7 +51,7 @@ async def get_integrations_credentials(integration_serivce: IntegrationService =
     if source_platform in ['big_commerce', 'shopify']:
         filters = ['big_commerce', 'shopify']
         
-    integration = integration_serivce.get_user_service_credentials(domain.id, filters)
+    integration = integration_serivce.get_user_service_credentials(domain_id=domain.id, filters=filters, user_id=user.get('id'))
     return integration
 
 

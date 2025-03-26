@@ -52,8 +52,8 @@ class IntegrationService:
         self.eai_persistence = epi_persistence
         self.UNLIMITED = -1
 
-    def get_user_service_credentials(self, domain_id, filters):
-        return self.integration_persistence.get_integration_by_user(domain_id, filters)
+    def get_user_service_credentials(self, domain_id, filters, user_id):
+        return self.integration_persistence.get_integration_by_user(domain_id, filters, user_id)
 
     def delete_integration(self, service_name: str, domain):
         self.integration_persistence.delete_integration(domain.id, service_name)

@@ -8,6 +8,7 @@ from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from datetime import datetime, timedelta
 from typing import List
 import httpx
+import os
 from models.five_x_five_users import FiveXFiveUser
 from schemas.integrations.integrations import DataMap, IntegrationCredentials
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
@@ -54,13 +55,23 @@ class WebhookIntegrationService:
             credential.error_message = None
             self.integration_persistence.db.commit()
             return credential
-        integration = self.integration_persistence.create_integration({
-            'domain_id': domain_id,
+        
+        common_integration = bool(os.getenv('COMMON_INTEGRATION'))
+        integration_data = {
             'full_name': user.get('full_name'),
             'service_name': SourcePlatformEnum.WEBHOOK.value
-        })
-        if not integration:
+        }
+
+        if common_integration:
+            integration_data['user_id'] = user.get('id')
+        else:
+            integration_data['domain_id'] = domain_id
+            
+        integartion = self.integrations_persisntece.create_integration(integration_data)
+        
+        if not integartion:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
+        
         return IntegrationsStatus.SUCCESS
 
     def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):

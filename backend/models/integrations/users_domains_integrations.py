@@ -1,11 +1,13 @@
 from models.base import Base
-
-from sqlalchemy import VARCHAR, Integer, Column, JSON, Boolean, TIMESTAMP, Index, func
+from models.users import Users
+from models.users_domains import UserDomains
+from sqlalchemy import VARCHAR, Integer, Column, JSON, Boolean, TIMESTAMP, Index, func, ForeignKey
 
 class UserIntegration(Base):
     __tablename__ = 'users_domains_integrations'
     id = Column(Integer, primary_key=True)
-    domain_id = Column(Integer)
+    user_id = Column(Integer, ForeignKey(Users.id), nullable=False)
+    domain_id = Column(Integer, ForeignKey(UserDomains.id), nullable=False)
     shop_domain = Column(VARCHAR(64))
     access_token = Column(VARCHAR)
     service_name = Column(VARCHAR(32))

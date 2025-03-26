@@ -2,7 +2,7 @@ from typing import List
 
 from fastapi import HTTPException
 from httpx import Client
-
+import os
 from enums import IntegrationsStatus, SourcePlatformEnum
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
@@ -21,12 +21,20 @@ class AttentiveIntegrationsService:
         credential = self.integrations_persistence.get_credentials_for_service(domain_id, SourcePlatformEnum.ATTENTIVE.value)
         if credential:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.ALREADY_EXIST.value})
-        integrations = self.integrations_persistence.create_integration({
-            'domain_id': domain_id,
+        
+        common_integration = bool(os.getenv('COMMON_INTEGRATION'))
+        integration_data = {
             'access_token': api_key,
             'full_name': user.get('full_name'),
             'service_name': SourcePlatformEnum.Attentive.value
-        })
+        }
+
+        if common_integration:
+            integration_data['user_id'] = user.get('id')
+        else:
+            integration_data['domain_id'] = domain_id
+            
+        integrations = self.integrations_persistence.create_integration(integration_data)
         if not integrations:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
         return integrations
@@ -54,10 +62,6 @@ class AttentiveIntegrationsService:
     async def create_sync(self, leads_type: str, list_id: str, list_name: str, data_map: List[DataMap], domain_id: int,
                           created_by: str, tags_id: str = None):
         credentials = self.integrations_persistence.get_credentials_for_service(domain_id, SourcePlatformEnum.ATTENTIVE.value)
-        data_syncs = self.sync_persistence.get_filter_by(domain_id=domain_id)
-        for sync in data_syncs:
-            if sync.get('integration_id') == credentials.id and sync.get('leads_type') == leads_type:
-                return
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'list_id': list_id,

@@ -6,6 +6,7 @@ from persistence.leads_persistence import LeadsPersistence
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from datetime import datetime, timedelta
+import os
 from models.five_x_five_users import FiveXFiveUser
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from fastapi import HTTPException
@@ -27,13 +28,20 @@ class ZapierIntegrationService:
     def get_credentials(self, domain_id):
         return self.integration_persistence.get_credentials_for_service(domain_id=domain_id, service_name=SourcePlatformEnum.ZAPIER.value)
 
-    def __create_integrations(self, domain):
-        integration = {
-            'domain_id': domain.id,
+    def __create_integrations(self, domain):       
+        common_integration = bool(os.getenv('COMMON_INTEGRATION'))
+        integration_data = {
             'service_name': SourcePlatformEnum.ZAPIER.value
         }
-        self.integration_persistence.create_integration(integration)
-        return integration
+        
+        if common_integration:
+            integration_data['user_id'] = domain.user_id
+        else:
+            integration_data['domain_id'] = domain.id
+            
+        integartion = self.integrations_persisntece.create_integration(integration_data)
+        self.integration_persistence.create_integration(integartion)
+        return integartion
 
     def add_integrations(self, domain):
         credentials = self.get_credentials(domain.id)
@@ -47,10 +55,6 @@ class ZapierIntegrationService:
     async def create_data_sync(self, domain_id, leads_type, hook_url, list_name, created_by):
         credentials = self.get_credentials(domain_id)
         leads_type = self.__mapped_leads_type(leads_type)
-        data_syncs = self.sync_persistence.get_filter_by(domain_id=domain_id)
-        for sync in data_syncs:
-            if sync.get('integration_id') == credentials.id and sync.get('leads_type') == leads_type:
-                return sync
         sync = self.sync_persistence.create_sync({
             'domain_id': domain_id,
             'list_name': list_name,

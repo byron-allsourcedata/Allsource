@@ -7,6 +7,7 @@ import json
 from typing import List
 from urllib.parse import unquote
 import base64
+import os
 from datetime import datetime, timedelta
 from utils import extract_first_email
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
@@ -48,16 +49,25 @@ class SlackService:
         if credential:
             return self.update_credential(domain_id, access_token)
         
-        integrations = self.integrations_persistence.create_integration({
-            'domain_id': domain_id,
+        common_integration = bool(os.getenv('COMMON_INTEGRATION'))
+        integration_data = {
             'access_token': access_token,
             'full_name': user.get('full_name'),
             'service_name': SourcePlatformEnum.SLACK.value,
             'slack_team_id': team_id
-        })
-        if not integrations:
+        }
+
+        if common_integration:
+            integration_data['user_id'] = user.get('id')
+        else:
+            integration_data['domain_id'] = domain_id
+            
+        integartion = self.integrations_persisntece.create_integration(integration_data)
+        
+        if not integartion:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
-        return integrations
+        
+        return integartion
 
     def generate_authorize_url(self, user_id, domain_id):
         state_payload = json.dumps({"user_id": user_id, "domain_id": domain_id})
@@ -294,10 +304,6 @@ class SlackService:
         join_result = self.join_channel(credentials.access_token, list_id)
         if join_result['status'] == IntegrationsStatus.JOIN_CHANNEL_IS_FAILED.value:
             return join_result
-        data_syncs = self.sync_persistence.get_filter_by(domain_id=domain_id)
-        for sync in data_syncs:
-            if sync.get('integration_id') == credentials.id and sync.get('leads_type') == leads_type:
-                return
         self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'list_id': list_id,
