@@ -58,7 +58,7 @@ class GoogleAdsIntegrationsService:
         
 
     def __save_integrations(self, access_token: str, domain_id: int, user: dict):
-        credential = self.get_credentials(domain_id)
+        credential = self.get_credentials(domain_id, user.get('id'))
         if credential:
             credential.access_token = access_token
             credential.is_failed = False
@@ -85,7 +85,7 @@ class GoogleAdsIntegrationsService:
         
         return integartion
 
-    def edit_sync(self, leads_type: str, list_id: str, list_name: str, integrations_users_sync_id: int, domain_id: int, created_by: str, data_map: List[DataMap] = None ,tags_id: str = None):
+    def edit_sync(self, leads_type: str, list_id: str, integrations_users_sync_id: int, domain_id: int, created_by: str, data_map: List[DataMap] = None ,tags_id: str = None):
         credentials = self.get_credentials(domain_id)
         sync = self.sync_persistence.edit_sync({
             'integration_id': credentials.id,
@@ -409,9 +409,9 @@ class GoogleAdsIntegrationsService:
 
         return hashlib.sha256(s.encode()).hexdigest()
     
-    def get_user_lists(self, domain_id, customer_id):
+    def get_user_lists(self, domain_id: int, customer_id: int, user_id: int):
         try:
-            credential = self.get_credentials(domain_id)
+            credential = self.get_credentials(domain_id, user_id)
             client = self.get_google_ads_client(credential.access_token)
             googleads_service = client.get_service("GoogleAdsService")
             query = """
@@ -442,9 +442,9 @@ class GoogleAdsIntegrationsService:
             logger.error(f"An unexpected error occurred: {e}")
             return {'status': IntegrationsStatus.CREDENTAILS_INVALID.value, 'message': str(e)}
         
-    def get_customer_info_and_resource_name(self, domain_id):
+    def get_customer_info_and_resource_name(self, domain_id, user_id):
         try:
-            credential = self.get_credentials(domain_id)
+            credential = self.get_credentials(domain_id, user_id)
             client = self.get_google_ads_client(credential.access_token)
             googleads_service = client.get_service("GoogleAdsService")
             customer_service = client.get_service("CustomerService")

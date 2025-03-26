@@ -38,14 +38,14 @@ class SlackService:
         self.lead_persistence = lead_persistence
         self.million_verifier_integrations = million_verifier_integrations
 
-    def get_credential(self, domain_id):
-        return self.integrations_persistence.get_credentials_for_service(domain_id, SourcePlatformEnum.SLACK.value)
+    def get_credential(self, domain_id, user_id):
+        return self.integrations_persistence.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.SLACK.value)
     
     def update_credential(self, domain_id, access_token):
         return self.integrations_persistence.update_credential_for_service(domain_id, SourcePlatformEnum.SLACK.value, access_token)
 
     def save_integration(self, domain_id: int, access_token: str, user: dict, team_id):
-        credential = self.get_credential(domain_id)
+        credential = self.get_credential(domain_id, user.get('id'))
         if credential:
             return self.update_credential(domain_id, access_token)
         
@@ -121,13 +121,13 @@ class SlackService:
         else:
             return {'status': "OAuth failed"}
     
-    def get_bot_token_by_slack_team_id(self, team_id):
-        user_integration = self.integrations_persistence.get_credential(slack_team_id=team_id)
+    def get_bot_token_by_slack_team_id(self, team_id, user_id):
+        user_integration = self.integrations_persistence.get_credential(slack_team_id=team_id, user_id=user_id)
         if user_integration:
             return user_integration.access_token
     
     def handle_app_home_opened(self, user_id, team_id):
-        bot_token = self.get_bot_token_by_slack_team_id(team_id)
+        bot_token = self.get_bot_token_by_slack_team_id(team_id, user_id)
         if not bot_token:
             logger.error(f"Error: Bot token: {bot_token} not found")
             return
@@ -157,8 +157,8 @@ class SlackService:
         elif event_type == "app_uninstalled":
             self.handle_app_uninstalled(team_id)
 
-    def create_channel(self, domain_id, channel_name):
-        user_integration = self.get_credential(domain_id)
+    def create_channel(self, domain_id, user_id, channel_name):
+        user_integration = self.get_credential(domain_id, user_id)
         client = WebClient(token=user_integration.access_token)
         try:
             response = client.conversations_create(
@@ -259,8 +259,8 @@ class SlackService:
         user_text = "\n".join([f"*{key}:* {value}" for key, value in data.items()])
         return user_text
 
-    def get_channels(self, domain_id):
-        user_integration = self.get_credential(domain_id)
+    def get_channels(self, domain_id, user_id):
+        user_integration = self.get_credential(domain_id, user_id)
         if user_integration:
             client = WebClient(token=user_integration.access_token)
             try:

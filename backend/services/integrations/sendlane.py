@@ -49,7 +49,7 @@ class SendlaneIntegrationService:
 
 
     def __save_integrations(self, api_key: str, domain_id: int, user: dict):
-        credential = self.get_credentials(domain_id)
+        credential = self.get_credentials(domain_id, user.get('id'))
         if credential:
             credential.access_token = api_key
             credential.is_failed = False
@@ -117,8 +117,8 @@ class SendlaneIntegrationService:
         return response
 
 
-    def get_sender(self, domain_id):
-        credential = self.get_credentials(domain_id)
+    def get_sender(self, domain_id: int, user_id: int):
+        credential = self.get_credentials(domain_id, user_id)
         if not credential:
             return
         senders = self.__get_sender(credential.access_token)

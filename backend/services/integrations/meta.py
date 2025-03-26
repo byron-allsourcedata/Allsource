@@ -154,8 +154,8 @@ class MetaIntegrationsService:
         response = self.__handle_request(url=url, params=params, method="GET")
         return response
         
-    def get_ad_accounts(self, domain_id: int):
-        credentials = self.get_credentials(domain_id)
+    def get_ad_accounts(self, domain_id: int, user_id: int):
+        credentials = self.get_credentials(domain_id, user_id)
         if not credentials:
             return
         response = self.__get_ad_accounts(credentials.access_token)

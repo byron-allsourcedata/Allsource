@@ -113,19 +113,20 @@ class MailchimpIntegrationsService:
         return self.__mapped_list(response) if response else None
 
 
-    def get_list(self, domain_id: int, user_id: int, api_key: str = None, server: str = None):
-        if domain_id:
+    def get_list(self, user_id: int, domain_id: int, api_key: str = None, server: str = None):
+        if api_key and server:
+            self.client.set_config({
+                'api_key': api_key,
+                'server': server
+            })
+        else:
             credentials = self.get_credentials(domain_id, user_id)
             if not credentials: return
             self.client.set_config({
                 'api_key': credentials.access_token,
                 'server': credentials.data_center
             })
-        else:
-            self.client.set_config({
-                'api_key': api_key,
-                'server': server
-            })
+            
         try:
             response = self.client.lists.get_all_lists()
             return [self.__mapped_list(list) for list in response.get('lists')]
@@ -138,7 +139,7 @@ class MailchimpIntegrationsService:
 
 
     def __save_integation(self, domain_id: int, api_key: str, server: str, user: dict):
-        credential = self.get_credentials(domain_id)
+        credential = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
         if credential:
             credential.access_token = api_key
             credential.data_center = server
@@ -148,7 +149,6 @@ class MailchimpIntegrationsService:
         
         common_integration = bool(os.getenv('COMMON_INTEGRATION'))
         integration_data = {
-            'domain_id': domain_id,
             'access_token': api_key,
             'data_center': server,
             'full_name': user.get('full_name'),
@@ -171,7 +171,7 @@ class MailchimpIntegrationsService:
     def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
         data_center = credentials.mailchimp.api_key.split('-')[-1]
         try:
-            lists = self.get_list(api_key=credentials.mailchimp.api_key, server=data_center)
+            lists = self.get_list(api_key=credentials.mailchimp.api_key, domain_id=domain.id, user_id=user.get('id'), server=data_center)
             if not lists:
                 raise HTTPException(status_code=200, detail={"status": IntegrationsStatus.CREDENTAILS_INVALID.value})
         except:
