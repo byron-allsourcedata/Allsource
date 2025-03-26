@@ -13,13 +13,12 @@ import CalculationPopup from "./CalculationPopup";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 
 interface ValidationData {
-    nestedSelections: { [key: string]: string };
-    expandedNested: { [key: string]: boolean };
-    selectedOptionsPersonalEmail: string[];
-    selectedOptionsBusinessEmail: string[];
-    selectedOptionsPhone: string[];
-    selectedOptionsPostalCAS: string[];
-    selectedOptionsLinkedIn: string[];
+    recency_params: { [key: string]: string };
+    personal_email: string[];
+    business_email: string[];
+    phone: string[];
+    postal_cas: string[];
+    linked_in: string[];
 }
 
 interface SelectedData {
@@ -60,23 +59,24 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
     const [showForm, setShowForm] = useState(true);
     const [isTableVisible, setIsTableVisible] = useState(true);
     const [isValidate, setIsValidate] = useState(false);
-    const [validationFilters, setValidationFilters] = useState<ValidationData>();
+    const [isValidateSkip, setIsValidateSkip] = useState(false);
+    const [validationFilters, setValidationFilters] = useState<ValidationData | null>();
     const [targetAudience, setTargetAudience] = useState<string | ''>('');
 
 
 
     // Generate Active Segments
-    const [value, setValue] = useState<number>(0);
-    const [maxValue, setMaxValue] = useState<number>(100000)
-    const [numberToValidate, setNumberToValidate] = useState<number>(0);
-    const [estimatedContacts, setEstimatedContacts] = useState<number>(0);
-    const [availableCredits, setAvailableCredits] = useState<number>(60);
-    const [validationCost, setValidationCost] = useState<number>(20);
+    const [value, setValue] = useState<number | null>(0);
+    const [maxValue, setMaxValue] = useState<number | null>(100000)
+    const [numberToValidate, setNumberToValidate] = useState<number | null>(null);
+    const [estimatedContacts, setEstimatedContacts] = useState<number | null>(null);
+    const [availableCredits, setAvailableCredits] = useState<number | null>(60);
+    const [validationCost, setValidationCost] = useState<number | null>(null);
     const [isCalculateActiveSegments, setIsCalculateActiveSegments] = useState(false);
     const [isValidateActiveSegments, setIsValidateActiveSegments] = useState(false);
     const [openConfirmValidatePopup, setOpenConfrimValidatePopup] = useState(false);
 
-    const handleCalculateActiveSegments = () => {
+    const handleCalculateActiveSegments = (value: number) => {
         setNumberToValidate(value)
         setEstimatedContacts(value - 1257)
         setValidationCost(10)
@@ -103,8 +103,10 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
         let newValue = event.target.value.replace(/,/g, "");
         if (/^\d*$/.test(newValue)) {
             let numericValue = Number(newValue);
-            if (numericValue <= maxValue) {
-                setValue(numericValue);
+            if (maxValue) {
+                if (numericValue <= maxValue) {
+                    setValue(numericValue);
+                }
             }
         }
     }
@@ -135,17 +137,20 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
 
     const handleOnSkip = () => {
         setIsValidate(true)
+        setIsValidateSkip(true)
+        setValidationFilters(null)
     }
 
     const handleOnEditValidation = () => {
         setIsValidate(false)
         setIsCalculateActiveSegments(false)
         setIsValidateActiveSegments(false)
+        setIsValidateSkip(false)
     }
 
     const handleFilterValidation = (data: ValidationData) => {
         setIsValidate(true)
-        console.log("Received data from AllFilters:", data);
+        setIsValidateSkip(false)
         setValidationFilters(data)
     };
 
@@ -212,17 +217,27 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
     };
 
     const handleGenerateSmartAudience = async () => {
-        const response = await axiosInstance.post('/smart-audiences/builder', {
+        try {
+        const requestData = {
             use_case: useCaseType,
-            target_schema: sourceType,
+            target_schema: targetAudience,
             data_sources: selectedSources,
             validation_params: validationFilters,
-            active_segments: {
-                contacts_to_validate: value
-            },
+            contacts_to_validate: isValidateSkip ? null : value,
             smart_audience_name: audienceName
-        })
-    }
+        };
+    
+        const filteredRequestData = Object.fromEntries(
+            Object.entries(requestData).filter(([_, v]) => v !== null && v !== undefined)
+        );
+        
+        
+        const response = await axiosInstance.post('/audience-smarts/builder', filteredRequestData);
+        } 
+        catch {
+            
+        }
+    };
 
     return (
         <Box sx={{ mb: 4 }}>
@@ -501,7 +516,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
             }
 
             {/* GENERATE ACTIVE SEGMENTS */}
-            {(AudienceSize && isValidate) &&
+            {(AudienceSize && isValidate && !isValidateSkip) &&
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minWidth: '100%', flexGrow: 1, position: "relative", flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px", mt: 2 }}>
                     {uploadProgress !== null && (
                         <Box sx={{ width: "100%", position: "absolute", top: 0, left: 0, zIndex: 1200 }}>
@@ -517,7 +532,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
                         <Typography sx={{ fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500 }}>Total Audience Size</Typography>
                         <Typography sx={{ fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)" }}>This is your total available audience for validation.</Typography>
                     </Box>
-                    <Typography>{formatNumber(maxValue.toString())}</Typography>
+                    <Typography>{formatNumber(maxValue ? maxValue.toString() : '0')}</Typography>
 
                     {!isCalculateActiveSegments ?
                         (
@@ -540,10 +555,10 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
                                         />
 
                                         <Slider
-                                            value={value}
+                                            value={value ? value : 0}
                                             onChange={handleSliderChange}
                                             min={0}
-                                            max={maxValue}
+                                            max={maxValue ? maxValue : 0}
                                             sx={{
                                                 color: value === 0 ? "rgba(231, 231, 231, 1)" : "rgba(80, 82, 178, 1)",
                                                 maxWidth: "280px",
@@ -559,11 +574,11 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
                         :
                         (
                             <Box sx={{ display: "flex", flexDirection: "column", gap: 2, width: "70%" }}>
-                          
+
                                 <Box sx={{ display: "flex", flexDirection: "row", alignItems: "stretch", gap: 6 }}>
                                     <Box sx={{ flex: 1 }}>
                                         <Typography className="form-input">Number of Users to Validate</Typography>
-                                        <Typography>{formatNumber(numberToValidate.toString())}</Typography>
+                                        <Typography>{formatNumber(numberToValidate ? numberToValidate.toString() : '0')}</Typography>
                                     </Box>
 
                                     <Box sx={{ flex: 1, textAlign: "left" }}>
@@ -572,8 +587,8 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
                                     </Box>
                                 </Box>
 
-                                
-                                <Box sx={{ display: "flex", flexDirection: "row", alignItems: "stretch",  gap: 6 }}>
+
+                                <Box sx={{ display: "flex", flexDirection: "row", alignItems: "stretch", gap: 6 }}>
                                     <Box sx={{ flex: 1 }}>
                                         <Typography sx={{ display: "flex", gap: 0.5, alignItems: "center" }} className="form-input">
                                             Estimated contacts after validation
@@ -606,21 +621,24 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
                                                 <Image src="/info-icon.svg" alt="info-icon" height={13} width={13} />
                                             </Tooltip>
                                         </Typography>
-                                        <Typography>{formatNumber(estimatedContacts.toString())}</Typography>
+                                        <Typography>{formatNumber(estimatedContacts ? estimatedContacts.toString() : '0')}</Typography>
                                     </Box>
 
                                     <Box sx={{ flex: 1, textAlign: "left" }}>
                                         <Typography className="form-input">Validation Cost</Typography>
                                         <Typography>{validationCost} Credits</Typography>
-                                        {availableCredits >= validationCost ? (
-                                            <Typography className="form-input" sx={{ color: "rgba(74, 158, 79, 1) !important", fontSize: "12px !important", mb: 1 }}>
-                                                ✓ You have enough credits to proceed.
-                                            </Typography>
-                                        ) : (
-                                            <Typography className="form-input" sx={{ color: "rgba(205, 40, 43, 1) !important", fontSize: "12px !important", mb: 1 }}>
-                                                ✗ You need {validationCost - availableCredits} more credits to proceed.
-                                            </Typography>
-                                        )}
+                                        {typeof availableCredits === "number" && typeof validationCost === "number" ? (
+                                            availableCredits >= validationCost ? (
+                                                <Typography className="form-input" sx={{ color: "rgba(74, 158, 79, 1) !important", fontSize: "12px !important", mb: 1 }}>
+                                                    ✓ You have enough credits to proceed.
+                                                </Typography>
+                                            ) : (
+                                                <Typography className="form-input" sx={{ color: "rgba(205, 40, 43, 1) !important", fontSize: "12px !important", mb: 1 }}>
+                                                    ✗ You need {validationCost - availableCredits} more credits to proceed.
+                                                </Typography>
+                                            )
+                                        ) : null}
+
                                     </Box>
                                 </Box>
                             </Box>
@@ -659,7 +677,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
                 </Box>
             }
 
-            {(AudienceSize && isValidate && !isCalculateActiveSegments) &&
+            {(AudienceSize && isValidate && !isCalculateActiveSegments && !isValidateSkip) &&
                 <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mt: 2, justifyContent: "flex-end", borderRadius: "6px" }}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
                         <Button
@@ -680,7 +698,8 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
                         </Button>
                         <Button
                             disabled={value === 0 ? true : false}
-                            variant="contained" onClick={handleCalculateActiveSegments} sx={{
+                            variant="contained" onClick={() => handleCalculateActiveSegments(value ?? 0)} 
+                                sx={{
                                 ...smartAudiences.buttonform,
                                 backgroundColor: "rgba(80, 82, 178, 1)",
                                 width: "120px",
@@ -743,7 +762,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
                 </Box>
             }
 
-            {isValidateActiveSegments &&
+            {(isValidateActiveSegments || isValidateSkip) &&
                 <Box>
                     <Box
                         sx={{
@@ -866,7 +885,10 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
                 onClose={() => setOpenConfrimValidatePopup(false)}
                 onCancel={() => setOpenConfrimValidatePopup(false)}
                 onConfirm={handleConfirmValidatePopup}
-                CalculationData={{ validationCost, availableCredits }}
+                CalculationData={{
+                    validationCost: validationCost ?? 0,
+                    availableCredits: availableCredits ?? 0
+                }}
             />
         </Box>
     )
