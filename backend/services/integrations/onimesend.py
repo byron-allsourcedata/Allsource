@@ -69,7 +69,7 @@ class OmnisendIntegrationService:
         else:
             integration_data['domain_id'] = domain_id
             
-        integartion = self.integrations_persisntece.create_integration(integration_data)
+        integartion = self.integration_persistence.create_integration(integration_data)
         
         if not integartion:
             return IntegrationsStatus.CREATE_IS_FAILED 

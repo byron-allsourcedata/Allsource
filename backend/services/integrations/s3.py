@@ -2,6 +2,7 @@ from utils import validate_and_format_phone
 from typing import List
 from fastapi import HTTPException
 import httpx
+import os
 from datetime import datetime, timedelta
 from utils import format_phone_number
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
@@ -58,14 +59,24 @@ class S3IntegrationService:
             credential.error_message = None
             self.integrations_persisntece.db.commit()
             return credential
-        integartions = self.integrations_persisntece.create_integration({
-            'domain_id': domain_id,
+        
+        common_integration = bool(os.getenv('COMMON_INTEGRATION'))
+        integration_data = {
             'access_token': json.dumps({"secret_id": secret_id, "secret_key": secret_key}),
             'full_name': user.get('full_name'),
             'service_name': SourcePlatformEnum.S3.value
-        })
-        if not integartions:
+        }
+
+        if common_integration:
+            integration_data['user_id'] = user.get('id')
+        else:
+            integration_data['domain_id'] = domain_id
+            
+        integartion = self.integrations_persisntece.create_integration(integration_data)
+        
+        if not integartion:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
+        
         return IntegrationsStatus.SUCCESS
     
     def edit_sync(self, leads_type: str, list_name: str, data_map: List[DataMap], integrations_users_sync_id: int, domain_id: int, created_by: str):
@@ -181,19 +192,19 @@ class S3IntegrationService:
         secret_id = parsed_data["secret_id"]
         secret_key = parsed_data["secret_key"]
         
-        with tempfile.NamedTemporaryFile(mode="w", newline="", suffix=".csv", delete=False, encoding="utf-8") as temp_csv:
-            writer = csv.DictWriter(temp_csv, fieldnames=headers)
-            writer.writeheader()
-            for row in data:
-                writer.writerow(row)
-            temp_file_path = temp_csv.name
+        # with tempfile.NamedTemporaryFile(mode="w", newline="", suffix=".csv", delete=False, encoding="utf-8") as temp_csv:
+        #     writer = csv.DictWriter(temp_csv, fieldnames=headers)
+        #     writer.writeheader()
+        #     for row in data:
+        #         writer.writerow(row)
+        #     temp_file_path = temp_csv.name
             
-        self.upload_file_to_bucket(secret_id=secret_id, secret_key=secret_key, file_path, object_key='data/2025/report.csv', bucket_name=bucket_name)
+        # self.upload_file_to_bucket(secret_id=secret_id, secret_key=secret_key, file_path, object_key='data/2025/report.csv', bucket_name=bucket_name)
             
-        if response.status_code == 401:
-            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
-        if response.status_code == 202:
-            return response
+        # if response.status_code == 401:
+        #     return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+        # if response.status_code == 202:
+        #     return response
     
     def __mapped_sendlane_contact(self, five_x_five_user: FiveXFiveUser):
         email_fields = [

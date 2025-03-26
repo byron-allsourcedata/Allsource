@@ -62,7 +62,7 @@ class SlackService:
         else:
             integration_data['domain_id'] = domain_id
             
-        integartion = self.integrations_persisntece.create_integration(integration_data)
+        integartion = self.integrations_persistence.create_integration(integration_data)
         
         if not integartion:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})

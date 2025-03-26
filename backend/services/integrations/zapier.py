@@ -39,7 +39,7 @@ class ZapierIntegrationService:
         else:
             integration_data['domain_id'] = domain.id
             
-        integartion = self.integrations_persisntece.create_integration(integration_data)
+        integartion = self.integration_persistence.create_integration(integration_data)
         self.integration_persistence.create_integration(integartion)
         return integartion
 
