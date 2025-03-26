@@ -166,10 +166,10 @@ class SlackService:
         user_id = event.get("user")
 
         if event_type == "app_home_opened":
-            self.handle_app_home_opened(team_id)
+            self.handle_app_home_opened(user_id=user_id, team_id=team_id)
 
         elif event_type == "app_uninstalled":
-            self.handle_app_uninstalled(team_id)
+            self.handle_app_uninstalled(team_id=team_id)
 
     def create_channel(self, domain_id, user_id, channel_name):
         user_integration = self.get_credential(domain_id, user_id)
