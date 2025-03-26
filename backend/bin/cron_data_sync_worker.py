@@ -156,7 +156,8 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
             'google_ads': integration_service.google_ads,
             'webhook': integration_service.webhook,
             'hubspot': integration_service.hubspot,
-            'sales_force': integration_service.sales_force
+            'sales_force': integration_service.sales_force,
+            's3': integration_service.s3
         }
         
         service = service_map.get(service_name)
