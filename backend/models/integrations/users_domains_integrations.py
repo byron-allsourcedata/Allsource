@@ -24,7 +24,7 @@ class UserIntegration(Base):
     shop_id = Column(VARCHAR(32))
     slack_team_id = Column(VARCHAR(32))
     created_at = Column(TIMESTAMP, default=func.now(), nullable=True)
-    app_home_opened = Column(Boolean, default=False, nullable=True)
+    is_slack_first_message_sent = Column(Boolean, default=False, nullable=False)
     
     __table_args__ = (
         Index('users_domains_integrations_pkey', 'id'),

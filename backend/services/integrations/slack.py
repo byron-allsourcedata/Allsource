@@ -137,7 +137,7 @@ class SlackService:
     
     def handle_app_home_opened(self, user_id, team_id):
         user_integration = self.integrations_persistence.get_credential(slack_team_id=team_id)
-        if user_integration.app_home_opened:
+        if user_integration.is_slack_first_message_sent:
             return
         
         bot_token = user_integration.access_token
