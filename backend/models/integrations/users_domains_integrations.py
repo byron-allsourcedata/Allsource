@@ -6,8 +6,8 @@ from sqlalchemy import VARCHAR, Integer, Column, JSON, Boolean, TIMESTAMP, Index
 class UserIntegration(Base):
     __tablename__ = 'users_domains_integrations'
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey(Users.id), nullable=False)
-    domain_id = Column(Integer, ForeignKey(UserDomains.id), nullable=False)
+    user_id = Column(Integer, ForeignKey(Users.id), nullable=True)
+    domain_id = Column(Integer, ForeignKey(UserDomains.id), nullable=True)
     shop_domain = Column(VARCHAR(64))
     access_token = Column(VARCHAR)
     service_name = Column(VARCHAR(32))
