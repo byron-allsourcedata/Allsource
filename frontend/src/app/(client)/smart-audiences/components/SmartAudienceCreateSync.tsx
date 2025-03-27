@@ -298,6 +298,9 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         onClose()
         setValue("1")
         setActiveImageService("csv-icon.svg")
+        setActiveService(null)
+        setValueContactSync(0)
+        setCustomFields([])
     }
 
     useEffect(() => {
@@ -318,7 +321,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
 
     useEffect(() => {
         if (isDownloadAction) {
-            setIsLoading(true)
+            // setIsLoading(true)
             setValue("3")
         }
         else {
@@ -362,10 +365,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     };
 
     const validateTab2 = () => {
-        return true;
+        return valueContactSync;
     };
     
-    const sendDataSync = () => {
+    const canSendDataSync = () => {
         return value === '4' || !contactSyncTab
     };
 
@@ -406,45 +409,48 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         }
     }
 
-    const handleNextTab = async () => {
+    const actionBasedOnService = () => {
+        if (activeService === "mailchimp") {
+            setContactSyncTab(true)
+            getList()
+            setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
+        }
 
+        if (activeService === "meta") {
+            setContactSyncTab(true)
+            fetchAdAccount()
+            setRows(defaultRowsMeta)
+        }
+
+        if (activeService === "google_ads") {
+            setContactSyncTab(true)
+            setRows(defaultRowsGoogleAds)
+        }
+
+        if (activeService === "hubspot") {
+            setRows(defaultRowsHubspot)
+            setCustomFields(customFieldsListHubspot.map(field => ({ type: field.value, value: field.type })))
+        }
+
+        if (activeService === "sales_force") {
+            setRows(defaultRowsSalesForce)
+        }
+    }
+
+    const handleNextTab = async () => {
         if (value === '1') {
-            if (activeService === "mailchimp") {
-                setContactSyncTab(true)
-                getList()
-                setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
+            if (activeService){
+                actionBasedOnService()
+                setValue((prevValue) => String(Number(prevValue) + 1));
             }
-    
-            if (activeService === "meta") {
-                setContactSyncTab(true)
-                fetchAdAccount()
-                setRows(defaultRowsMeta)
-            }
-    
-            if (activeService === "google_ads") {
-                setContactSyncTab(true)
-                setRows(defaultRowsGoogleAds)
-            }
-    
-            if (activeService === "hubspot") {
-                setRows(defaultRowsHubspot)
-                setCustomFields(customFieldsListHubspot.map(field => ({ type: field.value, value: field.type })))
-            }
-    
-            if (activeService === "sales_force") {
-                setRows(defaultRowsSalesForce)
-            }
-            setValue((prevValue) => {
-                const nextValue = String(Number(prevValue) + 1);
-                return nextValue;
-            })
         }
         else if (value === '2') {
             if (validateTab2()) {
                 setValue((prevValue) => String(Number(prevValue) + 1));
             }
-        } else if (value === '3' || value === '4') {
-            if (sendDataSync()) {
+        } 
+        else if (value === '3' || value === '4') {
+            if (canSendDataSync()) {
                 createDataSync()
             }
             else {
@@ -454,7 +460,19 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     };
 
     const handleChangeTab = (event: React.SyntheticEvent, newValue: string) => {
-        setValue(newValue);
+        if (newValue === "1") {
+            setContactSyncTab(false)
+            setValueContactSync(0)
+        }
+        if (newValue === "2") {
+            actionBasedOnService()
+        }
+        if (newValue === "3") {
+            if (!valueContactSync) return
+        }
+        if (activeService) {
+            setValue(newValue)
+        }
     };
 
     // Input Range Slider
@@ -1015,7 +1033,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                             <Typography variant="h6" className="first-sub-title">
                                                 {integrations.length ? "Choose where you want to sync" : ''}
                                             </Typography>
-                                            <List sx={{ display: 'flex', gap: '16px', flexWrap: 'wrap', border: 'none' }}>
+                                            <List sx={{ display: 'flex', p: 0, gap: '16px', flexWrap: 'wrap', border: 'none' }}>
                                                 {integrations
                                                     .sort((a, b) => {
                                                         const isIntegratedA = integratedServices.includes(a.service_name) || a.service_name === 'CSV';
@@ -2343,41 +2361,44 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                     </Grid>
                                                 </Grid>
                                             ))}
-                                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, mr: 6 }}>
-                                                <Button
-                                                    onClick={handleAddField}
-                                                    aria-haspopup="true"
-                                                    sx={{
-                                                        textTransform: 'none',
-                                                        border: '1px solid rgba(80, 82, 178, 1)',
-                                                        borderRadius: '4px',
-                                                        padding: '9px 16px',
-                                                        minWidth: 'auto',
-                                                        '@media (max-width: 900px)': {
-                                                            display: 'none'
-                                                        }
-                                                    }}
-                                                >
-                                                    <Typography sx={{
-                                                        marginRight: '0.5em',
-                                                        fontFamily: 'Nunito Sans',
-                                                        lineHeight: '22.4px',
-                                                        fontSize: '16px',
-                                                        textAlign: 'left',
-                                                        fontWeight: '500',
-                                                        color: '#5052B2'
-                                                    }}>
-                                                        Add
-                                                    </Typography>
-                                                </Button>
-                                            </Box>
+                                            {customFields.length !== 0 && 
+                                                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, mr: 6 }}>
+                                                    <Button
+                                                        disabled={customFields.length === 0}
+                                                        onClick={handleAddField}
+                                                        aria-haspopup="true"
+                                                        sx={{
+                                                            textTransform: 'none',
+                                                            border: '1px solid rgba(80, 82, 178, 1)',
+                                                            borderRadius: '4px',
+                                                            padding: '9px 16px',
+                                                            minWidth: 'auto',
+                                                            '@media (max-width: 900px)': {
+                                                                display: 'none'
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Typography sx={{
+                                                            marginRight: '0.5em',
+                                                            fontFamily: 'Nunito Sans',
+                                                            lineHeight: '22.4px',
+                                                            fontSize: '16px',
+                                                            textAlign: 'left',
+                                                            fontWeight: '500',
+                                                            color: '#5052B2'
+                                                        }}>
+                                                            Add
+                                                        </Typography>
+                                                    </Button>
+                                                </Box>
+                                            }
                                         </Box>
                                 </Box>
                             </TabPanel>
                         </TabContext>
                     </Box>
                     <Box sx={{ width: '100%', position: 'sticky', bottom: 0, zIndex: 9999 }}>
-                        <Box sx={{ position: 'sticky', bottom: 0, zIndex: 1302, backgroundColor: '#fff', borderTop: '1px solid #e4e4e4' }}>
+                        <Box sx={{ zIndex: 1302, backgroundColor: '#fff', borderTop: '1px solid #e4e4e4' }}>
                             <Box
                                 sx={{ display: 'flex', justifyContent: 'flex-end', gap: 3, p: 2 }}
                             >
@@ -2392,7 +2413,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                         textTransform: "none",
                                         padding: "0.75em 2.5em",
                                         '&:hover': {
-                                        backgroundColor: 'transparent'
+                                            backgroundColor: 'transparent'
                                         }
                                     }}
                                     >
@@ -2408,11 +2429,14 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                         textTransform: "none",
                                         padding: "0.75em 2.5em",
                                         '&:hover': {
-                                        backgroundColor: 'rgba(80, 82, 178, 1)'
+                                            backgroundColor: 'rgba(80, 82, 178, 1)'
                                         }
                                     }}
                                     >
-                                    Next
+                                    {(value === "3" && !contactSyncTab) || value === "4" 
+                                        ? "Sync"
+                                        : "Next"
+                                    }
                                 </Button>
                             </Box>
                         </Box>
