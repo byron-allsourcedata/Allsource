@@ -477,7 +477,6 @@ const Signup: React.FC = () => {
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton onClick={togglePasswordVisibility} edge="end">
-                      {/* {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />} */}
                       <Image
                         src={showPassword ? "/custom-visibility-icon-off.svg" : "/custom-visibility-icon.svg"}
                         alt={showPassword ? "Show password" : "Hide password"}

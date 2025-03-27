@@ -262,8 +262,6 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
             if (isEdit) {
                 const response = await axiosInstance.put('/data-sync/sync', {
                     integrations_users_sync_id: data.id,
-                    list_id: savedList.list_id,
-                    list_name: savedList.list_name,
                     name: savedList.list_name,
                     leads_type: selectedRadioValue,
                 }, {

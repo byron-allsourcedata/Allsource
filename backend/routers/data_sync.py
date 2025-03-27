@@ -30,7 +30,8 @@ async def create_sync(data: SyncCreate, service_name: str = Query(...),
         await service.create_sync(
             **data,
             domain_id=domain.id,
-            created_by=user.get('full_name')
+            created_by=user.get('full_name'),
+            user=user
         )
 
 @router.post('/create-smart-audience-sync')
@@ -101,6 +102,7 @@ async def edit_sync(data: SyncCreate,
         service.edit_sync(
             **data,
             domain_id=domain.id,
+            user_id=user.get('id'),
             created_by=user.get('full_name'),
         )
 

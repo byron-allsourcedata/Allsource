@@ -15,8 +15,11 @@ from utils import extract_first_email
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
+import json
+import boto3
+from botocore.exceptions import ClientError, NoCredentialsError, PartialCredentialsError
 
-class SendlaneIntegrationService:
+class S3IntegrationService:
 
     def __init__(self, domain_persistence: UserDomainsPersistence, integrations_persistence: IntegrationsPresistence, leads_persistence: LeadsPersistence,
                  sync_persistence: IntegrationsUserSyncPersistence, client: httpx.Client, million_verifier_integrations: MillionVerifierIntegrationsService):
@@ -28,7 +31,7 @@ class SendlaneIntegrationService:
         self.client = client
 
     def get_credentials(self, domain_id: int, user_id: int):
-        return self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.SENDLANE.value)
+        return self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.S3.value)
     
     
     def __handle_request(self, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None, api_key: str = None,  method: str = 'GET'):
@@ -48,10 +51,10 @@ class SendlaneIntegrationService:
         return response
 
 
-    def __save_integrations(self, api_key: str, domain_id: int, user: dict):
-        credential = self.get_credentials(domain_id, user.get('id'))
+    def __save_integrations(self, *, secret_id: str, secret_key, domain_id: int, user: dict):
+        credential = self.get_credentials(domain_id)
         if credential:
-            credential.access_token = api_key
+            credential.access_token = json.dumps({"secret_id": secret_id, "secret_key": secret_key})
             credential.is_failed = False
             credential.error_message = None
             self.integrations_persisntece.db.commit()
@@ -59,9 +62,9 @@ class SendlaneIntegrationService:
         
         common_integration = bool(os.getenv('COMMON_INTEGRATION'))
         integration_data = {
-            'access_token': api_key,
+            'access_token': json.dumps({"secret_id": secret_id, "secret_key": secret_key}),
             'full_name': user.get('full_name'),
-            'service_name': SourcePlatformEnum.SENDLANE.value
+            'service_name': SourcePlatformEnum.S3.value
         }
 
         if common_integration:
@@ -76,82 +79,73 @@ class SendlaneIntegrationService:
         
         return IntegrationsStatus.SUCCESS
     
-    def edit_sync(self, leads_type: str, list_id: str, list_name: str, integrations_users_sync_id: int, domain_id: int, created_by: str, user_id: int):
+    def edit_sync(self, leads_type: str, list_name: str, data_map: List[DataMap], integrations_users_sync_id: int, domain_id: int, created_by: str, user_id: int):
         credentials = self.get_credentials(domain_id, user_id)
         sync = self.sync_persistence.edit_sync({
             'integration_id': credentials.id,
-            'list_id': list_id,
             'list_name': list_name,
-            'domain_id': domain_id,
             'leads_type': leads_type,
+            'data_map': data_map,
             'created_by': created_by,
         }, integrations_users_sync_id)
 
         return sync
 
-    def __get_list(self, api_key):
-        response = self.__handle_request(url='/lists', api_key=api_key)
+    def __get_list(self, secret_id: str, secret_key: str):
+        client_params = {
+            'aws_access_key_id': secret_id,
+            'aws_secret_access_key': secret_key
+        }
+        s3_client = boto3.client('s3', **client_params)
+        response = s3_client.list_buckets()
         return response
 
     def get_list(self, domain_id: int, user_id: int):
         credential = self.get_credentials(domain_id, user_id)
         if not credential:
             return
-        lists = self.__get_list(credential.access_token)
-        if lists.status_code == 401:
+        
+        parsed_data = json.loads(credential.access_token)
+        secret_id = parsed_data["secret_id"]
+        secret_key = parsed_data["secret_key"]
+        try:
+            lists = self.__get_list(secret_id=secret_id, secret_key=secret_key)
+        except NoCredentialsError:
             credential.is_failed = True
             credential.error_message = 'Invalid API Key'
             self.integrations_persisntece.db.commit()
-            return
-        return [self.__mapped_list(list) for list in lists.json().get('data')]
+            raise HTTPException(status_code=400, detail={'status': 'CREDENTIALS_MISSING', 'message': 'Missing AWS credentials'})
+        except PartialCredentialsError:
+            credential.is_failed = True
+            credential.error_message = 'Invalid API Key'
+            self.integrations_persisntece.db.commit()
+            raise HTTPException(status_code=400, detail={'status': 'CREDENTIALS_INCOMPLETE', 'message': 'Incomplete AWS credentials'})
+        except ClientError as e:
+            error_code = e.response['Error']['Code']
+            credential.is_failed = True
+            credential.error_message = 'Invalid API Key'
+            self.integrations_persisntece.db.commit()
+            raise HTTPException(status_code=400, detail={'status': 'CREDENTIALS_INVALID', 'message': f'AWS error: {error_code}'})
+        
+        return [bucket["Name"] for bucket in lists.get("Buckets", [])]
 
     def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
-        lists = self.__get_list(credentials.sendlane.api_key)
-        if lists.status_code == 401:
-            raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREDENTAILS_INVALID.value})
-        return self.__save_integrations(credentials.sendlane.api_key, domain_id=domain.id, user=user)
-
-    
-    def __get_sender(self, api_key):
-        response = self.__handle_request('/senders', api_key=api_key)
-        return response
-
-
-    def get_sender(self, domain_id: int, user_id: int):
-        credential = self.get_credentials(domain_id, user_id)
-        if not credential:
-            return
-        senders = self.__get_sender(credential.access_token)
-        if senders.status_code == 401:
-            credential.is_failed = True
-            credential.error_message = 'Invalid API Key'
-            self.integrations_persisntece.db.commit()
-            return
-        return [self.__mapped_sender(sender) for sender in senders.json().get('data')]
-
-    def create_list(self, list, domain_id: int, user_id: int):
-        credential = self.get_credentials(domain_id, user_id)
-        if not credential:
-            raise HTTPException(status_code=403, detail={'status': IntegrationsStatus.CREDENTIALS_NOT_FOUND})
-        json = {
-            'name': list.name,
-            'sender_id': list.sender_id
-        }
-        response = self.__handle_request('/lists', method='POST', api_key=credential.access_token, json=json)
-        if response == 401:
-            credential.is_failed = True
-            credential.error_message = 'Invalid API Key'
-            self.integrations_persisntece.db.commit()
-            return
-        if response.status_code == 422:
-            raise HTTPException(status_code=422, detail={'status': response.json().get('message')})
-        return self.__mapped_list(response.json().get('data'))
+        try:
+            self.__get_list(secret_id=credentials.s3.secret_id, secret_key=credentials.s3.secret_key)
+        except NoCredentialsError:
+            raise HTTPException(status_code=400, detail={'status': 'CREDENTIALS_MISSING', 'message': 'Missing AWS credentials'})
+        except PartialCredentialsError:
+            raise HTTPException(status_code=400, detail={'status': 'CREDENTIALS_INCOMPLETE', 'message': 'Incomplete AWS credentials'})
+        except ClientError as e:
+            error_code = e.response['Error']['Code']
+            raise HTTPException(status_code=400, detail={'status': 'CREDENTIALS_INVALID', 'message': f'AWS error: {error_code}'})
+        
+        return self.__save_integrations(secret_id=credentials.s3.secret_id, secret_key=credentials.s3.secret_key,domain_id=domain.id, user=user)
  
-    async def create_sync(self, leads_type: str, list_id: str, list_name: str, data_map: List[DataMap], domain_id: int, created_by: str, user: dict):
+    async def create_sync(self, leads_type: str, list_name: str, data_map: List[DataMap], domain_id: int, created_by: str, user: dict):
         credentials = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
-            'list_id': list_id,
             'list_name': list_name,
             'domain_id': domain_id,
             'leads_type': leads_type,
@@ -161,13 +155,29 @@ class SendlaneIntegrationService:
         return sync
 
     async def process_data_sync(self, five_x_five_user, user_integration, integration_data_sync, lead_user):
-        profile = self.__create_contact(five_x_five_user, user_integration.access_token, integration_data_sync.list_id)
+        profile = self.__create_contact(five_x_five_user, user_integration.access_token, integration_data_sync.list_name)
         if profile in (ProccessDataSyncResult.AUTHENTICATION_FAILED.value, ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return profile
             
         return ProccessDataSyncResult.SUCCESS.value
+    
+    def upload_file_to_bucket(self, secret_id: str, secret_key: str, file_path: str, object_key: str, bucket_name: str):
+        client_params = {
+            'aws_access_key_id': secret_id,
+            'aws_secret_access_key': secret_key
+        }
+        s3_client = boto3.client('s3', **client_params)
+                    
+        try:
+            s3_client.upload_file(file_path, bucket_name, object_key)
+            print(f"Файл {file_path} успешно загружен в бакет {bucket_name} под именем {object_key}.")
+        except ClientError as e:
+            print("Ошибка при загрузке файла:", e)
+            raise HTTPException(status_code=400, detail="Ошибка загрузки файла в S3")
+        
+    
 
-    def __create_contact(self, five_x_five_user, access_token, list_id: int):
+    def __create_contact(self, five_x_five_user, access_token, bucket_name: str):
         profile = self.__mapped_sendlane_contact(five_x_five_user)
         if profile in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return profile
@@ -177,23 +187,23 @@ class SendlaneIntegrationService:
                 **profile.model_dump()
             }]
         }
-        response = self.__handle_request(f'/lists/{list_id}/contacts', api_key=access_token, json=json, method="POST")
-        if response.status_code == 401:
-            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
-        if response.status_code == 202:
-            return response
-
-    def __mapped_list(self, list):
-        return ListFromIntegration(
-            id=str(list.get('id')),
-            list_name=list.get('name')
-        )
-    
-    def __mapped_sender(self, sender):
-        return SendlaneSender(
-            id=str(sender.get('id')),
-            sender_name=sender.get('from_name')
-        )
+        parsed_data = json.loads(access_token)
+        secret_id = parsed_data["secret_id"]
+        secret_key = parsed_data["secret_key"]
+        
+        # with tempfile.NamedTemporaryFile(mode="w", newline="", suffix=".csv", delete=False, encoding="utf-8") as temp_csv:
+        #     writer = csv.DictWriter(temp_csv, fieldnames=headers)
+        #     writer.writeheader()
+        #     for row in data:
+        #         writer.writerow(row)
+        #     temp_file_path = temp_csv.name
+            
+        # self.upload_file_to_bucket(secret_id=secret_id, secret_key=secret_key, file_path, object_key='data/2025/report.csv', bucket_name=bucket_name)
+            
+        # if response.status_code == 401:
+        #     return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+        # if response.status_code == 202:
+        #     return response
     
     def __mapped_sendlane_contact(self, five_x_five_user: FiveXFiveUser):
         email_fields = [

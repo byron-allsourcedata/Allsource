@@ -67,10 +67,10 @@ interface SlackConnectProps {
     open: boolean
     initApiKey?: string;
     boxShadow?: string;
-    Invalid_api_key?: boolean;
+    invalid_api_key?: boolean;
 }
 
-const SlackConnectPopup = ({ open, handlePopupClose, boxShadow }: SlackConnectProps) => {
+const SlackConnectPopup = ({ open, handlePopupClose, boxShadow, invalid_api_key }: SlackConnectProps) => {
     const [authorizeUrl, setAuthorizeUrl] = useState('')
     const [value, setValue] = useState('1')
     const [loading, setLoading] = useState(false);
@@ -186,7 +186,7 @@ const SlackConnectPopup = ({ open, handlePopupClose, boxShadow }: SlackConnectPr
                                         color: '#202124',
                                         lineHeight: 'normal'
                                     }}>
-                                        Login to your slack
+                                        Login to your Slack
                                     </Typography>
                                 </Box>
                                 <Box>
@@ -214,6 +214,17 @@ const SlackConnectPopup = ({ open, handlePopupClose, boxShadow }: SlackConnectPr
                                     >
                                         Connect to Slack
                                     </Button>
+                                    {invalid_api_key && (
+                                        <Typography color="error" sx={{
+                                            fontFamily: "Nunito Sans",
+                                            fontSize: "14px",
+                                            fontWeight: "600",
+                                            lineHeight: "21.82px",
+                                            marginTop: "10px"
+                                        }}>
+                                            Invalid API Key detected. Please reconnect to Slack and try again
+                                        </Typography>
+                                    )}
                                 </Box>
                             </Box>
 

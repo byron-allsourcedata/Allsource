@@ -2,33 +2,23 @@ import React from "react";
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
-import { Box, List, ListItem, TextField, Tooltip, Typography, Drawer, Backdrop, Link, IconButton, Button, RadioGroup, FormControl, FormControlLabel, Radio, FormLabel, Divider, Tab, Switch, LinearProgress, Tabs } from "@mui/material";
+import { Box, TextField, Tooltip, Typography, Drawer, IconButton, Button, Tab, Switch, LinearProgress } from "@mui/material";
 import Image from "next/image";
+import { AxiosError } from 'axios';
 import { useEffect, useState } from "react";
-import CustomizedProgressBar from "./CustomizedProgressBar";
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from "./ToastNotification";
 import { useAxiosHook } from "@/hooks/AxiosHooks";
+import { useIntegrationContext } from "@/context/IntegrationContext";
 
-interface CreateKlaviyoProps {
+interface CreateS3Props {
     handleClose: () => void
-    onSave?: (integration: IntegrationsCredentials) => void
+    onSave?: (new_integration: any) => void
     open: boolean
-    initApiKey?: string
+    initApiKey?: any;
     boxShadow?: string;
-    isEdit?: boolean;
-    Invalid_api_key?: boolean;
-}
-
-interface IntegrationsCredentials {
-    id?: number
-    access_token: string
-    ad_account_id?: string
-    shop_domain?: string
-    data_center?: string
-    service_name: string
-    is_with_suppression?: boolean
+    invalid_api_key?: boolean;
 }
 
 const klaviyoStyles = {
@@ -42,6 +32,7 @@ const klaviyoStyles = {
         padding: 0,
         minWidth: 'auto',
         px: 2,
+        pointerEvents: 'none',
         '@media (max-width: 600px)': {
             alignItems: 'flex-start',
             p: 0
@@ -53,9 +44,8 @@ const klaviyoStyles = {
     },
     inputLabel: {
         fontFamily: 'Nunito Sans',
-        fontSize: '14px',
+        fontSize: '14.5px',
         lineHeight: '16px',
-        left: '2px',
         color: 'rgba(17, 17, 19, 0.60)',
         '&.Mui-focused': {
             color: '#0000FF',
@@ -82,8 +72,8 @@ const klaviyoStyles = {
                 borderColor: '#0000FF',
             },
             '&.Mui-error .MuiOutlinedInput-notchedOutline': {
-            borderColor: 'red',
-        },
+                borderColor: 'red',
+            },
         },
         '&+.MuiFormHelperText-root': {
             marginLeft: '0',
@@ -91,25 +81,27 @@ const klaviyoStyles = {
     },
 }
 
-const SlackIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxShadow, Invalid_api_key }: CreateKlaviyoProps) => {
+const S3Connect = ({ handleClose, open, onSave, initApiKey, boxShadow, invalid_api_key }: CreateS3Props) => {
+    const { triggerSync } = useIntegrationContext();
+    const [apiIdKey, setApiIdKey] = useState('');
     const [apiKey, setApiKey] = useState('');
-    const [apiKeyError, setApiKeyError] = useState(false);
+    const [value, setValue] = useState<string>('1')
     const [checked, setChecked] = useState(false);
-    const [tab2Error, setTab2Error] = useState(false);
-    const [disableButton, setDisableButton] = useState(false);
     const label = { inputProps: { 'aria-label': 'Switch demo' } };
-    const { data, loading, error, sendRequest } = useAxiosHook();
-
-
-    const [value, setValue] = useState("1");
-
-    const handleChange = (event: React.SyntheticEvent, newValue: string) => {
-        setValue(newValue);
-    };
+    const [disableButton, setDisableButton] = useState(false);
+    const { loading } = useAxiosHook();
 
     useEffect(() => {
-        setApiKey(initApiKey || '')
-    }, [initApiKey])
+        if (initApiKey){
+            try {
+                const parsedKey = JSON.parse(initApiKey);
+                setApiKey(parsedKey.secret_key || '');
+                setApiIdKey(parsedKey.secret_id || '');
+            } catch (error) {
+                console.error("error parsing JSON:", error);
+            }
+        }
+    }, [initApiKey]);
 
 
     const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -119,97 +111,51 @@ const SlackIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxShado
     const handleApiKeyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value;
         setApiKey(value);
-        setApiKeyError(!value);
     };
 
-    const instructions = [
-        { id: 'unique-id-1', text: 'Go to the Klaviyo website and log into your account.' },
-        { id: 'unique-id-2', text: 'Click on the Settings option located in your Klaviyo account options.' },
-        { id: 'unique-id-3', text: 'Click Create Private API Key Name to Maximiz.' },
-        { id: 'unique-id-4', text: 'Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Klaviyo key.' },
-        { id: 'unique-id-5', text: 'Click Create.' },
-        { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in Maximiz Klaviyo section.' },
-        { id: 'unique-id-7', text: 'Click Connect.' },
-    ];
-
-    type HighlightConfig = {
-        [keyword: string]: { color?: string; fontWeight?: string };
-    };
-
-    const highlightText = (text: string, highlightConfig: HighlightConfig) => {
-        let parts: (string | JSX.Element)[] = [text];
-
-        Object.keys(highlightConfig).forEach((keyword, keywordIndex) => {
-            const { color, fontWeight } = highlightConfig[keyword];
-            parts = parts.flatMap((part, partIndex) =>
-                typeof part === 'string' && part.includes(keyword)
-                    ? part.split(keyword).flatMap((segment, index, array) =>
-                        index < array.length - 1
-                            ? [
-                                segment,
-                                <span
-                                    style={{
-                                        color: color || 'inherit',
-                                        fontWeight: fontWeight || 'normal'
-                                    }}
-                                    key={`highlight-${keywordIndex}-${partIndex}-${index}`}
-                                >
-                                    {keyword}
-                                </span>
-                            ]
-                            : [segment]
-                    )
-                    : [part]
-            );
-        });
-
-        return <>{parts}</>;
+    const handleApiIdKeyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const value = event.target.value;
+        setApiIdKey(value);
     };
 
     const handleApiKeySave = async () => {
         try {
             setDisableButton(true)
-            const response = await sendRequest({
-                url: "/integrations/",
-                method: "POST",
-                data: {
-                    klaviyo: {
-                        api_key: apiKey,
-                    },
-                },
-                params: { service_name: "klaviyo" },
-            });
-
-            if (response?.status === 200) {
-                if (onSave) {
-                    onSave({
-                        service_name: 'klaviyo',
-                        access_token: apiKey,
-                    })
+            const response = await axiosInstance.post('/integrations/', {
+                s3: {
+                    secret_id: apiIdKey,
+                    secret_key: apiKey,
                 }
-                showToast("Integration Slack Successfully");
-                handleNextTab();
+            }, { params: { service_name: 's3' } })
+            if (response.status === 200) {
+                showToast('Integration S3 Successfully')
+                if (onSave) {
+                    const access_token = JSON.stringify({
+                        secret_id: apiIdKey,
+                        secret_key: apiKey
+                    });
+                    onSave({ 'service_name': 's3', 'is_failed': false, access_token: access_token, apiIdKey })
+                }
+                triggerSync();
+                handleNextTab()
             }
-        } catch (err) {
-            console.error("Error saving integration:", err);
+        } catch (error) {
+            if (error instanceof AxiosError) {
+                if (error.response?.status === 400) {
+                  if (error.response.data.status === 'CREDENTIALS_MISSING') {
+                    showErrorToast(error.response.data.message);
+                  } else if (error.response.data.status === 'CREDENTIALS_INCOMPLETE') {
+                    showErrorToast(error.response.data.message);
+                  } else {
+                    showErrorToast(error.response.data.message);
+                  }
+                }
+              }
         }
-    };
-
-
-    const highlightConfig: HighlightConfig = {
-        'Klaviyo': { color: '#5052B2', fontWeight: '500' },
-        'Settings': { color: '#707071', fontWeight: '500' },
-        'Create Private API Key': { color: '#707071', fontWeight: '500' },
-        'Lists': { color: '#707071', fontWeight: '500' },
-        'Profiles': { color: '#707071', fontWeight: '500' },
-        'Metrics': { color: '#707071', fontWeight: '500' },
-        'Events': { color: '#707071', fontWeight: '500' },
-        'Templates': { color: '#707071', fontWeight: '500' },
-        'Create': { color: '#707071', fontWeight: '500' },
-        'API Key': { color: '#707071', fontWeight: '500' },
-        'Connect': { color: '#707071', fontWeight: '500' },
-        'Export': { color: '#707071', fontWeight: '500' }
-    };
+        finally {
+            setDisableButton(false)
+        }
+    }
 
     const handleNextTab = async () => {
 
@@ -222,18 +168,7 @@ const SlackIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxShado
     };
 
     const handleSave = async () => {
-        if (onSave) {
-            onSave({
-                id: -1,
-                'service_name': 'klaviyo',
-                data_center: '',
-                access_token: apiKey,
-                is_with_suppression: checked,
-                ad_account_id: '',
-                shop_domain: ''
-            })
-        }
-            handleClose()
+        handleClose()
     }
 
     const getButton = (tabValue: string) => {
@@ -243,7 +178,7 @@ const SlackIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxShado
                     <Button
                         variant="contained"
                         onClick={handleApiKeySave}
-                        disabled={!apiKey || disableButton}
+                        disabled={!apiKey || disableButton || !apiIdKey}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito Sans",
@@ -296,27 +231,27 @@ const SlackIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxShado
 
     return (
         <>
-        {loading && (
-            <Box
-                sx={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'rgba(0, 0, 0, 0.2)',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    zIndex: 1400,
-                    overflow: 'hidden'
-                }}
-            >
-            <Box sx={{width: '100%', top: 0, height: '100vh'}}>
-                <LinearProgress />
-            </Box>
-            </Box>
-        )}
+            {loading && (
+                <Box
+                    sx={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0, 0, 0, 0.2)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 1400,
+                        overflow: 'hidden'
+                    }}
+                >
+                    <Box sx={{ width: '100%', top: 0, height: '100vh' }}>
+                        <LinearProgress />
+                    </Box>
+                </Box>
+            )}
             <Drawer
                 anchor="right"
                 open={open}
@@ -327,8 +262,8 @@ const SlackIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxShado
                         position: 'fixed',
                         zIndex: 1301,
                         top: 0,
-                        bottom: 0,
                         boxShadow: boxShadow ? '0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)' : 'none',
+                        bottom: 0,
                         msOverflowStyle: 'none',
                         scrollbarWidth: 'none',
                         '&::-webkit-scrollbar': {
@@ -342,20 +277,20 @@ const SlackIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxShado
                 slotProps={{
                     backdrop: {
                         sx: {
-                            backgroundColor: boxShadow ? boxShadow : 'rgba(0, 0, 0, 0.01)'
+                            backgroundColor: boxShadow ? boxShadow : 'transparent'
                         }
                     }
                 }}
             >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4' }}>
                     <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
-                        Connect to Klaviyo
+                        Connect to S3
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href={initApiKey ?
-                            "https://maximizai.zohodesk.eu/portal/en/kb/articles/update-klaviyo-integration-configuration" :
-                            "https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-klaviyo-to-maximiz"
-                        }
+                        {/* <Link
+                            href={initApiKey
+                                ? "https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-sendlane-to-maximiz"
+                                : "https://maximizai.zohodesk.eu/portal/en/kb/articles/update-sendlane-integration-configuration"}
                             target="_blank"
                             rel="noopener noreferrer"
                             sx={{
@@ -365,24 +300,21 @@ const SlackIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxShado
                                 lineHeight: '20px',
                                 color: '#5052b2',
                                 textDecorationColor: '#5052b2'
-                            }}>Tutorial</Link>
+                            }}>Tutorial</Link> */}
+
                         <IconButton onClick={handleClose} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />
                         </IconButton>
                     </Box>
                 </Box>
+
                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
                     <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                         <TabContext value={value}>
                             <Box sx={{ pb: 4 }}>
-                                <Tabs
-                                    value={value}
-                                    onChange={handleChange}
-                                    centered
-                                    aria-label="Connect to Klaviyo Tabs"
+                                <TabList centered aria-label="Connect to Sendlaene Tabs"
                                     TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
                                     sx={{
-                                        cursor: 'pointer',
                                         "& .MuiTabs-scroller": {
                                             overflowX: 'auto !important',
                                         },
@@ -390,102 +322,69 @@ const SlackIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxShado
                                             justifyContent: 'center',
                                             '@media (max-width: 600px)': {
                                                 gap: '16px',
-                                                justifyContent: 'flex-start',
-                                            },
-                                        },
-                                    }}
-                                >
-                                    <Tab
-                                        label="API Key"
-                                        value="1"
-                                        sx={{ ...klaviyoStyles.tabHeading, cursor: 'pointer' }}
-                                    />
-                                    <Tab
-                                        label="Suppression Sync"
-                                        value="2"
-                                        sx={{ ...klaviyoStyles.tabHeading, cursor: 'pointer' }}
-                                    />
-                                </Tabs>
-
+                                                justifyContent: 'flex-start'
+                                            }
+                                        }
+                                    }}>
+                                    <Tab label="API Key" value="1" sx={{ ...klaviyoStyles.tabHeading, cursor: 'pointer' }} />
+                                    <Tab label="Suppression Sync" value="2" sx={klaviyoStyles.tabHeading} />
+                                </TabList>
                             </Box>
                             <TabPanel value="1" sx={{ p: 0 }}>
                                 <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <Image src='/klaviyo.svg' alt='klaviyo' height={26} width={32} />
+                                        <Image src='/s3-icon.svg' alt='s3' height={26} width={32} />
                                         <Typography variant="h6" sx={{
                                             fontFamily: 'Nunito Sans',
                                             fontSize: '16px',
                                             fontWeight: '600',
                                             color: '#202124'
-                                        }}>API Key</Typography>
-                                        <Tooltip title="Enter the API key provided by Klaviyo" placement="right">
+                                        }}>Enter the AWS keys for integration</Typography>
+                                        <Tooltip title="Enter the AWS keys for integration" placement="right">
                                             <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
                                         </Tooltip>
                                     </Box>
                                     <TextField
-                                        label="Enter API Key"
+                                        label="Secret ID (Access Key ID)"
                                         variant="outlined"
                                         fullWidth
                                         margin="normal"
-                                        error={apiKeyError || Invalid_api_key}
-                                        helperText={apiKeyError ? 'API Key is required' : ''}
+                                        error={invalid_api_key}
+                                        helperText={invalid_api_key ? 'Invalid Secret ID' : ''}
+                                        value={apiIdKey}
+                                        onChange={handleApiIdKeyChange}
+                                        InputLabelProps={{ sx: klaviyoStyles.inputLabel }}
+                                        InputProps={{
+                                            sx: {
+                                                ...klaviyoStyles.formInput,
+                                                borderColor: invalid_api_key ? 'red' : 'inherit',
+                                            },
+                                        }}
+                                    />
+                                    <TextField
+                                        label="Secret Key"
+                                        variant="outlined"
+                                        fullWidth
+                                        margin="normal"
+                                        error={invalid_api_key}
+                                        helperText={invalid_api_key ? 'Invalid Secret Key' : ''}
                                         value={apiKey}
                                         onChange={handleApiKeyChange}
                                         InputLabelProps={{ sx: klaviyoStyles.inputLabel }}
-                                        InputProps={{ sx: {...klaviyoStyles.formInput, borderColor: Invalid_api_key ? 'red' : 'inherit' },   }}
+                                        InputProps={{
+                                            sx: {
+                                                ...klaviyoStyles.formInput,
+                                                borderColor: invalid_api_key ? 'red' : 'inherit',
+                                            },
+                                        }}
                                     />
-                                </Box>
-                                <Box sx={{ background: '#f0f0f0', border: '1px solid #efefef', borderRadius: '4px', p: 2 }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 2 }}>
-                                        <Image src='/info-circle.svg' alt='info-circle' height={20} width={20} />
-                                        <Typography variant="subtitle1" sx={{
-                                            fontFamily: 'Nunito Sans',
-                                            fontSize: '16px',
-                                            fontWeight: '600',
-                                            color: '#202124',
-                                            lineHeight: 'normal'
-                                        }}>How to integrate Klaviyo</Typography>
-                                    </Box>
-                                    <List dense sx={{ p: 0 }}>
-                                        {instructions.map((instruction, index) => (
-                                            <ListItem key={instruction.id} sx={{ p: 0, alignItems: 'flex-start' }}>
-                                                <Typography
-                                                    variant="body1"
-                                                    sx={{
-                                                        display: 'inline-block',
-                                                        marginRight: '4px',
-                                                        fontFamily: 'Roboto',
-                                                        fontSize: '12px',
-                                                        fontWeight: '400',
-                                                        color: '#808080',
-                                                        lineHeight: '24px'
-                                                    }}
-                                                >
-                                                    {index + 1}.
-                                                </Typography>
-                                                <Typography
-                                                    variant="body1"
-                                                    sx={{
-                                                        display: 'inline',
-                                                        fontFamily: 'Roboto',
-                                                        fontSize: '12px',
-                                                        fontWeight: '400',
-                                                        color: '#808080',
-                                                        lineHeight: '24px'
-                                                    }}
-                                                >
-                                                    {highlightText(instruction.text, highlightConfig)}
-                                                </Typography>
-                                            </ListItem>
-                                        ))}
-                                    </List>
                                 </Box>
                             </TabPanel>
                             <TabPanel value="2" sx={{ p: 0 }}>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                     <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <Image src='/klaviyo.svg' alt='klaviyo' height={26} width={32} />
+                                            <Image src='/s3-icon.svg' alt='s3' height={26} width={32} />
                                             <Typography variant="h6" sx={{
                                                 fontFamily: 'Nunito Sans',
                                                 fontSize: '16px',
@@ -502,8 +401,7 @@ const SlackIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxShado
                                             lineHeight: '20px',
                                             letterSpacing: '0.06px'
                                         }}>Sync your current list to avoid collecting contacts you already possess.
-                                            Newly added contacts in Klaviyo will be automatically suppressed each day.</Typography>
-
+                                            Newly added contacts in Sendlane will be automatically suppressed each day.</Typography>
 
                                         <Box sx={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
                                             <Typography variant="subtitle1" sx={{
@@ -619,14 +517,14 @@ const SlackIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxShado
                                                 color: '#808080',
                                                 lineHeight: '20px',
                                                 letterSpacing: '0.06px'
-                                            }}>By performing this action, all your Klaviyo contacts will be added to your Grow suppression list, and new contacts will be imported daily around 6pm EST.</Typography>
+                                            }}>By performing this action, all your Sendlane contacts will be added to your Grow suppression list, and new contacts will be imported daily around 6pm EST.</Typography>
                                         </Box>
                                     </Box>
                                 </Box>
                             </TabPanel>
                         </TabContext>
                     </Box>
-                    <Box sx={{ px: 2, py: 3.5, width: '100%' }}>
+                    <Box sx={{ px: 2, py: 2, width: '100%', borderTop: '1px solid #e4e4e4' }}>
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
                             {getButton(value)}
                         </Box>
@@ -637,4 +535,4 @@ const SlackIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxShado
     );
 }
 
-export default SlackIntegrationPopup;
+export default S3Connect;
