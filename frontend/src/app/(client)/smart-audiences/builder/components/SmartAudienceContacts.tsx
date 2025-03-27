@@ -7,6 +7,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import Image from 'next/image';
+import { useRouter } from "next/navigation";
 
 interface SelectedData {
     includeExclude: string;
@@ -28,6 +29,7 @@ const lookalikeData = [
 ];
 
 const SmartAudiencesContacts: React.FC = () => {
+    const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [audienceName, setAudienceName] = useState<string>("");
     const [option, setOption] = useState<string>("");
@@ -298,7 +300,9 @@ const SmartAudiencesContacts: React.FC = () => {
             {(!showForm && selectedSources.length !== 0 && !AudienceSize) && (
                 <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mt: 2, justifyContent: "flex-end", borderRadius: "6px" }}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-                        <Button variant="outlined" sx={{
+                        <Button
+                            onClick={() => router.push('/smart-audiences')}
+                            variant="outlined" sx={{
                             ...smartAudiences.buttonform,
                             borderColor: "rgba(80, 82, 178, 1)",
                             width: "92px",
@@ -392,7 +396,9 @@ const SmartAudiencesContacts: React.FC = () => {
                     </Box>
                     <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mt: 2, justifyContent: "flex-end", borderRadius: "6px" }}>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-                            <Button variant="outlined" sx={{
+                            <Button
+                                onClick={() => router.push('/smart-audiences')}
+                                variant="outlined" sx={{
                                 ...smartAudiences.buttonform,
                                 borderColor: "rgba(80, 82, 178, 1)",
                                 width: "92px",

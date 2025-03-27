@@ -430,7 +430,7 @@ const CreateLookalikePage: React.FC = () => {
                                 <Button
                                     variant="contained"/* need chnage < on !== */
                                     className='second-sub-title'
-                                    disabled={true}
+                                    onClick={() => router.push('/smart-audiences/builder')}
                                     sx={{
                                         backgroundColor: 'rgba(80, 82, 178, 1)',
                                         textTransform: 'none',

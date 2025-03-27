@@ -29,6 +29,10 @@ class TypeOfSourceOrigin(Enum):
     CSV = 'csv'
     PIXEL = 'pixel'
 
+class DataSyncType(Enum):
+    AUDIENCE = 'audience'
+    PIXEL = 'pixel'
+
 class BusinessType(Enum):
     D2C = 'd2c'
     B2B = 'b2b'

@@ -91,22 +91,18 @@ const Sources: React.FC = () => {
     const isOpen = Boolean(anchorEl);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const [isMakeRequest, setIsMakeRequest] = useState(false);
-    const createCommonCellStyles = (
-        width: string = "15vw",
-        mobileWidth: string = "20vw"
-      ) => ({
-        minWidth: width,
-        width: width,
-        maxWidth: width,
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap",
-        // '@media (max-width: 600px)': {
-        //   minWidth: mobileWidth,
-        //   width: mobileWidth,
-        //   maxWidth: mobileWidth,
-        // },
-      });
+
+    const columns = [
+        { key: 'name', label: 'Name', widths: { width: '11vw', minWidth: '11vw', maxWidth: '11vw' } },
+        { key: 'source', label: 'Source', widths: { width: '80px', minWidth: '80px', maxWidth: '80px' } },
+        { key: 'domain', label: 'Domain', widths: { width: '12vw', minWidth: '12vw', maxWidth: '12vw' } },
+        { key: 'type', label: 'Type', widths: { width: '13vw', minWidth: '13vw', maxWidth: '20vw' } },
+        { key: 'created_date', label: 'Created Date', widths: { width: '125px', minWidth: '125px', maxWidth: '125px' }, sortable: true },
+        { key: 'created_by', label: 'Created By', widths: { width: '11vw', minWidth: '11vw', maxWidth: '11vw' } },
+        { key: 'number_of_customers', label: 'No of Customers', widths: { width: '140px', minWidth: '140px', maxWidth: '140px' }, sortable: true },
+        { key: 'matched_records', label: 'Matched Records', widths: { width: '145px', minWidth: '145px', maxWidth: '145px' }, sortable: true },
+        { key: 'actions', label: 'Actions', widths: { width: '80px', minWidth: '80px', maxWidth: '80px' } }
+      ];
 
     useEffect(() => {
         fetchSources({
@@ -454,23 +450,35 @@ const Sources: React.FC = () => {
     }
 
 
-    const truncateText = (text: string, maxLength: number) => {
-        return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
-    };
+    const tableContainerRef = useRef<HTMLDivElement>(null);
+    const [isScrolled, setIsScrolled] = useState(false);
 
-    const commonCellStyles = {
-        minWidth: "15vw",
-        width: "15vw",
-        maxWidth: "15vw",
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap",
-        '@media (max-width: 600px)': {
-            minWidth: "20vw",
-            width: "20vw",
-            maxWidth: "20vw"
-        },
-    };
+    useEffect(() => {
+        if (tableContainerRef.current) {
+            const container = tableContainerRef.current;
+            const checkScroll = () => {
+                if (container) {
+                setIsScrolled(container.scrollLeft > 0);
+                }
+            };
+    
+            if (container) {
+                container.addEventListener('scroll', checkScroll);
+            }
+            window.addEventListener('resize', checkScroll);
+    
+            checkScroll();
+    
+            return () => {
+                if (container) {
+                container.removeEventListener('scroll', checkScroll);
+                }
+                window.removeEventListener('resize', checkScroll);
+            };
+        } else {
+          console.warn("TableContainer ref is still null");
+        }
+      }, [tableContainerRef.current]);
 
     return (
         <>
@@ -729,19 +737,9 @@ const Sources: React.FC = () => {
                                                 >
                                                     <Table stickyHeader aria-label="leads table">
                                                         <TableHead sx={{ position: "relative" }}>
-                                                            <TableRow>
-                                                                {[
-                                                                    { key: 'name', label: 'Name' },
-                                                                    { key: 'source', label: 'Source' },
-                                                                    { key: 'domain', label: 'Domain' },
-                                                                    { key: 'type', label: 'Type' },
-                                                                    { key: 'created_date', label: 'Created Date', sortable: true },
-                                                                    { key: 'created_by', label: 'Created By' },
-                                                                    { key: 'number_of_customers', label: 'No of Customers', sortable: true },
-                                                                    { key: 'matched_records', label: 'Matched Records', sortable: true },
-                                                                    { key: 'actions', label: 'Actions' }
-                                                                ].map(({ key, label, sortable = false }) => (
-                                                                    <TableCell
+                                                        <TableRow>
+                                                                {columns.map(({ key, label, sortable = false, widths }) => (
+                                                                <TableCell
                                                                         key={key}
                                                                         sx={{
                                                                             ...sourcesStyles.table_column,
@@ -750,28 +748,14 @@ const Sources: React.FC = () => {
                                                                                 left: 0,
                                                                                 zIndex: 10,
                                                                                 top: 0,
+                                                                                boxShadow: isScrolled ? '2px 0px 6px 0px #00000033' : 'none',
                                                                             }),
                                                                         }}
-                                                                        onClick={sortable ? () => handleSortRequest(key) : undefined}
-                                                                        style={{ cursor: sortable ? 'pointer' : 'default' }}
                                                                     >
                                                                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: "space-between" }}>
                                                                             <Typography variant="body2" sx={{ ...sourcesStyles.table_column, borderRight: '0' }}>
                                                                                 {label}
                                                                             </Typography>
-                                                                            {sortable && (
-                                                                                <IconButton size="small">
-                                                                                    {orderBy === key ? (
-                                                                                        order === 'asc' ? (
-                                                                                            <ArrowUpwardRoundedIcon fontSize="inherit" />
-                                                                                        ) : (
-                                                                                            <ArrowDownwardRoundedIcon fontSize="inherit" />
-                                                                                        )
-                                                                                    ) : (
-                                                                                        <SwapVertIcon fontSize="inherit" />
-                                                                                    )}
-                                                                                </IconButton>
-                                                                            )}
                                                                         </Box>
                                                                     </TableCell>
                                                                 ))}
@@ -832,6 +816,7 @@ const Sources: React.FC = () => {
                                             <Grid container spacing={1} sx={{ flex: 1 }}>
                                                 <Grid item xs={12}>
                                                     <TableContainer
+                                                        ref={ tableContainerRef }
                                                         component={Paper}
                                                         sx={{
                                                             border: '1px solid rgba(235, 235, 235, 1)',
@@ -852,29 +837,21 @@ const Sources: React.FC = () => {
                                                             },
                                                         }}
                                                     >
-                                                        <Table stickyHeader aria-label="leads table">
+                                                        <Table stickyHeader aria-label="leads table" sx={{ tableLayout: 'fixed' }}>
                                                         <TableHead sx={{ position: "relative" }}>
-                                                                <TableRow>
-                                                                    {[
-                                                                        { key: 'name', label: 'Name' },
-                                                                        { key: 'source', label: 'Source' },
-                                                                        { key: 'domain', label: 'Domain' },
-                                                                        { key: 'type', label: 'Type' },
-                                                                        { key: 'created_date', label: 'Created Date', sortable: true },
-                                                                        { key: 'created_by', label: 'Created By' },
-                                                                        { key: 'number_of_customers', label: 'No of Customers', sortable: true },
-                                                                        { key: 'matched_records', label: 'Matched Records', sortable: true },
-                                                                        { key: 'actions', label: 'Actions' }
-                                                                    ].map(({ key, label, sortable = false }) => (
-                                                                        <TableCell
+                                                        <TableRow>
+                                                                {columns.map(({ key, label, sortable = false, widths }) => (
+                                                                <TableCell
                                                                             key={key}
                                                                             sx={{
+                                                                                ...widths,
                                                                                 ...sourcesStyles.table_column,
                                                                                 ...(key === 'name' && {
                                                                                     position: 'sticky',
                                                                                     left: 0,
                                                                                     zIndex: 10,
                                                                                     top: 0,
+                                                                                    boxShadow: isScrolled ? '2px 0px 6px 0px #00000033' : 'none',
                                                                                 }),
                                                                                 ...(key === 'average_time_sec' && {
                                                                                     "::after": { content: 'none' }
@@ -950,31 +927,37 @@ const Sources: React.FC = () => {
                                                                             }}
                                                                         >
                                                                             {/* Name Column */}
-                                                                            <CustomCell rowExample={row.name} cellWidth="10vw" loaderForTable={loaderForTable} customCellStyles={{
+                                                                            <CustomCell rowExample={row.name} loaderForTable={loaderForTable} customCellStyles={{
                                                                                 position: 'sticky',
                                                                                 left: '0',
                                                                                 zIndex: 9,
                                                                                 backgroundColor: loaderForTable ? '#fff' : '#fff',
+                                                                                boxShadow: isScrolled ? '2px 0px 6px 0px #00000033' : 'none',
                                                                             }}/>
 
                                                                             {/* Source Column */}
-                                                                            <CustomCell rowExample={setSourceOrigin(row.source_type)} cellWidth="7vw" loaderForTable={loaderForTable}/>
+                                                                            <TableCell
+                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative', minWidth: '80px', maxWidth: '80px', width: '80px' }}
+                                                                            >
+                                                                                {setSourceOrigin(row.source_type)}
+                                                                            </TableCell>
+                                                                            {/* <CustomCell rowExample={setSourceOrigin(row.source_type)} cellWidth="60px" loaderForTable={loaderForTable}/> */}
 
                                                                             {/* Domain Column */}
-                                                                            <CustomCell rowExample={row.domain ?? "--"} cellWidth="10vw" loaderForTable={loaderForTable} />
+                                                                            <CustomCell rowExample={row.domain ?? "--"} loaderForTable={loaderForTable} />
 
                                                                             {/* Type Column */}
-                                                                            <CustomCell rowExample={setSourceType(row.source_origin)} cellWidth="14vw" loaderForTable={loaderForTable} />
+                                                                            <CustomCell rowExample={setSourceType(row.source_origin)} loaderForTable={loaderForTable} />
 
                                                                             {/* Created date Column */}
-                                                                            <CustomCell rowExample={dayjs(row.created_at).isValid() ? dayjs(row.created_at).format('MMM D, YYYY') : '--'} cellWidth="12vw" loaderForTable={loaderForTable} />
+                                                                            <CustomCell rowExample={dayjs(row.created_at).isValid() ? dayjs(row.created_at).format('MMM D, YYYY') : '--'} loaderForTable={loaderForTable} />
 
                                                                             {/* Created By Column */}
-                                                                            <CustomCell rowExample={row.created_by} cellWidth="10vw" loaderForTable={loaderForTable} />
+                                                                            <CustomCell rowExample={row.created_by} loaderForTable={loaderForTable} />
 
                                                                             {/* Number of Customers Column */}
                                                                             <TableCell
-                                                                                sx={{ ...createCommonCellStyles("8vw"), ...sourcesStyles.table_array, position: 'relative' }}
+                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                                             >
                                                                                 {progress?.total && progress?.total > 0 || row?.total_records > 0
                                                                                     ? progress?.total > 0
@@ -986,7 +969,7 @@ const Sources: React.FC = () => {
 
                                                                             {/* Matched Records  Column */}
                                                                             <TableCell
-                                                                                sx={{ ...createCommonCellStyles("8vw"), ...sourcesStyles.table_array, position: 'relative' }}
+                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative' }}
                                                                             >
                                                                                 {(progress?.processed && progress?.processed == progress?.total) || (row?.processed_records == row?.total_records && row?.processed_records !== 0)
                                                                                     ? progress?.matched > row?.matched_records
@@ -998,7 +981,7 @@ const Sources: React.FC = () => {
                                                                                 }
                                                                             </TableCell>
 
-                                                                            <TableCell sx={{ ...createCommonCellStyles("2vw"), ...sourcesStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
+                                                                            <TableCell sx={{ ...sourcesStyles.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
                                                                                 <IconButton onClick={(event) => handleOpenPopover(event, row)} sx={{ ':hover': { backgroundColor: 'transparent' } }} >
                                                                                     <MoreVert sx={{ color: "rgba(32, 33, 36, 1)" }} height={8} width={24} />
                                                                                 </IconButton>
