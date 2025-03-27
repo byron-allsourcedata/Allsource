@@ -293,6 +293,7 @@ class MetaIntegrationsService:
             'domain_id': domain_id,
             'customer_id': customer_id,
             'campaign_id': campaign_id,
+            'campaign_name': campaign.get('campaign_name'),
             'data_map': [data.model_dump_json() for data in data_map] if data_map else None,
             'created_by': created_by
         })
