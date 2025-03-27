@@ -49,14 +49,14 @@ class WebhookIntegrationService:
             return None
     
     def save_integration(self, domain_id: int, user: dict):
-        credential = self.integration_persistence.get_credentials_for_service(domain_id=domain_id, service_name=SourcePlatformEnum.WEBHOOK.value)
+        credential = self.integration_persistence.get_credentials_for_service(domain_id=domain_id, service_name=SourcePlatformEnum.WEBHOOK.value, user_id = user.get('id'))
         if credential:
             credential.is_failed = False
             credential.error_message = None
             self.integration_persistence.db.commit()
             return credential
         
-        common_integration = bool(os.getenv('COMMON_INTEGRATION'))
+        common_integration = os.getenv('COMMON_INTEGRATION') == 'True'
         integration_data = {
             'full_name': user.get('full_name'),
             'service_name': SourcePlatformEnum.WEBHOOK.value

@@ -55,7 +55,7 @@ class HubspotIntegrationsService:
         return credential
 
     def __save_integrations(self, api_key: str, domain_id: int, user: dict):
-        credential = self.get_credentials(domain_id)
+        credential = self.get_credentials(domain_id, user.get('id'))
         if credential:
             credential.access_token = api_key
             credential.is_failed = False
@@ -63,7 +63,7 @@ class HubspotIntegrationsService:
             self.integrations_persisntece.db.commit()
             return credential
               
-        common_integration = bool(os.getenv('COMMON_INTEGRATION'))
+        common_integration = os.getenv('COMMON_INTEGRATION') == 'True'
         integration_data = {
             'access_token': api_key,
             'full_name': user.get('full_name'),

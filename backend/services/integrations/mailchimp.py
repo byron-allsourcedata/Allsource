@@ -147,7 +147,7 @@ class MailchimpIntegrationsService:
             self.integrations_persisntece.db.commit()
             return credential
         
-        common_integration = bool(os.getenv('COMMON_INTEGRATION'))
+        common_integration = os.getenv('COMMON_INTEGRATION') == 'True'
         integration_data = {
             'access_token': api_key,
             'data_center': server,

@@ -52,7 +52,7 @@ class S3IntegrationService:
 
 
     def __save_integrations(self, *, secret_id: str, secret_key, domain_id: int, user: dict):
-        credential = self.get_credentials(domain_id)
+        credential = self.get_credentials(domain_id, user.get('id'))
         if credential:
             credential.access_token = json.dumps({"secret_id": secret_id, "secret_key": secret_key})
             credential.is_failed = False
@@ -60,7 +60,7 @@ class S3IntegrationService:
             self.integrations_persisntece.db.commit()
             return credential
         
-        common_integration = bool(os.getenv('COMMON_INTEGRATION'))
+        common_integration = os.getenv('COMMON_INTEGRATION') == 'True'
         integration_data = {
             'access_token': json.dumps({"secret_id": secret_id, "secret_key": secret_key}),
             'full_name': user.get('full_name'),
