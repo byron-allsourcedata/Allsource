@@ -50,7 +50,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
     const [selectedOption, setSelectedOption] = useState<MetaAuidece | null>(null);
     const [selectedOptionCampaign, setSelectedOptionCampaign] = useState<MetaCampaign | null>(null);
     const [inputValue, setInputValue] = useState('');
-    const [inputValueCampaign, setInputValueCampaign] = useState(data.campaign_id ?? '');
+    const [inputValueCampaign, setInputValueCampaign] = useState(data?.campaign_name ?? '');
     const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
     const [showCreateFormCampaign, setShowCreateFormCampaign] = useState<boolean>(false);
     const [newListName, setNewListName] = useState<string>('');
@@ -601,11 +601,10 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
                     list_name: list?.list_name,
                     leads_type: selectedRadioValue,
                 };
-
-                if (selectedOptionCampaign?.id && formValues?.campaignName) {
+                if (selectedOptionCampaign?.id || formValues?.campaignName) {
                     requestData.campaign = {
                         campaign_id: selectedOptionCampaign?.id,
-                        campaign_name: formValues?.campaignName,
+                        campaign_name: selectedOptionCampaign?.list_name,
                         campaign_objective: formValues?.campaignObjective,
                         bid_amount: formValues?.bidAmount,
                         daily_budget: formValues?.dailyBudget
@@ -1275,11 +1274,12 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
                                                             variant="outlined"
                                                             value={inputValueCampaign}
                                                             onClick={handleClickCampaign}
+                                                            disabled={data?.campaign_name}
                                                             size="medium"
                                                             fullWidth
-                                                            label={selectedOptionCampaign ? '' : 'Select or Create new Campaign'}
+                                                            label={inputValueCampaign ? '' : 'Select or Create new Campaign'}
                                                             InputLabelProps={{
-                                                                shrink: selectedOptionCampaign ? false : isShrunkCampaign,
+                                                                shrink: inputValueCampaign ? false : isShrunkCampaign,
                                                                 sx: {
                                                                     fontFamily: 'Nunito Sans',
                                                                     fontSize: '15px',
@@ -1294,13 +1294,13 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
                                                             InputProps={{
                                                                 endAdornment: (
                                                                     <InputAdornment position="end">
-                                                                        <IconButton onClick={handleDropdownToggleCampaign} edge="end">
+                                                                        <IconButton disabled={data?.campaign_name} onClick={handleDropdownToggleCampaign} edge="end">
                                                                             {isDropdownOpenCampaign ?
                                                                                 <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} />
                                                                                 : <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />}
                                                                         </IconButton>
                                                                         {selectedOptionCampaign && (
-                                                                            <IconButton onClick={handleClearCampaign} edge="end">
+                                                                            <IconButton disabled={data?.campaign_name} onClick={handleClearCampaign} edge="end">
                                                                                 <CloseIcon />
                                                                             </IconButton>
                                                                         )}
@@ -1326,7 +1326,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
 
                                                         <Menu
                                                             anchorEl={anchorElCampaign}
-                                                            open={Boolean(anchorElCampaign) && isDropdownOpenCampaign}
+                                                            open={Boolean(anchorElCampaign) && isDropdownOpenCampaign && !data?.campaign_name}
                                                             onClose={handleCloseCampaign}
                                                             PaperProps={{
                                                                 sx: {
@@ -1336,7 +1336,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
                                                             }}
                                                         >
                                                             {/* Show "Create New Campaign" option */}
-                                                            <MenuItem onClick={() => handleSelectOptionCampaign('createNewAudience')} sx={{
+                                                            <MenuItem disabled={data?.campaign_name} onClick={() => handleSelectOptionCampaign('createNewAudience')} sx={{
                                                                 borderBottom: showCreateFormCampaign ? "none" : "1px solid #cdcdcd",
                                                                 '&:hover': {
                                                                     background: 'rgba(80, 82, 178, 0.10)'
