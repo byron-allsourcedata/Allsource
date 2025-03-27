@@ -60,7 +60,7 @@ const CreateLookalikePage: React.FC = () => {
     // Pagination and Sorting
     const [count_lookalikes, setCountLookalike] = useState<number | null>(null);
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(15);
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
     const [orderBy, setOrderBy] = useState<keyof TableRowData>();
     const [order, setOrder] = useState<"asc" | "desc">();

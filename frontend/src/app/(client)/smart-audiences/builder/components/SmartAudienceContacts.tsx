@@ -1,3 +1,4 @@
+"use client";
 import { LinearProgress, Typography, TextField, Chip, Button, FormControl, Select, MenuItem, InputAdornment, IconButton, TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody, SelectChangeEvent } from "@mui/material"
 import { Box } from "@mui/system"
 import { smartAudiences } from "../../smartAudiences"
@@ -16,6 +17,10 @@ interface SelectedData {
     selectedSourceId: string;
 }
 
+interface SmartAudienceContactsProps {
+    useCaseType: string;
+}
+
 const sourceData = [
     { id: 'uuid-123', name: "My orders", type: "Customer Conversions", size: "10,000" },
     { id: 'uuid-124', name: "Failed", type: "Lead Failures", size: "35,000" },
@@ -28,7 +33,7 @@ const lookalikeData = [
     { id: 'uuid-128', name: "New List", type: "Customer Conversions", size: "50,000" },
 ];
 
-const SmartAudiencesContacts: React.FC = () => {
+const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({ useCaseType }) => {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [audienceName, setAudienceName] = useState<string>("");

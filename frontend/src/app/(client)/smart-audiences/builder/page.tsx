@@ -40,7 +40,7 @@ const SmartAudiencesBuilder: React.FC = () => {
                                 <Typography sx={{ fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)" }}>Choose what you would like to use it for.</Typography>
                             </Box>
                             <FormControl variant="outlined">
-                                <Select value={useCaseType} onChange={handleChangeSourceType} displayEmpty sx={{ ...smartAudiences.text, width: "316px", borderRadius: "4px", pt: 0 }}>
+                                <Select value={useCaseType ? useCaseType : ''} onChange={handleChangeSourceType} displayEmpty sx={{ ...smartAudiences.text, width: "316px", borderRadius: "4px", pt: 0 }}>
                                     <MenuItem value="" disabled sx={{ display: "none", mt: 0 }}>Choose Use case Type</MenuItem>
                                     <MenuItem className="second-sub-title" value={"Meta"}>Meta</MenuItem>
                                     <MenuItem className="second-sub-title" value={"Google"}>Google</MenuItem>
@@ -54,10 +54,14 @@ const SmartAudiencesBuilder: React.FC = () => {
                         </Box>
 
                         {["Google", "Bing", "Meta"].includes(useCaseType) ? (
-                            <SmartAudiencesContacts />
+                            <SmartAudiencesContacts useCaseType={useCaseType} />
                         ) : (
-                            <SmartAudiencesTarget useCaseType={useCaseType}/>
+                            ["Email", "Tele Marketing", "Postal", "LinkedIn"].includes(useCaseType) && (
+                                <SmartAudiencesTarget useCaseType={useCaseType} />
+                            )
                         )}
+
+
                     </Box>
                 </Box>
             </Box>

@@ -79,3 +79,24 @@ class AudienceSmartsService:
     def update_audience_smart(self, id, new_name) -> bool:
         count_updated = self.audience_smarts_persistence.update_audience_smart(id, new_name)
         return count_updated > 0
+
+    def create_audience_smart(
+            self,
+            name: str,
+            user: dict,
+            created_by_user_id: int,
+            use_case_alias: str,
+            data_sources: List[dict],
+            validation_params: Optional[dict],
+            contacts_to_validate: int
+    ):
+
+        return self.audience_smarts_persistence.create_audience_smart(
+            name=name,
+            user_id=user.get('id'),
+            created_by_user_id=created_by_user_id,
+            use_case_alias=use_case_alias,
+            validation_params=validation_params,
+            data_sources=data_sources,
+            contacts_to_validate=contacts_to_validate
+        )

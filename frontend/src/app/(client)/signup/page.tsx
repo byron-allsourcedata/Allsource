@@ -313,7 +313,7 @@ const Signup: React.FC = () => {
   return (
     <>
       <Box sx={signupStyles.logoContainer}>
-        <Image src='/logo.svg' alt='logo' height={30} width={50} />
+        <Image src='/logo.svg' alt='logo' height={30} width={130} />
       </Box>
       <Box sx={signupStyles.mainContent}>
         <Box sx={signupStyles.container}>

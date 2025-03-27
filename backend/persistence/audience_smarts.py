@@ -7,9 +7,11 @@ from sqlalchemy.orm import Session
 
 from models.audience_smarts import AudienceSmart
 from models.audience_smarts_use_cases import AudienceSmartsUseCase
+from models.audience_smarts_data_sources import AudienceSmartsDataSources
 from models.users import Users
 from typing import Optional, Tuple, List
 from sqlalchemy.engine.row import Row
+from uuid import UUID
 from urllib.parse import unquote
 
 from persistence.utils import apply_filters
@@ -20,6 +22,68 @@ class AudienceSmartsPersistence:
     def __init__(self, db: Session):
         self.db = db
 
+    def get_use_case_id_by_alias(self, use_case_alias: str):
+        use_case = (
+            self.db.query(AudienceSmartsUseCase.id)
+                .filter(AudienceSmartsUseCase.alias == use_case_alias)
+                .first()
+        )
+        return use_case[0] if use_case else None
+
+    def create_audience_smarts_data_sources(
+            self,
+            smart_audience_id: str,
+            data_sources: List[dict],
+    ) -> None:
+        new_data_sources = []
+
+        for source in data_sources:
+            data_entry = AudienceSmartsDataSources(
+                smart_audience_id=smart_audience_id,
+                data_type=source["includeExclude"],
+                source_id=source["selectedSourceId"] if source["sourceLookalike"] == "Source" else None,
+                lookalike_id=source["selectedSourceId"] if source["sourceLookalike"] == "Lookalike" else None,
+            )
+            new_data_sources.append(data_entry)
+
+
+        self.db.bulk_save_objects(new_data_sources)
+        self.db.flush()
+
+    def create_audience_smart(
+            self,
+            name: str,
+            user_id: int,
+            created_by_user_id: int,
+            use_case_alias: str,
+            data_sources: List[dict],
+            validation_params: Optional[dict],
+            contacts_to_validate: Optional[int]
+    ) -> AudienceSmart:
+
+        use_case_id = self.get_use_case_id_by_alias(use_case_alias)
+        if not use_case_id:
+            raise ValueError(f"Use case with alias '{use_case_alias}' not found.")
+
+        new_audience = AudienceSmart(
+            name=name,
+            user_id=user_id,
+            created_by_user_id=created_by_user_id,
+            use_case_id=use_case_id,
+            validations=validation_params,
+            active_segment_records=contacts_to_validate,
+            status="unvalidated"
+        )
+
+        self.db.add(new_audience)
+        self.db.flush()
+
+        self.create_audience_smarts_data_sources(new_audience.id, data_sources)
+
+        self.db.commit()
+        self.db.refresh(new_audience)
+
+        return new_audience
 
     def get_audience_smarts(
             self,
