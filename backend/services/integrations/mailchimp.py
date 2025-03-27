@@ -6,6 +6,7 @@ from services.integrations.million_verifier import MillionVerifierIntegrationsSe
 from schemas.integrations.integrations import *
 from schemas.integrations.klaviyo import *
 import hashlib
+import os
 from fastapi import HTTPException
 from datetime import datetime, timedelta
 from schemas.integrations.mailchimp import MailchimpProfile
@@ -29,11 +30,11 @@ class MailchimpIntegrationsService:
         self.million_verifier_integrations = million_verifier_integrations
         self.client = MailchimpMarketing.Client()
 
-    def get_credentials(self, domain_id: int):
-        return self.integrations_persisntece.get_credentials_for_service(domain_id, SourcePlatformEnum.MAILCHIMP.value)
+    def get_credentials(self, domain_id: int, user_id: int):
+        return self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.MAILCHIMP.value)
     
-    def create_list(self, list_data, domain_id):
-        credential = self.get_credentials(domain_id)
+    def create_list(self, list_data, domain_id: int, user_id: int):
+        credential = self.get_credentials(domain_id, user_id)
         response = None
         self.client.set_config({
             'api_key': credential.access_token,
@@ -112,19 +113,20 @@ class MailchimpIntegrationsService:
         return self.__mapped_list(response) if response else None
 
 
-    def get_list(self, domain_id: int = None, api_key: str = None, server: str = None):
-        if domain_id:
-            credentials = self.get_credentials(domain_id)
+    def get_list(self, user_id: int, domain_id: int, api_key: str = None, server: str = None):
+        if api_key and server:
+            self.client.set_config({
+                'api_key': api_key,
+                'server': server
+            })
+        else:
+            credentials = self.get_credentials(domain_id, user_id)
             if not credentials: return
             self.client.set_config({
                 'api_key': credentials.access_token,
                 'server': credentials.data_center
             })
-        else:
-            self.client.set_config({
-                'api_key': api_key,
-                'server': server
-            })
+            
         try:
             response = self.client.lists.get_all_lists()
             return [self.__mapped_list(list) for list in response.get('lists')]
@@ -136,42 +138,49 @@ class MailchimpIntegrationsService:
                 return
 
 
-    def __save_integation(self, domain_id: int, api_key: str, server: str):
-        credential = self.get_credentials(domain_id)
+    def __save_integation(self, domain_id: int, api_key: str, server: str, user: dict):
+        credential = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
         if credential:
             credential.access_token = api_key
             credential.data_center = server
             credential.is_failed = False
             self.integrations_persisntece.db.commit()
             return credential
-        integartions = self.integrations_persisntece.create_integration({
-            'domain_id': domain_id,
+        
+        common_integration = bool(os.getenv('COMMON_INTEGRATION'))
+        integration_data = {
             'access_token': api_key,
             'data_center': server,
+            'full_name': user.get('full_name'),
             'service_name': SourcePlatformEnum.MAILCHIMP.value
-        })
-        if not integartions:
+        }
+
+        if common_integration:
+            integration_data['user_id'] = user.get('id')
+        else:
+            integration_data['domain_id'] = domain_id
+            
+        integartion = self.integrations_persisntece.create_integration(integration_data)
+        
+        if not integartion:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
-        return integartions
+        
+        return integartion
 
 
     def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
         data_center = credentials.mailchimp.api_key.split('-')[-1]
         try:
-            lists = self.get_list(api_key=credentials.mailchimp.api_key, server=data_center)
+            lists = self.get_list(api_key=credentials.mailchimp.api_key, domain_id=domain.id, user_id=user.get('id'), server=data_center)
             if not lists:
                 raise HTTPException(status_code=200, detail={"status": IntegrationsStatus.CREDENTAILS_INVALID.value})
         except:
             raise HTTPException(status_code=200, detail={'status': IntegrationsStatus.CREDENTAILS_INVALID.value})
-        integration = self.__save_integation(domain_id=domain.id, api_key=credentials.mailchimp.api_key, server=data_center)
+        integration = self.__save_integation(domain_id=domain.id, api_key=credentials.mailchimp.api_key, server=data_center, user=user)
         return integration
 
-    async def create_sync(self, leads_type: str, list_id: str, list_name: str, data_map: List[DataMap], domain_id: int, created_by: str, tags_id: str = None):
-        credentials = self.get_credentials(domain_id)
-        data_syncs = self.sync_persistence.get_filter_by(domain_id=domain_id)
-        for sync in data_syncs:
-            if sync.get('integration_id') == credentials.id and sync.get('leads_type') == leads_type:
-                return
+    async def create_sync(self, leads_type: str, list_id: str, list_name: str, data_map: List[DataMap], domain_id: int, created_by: str, user: dict):
+        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'list_id': list_id,
@@ -181,6 +190,7 @@ class MailchimpIntegrationsService:
             'data_map': data_map,
             'created_by': created_by,
         })
+        return sync
 
     async def process_data_sync(self, five_x_five_user, access_token, integration_data_sync, lead_user):
         profile = self.__create_profile(five_x_five_user, access_token, integration_data_sync)
@@ -259,13 +269,12 @@ class MailchimpIntegrationsService:
         return response
 
     def edit_sync(self, leads_type: str, list_id: str, list_name: str, integrations_users_sync_id: int,
-                  data_map: List[DataMap], domain_id: int, created_by: str):
-        credentials = self.get_credentials(domain_id)
+                  data_map: List[DataMap], domain_id: int, created_by: str, user_id: int):
+        credentials = self.get_credentials(domain_id, user_id)
         sync = self.sync_persistence.edit_sync({
             'integration_id': credentials.id,
             'list_id': list_id,
             'list_name': list_name,
-            'domain_id': domain_id,
             'leads_type': leads_type,
             'data_map': data_map,
             'created_by': created_by,

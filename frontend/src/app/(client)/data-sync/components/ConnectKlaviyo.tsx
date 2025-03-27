@@ -32,6 +32,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
     const [selectedRadioValue, setSelectedRadioValue] = useState(data?.type);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedOption, setSelectedOption] = useState<KlaviyoList | null>(null);
+    const [listName, setlistName] = useState<string | null>(data?.name ?? '');
     const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
     const [newListName, setNewListName] = useState<string>('');
     const [tagName, setTagName] = useState<string>('');
@@ -132,6 +133,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
         setSelectedRadioValue('');
         setAnchorEl(null);
         setSelectedOption(null);
+        setlistName('')
         setShowCreateForm(false);
         setNewListName('');
         setTagName('');
@@ -166,6 +168,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                     id: foundItem.id,
                     list_name: foundItem.list_name
                 });
+                setlistName(foundItem.list_name)
             } else {
                 setSelectedOption(null);
             }
@@ -176,7 +179,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
         }
     }
     useEffect(() => {
-        if (open) {
+        if (open && !data) {
             getKlaviyoList()
         }
     }, [open])
@@ -217,13 +220,15 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
         let tag = null;
 
         try {
-            if (selectedOption && selectedOption.id === '-1') {
-                list = await createNewList();
-            } else if (selectedOption) {
-                list = selectedOption;
-            } else {
-                showToast('Please select a valid option.');
-                return;
+            if (!listName){
+                if (selectedOption && selectedOption.id === '-1') {
+                    list = await createNewList();
+                } else if (selectedOption) {
+                    list = selectedOption;
+                } else {
+                    showToast('Please select a valid option.');
+                    return;
+                }
             }
 
             if (tagName) {
@@ -232,9 +237,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
             if (isEdit) {
                 const response = await axiosInstance.put(`/data-sync/sync`, {
                     integrations_users_sync_id: data.id,
-                    list_id: list?.id,
-                    list_name: list?.list_name,
-                    tags_id: tag ? tag.id : null,
                     leads_type: selectedRadioValue,
                     data_map: customFields
                 }, {
@@ -310,6 +312,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                 id: value.id,
                 list_name: value.list_name
             });
+            setlistName(value.list_name)
             setIsDropdownValid(true);
             handleClose();
         } else {
@@ -340,6 +343,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
         if (valid) {
             const newKlaviyoList = { id: '-1', list_name: newListName }
             setSelectedOption(newKlaviyoList);
+            setlistName(newKlaviyoList.list_name)
             if (isKlaviyoList(newKlaviyoList)) {
                 setIsDropdownValid(true);
             }
@@ -424,7 +428,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                 return (
                     <Button
                         variant="contained"
-                        disabled={!isDropdownValid}
+                        disabled={!isDropdownValid && !listName}
                         onClick={handleNextTab}
                         sx={{
                             backgroundColor: '#5052B2',
@@ -451,7 +455,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                     <Button
                         variant="contained"
                         onClick={handleSaveSync}
-                        disabled={!selectedOption || !selectedRadioValue}
+                        disabled={!listName || !selectedRadioValue}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito Sans",
@@ -821,37 +825,38 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                 <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
                                             </Tooltip>
                                         </Box>
-                                        <ClickAwayListener onClickAway={handleClose}>
+                                        <ClickAwayListener disabled={data} onClickAway={handleClose}>
                                             <Box>
                                                 <TextField
                                                     ref={textFieldRef}
                                                     variant="outlined"
-                                                    value={selectedOption?.list_name}
+                                                    value={listName}
                                                     onClick={handleClick}
                                                     size="small"
+                                                    disabled={data} 
                                                     fullWidth
-                                                    label={selectedOption ? '' : 'Select or Create new list'}
+                                                    label={listName ? '' : 'Select or Create new list'}
                                                     InputLabelProps={{
-                                                        shrink: selectedOption ? false : isShrunk,
+                                                        shrink: listName ? false : isShrunk,
                                                         sx: {
                                                             fontFamily: 'Nunito Sans',
                                                             fontSize: '12px',
                                                             lineHeight: '16px',
-                                                            // color: '#5052B2',
                                                             letterSpacing: '0.06px',
                                                             top: '5px',
-                                                            // '&.Mui-focused': {
-                                                            //     color: '#0000FF',
-                                                            // },
                                                         }
                                                     }}
                                                     InputProps={{
 
                                                         endAdornment: (
                                                             <InputAdornment position="end">
-                                                                <IconButton onClick={handleDropdownToggle} edge="end">
-                                                                    {isDropdownOpen ? <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} /> : <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />}
-                                                                </IconButton>
+                                                                {
+                                                                    !data ? (
+                                                                        <IconButton onClick={handleDropdownToggle} edge="end">
+                                                                            {isDropdownOpen ? <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} /> : <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />}
+                                                                        </IconButton>
+                                                                    ) : ''
+                                                                }
                                                             </InputAdornment>
                                                         ),
                                                         sx: klaviyoStyles.formInput
@@ -888,7 +893,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                     }}
                                                 >
                                                     {/* Show "Create New List" option */}
-                                                    <MenuItem onClick={() => handleSelectOption('createNew')} sx={{
+                                                    <MenuItem disabled={data} onClick={() => handleSelectOption('createNew')} sx={{
                                                         borderBottom: showCreateForm ? "none" : "1px solid #cdcdcd",
                                                         '&:hover': {
                                                             background: 'rgba(80, 82, 178, 0.10)'
@@ -934,6 +939,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                                         label="List Name"
                                                                         variant="outlined"
                                                                         value={newListName}
+                                                                        disabled={data}
                                                                         onChange={(e) => setNewListName(e.target.value)}
                                                                         size="small"
                                                                         fullWidth

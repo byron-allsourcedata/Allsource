@@ -186,7 +186,7 @@ const SlackConnectPopup = ({ open, handlePopupClose, boxShadow, invalid_api_key 
                                         color: '#202124',
                                         lineHeight: 'normal'
                                     }}>
-                                        Login to your slack
+                                        Login to your Slack
                                     </Typography>
                                 </Box>
                                 <Box>

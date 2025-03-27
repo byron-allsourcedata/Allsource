@@ -244,6 +244,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                         }
                     });
                     if (response.status === 201 || response.status === 200) {
+                        triggerSync();
                         onClose();
                         showToast('Data sync updated successfully');
                     }

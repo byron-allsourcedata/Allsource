@@ -2,6 +2,7 @@ from utils import validate_and_format_phone
 from typing import List
 from fastapi import HTTPException
 import httpx
+import os
 from datetime import datetime, timedelta
 from utils import format_phone_number
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
@@ -29,8 +30,8 @@ class S3IntegrationService:
         self.sync_persistence = sync_persistence
         self.client = client
 
-    def get_credentials(self, domain_id: int):
-        return self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, service_name=SourcePlatformEnum.S3.value)
+    def get_credentials(self, domain_id: int, user_id: int):
+        return self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.S3.value)
     
     
     def __handle_request(self, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None, api_key: str = None,  method: str = 'GET'):
@@ -58,22 +59,31 @@ class S3IntegrationService:
             credential.error_message = None
             self.integrations_persisntece.db.commit()
             return credential
-        integartions = self.integrations_persisntece.create_integration({
-            'domain_id': domain_id,
+        
+        common_integration = bool(os.getenv('COMMON_INTEGRATION'))
+        integration_data = {
             'access_token': json.dumps({"secret_id": secret_id, "secret_key": secret_key}),
             'full_name': user.get('full_name'),
             'service_name': SourcePlatformEnum.S3.value
-        })
-        if not integartions:
+        }
+
+        if common_integration:
+            integration_data['user_id'] = user.get('id')
+        else:
+            integration_data['domain_id'] = domain_id
+            
+        integartion = self.integrations_persisntece.create_integration(integration_data)
+        
+        if not integartion:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
+        
         return IntegrationsStatus.SUCCESS
     
-    def edit_sync(self, leads_type: str, list_name: str, data_map: List[DataMap], integrations_users_sync_id: int, domain_id: int, created_by: str):
-        credentials = self.get_credentials(domain_id)
+    def edit_sync(self, leads_type: str, list_name: str, data_map: List[DataMap], integrations_users_sync_id: int, domain_id: int, created_by: str, user_id: int):
+        credentials = self.get_credentials(domain_id, user_id)
         sync = self.sync_persistence.edit_sync({
             'integration_id': credentials.id,
             'list_name': list_name,
-            'domain_id': domain_id,
             'leads_type': leads_type,
             'data_map': data_map,
             'created_by': created_by,
@@ -90,8 +100,8 @@ class S3IntegrationService:
         response = s3_client.list_buckets()
         return response
 
-    def get_list(self, domain_id):
-        credential = self.get_credentials(domain_id)
+    def get_list(self, domain_id: int, user_id: int):
+        credential = self.get_credentials(domain_id, user_id)
         if not credential:
             return
         
@@ -132,8 +142,8 @@ class S3IntegrationService:
         
         return self.__save_integrations(secret_id=credentials.s3.secret_id, secret_key=credentials.s3.secret_key,domain_id=domain.id, user=user)
  
-    async def create_sync(self, leads_type: str, list_name: str, data_map: List[DataMap], domain_id: int, created_by: str):
-        credentials = self.get_credentials(domain_id)
+    async def create_sync(self, leads_type: str, list_name: str, data_map: List[DataMap], domain_id: int, created_by: str, user: dict):
+        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'list_name': list_name,
@@ -181,19 +191,19 @@ class S3IntegrationService:
         secret_id = parsed_data["secret_id"]
         secret_key = parsed_data["secret_key"]
         
-        with tempfile.NamedTemporaryFile(mode="w", newline="", suffix=".csv", delete=False, encoding="utf-8") as temp_csv:
-            writer = csv.DictWriter(temp_csv, fieldnames=headers)
-            writer.writeheader()
-            for row in data:
-                writer.writerow(row)
-            temp_file_path = temp_csv.name
+        # with tempfile.NamedTemporaryFile(mode="w", newline="", suffix=".csv", delete=False, encoding="utf-8") as temp_csv:
+        #     writer = csv.DictWriter(temp_csv, fieldnames=headers)
+        #     writer.writeheader()
+        #     for row in data:
+        #         writer.writerow(row)
+        #     temp_file_path = temp_csv.name
             
-        self.upload_file_to_bucket(secret_id=secret_id, secret_key=secret_key, file_path, object_key='data/2025/report.csv', bucket_name=bucket_name)
+        # self.upload_file_to_bucket(secret_id=secret_id, secret_key=secret_key, file_path, object_key='data/2025/report.csv', bucket_name=bucket_name)
             
-        if response.status_code == 401:
-            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
-        if response.status_code == 202:
-            return response
+        # if response.status_code == 401:
+        #     return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+        # if response.status_code == 202:
+        #     return response
     
     def __mapped_sendlane_contact(self, five_x_five_user: FiveXFiveUser):
         email_fields = [

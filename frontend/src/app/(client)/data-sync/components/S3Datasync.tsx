@@ -155,11 +155,10 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({ open, onClose, data, isEdit
             }
         }
     }
+
     useEffect(() => {
-        if (open) {
-            if (!data.name) {
-                getSendlaneList()
-            }
+        if (open && !data) {
+            getSendlaneList()
         }
     }, [open])
 
@@ -330,7 +329,7 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({ open, onClose, data, isEdit
                 return (
                     <Button
                         variant="contained"
-                        disabled={!isDropdownValid && !data.name}
+                        disabled={!isDropdownValid && !data}
                         onClick={handleNextTab}
                         sx={{
                             backgroundColor: '#5052B2',
