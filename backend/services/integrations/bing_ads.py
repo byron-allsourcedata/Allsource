@@ -201,8 +201,8 @@ class BingAdsIntegrationsService:
             
         return ProccessDataSyncResult.SUCCESS.value
                 
-    def set_suppression(self, suppression: bool, domain_id: int):
-            credential = self.get_credentials(domain_id)
+    def set_suppression(self, suppression: bool, domain_id: int, user: dict):
+            credential = self.get_credentials(domain_id, user.get('id'))
             if not credential:
                 raise HTTPException(status_code=403, detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value)
             credential.suppression = suppression

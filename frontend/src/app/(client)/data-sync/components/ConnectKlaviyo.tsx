@@ -220,12 +220,13 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
         let tag = null;
 
         try {
-            if (!listName){
-                if (selectedOption && selectedOption.id === '-1') {
-                    list = await createNewList();
-                } else if (selectedOption) {
-                    list = selectedOption;
-                } else {
+            if (selectedOption && selectedOption.id === '-1') {
+                list = await createNewList();
+            } else if (selectedOption) {
+                list = selectedOption;
+            }
+            else {
+                if (!listName) {
                     showToast('Please select a valid option.');
                     return;
                 }
@@ -833,7 +834,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                     value={listName}
                                                     onClick={handleClick}
                                                     size="small"
-                                                    disabled={data} 
+                                                    disabled={data}
                                                     fullWidth
                                                     label={listName ? '' : 'Select or Create new list'}
                                                     InputLabelProps={{

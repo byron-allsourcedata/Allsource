@@ -83,6 +83,7 @@ class IntegrationsUserSyncPersistence:
             IntegrationUserSync.customer_id,
             IntegrationUserSync.list_name,
             IntegrationUserSync.list_id,
+            IntegrationUserSync.campaign_id,
             IntegrationUserSync.hook_url,
             IntegrationUserSync.method,
             UserIntegration.service_name,
@@ -116,6 +117,7 @@ class IntegrationsUserSyncPersistence:
                     'integration_is_failed': sync.is_failed,
                     'type_error': sync.error_message,
                     'list_id': sync.list_id,
+                    'campaign_id': sync.campaign_id,
                     'customer_id': sync.customer_id,
                     'hook_url': sync.hook_url,
                     'method': sync.method
@@ -134,6 +136,7 @@ class IntegrationsUserSyncPersistence:
             'contacts': sync.no_of_contacts,
             'createdBy': sync.created_by,
             'accountId': sync.platform_user_id,
+            'campaign_id': sync.campaign_id,
             'data_map': sync.data_map,
             'syncStatus': False if sync.is_failed == True else sync.sync_status,
             'integration_is_failed': sync.is_failed,
