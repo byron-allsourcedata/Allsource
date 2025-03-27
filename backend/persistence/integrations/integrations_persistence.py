@@ -2,6 +2,7 @@ from models.integrations.users_domains_integrations import UserIntegration, Inte
 from models.integrations.external_apps_installations import ExternalAppsInstall
 from models.kajabi import Kajabi
 from sqlalchemy.orm import Session
+from typing import Optional
 from sqlalchemy import and_, or_
 
 class IntegrationsPresistence:
@@ -102,12 +103,15 @@ class IntegrationsPresistence:
             .filter(UserIntegration.slack_team_id == team_id).delete()
         self.db.commit()
 
-    def delete_integration(self, domain_id: int, service_name: str, user_id: str):
-        self.db.query(UserIntegration) \
-            .filter(
-                UserIntegration.service_name == service_name,
-                or_(UserIntegration.domain_id == domain_id, UserIntegration.user_id == user_id)
-            ).delete()
+    def delete_integration(self, domain_id: Optional[int], service_name: str, user_id: Optional[str]):
+        query = self.db.query(UserIntegration).filter(UserIntegration.service_name == service_name)
+
+        if domain_id is not None:
+            query = query.filter(UserIntegration.domain_id == domain_id)
+        if user_id is not None:
+            query = query.filter(UserIntegration.user_id == user_id)
+            
+        query.delete()
         self.db.commit()
 
 
