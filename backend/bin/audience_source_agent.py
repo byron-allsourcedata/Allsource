@@ -4,6 +4,9 @@ import sys
 import asyncio
 import functools
 import json
+from collections import defaultdict
+from datetime import datetime
+
 import boto3
 from sqlalchemy import update
 from aio_pika import IncomingMessage, Message
@@ -78,35 +81,89 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         type = message_body.get('type')
         user_id = data.get('user_id')
         persons = data.get('persons')
-        five_x_five_user_ids = []
+        # five_x_five_user_ids = []
         if type == 'emails':
-            emails = [p['email'] for p in persons]
-            email_records = db_session.query(FiveXFiveEmails).filter(FiveXFiveEmails.email.in_(emails)).all()
-            if email_records:
-                logging.info(f"email_records find")
-                email_ids = [record.id for record in email_records]
-                five_x_five_users = db_session.query(FiveXFiveUsersEmails.user_id).filter(FiveXFiveUsersEmails.email_id.in_(email_ids)).all()
-                five_x_five_user_ids = [five_x_five_user[0] for five_x_five_user in five_x_five_users]
-                logging.info(f"user_ids find {len(five_x_five_user_ids)} for source_id {source_id}")
+            matched_persons = defaultdict(lambda: {"orders_amount": 0.0, "orders_count": 0, "orders_date": None})
+
+            for person in persons:
+                email = person.get("email", "").strip().lower()
+                sale_amount = person.get("sale_amount", 0.0)
+                transaction_date = person.get("transaction_date", "").strip()
+
+                transaction_date_obj = None
+                if transaction_date:
+                    try:
+                        transaction_date_obj = datetime.fromisoformat(transaction_date)
+                    except Exception as date_error:
+                        logging.warning(f"Error date '{transaction_date}': {date_error}")
+
+                if email in matched_persons:
+                    matched_persons[email]["orders_amount"] += sale_amount
+                    matched_persons[email]["orders_count"] += 1
+                    if transaction_date_obj:
+                        existing_date = matched_persons[email]["orders_date"]
+                        if existing_date is None or transaction_date_obj > existing_date:
+                            matched_persons[email]["orders_date"] = transaction_date_obj
+                else:
+                    matched_persons[email] = {
+                        "orders_amount": sale_amount,
+                        "orders_count": 1,
+                        "orders_date": transaction_date_obj
+                    }
+
+            # emails = [p['email'] for p in persons]
+            # email_records = db_session.query(FiveXFiveEmails).filter(FiveXFiveEmails.email.in_(emails)).all()
+            # if email_records:
+            #     logging.info(f"email_records find")
+            #     email_ids = [record.id for record in email_records]
+            #     five_x_five_users = db_session.query(FiveXFiveUsersEmails.user_id).filter(FiveXFiveUsersEmails.email_id.in_(email_ids)).all()
+            #     five_x_five_user_ids = [five_x_five_user[0] for five_x_five_user in five_x_five_users]
+            #     logging.info(f"user_ids find {len(five_x_five_user_ids)} for source_id {source_id}")
         
         if type == 'user_ids':
             five_x_five_user_ids = [p['user_id'] for p in persons]
             logging.info(f"user_ids find {len(five_x_five_user_ids)} for source_id {source_id}")
         
         logging.info(f"Processing AudienceSourceMatching with ID: {source_id}")
-        
-        for five_x_five_user_id in five_x_five_user_ids:
-            matched_person = AudienceSourcesMatchedPerson(
-                source_id=source_id,
-                five_x_five_user_id=five_x_five_user_id
-            )
-            db_session.add(matched_person)
+
+        existing_persons = {p.email: p for p in db_session.query(AudienceSourcesMatchedPerson).filter(
+            AudienceSourcesMatchedPerson.source_id == source_id,
+            AudienceSourcesMatchedPerson.email.in_(matched_persons.keys())
+        ).all()}
+
+        for email, data in matched_persons.items():
+            if email in existing_persons:
+                matched_person = existing_persons[email]
+                matched_person.orders_amount += data["orders_amount"]
+                matched_person.orders_count += data["orders_count"]
+                if data["orders_date"]:
+                    if matched_person.orders_date is None or data["orders_date"] > matched_person.orders_date:
+                        matched_person.orders_date = data["orders_date"]
+            else:
+                new_matched_person = AudienceSourcesMatchedPerson(
+                    source_id=source_id,
+                    email=email,
+                    orders_amount=data["orders_amount"],
+                    orders_count=data["orders_count"],
+                    orders_date=data["orders_date"]
+                )
+                db_session.add(new_matched_person)
+
+        # for five_x_five_user_id in five_x_five_user_ids:
+        #     matched_person = AudienceSourcesMatchedPerson(
+        #         source_id=source_id,
+        #         five_x_five_user_id=five_x_five_user_id
+        #     )
+        #     db_session.add(matched_person)
+
+        # new_processed = audience_source.processed_records + len(persons)
+        # new_matched = audience_source.matched_records + len(persons)
 
         total_records, processed_records, matched_records = db_session.execute(
             update(AudienceSource)
             .where(AudienceSource.id == source_id)
             .values(
-                matched_records=AudienceSource.matched_records + len(five_x_five_user_ids),
+                matched_records=AudienceSource.matched_records + len(persons),
                 processed_records=AudienceSource.processed_records + len(persons)
             )
             .returning(AudienceSource.total_records, AudienceSource.processed_records, AudienceSource.matched_records)

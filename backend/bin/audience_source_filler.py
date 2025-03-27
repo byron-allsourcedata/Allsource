@@ -4,6 +4,8 @@ import sys
 import asyncio
 import functools
 import json
+from datetime import datetime
+
 import chardet
 import io
 import csv
@@ -62,7 +64,7 @@ def assume_role(role_arn, sts_client):
     return credentials
 
 async def parse_csv_file(*, data, source_id, db_session, s3_session, connection, user_id):
-    email_field = data.get('email') 
+    # email_field = data.get('Email')
     logging.info(f"Processing AudienceSource with ID: {source_id}")
 
     source = db_session.query(AudienceSource).filter_by(id=source_id).first()
@@ -98,11 +100,13 @@ async def parse_csv_file(*, data, source_id, db_session, s3_session, connection,
     batch_content = body.decode(encoding, errors='replace')
     csv_file = io.StringIO(batch_content)
     csv_reader = csv.DictReader(csv_file)
-    email_field = email_field.strip().replace('"', '')
+    # email_field = email_field.strip().replace('"', '')
     total_rows = sum(1 for _ in csv_reader)
     csv_file.seek(0)
     next(csv_reader, None)
     processed_rows = 0
+
+    # print(email_field)
 
     logging.info(f"Total row in CSV file: {total_rows}")
     source.total_records = total_rows
@@ -114,15 +118,42 @@ async def parse_csv_file(*, data, source_id, db_session, s3_session, connection,
     while send_rows < total_rows:
         batch_rows = []
         for row in islice(csv_reader, SELECTED_ROW_COUNT):
-            email = row.get(email_field, "")
-            batch_rows.append(email)
+            first_name = row.get("FirstName", "").strip()
+            last_name = row.get("LastName", "").strip()
+            email = row.get("Email", "").strip()
+            phone = row.get("Phone", "").strip()
+            transaction_date = row.get("TransactionDate", "").strip()
+            sale_amount_raw = row.get("SaleAmount", "").strip()
 
-        persons = [{"email": email} for email in batch_rows]
-        if persons:
+            try:
+                parsed_date = datetime.strptime(transaction_date, '%m/%d/%Y %H:%M')
+                transaction_date = parsed_date.isoformat()
+            except Exception as date_error:
+                logging.warning(f"Ошибка преобразования даты '{transaction_date}': {date_error}")
+
+            try:
+                # logging.debug(f"Исходное значение суммы: '{sale_amount_raw}'")
+                sale_amount = float(sale_amount_raw.replace('$', '').replace(',', '').strip())
+            except Exception as sale_error:
+                logging.warning(f"Ошибка преобразования суммы '{sale_amount_raw}': {sale_error}")
+                sale_amount = 0.0
+
+            # email = row.get(email_field, "")
+            batch_rows.append({
+                "first_name": first_name,
+                "last_name": last_name,
+                "email": email,
+                "phone": phone,
+                "transaction_date": transaction_date,
+                "sale_amount": sale_amount,
+            })
+            # logging(batch_rows[-1])
+        # persons = [{"email": email} for email in batch_rows]
+        if batch_rows:
             message_body = {
                 "type": 'emails',
                 "data": {
-                    "persons": persons,
+                    "persons": batch_rows,
                     "source_id": source_id,
                     "user_id": user_id
                 },

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, event, Integer, TIMESTAMP, JSON, ForeignKey, Index, UUID
+from sqlalchemy import Column, event, Integer, TIMESTAMP, JSON, ForeignKey, Index, UUID, String, Float
 from .base import Base, create_timestamps, update_timestamps
 
 
@@ -9,6 +9,12 @@ class AudienceSourcesMatchedPerson(Base):
     source_id = Column(UUID(as_uuid=True), ForeignKey('audience_sources.id', ondelete='cascade'), nullable=False)
     five_x_five_user_id = Column(Integer, ForeignKey('5x5_users.id'), nullable=False)
     mapped_fields = Column(JSON, nullable=True)
+
+    email = Column(String, nullable=False)
+    orders_amount = Column(Float, default=0)
+    orders_count = Column(Integer, default=0)
+    orders_date = Column(TIMESTAMP, nullable=True)
+
     created_at = Column(TIMESTAMP, nullable=False)
     updated_at = Column(TIMESTAMP, nullable=False)
 
