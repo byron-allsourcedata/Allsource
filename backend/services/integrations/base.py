@@ -16,6 +16,7 @@ from enums import ProccessDataSyncResult
 from datetime import datetime, timedelta
 from utils import extract_first_email, format_phone_number
 from .sendlane import SendlaneIntegrationService
+from .s3 import S3IntegrationService
 from persistence.user_persistence import UserPersistence
 from .slack import SlackService
 from .million_verifier import MillionVerifierIntegrationsService
@@ -52,11 +53,11 @@ class IntegrationService:
         self.eai_persistence = epi_persistence
         self.UNLIMITED = -1
 
-    def get_user_service_credentials(self, domain_id, filters):
-        return self.integration_persistence.get_integration_by_user(domain_id, filters)
+    def get_user_service_credentials(self, domain_id, filters, user_id):
+        return self.integration_persistence.get_integration_by_user(domain_id, filters, user_id)
 
-    def delete_integration(self, service_name: str, domain):
-        self.integration_persistence.delete_integration(domain.id, service_name)
+    def delete_integration(self, service_name: str, domain, user: dict):
+        self.integration_persistence.delete_integration(domain.id, service_name, user.get('id'))
 
     def get_sync_domain(self, domain_id: int, service_name: str = None, integrations_users_sync_id: int = None):
         return self.integrations_user_sync_persistence.get_filter_by(domain_id=domain_id, service_name=service_name, integrations_users_sync_id=integrations_users_sync_id)
@@ -73,6 +74,8 @@ class IntegrationService:
     def get_leads_for_zapier(self, domain):
         five_x_five_users = self.lead_persistence.get_last_leads_for_zapier(domain.id)
         valid_users = []
+        if not five_x_five_users:
+            return None
         for five_x_five_user in five_x_five_users:
                 email_fields = [
                     'business_email', 
@@ -210,6 +213,13 @@ class IntegrationService:
                                                 self.lead_persistence,
                                                 self.integrations_user_sync_persistence,
                                                 self.client, self.million_verifier_integrations)
+        
+        self.s3 = S3IntegrationService(domain_persistence=self.domain_persistence, 
+                                                integrations_persistence=self.integration_persistence,  
+                                                leads_persistence=self.lead_persistence,
+                                                sync_persistence=self.integrations_user_sync_persistence,
+                                                client=self.client, million_verifier_integrations=self.million_verifier_integrations)
+        
         self.attentive = AttentiveIntegrationsService(self.domain_persistence,
                                                       self.integrations_user_sync_persistence,
                                                       self.client)

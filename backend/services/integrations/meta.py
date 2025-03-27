@@ -8,6 +8,7 @@ from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
 from persistence.domains import UserDomainsPersistence
 import httpx
+import os
 from datetime import datetime, timedelta
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
 from facebook_business.adobjects.adaccount import AdAccount
@@ -51,8 +52,8 @@ class MetaIntegrationsService:
         return response
 
 
-    def get_credentials(self, domain_id: int):
-        return self.integrations_persisntece.get_credentials_for_service(domain_id, SourcePlatformEnum.META.value)
+    def get_credentials(self, domain_id: int, user_id: int):
+        return self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.META.value)
 
     def get_info_by_access_token(self, access_token: str):
         url = 'https://graph.facebook.com/v20.0/me'
@@ -75,25 +76,34 @@ class MetaIntegrationsService:
             self.integrations_persisntece.db.commit()
             return
         ad_account_info = self.get_info_by_access_token(access_token.get('access_token'))
-        new_integration = self.integrations_persisntece.create_integration({
-            'domain_id': domain.id,
+        
+        common_integration = bool(os.getenv('COMMON_INTEGRATION'))
+        integration_data = {
             'ad_account_id': ad_account_info.get('id'),
             'access_token': access_token.get('access_token'),
+            'full_name': user.get('full_name'),
             'expire_access_token': access_token.get('expires_in'),
             'last_access_token_update': datetime.now(),
             'service_name': SourcePlatformEnum.META.value
-        })
+        }
+
+        if common_integration:
+            integration_data['user_id'] = user.get('id')
+        else:
+            integration_data['domain_id'] = domain.id
             
+        integartion = self.integrations_persisntece.create_integration(integration_data)
+        
         integrations = self.integrations_persisntece.get_all_integrations_filter_by(ad_account_id=ad_account_info.get('id'), domain_id=domain.id)
         for integration in integrations:
             integration.access_token == access_token.get('access_token')
             integration.expire_access_token = access_token.get('expires_in')
             integration.last_access_token_update = datetime.now()
             self.integrations_persisntece.db.commit()
-        if not new_integration:
+        if not integartion:
             raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
         
-        return new_integration
+        return integartion
     
     def check_custom_audience_terms(self, ad_account_id, access_token):
         url = f"https://graph.facebook.com/v20.0/{ad_account_id}/customaudiences"
@@ -144,8 +154,8 @@ class MetaIntegrationsService:
         response = self.__handle_request(url=url, params=params, method="GET")
         return response
         
-    def get_ad_accounts(self, domain_id: int):
-        credentials = self.get_credentials(domain_id)
+    def get_ad_accounts(self, domain_id: int, user_id: int):
+        credentials = self.get_credentials(domain_id, user_id)
         if not credentials:
             return
         response = self.__get_ad_accounts(credentials.access_token)
@@ -174,8 +184,8 @@ class MetaIntegrationsService:
         response = self.__handle_request(url=url, params=params, method="GET")
         return response
 
-    def get_list(self, ad_account_id: str, domain_id: str):
-        credentials = self.get_credentials(domain_id)
+    def get_list(self, ad_account_id: str, domain_id: int, user_id: int):
+        credentials = self.get_credentials(domain_id, user_id)
         if not credentials:
             return
         response_audience = self.__get_audience_list(ad_account_id, credentials.access_token)
@@ -192,8 +202,8 @@ class MetaIntegrationsService:
             'campaign_lists': campaign_lists
         }
 
-    def create_list(self, list, domain_id: int, description: str = None):
-        credential = self.get_credentials(domain_id)
+    def create_list(self, list, domain_id: int, user_id: int, description: str = None):
+        credential = self.get_credentials(domain_id, user_id)
         if not credential:
             raise HTTPException(status_code=403, detail={'status': IntegrationsStatus.CREDENTIALS_NOT_FOUND.value})
         FacebookAdsApi.init(access_token=credential.access_token)
@@ -218,8 +228,8 @@ class MetaIntegrationsService:
             'list_name': list.name
         }
     
-    def edit_sync(self, leads_type: str, integrations_users_sync_id: int, domain_id: int, created_by: str, campaign = {}, customer_id = None, list_id = None):
-        credentials = self.get_credentials(domain_id)
+    def edit_sync(self, leads_type: str, integrations_users_sync_id: int, domain_id: int, created_by: str, user_id: int, campaign = {}, customer_id = None, list_id = None):
+        credentials = self.get_credentials(domain_id, user_id)
         campaign_id = campaign.get('campaign_id')
         if campaign_id == -1 and campaign.get('campaign_name'):
             campaign_id = self.create_campaign(campaign['campaign_name'], campaign['daily_budget'], credentials.access_token, customer_id)
@@ -228,7 +238,6 @@ class MetaIntegrationsService:
         
         sync = self.sync_persistence.edit_sync({
             'integration_id': credentials.id,
-            'domain_id': domain_id,
             'leads_type': leads_type,
             'created_by': created_by,
         }, integrations_users_sync_id)
@@ -269,8 +278,8 @@ class MetaIntegrationsService:
         campaign_id = response['id']
         return campaign_id
 
-    async def create_sync(self, customer_id: int, domain_id: int, created_by: str, campaign = {}, data_map: List[DataMap] = None, leads_type: str = None, list_id: str = None, list_name: str = None,):
-        credentials = self.get_credentials(domain_id)
+    async def create_sync(self, customer_id: int, domain_id: int, created_by: str, user: dict, campaign = {}, data_map: List[DataMap] = None, leads_type: str = None, list_id: str = None, list_name: str = None,):
+        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
         campaign_id = campaign.get('campaign_id')
         if campaign_id == -1 and campaign.get('campaign_name'):
             campaign_id = self.create_campaign(campaign['campaign_name'], campaign['daily_budget'], credentials.access_token, customer_id)

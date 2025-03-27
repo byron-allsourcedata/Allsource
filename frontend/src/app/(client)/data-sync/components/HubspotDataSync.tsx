@@ -119,7 +119,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
                 const response = await axiosInstance.put(`/data-sync/sync`, {
                     integrations_users_sync_id: data.id,
                     leads_type: selectedRadioValue,
-                    // data_map: customFields
+                    data_map: customFields
                 }, {
                     params: {
                         service_name: 'hubspot'
@@ -129,6 +129,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
                     resetToDefaultValues();
                     onClose();
                     showToast('Data sync updated successfully');
+                    triggerSync();
                 }
             } else {
                 const response = await axiosInstance.post('/data-sync/sync', {

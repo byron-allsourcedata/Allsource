@@ -13,10 +13,10 @@ interface CreateWebhookProps {
     open: boolean
     initApiKey?: string;
     boxShadow?: string;
-    Invalid_api_key?: boolean;
+    invalid_api_key?: boolean;
 }
 
-const WebhookConnectPopup = ({ handleClose, open, onSave, initApiKey, boxShadow }: CreateWebhookProps) => {
+const WebhookConnectPopup = ({ handleClose, open, onSave, initApiKey, boxShadow, invalid_api_key }: CreateWebhookProps) => {
     const { triggerSync } = useIntegrationContext();
     const [apiKey, setApiKey] = useState('');
     const [loading, setLoading] = useState(false)
@@ -26,7 +26,7 @@ const WebhookConnectPopup = ({ handleClose, open, onSave, initApiKey, boxShadow 
         try {
             setLoading(true)
             const response = await axiosInstance.post('/integrations/', {
-               
+
             }, { params: { service_name: 'webhook' } })
             if (response.status === 200 && response.data === "SUCCESS") {
                 showToast('Integration Webhook Successfully')
@@ -39,7 +39,7 @@ const WebhookConnectPopup = ({ handleClose, open, onSave, initApiKey, boxShadow 
                 showErrorToast("Error connect webhook")
             }
         } catch (error) {
-         }
+        }
         finally {
             setLoading(false)
         }
@@ -159,6 +159,17 @@ const WebhookConnectPopup = ({ handleClose, open, onSave, initApiKey, boxShadow 
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
                             {getButton(value)}
                         </Box>
+                        {invalid_api_key && (
+                            <Typography color="error" sx={{
+                                fontFamily: "Nunito Sans",
+                                fontSize: "14px",
+                                fontWeight: "600",
+                                lineHeight: "21.82px",
+                                marginTop: "10px"
+                            }}>
+                                Invalid API Key detected. Please reconnect to Webhook and try again
+                            </Typography>
+                        )}
                     </Box>
                 </Box>
             </Drawer>

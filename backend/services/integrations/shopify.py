@@ -207,8 +207,8 @@ class ShopifyIntegrationService:
         return response.json().get('orders')
 
 
-    def get_credentials(self, domain_id: int):
-        return self.integration_persistence.get_credentials_for_service(domain_id, SourcePlatformEnum.SHOPIFY.value)
+    def get_credentials(self, domain_id: int, user_id = None):
+        return self.integration_persistence.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.SHOPIFY.value)
     
     def initialize_pixel(self, access_token, domain, user_id):
         client_id = domain.data_provider_id

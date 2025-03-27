@@ -2,7 +2,8 @@ from models.integrations.users_domains_integrations import UserIntegration, Inte
 from models.integrations.external_apps_installations import ExternalAppsInstall
 from models.kajabi import Kajabi
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from typing import Optional
+from sqlalchemy import and_, or_
 
 class IntegrationsPresistence:
 
@@ -52,11 +53,21 @@ class IntegrationsPresistence:
         self.db.query(ExternalAppsInstall).filter(ExternalAppsInstall.store_hash == shop_hash).delete()
         self.db.commit()
         
-    def get_integration_by_user(self, domain_id: int, filters) -> list[UserIntegration]:
-        query = self.db.query(UserIntegration).filter(
-            UserIntegration.domain_id == domain_id,
-            UserIntegration.service_name.notin_(filters)
-        )
+    def get_integration_by_user(self, domain_id: Optional[int], filters: list, user_id: Optional[int]):
+        query = self.db.query(UserIntegration)
+
+        or_conditions = []
+        if domain_id is not None:
+            or_conditions.append(UserIntegration.domain_id == domain_id)
+        if user_id is not None:
+            or_conditions.append(UserIntegration.user_id == user_id)
+
+        if or_conditions:
+            query = query.filter(or_(*or_conditions))
+
+        if filters:
+            query = query.filter(UserIntegration.service_name.notin_(filters))
+
         return query.all()
     
     def update_credential_for_service(self, domain_id: int, service_name: str, access_token):
@@ -69,20 +80,44 @@ class IntegrationsPresistence:
     
     def get_credential(self, **filter_by):
         return self.db.query(UserIntegration).filter_by(**filter_by).first()
+    
+    def update_app_home_opened(self, slack_team_id):
+        self.db.query(UserIntegration) \
+            .filter(UserIntegration.slack_team_id == slack_team_id) \
+            .update({UserIntegration.is_slack_first_message_sent: True}, synchronize_session='fetch')
+        self.db.commit()
 
-    def get_credentials_for_service(self, domain_id: int, service_name: str, **filter_by) -> UserIntegration:
-        return self.db.query(UserIntegration) \
-            .filter(UserIntegration.domain_id == domain_id, UserIntegration.service_name == service_name).filter_by(**filter_by).first()
+    def get_credentials_for_service(self, domain_id: int, user_id, service_name: str, **filter_by):
+        query = self.db.query(UserIntegration).filter(UserIntegration.service_name == service_name)
+        if user_id:
+            query = query.filter(or_(UserIntegration.domain_id == domain_id, UserIntegration.user_id == user_id))
+        else:
+            query = query.filter(UserIntegration.domain_id == domain_id)
+
+        return query.filter_by(**filter_by).first()
+
+
         
     def delete_integration_by_slack_team_id(self, team_id: str):
         self.db.query(UserIntegration) \
             .filter(UserIntegration.slack_team_id == team_id).delete()
         self.db.commit()
 
-    def delete_integration(self, domain_id: int, service_name: str):
-        self.db.query(UserIntegration) \
-            .filter(UserIntegration.domain_id == domain_id, UserIntegration.service_name == service_name).delete()
+    def delete_integration(self, domain_id: Optional[int], service_name: str, user_id: Optional[str]):
+        query = self.db.query(UserIntegration).filter(UserIntegration.service_name == service_name)
+
+        or_conditions = []
+        if domain_id is not None:
+            or_conditions.append(UserIntegration.domain_id == domain_id)
+        if user_id is not None:
+            or_conditions.append(UserIntegration.user_id == user_id)
+
+        if or_conditions:
+            query = query.filter(or_(*or_conditions))
+
+        query.delete()
         self.db.commit()
+
 
     def edit_integrations(self, id: int, data: dict) -> UserIntegration:
         result = self.db.query(UserIntegration) \
