@@ -20,11 +20,12 @@ from schemas.integrations.google_ads import GoogleAdsProfile
 from fastapi import HTTPException
 from datetime import datetime, timedelta
 from utils import extract_first_email
-from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
+from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, DataSyncType
 import httpx
 from utils import format_phone_number
 from typing import List
 from utils import validate_and_format_phone, format_phone_number
+from uuid import UUID
 
 logger = logging.getLogger(__name__)
 
@@ -127,6 +128,24 @@ class GoogleAdsIntegrationsService:
             'domain_id': domain_id,
             'leads_type': leads_type,
             'data_map': data_map,
+            'created_by': created_by,
+            'customer_id': customer_id
+        })
+        if tags_id: 
+            self.create_tag_relationships_lists(tags_id=tags_id, list_id=list_id, api_key=credentials.access_token)
+
+    def create_smart_audience_sync(self, customer_id: str, smart_audience_id: UUID, sent_contacts: int, list_id: str, list_name: str, domain_id: int, created_by: str, tags_id: str = None, data_map: List[DataMap] = []):
+        credentials = self.get_credentials(domain_id)
+
+        sync = self.sync_persistence.create_sync({
+            'integration_id': credentials.id,
+            'list_id': list_id,
+            'list_name': list_name,
+            'domain_id': domain_id,
+            'data_map': data_map,
+            'sent_contacts': sent_contacts,
+            'sync_type': DataSyncType.AUDIENCE.value,
+            'smart_audience_id': smart_audience_id,
             'created_by': created_by,
             'customer_id': customer_id
         })

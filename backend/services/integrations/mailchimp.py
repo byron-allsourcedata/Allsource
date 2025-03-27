@@ -183,7 +183,7 @@ class MailchimpIntegrationsService:
             'created_by': created_by,
         })
 
-    async def create_smart_audience_sync(self, smart_audience_id: UUID, sent_contacts: int, list_id: str, list_name: str, data_map: List[DataMap], domain_id: int, created_by: str, tags_id: str = None):
+    def create_smart_audience_sync(self, smart_audience_id: UUID, sent_contacts: int, list_id: str, list_name: str, data_map: List[DataMap], domain_id: int, created_by: str, tags_id: str = None):
         credentials = self.get_credentials(domain_id)
 
         sync = self.sync_persistence.create_sync({

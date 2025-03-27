@@ -2,7 +2,7 @@ import logging
 
 from pydantic import EmailStr
 
-from enums import SourcePlatformEnum, IntegrationsStatus, ProccessDataSyncResult
+from enums import SourcePlatformEnum, IntegrationsStatus, ProccessDataSyncResult, DataSyncType
 from persistence.domains import UserDomainsPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
@@ -18,6 +18,7 @@ from schemas.integrations.integrations import DataMap
 from schemas.integrations.integrations import IntegrationCredentials
 from services.integrations.commonIntegration import get_valid_email, get_valid_phone, get_valid_location
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
+from uuid import UUID
 
 
 class HubspotIntegrationsService:
@@ -114,6 +115,19 @@ class HubspotIntegrationsService:
             'integration_id': credentials.id,
             'domain_id': domain_id,
             'leads_type': leads_type,
+            'data_map': data_map,
+            'created_by': created_by,
+        })
+
+    def create_smart_audience_sync(self, smart_audience_id: UUID, sent_contacts: int, data_map: List[DataMap], domain_id: int, created_by: str, tags_id: str = None):
+        credentials = self.get_credentials(domain_id)
+
+        sync = self.sync_persistence.create_sync({
+            'integration_id': credentials.id,
+            'domain_id': domain_id,
+            'sent_contacts': sent_contacts,
+            'sync_type': DataSyncType.AUDIENCE.value,
+            'smart_audience_id': smart_audience_id,
             'data_map': data_map,
             'created_by': created_by,
         })

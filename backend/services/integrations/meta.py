@@ -9,7 +9,7 @@ from persistence.leads_persistence import LeadsPersistence
 from persistence.domains import UserDomainsPersistence
 import httpx
 from datetime import datetime, timedelta
-from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
+from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, DataSyncType
 from facebook_business.adobjects.adaccount import AdAccount
 from facebook_business.api import FacebookAdsApi
 from fastapi import HTTPException
@@ -20,6 +20,7 @@ from schemas.integrations.integrations import IntegrationCredentials, DataMap, L
 from utils import format_phone_number
 from typing import List
 from config.meta import MetaConfig
+from uuid import UUID
 
 APP_SECRET = MetaConfig.app_secret
 APP_ID = MetaConfig.app_piblic
@@ -283,6 +284,27 @@ class MetaIntegrationsService:
             'leads_type': leads_type,
             'domain_id': domain_id,
             'customer_id': customer_id,
+            'data_map': [data.model_dump_json() for data in data_map] if data_map else None,
+            'created_by': created_by
+        })
+        return sync
+    
+    def create_smart_audience_sync(self, customer_id: int, domain_id: int, created_by: str, smart_audience_id: UUID, sent_contacts: int, campaign = {}, data_map: List[DataMap] = None, list_id: str = None, list_name: str = None,):
+        credentials = self.get_credentials(domain_id)
+        campaign_id = campaign.get('campaign_id')
+        if campaign_id == -1 and campaign.get('campaign_name'):
+            campaign_id = self.create_campaign(campaign['campaign_name'], campaign['daily_budget'], credentials.access_token, customer_id)
+        if campaign_id and campaign_id != -1:
+            self.create_adset(customer_id, campaign['campaign_name'], campaign_id, credentials.access_token, list_id, campaign['campaign_objective'], campaign['bid_amount'])
+        sync = self.sync_persistence.create_sync({
+            'integration_id': credentials.id,
+            'list_id': list_id,
+            'list_name': list_name,
+            'domain_id': domain_id,
+            'customer_id': customer_id,
+            'sent_contacts': sent_contacts,
+            'sync_type': DataSyncType.AUDIENCE.value,
+            'smart_audience_id': smart_audience_id,
             'data_map': [data.model_dump_json() for data in data_map] if data_map else None,
             'created_by': created_by
         })

@@ -34,7 +34,7 @@ async def create_sync(data: SyncCreate, service_name: str = Query(...),
         )
 
 @router.post('/create-smart-audience-sync')
-async def create_smart_audience_sync(
+def create_smart_audience_sync(
     data: SmartAudienceSyncCreate, 
     service_name: str = Query(...),
     integration_service: IntegrationService = Depends(get_integration_service),
@@ -49,7 +49,7 @@ async def create_smart_audience_sync(
     data = {k: v for k, v in data.model_dump().items() if v}
     with integration_service as service:
         service = getattr(service, service_name.lower())
-        await service.create_smart_audience_sync(
+        service.create_smart_audience_sync(
             **data,
             domain_id=domain.id,
             created_by=user.get('full_name')

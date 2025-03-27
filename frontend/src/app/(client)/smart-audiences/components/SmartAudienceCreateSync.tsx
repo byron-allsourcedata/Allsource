@@ -84,6 +84,15 @@ interface adAccount {
     name: string
 }
 
+interface RequestData {
+    sent_contacts: number;
+    smart_audience_id?: string
+    list_id?: any
+    list_name?: any
+    customer_id?: string
+    data_map: CustomRow[]
+}
+
 type ServiceHandlers = {
     hubspot: () => void;
     mailchimp: () => void;
@@ -299,7 +308,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(null)
     const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
 
-    const [customFields, setCustomFields] = useState<{ type: string, value: string }[]>([]);
+    const [customFields, setCustomFields] = useState<CustomRow[]>([]);
     const [rows, setRows] = useState(defaultRows);
     const { needsSync, setNeedsSync } = useIntegrationContext();
 
@@ -388,32 +397,40 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         setIsLoading(true);
         let list: KlaviyoList | null = null;
         try {
-            if (selectedOptionMailchimp && selectedOptionMailchimp.id === '-1') {
-                list = await createNewList();
+            if ((selectedOptionMailchimp && selectedOptionMailchimp.id === '-1')) {
+                list = await createNewListMailchimp(selectedOptionMailchimp?.list_name);
             } else if (selectedOptionMailchimp) {
                 list = selectedOptionMailchimp;
-            } else {
-                showToast('Please select a valid option.');
-                return;
+            } else if (selectedOptionMeta && selectedOptionMeta.id === '-1') {
+                list = list = await createNewListMeta(selectedOptionMeta?.list_name);;
+            } else if (selectedOptionMeta) {
+                list = selectedOptionMeta;
+            } 
+
+            const requestObj: RequestData = {
+                sent_contacts: valueContactSync,
+                smart_audience_id: id,
+                data_map: customFields
             }
 
             if (list) {
-                const response = await axiosInstance.post('/data-sync/create-smart-audience-sync', {
-                    list_id: list?.id,
-                    list_name: list?.list_name,
-                    sent_contacts: valueContactSync,
-                    smart_audience_id: id,
-                    data_map: customFields
-                }, {
-                    params: {
-                        service_name: activeService
-                    }
-                });
-                if (response.status === 201 || response.status === 200) {
-                    handleClosePopup();
-                    showToast('Data sync created successfully');
-                    triggerSync();
+                requestObj.list_id = list?.id
+                requestObj.list_name = list?.list_name
+            }
+
+            if (activeService === "meta") {
+                requestObj.customer_id = String(optionAdAccountMeta?.id)
+            }
+
+            const response = await axiosInstance.post('/data-sync/create-smart-audience-sync', requestObj, {
+                params: {
+                    service_name: activeService
                 }
+            });
+            if (response.status === 201 || response.status === 200) {
+                handleClosePopup();
+                showToast('Data sync created successfully');
+                triggerSync();
             }
         } catch {
         } finally {
@@ -493,14 +510,14 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     const maxContacts = activeSegmentRecords;
     
     const handleSliderChange = (event: Event, newValue: number | number[]) => {
-    setValueContactSync(newValue as number);
+        setValueContactSync(newValue as number);
     };
     
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const inputValue = Number(event.target.value);
-    if (inputValue >= 0 && inputValue <= maxContacts) {
-        setValueContactSync(inputValue);
-    }
+        const inputValue = Number(event.target.value);
+        if (inputValue >= 0 && inputValue <= maxContacts) {
+            setValueContactSync(inputValue);
+        }
     };
 
     // Data Maping
@@ -670,14 +687,14 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     const [listNameError, setListNameError] = useState(false);
     const [isShrunkMailchimp, setIsShrunkMailchimp] = useState<boolean>(false);
     const [anchorElMailchimp, setAnchorElMailchimp] = useState<null | HTMLElement>(null);
-    const textFieldRef = useRef<HTMLDivElement>(null);
+    const textFieldRefMailchimp = useRef<HTMLDivElement>(null);
     const [klaviyoList, setKlaviyoList] = useState<KlaviyoList[]>([])
     const [selectedOptionMailchimp, setSelectedOptionMailchimp] = useState<KlaviyoList | null>(null);
 
-    const createNewList = async () => {
+    const createNewListMailchimp = async (name: string) => {
         try {
             const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
-                name: selectedOptionMailchimp?.list_name
+                name,
             }, {
                 params: {
                     service_name: activeService
@@ -701,7 +718,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         if (value === 'createNew') {
             setShowCreateFormMailchimp(prev => !prev);
             if (!showCreateFormMailchimp) {
-                setAnchorElMailchimp(textFieldRef.current);
+                setAnchorElMailchimp(textFieldRefMailchimp.current);
             }
         } else if (isKlaviyoList(value)) {
             // Проверка, является ли value объектом KlaviyoList
@@ -739,10 +756,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
             'list_name' in value;
     };
 
-    const handleDropdownToggle = (event: React.MouseEvent) => {
+    const handleDropdownToggleMailchimp = (event: React.MouseEvent) => {
         event.stopPropagation(); // Prevent triggering the input field click
         setIsDropdownOpen(prev => !prev);
-        setAnchorElMailchimp(textFieldRef.current);
+        setAnchorElMailchimp(textFieldRefMailchimp.current);
     };
 
     const handleSave = async () => {
@@ -785,7 +802,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
 
     ///Meta 
 
-
     const [anchorElMeta, setAnchorElMeta] = useState<null | HTMLElement>(null);
     const [anchorElAdAccountMeta, setAnchorElAdAccountMeta] = useState<null | HTMLElement>(null);
     const [isDropdownOpenAdAccountMeta, setIsDropdownOpenAdAccountMeta] = useState(false);
@@ -804,6 +820,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     const textFieldRefCampaignMeta = useRef<HTMLDivElement>(null);
     const textFieldRefAdAccountMeta = useRef<HTMLDivElement>(null);
     const [isCheckedMeta, setIsCheckedMeta] = useState(false);
+    const textFieldRefMeta = useRef<HTMLDivElement>(null);
     const [formValues, setFormValues] = useState<FormValues>({
         campaignName: '',
         campaignObjective: '',
@@ -813,6 +830,11 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     const [inputValueMeta, setInputValueMeta] = useState('');
     const [optionAdAccountMeta, setOptionAdAccountMeta] = useState<adAccount | null>(null)
     const [adAccountsMeta, setAdAccountsMeta] = useState<adAccount[]>([])
+
+    useEffect(() => {
+        const allFieldsFilled = Object.values(formValues).every((value) => String(value).trim() !== '');
+        setIsCheckedMeta(allFieldsFilled);
+    }, [formValues]);
 
     const fetchAdAccount = async () => {
         setIsLoading(true);
@@ -825,6 +847,27 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         finally {
             setIsLoading(false);
         }
+    };
+
+    const createNewListMeta = async (name: string) => {
+        const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
+            name: name,
+            ad_account_id: optionAdAccountMeta?.id
+        }, {
+            params: {
+                service_name: activeService
+            }
+        });
+        if (newListResponse.status == 201 && newListResponse.data.terms_link && newListResponse.data.terms_accepted == false) {
+            showErrorToast('User has not accepted the Custom Audience Terms.')
+            window.open(newListResponse.data.terms_link, '_blank');
+            return
+        }
+        if (newListResponse.status !== 201) {
+            throw new Error('Failed to create a new tags')
+        }
+
+        return newListResponse.data;
     };
 
 
@@ -910,6 +953,32 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         event.stopPropagation(); // Prevent triggering the input field click
         setIsDropdownOpenAdAccountMeta(prev => !prev);
         setAnchorElAdAccountMeta(textFieldRefAdAccountMeta.current);
+    };
+
+    const handleDropdownToggleMeta = (event: React.MouseEvent) => {
+        event.stopPropagation(); // Prevent triggering the input field click
+        setIsDropdownOpen(prev => !prev);
+        setAnchorElMeta(textFieldRefMeta.current);
+    };
+
+    const handleSelectOptionMeta = (value: MetaAuidece | string) => {
+        if (value === 'createNew') {
+            setShowCreateFormMeta(prev => !prev);
+            if (!showCreateFormMeta) {
+                setAnchorElMeta(textFieldRefMeta.current);
+            }
+        } else if (isKlaviyoList(value)) {
+            setSelectedOptionMeta({
+                id: value.id,
+                list_name: value.list_name
+            });
+            setInputValueMeta(value.list_name)
+            setIsDropdownValid(true);
+            handleCloseMeta();
+        } else {
+            setIsDropdownValid(false);
+            setSelectedOptionMeta(null);
+        }
     };
 
     const handleInputChangeMeta = (e: any) => {
@@ -1164,7 +1233,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                 <ClickAwayListener onClickAway={handleCloseSelectMailchimp}>
                                                     <Box>
                                                         <TextField
-                                                            ref={textFieldRef}
+                                                            ref={textFieldRefMailchimp}
                                                             variant="outlined"
                                                             value={selectedOptionMailchimp?.list_name}
                                                             onClick={handleClickMailchimp}
@@ -1189,7 +1258,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
 
                                                                 endAdornment: (
                                                                     <InputAdornment position="end">
-                                                                        <IconButton onClick={handleDropdownToggle} edge="end">
+                                                                        <IconButton onClick={handleDropdownToggleMailchimp} edge="end">
                                                                             {isDropdownOpen ? <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} /> : <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />}
                                                                         </IconButton>
                                                                     </InputAdornment>
@@ -1488,7 +1557,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                         {/* AudienceList */}
                                                         <Box>
                                                             <TextField
-                                                                ref={textFieldRef}
+                                                                ref={textFieldRefMeta}
                                                                 variant="outlined"
                                                                 value={inputValueMeta}
                                                                 onClick={handleClickMeta}
@@ -1511,8 +1580,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                                 InputProps={{
                                                                     endAdornment: (
                                                                         <InputAdornment position="end">
-                                                                            <IconButton onClick={handleDropdownToggle} edge="end">
-                                                                                {isDropdownOpen ? <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} /> : <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />}
+                                                                            <IconButton onClick={handleDropdownToggleMeta} edge="end">
+                                                                                {isDropdownOpenMeta ? <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} /> : <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />}
                                                                             </IconButton>
                                                                         </InputAdornment>
                                                                     ),
@@ -1537,7 +1606,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         
                                                             <Menu
                                                                 anchorEl={anchorElMeta}
-                                                                open={Boolean(anchorElMeta) && isDropdownOpen}
+                                                                open={Boolean(anchorElMeta) && isDropdownOpenMeta}
                                                                 onClose={handleCloseMeta}
                                                                 PaperProps={{
                                                                     sx: {
@@ -1547,8 +1616,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                                 }}
                                                             >
                                                                 {/* Show "Create New List" option */}
-                                                                <MenuItem onClick={() => handleSelectOptionMailchimp('createNew')} sx={{
-                                                                    borderBottom: showCreateFormMailchimp ? "none" : "1px solid #cdcdcd",
+                                                                <MenuItem onClick={() => handleSelectOptionMeta('createNew')} sx={{
+                                                                    borderBottom: showCreateFormMeta ? "none" : "1px solid #cdcdcd",
                                                                     '&:hover': {
                                                                         background: 'rgba(80, 82, 178, 0.10)'
                                                                     }
@@ -1557,7 +1626,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                                         sx: {
                                                                             fontFamily: "Nunito Sans",
                                                                             fontSize: "14px",
-                                                                            color: showCreateFormMailchimp ? "#5052B2" : "#202124",
+                                                                            color: showCreateFormMeta ? "#5052B2" : "#202124",
                                                                             fontWeight: "500",
                                                                             lineHeight: "20px",
         
@@ -1565,7 +1634,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                                     }} />
                                                                 </MenuItem>
         
-                                                                {showCreateFormMailchimp && (
+                                                                {showCreateFormMeta && (
                                                                     <Box>
                                                                         <Box sx={{
                                                                             display: 'flex',
@@ -1695,7 +1764,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         
                                                                 {/* Show static options */}
                                                                 {metaAudienceList && metaAudienceList.map((klaviyo, option) => (
-                                                                    <MenuItem key={klaviyo.id} onClick={() => handleSelectOptionMailchimp(klaviyo)} sx={{
+                                                                    <MenuItem key={klaviyo.id} onClick={() => handleSelectOptionMeta(klaviyo)} sx={{
                                                                         '&:hover': {
                                                                             background: 'rgba(80, 82, 178, 0.10)'
                                                                         }
@@ -1819,7 +1888,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                                                         name="campaignName"
                                                                                         value={formValues.campaignName}
                                                                                         onKeyDown={(e) => e.stopPropagation()}
-                                                                                        onChange={handleInputChange}
+                                                                                        onChange={handleInputChangeMeta}
                                                                                         fullWidth
                                                                                         margin="normal"
                                                                                         sx={{
@@ -1827,6 +1896,12 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                                                             '& .MuiInputBase-input': {
                                                                                                 fontSize: '14px',
                                                                                                 lineHeight: '16px',
+                                                                                            },
+                                                                                            "& .MuiInputLabel-root.Mui-focused": {
+                                                                                                color: "rgba(17, 17, 19, 0.6)",
+                                                                                            },
+                                                                                            "& .MuiInputLabel-root[data-shrink='false']": {
+                                                                                                transform: "translate(16px, 60%) scale(1)",
                                                                                             },
                                                                                             '& .MuiInputLabel-root': {
                                                                                                 fontSize: '14px',
@@ -1849,6 +1924,9 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                                                                 justifyContent: 'flex-start',
                                                                                                 '& .MuiSelect-select': {
                                                                                                     fontSize: '16px',
+                                                                                                },
+                                                                                                "& .MuiInputLabel-root.Mui-focused": {
+                                                                                                    color: "rgba(17, 17, 19, 0.6)",
                                                                                                 },
                                                                                             }}
                                                                                         >
@@ -1878,6 +1956,11 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                                                         InputProps={{
                                                                                             startAdornment: <InputAdornment position="start">$</InputAdornment>,
                                                                                         }}
+                                                                                        sx={{
+                                                                                            "& .MuiInputLabel-root.Mui-focused": {
+                                                                                                color: "rgba(17, 17, 19, 0.6)",
+                                                                                            }
+                                                                                        }}
                                                                                     />
                                                                                     <TextField
                                                                                         label="Daily Budget"
@@ -1891,6 +1974,11 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                                                         InputProps={{
                                                                                             startAdornment: <InputAdornment position="start">$</InputAdornment>,
                                                                                         }}
+                                                                                        sx={{
+                                                                                            "& .MuiInputLabel-root.Mui-focused": {
+                                                                                                color: "rgba(17, 17, 19, 0.6)",
+                                                                                            }
+                                                                                        }}
                                                                                     />
                                                                                     <Typography variant="body2" color="textSecondary" paragraph>
                                                                                         We will not run your campaign. Maximiz will create a campaign template in your ad account. We won&apos;t run anything without your confirmation.
@@ -1900,22 +1988,23 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                                                         sx={{
                                                                                             borderRadius: '4px',
                                                                                             border: '1px solid #5052B2',
-                                                                                            background: '#fff',
                                                                                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                                                                            backgroundColor: "rgba(80, 82, 178, 1)",
                                                                                             fontFamily: 'Nunito Sans',
                                                                                             fontSize: '14px',
                                                                                             fontWeight: '600',
                                                                                             lineHeight: '20px',
-                                                                                            color: '#5052b2',
+                                                                                            color: "rgba(255, 255, 255, 1)",
                                                                                             textTransform: 'none',
                                                                                             padding: '4px 22px',
-                                                                                            '&:hover': {
-                                                                                                background: 'transparent'
+                                                                                            ":hover": {
+                                                                                                backgroundColor: "rgba(62, 64, 142, 1)"},
+                                                                                            ":active": {
+                                                                                                backgroundColor: "rgba(80, 82, 178, 1)"},
+                                                                                            ":disabled": {
+                                                                                                borderColor: "rgba(80, 82, 178, 1)",
+                                                                                                opacity: 0.4,
                                                                                             },
-                                                                                            '&.Mui-disabled': {
-                                                                                                backgroundColor: '#E4E4E4',
-                                                                                                color: '#808080'
-                                                                                            }
                                                                                         }}>
                                                                                         Save
                                                                                     </Button>
@@ -1994,7 +2083,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                     minWidth: '196px'
                                                 }
                                             }}>
-                                                <Image src='/logo.svg' alt='logo' height={22} width={34} />
+                                                <Image src='/logo.svg' alt='logo' height={31} width={130} />
                                             </Grid>
                                             <Grid item xs="auto" sm={1} sx={{
                                                 '@media (max-width:599px)': {

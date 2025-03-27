@@ -9,12 +9,13 @@ from schemas.integrations.sales_force import SalesForceProfile
 from fastapi import HTTPException
 from datetime import datetime, timedelta
 from utils import extract_first_email
-from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
+from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, DataSyncType
 import httpx
 import json
 from utils import format_phone_number
 from typing import List
 from utils import validate_and_format_phone, format_phone_number
+from uuid import UUID
 
 
 class SalesForceIntegrationsService:
@@ -147,6 +148,19 @@ class SalesForceIntegrationsService:
             'integration_id': credentials.id,
             'domain_id': domain_id,
             'leads_type': leads_type,
+            'data_map': data_map,
+            'created_by': created_by,
+        })
+        return sync
+    
+    def create_smart_audience_sync(self, smart_audience_id: UUID, sent_contacts: int, domain_id: int, created_by: str, data_map: List[DataMap] = []):
+        credentials = self.get_credentials(domain_id)
+        sync = self.sync_persistence.create_sync({
+            'integration_id': credentials.id,
+            'domain_id': domain_id,
+            'sent_contacts': sent_contacts,
+            'sync_type': DataSyncType.AUDIENCE.value,
+            'smart_audience_id': smart_audience_id,
             'data_map': data_map,
             'created_by': created_by,
         })
