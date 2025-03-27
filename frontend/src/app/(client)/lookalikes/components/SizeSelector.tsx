@@ -107,8 +107,11 @@ const AudienceSizeSelector: React.FC<AudienceSizeSelectorProps> = ({
                                     minWidth: '12.125rem',
                                     border:
                                         selectedSize === source.id
-                                            ? "1px solid #1976d2"
+                                            ? "1px solid rgba(117, 168, 218, 1)"
                                             : "1px solid rgba(208, 213, 221, 1)",
+                                    backgroundColor: selectedSize === source.id 
+                                    ? 'rgba(246, 248, 250, 1)'
+                                    : 'rgba(255, 255, 255, 1)',
                                     padding: "0.6rem 0.5rem",
                                     borderRadius: "4px",
                                     textTransform: "none",

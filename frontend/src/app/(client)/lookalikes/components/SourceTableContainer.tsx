@@ -16,6 +16,18 @@ interface TableContainerProps {
   tableData: TableData[];
 }
 
+const setSourceType = (sourceType: string) => {
+  return sourceType
+      .split(',')
+      .map(item =>
+          item
+              .split('_')
+              .map(subItem => subItem.charAt(0).toUpperCase() + subItem.slice(1))
+              .join(' ')
+      )
+      .join(', ');
+}
+
 const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
   return (
     <TableContainer
@@ -79,8 +91,8 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
           {tableData.map((row, index) => (
             <TableRow key={index}>
               <TableCell>{row.name}</TableCell>
-              <TableCell>{row.source}</TableCell>
-              <TableCell>{row.type}</TableCell>
+              <TableCell>{setSourceType(row.source)}</TableCell>
+              <TableCell>{setSourceType(row.type)}</TableCell>
               <TableCell>{dayjs(row.created_date).format('MMM D, YYYY')}</TableCell>
               <TableCell>{row.created_by}</TableCell>
               <TableCell>{row.number_of_customers}</TableCell>

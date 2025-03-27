@@ -1,4 +1,4 @@
-import { LinearProgress, Typography, TextField, Chip, Button, FormControl, Select, MenuItem, InputAdornment, IconButton, TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody, SelectChangeEvent, ToggleButton } from "@mui/material"
+import { LinearProgress, Typography, TextField, Chip, Button, FormControl, Select, MenuItem, InputAdornment, IconButton, TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody, SelectChangeEvent, ToggleButton, Slider, Tooltip } from "@mui/material"
 import { Box } from "@mui/system"
 import { smartAudiences } from "../../smartAudiences"
 import { useState } from "react";
@@ -7,6 +7,19 @@ import SearchIcon from "@mui/icons-material/Search";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import Image from 'next/image';
+import ExpandableFilter from "./ValidationFilters";
+import { useRouter } from "next/navigation";
+import CalculationPopup from "./CalculationPopup";
+import axiosInstance from "@/axios/axiosInterceptorInstance";
+
+interface ValidationData {
+    recency_params: { [key: string]: string };
+    personal_email: string[];
+    business_email: string[];
+    phone: string[];
+    postal_cas: string[];
+    linked_in: string[];
+}
 
 interface SelectedData {
     includeExclude: string;
@@ -14,6 +27,11 @@ interface SelectedData {
     selectedSource: string;
     selectedSourceId: string;
 }
+
+interface SmartAudienceTargetProps {
+    useCaseType: string;
+}
+
 
 const sourceData = [
     { id: 'uuid-123', name: "My orders", type: "Customer Conversions", size: "10,000" },
@@ -27,7 +45,8 @@ const lookalikeData = [
     { id: 'uuid-128', name: "New List", type: "Customer Conversions", size: "50,000" },
 ];
 
-const SmartAudiencesTarget: React.FC = () => {
+const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType }) => {
+    const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [audienceName, setAudienceName] = useState<string>("");
     const [option, setOption] = useState<string>("");
@@ -39,11 +58,62 @@ const SmartAudiencesTarget: React.FC = () => {
     const [showTable, setShowTable] = useState(true);
     const [showForm, setShowForm] = useState(true);
     const [isTableVisible, setIsTableVisible] = useState(true);
+    const [isValidate, setIsValidate] = useState(false);
+    const [isValidateSkip, setIsValidateSkip] = useState(false);
+    const [validationFilters, setValidationFilters] = useState<ValidationData | null>();
+    const [targetAudience, setTargetAudience] = useState<string | ''>('');
 
-    const [targetAudience, setTargetAudience] = useState<string | null>(null);
+
+
+    // Generate Active Segments
+    const [value, setValue] = useState<number | null>(0);
+    const [maxValue, setMaxValue] = useState<number | null>(100000)
+    const [numberToValidate, setNumberToValidate] = useState<number | null>(null);
+    const [estimatedContacts, setEstimatedContacts] = useState<number | null>(null);
+    const [availableCredits, setAvailableCredits] = useState<number | null>(60);
+    const [validationCost, setValidationCost] = useState<number | null>(null);
+    const [isCalculateActiveSegments, setIsCalculateActiveSegments] = useState(false);
+    const [isValidateActiveSegments, setIsValidateActiveSegments] = useState(false);
+    const [openConfirmValidatePopup, setOpenConfrimValidatePopup] = useState(false);
+
+    const handleCalculateActiveSegments = (value: number) => {
+        setNumberToValidate(value)
+        setEstimatedContacts(value - 1257)
+        setValidationCost(10)
+        setIsCalculateActiveSegments(true)
+    }
+
+
+    const handleOpenConfirmValidatePopup = () => {
+        setOpenConfrimValidatePopup(true)
+    }
+
+    const handleConfirmValidatePopup = () => {
+        setOpenConfrimValidatePopup(false)
+        setIsValidateActiveSegments(true)
+    }
+
+
+
+    const formatNumber = (value: string) => {
+        return value.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    };
+
+    const handleInputNumberChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        let newValue = event.target.value.replace(/,/g, "");
+        if (/^\d*$/.test(newValue)) {
+            let numericValue = Number(newValue);
+            if (maxValue) {
+                if (numericValue <= maxValue) {
+                    setValue(numericValue);
+                }
+            }
+        }
+    }
 
     const handleTargetAudienceChange = (value: string) => {
         setTargetAudience(value);
+        setValue(0)
     };
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,6 +134,30 @@ const SmartAudiencesTarget: React.FC = () => {
             !selectedSources.some(source => source.selectedSourceId === item.id)
         );
     };
+
+    const handleOnSkip = () => {
+        setIsValidate(true)
+        setIsValidateSkip(true)
+        setValidationFilters(null)
+    }
+
+    const handleOnEditValidation = () => {
+        setIsValidate(false)
+        setIsCalculateActiveSegments(false)
+        setIsValidateActiveSegments(false)
+        setIsValidateSkip(false)
+    }
+
+    const handleFilterValidation = (data: ValidationData) => {
+        setIsValidate(true)
+        setIsValidateSkip(false)
+        setValidationFilters(data)
+    };
+
+    const handleEditActiveSegments = () => {
+        setIsCalculateActiveSegments(false)
+        setIsValidateActiveSegments(false)
+    }
 
 
     const handleSelectRow = (row: any) => {
@@ -118,8 +212,35 @@ const SmartAudiencesTarget: React.FC = () => {
         setAudienceSize(null)
     }
 
+    const handleSliderChange = (_: Event, newValue: number | number[]) => {
+        setValue(newValue as number);
+    };
+
+    const handleGenerateSmartAudience = async () => {
+        try {
+        const requestData = {
+            use_case: useCaseType,
+            target_schema: targetAudience,
+            data_sources: selectedSources,
+            validation_params: validationFilters,
+            contacts_to_validate: isValidateSkip ? null : value,
+            smart_audience_name: audienceName
+        };
+    
+        const filteredRequestData = Object.fromEntries(
+            Object.entries(requestData).filter(([_, v]) => v !== null && v !== undefined)
+        );
+        
+        
+        const response = await axiosInstance.post('/audience-smarts/builder', filteredRequestData);
+        } 
+        catch {
+            
+        }
+    };
+
     return (
-        <Box sx={{mb:4 }}>
+        <Box sx={{ mb: 4 }}>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minWidth: '100%', flexGrow: 1, position: "relative", flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px", mt: 2, }}>
                 {uploadProgress !== null && (
                     <Box sx={{ width: "100%", position: "absolute", top: 0, left: 0, zIndex: 1200 }}>
@@ -129,13 +250,13 @@ const SmartAudiencesTarget: React.FC = () => {
                 <Box sx={{ display: "flex", width: '100%', flexDirection: "row", justifyContent: 'space-between', gap: 1 }}>
 
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, }}>
-                        <Typography sx={{ fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500 }}>Select your Target Audience</Typography>
+                        <Typography sx={{ fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500 }}>Select your Target Schema</Typography>
                         <Typography sx={{ fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)" }}>Choose what you would like to use it for.</Typography>
                     </Box>
 
                 </Box>
                 <Box sx={{ display: "flex", flexDirection: "row", gap: 2 }}>
-                    {["B2B", "D2C", "Both"].map((option) => (
+                    {["B2B", "B2C", "Both"].map((option) => (
                         <ToggleButton
                             key={option}
                             value={option}
@@ -163,197 +284,200 @@ const SmartAudiencesTarget: React.FC = () => {
 
             </Box>
 
-            {targetAudience &&
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minWidth: '100%', flexGrow: 1, position: "relative", flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px", mt: 2 }}>
-                {uploadProgress !== null && (
-                    <Box sx={{ width: "100%", position: "absolute", top: 0, left: 0, zIndex: 1200 }}>
-                        <LinearProgress variant="determinate" value={uploadProgress} sx={{ borderRadius: "6px", backgroundColor: '#c6dafc', '& .MuiLinearProgress-bar': { borderRadius: 5, backgroundColor: '#4285f4' } }} />
-                    </Box>
-                )}
-                <Box sx={{ display: "flex", width: '100%', flexDirection: "row", justifyContent: 'space-between', gap: 1 }}>
-
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, }}>
-                        <Typography sx={{ fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500 }}>Select your Contacts</Typography>
-                        <Typography sx={{ fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)" }}>Choose what data sources you want to use.</Typography>
-                    </Box>
-
-                    {AudienceSize &&
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                            <Typography className='table-data' sx={{ color: 'rgba(32, 33, 36, 1) !important', fontSize: '14px !important' }}>Size</Typography>
-                            <TextField
-                                fullWidth
-                                size="small"
-                                margin="none"
-                                variant="outlined"
-                                value={AudienceSize}
-                                disabled
-                                sx={{
-                                    maxHeight: '40px',
-                                    width: '120px',
-                                    '& .MuiInputBase-root': {
-                                        height: '40px',
-                                    },
-                                    '& .MuiOutlinedInput-input': {
-                                        padding: '8px 16px',
-                                    },
-                                    '& .MuiOutlinedInput-input.Mui-disabled': {
-                                        color: 'rgba(33, 33, 33, 1)',
-                                        WebkitTextFillColor: 'rgba(33, 33, 33, 1)'
-                                    }
-                                }}
-                            />
+            {/* Select your Contacts */}
+            {(targetAudience && useCaseType) &&
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minWidth: '100%', flexGrow: 1, position: "relative", flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px", mt: 2 }}>
+                    {uploadProgress !== null && (
+                        <Box sx={{ width: "100%", position: "absolute", top: 0, left: 0, zIndex: 1200 }}>
+                            <LinearProgress variant="determinate" value={uploadProgress} sx={{ borderRadius: "6px", backgroundColor: '#c6dafc', '& .MuiLinearProgress-bar': { borderRadius: 5, backgroundColor: '#4285f4' } }} />
                         </Box>
-                    }
+                    )}
+                    <Box sx={{ display: "flex", width: '100%', flexDirection: "row", justifyContent: 'space-between', gap: 1 }}>
 
-
-                </Box>
-                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'end', justifyContent: 'space-between' }}>
-                        <Box>
-                            {Object.entries(groupedSources).map(([key, values]) => (
-                                <Box key={key} sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 2 }}>
-                                    <Typography sx={{ fontFamily: 'Roboto', fontWeight: '400', fontSize: '14px', color: '#202124' }}>{key}</Typography>
-                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                                        {values.map(({ source, type, id }, index) => (
-                                            <Chip
-                                                key={index}
-                                                label={`${type} - ${source}`}
-                                                deleteIcon={
-                                                    !AudienceSize ? (
-                                                        <CloseIcon sx={{ color: 'rgba(32, 33, 36, 1) !important', fontSize: '16px !important' }} />
-                                                    ) : undefined
-                                                }
-                                                sx={{
-                                                    border: '1px solid #90A4AE', backgroundColor: '#ffffff', borderRadius: '4px',
-                                                    '& .MuiChip-label': {
-                                                        fontSize: '12px', fontFamily: 'Nunito Sans', fontWeight: '500'
-                                                    },
-                                                }}
-                                                onDelete={!AudienceSize ? () => handleDeleteChip(id) : undefined}
-                                            />
-                                        ))}
-                                    </Box>
-                                </Box>
-                            ))}
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, }}>
+                            <Typography sx={{ fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500 }}>Select your Contacts</Typography>
+                            <Typography sx={{ fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)" }}>Choose what data sources you want to use.</Typography>
                         </Box>
 
                         {AudienceSize &&
-                            <Button
-                                onClick={handleEditContacts}
-                                variant="outlined"
-                                sx={{
-                                    ...smartAudiences.buttonform,
-                                    borderColor: "rgba(80, 82, 178, 1)",
-                                    width: "92px",
-                                    ":hover": {
-                                        backgroundColor: "#fff"
-                                    },
-                                }}>
-                                <Typography
-                                    sx={{
-                                        ...smartAudiences.textButton,
-                                        color: "rgba(80, 82, 178, 1)",
-
-
-                                    }}
-                                >
-                                    Edit
-                                </Typography>
-                            </Button>
-                        }
-                    </Box>
-
-
-
-                    {(showForm || selectedSources.length === 0) && (
-                        <Box sx={{ display: "flex", flexDirection: "row", gap: 2 }}>
-                            <FormControl variant="outlined">
-                                <Select value={option} onChange={handleSelectOption} displayEmpty sx={{ ...smartAudiences.text, width: "316px", borderRadius: "4px", pt: 0 }}>
-                                    <MenuItem value="" disabled sx={{ display: "none", mt: 0 }}>Select an option</MenuItem>
-                                    <MenuItem className="second-sub-title" value={"Include"}>Include</MenuItem>
-                                    <MenuItem className="second-sub-title" value={"Exclude"}>Exclude</MenuItem>
-                                </Select>
-                            </FormControl>
-
-                            {option && (
-                                <FormControl variant="outlined">
-                                    <Select value={sourceType} onChange={handleSelectSourceType} displayEmpty sx={{ ...smartAudiences.text, width: "316px", borderRadius: "4px", pt: 0 }}>
-                                        <MenuItem value="" disabled sx={{ display: "none", mt: 0 }}>Select audience source</MenuItem>
-                                        <MenuItem className="second-sub-title" value={"Source"}>Source</MenuItem>
-                                        <MenuItem className="second-sub-title" value={"Lookalike"}>Lookalike</MenuItem>
-                                    </Select>
-                                </FormControl>
-                            )}
-                        </Box>
-                    )}
-
-                    {option && sourceType && showTable && (
-                        <Box sx={{ display: 'flex', width: '100%', flexDirection: 'column', pt: 2, gap: 2 }}>
-                            <Typography>Choose your {sourceType}</Typography>
-                            <Box sx={{ width: "100%" }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                                <Typography className='table-data' sx={{ color: 'rgba(32, 33, 36, 1) !important', fontSize: '14px !important' }}>Size</Typography>
                                 <TextField
                                     fullWidth
+                                    size="small"
+                                    margin="none"
                                     variant="outlined"
-                                    placeholder="Source Search"
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    InputProps={{
-                                        startAdornment: (
-                                            <InputAdornment position="start">
-                                                <SearchIcon />
-                                            </InputAdornment>
-                                        ),
-                                        endAdornment: (
-                                            <IconButton onClick={() => setIsTableVisible(!isTableVisible)}>
-                                                {isTableVisible ? <ExpandMoreIcon /> : <ExpandLessIcon />}
-                                            </IconButton>
-                                        )
+                                    value={AudienceSize}
+                                    disabled
+                                    sx={{
+                                        maxHeight: '40px',
+                                        width: '120px',
+                                        '& .MuiInputBase-root': {
+                                            height: '40px',
+                                        },
+                                        '& .MuiOutlinedInput-input': {
+                                            padding: '8px 16px',
+                                        },
+                                        '& .MuiOutlinedInput-input.Mui-disabled': {
+                                            color: 'rgba(33, 33, 33, 1)',
+                                            WebkitTextFillColor: 'rgba(33, 33, 33, 1)'
+                                        }
                                     }}
-                                    sx={{ pb: '2px' }}
                                 />
-                                {isTableVisible && (
-                                    <TableContainer component={Paper}>
-                                        <Table>
-                                            <TableHead>
-                                                <TableRow>
-                                                    <TableCell className="black-table-data" >Name</TableCell>
-                                                    <TableCell className="black-table-data" >Type</TableCell>
-                                                    <TableCell className="black-table-data" >Size</TableCell>
-                                                </TableRow>
-                                            </TableHead>
-                                            <TableBody>
-                                                {filteredData.map((row) => (
-                                                    <TableRow key={row.name} hover sx={{ cursor: "pointer" }} onClick={() => handleSelectRow(row)}>
-                                                        <TableCell className="black-table-header">{row.name}</TableCell>
-                                                        <TableCell className="black-table-header">{row.type}</TableCell>
-                                                        <TableCell className="black-table-header">{row.size}</TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    </TableContainer>
+                            </Box>
+                        }
+
+
+                    </Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'end', justifyContent: 'space-between' }}>
+                            <Box>
+                                {Object.entries(groupedSources).map(([key, values]) => (
+                                    <Box key={key} sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 2 }}>
+                                        <Typography sx={{ fontFamily: 'Roboto', fontWeight: '400', fontSize: '14px', color: '#202124' }}>{key}</Typography>
+                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                                            {values.map(({ source, type, id }, index) => (
+                                                <Chip
+                                                    key={index}
+                                                    label={`${type} - ${source}`}
+                                                    deleteIcon={
+                                                        !AudienceSize ? (
+                                                            <CloseIcon sx={{ color: 'rgba(32, 33, 36, 1) !important', fontSize: '16px !important' }} />
+                                                        ) : undefined
+                                                    }
+                                                    sx={{
+                                                        border: '1px solid #90A4AE', backgroundColor: '#ffffff', borderRadius: '4px',
+                                                        '& .MuiChip-label': {
+                                                            fontSize: '12px', fontFamily: 'Nunito Sans', fontWeight: '500'
+                                                        },
+                                                    }}
+                                                    onDelete={!AudienceSize ? () => handleDeleteChip(id) : undefined}
+                                                />
+                                            ))}
+                                        </Box>
+                                    </Box>
+                                ))}
+                            </Box>
+
+                            {AudienceSize &&
+                                <Button
+                                    onClick={handleEditContacts}
+                                    variant="outlined"
+                                    sx={{
+                                        ...smartAudiences.buttonform,
+                                        borderColor: "rgba(80, 82, 178, 1)",
+                                        width: "120px",
+                                        ":hover": {
+                                            backgroundColor: "#fff"
+                                        },
+                                    }}>
+                                    <Typography
+                                        sx={{
+                                            ...smartAudiences.textButton,
+                                            color: "rgba(80, 82, 178, 1)",
+
+
+                                        }}
+                                    >
+                                        Edit
+                                    </Typography>
+                                </Button>
+                            }
+                        </Box>
+
+
+
+                        {(showForm || selectedSources.length === 0) && (
+                            <Box sx={{ display: "flex", flexDirection: "row", gap: 2 }}>
+                                <FormControl variant="outlined">
+                                    <Select value={option} onChange={handleSelectOption} displayEmpty sx={{ ...smartAudiences.text, width: "316px", borderRadius: "4px", pt: 0 }}>
+                                        <MenuItem value="" disabled sx={{ display: "none", mt: 0 }}>Select an option</MenuItem>
+                                        <MenuItem className="second-sub-title" value={"Include"}>Include</MenuItem>
+                                        <MenuItem className="second-sub-title" value={"Exclude"}>Exclude</MenuItem>
+                                    </Select>
+                                </FormControl>
+
+                                {option && (
+                                    <FormControl variant="outlined">
+                                        <Select value={sourceType} onChange={handleSelectSourceType} displayEmpty sx={{ ...smartAudiences.text, width: "316px", borderRadius: "4px", pt: 0 }}>
+                                            <MenuItem value="" disabled sx={{ display: "none", mt: 0 }}>Select audience source</MenuItem>
+                                            <MenuItem className="second-sub-title" value={"Source"}>Source</MenuItem>
+                                            <MenuItem className="second-sub-title" value={"Lookalike"}>Lookalike</MenuItem>
+                                        </Select>
+                                    </FormControl>
                                 )}
                             </Box>
-                        </Box>
-                    )}
+                        )}
 
-                    {(!showForm && selectedSources.length !== 0 && !AudienceSize) && (
-                        <Box sx={{ display: 'flex', width: '100%', alignItems: 'self-start' }}>
-                            <Button onClick={handleAddMore} variant="text" className="second-sub-title" sx={{ textTransform: 'none', textDecoration: 'underline', color: 'rgba(80, 82, 178, 1) !important' }}>+ Add more</Button>
-                        </Box>
-                    )}
+                        {option && sourceType && showTable && (
+                            <Box sx={{ display: 'flex', width: '100%', flexDirection: 'column', pt: 2, gap: 2 }}>
+                                <Typography>Choose your {sourceType}</Typography>
+                                <Box sx={{ width: "100%" }}>
+                                    <TextField
+                                        fullWidth
+                                        variant="outlined"
+                                        placeholder="Source Search"
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    <SearchIcon />
+                                                </InputAdornment>
+                                            ),
+                                            endAdornment: (
+                                                <IconButton onClick={() => setIsTableVisible(!isTableVisible)}>
+                                                    {isTableVisible ? <ExpandMoreIcon /> : <ExpandLessIcon />}
+                                                </IconButton>
+                                            )
+                                        }}
+                                        sx={{ pb: '2px' }}
+                                    />
+                                    {isTableVisible && (
+                                        <TableContainer component={Paper}>
+                                            <Table>
+                                                <TableHead>
+                                                    <TableRow>
+                                                        <TableCell className="black-table-data" >Name</TableCell>
+                                                        <TableCell className="black-table-data" >Type</TableCell>
+                                                        <TableCell className="black-table-data" >Size</TableCell>
+                                                    </TableRow>
+                                                </TableHead>
+                                                <TableBody>
+                                                    {filteredData.map((row) => (
+                                                        <TableRow key={row.name} hover sx={{ cursor: "pointer" }} onClick={() => handleSelectRow(row)}>
+                                                            <TableCell className="black-table-header">{row.name}</TableCell>
+                                                            <TableCell className="black-table-header">{row.type}</TableCell>
+                                                            <TableCell className="black-table-header">{row.size}</TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </TableContainer>
+                                    )}
+                                </Box>
+                            </Box>
+                        )}
+
+                        {(!showForm && selectedSources.length !== 0 && !AudienceSize) && (
+                            <Box sx={{ display: 'flex', width: '100%', alignItems: 'self-start' }}>
+                                <Button onClick={handleAddMore} variant="text" className="second-sub-title" sx={{ textTransform: 'none', textDecoration: 'underline', color: 'rgba(80, 82, 178, 1) !important' }}>+ Add more</Button>
+                            </Box>
+                        )}
+                    </Box>
+
                 </Box>
-
-            </Box>
             }
             {(!showForm && selectedSources.length !== 0 && !AudienceSize) && (
                 <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mt: 2, justifyContent: "flex-end", borderRadius: "6px" }}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-                        <Button variant="outlined" sx={{
-                            ...smartAudiences.buttonform,
-                            borderColor: "rgba(80, 82, 178, 1)",
-                            width: "92px",
-                        }}>
+                        <Button
+                            onClick={() => router.push('/smart-audiences')}
+                            variant="outlined" sx={{
+                                ...smartAudiences.buttonform,
+                                borderColor: "rgba(80, 82, 178, 1)",
+                                width: "92px",
+                            }}>
                             <Typography
                                 sx={{
                                     ...smartAudiences.textButton,
@@ -385,7 +509,260 @@ const SmartAudiencesTarget: React.FC = () => {
                 </Box>
             )}
 
-            {(AudienceSize && targetAudience ==='D2C') &&
+
+            {/* VALIDATION*/}
+            {AudienceSize &&
+                <ExpandableFilter targetAudience={targetAudience} useCaseType={useCaseType} onSkip={handleOnSkip} onValidate={handleFilterValidation} onEdit={handleOnEditValidation} />
+            }
+
+            {/* GENERATE ACTIVE SEGMENTS */}
+            {(AudienceSize && isValidate && !isValidateSkip) &&
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minWidth: '100%', flexGrow: 1, position: "relative", flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px", mt: 2 }}>
+                    {uploadProgress !== null && (
+                        <Box sx={{ width: "100%", position: "absolute", top: 0, left: 0, zIndex: 1200 }}>
+                            <LinearProgress variant="determinate" value={uploadProgress} sx={{ borderRadius: "6px", backgroundColor: '#c6dafc', '& .MuiLinearProgress-bar': { borderRadius: 5, backgroundColor: '#4285f4' } }} />
+                        </Box>
+                    )}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, }}>
+                        <Typography sx={{ fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500 }}>Generate Active Segments</Typography>
+                        <Typography sx={{ fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)" }}>Manage your audience segments for validation.</Typography>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, }}>
+                        <Typography sx={{ fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500 }}>Total Audience Size</Typography>
+                        <Typography sx={{ fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)" }}>This is your total available audience for validation.</Typography>
+                    </Box>
+                    <Typography>{formatNumber(maxValue ? maxValue.toString() : '0')}</Typography>
+
+                    {!isCalculateActiveSegments ?
+                        (
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, }}>
+
+                                <Typography sx={{ fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500, pt: 1 }}>How many contacts do you want to validate?</Typography>
+                                <Typography sx={{ fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)", pb: 1 }}>Enter the number of users you want to validate. The cost will be calculated automatically.</Typography>
+
+                                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                        <TextField
+                                            value={value}
+                                            type="number"
+                                            label="Enter a number"
+                                            onChange={handleInputNumberChange}
+                                            inputProps={{ max: maxValue }}
+                                            InputLabelProps={{ sx: { fontFamily: "Nunito Sans", pl: "2px" } }}
+                                            sx={smartAudiences.inputStyle}
+                                        />
+
+                                        <Slider
+                                            value={value ? value : 0}
+                                            onChange={handleSliderChange}
+                                            min={0}
+                                            max={maxValue ? maxValue : 0}
+                                            sx={{
+                                                color: value === 0 ? "rgba(231, 231, 231, 1)" : "rgba(80, 82, 178, 1)",
+                                                maxWidth: "280px",
+                                                "& .MuiSlider-track": { backgroundColor: "rgba(80, 82, 178, 1)" },
+                                                "& .MuiSlider-thumb": { backgroundColor: "rgba(80, 82, 178, 1)" },
+                                            }}
+                                        />
+                                    </Box>
+
+                                </Box>
+                            </Box>
+                        )
+                        :
+                        (
+                            <Box sx={{ display: "flex", flexDirection: "column", gap: 2, width: "70%" }}>
+
+                                <Box sx={{ display: "flex", flexDirection: "row", alignItems: "stretch", gap: 6 }}>
+                                    <Box sx={{ flex: 1 }}>
+                                        <Typography className="form-input">Number of Users to Validate</Typography>
+                                        <Typography>{formatNumber(numberToValidate ? numberToValidate.toString() : '0')}</Typography>
+                                    </Box>
+
+                                    <Box sx={{ flex: 1, textAlign: "left" }}>
+                                        <Typography className="form-input">Available Credits</Typography>
+                                        <Typography>{availableCredits} Credits</Typography>
+                                    </Box>
+                                </Box>
+
+
+                                <Box sx={{ display: "flex", flexDirection: "row", alignItems: "stretch", gap: 6 }}>
+                                    <Box sx={{ flex: 1 }}>
+                                        <Typography sx={{ display: "flex", gap: 0.5, alignItems: "center" }} className="form-input">
+                                            Estimated contacts after validation
+                                            <Tooltip
+                                                sx={{ "@media (max-width: 600px)": { display: "none" } }}
+                                                title={
+                                                    <Box sx={{ backgroundColor: "#fff", padding: 0, display: "flex", flexDirection: "row", alignItems: "center" }}>
+                                                        <Typography className="table-data" sx={{ fontSize: "12px !important" }}>
+                                                            This is an estimated number based on our historical data. The exact number will be available only after validation.
+                                                        </Typography>
+                                                    </Box>
+                                                }
+                                                componentsProps={{
+                                                    tooltip: {
+                                                        sx: {
+                                                            backgroundColor: "#fff",
+                                                            color: "#000",
+                                                            boxShadow: "0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
+                                                            border: ".2px solid rgba(255, 255, 255, 1)",
+                                                            borderRadius: "4px",
+                                                            maxHeight: "100%",
+                                                            maxWidth: "21.5rem",
+                                                            minWidth: "200px",
+                                                            padding: ".625rem",
+                                                        },
+                                                    },
+                                                }}
+                                                placement="right"
+                                            >
+                                                <Image src="/info-icon.svg" alt="info-icon" height={13} width={13} />
+                                            </Tooltip>
+                                        </Typography>
+                                        <Typography>{formatNumber(estimatedContacts ? estimatedContacts.toString() : '0')}</Typography>
+                                    </Box>
+
+                                    <Box sx={{ flex: 1, textAlign: "left" }}>
+                                        <Typography className="form-input">Validation Cost</Typography>
+                                        <Typography>{validationCost} Credits</Typography>
+                                        {typeof availableCredits === "number" && typeof validationCost === "number" ? (
+                                            availableCredits >= validationCost ? (
+                                                <Typography className="form-input" sx={{ color: "rgba(74, 158, 79, 1) !important", fontSize: "12px !important", mb: 1 }}>
+                                                    ✓ You have enough credits to proceed.
+                                                </Typography>
+                                            ) : (
+                                                <Typography className="form-input" sx={{ color: "rgba(205, 40, 43, 1) !important", fontSize: "12px !important", mb: 1 }}>
+                                                    ✗ You need {validationCost - availableCredits} more credits to proceed.
+                                                </Typography>
+                                            )
+                                        ) : null}
+
+                                    </Box>
+                                </Box>
+                            </Box>
+
+
+                        )
+                    }
+
+                    {isCalculateActiveSegments &&
+                        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'end' }}>
+                            <Button
+                                onClick={handleEditActiveSegments}
+                                variant="outlined"
+                                sx={{
+                                    ...smartAudiences.buttonform,
+                                    borderColor: "rgba(80, 82, 178, 1)",
+                                    width: "120px",
+                                    ":hover": {
+                                        backgroundColor: "#fff"
+                                    },
+                                }}>
+                                <Typography
+                                    sx={{
+                                        ...smartAudiences.textButton,
+                                        color: "rgba(80, 82, 178, 1)",
+
+
+                                    }}
+                                >
+                                    Edit
+                                </Typography>
+                            </Button>
+                        </Box>
+                    }
+
+                </Box>
+            }
+
+            {(AudienceSize && isValidate && !isCalculateActiveSegments && !isValidateSkip) &&
+                <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mt: 2, justifyContent: "flex-end", borderRadius: "6px" }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
+                        <Button
+                            onClick={() => router.push('/smart-audiences')}
+                            variant="outlined" sx={{
+                                ...smartAudiences.buttonform,
+                                borderColor: "rgba(80, 82, 178, 1)",
+                                width: "92px",
+                            }}>
+                            <Typography
+                                sx={{
+                                    ...smartAudiences.textButton,
+                                    color: "rgba(80, 82, 178, 1)",
+                                }}
+                            >
+                                Cancel
+                            </Typography>
+                        </Button>
+                        <Button
+                            disabled={value === 0 ? true : false}
+                            variant="contained" onClick={() => handleCalculateActiveSegments(value ?? 0)} 
+                                sx={{
+                                ...smartAudiences.buttonform,
+                                backgroundColor: "rgba(80, 82, 178, 1)",
+                                width: "120px",
+                                ":hover": {
+                                    backgroundColor: "rgba(80, 82, 178, 1)"
+                                },
+                            }}>
+                            <Typography
+                                sx={{
+                                    ...smartAudiences.textButton,
+                                    color: "rgba(255, 255, 255, 1)",
+
+                                }}
+                            >
+                                Calculate
+                            </Typography>
+                        </Button>
+                    </Box>
+                </Box>
+            }
+
+            {(AudienceSize && isValidate && isCalculateActiveSegments && !isValidateActiveSegments) &&
+                <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mt: 2, justifyContent: "flex-end", borderRadius: "6px" }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
+                        <Button
+                            onClick={() => router.push('/smart-audiences')}
+                            variant="outlined" sx={{
+                                ...smartAudiences.buttonform,
+                                borderColor: "rgba(80, 82, 178, 1)",
+                                width: "92px",
+                            }}>
+                            <Typography
+                                sx={{
+                                    ...smartAudiences.textButton,
+                                    color: "rgba(80, 82, 178, 1)",
+                                }}
+                            >
+                                Cancel
+                            </Typography>
+                        </Button>
+                        <Button variant="contained" onClick={handleOpenConfirmValidatePopup} sx={{
+                            ...smartAudiences.buttonform,
+                            backgroundColor: "rgba(80, 82, 178, 1)",
+                            width: "120px",
+                            ":hover": {
+                                backgroundColor: "rgba(80, 82, 178, 1)"
+                            },
+                        }}>
+                            <Typography
+                                sx={{
+                                    ...smartAudiences.textButton,
+                                    color: "rgba(255, 255, 255, 1)",
+
+                                }}
+                            >
+                                Validate
+                            </Typography>
+                        </Button>
+                    </Box>
+                </Box>
+            }
+
+            {(isValidateActiveSegments || isValidateSkip) &&
                 <Box>
                     <Box
                         sx={{
@@ -443,11 +820,13 @@ const SmartAudiencesTarget: React.FC = () => {
                     </Box>
                     <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mt: 2, justifyContent: "flex-end", borderRadius: "6px" }}>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-                            <Button variant="outlined" sx={{
-                                ...smartAudiences.buttonform,
-                                borderColor: "rgba(80, 82, 178, 1)",
-                                width: "92px",
-                            }}>
+                            <Button
+                                onClick={() => router.push('/smart-audiences')}
+                                variant="outlined" sx={{
+                                    ...smartAudiences.buttonform,
+                                    borderColor: "rgba(80, 82, 178, 1)",
+                                    width: "92px",
+                                }}>
                                 <Typography
                                     sx={{
                                         ...smartAudiences.textButton,
@@ -457,14 +836,16 @@ const SmartAudiencesTarget: React.FC = () => {
                                     Cancel
                                 </Typography>
                             </Button>
-                            <Button variant="contained" onClick={handleCalculate} sx={{
-                                ...smartAudiences.buttonform,
-                                backgroundColor: "rgba(80, 82, 178, 1)",
-                                width: "237px",
-                                ":hover": {
-                                    backgroundColor: "rgba(80, 82, 178, 1)"
-                                },
-                            }}>
+                            <Button
+                                disabled={audienceName.trim() == "" ? true : false}
+                                variant="contained" onClick={handleGenerateSmartAudience} sx={{
+                                    ...smartAudiences.buttonform,
+                                    backgroundColor: "rgba(80, 82, 178, 1)",
+                                    width: "237px",
+                                    ":hover": {
+                                        backgroundColor: "rgba(80, 82, 178, 1)"
+                                    },
+                                }}>
 
                                 <Box
                                     sx={{
@@ -497,6 +878,18 @@ const SmartAudiencesTarget: React.FC = () => {
                     </Box>
                 </Box>
             }
+
+
+            <CalculationPopup
+                open={openConfirmValidatePopup}
+                onClose={() => setOpenConfrimValidatePopup(false)}
+                onCancel={() => setOpenConfrimValidatePopup(false)}
+                onConfirm={handleConfirmValidatePopup}
+                CalculationData={{
+                    validationCost: validationCost ?? 0,
+                    availableCredits: availableCredits ?? 0
+                }}
+            />
         </Box>
     )
 }

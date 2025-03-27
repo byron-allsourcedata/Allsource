@@ -1,3 +1,4 @@
+"use client";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -9,6 +10,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { TrialProvider } from '../context/TrialProvider';
 import { SSEProvider } from '../context/SSEContext';
 import { IntegrationProvider } from "@/context/IntegrationContext";
+import { usePathname } from "next/navigation";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,21 +20,30 @@ if (!googleClientId) {
   throw new Error("NEXT_PUBLIC_GOOGLE_CLIENT_ID is not defined");
 }
 
-export const metadata: Metadata = {
-  title: "Maximiz",
-  description: "Maximiz description",
+const formatPageTitle = (path: string) => {
+  return path
+      .replace(/[-_]/g, " ")
+      .split("/")
+      .filter(Boolean)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
 };
+
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const pageTitle = formatPageTitle(pathname || "");
   return (
 
     <html lang="en">
       <head>
-       <meta httpEquiv="Content-Security-Policy" content="script-src * 'unsafe-inline' 'unsafe-eval'; object-src 'none';" />
+        <title>{pageTitle ? `AllSource | ${pageTitle} ` : "AllSource"}</title>
+        <meta name="description" content={`Page: ${pageTitle}`} />
+        <meta httpEquiv="Content-Security-Policy" content="script-src * 'unsafe-inline' 'unsafe-eval'; object-src 'none';" />
       </head>
       <body className={inter.className}>
         <GoogleOAuthProvider clientId={googleClientId as string}>
