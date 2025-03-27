@@ -53,20 +53,20 @@ class IntegrationsPresistence:
         self.db.query(ExternalAppsInstall).filter(ExternalAppsInstall.store_hash == shop_hash).delete()
         self.db.commit()
         
-    def get_integration_by_user(self, domain_id: int, filters: list, user_id: int):
+    def get_integration_by_user(self, domain_id: Optional[int], filters: list, user_id: Optional[int]):
         query = self.db.query(UserIntegration)
-        filters_list = []
-        if domain_id:
-            filters_list.append(UserIntegration.domain_id == domain_id)
-            
-        if user_id:
-            filters_list.append(UserIntegration.user_id == user_id)
+
+        or_conditions = []
+        if domain_id is not None:
+            or_conditions.append(UserIntegration.domain_id == domain_id)
+        if user_id is not None:
+            or_conditions.append(UserIntegration.user_id == user_id)
+
+        if or_conditions:
+            query = query.filter(or_(*or_conditions))
 
         if filters:
-            filters_list.append(UserIntegration.service_name.notin_(filters))
-
-        if filters_list:
-            query = query.filter(and_(*filters_list))
+            query = query.filter(UserIntegration.service_name.notin_(filters))
 
         return query.all()
     
@@ -106,11 +106,15 @@ class IntegrationsPresistence:
     def delete_integration(self, domain_id: Optional[int], service_name: str, user_id: Optional[str]):
         query = self.db.query(UserIntegration).filter(UserIntegration.service_name == service_name)
 
+        or_conditions = []
         if domain_id is not None:
-            query = query.filter(UserIntegration.domain_id == domain_id)
+            or_conditions.append(UserIntegration.domain_id == domain_id)
         if user_id is not None:
-            query = query.filter(UserIntegration.user_id == user_id)
-            
+            or_conditions.append(UserIntegration.user_id == user_id)
+
+        if or_conditions:
+            query = query.filter(or_(*or_conditions))
+
         query.delete()
         self.db.commit()
 
