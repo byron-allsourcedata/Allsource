@@ -75,10 +75,10 @@ interface GoogleADSConnectProps {
     open: boolean
     initApiKey?: string;
     boxShadow?: string;
-    Invalid_api_key?: boolean;
+    invalid_api_key?: boolean;
 }
 
-const GoogleADSConnectPopup = ({ open, handlePopupClose, boxShadow }: GoogleADSConnectProps) => {
+const GoogleADSConnectPopup = ({ open, handlePopupClose, boxShadow, invalid_api_key }: GoogleADSConnectProps) => {
     const [value, setValue] = useState('1')
     const [loading, setLoading] = useState(false);
 
@@ -212,6 +212,17 @@ const GoogleADSConnectPopup = ({ open, handlePopupClose, boxShadow }: GoogleADSC
                                     >
                                         Connect to GoogleAds
                                     </Button>
+                                    {invalid_api_key && (
+                                        <Typography color="error" sx={{
+                                            fontFamily: "Nunito Sans",
+                                            fontSize: "14px",
+                                            fontWeight: "600",
+                                            lineHeight: "21.82px",
+                                            marginTop: "10px"
+                                        }}>
+                                            Invalid API Key detected. Please reconnect to GoogleAds and try again
+                                        </Typography>
+                                    )}
                                 </Box>
                             </Box>
 

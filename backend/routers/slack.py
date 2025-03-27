@@ -42,14 +42,14 @@ async def get_authorize_url(domain = Depends(check_domain),
 async def get_channels(user=Depends(check_user_authentication),
                        domain = Depends(check_domain),
                        slack_service: SlackService = Depends(get_slack_service)):
-    return slack_service.get_channels(domain_id = domain.id)
+    return slack_service.get_channels(domain_id = domain.id, user_id=user.get('id'))
 
 @router.post("/create-channel")
 async def get_channels(slack_create_List_request: SlackCreateListRequest,
                        user=Depends(check_user_authentication),
                        domain = Depends(check_domain),
                        slack_service: SlackService = Depends(get_slack_service)):
-    return slack_service.create_channel(domain_id = domain.id, channel_name = slack_create_List_request.name)
+    return slack_service.create_channel(domain_id = domain.id, user_id=user.get('id'), channel_name = slack_create_List_request.name)
 
 @router.post(
             "/events", 

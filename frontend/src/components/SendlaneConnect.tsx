@@ -18,17 +18,7 @@ interface CreateSendlaneProps {
     open: boolean
     initApiKey?: string;
     boxShadow?: string;
-    Invalid_api_key?: boolean;
-}
-
-interface IntegrationsCredentials {
-    id: number
-    access_token: string
-    ad_account_id: string
-    shop_domain: string
-    data_center: string
-    service_name: string
-    is_with_suppression: boolean
+    invalid_api_key?: boolean;
 }
 
 const klaviyoStyles = {
@@ -91,7 +81,7 @@ const klaviyoStyles = {
     },
 }
 
-const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Invalid_api_key }: CreateSendlaneProps) => {
+const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, invalid_api_key }: CreateSendlaneProps) => {
     const { triggerSync } = useIntegrationContext();
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
@@ -397,12 +387,17 @@ const SendlaneConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Inv
                                         variant="outlined"
                                         fullWidth
                                         margin="normal"
-                                        error={apiKeyError || Invalid_api_key}
-                                        helperText={apiKeyError ? 'API Key is required' : ''}
+                                        error={invalid_api_key}
+                                        helperText={invalid_api_key ? 'Invalid API Key' : ''}
                                         value={apiKey}
                                         onChange={handleApiKeyChange}
                                         InputLabelProps={{ sx: klaviyoStyles.inputLabel }}
-                                        InputProps={{ sx: klaviyoStyles.formInput }}
+                                        InputProps={{
+                                            sx: {
+                                                ...klaviyoStyles.formInput,
+                                                borderColor: invalid_api_key ? 'red' : 'inherit',
+                                            },
+                                        }}
                                     />
                                 </Box>
                                 {instructions.length > 0 && (<Box sx={{ background: '#f0f0f0', border: '1px solid #efefef', borderRadius: '4px', p: 2 }}>

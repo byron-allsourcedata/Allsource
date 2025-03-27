@@ -10,7 +10,7 @@ import sys
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, or_
 from sqlalchemy.exc import PendingRollbackError
 from dotenv import load_dotenv
 from utils import get_utc_aware_date
@@ -65,9 +65,12 @@ def get_lead_attributes(session, lead_users_id, data_sync_id):
         IntegrationUserSync
     ) \
     .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id) \
-    .join(UserIntegration, UserIntegration.domain_id == LeadUser.domain_id) \
+    .join(UserIntegration, 
+          or_(UserIntegration.user_id == LeadUser.user_id, 
+              UserIntegration.domain_id == LeadUser.domain_id))\
     .join(IntegrationUserSync, IntegrationUserSync.integration_id == UserIntegration.id) \
-    .filter(LeadUser.id == lead_users_id, IntegrationUserSync.id == data_sync_id) \
+    .filter(LeadUser.id == lead_users_id, 
+            IntegrationUserSync.id == data_sync_id) \
     .first()
 
     if result:
@@ -156,7 +159,8 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
             'google_ads': integration_service.google_ads,
             'webhook': integration_service.webhook,
             'hubspot': integration_service.hubspot,
-            'sales_force': integration_service.sales_force
+            'sales_force': integration_service.sales_force,
+            's3': integration_service.s3
         }
         
         service = service_map.get(service_name)

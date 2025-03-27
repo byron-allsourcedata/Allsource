@@ -32,6 +32,7 @@ import OmnisendConnect from "@/components/OmnisendConnect";
 import MailchimpConnect from "@/components/MailchimpConnect";
 import RevenueTracking from "@/components/RevenueTracking";
 import SendlaneConnect from "@/components/SendlaneConnect";
+import S3Connect from "@/components/S3Connect";
 import AttentiveIntegrationPopup from "@/components/AttentiveIntegrationPopup";
 import { useNotification } from "@/context/NotificationContext";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -615,7 +616,8 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
     { image: 'hubspot.svg', service_name: 'hubspot' },
     { image: 'google-ads.svg', service_name: 'google_ads' },
     { image: 'salesforce-icon.svg', service_name: 'sales_force' },
-    { image: 'bingads-icon.svg', service_name: 'bing_ads' }
+    { image: 'bingads-icon.svg', service_name: 'bing_ads' },
+    { image: 's3-icon.svg', service_name: 's3' }
   ];
 
   const integratedServices = integrationsCredentials.map(cred => cred.service_name);
@@ -714,6 +716,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
           handleClose={handleClose}
           onSave={handleSaveSettings}
           initApiKey={integrationsCredentials.find(integration => integration.service_name === 'klaviyo')?.access_token}
+          invalid_api_key={integrationsCredentials.find(integration => integration.service_name === 'klaviyo')?.is_failed === true}
           boxShadow="rgba(0, 0, 0, 0.1)"
         />
       )}
@@ -723,6 +726,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
           handleClose={handleClose}
           onSave={handleSaveSettings}
           initApiKey={integrationsCredentials.find(integration => integration.service_name === 'sales_force')?.access_token}
+          invalid_api_key={integrationsCredentials.find(integration => integration.service_name === 'sales_force')?.is_failed === true}
           boxShadow="rgba(0, 0, 0, 0.1)"
         />
       )}
@@ -733,6 +737,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
           handleClose={handleClose}
           onSave={handleSaveSettings}
           initApiKey={integrationsCredentials.find(integration => integration.service_name === 'attentive')?.access_token}
+          invalid_api_key={integrationsCredentials.find(integration => integration.service_name === 'attentive')?.is_failed === true}
           boxShadow="rgba(0, 0, 0, 0.1)"
         />
       )}
@@ -742,6 +747,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
           open={true}
           onClose={handleClose}
           onSave={handleSaveSettings}
+          invalid_api_key={integrationsCredentials.find(integration => integration.service_name === 'meta')?.is_failed === true}
           isEdit={true}
           boxShadow="rgba(0, 0, 0, 0.1)"
         />
@@ -772,6 +778,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
           handleClose={handleClose}
           onSave={handleSaveSettings}
           initApiKey={integrationsCredentials.find(integration => integration.service_name === 'omnisend')?.access_token}
+          invalid_api_key={integrationsCredentials.find(integration => integration.service_name === 'omnisend')?.is_failed === true}
           boxShadow="rgba(0, 0, 0, 0.1)"
         />
       )}
@@ -782,6 +789,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
           handleClose={handleClose}
           onSave={handleSaveSettings}
           initApiKey={integrationsCredentials.find(integration => integration.service_name === 'mailchimp')?.access_token}
+          invalid_api_key={integrationsCredentials.find(integration => integration.service_name === 'mailchimp')?.is_failed === true}
           boxShadow="rgba(0, 0, 0, 0.1)"
         />
       )}
@@ -792,6 +800,18 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
           handleClose={handleClose}
           onSave={handleSaveSettings}
           initApiKey={integrationsCredentials.find(integration => integration.service_name === 'sendlane')?.access_token}
+          invalid_api_key={integrationsCredentials.find(integration => integration.service_name === 'sendlane')?.is_failed === true}
+          boxShadow="rgba(0, 0, 0, 0.1)"
+        />
+      )}
+
+      {openModal === 's3' && (
+        <S3Connect
+          open={true}
+          handleClose={handleClose}
+          onSave={handleSaveSettings}
+          initApiKey={integrationsCredentials.find(integration => integration.service_name === 's3')?.access_token}
+          invalid_api_key={integrationsCredentials.find(integration => integration.service_name === 's3')?.is_failed === true}
           boxShadow="rgba(0, 0, 0, 0.1)"
         />
       )}
@@ -800,6 +820,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
         <ZapierConnectPopup
           open={true}
           handlePopupClose={handleClose}
+          invalid_api_key={integrationsCredentials.find(integration => integration.service_name === 'zapier')?.is_failed === true}
           boxShadow="rgba(0, 0, 0, 0.1)"
         />
       )}
@@ -808,6 +829,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
         <SlackConnectPopup
           open={true}
           handlePopupClose={handleClose}
+          invalid_api_key={integrationsCredentials.find(integration => integration.service_name === 'slack')?.is_failed === true}
           boxShadow="rgba(0, 0, 0, 0.1)"
         />
       )}
@@ -816,6 +838,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
         <GoogleADSConnectPopup
           open={true}
           handlePopupClose={handleClose}
+          invalid_api_key={integrationsCredentials.find(integration => integration.service_name === 'google_ads')?.is_failed === true}
           boxShadow="rgba(0, 0, 0, 0.1)"
         />
       )}
@@ -824,6 +847,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
         <BingAdsIntegrationPopup
           open={true}
           handleClose={handleClose}
+          invalid_api_key={integrationsCredentials.find(integration => integration.service_name === 'bing_ads')?.is_failed === true}
           boxShadow="rgba(0, 0, 0, 0.1)"
         />
       )}
@@ -832,6 +856,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
         <WebhookConnectPopup
           open={true}
           handleClose={handleClose}
+          invalid_api_key={integrationsCredentials.find(integration => integration.service_name === 'webhook')?.is_failed === true}
           boxShadow="rgba(0, 0, 0, 0.01)"
         />
       )}
@@ -841,6 +866,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
           open={true}
           handleClose={handleClose}
           initApiKey={integrationsCredentials.find(integration => integration.service_name === 'hubspot')?.access_token}
+          invalid_api_key={integrationsCredentials.find(integration => integration.service_name === 'hubspot')?.is_failed === true}
           boxShadow="rgba(0, 0, 0, 0.01)"
         />
       )}

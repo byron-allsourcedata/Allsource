@@ -53,44 +53,47 @@ class GoogleAdsIntegrationsService:
                 response = self.client.request(method, redirect_url, headers=headers, json=json, data=data, params=params)
         return response
 
-    def get_credentials(self, domain_id: str):
-        credential = self.integrations_persisntece.get_credentials_for_service(domain_id, SourcePlatformEnum.GOOGLE_ADS.value)
+    def get_credentials(self, domain_id: int, user_id: int):
+        credential = self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.GOOGLE_ADS.value)
         return credential
         
 
     def __save_integrations(self, access_token: str, domain_id: int, user: dict):
-        credential = self.get_credentials(domain_id)
+        credential = self.get_credentials(domain_id, user.get('id'))
         if credential:
             credential.access_token = access_token
             credential.is_failed = False
             credential.error_message = None
             self.integrations_persisntece.db.commit()
             return credential
-        integartions = self.integrations_persisntece.create_integration({
-            'domain_id': domain_id,
+        
+        common_integration = os.getenv('COMMON_INTEGRATION') == 'True'
+        integration_data = {
             'access_token': access_token,
             'full_name': user.get('full_name'),
             'service_name': SourcePlatformEnum.GOOGLE_ADS.value
-        })
-        if not integartions:
-            raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
-        return integartions
+        }
 
-    def edit_sync(self, leads_type: str, list_id: str, list_name: str, integrations_users_sync_id: int, domain_id: int, created_by: str, data_map: List[DataMap] = None ,tags_id: str = None):
-        credentials = self.get_credentials(domain_id)
-        data_syncs = self.sync_persistence.get_filter_by(domain_id=domain_id)
-        for sync in data_syncs:
-            if sync.get('integration_id') == credentials.id and sync.get('leads_type') == leads_type:
-                return
+        if common_integration:
+            integration_data['user_id'] = user.get('id')
+        else:
+            integration_data['domain_id'] = domain_id
+            
+        integartion = self.integrations_persisntece.create_integration(integration_data)
+        
+        if not integartion:
+            raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
+        
+        return integartion
+
+    def edit_sync(self, leads_type: str, integrations_users_sync_id: int, domain_id: int, created_by: str, user_id: int):
+        credentials = self.get_credentials(domain_id, user_id)
         sync = self.sync_persistence.edit_sync({
             'integration_id': credentials.id,
-            'domain_id': domain_id,
             'leads_type': leads_type,
             'created_by': created_by,
         }, integrations_users_sync_id)
-        if tags_id: 
-            self.update_tag_relationships_lists(tags_id=tags_id, list_id=list_id, api_key=credentials.access_token)
-
+        return sync
 
     def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
         client_id = os.getenv("CLIENT_GOOGLE_ID")
@@ -115,12 +118,8 @@ class GoogleAdsIntegrationsService:
         }
     
     
-    async def create_sync(self, customer_id: str, leads_type: str, list_id: str, list_name: str, domain_id: int, created_by: str, tags_id: str = None, data_map: List[DataMap] = []):
-        credentials = self.get_credentials(domain_id)
-        data_syncs = self.sync_persistence.get_filter_by(domain_id=domain_id)
-        for sync in data_syncs:
-            if sync.get('integration_id') == credentials.id and sync.get('leads_type') == leads_type:
-                return
+    async def create_sync(self, customer_id: str, leads_type: str, list_id: str, list_name: str, domain_id: int, created_by: str, user: dict, data_map: List[DataMap] = []):
+        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'list_id': list_id,
@@ -131,8 +130,7 @@ class GoogleAdsIntegrationsService:
             'created_by': created_by,
             'customer_id': customer_id
         })
-        if tags_id: 
-            self.create_tag_relationships_lists(tags_id=tags_id, list_id=list_id, api_key=credentials.access_token)
+        return sync 
 
     def create_smart_audience_sync(self, customer_id: str, smart_audience_id: UUID, sent_contacts: int, list_id: str, list_name: str, domain_id: int, created_by: str, tags_id: str = None, data_map: List[DataMap] = []):
         credentials = self.get_credentials(domain_id)
@@ -277,9 +275,9 @@ class GoogleAdsIntegrationsService:
         client = GoogleAdsClient(credentials=credentials, developer_token=os.getenv("GOOGLE_ADS_TOKEN"))
         return client
     
-    def create_list(self, list, domain_id):
+    def create_list(self, list, domain_id, user_id):
         try:
-            credential = self.get_credentials(domain_id)
+            credential = self.get_credentials(domain_id, user_id)
             client = self.get_google_ads_client(credential.access_token)
             channel = self.create_customer_match_user_list(client, list.customer_id, list.name)
             if not channel:
@@ -427,9 +425,9 @@ class GoogleAdsIntegrationsService:
 
         return hashlib.sha256(s.encode()).hexdigest()
     
-    def get_user_lists(self, domain_id, customer_id):
+    def get_user_lists(self, domain_id: int, customer_id: int, user_id: int):
         try:
-            credential = self.get_credentials(domain_id)
+            credential = self.get_credentials(domain_id, user_id)
             client = self.get_google_ads_client(credential.access_token)
             googleads_service = client.get_service("GoogleAdsService")
             query = """
@@ -460,9 +458,9 @@ class GoogleAdsIntegrationsService:
             logger.error(f"An unexpected error occurred: {e}")
             return {'status': IntegrationsStatus.CREDENTAILS_INVALID.value, 'message': str(e)}
         
-    def get_customer_info_and_resource_name(self, domain_id):
+    def get_customer_info_and_resource_name(self, domain_id, user_id):
         try:
-            credential = self.get_credentials(domain_id)
+            credential = self.get_credentials(domain_id, user_id)
             client = self.get_google_ads_client(credential.access_token)
             googleads_service = client.get_service("GoogleAdsService")
             customer_service = client.get_service("CustomerService")

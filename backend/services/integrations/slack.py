@@ -7,6 +7,7 @@ import json
 from typing import List
 from urllib.parse import unquote
 import base64
+import os
 from datetime import datetime, timedelta
 from utils import extract_first_email
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
@@ -37,27 +38,47 @@ class SlackService:
         self.lead_persistence = lead_persistence
         self.million_verifier_integrations = million_verifier_integrations
 
-    def get_credential(self, domain_id):
-        return self.integrations_persistence.get_credentials_for_service(domain_id, SourcePlatformEnum.SLACK.value)
+    def get_credential(self, domain_id, user_id):
+        return self.integrations_persistence.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.SLACK.value)
+    
+    
+    def edit_sync(self, leads_type: str, integrations_users_sync_id: int, domain_id: int, created_by: str, user_id: int, data_map: List[DataMap] = []):
+        credentials = self.get_credential(domain_id, user_id)
+        sync = self.sync_persistence.edit_sync({
+            'integration_id': credentials.id,
+            'leads_type': leads_type,
+            'data_map': data_map,
+            'created_by': created_by,
+        }, integrations_users_sync_id)
+        return sync
     
     def update_credential(self, domain_id, access_token):
         return self.integrations_persistence.update_credential_for_service(domain_id, SourcePlatformEnum.SLACK.value, access_token)
 
     def save_integration(self, domain_id: int, access_token: str, user: dict, team_id):
-        credential = self.get_credential(domain_id)
+        credential = self.get_credential(domain_id, user.get('id'))
         if credential:
             return self.update_credential(domain_id, access_token)
         
-        integrations = self.integrations_persistence.create_integration({
-            'domain_id': domain_id,
+        common_integration = os.getenv('COMMON_INTEGRATION') == 'True'
+        integration_data = {
             'access_token': access_token,
             'full_name': user.get('full_name'),
             'service_name': SourcePlatformEnum.SLACK.value,
             'slack_team_id': team_id
-        })
-        if not integrations:
+        }
+
+        if common_integration:
+            integration_data['user_id'] = user.get('id')
+        else:
+            integration_data['domain_id'] = domain_id
+            
+        integartion = self.integrations_persistence.create_integration(integration_data)
+        
+        if not integartion:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
-        return integrations
+        
+        return integartion
 
     def generate_authorize_url(self, user_id, domain_id):
         state_payload = json.dumps({"user_id": user_id, "domain_id": domain_id})
@@ -69,8 +90,7 @@ class SlackService:
                 "channels:join",
                 "channels:manage",
                 "channels:read",
-                "chat:write",
-                "chat:write.public"
+                "chat:write"
             ],
             user_scopes=[],
             redirect_uri=SlackConfig.redirect_url,
@@ -110,14 +130,17 @@ class SlackService:
                 return {'status': "Maximiz user not found"}
         else:
             return {'status': "OAuth failed"}
-    
-    def get_bot_token_by_slack_team_id(self, team_id):
-        user_integration = self.integrations_persistence.get_credential(slack_team_id=team_id)
-        if user_integration:
-            return user_integration.access_token
+     
+    def update_app_home_opened(self, team_id):
+        self.integrations_persistence.update_app_home_opened(slack_team_id=team_id)
+        return True
     
     def handle_app_home_opened(self, user_id, team_id):
-        bot_token = self.get_bot_token_by_slack_team_id(team_id)
+        user_integration = self.integrations_persistence.get_credential(slack_team_id=team_id)
+        if user_integration.is_slack_first_message_sent:
+            return
+        
+        bot_token = user_integration.access_token
         if not bot_token:
             logger.error(f"Error: Bot token: {bot_token} not found")
             return
@@ -128,6 +151,7 @@ class SlackService:
                 channel=user_id,
                 text="Welcome to App Home! I'll share updates via Contacts using the Maximiz app."
             )
+            self.update_app_home_opened(team_id)
         except SlackApiError as e:
             logger.error(f"Error sending message: {e.response['error']}")
 
@@ -142,13 +166,13 @@ class SlackService:
         user_id = event.get("user")
 
         if event_type == "app_home_opened":
-            self.handle_app_home_opened(user_id, team_id)
+            self.handle_app_home_opened(user_id=user_id, team_id=team_id)
 
         elif event_type == "app_uninstalled":
-            self.handle_app_uninstalled(team_id)
+            self.handle_app_uninstalled(team_id=team_id)
 
-    def create_channel(self, domain_id, channel_name):
-        user_integration = self.get_credential(domain_id)
+    def create_channel(self, domain_id, user_id, channel_name):
+        user_integration = self.get_credential(domain_id, user_id)
         client = WebClient(token=user_integration.access_token)
         try:
             response = client.conversations_create(
@@ -249,8 +273,8 @@ class SlackService:
         user_text = "\n".join([f"*{key}:* {value}" for key, value in data.items()])
         return user_text
 
-    def get_channels(self, domain_id):
-        user_integration = self.get_credential(domain_id)
+    def get_channels(self, domain_id, user_id):
+        user_integration = self.get_credential(domain_id, user_id)
         if user_integration:
             client = WebClient(token=user_integration.access_token)
             try:
@@ -289,15 +313,11 @@ class SlackService:
             logger.error(f"Slack API error: {e.response['error']}")
             return ProccessDataSyncResult.LIST_NOT_EXISTS.value
         
-    async def create_sync(self, leads_type: str, list_id: str, list_name: str, domain_id: int, created_by: str, data_map: List[DataMap]=None):
-        credentials = self.integrations_persistence.get_credentials_for_service(domain_id, SourcePlatformEnum.SLACK.value)
+    async def create_sync(self, leads_type: str, list_id: str, list_name: str, domain_id: int, created_by: str, user: dict):
+        credentials = self.integrations_persistence.get_credentials_for_service(domain_id=domain_id, user_id=user.get('id'), service_name=SourcePlatformEnum.SLACK.value)
         join_result = self.join_channel(credentials.access_token, list_id)
         if join_result['status'] == IntegrationsStatus.JOIN_CHANNEL_IS_FAILED.value:
             return join_result
-        data_syncs = self.sync_persistence.get_filter_by(domain_id=domain_id)
-        for sync in data_syncs:
-            if sync.get('integration_id') == credentials.id and sync.get('leads_type') == leads_type:
-                return
         self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'list_id': list_id,

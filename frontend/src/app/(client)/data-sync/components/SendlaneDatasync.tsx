@@ -245,13 +245,14 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, d
                     list_id: list?.id,
                     list_name: list?.list_name,
                     leads_type: selectedRadioValue,
-                    // data_map: customFields
+                    //data_map: customFields
                 }, {
                     params: {
                         service_name: 'sendlane'
                     }
                 });
                 if (response.status === 201 || response.status === 200) {
+                    triggerSync();
                     onClose();
                     showToast('Data sync updated successfully');
                 }

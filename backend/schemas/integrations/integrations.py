@@ -44,6 +44,9 @@ class MetaCredentials(BaseModel):
 class SupperssionSet(BaseModel):
     suppression: bool
 
+class S3Credentials(BaseModel):
+    secret_key: str
+    secret_id: str
 
 class IntegrationCredentials(BaseModel):
     shopify: Optional[ShopifyOrBigcommerceCredentials] = None
@@ -58,6 +61,7 @@ class IntegrationCredentials(BaseModel):
     hubspot: Optional[HubSpotCredentials] = None
     google_ads: Optional[GoogleAdsCredentials] = None
     bing_ads: Optional[BingAdsCredentials] = None
+    s3: Optional[S3Credentials] = None
     sales_force: Optional[SalesForceCredentials] = None
     pixel_install: bool = False
     supperssion: bool = False

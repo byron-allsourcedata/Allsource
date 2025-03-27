@@ -30,7 +30,8 @@ async def create_sync(data: SyncCreate, service_name: str = Query(...),
         await service.create_sync(
             **data,
             domain_id=domain.id,
-            created_by=user.get('full_name')
+            created_by=user.get('full_name'),
+            user=user
         )
 
 @router.post('/create-smart-audience-sync')
@@ -101,6 +102,7 @@ async def edit_sync(data: SyncCreate,
         service.edit_sync(
             **data,
             domain_id=domain.id,
+            user_id=user.get('id'),
             created_by=user.get('full_name'),
         )
 
@@ -110,7 +112,7 @@ async def get_tags(service_name: str = Query(...),
                    user = Depends(check_user_authentication), domain = Depends(check_domain)):
     with integration_service as service:
         service = getattr(service, service_name.lower())
-        return service.get_tags(domain.id)
+        return service.get_tags(domain.id, user)
 
 @router.post('/sync/tags')
 async def create_tag(tag_data: CreateListOrTags,
@@ -119,4 +121,4 @@ async def create_tag(tag_data: CreateListOrTags,
                       user = Depends(check_user_authorization), domain = Depends(check_domain)):
     with integrations_service as service:
         service = getattr(service, service_name)
-        return service.create_tags(tag_data.name, domain.id)
+        return service.create_tags(tag_data.name, domain.id, user)

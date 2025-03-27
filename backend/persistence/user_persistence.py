@@ -39,7 +39,7 @@ class UserPersistence:
         self.db.add(user_domain)
         self.db.commit()
         return user_domain
-
+    
     def charge_credit(self, user_id: int):
         user = self.db.query(Users).filter(Users.id == user_id).first()
         
