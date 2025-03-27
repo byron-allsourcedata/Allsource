@@ -129,13 +129,12 @@ async def parse_csv_file(*, data, source_id, db_session, s3_session, connection,
                 parsed_date = datetime.strptime(transaction_date, '%m/%d/%Y %H:%M')
                 transaction_date = parsed_date.isoformat()
             except Exception as date_error:
-                logging.warning(f"Ошибка преобразования даты '{transaction_date}': {date_error}")
+                logging.warning(f"Error date: '{transaction_date}': {date_error}")
 
             try:
-                # logging.debug(f"Исходное значение суммы: '{sale_amount_raw}'")
                 sale_amount = float(sale_amount_raw.replace('$', '').replace(',', '').strip())
             except Exception as sale_error:
-                logging.warning(f"Ошибка преобразования суммы '{sale_amount_raw}': {sale_error}")
+                logging.warning(f"Error amount: '{sale_amount_raw}': {sale_error}")
                 sale_amount = 0.0
 
             # email = row.get(email_field, "")
