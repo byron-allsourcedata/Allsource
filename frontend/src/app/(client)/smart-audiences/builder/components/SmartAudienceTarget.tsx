@@ -1,7 +1,8 @@
-import { LinearProgress, Typography, TextField, Chip, Button, FormControl, Select, MenuItem, InputAdornment, IconButton, TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody, SelectChangeEvent, ToggleButton, Slider, Tooltip } from "@mui/material"
+"use client";
+import { LinearProgress, Typography, TextField, Chip, Button, FormControl, Select, MenuItem, InputAdornment, IconButton, TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody, SelectChangeEvent, ToggleButton, Slider, Tooltip, Skeleton } from "@mui/material"
 import { Box } from "@mui/system"
 import { smartAudiences } from "../../smartAudiences"
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from "@mui/icons-material/Search";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -11,6 +12,8 @@ import ExpandableFilter from "./ValidationFilters";
 import { useRouter } from "next/navigation";
 import CalculationPopup from "./CalculationPopup";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
+import { showErrorToast, showToast } from "@/components/ToastNotification";
+import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 
 interface ValidationData {
     recency_params: { [key: string]: string };
@@ -30,22 +33,33 @@ interface SelectedData {
 
 interface SmartAudienceTargetProps {
     useCaseType: string;
+    sourceData: DataItem[];
+    lookalikeData: DataItem[];
 }
 
+interface DataItem {
+    id: string;
+    name: string;
+    type: string;
+    size: string;
+}
 
-const sourceData = [
-    { id: 'uuid-123', name: "My orders", type: "Customer Conversions", size: "10,000" },
-    { id: 'uuid-124', name: "Failed", type: "Lead Failures", size: "35,000" },
-    { id: 'uuid-125', name: "Intent list", type: "Intent", size: "37,000" },
-];
+const toSnakeCase = (str: string) => {
+    const exceptions: Record<string, string> = {
+        "LinkedIn": "linkedin",
+    };
 
-const lookalikeData = [
-    { id: 'uuid-126', name: "List 2", type: "Customer Conversions", size: "4,000,000" },
-    { id: 'uuid-127', name: "List 1", type: "Customer Conversions", size: "20,000" },
-    { id: 'uuid-128', name: "New List", type: "Customer Conversions", size: "50,000" },
-];
+    if (exceptions[str]) {
+        return exceptions[str];
+    }
 
-const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType }) => {
+    return str
+        .replace(/\s+/g, '_')
+        .replace(/([a-z])([A-Z])/g, '$1_$2')
+        .toLowerCase();
+};
+
+const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType, sourceData, lookalikeData }) => {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [audienceName, setAudienceName] = useState<string>("");
@@ -62,6 +76,8 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
     const [isValidateSkip, setIsValidateSkip] = useState(false);
     const [validationFilters, setValidationFilters] = useState<ValidationData | null>();
     const [targetAudience, setTargetAudience] = useState<string | ''>('');
+    const [filteredSourceData, setFilteredSourceData] = useState<DataItem[]>([]);
+    const [filteredLookalikeData, setFilteredLookalikeData] = useState<DataItem[]>([]);
 
 
 
@@ -135,6 +151,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
         );
     };
 
+
     const handleOnSkip = () => {
         setIsValidate(true)
         setIsValidateSkip(true)
@@ -201,8 +218,8 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
         return acc;
     }, {} as Record<string, { source: string; type: string; id: string }[]>);
 
-    const currentData = sourceType === "Source" ? sourceData : lookalikeData;
-    const filteredData = getFilteredData(currentData);
+
+
 
     const handleCalculate = () => {
         setAudienceSize(123)
@@ -218,29 +235,47 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
 
     const handleGenerateSmartAudience = async () => {
         try {
-        const requestData = {
-            use_case: useCaseType,
-            target_schema: targetAudience,
-            data_sources: selectedSources,
-            validation_params: validationFilters,
-            contacts_to_validate: isValidateSkip ? null : value,
-            smart_audience_name: audienceName
-        };
-    
-        const filteredRequestData = Object.fromEntries(
-            Object.entries(requestData).filter(([_, v]) => v !== null && v !== undefined)
-        );
-        
-        
-        const response = await axiosInstance.post('/audience-smarts/builder', filteredRequestData);
-        } 
+            setLoading(true)
+            const requestData = {
+                use_case: toSnakeCase(useCaseType),
+                target_schema: targetAudience,
+                data_sources: selectedSources,
+                validation_params: validationFilters,
+                contacts_to_validate: isValidateSkip ? null : value,
+                smart_audience_name: audienceName
+            };
+
+            const filteredRequestData = Object.fromEntries(
+                Object.entries(requestData).filter(([_, v]) => v !== null && v !== undefined)
+            );
+
+
+            const response = await axiosInstance.post('/audience-smarts/builder', filteredRequestData);
+            if (response.data.status === "SUCCESS") {
+                showToast("New Smart Audience successfully created")
+                router.push('/smart-audiences')
+            }
+        }
         catch {
-            
+            showErrorToast('An error occurred while creating a new Smart Audience');
+        } finally {
+            setLoading(false)
         }
     };
 
+
+    useEffect(() => {
+        if (sourceType === "Source") {
+            setFilteredSourceData(getFilteredData(sourceData));
+        } else if (sourceType === "Lookalike") {
+            setFilteredLookalikeData(getFilteredData(lookalikeData));
+        }
+    }, [sourceType,  sourceData, lookalikeData, selectedSources]);
+
+
     return (
         <Box sx={{ mb: 4 }}>
+            {loading && <CustomizedProgressBar/>}
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minWidth: '100%', flexGrow: 1, position: "relative", flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px", mt: 2, }}>
                 {uploadProgress !== null && (
                     <Box sx={{ width: "100%", position: "absolute", top: 0, left: 0, zIndex: 1200 }}>
@@ -285,7 +320,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
             </Box>
 
             {/* Select your Contacts */}
-            {(targetAudience && useCaseType) &&
+            {(targetAudience && useCaseType !== null) &&
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minWidth: '100%', flexGrow: 1, position: "relative", flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px", mt: 2 }}>
                     {uploadProgress !== null && (
                         <Box sx={{ width: "100%", position: "absolute", top: 0, left: 0, zIndex: 1200 }}>
@@ -334,7 +369,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
                             <Box>
                                 {Object.entries(groupedSources).map(([key, values]) => (
                                     <Box key={key} sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 2 }}>
-                                        <Typography sx={{ fontFamily: 'Roboto', fontWeight: '400', fontSize: '14px', color: '#202124' }}>{key}</Typography>
+                                        <Typography sx={{ fontFamily: 'Roboto', fontWeight: '400', fontSize: '14px', color: '#202124' }}>{key.charAt(0).toUpperCase() + key.slice(1)}</Typography>
                                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                                             {values.map(({ source, type, id }, index) => (
                                                 <Chip
@@ -392,8 +427,8 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
                                 <FormControl variant="outlined">
                                     <Select value={option} onChange={handleSelectOption} displayEmpty sx={{ ...smartAudiences.text, width: "316px", borderRadius: "4px", pt: 0 }}>
                                         <MenuItem value="" disabled sx={{ display: "none", mt: 0 }}>Select an option</MenuItem>
-                                        <MenuItem className="second-sub-title" value={"Include"}>Include</MenuItem>
-                                        <MenuItem className="second-sub-title" value={"Exclude"}>Exclude</MenuItem>
+                                        <MenuItem className="second-sub-title" value={"include"}>Include</MenuItem>
+                                        <MenuItem className="second-sub-title" value={"exclude"}>Exclude</MenuItem>
                                     </Select>
                                 </FormControl>
 
@@ -434,8 +469,8 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
                                         sx={{ pb: '2px' }}
                                     />
                                     {isTableVisible && (
-                                        <TableContainer component={Paper}>
-                                            <Table>
+                                        <TableContainer component={Paper} sx={{ maxHeight: '32vh' }}>
+                                            <Table stickyHeader>
                                                 <TableHead>
                                                     <TableRow>
                                                         <TableCell className="black-table-data" >Name</TableCell>
@@ -444,8 +479,8 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
                                                     </TableRow>
                                                 </TableHead>
                                                 <TableBody>
-                                                    {filteredData.map((row) => (
-                                                        <TableRow key={row.name} hover sx={{ cursor: "pointer" }} onClick={() => handleSelectRow(row)}>
+                                                    {(sourceType === "Source" ? filteredSourceData : filteredLookalikeData).map((row) => (
+                                                        <TableRow key={row.id} hover sx={{ cursor: "pointer" }} onClick={() => handleSelectRow(row)}>
                                                             <TableCell className="black-table-header">{row.name}</TableCell>
                                                             <TableCell className="black-table-header">{row.type}</TableCell>
                                                             <TableCell className="black-table-header">{row.size}</TableCell>
@@ -698,8 +733,8 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
                         </Button>
                         <Button
                             disabled={value === 0 ? true : false}
-                            variant="contained" onClick={() => handleCalculateActiveSegments(value ?? 0)} 
-                                sx={{
+                            variant="contained" onClick={() => handleCalculateActiveSegments(value ?? 0)}
+                            sx={{
                                 ...smartAudiences.buttonform,
                                 backgroundColor: "rgba(80, 82, 178, 1)",
                                 width: "120px",
@@ -762,7 +797,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
                 </Box>
             }
 
-            {(isValidateActiveSegments || isValidateSkip) &&
+            {((isValidateActiveSegments || isValidateSkip) && AudienceSize) &&
                 <Box>
                     <Box
                         sx={{

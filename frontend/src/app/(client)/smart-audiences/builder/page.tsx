@@ -1,21 +1,34 @@
 "use client";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
-import { Typography, LinearProgress, FormControl, Select, MenuItem, SelectChangeEvent } from "@mui/material";
+import { Typography, LinearProgress, FormControl, Select, MenuItem, SelectChangeEvent, Skeleton } from "@mui/material";
 import { Box } from "@mui/system";
 import { useState } from "react";
 import { smartAudiences } from "../smartAudiences";
 import SmartAudiencesContacts from "./components/SmartAudienceContacts";
 import SmartAudiencesTarget from "./components/SmartAudienceTarget";
+import { useFetchAudienceData } from "@/hooks/useFetchAudienceData";
 
 
 const SmartAudiencesBuilder: React.FC = () => {
-    const [loading, setLoading] = useState(false);
     const [useCaseType, setUseCaseType] = useState<string>("");
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
     const handleChangeSourceType = (event: SelectChangeEvent<string>) => {
         setUseCaseType(event.target.value);
     };
+
+    const { sourceData, lookalikeData, loading } = useFetchAudienceData();
+
+    if(loading){
+        return(
+            <Box sx={{display: 'flex', flexDirection: 'column', gap: 2,  mt:1, alignItems: 'center'}}>
+                <CustomizedProgressBar />
+                <Box sx={{alignItems: 'end', display:'flex', width: '73%', justifyContent: 'start'}}><Skeleton variant="text" width={'12vw'} sx={{ fontSize: '1.75rem', alignItems:'end'}} /></Box>
+            
+            <Skeleton variant="rectangular" width={'63vw'} height={'20vh'} sx={{borderRadius: '6px'}}/>
+            </Box>
+        )
+    }
 
 
     return (
@@ -40,7 +53,7 @@ const SmartAudiencesBuilder: React.FC = () => {
                                 <Typography sx={{ fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)" }}>Choose what you would like to use it for.</Typography>
                             </Box>
                             <FormControl variant="outlined">
-                                <Select value={useCaseType} onChange={handleChangeSourceType} displayEmpty sx={{ ...smartAudiences.text, width: "316px", borderRadius: "4px", pt: 0 }}>
+                                <Select value={useCaseType ? useCaseType : ''} onChange={handleChangeSourceType} displayEmpty sx={{ ...smartAudiences.text, width: "316px", borderRadius: "4px", pt: 0 }}>
                                     <MenuItem value="" disabled sx={{ display: "none", mt: 0 }}>Choose Use case Type</MenuItem>
                                     <MenuItem className="second-sub-title" value={"Meta"}>Meta</MenuItem>
                                     <MenuItem className="second-sub-title" value={"Google"}>Google</MenuItem>
@@ -54,10 +67,22 @@ const SmartAudiencesBuilder: React.FC = () => {
                         </Box>
 
                         {["Google", "Bing", "Meta"].includes(useCaseType) ? (
-                            <SmartAudiencesContacts />
+                            <SmartAudiencesContacts
+                                useCaseType={useCaseType}
+                                sourceData={sourceData}
+                                lookalikeData={lookalikeData}
+                            />
                         ) : (
-                            <SmartAudiencesTarget useCaseType={useCaseType}/>
+                            ["Email", "Tele Marketing", "Postal", "LinkedIn"].includes(useCaseType) && (
+                                <SmartAudiencesTarget
+                                    useCaseType={useCaseType}
+                                    sourceData={sourceData}
+                                    lookalikeData={lookalikeData}
+                                />
+                            )
                         )}
+
+
                     </Box>
                 </Box>
             </Box>

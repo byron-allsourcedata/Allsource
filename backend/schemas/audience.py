@@ -97,3 +97,11 @@ class SmartsAudienceObjectResponse(BaseModel):
 
 class UpdateSmartAudienceRequest(BaseModel):
     new_name: str
+
+
+class CreateSmartAudienceRequest(BaseModel):
+    smart_audience_name: str
+    use_case: str
+    data_sources: List[dict]
+    validation_params: Optional[dict] = None
+    contacts_to_validate: Optional[int] = None

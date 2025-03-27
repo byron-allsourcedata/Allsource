@@ -204,8 +204,13 @@ def get_audience_sources_service(
     return AudienceSourceService(audience_sources_persistence=audience_sources_persistence, domain_persistence=domain_persistence)
 
 def get_audience_smarts_service(
-        audience_smarts_persistence: AudienceSmartsPersistence = Depends(get_audience_smarts_persistence)):
-    return AudienceSmartsService(audience_smarts_persistence=audience_smarts_persistence)
+        audience_smarts_persistence: AudienceSmartsPersistence = Depends(get_audience_smarts_persistence),
+        lookalikes_persistence_service: AudienceLookalikesPersistence = Depends(get_lookalikes_persistence),
+        audience_sources_persistence: AudienceSourcesPersistence = Depends(get_audience_sources_persistence)
+    ):
+    return AudienceSmartsService(audience_smarts_persistence=audience_smarts_persistence,
+                                 lookalikes_persistence_service=lookalikes_persistence_service,
+                                 audience_sources_persistence=audience_sources_persistence)
 
 
 def get_slack_service(

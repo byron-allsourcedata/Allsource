@@ -1,3 +1,4 @@
+"use client";
 import { LinearProgress, Typography, TextField, Chip, Button, FormControl, Select, MenuItem, InputAdornment, IconButton, TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody, SelectChangeEvent } from "@mui/material"
 import { Box } from "@mui/system"
 import { smartAudiences } from "../../smartAudiences"
@@ -8,6 +9,9 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import Image from 'next/image';
 import { useRouter } from "next/navigation";
+import axiosInstance from "@/axios/axiosInterceptorInstance";
+import { showToast, showErrorToast } from "@/components/ToastNotification";
+import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 
 interface SelectedData {
     includeExclude: string;
@@ -16,19 +20,37 @@ interface SelectedData {
     selectedSourceId: string;
 }
 
-const sourceData = [
-    { id: 'uuid-123', name: "My orders", type: "Customer Conversions", size: "10,000" },
-    { id: 'uuid-124', name: "Failed", type: "Lead Failures", size: "35,000" },
-    { id: 'uuid-125', name: "Intent list", type: "Intent", size: "37,000" },
-];
 
-const lookalikeData = [
-    { id: 'uuid-126', name: "List 2", type: "Customer Conversions", size: "4,000,000" },
-    { id: 'uuid-127', name: "List 1", type: "Customer Conversions", size: "20,000" },
-    { id: 'uuid-128', name: "New List", type: "Customer Conversions", size: "50,000" },
-];
+interface DataItem {
+    id: string;
+    name: string;
+    type: string;
+    size: string;
+}
 
-const SmartAudiencesContacts: React.FC = () => {
+interface SmartAudienceContactsProps {
+    useCaseType: string;
+    sourceData: DataItem[];
+    lookalikeData: DataItem[];
+}
+
+const toSnakeCase = (str: string) => {
+    const exceptions: Record<string, string> = {
+        "LinkedIn": "linkedin",
+    };
+
+    if (exceptions[str]) {
+        return exceptions[str];
+    }
+
+    return str
+        .replace(/\s+/g, '_')
+        .replace(/([a-z])([A-Z])/g, '$1_$2')
+        .toLowerCase();
+};
+
+
+const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({ useCaseType, sourceData, lookalikeData }) => {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [audienceName, setAudienceName] = useState<string>("");
@@ -114,8 +136,36 @@ const SmartAudiencesContacts: React.FC = () => {
         setAudienceSize(null)
     }
 
+    const handleGenerateSmartAudience = async () => {
+        try {
+            setLoading(true)
+            const requestData = {
+                use_case: toSnakeCase(useCaseType),
+                data_sources: selectedSources,
+                smart_audience_name: audienceName
+            };
+
+            const filteredRequestData = Object.fromEntries(
+                Object.entries(requestData).filter(([_, v]) => v !== null && v !== undefined)
+            );
+
+
+            const response = await axiosInstance.post('/audience-smarts/builder', filteredRequestData);
+            if (response.data.status === "SUCCESS") {
+                showToast("New Smart Audience successfully created")
+                router.push('/smart-audiences')
+            }
+        }
+        catch {
+            showErrorToast('An error occurred while creating a new Smart Audience');
+        } finally {
+            setLoading(false)
+        }
+    };
+
     return (
         <Box>
+            {loading && <CustomizedProgressBar/>}
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minWidth: '100%', flexGrow: 1, position: "relative", flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px", mt: 2 }}>
                 {uploadProgress !== null && (
                     <Box sx={{ width: "100%", position: "absolute", top: 0, left: 0, zIndex: 1200 }}>
@@ -412,7 +462,7 @@ const SmartAudiencesContacts: React.FC = () => {
                                     Cancel
                                 </Typography>
                             </Button>
-                            <Button variant="contained" onClick={handleCalculate} sx={{
+                            <Button variant="contained" onClick={handleGenerateSmartAudience} sx={{
                                 ...smartAudiences.buttonform,
                                 backgroundColor: "rgba(80, 82, 178, 1)",
                                 width: "237px",

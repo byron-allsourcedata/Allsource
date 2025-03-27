@@ -135,7 +135,7 @@ const Reseller: React.FC = () => {
       <Box sx={resellerStyle.headers}>
           <Box sx={resellerStyle.logoContainer}>
               <Link href="/" underline="none" sx={{ zIndex: 10 }}>
-                  <Image src='/logo.svg' priority alt='logo' height={80} width={60} />
+                  <Image src='/logo.svg' priority alt='logo' height={31} width={130} />
               </Link>
           </Box>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>

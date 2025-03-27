@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from dependencies import get_audience_smarts_service, check_user_authorization_without_pixel
 from services.audience_smarts import AudienceSmartsService
-from schemas.audience import SmartsAudienceObjectResponse, UpdateSmartAudienceRequest
+from schemas.audience import SmartsAudienceObjectResponse, UpdateSmartAudienceRequest, CreateSmartAudienceRequest
 from typing import Optional, List
 from uuid import UUID
 
@@ -38,6 +38,44 @@ def get_audience_smarts(
         "audience_smarts_list": smarts_audience_list,
         "count": count
     }
+
+
+@router.post("/builder")
+def create_smart_audience(
+        request: CreateSmartAudienceRequest,
+        user=Depends(check_user_authorization_without_pixel),
+        audience_smarts_service: AudienceSmartsService = Depends(get_audience_smarts_service)
+):
+    try:
+        if user.get('team_member'):
+            user_id = user.get('team_member').get('id')
+        else:
+            user_id = user.get('id')
+
+        new_audience = audience_smarts_service.create_audience_smart(
+            name=request.smart_audience_name,
+            user=user,
+            created_by_user_id=user_id,
+            use_case_alias=request.use_case,
+            validation_params=request.validation_params,
+            data_sources=request.data_sources,
+            contacts_to_validate=request.contacts_to_validate
+        )
+        return {'status': "SUCCESS"}
+    except ValueError:
+        raise HTTPException(status_code=400)
+
+
+@router.get("/get-datasource")
+def get_datasource(
+        user=Depends(check_user_authorization_without_pixel),
+        audience_smarts_service: AudienceSmartsService = Depends(get_audience_smarts_service)
+):
+        data_source = audience_smarts_service.get_datasource(
+            user=user,
+        )
+        return data_source
+
 
 
 @router.get("/search")
