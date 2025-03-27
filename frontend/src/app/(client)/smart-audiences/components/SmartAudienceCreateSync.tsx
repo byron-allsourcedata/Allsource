@@ -57,6 +57,11 @@ interface Row {
     canDelete?: boolean;
 }
 
+interface CustomRow {
+    type: string;
+    value: string;
+}
+
 interface MetaAuidece {
     id: string
     list_name: string
@@ -84,6 +89,12 @@ type ServiceHandlers = {
     mailchimp: () => void;
     sales_force: () => void;
     google_ads: () => void;
+  };
+
+type ArrayMapping = {
+    hubspot: CustomRow[];
+    mailchimp: CustomRow[];
+    default: CustomRow[]
   };
 
 const styles = {
@@ -618,6 +629,12 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         mailchimp: handleOpenMailchimpConnect,
         sales_force: handleCreateSalesForceOpen,
         google_ads: handleCreateGoogleAdsClose,
+    };
+
+    const arrayWithCustomFields: ArrayMapping = {
+        hubspot: customFieldsListHubspot,
+        mailchimp: customFieldsList,
+        default: customFieldsList
     };
 
     const handleAddIntegration = async (service_name: string) => {
@@ -2226,6 +2243,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                         ))}
                                         <Box sx={{ mb: 2 }}>
                                             {customFields.map((field, index) => (
+                                                // <Box>{field.type}</Box>
                                                 <Grid container spacing={2} alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' } }} key={index}>
                                                     <Grid item xs="auto" sm={5} mb={2}>
                                                         <TextField
@@ -2280,11 +2298,11 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                             }}
                                                         >
 
-                                                            {customFieldsList.map((item) => (
+                                                            {arrayWithCustomFields[activeService as keyof ArrayMapping ?? "default"].map((item: CustomRow) => (
                                                                 <MenuItem
                                                                     key={item.value}
                                                                     value={item.value}
-                                                                    disabled={customFields.some(f => f.type === item.value)} // Дизейблим выбранные
+                                                                    disabled={customFields.some(f => f.type === item.value)}
                                                                 >
                                                                     {item.type}
                                                                 </MenuItem>
@@ -2361,10 +2379,9 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                     </Grid>
                                                 </Grid>
                                             ))}
-                                            {customFields.length !== 0 && 
+                                            {(customFields.length !== 0) &&
                                                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, mr: 6 }}>
                                                     <Button
-                                                        disabled={customFields.length === 0}
                                                         onClick={handleAddField}
                                                         aria-haspopup="true"
                                                         sx={{
