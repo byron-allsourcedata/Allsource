@@ -12,6 +12,7 @@ import { showErrorToast, showToast } from "./ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface CreateOmnisendProps {
+    fromAudience?: boolean
     handleClose: () => void
     onSave?: (new_integration: any) => void
     open: boolean
@@ -91,7 +92,7 @@ const klaviyoStyles = {
       },
 }
 
-const MailchimpConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, Invalid_api_key}: CreateOmnisendProps) => {
+const MailchimpConnect = ({ fromAudience, handleClose, open, onSave, initApiKey, boxShadow, Invalid_api_key}: CreateOmnisendProps) => {
     const { triggerSync } = useIntegrationContext();
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
@@ -181,7 +182,12 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, In
                 onSave({'service_name': 'mailchimp', 'is_failed': false, access_token: apiKey})
             }
             triggerSync();
-            handleNextTab()
+            if (fromAudience) {
+                handleClose()
+            }
+            else {
+                handleNextTab();
+            }
         } else {
             showErrorToast("Invalid API Key")
         }
@@ -375,7 +381,7 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, In
                             }
                         }}}>
                         <Tab label="API Key" value="1" sx={{...klaviyoStyles.tabHeading, cursor: 'pointer'}} />
-                        <Tab label="Suppression Sync" value="2" sx={klaviyoStyles.tabHeading} />
+                        {!fromAudience && <Tab label="Suppression Sync" value="2" sx={klaviyoStyles.tabHeading} />}
                         </TabList>
                     </Box>
                     <TabPanel value="1" sx={{p: 0}}>

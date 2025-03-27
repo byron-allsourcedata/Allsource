@@ -192,7 +192,7 @@ class MailchimpIntegrationsService:
             'list_name': list_name,
             'domain_id': domain_id,
             'sent_contacts': sent_contacts,
-            'sync_type': DataSyncType.AUDIENCE,
+            'sync_type': DataSyncType.AUDIENCE.value,
             'smart_audience_id': smart_audience_id,
             'data_map': data_map,
             'created_by': created_by,

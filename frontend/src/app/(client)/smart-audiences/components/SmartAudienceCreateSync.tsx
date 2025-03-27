@@ -301,6 +301,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
 
     const [customFields, setCustomFields] = useState<{ type: string, value: string }[]>([]);
     const [rows, setRows] = useState(defaultRows);
+    const { needsSync, setNeedsSync } = useIntegrationContext();
 
     //GENERAL
 
@@ -359,7 +360,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         if (open) {
             fetchData()
         }
-    }, [open])
+    }, [open, needsSync])
 
 
     const toCamelCase = (name: string) => {
@@ -2475,14 +2476,14 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                 onSave={handleSaveSettings} 
                 initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sales_force')?.access_token} />
             <MailchimpConnect 
-                onSave={handleSaveSettings} 
+                fromAudience={true}
                 open={openMailchimpConnect} 
                 handleClose={handleOpenMailchimpConnectClose} 
                 initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'Mailchimp')?.access_token} />
             <HubspotIntegrationPopup 
+                fromAudience={true}
                 open={createHubspot} 
-                handleClose={handleCreateHubspotClose} 
-                onSave={handleSaveSettings} 
+                handleClose={handleCreateHubspotClose}
                 initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'hubspot')?.access_token} />
             <MetaConnectButton 
                 open={metaConnectApp} 
