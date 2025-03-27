@@ -90,6 +90,7 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         type = message_body.get('type')
         user_id = data.get('user_id')
         persons = data.get('persons')
+        count = 0
 
         if type == 'emails':
             processing_start = time.perf_counter()
@@ -122,72 +123,89 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
                         "orders_date": transaction_date_obj
                     }
 
+            count = len(persons)
             processing_end = time.perf_counter()
             logging.info(f"📊 Email processing time: {processing_end - processing_start:.6f} сек.")
 
+        if type == 'user_ids':
+            five_x_five_user_ids = [p['user_id'] for p in persons]
+            logging.info(f"user_ids find {len(five_x_five_user_ids)} for source_id {source_id}")
+            count = len(five_x_five_user_ids)
+
         logging.info(f"Processing AudienceSourceMatching with ID: {source_id}")
-
         db_fetch_start = time.perf_counter()
-        existing_persons = {p.email: p for p in db_session.query(AudienceSourcesMatchedPerson).filter(
-            AudienceSourcesMatchedPerson.source_id == source_id,
-            AudienceSourcesMatchedPerson.email.in_(matched_persons.keys())
-        ).all()}
-        db_fetch_end = time.perf_counter()
-        logging.info(f"🔍 DB Query (Existing Persons): {db_fetch_end - db_fetch_start:.6f} сек.")
 
-        reference_date = datetime.now()
+        if type == 'emails':
+            existing_persons = {p.email: p for p in db_session.query(AudienceSourcesMatchedPerson).filter(
+                AudienceSourcesMatchedPerson.source_id == source_id,
+                AudienceSourcesMatchedPerson.email.in_(matched_persons.keys())
+            ).all()}
+            db_fetch_end = time.perf_counter()
 
-        update_start = time.perf_counter()
-
-        matched_persons_to_update = []
-        matched_persons_to_add = []
-        for email, data in matched_persons.items():
-            last_transaction = data["orders_date"]
-            recency = (reference_date - last_transaction).days if last_transaction else None
-
-            if email in existing_persons:
-                matched_person = existing_persons[email]
-                matched_person.orders_amount += data["orders_amount"]
-                matched_person.orders_count += data["orders_count"]
-                if data["orders_date"]:
-                    if matched_person.orders_date is None or data["orders_date"] > matched_person.orders_date:
-                        matched_person.orders_date = data["orders_date"]
-                        matched_person.recency = recency
-                matched_persons_to_update.append({
-                    "id": matched_person.id,
-                    "orders_amount": matched_person.orders_amount,
-                    "orders_count": matched_person.orders_count,
-                    "orders_date": matched_person.orders_date,
-                    "recency": recency
-                })
-            else:
-                new_matched_person = AudienceSourcesMatchedPerson(
+        if type == 'user_ids':
+            for five_x_five_user_id in five_x_five_user_ids:
+                matched_person = AudienceSourcesMatchedPerson(
                     source_id=source_id,
-                    email=email,
-                    orders_amount=data["orders_amount"],
-                    orders_count=data["orders_count"],
-                    orders_date=data["orders_date"],
-                    recency=recency
+                    five_x_five_user_id=five_x_five_user_id
                 )
-                matched_persons_to_add.append(new_matched_person)
+                db_session.add(matched_person)
 
-        if matched_persons_to_update:
-            db_session.bulk_update_mappings(AudienceSourcesMatchedPerson, matched_persons_to_update)
+        if type == 'emails':
+            logging.info(f"🔍 DB Query (Existing Persons): {db_fetch_end - db_fetch_start:.6f} сек.")
 
-        if matched_persons_to_add:
-            db_session.bulk_save_objects(matched_persons_to_add)
+            reference_date = datetime.now()
 
-        db_session.flush()
+            update_start = time.perf_counter()
 
-        update_end = time.perf_counter()
-        logging.info(f"📝 DB Update (Matched Persons): {update_end - update_start:.6f} сек.")
+            matched_persons_to_update = []
+            matched_persons_to_add = []
+            for email, data in matched_persons.items():
+                last_transaction = data["orders_date"]
+                recency = (reference_date - last_transaction).days if last_transaction else None
+
+                if email in existing_persons:
+                    matched_person = existing_persons[email]
+                    matched_person.orders_amount += data["orders_amount"]
+                    matched_person.orders_count += data["orders_count"]
+                    if data["orders_date"]:
+                        if matched_person.orders_date is None or data["orders_date"] > matched_person.orders_date:
+                            matched_person.orders_date = data["orders_date"]
+                            matched_person.recency = recency
+                    matched_persons_to_update.append({
+                        "id": matched_person.id,
+                        "orders_amount": matched_person.orders_amount,
+                        "orders_count": matched_person.orders_count,
+                        "orders_date": matched_person.orders_date,
+                        "recency": recency
+                    })
+                else:
+                    new_matched_person = AudienceSourcesMatchedPerson(
+                        source_id=source_id,
+                        email=email,
+                        orders_amount=data["orders_amount"],
+                        orders_count=data["orders_count"],
+                        orders_date=data["orders_date"],
+                        recency=recency
+                    )
+                    matched_persons_to_add.append(new_matched_person)
+
+            if matched_persons_to_update:
+                db_session.bulk_update_mappings(AudienceSourcesMatchedPerson, matched_persons_to_update)
+
+            if matched_persons_to_add:
+                db_session.bulk_save_objects(matched_persons_to_add)
+
+            db_session.flush()
+
+            update_end = time.perf_counter()
+            logging.info(f"📝 DB Update (Matched Persons): {update_end - update_start:.6f} сек.")
 
         db_commit_start = time.perf_counter()
         total_records, processed_records, matched_records = db_session.execute(
             update(AudienceSource)
             .where(AudienceSource.id == source_id)
             .values(
-                matched_records=AudienceSource.matched_records + len(persons),
+                matched_records=AudienceSource.matched_records + count,
                 processed_records=AudienceSource.processed_records + len(persons)
             )
             .returning(AudienceSource.total_records, AudienceSource.processed_records, AudienceSource.matched_records)
