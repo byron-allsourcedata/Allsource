@@ -5,7 +5,7 @@ import asyncio
 import functools
 import json
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 
 import boto3
 from sqlalchemy import update
@@ -111,18 +111,9 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
                         "orders_date": transaction_date_obj
                     }
 
-            # emails = [p['email'] for p in persons]
-            # email_records = db_session.query(FiveXFiveEmails).filter(FiveXFiveEmails.email.in_(emails)).all()
-            # if email_records:
-            #     logging.info(f"email_records find")
-            #     email_ids = [record.id for record in email_records]
-            #     five_x_five_users = db_session.query(FiveXFiveUsersEmails.user_id).filter(FiveXFiveUsersEmails.email_id.in_(email_ids)).all()
-            #     five_x_five_user_ids = [five_x_five_user[0] for five_x_five_user in five_x_five_users]
-            #     logging.info(f"user_ids find {len(five_x_five_user_ids)} for source_id {source_id}")
-        
-        if type == 'user_ids':
-            five_x_five_user_ids = [p['user_id'] for p in persons]
-            logging.info(f"user_ids find {len(five_x_five_user_ids)} for source_id {source_id}")
+        # if type == 'user_ids':
+        #     five_x_five_user_ids = [p['user_id'] for p in persons]
+        #     logging.info(f"user_ids find {len(five_x_five_user_ids)} for source_id {source_id}")
         
         logging.info(f"Processing AudienceSourceMatching with ID: {source_id}")
 
@@ -131,7 +122,14 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
             AudienceSourcesMatchedPerson.email.in_(matched_persons.keys())
         ).all()}
 
+        reference_date = datetime.now(timezone.utc)
+
         for email, data in matched_persons.items():
+            last_transaction = data["orders_date"]
+            if last_transaction and last_transaction.tzinfo is None:
+                last_transaction = last_transaction.replace(tzinfo=timezone.utc)
+            recency = (reference_date - last_transaction).days if last_transaction else None
+
             if email in existing_persons:
                 matched_person = existing_persons[email]
                 matched_person.orders_amount += data["orders_amount"]
@@ -139,25 +137,17 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
                 if data["orders_date"]:
                     if matched_person.orders_date is None or data["orders_date"] > matched_person.orders_date:
                         matched_person.orders_date = data["orders_date"]
+                        matched_person.recency = recency
             else:
                 new_matched_person = AudienceSourcesMatchedPerson(
                     source_id=source_id,
                     email=email,
                     orders_amount=data["orders_amount"],
                     orders_count=data["orders_count"],
-                    orders_date=data["orders_date"]
+                    orders_date=data["orders_date"],
+                    recency=recency
                 )
                 db_session.add(new_matched_person)
-
-        # for five_x_five_user_id in five_x_five_user_ids:
-        #     matched_person = AudienceSourcesMatchedPerson(
-        #         source_id=source_id,
-        #         five_x_five_user_id=five_x_five_user_id
-        #     )
-        #     db_session.add(matched_person)
-
-        # new_processed = audience_source.processed_records + len(persons)
-        # new_matched = audience_source.matched_records + len(persons)
 
         total_records, processed_records, matched_records = db_session.execute(
             update(AudienceSource)
