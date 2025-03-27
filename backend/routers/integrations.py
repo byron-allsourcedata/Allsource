@@ -204,9 +204,8 @@ async def set_suppression(suppression_data: SupperssionSet, service_name: str = 
                 detail="Access denied. Admins and standard only."
             )
     with integration_service as service:
-        service.klaviyo.set_suppression()
         service = getattr(service, service_name)
-        return service.set_supperssions(suppression_data.suppression, domain.id)
+        return service.set_supperssions(suppression_data.suppression, domain.id, user)
 
 
 @router.get("/bigcommerce/oauth")

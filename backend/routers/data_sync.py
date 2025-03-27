@@ -112,7 +112,7 @@ async def get_tags(service_name: str = Query(...),
                    user = Depends(check_user_authentication), domain = Depends(check_domain)):
     with integration_service as service:
         service = getattr(service, service_name.lower())
-        return service.get_tags(domain.id)
+        return service.get_tags(domain.id, user)
 
 @router.post('/sync/tags')
 async def create_tag(tag_data: CreateListOrTags,
@@ -121,4 +121,4 @@ async def create_tag(tag_data: CreateListOrTags,
                       user = Depends(check_user_authorization), domain = Depends(check_domain)):
     with integrations_service as service:
         service = getattr(service, service_name)
-        return service.create_tags(tag_data.name, domain.id)
+        return service.create_tags(tag_data.name, domain.id, user)

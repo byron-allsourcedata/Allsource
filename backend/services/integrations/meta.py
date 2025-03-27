@@ -66,7 +66,7 @@ class MetaIntegrationsService:
         return response.json()
 
     def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
-        credential = self.get_credentials(domain.id)
+        credential = self.get_credentials(domain.id, user.get('id'))
         access_token = self.get_long_lived_token(credentials.meta.access_token)
         if not access_token:
             raise HTTPException(status_code=400, detail={'status': 'Long-lived token unavailable'})
@@ -77,7 +77,7 @@ class MetaIntegrationsService:
             return
         ad_account_info = self.get_info_by_access_token(access_token.get('access_token'))
         
-        common_integration = bool(os.getenv('COMMON_INTEGRATION'))
+        common_integration = os.getenv('COMMON_INTEGRATION') == 'True'
         integration_data = {
             'ad_account_id': ad_account_info.get('id'),
             'access_token': access_token.get('access_token'),
@@ -292,6 +292,8 @@ class MetaIntegrationsService:
             'leads_type': leads_type,
             'domain_id': domain_id,
             'customer_id': customer_id,
+            'campaign_id': campaign_id,
+            'campaign_name': campaign.get('campaign_name'),
             'data_map': [data.model_dump_json() for data in data_map] if data_map else None,
             'created_by': created_by
         })

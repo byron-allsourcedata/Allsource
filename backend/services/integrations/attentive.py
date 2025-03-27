@@ -22,7 +22,7 @@ class AttentiveIntegrationsService:
         if credential:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.ALREADY_EXIST.value})
         
-        common_integration = bool(os.getenv('COMMON_INTEGRATION'))
+        common_integration = os.getenv('COMMON_INTEGRATION') == 'True'
         integration_data = {
             'access_token': api_key,
             'full_name': user.get('full_name'),

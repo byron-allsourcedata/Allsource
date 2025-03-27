@@ -50,7 +50,7 @@ class KlaviyoIntegrationsService:
         
 
     def __save_integrations(self, api_key: str, domain_id: int, user: dict):
-        credential = self.get_credentials(domain_id)
+        credential = self.get_credentials(domain_id, user.get('id'))
         if credential:
             credential.access_token = api_key
             credential.is_failed = False
@@ -58,7 +58,7 @@ class KlaviyoIntegrationsService:
             self.integrations_persisntece.db.commit()
             return credential
         
-        common_integration = bool(os.getenv('COMMON_INTEGRATION'))
+        common_integration = os.getenv('COMMON_INTEGRATION') == 'True'
         integration_data = {
             'access_token': api_key,
             'full_name': user.get('full_name'),
@@ -109,13 +109,13 @@ class KlaviyoIntegrationsService:
             return
         return [self.__mapped_tags(tag) for tag in response.json().get('data')]
 
-    def get_tags(self, domain_id: int):
-        credentials = self.get_credentials(domain_id)
+    def get_tags(self, domain_id: int, user: dict):
+        credentials = self.get_credentials(domain_id, user.get('id'))
         return self.__get_tags(credentials.access_token, credentials)
 
 
-    def create_tags(self, tag_name: str, domain_id: int):
-        credential = self.get_credentials(domain_id)
+    def create_tags(self, tag_name: str, domain_id: int, user: dict):
+        credential = self.get_credentials(domain_id, user.get('id'))
         response = self.__handle_request(method='POST', url='https://a.klaviyo.com/api/tags/', api_key=credential.access_token, json=self.__mapped_tags_json_to_klaviyo(tag_name))
         if response.status_code == 201 or response.status_code == 200:
             return self.__mapped_tags(response.json().get('data'))
@@ -221,6 +221,7 @@ class KlaviyoIntegrationsService:
     async def process_data_sync(self, five_x_five_user, user_integration, data_sync, lead_user):
         data_map = data_sync.data_map if data_sync.data_map else None
         profile = self.__create_profile(five_x_five_user, user_integration.access_token, data_map)
+        print(profile)
         if profile in (ProccessDataSyncResult.AUTHENTICATION_FAILED.value, ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return profile
 
@@ -387,8 +388,8 @@ class KlaviyoIntegrationsService:
             
         return response
         
-    def set_suppression(self, suppression: bool, domain_id: int):
-            credential = self.get_credentials(domain_id)
+    def set_suppression(self, suppression: bool, domain_id: int, user: dict):
+            credential = self.get_credentials(domain_id, user.get('id'))
             if not credential:
                 raise HTTPException(status_code=403, detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value)
             credential.suppression = suppression

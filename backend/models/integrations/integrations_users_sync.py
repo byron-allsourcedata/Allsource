@@ -25,6 +25,8 @@ class IntegrationUserSync(Base):
     created_by = Column(VARCHAR, nullable=False)
     last_lead_sync_id = Column(VARCHAR(64))
     hook_url = Column(VARCHAR)
+    campaign_id = Column(VARCHAR, nullable=True)
+    campaign_name = Column(VARCHAR, nullable=True)
     last_sent_lead_id = Column(Integer, nullable=True)
     method = Column(VARCHAR(8))
     result_file_url = Column(VARCHAR(256), nullable=True)

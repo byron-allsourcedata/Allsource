@@ -48,7 +48,7 @@ class SalesForceIntegrationsService:
         
 
     def __save_integrations(self, api_key: str, instance_url: str, domain_id: int, user: dict):
-        credential = self.get_credentials(domain_id)
+        credential = self.get_credentials(domain_id, user.get('id'))
         if credential:
             credential.access_token = api_key
             credential.is_failed = False
@@ -56,7 +56,7 @@ class SalesForceIntegrationsService:
             self.integrations_persisntece.db.commit()
             return credential
         
-        common_integration = bool(os.getenv('COMMON_INTEGRATION'))
+        common_integration = os.getenv('COMMON_INTEGRATION') == 'True'
         integration_data = {
             'access_token': api_key,
             'full_name': user.get('full_name'),
@@ -207,8 +207,8 @@ class SalesForceIntegrationsService:
             
         return ProccessDataSyncResult.SUCCESS.value
                 
-    def set_suppression(self, suppression: bool, domain_id: int):
-            credential = self.get_credentials(domain_id)
+    def set_suppression(self, suppression: bool, domain_id: int, user: dict):
+            credential = self.get_credentials(domain_id, user.get('id'))
             if not credential:
                 raise HTTPException(status_code=403, detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value)
             credential.suppression = suppression

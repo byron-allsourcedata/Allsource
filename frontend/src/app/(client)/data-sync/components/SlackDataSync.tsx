@@ -177,8 +177,10 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
             } else if (selectedOption) {
                 list = selectedOption;
             } else {
-                showToast('Please select a valid option.');
-                return;
+                if (!listName) {
+                    showToast('Please select a valid option.');
+                    return;
+                }
             }
             if (validateTab2()) {
                 setValue((prevValue) => String(Number(prevValue) + 1));

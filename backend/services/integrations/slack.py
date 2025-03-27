@@ -60,7 +60,7 @@ class SlackService:
         if credential:
             return self.update_credential(domain_id, access_token)
         
-        common_integration = bool(os.getenv('COMMON_INTEGRATION'))
+        common_integration = os.getenv('COMMON_INTEGRATION') == 'True'
         integration_data = {
             'access_token': access_token,
             'full_name': user.get('full_name'),

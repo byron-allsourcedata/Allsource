@@ -51,13 +51,13 @@ class OmnisendIntegrationService:
         return contacts
     
     def __save_integrations(self, api_key: str, domain_id: int, user: dict):
-        credential = self.get_credentials(domain_id)
+        credential = self.get_credentials(domain_id, user.get('id'))
         if credential:
             credential.access_token = api_key
             self.integration_persistence.db.commit()
             return credential
         
-        common_integration = bool(os.getenv('COMMON_INTEGRATION'))
+        common_integration = os.getenv('COMMON_INTEGRATION') == 'True'
         integration_data = {
             'access_token': api_key,
             'full_name': user.get('full_name'),
@@ -78,7 +78,7 @@ class OmnisendIntegrationService:
 
 
     def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
-        if self.get_credentials(domain.id):
+        if self.get_credentials(domain.id, user.get('id')):
             return IntegrationsStatus.ALREADY_EXIST
         if self.get_list_contact(credentials.omnisend.api_key).status_code != 200:
             return IntegrationsStatus.CREDENTAILS_INVALID
