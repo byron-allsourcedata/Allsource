@@ -66,30 +66,16 @@ def create_smart_audience(
         raise HTTPException(status_code=400)
 
 
-@router.post("/get-datasource")
+@router.get("/get-datasource")
 def get_datasource(
-        request: CreateSmartAudienceRequest,
         user=Depends(check_user_authorization_without_pixel),
         audience_smarts_service: AudienceSmartsService = Depends(get_audience_smarts_service)
 ):
-    try:
-        if user.get('team_member'):
-            user_id = user.get('team_member').get('id')
-        else:
-            user_id = user.get('id')
-
-        new_audience = audience_smarts_service.create_audience_smart(
-            name=request.smart_audience_name,
+        data_source = audience_smarts_service.get_datasource(
             user=user,
-            created_by_user_id=user_id,
-            use_case_alias=request.use_case,
-            validation_params=request.validation_params,
-            data_sources=request.data_sources,
-            contacts_to_validate=request.contacts_to_validate
         )
-        return {'status': "SUCCESS"}
-    except ValueError:
-        raise HTTPException(status_code=400)
+        return data_source
+
 
 
 @router.get("/search")

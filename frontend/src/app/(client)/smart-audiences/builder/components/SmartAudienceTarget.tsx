@@ -33,6 +33,8 @@ interface SelectedData {
 
 interface SmartAudienceTargetProps {
     useCaseType: string;
+    sourceData: DataItem[];
+    lookalikeData: DataItem[];
 }
 
 interface DataItem {
@@ -57,11 +59,9 @@ const toSnakeCase = (str: string) => {
         .toLowerCase();
 };
 
-const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType }) => {
+const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType, sourceData, lookalikeData }) => {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
-    const [sourceData, setSourceData] = useState<DataItem[]>([]);
-    const [lookalikeData, setLookalikeData] = useState<DataItem[]>([]);
     const [audienceName, setAudienceName] = useState<string>("");
     const [option, setOption] = useState<string>("");
     const [sourceType, setSourceType] = useState<string>("");
@@ -76,8 +76,8 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
     const [isValidateSkip, setIsValidateSkip] = useState(false);
     const [validationFilters, setValidationFilters] = useState<ValidationData | null>();
     const [targetAudience, setTargetAudience] = useState<string | ''>('');
-    const [filteredSourceData, setFilteredSourceData] = useState<any[]>([]);
-    const [filteredLookalikeData, setFilteredLookalikeData] = useState<any[]>([]);
+    const [filteredSourceData, setFilteredSourceData] = useState<DataItem[]>([]);
+    const [filteredLookalikeData, setFilteredLookalikeData] = useState<DataItem[]>([]);
 
 
 
@@ -204,7 +204,6 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
 
     const handleDeleteChip = (id: string) => {
         setSelectedSources(selectedSources.filter(source => source.selectedSourceId !== id));
-        setSourceType('')
     };
 
     const handleAddMore = () => {
@@ -236,6 +235,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
 
     const handleGenerateSmartAudience = async () => {
         try {
+            setLoading(true)
             const requestData = {
                 use_case: toSnakeCase(useCaseType),
                 target_schema: targetAudience,
@@ -258,51 +258,11 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
         }
         catch {
             showErrorToast('An error occurred while creating a new Smart Audience');
-        }
-    };
-
-    const fetchData = async () => {
-        try {
-            setLoading(true);
-            const [sourcesResponse, lookalikesResponse] = await Promise.all([
-                axiosInstance.get("/audience-sources/", {
-                    params: { page: 1, per_page: 15 },
-                }),
-                axiosInstance.get("/audience-lookalikes/", {
-                    params: { page: 1, per_page: 15 },
-                }),
-            ]);
-
-            // Достаем `source_list` из ответа
-            const sources = sourcesResponse.data.source_list || [];
-
-            // Достаем первый элемент массива из ответа lookalikes
-            const lookalikes = Array.isArray(lookalikesResponse.data) ? lookalikesResponse.data[0] || [] : [];
-
-            // Форматируем источники данных
-            const formattedSources = sources.map((source: any) => ({
-                id: source.id,
-                name: source.name,
-                type: source.source_type,
-                size: source.total_records?.toLocaleString() || "0",
-            }));
-
-            // Форматируем lookalike аудитории
-            const formattedLookalikes = lookalikes.map((lookalike: any) => ({
-                id: lookalike.id,
-                name: lookalike.name,
-                type: lookalike.source_type,
-                size: lookalike.size || "0",
-            }));
-
-            setSourceData(formattedSources);
-            setLookalikeData(formattedLookalikes);
-        } catch (err) {
-            console.log(err)
         } finally {
-            setLoading(false);
+            setLoading(false)
         }
     };
+
 
     useEffect(() => {
         if (sourceType === "Source") {
@@ -310,29 +270,12 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
         } else if (sourceType === "Lookalike") {
             setFilteredLookalikeData(getFilteredData(lookalikeData));
         }
-    }, [sourceType, search, sourceData, lookalikeData]);
+    }, [sourceType,  sourceData, lookalikeData, selectedSources]);
 
-    useEffect(() => {
-        fetchData();
-        return () => {
-            // Очищаем данные при размонтировании
-            setSourceData([]);
-            setLookalikeData([]);
-        };
-    }, []);
-
-    if(loading){
-        return(
-            
-            <Box sx={{display: 'flex', flexDirection: 'column', gap: 2,  mt:1}}>
-                <CustomizedProgressBar />
-            <Skeleton variant="rectangular" width={'63vw'} height={'20vh'} sx={{borderRadius: '6px'}}/>
-            </Box>
-        )
-    }
 
     return (
         <Box sx={{ mb: 4 }}>
+            {loading && <CustomizedProgressBar/>}
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minWidth: '100%', flexGrow: 1, position: "relative", flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px", mt: 2, }}>
                 {uploadProgress !== null && (
                     <Box sx={{ width: "100%", position: "absolute", top: 0, left: 0, zIndex: 1200 }}>
@@ -426,7 +369,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({ useCaseType 
                             <Box>
                                 {Object.entries(groupedSources).map(([key, values]) => (
                                     <Box key={key} sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 2 }}>
-                                        <Typography sx={{ fontFamily: 'Roboto', fontWeight: '400', fontSize: '14px', color: '#202124' }}>{key}</Typography>
+                                        <Typography sx={{ fontFamily: 'Roboto', fontWeight: '400', fontSize: '14px', color: '#202124' }}>{key.charAt(0).toUpperCase() + key.slice(1)}</Typography>
                                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                                             {values.map(({ source, type, id }, index) => (
                                                 <Chip

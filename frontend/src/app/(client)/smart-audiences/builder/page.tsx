@@ -1,21 +1,34 @@
 "use client";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
-import { Typography, LinearProgress, FormControl, Select, MenuItem, SelectChangeEvent } from "@mui/material";
+import { Typography, LinearProgress, FormControl, Select, MenuItem, SelectChangeEvent, Skeleton } from "@mui/material";
 import { Box } from "@mui/system";
 import { useState } from "react";
 import { smartAudiences } from "../smartAudiences";
 import SmartAudiencesContacts from "./components/SmartAudienceContacts";
 import SmartAudiencesTarget from "./components/SmartAudienceTarget";
+import { useFetchAudienceData } from "@/hooks/useFetchAudienceData";
 
 
 const SmartAudiencesBuilder: React.FC = () => {
-    const [loading, setLoading] = useState(false);
     const [useCaseType, setUseCaseType] = useState<string>("");
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
     const handleChangeSourceType = (event: SelectChangeEvent<string>) => {
         setUseCaseType(event.target.value);
     };
+
+    const { sourceData, lookalikeData, loading } = useFetchAudienceData();
+
+    if(loading){
+        return(
+            <Box sx={{display: 'flex', flexDirection: 'column', gap: 2,  mt:1, alignItems: 'center'}}>
+                <CustomizedProgressBar />
+                <Box sx={{alignItems: 'end', display:'flex', width: '73%', justifyContent: 'start'}}><Skeleton variant="text" width={'12vw'} sx={{ fontSize: '1.75rem', alignItems:'end'}} /></Box>
+            
+            <Skeleton variant="rectangular" width={'63vw'} height={'20vh'} sx={{borderRadius: '6px'}}/>
+            </Box>
+        )
+    }
 
 
     return (
@@ -54,10 +67,18 @@ const SmartAudiencesBuilder: React.FC = () => {
                         </Box>
 
                         {["Google", "Bing", "Meta"].includes(useCaseType) ? (
-                            <SmartAudiencesContacts useCaseType={useCaseType} />
+                            <SmartAudiencesContacts
+                                useCaseType={useCaseType}
+                                sourceData={sourceData}
+                                lookalikeData={lookalikeData}
+                            />
                         ) : (
                             ["Email", "Tele Marketing", "Postal", "LinkedIn"].includes(useCaseType) && (
-                                <SmartAudiencesTarget useCaseType={useCaseType} />
+                                <SmartAudiencesTarget
+                                    useCaseType={useCaseType}
+                                    sourceData={sourceData}
+                                    lookalikeData={lookalikeData}
+                                />
                             )
                         )}
 

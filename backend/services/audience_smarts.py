@@ -1,6 +1,9 @@
 import logging
 from typing import Optional, List
 import json
+
+from persistence.audience_lookalikes import AudienceLookalikesPersistence
+from persistence.audience_sources_persistence import AudienceSourcesPersistence
 from schemas.audience import SmartsAudienceObjectResponse
 from persistence.audience_smarts import AudienceSmartsPersistence
 from models.users import User
@@ -8,8 +11,13 @@ from models.users import User
 logger = logging.getLogger(__name__)
 
 class AudienceSmartsService:
-    def __init__(self, audience_smarts_persistence: AudienceSmartsPersistence):
+    def __init__(self, audience_smarts_persistence: AudienceSmartsPersistence,
+                 lookalikes_persistence_service: AudienceLookalikesPersistence,
+                 audience_sources_persistence: AudienceSourcesPersistence
+                 ):
         self.audience_smarts_persistence = audience_smarts_persistence
+        self.lookalikes_persistence_service = lookalikes_persistence_service
+        self.audience_sources_persistence = audience_sources_persistence
 
     def get_audience_smarts(
             self,
@@ -100,3 +108,32 @@ class AudienceSmartsService:
             data_sources=data_sources,
             contacts_to_validate=contacts_to_validate
         )
+
+    def get_datasource(self, user: dict):
+        lookalikes, count, max_page = self.lookalikes_persistence_service.get_lookalikes(
+            user_id=user.get('id'), page=1, per_page=50
+        )
+
+        sources, count = self.audience_sources_persistence.get_sources(
+            user_id=user.get("id"), page=1, per_page=50
+        )
+
+        source_list = [
+            {
+                'id': source[0],
+                'name': source[1],
+                'source_origin': source[2],
+                'source_type': source[3],
+                'created_at': source[5],
+                'created_by': source[4],
+                'domain': source[6],
+                'total_records': source[7],
+                'matched_records': source[8],
+                'matched_records_status': source[9],
+                'processed_records': source[10],
+            }
+            for source in sources
+        ]
+
+        return {"lookalikes": lookalikes, "sources": source_list}
+
