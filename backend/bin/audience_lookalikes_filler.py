@@ -112,7 +112,7 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, conn
         
         current_id = -1
         while current_id < max_id:
-            query = db_session.query(FiveXFiveUser.id).filter(FiveXFiveUser.id > current_id).order_by(FiveXFiveUser.id.asc()).limit(SELECTED_ROW_COUNT)
+            query = db_session.query(FiveXFiveUser.id).filter(FiveXFiveUser.id <= max_id, FiveXFiveUser.id > current_id).order_by(FiveXFiveUser.id.asc()).limit(SELECTED_ROW_COUNT)
             results = query.all()
             
             if not results:
