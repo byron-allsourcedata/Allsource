@@ -24,8 +24,8 @@ interface TableData {
     type: string;
     created_date: string;
     created_by: string;
-    number_of_customers: string;
-    matched_records: string;
+    number_of_customers: number;
+    matched_records: number;
 }
 
 interface LookalikeData {
@@ -311,7 +311,7 @@ const CreateLookalikePage: React.FC = () => {
                                             Source
                                         </Typography>
 
-                                        {selectSourceData && <SourceTableContainer tableData={selectSourceData} />}
+                                        {selectSourceData.length > 0 && <SourceTableContainer tableData={selectSourceData} />}
                                     </Box>
                                 )}
                                 {currentStep >= 1 && (
