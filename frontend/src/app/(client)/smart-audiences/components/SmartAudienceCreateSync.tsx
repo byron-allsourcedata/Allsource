@@ -12,6 +12,7 @@ import Image from 'next/image';
 import SalesForceIntegrationPopup from '@/components/SalesForceIntegrationPopup';
 import GoogleADSConnectPopup from '@/components/GoogleADSConnectPopup';
 import MetaConnectButton from '@/components/MetaConnectButton';
+import S3Connect from "@/components/S3Connect";
 import MailchimpConnect from '@/components/MailchimpConnect';
 import HubspotIntegrationPopup from '@/components/HubspotIntegrationPopup';
 import { UpgradePlanPopup } from '@/app/(client)/components/UpgradePlanPopup';
@@ -292,6 +293,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     const [createGoogleAds, setCreateGoogleAds] = useState<boolean>(false)
     const [integrations, setIntegrations] = useState<Integrations[]>([])
     const [metaConnectApp, setMetaConnectApp] = useState(false)
+    const [openS3Connect, setOpenS3Connect] = useState(false);
+    const [isInvalidApiKey, setIsInvalidApiKey] = useState(false);
     const [integratedServices, setIntegratedServices] = useState<string[]>([])
 
     const [mailchimpIconPopupOpen, setOpenMailchimpIconPopup] = useState(false)
@@ -328,11 +331,11 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         const fetchData = async () => {
             const response = await axiosInstance.get('/integrations/smart-audience-sync/', {
                 params: {
-                    integration_list: integ.join(","),
+                    integration_list: [...integ, "s3"].join(","),
                 },
             });
             if (response.status === 200) {
-                setIntegrations([{service_name: "CSV", data_sync: true, id: 0}, {service_name: "s3", data_sync: true, id: 1}, ...response.data]);
+                setIntegrations([{service_name: "CSV", data_sync: true, id: 0}, ...response.data]);
             }
         };
         if (open) {
@@ -653,6 +656,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
 
     const handleCreateHubspotClose = () => {
         setCreateHubspot(false)
+    }
+
+    const handleCreateS3Close = () => {
+        setOpenS3Connect(false)
     }
 
     const handleCreateGoogleAdsClose = () => {
@@ -1569,6 +1576,12 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                 open={metaConnectApp} 
                 onClose={handleCloseMetaConnectApp} 
                 onSave={handleSaveSettings} />
+            <S3Connect
+                open={openS3Connect}
+                handleClose={handleCreateS3Close}
+                initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 's3')?.access_token} 
+                invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
+            />
             
             <UpgradePlanPopup open={upgradePlanPopup} limitName={'domain'} handleClose={() => setUpgradePlanPopup(false)} />
         </>
