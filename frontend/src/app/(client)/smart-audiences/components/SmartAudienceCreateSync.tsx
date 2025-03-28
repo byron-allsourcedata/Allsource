@@ -418,14 +418,32 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                 requestObj.list_name = list?.list_name
             }
 
+            if (activeService === "mailchimp") {
+                if (!requestObj.list_id && !requestObj.list_name) {
+                    showErrorToast("You have selected incorrect data!")
+                    return
+                }
+            }
+
             if (activeService === "meta") {
-                requestObj.customer_id = String(optionAdAccountMeta?.id)
+                if (optionAdAccountMeta?.id && requestObj.list_name && requestObj.list_id)
+                    requestObj.customer_id = String(optionAdAccountMeta?.id)
+                else {
+                    showErrorToast("You have selected incorrect data!")
+                    return
+                }
             }
 
             if (activeService === "google_ads") {
-                requestObj.customer_id = String(selectedAccountIdGoogle)
-                requestObj.list_id = String(selectedOptionGoogle?.list_id),
-                requestObj.list_name = selectedOptionGoogle?.list_name
+                if (selectedOptionGoogle?.list_id && selectedOptionGoogle?.list_name && selectedAccountIdGoogle) {
+                    requestObj.customer_id = String(selectedAccountIdGoogle)
+                    requestObj.list_id = String(selectedOptionGoogle?.list_id),
+                    requestObj.list_name = selectedOptionGoogle?.list_name
+                }
+                else {
+                    showErrorToast("You have selected incorrect data!")
+                    return
+                }
             }
 
             const response = await axiosInstance.post('/data-sync/create-smart-audience-sync', requestObj, {
