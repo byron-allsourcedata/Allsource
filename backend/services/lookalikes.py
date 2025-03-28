@@ -15,17 +15,18 @@ class AudienceLookalikesService:
         return lookalikes, count, max_page
 
     def get_source_info(self, uuid_of_source, user):
-        source_info = self.lookalikes_persistence_service.get_source_info(uuid_of_source, user.get('id'))
+        source_info = self.lookalikes_persistence_service.get_source_info_for_lookalikes(uuid_of_source, user.get('id'))
         if source_info:
-            sources, created_by = source_info
+            id, name, source_origin, source_type, created_at, size, processed_size, created_by = source_info
             return {
-                'name': sources.name,
-                'source': sources.source_origin,
-                'type': sources.source_type,
-                'created_date': sources.created_at,
+                'id': id,
+                'name': name,
+                'source': source_origin,
+                'type': source_type,
+                'created_date': created_at,
                 'created_by': created_by,
-                'number_of_customers': sources.total_records,
-                'matched_records': sources.matched_records,
+                'number_of_customers': size,
+                'matched_records': processed_size,
             }
         return {}
 
@@ -40,7 +41,7 @@ class AudienceLookalikesService:
             uuid_of_source, user.get('id'), lookalike_size, lookalike_name, created_by_user_id
         )
         return {
-            'status': BaseEnum.SUCCESS,
+            'status': BaseEnum.SUCCESS.value,
             'lookalike': lookalike
         }
 

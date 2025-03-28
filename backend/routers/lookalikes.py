@@ -3,7 +3,10 @@ from fastapi import APIRouter, Depends, Query
 from dependencies import get_lookalikes_service, check_user_authorization_without_pixel
 from services.lookalikes import AudienceLookalikesService
 from pydantic import BaseModel
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from fastapi import Body
+
+AUDIENCE_LOOKALIKES_READER = 'audience_lookalikes_reader'
 
 
 class LookalikeCreateRequest(BaseModel):
@@ -69,13 +72,22 @@ async def create_lookalike(
     else:
         user_id = user.get('id')
 
-    return lookalike_service.create_lookalike(
+    result = lookalike_service.create_lookalike(
         user=user,
         uuid_of_source=request.uuid_of_source,
         lookalike_size=request.lookalike_size,
         lookalike_name=request.lookalike_name,
         created_by_user_id=user_id
     )
+    if result['status'] == 'SUCCESS':
+        msg_body = {
+            'lookalike_id': str(result['lookalike']['id'])
+        }
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+        await publish_rabbitmq_message(connection=connection, queue_name=AUDIENCE_LOOKALIKES_READER, message_body=msg_body)
+
+    return result
 
 
 @router.delete("/delete-lookalike")

@@ -1,5 +1,6 @@
 import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableRow, Paper, TableContainer, Box } from "@mui/material";
+import ProgressBar from './ProgressLoader';
 import dayjs from "dayjs";
 
 interface TableData {
@@ -8,8 +9,8 @@ interface TableData {
   type: string;
   created_date: string;
   created_by: string;
-  number_of_customers: string;
-  matched_records: string;
+  number_of_customers: number;
+  matched_records: number;
 }
 
 interface TableContainerProps {
@@ -18,14 +19,14 @@ interface TableContainerProps {
 
 const setSourceType = (sourceType: string) => {
   return sourceType
-      .split(',')
-      .map(item =>
-          item
-              .split('_')
-              .map(subItem => subItem.charAt(0).toUpperCase() + subItem.slice(1))
-              .join(' ')
-      )
-      .join(', ');
+    .split(',')
+    .map(item =>
+      item
+        .split('_')
+        .map(subItem => subItem.charAt(0).toUpperCase() + subItem.slice(1))
+        .join(' ')
+    )
+    .join(', ');
 }
 
 const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
@@ -45,7 +46,7 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
         sx={{
           borderCollapse: "separate",
           width: "100%",
-          display: "table", 
+          display: "table",
           "@media (max-width: 600px)": {
             display: "none",
           },
@@ -96,7 +97,12 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
               <TableCell>{dayjs(row.created_date).format('MMM D, YYYY')}</TableCell>
               <TableCell>{row.created_by}</TableCell>
               <TableCell>{row.number_of_customers}</TableCell>
-              <TableCell>{row.matched_records}</TableCell>
+              <TableCell sx={{ position: 'relative' }}>
+                {row.matched_records >= row.number_of_customers
+                  ? row.matched_records.toLocaleString('en-US')
+                  : <ProgressBar progress={{ total: row.number_of_customers, processed: row.matched_records }} />
+                }
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -117,9 +123,9 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
               backgroundColor: "#FFF",
             }}
           >
-            
+
             <Box sx={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            <Box>Name: {row.name}</Box>
+              <Box>Name: {row.name}</Box>
               <Box> Source: {row.source}</Box>
               <Box> Type:  {row.type}</Box>
               <Box> Created Date:  {row.created_date}</Box>
