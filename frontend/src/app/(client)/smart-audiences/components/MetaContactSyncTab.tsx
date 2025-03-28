@@ -1,10 +1,9 @@
-import { Drawer, Box, Typography, IconButton, List, LinearProgress, Grid, ClickAwayListener, 
-    Button, ListItemText, Popover, Tooltip, Tab, Slider, TextField, Card, CardContent,
-    InputAdornment, MenuItem, Menu, Divider, FormControl, InputLabel, Select, Link} from '@mui/material';
+import { Box, Typography, IconButton, ClickAwayListener, Select,
+    Button, ListItemText, TextField, Divider, FormControl, InputLabel,
+    InputAdornment, MenuItem, Menu} from '@mui/material';
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
-import { showErrorToast, showToast } from '@/components/ToastNotification';
 import CloseIcon from '@mui/icons-material/Close';
 
 interface MetaAuidece {
@@ -29,13 +28,18 @@ type KlaviyoList = {
     list_name: string
 }
 
+interface adAccount {
+    id: string
+    name: string
+}
+
 interface MetaContactSyncTabProps {
     setIsLoading: (state: boolean) => void
-    setSelectedOptionMeta: any
-    selectedOptionMeta: any
-    adAccountsMeta: any
-    optionAdAccountMeta: any
-    setOptionAdAccountMeta: any
+    setSelectedOptionMeta: (state: MetaAuidece | null) => void
+    selectedOptionMeta: MetaAuidece | null
+    adAccountsMeta: adAccount[]
+    optionAdAccountMeta: adAccount | null
+    setOptionAdAccountMeta: (state: adAccount) => void
 }
 
 const styles = {
@@ -126,7 +130,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
         setIsCheckedMeta(allFieldsFilled);
     }, [formValues]);
 
-    const isKlaviyoList = (value: any): value is KlaviyoList => {
+    const isKlaviyoList = (value: KlaviyoList | string): value is KlaviyoList => {
         return value !== null &&
             typeof value === 'object' &&
             'id' in value &&
@@ -270,7 +274,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
         setIsDropdownOpenAdAccountMeta(false);
     };
 
-    const handleSelectAdAccountMeta = async (value: any) => {
+    const handleSelectAdAccountMeta = async (value: adAccount) => {
         setOptionAdAccountMeta(value);
         handleCloseMeta();
     }
@@ -387,7 +391,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                     }}
                 >
                     {/* Show static options */}
-                    {adAccountsMeta?.map((adAccount: any) => (
+                    {adAccountsMeta?.map((adAccount: adAccount) => (
                         <MenuItem key={adAccount.id} onClick={() => handleSelectAdAccountMeta(adAccount)} sx={{
                             '&:hover': {
                                 background: 'rgba(80, 82, 178, 0.10)'

@@ -1,10 +1,9 @@
-import { Drawer, Box, Typography, IconButton, List, LinearProgress, Grid, ClickAwayListener, 
-    Button, ListItemText, Popover, Tooltip, Tab, Slider, TextField, Card, CardContent,
-    InputAdornment, MenuItem, Menu, Divider, FormControl, InputLabel, Select, Link} from '@mui/material';
+import { Box, IconButton, ClickAwayListener, MenuItem, Menu,
+    Button, ListItemText, TextField, InputAdornment, Divider,} from '@mui/material';
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
-import { showErrorToast, showToast } from '@/components/ToastNotification';
+import { showErrorToast } from '@/components/ToastNotification';
 
 type ChannelList = {
     list_id: string;
@@ -16,13 +15,12 @@ type Customers = {
     customer_name: string;
 }
 
-
 interface GoogleAdsContactSyncTabProps { 
     setIsLoading: (state: boolean) => void
-    customersInfo: any
-    setSelectedOptionGoogle: any
-    setSelectedAccountIdGoogle: any
-    selectedAccountIdGoogle: any
+    customersInfo: Customers[]
+    setSelectedOptionGoogle: (state: ChannelList | null) => void
+    setSelectedAccountIdGoogle: (state: string) => void
+    selectedAccountIdGoogle: string
 }
 
 const styles = {
@@ -84,7 +82,6 @@ const GoogleAdsContactSyncTab: React.FC<GoogleAdsContactSyncTabProps> = ({ setIs
     const [showCreateFormGoogle, setShowCreateFormGoogle] = useState<boolean>(false);
     const [newListNameGoogle, setNewListNameGoogle] = useState<string>('');
     const [isShrunkGoogle, setIsShrunkGoogle] = useState<boolean>(false);
-    const textFieldRef = useRef<HTMLDivElement>(null);
     const [anchorElAdAccountGoogle, setAnchorElAdAccountGoogle] = useState<null | HTMLElement>(null);
     const [isDropdownOpenAdAccountGoogle, setIsDropdownOpenAdAccountGoogle] = useState(false);
     const [googleList, setGoogleAdsList] = useState<ChannelList[]>([]);
@@ -190,7 +187,7 @@ const GoogleAdsContactSyncTab: React.FC<GoogleAdsContactSyncTabProps> = ({ setIs
         setIsDropdownOpenGoogle(false);
     };
 
-    const isKlaviyoListGoogle = (value: any): value is ChannelList => {
+    const isKlaviyoListGoogle = (value: ChannelList | string): value is ChannelList => {
         return value !== null &&
             typeof value === 'object' &&
             'list_id' in value &&
@@ -316,7 +313,7 @@ const GoogleAdsContactSyncTab: React.FC<GoogleAdsContactSyncTabProps> = ({ setIs
                     }}
 
                 >
-                    {customersInfo?.map((account: any) => (
+                    {customersInfo?.map((account: Customers) => (
                         <MenuItem key={account.customer_id} onClick={() => handleSelectAdAccountGoogle(account)} sx={{
                             '&:hover': {
                                 background: 'rgba(80, 82, 178, 0.10)'
