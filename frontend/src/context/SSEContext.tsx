@@ -12,6 +12,7 @@ interface SSEContextType {
   newNotification: boolean;
   NotificationData: { id: number; text: string } | null;
   sourceProgress: Record<string, { total: number; processed: number, matched: number }>
+  smartLookaLikeProgress: Record<string, { total: number; processed: number }>
 }
 
 interface SSEProviderProps {
@@ -26,12 +27,19 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   const [newNotification, setNewNotifications] = useState(false);
   const [NotificationData, setLatestNotification] = useState<{ id: number; text: string } | null>(null);
   const [sourceProgress, setSourceProgress] = useState<Record<string, { total: number; processed: number, matched: number }>>({});
+  const [smartLookaLikeProgress, setLookaLikeProgress] = useState<Record<string, { total: number; processed: number }>>({});
+
+  const updateSmartAudienceProgress = (lookalike_id: string, total: number, processed: number) => {
+    setLookaLikeProgress((prev) => ({
+      ...prev,
+      [lookalike_id]: { total, processed },
+    }));
+  };
 
   const updateSourceProgress = (source_id: string, total: number, processed: number, matched: number) => {
     setSourceProgress((prev) => ({
       ...prev,
       [source_id]: { total, processed, matched },
-      // [source_id]: { total: 0, processed: 0, matched: 0 },
     }));
   };
 
@@ -90,6 +98,15 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
       
           updateSourceProgress(source_id, total, processed, matched);
       }
+      else if (data.status == 'AUDIENCE_LOOKALIKES_PROGRESS') {
+        const { lookalike_id, total, processed } = data.data;
+        if (!lookalike_id) {
+            console.error("source_id is undefined");
+            return;
+        }
+    
+        updateSmartAudienceProgress(lookalike_id, total, processed);
+    }
         else {
           if (data.percent) {
             const meItem = sessionStorage.getItem('me');
@@ -113,7 +130,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   }, [url]);
 
   return (
-    <SSEContext.Provider value={{ data, newNotification, NotificationData, sourceProgress }}>
+    <SSEContext.Provider value={{ data, newNotification, NotificationData, sourceProgress, smartLookaLikeProgress }}>
       {children}
     </SSEContext.Provider>
   );

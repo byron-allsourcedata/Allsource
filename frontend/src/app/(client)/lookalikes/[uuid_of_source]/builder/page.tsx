@@ -1,11 +1,12 @@
 'use client'
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import { Box, Typography, Button, TextField } from "@mui/material";
 import AudienceSizeSelector from "@/app/(client)/lookalikes/components/SizeSelector";
 import SourceTableContainer from "@/app/(client)/lookalikes/components/SourceTableContainer";
 import useAxios from "axios-hooks";
+import { useSSE } from '@/context/SSEContext';
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
@@ -51,13 +52,14 @@ const audienceSize = [
 ];
 
 interface TableData {
+    id: number;
     name: string;
     source: string;
     type: string;
     created_date: string;
     created_by: string;
-    number_of_customers: string;
-    matched_records: string;
+    number_of_customers: number;
+    matched_records: number;
 }
 const tableData = [
     {
@@ -79,10 +81,27 @@ const CreateLookalikePage: React.FC = () => {
     const [sliderValue, setSliderValue] = useState<number[]>([0, 0]);
     const [currentStep, setCurrentStep] = useState(1);
     const [sourceName, setSourceName] = useState("");
+    const { smartLookaLikeProgress } = useSSE();
     const [sourceData, setSourceData] = useState<TableData[]>([]);
     const [loading, setLoading] = useState(false);
     const [isLookalikeCreated, setIsLookalikeCreated] = useState(false);
 
+    useEffect(() => {
+        const updatedData = sourceData.map(item => {
+            const progress = smartLookaLikeProgress[item.id];
+            
+            if (progress) {
+                return { 
+                    ...item, 
+                    number_of_customers: progress.total,
+                    matched_records: progress.processed
+                };
+            }
+            return item;
+        });
+        
+        setSourceData(updatedData);
+    }, [smartLookaLikeProgress]);    
 
     const handleSelectSize = (
         id: string,

@@ -24,6 +24,25 @@ class AudienceLookalikesPersistence:
             .filter(AudienceSource.id == uuid_of_source, AudienceSource.user_id == user_id).first()
 
         return source
+    
+    def get_source_info_for_lookalikes(self, uuid_of_source, user_id):
+        source = self.db.query(
+            AudienceLookalikes.id, 
+            AudienceLookalikes.name, 
+            AudienceSource.source_origin, 
+            AudienceSource.source_type, 
+            AudienceLookalikes.created_date, 
+            AudienceLookalikes.size, 
+            AudienceLookalikes.processed_size, 
+            Users.full_name
+        ) \
+        .join(Users, Users.id == AudienceLookalikes.created_by_user_id) \
+        .join(AudienceSource, AudienceSource.id == AudienceLookalikes.source_uuid)\
+        .filter(AudienceSource.id == uuid_of_source, AudienceLookalikes.user_id == user_id)\
+        .first()
+
+        return source
+
 
     def get_lookalikes(self, user_id: int, page: Optional[int] = None, per_page: Optional[int] = None, from_date: Optional[int] = None, to_date: Optional[int] = None,
                        sort_by: Optional[str] = None, sort_order: Optional[str] = None,
@@ -110,6 +129,7 @@ class AudienceLookalikesPersistence:
         self.db.commit()
 
         return {
+            "id": lookalike.id,
             "name": lookalike.name,
             "source": sources.source_origin,
             "source_type": sources.source_type,
