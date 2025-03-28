@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import sys
 import asyncio
 import functools
@@ -63,8 +64,15 @@ def assume_role(role_arn, sts_client):
     logging.info(f"Assumed role '{role_arn}', got temporary credentials.")
     return credentials
 
+
+def extract_amount(amount_raw: str) -> float:
+    match = re.search(r'[\d,]+(?:\.\d+)?', amount_raw)
+    if match:
+        return float(match.group(0).replace(',', ''))
+    else:
+        return 0.0
+
 async def parse_csv_file(*, data, source_id, db_session, s3_session, connection, user_id):
-    # email_field = data.get('Email')
     logging.info(f"Processing AudienceSource with ID: {source_id}")
 
     source = db_session.query(AudienceSource).filter_by(id=source_id).first()
@@ -100,13 +108,10 @@ async def parse_csv_file(*, data, source_id, db_session, s3_session, connection,
     batch_content = body.decode(encoding, errors='replace')
     csv_file = io.StringIO(batch_content)
     csv_reader = csv.DictReader(csv_file)
-    # email_field = email_field.strip().replace('"', '')
     total_rows = sum(1 for _ in csv_reader)
     csv_file.seek(0)
     next(csv_reader, None)
     processed_rows = 0
-
-    # print(email_field)
 
     logging.info(f"Total row in CSV file: {total_rows}")
     source.total_records = total_rows
@@ -118,10 +123,10 @@ async def parse_csv_file(*, data, source_id, db_session, s3_session, connection,
     while send_rows < total_rows:
         batch_rows = []
         for row in islice(csv_reader, SELECTED_ROW_COUNT):
-            first_name = row.get("FirstName", "").strip()
-            last_name = row.get("LastName", "").strip()
+            # first_name = row.get("FirstName", "").strip()
+            # last_name = row.get("LastName", "").strip()
+            # phone = row.get("Phone", "").strip()
             email = row.get("Email", "").strip()
-            phone = row.get("Phone", "").strip()
             transaction_date = row.get("TransactionDate", "").strip()
             sale_amount_raw = row.get("SaleAmount", "").strip()
 
@@ -132,22 +137,20 @@ async def parse_csv_file(*, data, source_id, db_session, s3_session, connection,
                 logging.warning(f"Error date: '{transaction_date}': {date_error}")
 
             try:
-                sale_amount = float(sale_amount_raw.replace('$', '').replace(',', '').strip())
+                sale_amount = extract_amount(sale_amount_raw)
             except Exception as sale_error:
                 logging.warning(f"Error amount: '{sale_amount_raw}': {sale_error}")
                 sale_amount = 0.0
 
-            # email = row.get(email_field, "")
             batch_rows.append({
-                "first_name": first_name,
-                "last_name": last_name,
+                # "first_name": first_name,
+                # "last_name": last_name,
+                # "phone": phone,
                 "email": email,
-                "phone": phone,
                 "transaction_date": transaction_date,
                 "sale_amount": sale_amount,
             })
-            # logging(batch_rows[-1])
-        # persons = [{"email": email} for email in batch_rows]
+
         if batch_rows:
             message_body = {
                 "type": 'emails',

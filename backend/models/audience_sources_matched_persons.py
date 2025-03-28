@@ -14,9 +14,10 @@ class AudienceSourcesMatchedPerson(Base):
 
     email = Column(String, nullable=False)
     orders_amount = Column(Float, default=0)
-    orders_count = Column(Integer, default=0)
+    orders_count = Column(Integer, default=1)
     orders_date = Column(TIMESTAMP, nullable=True)
     recency = Column(Integer, nullable=True)
+    value_score = Column(Float, default=0)
 
     created_at = Column(TIMESTAMP, nullable=False)
     updated_at = Column(TIMESTAMP, nullable=False)

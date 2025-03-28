@@ -29,6 +29,7 @@ load_dotenv()
 
 AUDIENCE_SOURCES_MATCHING= 'aud_sources_matching'
 SOURCE_PROCESSING_PROGRESS = "SOURCE_PROCESSING_PROGRESS"
+BATCH_SIZE = 500
 
 def setup_logging(level):
     logging.basicConfig(
@@ -68,8 +69,10 @@ async def send_sse(connection, user_id: int, data: dict):
     except Exception as e:
         logging.error(f"Error sending SSE: {e}")
 
-def process_email(persons, db_session: Session, source_id: int) -> int:
+async def process_email(persons, db_session: Session, source_id: int) -> int:
     matched_persons = defaultdict(lambda: {"orders_amount": 0.0, "orders_count": 0, "orders_date": None})
+
+    logging.info(f"Start processing {len(persons)} persons for source_id {source_id}")
 
     for person in persons:
         email = person.get("email", "").strip().lower()
@@ -81,7 +84,7 @@ def process_email(persons, db_session: Session, source_id: int) -> int:
             try:
                 transaction_date_obj = datetime.fromisoformat(transaction_date)
             except Exception as date_error:
-                logging.warning(f"Error date '{transaction_date}': {date_error}")
+                logging.warning(f"Error parsing date '{transaction_date}': {date_error}")
 
         if email in matched_persons:
             matched_persons[email]["orders_amount"] += sale_amount
@@ -90,17 +93,21 @@ def process_email(persons, db_session: Session, source_id: int) -> int:
                 existing_date = matched_persons[email]["orders_date"]
                 if existing_date is None or transaction_date_obj > existing_date:
                     matched_persons[email]["orders_date"] = transaction_date_obj
+                    logging.debug(f"Updated orders_date for {email}: {transaction_date_obj}")
         else:
             matched_persons[email] = {
                 "orders_amount": sale_amount,
                 "orders_count": 1,
                 "orders_date": transaction_date_obj
             }
+            logging.debug(f"Added new person {email} with sale amount {sale_amount} and transaction date {transaction_date_obj}")
 
     existing_persons = {p.email: p for p in db_session.query(AudienceSourcesMatchedPerson).filter(
         AudienceSourcesMatchedPerson.source_id == source_id,
         AudienceSourcesMatchedPerson.email.in_(matched_persons.keys())
     ).all()}
+
+    logging.info(f"Found {len(existing_persons)} existing persons to update for source_id {source_id}")
 
     reference_date = datetime.now()
 
@@ -119,6 +126,7 @@ def process_email(persons, db_session: Session, source_id: int) -> int:
                 if matched_person.orders_date is None or data["orders_date"] > matched_person.orders_date:
                     matched_person.orders_date = data["orders_date"]
                     matched_person.recency = recency
+                    logging.debug(f"Updated matched person {email}: orders_amount={matched_person.orders_amount}, orders_count={matched_person.orders_count}")
 
             matched_persons_to_update.append({
                 "id": matched_person.id,
@@ -137,17 +145,24 @@ def process_email(persons, db_session: Session, source_id: int) -> int:
                 recency=recency
             )
             matched_persons_to_add.append(new_matched_person)
+            logging.debug(f"Added new matched person {email}: orders_amount={data['orders_amount']}, orders_count={data['orders_count']}")
 
     if matched_persons_to_update:
+        logging.info(f"Updating {len(matched_persons_to_update)} persons in the database")
         db_session.bulk_update_mappings(AudienceSourcesMatchedPerson, matched_persons_to_update)
 
     if matched_persons_to_add:
+        logging.info(f"Adding {len(matched_persons_to_add)} new persons to the database")
         db_session.bulk_save_objects(matched_persons_to_add)
 
     db_session.flush()
-    return len(persons)
 
-def process_user_id(persons, db_session: Session, source_id: int) -> int:
+    processed_count = len(persons)
+    logging.info(f"Processed {processed_count} persons for source_id {source_id}")
+    return processed_count
+
+
+async def process_user_id(persons, db_session: Session, source_id: int) -> int:
     five_x_five_user_ids = [p['user_id'] for p in persons]
     logging.info(f"user_ids find {len(five_x_five_user_ids)} for source_id {source_id}")
 
@@ -161,6 +176,67 @@ def process_user_id(persons, db_session: Session, source_id: int) -> int:
     return len(five_x_five_user_ids)
 
 
+async def process_and_send_chunks(db_session: Session, source_id: int, batch_size: int, queue_name: str, connection):
+    matched_persons_list = db_session.query(AudienceSourcesMatchedPerson).filter_by(source_id=source_id).all()
+
+    if not matched_persons_list:
+        logging.warning(f"No matched persons found for source_id {source_id}")
+        return
+
+    logging.info(f"Processing {len(matched_persons_list)} matched persons for source_id {source_id}")
+
+    min_orders_amount = min(p.orders_amount for p in matched_persons_list)
+    max_orders_amount = max(p.orders_amount for p in matched_persons_list)
+    min_orders_count = min(p.orders_count for p in matched_persons_list)
+    max_orders_count = max(p.orders_count for p in matched_persons_list)
+
+    valid_dates = [p.orders_date for p in matched_persons_list if p.orders_date is not None]
+    min_orders_date = min(valid_dates) if valid_dates else None
+    max_orders_date = max(valid_dates) if valid_dates else None
+
+    valid_recencies = [p.recency for p in matched_persons_list if p.recency is not None]
+    min_recency = min(valid_recencies) if valid_recencies else None
+    max_recency = max(valid_recencies) if valid_recencies else None
+
+    logging.info(f"Normalization ranges: min_orders_amount={min_orders_amount}, max_orders_amount={max_orders_amount}, "
+                 f"min_orders_count={min_orders_count}, max_orders_count={max_orders_count}, "
+                 f"min_recency={min_recency}, max_recency={max_recency}")
+
+    chunks = [matched_persons_list[i:i + batch_size] for i in range(0, len(matched_persons_list), batch_size)]
+    logging.info(f"Total of {len(chunks)} chunks to process")
+
+    for idx, chunk in enumerate(chunks, 1):
+        batch_rows = [{
+            "email": p.email,
+            "orders_amount": p.orders_amount,
+            "orders_count": p.orders_count,
+            "recency": p.recency
+        } for p in chunk]
+
+        message_body = {
+            "type": "emails",
+            "data": {
+                "persons": batch_rows,
+                "source_id": str(source_id),
+                "data_for_normalize": {
+                    "min_orders_amount": min_orders_amount,
+                    "max_orders_amount": max_orders_amount,
+                    "min_orders_count": min_orders_count,
+                    "max_orders_count": max_orders_count,
+                    "min_orders_date": min_orders_date.isoformat() if min_orders_date else None,
+                    "max_orders_date": max_orders_date.isoformat() if max_orders_date else None,
+                    "min_recency": min_recency,
+                    "max_recency": max_recency,
+                },
+            },
+        }
+
+        await publish_rabbitmq_message(connection=connection, queue_name=queue_name, message_body=message_body)
+        logging.info(f"RMQ message sent for chunk {idx} of size {len(chunk)}")
+
+    logging.info(f"All chunks processed and messages sent for source_id {source_id}")
+
+
 async def aud_sources_matching(message: IncomingMessage, db_session: Session, connection):
     try:
         message_body = json.loads(message.body)
@@ -169,20 +245,67 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         audience_source = db_session.query(AudienceSource).filter_by(id=source_id).first()
 
         if not data or not audience_source:
-            logging.warning("Message data is missing.")
+            logging.warning("Message data is missing or audience source not found.")
             await message.ack()
             return
 
         type = message_body.get('type')
         user_id = data.get('user_id')
         persons = data.get('persons')
+        data_for_normalize = data.get('data_for_normalize')
+
+        if type == 'emails' and data_for_normalize:
+            logging.info(f"Processing normalization data for source_id {source_id}")
+
+            min_orders_amount = data_for_normalize.get("min_orders_amount", 0)
+            max_orders_amount = data_for_normalize.get("max_orders_amount", 1)
+            min_orders_count = data_for_normalize.get("min_orders_count", 0)
+            max_orders_count = data_for_normalize.get("max_orders_count", 1)
+            min_recency = data_for_normalize.get("min_recency", 0)
+            max_recency = data_for_normalize.get("max_recency", 1)
+
+            def normalize(value, min_val, max_val):
+                return (value - min_val) / (max_val - min_val) if max_val > min_val else 0
+
+            w1, w2, w3 = 0.5, 0.3, 0.2
+
+            for person in persons:
+                # logging.info(f"Person data: {person}")
+                # logging.info(f"w1 {w1 * normalize(person["orders_amount"], min_orders_amount, max_orders_amount)}")
+                # logging.info(f"w2 {w2 * normalize(person["orders_count"], min_orders_count, max_orders_count)}")
+                # logging.info(f"w3 {w3 * normalize(person["recency"], min_recency, max_recency)}")
+                value_score = (w1 * normalize(person["orders_amount"], min_orders_amount, max_orders_amount) +
+                               w2 * normalize(person["orders_count"], min_orders_count, max_orders_count) -
+                               w3 * normalize(person["recency"], min_recency, max_recency)
+               )
+                person["value_score"] = value_score
+                db_session.execute(
+                    update(AudienceSourcesMatchedPerson)
+                    .where(
+                        AudienceSourcesMatchedPerson.source_id == source_id,
+                        AudienceSourcesMatchedPerson.email == person["email"]
+                    )
+                    .values(value_score=value_score)
+                )
+
+            logging.info(f"Normalized data for {len(persons)} persons.")
+
+            db_session.commit()
+            logging.info(f"Updated value scores for {len(persons)} persons.")
+            await message.ack()
+            return
+
         count = 0
 
         if type == 'emails':
-            count = process_email(persons=persons, db_session=db_session, source_id=source_id)
+            logging.info(f"Processing {len(persons)} email records.")
+            count = await process_email(persons=persons, db_session=db_session, source_id=source_id)
 
         if type == 'user_ids':
-            count = process_user_id(persons=persons, db_session=db_session, source_id=source_id)
+            logging.info(f"Processing {len(persons)} user_id records.")
+            count = await process_user_id(persons=persons, db_session=db_session, source_id=source_id)
+
+        logging.info(f"Updated processed and matched records for source_id {count}.")
 
         total_records, processed_records, matched_records = db_session.execute(
             update(AudienceSource)
@@ -195,23 +318,34 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         ).fetchone()
 
         db_session.flush()
+        logging.info(f"Updated processed and matched records for source_id {source_id}.")
+
         if processed_records >= total_records:
             db_session.execute(
                 update(AudienceSource)
                 .where(AudienceSource.id == source_id)
                 .values(matched_records_status="complete")
             )
+            logging.info(f"Source_id {source_id} processing complete.")
 
         db_session.commit()
+
+        if type == 'emails' and processed_records >= total_records:
+            await process_and_send_chunks(db_session=db_session, source_id=source_id,
+                                          batch_size=BATCH_SIZE, queue_name=AUDIENCE_SOURCES_MATCHING, connection=connection)
 
         await send_sse(connection, user_id,
                        {"source_id": source_id, "total": total_records, "processed": processed_records,
                         "matched": matched_records})
 
         await message.ack()
+        logging.info(f"Processing completed for source_id {source_id}.")
 
     except Exception as e:
-        await message.nack()
+        logging.error(f"Error processing source_id {source_id}: {str(e)}")
+        await message.nack(requeue=False)
+        logging.warning(f"Message for source_id {source_id} failed and will be reprocessed.")
+
 
 async def main():
     log_level = logging.INFO
