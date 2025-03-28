@@ -115,7 +115,7 @@ const SourcesImport: React.FC = () => {
         let updatedRows = defaultRows.map(row => {
             if (row.type === 'Transaction Date') {
                 let newType = row.type;
-                if (sourceType === "Customer conversion") newType = "Transaction Date";
+                if (sourceType === "Customer Conversions") newType = "Transaction Date";
                 if (sourceType === "Failed Leads") newType = "Lead Date";
                 if (sourceType === "Interest") newType = "Interest Date";
 
@@ -123,7 +123,7 @@ const SourcesImport: React.FC = () => {
             }
             return row;
         });
-        if (sourceType === "Customer conversion") {
+        if (sourceType === "Customer Conversions") {
             updatedRows = [
                 ...updatedRows,
                 { id: 6, type: 'Order Amount', value: '', canDelete: true, isHidden: false },
