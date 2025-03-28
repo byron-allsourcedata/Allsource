@@ -125,7 +125,6 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, order
     const handleDelete = async (rowId: string) => {
         try {
             const response = await axiosInstance.delete(`/audience-lookalikes/delete-lookalike`, { params: { uuid_of_lookalike: rowId } });
-            console.log(response)
             if (response.data.status === "SUCCESS") {
                 showToast("Lookalike has been successfully removed")
                 refreshData()
