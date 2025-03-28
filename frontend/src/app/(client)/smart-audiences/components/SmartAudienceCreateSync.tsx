@@ -97,8 +97,8 @@ type Customers = {
 interface RequestData {
     sent_contacts: number;
     smart_audience_id?: string
-    list_id?: any
-    list_name?: any
+    list_id?: string
+    list_name?: string
     customer_id?: string
     data_map: CustomRow[]
 }
@@ -1071,14 +1071,13 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     const [inputCustomerNameGoogle, setInputCustomerNameGoogle] = useState('');
     const [customersInfo, setCustomersInfo] = useState<Customers[]>([]);
     const [notAdsUser, setNotAdsUser] = useState<boolean>(false);
-    const [savedList, setSavedList] = useState<ChannelList | null>(null);
     const [isDropdownValidGoogle, setIsDropdownValidGoogle] = useState(false);
 
-    const createNewListGoogle = async () => {
+    const createNewListGoogle = async (newListNameGoogle: string) => {
         try {
             setIsLoading(true)
             const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
-                name: selectedOptionGoogle?.list_name,
+                name: newListNameGoogle,
                 customer_id: String(selectedAccountIdGoogle)
             }, {
                 params: {
@@ -1090,36 +1089,15 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                 showErrorToast(newListResponse.data.message)
             }
 
-            return newListResponse.data.channel;
+            const data = newListResponse.data.channel
+            setSelectedOptionGoogle(data)  
+            setInputListNameGoogle(data.list_name)
+            setIsDropdownValidGoogle(true)
         }
         finally {
             setIsLoading(false)
         }
     }
-
-    // const handleSaveList = async () => {
-    //     setIsLoading(true);
-    //     try {
-    //         let list: ChannelList | null = null;
-
-    //         if (selectedOptionGoogle && selectedOptionGoogle.list_id === '-1') {
-    //             list = await createNewListGoogle();
-    //         } else if (selectedOptionGoogle) {
-    //             list = selectedOptionGoogle;
-    //         } else {
-    //             showToast('Please select a valid option.');
-    //             return;
-    //         }
-    //         if (validateTab2()) {
-    //             setValue((prevValue) => String(Number(prevValue) + 1));
-    //         }
-    //         setSavedList(list);
-    //         showToast('List saved successfully');
-    //     } catch {
-    //     } finally {
-    //         setIsLoading(false);
-    //     }
-    // };
 
     const getGoogleAdsList = async () => {
         try {
@@ -1264,12 +1242,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         }
 
         if (valid) {
-            const newSlackList = { list_id: '-1', list_name: newListNameGoogle }
-            setSelectedOptionGoogle(newSlackList);
-            setInputListNameGoogle(newSlackList.list_name)
-            if (isKlaviyoListGoogle(newSlackList)) {
-                setIsDropdownValidGoogle(true);
-            }
+            createNewListGoogle(newListNameGoogle)
             handleCloseGoogle();
         }
     };
