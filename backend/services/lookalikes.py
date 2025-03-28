@@ -34,15 +34,15 @@ class AudienceLookalikesService:
     def get_all_sources(self, user):
         sources = self.lookalikes_persistence_service.get_all_sources(user.get('id'))
         result = [
-            {
-                'name': source.name,
-                'source': source.source_origin,
-                'type': source.source_type,
-                'created_date': source.created_at,
-                'created_by': created_by,
-                'number_of_customers': source.total_records,
-                'matched_records': source.matched_records,
-            }
+            {'id': source.id,
+             'name': source.name,
+             'source': source.source_origin,
+             'type': source.source_type,
+             'created_date': source.created_at,
+             'created_by': created_by,
+             'number_of_customers': source.total_records,
+             'matched_records': source.matched_records,
+             }
             for source, created_by in sources
         ]
 
@@ -80,13 +80,12 @@ class AudienceLookalikesService:
                                                                                user_id=user.get('id'))
         results = set()
         for lookalike, source_name, source_type, creator_name in lookalike_data:
-                if start_letter.lower() in lookalike.name.lower():
-                    results.add(lookalike.name)
-                if start_letter.lower() in source_name.lower():
-                    results.add(source_name)
-                if start_letter.lower() in creator_name.lower():
-                    results.add(creator_name)
+            if start_letter.lower() in lookalike.name.lower():
+                results.add(lookalike.name)
+            if start_letter.lower() in source_name.lower():
+                results.add(source_name)
+            if start_letter.lower() in creator_name.lower():
+                results.add(creator_name)
 
         limited_results = list(results)[:10]
         return limited_results
-

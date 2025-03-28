@@ -49,31 +49,31 @@ interface LookalikeTableProps {
 
 const audienceSize = [
     {
-        label: "Almost identical",
+        label: "almost_identical",
         text: "Lookalike size 0-3%",
         min_value: 0,
         max_value: 3,
     },
     {
-        label: "Extremely Similar",
+        label: "extremely_similar",
         text: "Lookalike size 0-7%",
         min_value: 0,
         max_value: 7,
     },
     {
-        label: "Very similar",
+        label: "very_similar",
         text: "Lookalike size 0-10%",
         min_value: 0,
         max_value: 10,
     },
     {
-        label: "Quite similar",
+        label: "quite_similar",
         text: "Lookalike size 0-15%",
         min_value: 0,
         max_value: 15,
     },
     {
-        label: "Broad",
+        label: "broad",
         text: "Lookalike size 0-20%",
         min_value: 0,
         max_value: 20,
@@ -151,7 +151,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, order
         setIsConfirmOpen(false);
     };
 
-    const setSourceType = (sourceType: string) => {
+    const toNormalText = (sourceType: string) => {
         return sourceType
             .split(',')
             .map(item =>
@@ -382,7 +382,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, order
                                         title={
                                             <Box sx={{ backgroundColor: '#fff', margin: 0, padding: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', }}>
                                                 <Typography className='table-data' component='div' sx={{ fontSize: '12px !important', }}>
-                                                    {setSourceType(row.source_type)}
+                                                    {toNormalText(row.source_type)}
                                                 </Typography>
                                             </Box>
                                         }
@@ -412,7 +412,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, order
                                                 maxWidth: '150px',
                                             }}
                                         >
-                                            {truncateText(setSourceType(row.source_type), 30)}
+                                            {truncateText(toNormalText(row.source_type), 30)}
                                         </Typography>
                                     </Tooltip>
                                 </Box>
@@ -420,7 +420,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, order
                             <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>
                                 {(() => {
                                     const size = audienceSize.find(size => size.label === row.lookalike_size);
-                                    return size ? `${size.label} ${size.min_value}-${size.max_value}%` : row.lookalike_size;
+                                    return size ? `${toNormalText(size.label)} ${size.min_value}-${size.max_value}%` : row.lookalike_size;
                                 })()}
                             </TableCell>
                             <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>{dayjs(row.created_date).format('MMM D, YYYY')}</TableCell>
