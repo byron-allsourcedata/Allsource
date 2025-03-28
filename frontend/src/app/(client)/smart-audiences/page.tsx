@@ -30,6 +30,8 @@ import DateRangeIcon from '@mui/icons-material/DateRange';
 import CalendarPopup from "@/components/CustomCalendar";
 import EditIcon from '@mui/icons-material/Edit';
 import HeadsetMicOutlinedIcon from '@mui/icons-material/HeadsetMicOutlined';
+import { color } from 'framer-motion';
+import { yellow } from '@mui/material/colors';
 
 interface Smarts {
     id: string
@@ -1123,7 +1125,11 @@ const SmartAudiences: React.FC = () => {
                                                                             <TableCell
                                                                                 sx={{ ...smartAudiences.table_array, position: 'relative', textAlign: "center" }}
                                                                             >
-                                                                                {row.validated_records.toLocaleString('en-US')}
+                                                                                {row.status === "unvalidated" 
+                                                                                ? <Image src="./danger_yellow.svg" alt='danger' width={20} height={20}/>
+                                                                                : row.validated_records === 0 
+                                                                                    ? "NA" 
+                                                                                    : row.validated_records.toLocaleString('en-US')}
                                                                             </TableCell>
 
                                                                             {/* Created Column */}
