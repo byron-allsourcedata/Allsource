@@ -7,6 +7,7 @@ import json
 import time
 from collections import defaultdict
 from datetime import datetime, timezone
+from typing import List, Dict
 
 import boto3
 from sqlalchemy import update
@@ -219,6 +220,8 @@ async def process_and_send_chunks(db_session: Session, source_id: int, batch_siz
                 "persons": batch_rows,
                 "source_id": str(source_id),
                 "data_for_normalize": {
+                    "matched_size": idx * batch_size,
+                    "all_size": len(chunk) * batch_size,
                     "min_orders_amount": min_orders_amount,
                     "max_orders_amount": max_orders_amount,
                     "min_orders_count": min_orders_count,
@@ -236,6 +239,44 @@ async def process_and_send_chunks(db_session: Session, source_id: int, batch_siz
 
     logging.info(f"All chunks processed and messages sent for source_id {source_id}")
 
+
+def normalize_persons(persons: List[Dict], source_id: int, data_for_normalize: Dict, db_session: Session):
+    logging.info(f"Processing normalization data for source_id {source_id}")
+
+    min_orders_amount = data_for_normalize.get("min_orders_amount", 0)
+    max_orders_amount = data_for_normalize.get("max_orders_amount", 1)
+    min_orders_count = data_for_normalize.get("min_orders_count", 0)
+    max_orders_count = data_for_normalize.get("max_orders_count", 1)
+    min_recency = data_for_normalize.get("min_recency", 0)
+    max_recency = data_for_normalize.get("max_recency", 1)
+
+    def normalize(value, min_val, max_val):
+        return (value - min_val) / (max_val - min_val) if max_val > min_val else 0
+
+    w1, w2, w3 = 1, 1, 1
+
+    for person in persons:
+        value_score = (
+                w1 * normalize(person["orders_amount"], min_orders_amount, max_orders_amount) +
+                w2 * normalize(person["orders_count"], min_orders_count, max_orders_count) -
+                w3 * normalize(person["recency"], min_recency, max_recency) + 1
+        )
+        person["value_score"] = value_score
+        db_session.execute(
+            update(AudienceSourcesMatchedPerson)
+            .where(
+                AudienceSourcesMatchedPerson.source_id == source_id,
+                AudienceSourcesMatchedPerson.email == person["email"]
+            )
+            .values(value_score=value_score)
+        )
+
+    logging.info(f"Normalized data for {len(persons)} persons.")
+    db_session.commit()
+    logging.info(
+        f"RMQ message sent for matched records {data_for_normalize.get('matched_size', 0)} "
+        f"from {data_for_normalize.get('all_size', 0)}"
+    )
 
 async def aud_sources_matching(message: IncomingMessage, db_session: Session, connection):
     try:
@@ -255,43 +296,7 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         data_for_normalize = data.get('data_for_normalize')
 
         if type == 'emails' and data_for_normalize:
-            logging.info(f"Processing normalization data for source_id {source_id}")
-
-            min_orders_amount = data_for_normalize.get("min_orders_amount", 0)
-            max_orders_amount = data_for_normalize.get("max_orders_amount", 1)
-            min_orders_count = data_for_normalize.get("min_orders_count", 0)
-            max_orders_count = data_for_normalize.get("max_orders_count", 1)
-            min_recency = data_for_normalize.get("min_recency", 0)
-            max_recency = data_for_normalize.get("max_recency", 1)
-
-            def normalize(value, min_val, max_val):
-                return (value - min_val) / (max_val - min_val) if max_val > min_val else 0
-
-            w1, w2, w3 = 0.5, 0.3, 0.2
-
-            for person in persons:
-                # logging.info(f"Person data: {person}")
-                # logging.info(f"w1 {w1 * normalize(person["orders_amount"], min_orders_amount, max_orders_amount)}")
-                # logging.info(f"w2 {w2 * normalize(person["orders_count"], min_orders_count, max_orders_count)}")
-                # logging.info(f"w3 {w3 * normalize(person["recency"], min_recency, max_recency)}")
-                value_score = (w1 * normalize(person["orders_amount"], min_orders_amount, max_orders_amount) +
-                               w2 * normalize(person["orders_count"], min_orders_count, max_orders_count) -
-                               w3 * normalize(person["recency"], min_recency, max_recency)
-               )
-                person["value_score"] = value_score
-                db_session.execute(
-                    update(AudienceSourcesMatchedPerson)
-                    .where(
-                        AudienceSourcesMatchedPerson.source_id == source_id,
-                        AudienceSourcesMatchedPerson.email == person["email"]
-                    )
-                    .values(value_score=value_score)
-                )
-
-            logging.info(f"Normalized data for {len(persons)} persons.")
-
-            db_session.commit()
-            logging.info(f"Updated value scores for {len(persons)} persons.")
+            normalize_persons()
             await message.ack()
             return
 
