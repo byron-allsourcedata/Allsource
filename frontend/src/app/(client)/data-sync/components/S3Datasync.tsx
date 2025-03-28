@@ -718,7 +718,7 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({ open, onClose, data, isEdit
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                     <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
-                                            <Image src='/s3-icon.svg' alt='sendlane' height={26} width={32} />
+                                            <Image src='/s3.svg' alt='sendlane' height={26} width={32} />
                                             <Typography variant="h6" className='first-sub-title'>Contact sync</Typography>
                                             <Tooltip title="Sync data with list" placement="right">
                                                 <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
@@ -876,7 +876,7 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({ open, onClose, data, isEdit
                                                 minWidth: '196px'
                                             }
                                         }}>
-                                            <Image src='/s3-icon.svg' alt='s3' height={20} width={24} />
+                                            <Image src='/s3.svg' alt='s3' height={20} width={24} />
                                         </Grid>
                                         <Grid item xs="auto" sm={1}>&nbsp;</Grid>
                                     </Grid>
