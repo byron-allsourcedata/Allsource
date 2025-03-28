@@ -18,7 +18,7 @@ interface CreateOmnisendProps {
     open: boolean
     initApiKey?: string;
     boxShadow?: string;
-    Invalid_api_key?: boolean;
+    invalid_api_key?: boolean;
 }
 
 interface IntegrationsCredentials {
@@ -92,7 +92,7 @@ const klaviyoStyles = {
       },
 }
 
-const MailchimpConnect = ({ fromAudience, handleClose, open, onSave, initApiKey, boxShadow, Invalid_api_key}: CreateOmnisendProps) => {
+const MailchimpConnect = ({ fromAudience, handleClose, open, onSave, initApiKey, boxShadow, invalid_api_key}: CreateOmnisendProps) => {
     const { triggerSync } = useIntegrationContext();
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
@@ -403,7 +403,7 @@ const MailchimpConnect = ({ fromAudience, handleClose, open, onSave, initApiKey,
                                 variant="outlined"
                                 fullWidth
                                 margin="normal"
-                                error={apiKeyError || Invalid_api_key}
+                                error={apiKeyError || invalid_api_key}
                                 helperText={apiKeyError ? 'API Key is required' : ''}
                                 value={apiKey}
                                 onChange={handleApiKeyChange}
