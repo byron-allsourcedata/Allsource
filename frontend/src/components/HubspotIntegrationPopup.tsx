@@ -13,6 +13,7 @@ import { useAxiosHook } from "@/hooks/AxiosHooks";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface CreateHubspotProps {
+    fromAudience?: boolean
     handleClose: () => void
     onSave?: (integration: IntegrationsCredentials) => void
     open: boolean
@@ -92,7 +93,9 @@ const hubspotStyles = {
     },
 }
 
-const HubspotIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxShadow, invalid_api_key }: CreateHubspotProps) => {
+
+const HubspotIntegrationPopup = ({ fromAudience, handleClose, open, onSave, initApiKey, boxShadow, invalid_api_key }: CreateHubspotProps) => {
+
     const { triggerSync } = useIntegrationContext();
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
@@ -193,7 +196,12 @@ const HubspotIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                 }
                 showToast("Integration Hubspot Successfully");
                 triggerSync();
-                handleNextTab();
+                if (fromAudience) {
+                    handleClose()
+                }
+                else {
+                    handleNextTab();
+                }
             }
         } catch (err) {
         } finally {
@@ -406,11 +414,11 @@ const HubspotIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                                         value="1"
                                         sx={{ ...hubspotStyles.tabHeading, cursor: 'pointer' }}
                                     />
-                                    <Tab
+                                    {!fromAudience && <Tab
                                         label="Suppression Sync"
                                         value="2"
                                         sx={{ ...hubspotStyles.tabHeading, cursor: 'pointer' }}
-                                    />
+                                    />}
                                 </Tabs>
 
                             </Box>

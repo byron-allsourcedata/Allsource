@@ -113,6 +113,7 @@ class SyncCreate(BaseModel):
 
 class SmartAudienceSyncCreate(BaseModel):
     smart_audience_id: UUID
+    customer_id: Optional[str] = None
     list_id: Optional[str] = None
     sent_contacts: int
     list_name: Optional[str] = None
