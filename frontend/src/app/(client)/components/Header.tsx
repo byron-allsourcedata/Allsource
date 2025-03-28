@@ -189,7 +189,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification, NotificationDat
             </Button>
           )}
           <Box sx={{display: 'flex', ml:3}}>
-            {(pathname.includes('dashboard') || pathname.includes('leads') || pathname.includes('company') || pathname.includes('suppressions')) && <DomainButton />}
+            {(pathname.includes('dashboard') || pathname.includes('leads') || pathname.includes('company') || pathname.includes('suppressions') || pathname.includes('audience-dashboard')) && <DomainButton />}
           </Box>
         </Box>
         <Box sx={{ display: "flex", alignItems: "center" }}>
