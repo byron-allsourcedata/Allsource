@@ -860,7 +860,7 @@ const SmartAudiences: React.FC = () => {
                                                                         { key: 'validations', label: 'Validations' },
                                                                         { key: 'created_date', label: 'Created', sortable: true },
                                                                         { key: 'number_of_customers', label: 'Total Universe', sortable: true },
-                                                                        { key: 'matched_records', label: 'Active Segment', sortable: true },
+                                                                        { key: 'active_segment_records', label: 'Active Segment', sortable: true },
                                                                         { key: 'status', label: 'Status' },
                                                                         { key: 'actions', label: 'Actions' }
                                                                     ].map(({ key, label, sortable = false }) => (
