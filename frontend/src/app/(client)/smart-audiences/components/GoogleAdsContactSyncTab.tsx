@@ -17,7 +17,7 @@ type Customers = {
 }
 
 
-interface IntegrationBoxProps { 
+interface GoogleAdsContactSyncTabProps { 
     setIsLoading: (state: boolean) => void
     customersInfo: any
     setSelectedOptionGoogle: any
@@ -77,7 +77,7 @@ const styles = {
     },
 }
 
-const IntegrationBox: React.FC<IntegrationBoxProps> = ({ setIsLoading, customersInfo, setSelectedOptionGoogle, selectedAccountIdGoogle, setSelectedAccountIdGoogle }) => {
+const GoogleAdsContactSyncTab: React.FC<GoogleAdsContactSyncTabProps> = ({ setIsLoading, customersInfo, setSelectedOptionGoogle, selectedAccountIdGoogle, setSelectedAccountIdGoogle }) => {
     const textFieldRefGoogle = useRef<HTMLDivElement>(null);
     const [anchorElGoogle, setAnchorElGoogle] = useState<null | HTMLElement>(null);
     const [isDropdownOpenGoogle, setIsDropdownOpenGoogle] = useState<boolean>(false);
@@ -566,4 +566,4 @@ const IntegrationBox: React.FC<IntegrationBoxProps> = ({ setIsLoading, customers
     );
   };
 
-export default IntegrationBox;
+export default GoogleAdsContactSyncTab;
