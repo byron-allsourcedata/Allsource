@@ -1,5 +1,7 @@
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from enums import BaseEnum
+from sqlalchemy.exc import IntegrityError
+from fastapi import HTTPException
 
 
 class AudienceLookalikesService:
@@ -29,11 +31,32 @@ class AudienceLookalikesService:
             }
         return {}
 
+    def get_all_sources(self, user):
+        sources = self.lookalikes_persistence_service.get_all_sources(user.get('id'))
+        result = [
+            {
+                'name': source.name,
+                'source': source.source_origin,
+                'type': source.source_type,
+                'created_date': source.created_at,
+                'created_by': created_by,
+                'number_of_customers': source.total_records,
+                'matched_records': source.matched_records,
+            }
+            for source, created_by in sources
+        ]
+
+        return result
+
     def delete_lookalike(self, uuid_of_lookalike, user):
-        delete_lookalike = self.lookalikes_persistence_service.delete_lookalike(uuid_of_lookalike, user.get('id'))
-        if delete_lookalike:
-            return {'status': 'SUCCESS'}
-        return {'status': 'FAILURE'}
+        try:
+            delete_lookalike = self.lookalikes_persistence_service.delete_lookalike(uuid_of_lookalike, user.get('id'))
+            if delete_lookalike:
+                return {'status': 'SUCCESS'}
+            return {'status': 'FAILURE'}
+
+        except IntegrityError:
+            raise HTTPException(status_code=400, detail="Cannot remove lookalike because it is used for smart audience")
 
     def create_lookalike(self, user, uuid_of_source, lookalike_size, lookalike_name, created_by_user_id):
         lookalike = self.lookalikes_persistence_service.create_lookalike(

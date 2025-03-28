@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from typing import Optional
 import math
 from sqlalchemy import asc, desc, or_
+from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from urllib.parse import unquote
 
@@ -119,11 +120,18 @@ class AudienceLookalikesPersistence:
 
     def delete_lookalike(self, uuid_of_lookalike, user_id):
         delete_lookalike = self.db.query(AudienceLookalikes).filter(
-            AudienceLookalikes.id == uuid_of_lookalike, AudienceLookalikes.user_id == user_id).first()
+            AudienceLookalikes.id == uuid_of_lookalike,
+            AudienceLookalikes.user_id == user_id
+        ).first()
+
         if delete_lookalike:
-            self.db.delete(delete_lookalike)
-            self.db.commit()
-            return True
+            try:
+                self.db.delete(delete_lookalike)
+                self.db.commit()
+                return True
+            except IntegrityError:
+                self.db.rollback()
+                raise
         return False
 
     def update_lookalike(self, uuid_of_lookalike, name_of_lookalike, user_id):
@@ -156,4 +164,11 @@ class AudienceLookalikesPersistence:
         lookalike_data = query.all()
 
         return lookalike_data
+
+    def get_all_sources(self, user_id):
+        source = self.db.query(AudienceSource, Users.full_name).join(Users,
+                                                                     Users.id == AudienceSource.created_by_user_id) \
+            .filter(AudienceSource.user_id == user_id).all()
+
+        return source
 
