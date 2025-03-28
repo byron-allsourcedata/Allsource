@@ -144,15 +144,15 @@ const DetailsPopup: React.FC<DetailsPopupProps> = ({ open, onClose, id }) => {
                     <Typography className='first-sub-title'>Included</Typography>
                 </Box>
                 <Box sx={{ width: "100%", display: 'flex', flexDirection: "column", alignItems: "center", justifyContent: "space-between", py: "20px", px: "24px", border: "1px solid rgba(240, 240, 240, 1)", borderTop: "none", boxShadow: "rgba(0, 0, 0, 0.2)"}}>
-                    <Box sx={{width: "100%", py: 1, borderBottom: "1px solid rgba(240, 240, 240, 1)", display: "flex", justifyContent: "space-between"}}>
-                        <Typography className='table-data'>Name</Typography>
-                        <Typography className='table-data'>Type</Typography>
-                        <Typography className='table-data'>Size</Typography>
+                    <Box sx={{width: "100%", py: 1, gap: 4,  borderBottom: "1px solid rgba(240, 240, 240, 1)", display: "flex", justifyContent: "space-between"}}>
+                        <Typography sx={{flex: 1}} className='table-data'>Name</Typography>
+                        <Typography sx={{flex: 1}} className='table-data'>Type</Typography>
+                        <Typography sx={{flex: 1}} className='table-data'>Size</Typography>
                     </Box>
-                    <Box sx={{width: "100%", py: "12px", borderBottom: "1px solid rgba(240, 240, 240, 1)", display: "flex", justifyContent: "space-between"}}>
-                        <Typography className='black-table-header'>My orders</Typography>
-                        <Typography className='black-table-header'>Customer Conversions</Typography>
-                        <Typography className='black-table-header'>10,000</Typography>
+                    <Box sx={{width: "100%", py: "12px", gap: 4, borderBottom: "1px solid rgba(240, 240, 240, 1)", display: "flex", justifyContent: "space-between"}}>
+                        <Typography sx={{flex: 1}} className='black-table-header'>My orders</Typography>
+                        <Typography sx={{flex: 1}} className='black-table-header'>Customer Conversions</Typography>
+                        <Typography sx={{flex: 1}} className='black-table-header'>10,000</Typography>
                     </Box>
                 </Box>
                 </Box>
