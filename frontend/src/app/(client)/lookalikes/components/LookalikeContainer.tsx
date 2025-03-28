@@ -1,15 +1,17 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableRow, Paper, TableContainer, Box, Tooltip, Typography } from "@mui/material";
 import dayjs from "dayjs";
+import { useSSE } from "@/context/SSEContext";
+import ProgressBar from "./ProgressLoader";
 
 interface TableData {
+    id: string;
     lookalike_name: string;
     source: string;
     type: string;
     lookalike_size: string;
     created_date: string;
     created_by: string;
-    size: string;
 }
 
 interface TableContainerProps {
@@ -66,6 +68,24 @@ const truncateText = (text: string, maxLength: number) => {
 };
 
 const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
+    const { smartLookaLikeProgress } = useSSE();
+    const [progress, setProgress] = useState<number | 0>(0)
+    const [total, setTotal] = useState<number | 0>(0)
+
+
+    useEffect(() => {
+        const updatedData = tableData.map(item => {
+            const progress = smartLookaLikeProgress[item.id];
+
+            if (progress) {
+                setProgress(progress.processed)
+                setTotal(progress.total)
+            }
+        });
+
+    }, [smartLookaLikeProgress]);
+
+
     return (
         <TableContainer
             component={Paper}
@@ -129,7 +149,7 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
                         <TableRow key={index}>
                             <TableCell>{row.lookalike_name}</TableCell>
                             <TableCell>{setSourceType(row.source)}</TableCell>
-                            <TableCell sx={{maxWidth: '6.25rem'}}>
+                            <TableCell sx={{ maxWidth: '6.25rem' }}>
                                 <Box>
                                     <Tooltip
                                         title={
@@ -166,7 +186,7 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
                                             }}
                                         >
                                             {truncateText(setSourceType(row.type), 30)}
-                                            </Typography>
+                                        </Typography>
                                     </Tooltip>
                                 </Box>
                             </TableCell>
@@ -180,7 +200,12 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
                             </TableCell>
                             <TableCell>{dayjs(row.created_date).format('MMM D, YYYY')}</TableCell>
                             <TableCell>{row.created_by}</TableCell>
-                            <TableCell>{row.size}</TableCell>
+                            <TableCell sx={{ position: 'relative' }}>
+                                {(progress >= total && progress !==0)
+                                    ? progress.toLocaleString('en-US')
+                                    : <ProgressBar progress={{ total: total, processed: progress }} />
+                                }
+                            </TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
@@ -209,7 +234,10 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
                             <Box> Lookalike Size:  {row.lookalike_size}</Box>
                             <Box> Created Date:  {row.created_date}</Box>
                             <Box> Created By:  {row.created_by}</Box>
-                            <Box> Size:  {row.size}</Box>
+                            <Box> Size:  {progress >= total
+                                    ? progress.toLocaleString('en-US')
+                                    : <ProgressBar progress={{ total: total, processed: progress }} />
+                                }</Box>
                         </Box>
                     </Box>
                 ))}

@@ -11,6 +11,7 @@ import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useRouter } from 'next/navigation';
+import LookalikeContainer from "../../components/LookalikeContainer";
 
 
 const audienceSize = [
@@ -61,17 +62,16 @@ interface TableData {
     number_of_customers: number;
     matched_records: number;
 }
-const tableData = [
-    {
-        name: "My Orders",
-        source: "CSV File",
-        type: "Customer Conversions",
-        createdDate: "Oct 01, 2024",
-        createdBy: "Mikhail Sofin",
-        numberOfCustomers: "10,000",
-        matchedRecords: "7,523",
-    },
-];
+
+interface LookalikeData {
+    id: string;
+    lookalike_name: string;
+    source: string;
+    type: string;
+    lookalike_size: string;
+    created_date: string;
+    created_by: string;
+}
 
 const CreateLookalikePage: React.FC = () => {
     const router = useRouter();
@@ -81,27 +81,10 @@ const CreateLookalikePage: React.FC = () => {
     const [sliderValue, setSliderValue] = useState<number[]>([0, 0]);
     const [currentStep, setCurrentStep] = useState(1);
     const [sourceName, setSourceName] = useState("");
-    const { smartLookaLikeProgress } = useSSE();
     const [sourceData, setSourceData] = useState<TableData[]>([]);
+    const [lookalike, setLookalikeData] = useState<LookalikeData[]>([]);
     const [loading, setLoading] = useState(false);
-    const [isLookalikeCreated, setIsLookalikeCreated] = useState(false);
-
-    useEffect(() => {
-        const updatedData = sourceData.map(item => {
-            const progress = smartLookaLikeProgress[item.id];
-            
-            if (progress) {
-                return { 
-                    ...item, 
-                    number_of_customers: progress.total,
-                    matched_records: progress.processed
-                };
-            }
-            return item;
-        });
-        
-        setSourceData(updatedData);
-    }, [smartLookaLikeProgress]);    
+    const [isLookalikeCreated, setIsLookalikeCreated] = useState(false);   
 
     const handleSelectSize = (
         id: string,
@@ -163,12 +146,28 @@ const CreateLookalikePage: React.FC = () => {
             .toLowerCase();
     };
 
+    const createLookalikeData = async (id: string) => {
+        const lookalikeData = sourceData.map(row => ({
+            id: id,
+            lookalike_name: sourceName,
+            source: row.source,
+            type: row.type,
+            lookalike_size: selectedLabel,
+            created_date: new Date().toISOString(),
+            created_by: row.created_by,
+        }));
+
+        setLookalikeData(lookalikeData)
+        setIsLookalikeCreated(true);
+    };
+
     const handleGenerateLookalike = async () => {
         try {
             setLoading(true);
             const response = await axiosInstance.post('/audience-lookalikes/builder', { uuid_of_source: params.uuid_of_source, lookalike_size: toSnakeCase(selectedLabel), lookalike_name: sourceName })
             if (response.data.status === "SUCCESS") {
                 showToast('Lookalike was created successfully!');
+                createLookalikeData(response.data.id)
                 setIsLookalikeCreated(true);
             }
         }
@@ -256,7 +255,7 @@ const CreateLookalikePage: React.FC = () => {
                                             Source
                                         </Typography>
 
-                                        {sourceData && <SourceTableContainer tableData={sourceData} />}
+                                        {sourceData.length > 0 && <SourceTableContainer tableData={sourceData} />}
                                     </Box>
                                 )}
                                 {currentStep >= 1 && (
@@ -428,8 +427,11 @@ const CreateLookalikePage: React.FC = () => {
                                 Lookalikes
                             </Typography>
 
-                            {/* Block with table Source */}
-                            {sourceData && <SourceTableContainer tableData={sourceData} />}
+                            {lookalike.length > 0 ? (
+                                <LookalikeContainer tableData={lookalike} />
+                            ) : (
+                                <Typography>No Lookalike data available</Typography>
+                            )}
                             <Box sx={{ display: "flex", justifyContent: "end", gap: 2, mt: 2, alignItems: "center" }}>
                                 <Button
                                     variant="outlined"

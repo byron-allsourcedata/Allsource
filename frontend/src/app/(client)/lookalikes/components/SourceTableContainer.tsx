@@ -19,7 +19,7 @@ interface TableContainerProps {
 
 const setSourceType = (sourceType: string) => {
   return sourceType
-    .split(',')
+    ?.split(',')
     .map(item =>
       item
         .split('_')
