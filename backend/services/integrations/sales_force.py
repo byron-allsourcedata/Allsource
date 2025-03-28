@@ -160,8 +160,8 @@ class SalesForceIntegrationsService:
         })
         return sync
     
-    def create_smart_audience_sync(self, smart_audience_id: UUID, sent_contacts: int, domain_id: int, created_by: str, data_map: List[DataMap] = []):
-        credentials = self.get_credentials(domain_id)
+    def create_smart_audience_sync(self, smart_audience_id: UUID, sent_contacts: int, domain_id: int, created_by: str, user: dict, data_map: List[DataMap] = []):
+        credentials = self.get_credentials(domain_id, user_id=user.get('id'))
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'domain_id': domain_id,

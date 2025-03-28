@@ -1198,7 +1198,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     const handleDropdownToggleGoogle = (event: React.MouseEvent) => {
         event.stopPropagation();
         setIsDropdownOpenGoogle(prev => !prev);
-        setAnchorElGoogle(textFieldRef.current);
+        setAnchorElGoogle(textFieldRefGoogle.current);
     };
 
     const handleCloseGoogle = () => {
@@ -1220,7 +1220,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         if (value === 'createNew') {
             setShowCreateFormGoogle(prev => !prev);
             if (!showCreateFormGoogle) {
-                setAnchorElGoogle(textFieldRef.current);
+                setAnchorElGoogle(textFieldRefGoogle.current);
             }
         } else if (isKlaviyoListGoogle(value)) {
             setSelectedOptionGoogle({
@@ -1250,6 +1250,27 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         if (!value) {
             setListNameError(true);
             setListNameErrorMessage('List name is required');
+        }
+    };
+
+    const handleSaveGoogle = async () => {
+        let valid = true;
+
+        if (newListNameGoogle.trim() === '') {
+            setListNameError(true);
+            valid = false;
+        } else {
+            setListNameError(false);
+        }
+
+        if (valid) {
+            const newSlackList = { list_id: '-1', list_name: newListNameGoogle }
+            setSelectedOptionGoogle(newSlackList);
+            setInputListNameGoogle(newSlackList.list_name)
+            if (isKlaviyoListGoogle(newSlackList)) {
+                setIsDropdownValidGoogle(true);
+            }
+            handleCloseGoogle();
         }
     };
     
@@ -2422,7 +2443,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                             >
                                                                 <MenuItem 
                                                                     // disabled={data?.name}
-                                                                    onClick={() => handleSelectOptionGoogle('createNew')} sx={{
+                                                                    onClick={() => handleSelectOptionGoogle('createNew')} 
+                                                                    sx={{
                                                                         borderBottom: showCreateFormGoogle ? "none" : "1px solid #cdcdcd",
                                                                         '&:hover': {
                                                                             background: 'rgba(80, 82, 178, 0.10)'
@@ -2519,7 +2541,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                                                                     borderColor: '#A3B0C2',
                                                                                                 },
                                                                                                 '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                                                    borderColor: '#0000FF',
+                                                                                                    borderColor: 'rgba(80, 82, 178, 1)',
                                                                                                 },
                                                                                             },
                                                                                             '&+.MuiFormHelperText-root': {
@@ -2531,8 +2553,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         
                                                                             </Box>
                                                                             <Box sx={{ textAlign: 'right' }}>
-                                                                                <Button variant="contained" onClick={handleSave}
-                                                                                    disabled={listNameError || !newListName}
+                                                                                <Button variant="contained" onClick={handleSaveGoogle}
+                                                                                    disabled={listNameError || !newListNameGoogle}
                                                                                     sx={{
                                                                                         borderRadius: '4px',
                                                                                         border: '1px solid #5052B2',

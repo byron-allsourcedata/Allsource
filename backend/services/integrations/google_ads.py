@@ -132,8 +132,8 @@ class GoogleAdsIntegrationsService:
         })
         return sync 
 
-    def create_smart_audience_sync(self, customer_id: str, smart_audience_id: UUID, sent_contacts: int, list_id: str, list_name: str, domain_id: int, created_by: str, tags_id: str = None, data_map: List[DataMap] = []):
-        credentials = self.get_credentials(domain_id)
+    def create_smart_audience_sync(self, customer_id: str, smart_audience_id: UUID, sent_contacts: int, list_id: str, list_name: str, domain_id: int, created_by: str, user: dict, data_map: List[DataMap] = []):
+        credentials = self.get_credentials(domain_id, user_id=user.get('id'))
 
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
@@ -147,8 +147,7 @@ class GoogleAdsIntegrationsService:
             'created_by': created_by,
             'customer_id': customer_id
         })
-        if tags_id: 
-            self.create_tag_relationships_lists(tags_id=tags_id, list_id=list_id, api_key=credentials.access_token)
+        return sync
 
     async def process_data_sync(self, five_x_five_user, user_integration, data_sync, lead_user: LeadUser):
         profile = self.__mapped_googleads_profile(five_x_five_user, lead_user)

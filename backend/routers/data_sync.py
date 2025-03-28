@@ -53,7 +53,8 @@ def create_smart_audience_sync(
         service.create_smart_audience_sync(
             **data,
             domain_id=domain.id,
-            created_by=user.get('full_name')
+            created_by=user.get('full_name'),
+            user=user
         )
         
 @router.delete('/sync')

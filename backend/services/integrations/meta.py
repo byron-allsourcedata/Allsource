@@ -300,8 +300,8 @@ class MetaIntegrationsService:
         })
         return sync
     
-    def create_smart_audience_sync(self, customer_id: int, domain_id: int, created_by: str, smart_audience_id: UUID, sent_contacts: int, campaign = {}, data_map: List[DataMap] = None, list_id: str = None, list_name: str = None,):
-        credentials = self.get_credentials(domain_id)
+    def create_smart_audience_sync(self, customer_id: int, domain_id: int, created_by: str, user: dict, smart_audience_id: UUID, sent_contacts: int, campaign = {}, data_map: List[DataMap] = None, list_id: str = None, list_name: str = None,):
+        credentials = self.get_credentials(domain_id, user_id=user.get('id'))
         campaign_id = campaign.get('campaign_id')
         if campaign_id == -1 and campaign.get('campaign_name'):
             campaign_id = self.create_campaign(campaign['campaign_name'], campaign['daily_budget'], credentials.access_token, customer_id)
