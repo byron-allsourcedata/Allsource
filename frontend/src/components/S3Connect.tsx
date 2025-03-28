@@ -19,6 +19,7 @@ interface CreateS3Props {
     initApiKey?: any;
     boxShadow?: string;
     invalid_api_key?: boolean;
+    fromAudience?: boolean;
 }
 
 const klaviyoStyles = {
@@ -81,7 +82,7 @@ const klaviyoStyles = {
     },
 }
 
-const S3Connect = ({ handleClose, open, onSave, initApiKey, boxShadow, invalid_api_key }: CreateS3Props) => {
+const S3Connect = ({ fromAudience, handleClose, open, onSave, initApiKey, boxShadow, invalid_api_key }: CreateS3Props) => {
     const { triggerSync } = useIntegrationContext();
     const [apiIdKey, setApiIdKey] = useState('');
     const [apiKey, setApiKey] = useState('');
@@ -137,7 +138,12 @@ const S3Connect = ({ handleClose, open, onSave, initApiKey, boxShadow, invalid_a
                     onSave({ 'service_name': 's3', 'is_failed': false, access_token: access_token, apiIdKey })
                 }
                 triggerSync();
-                handleNextTab()
+                if (fromAudience) {
+                    handleClose()
+                }
+                else {
+                    handleNextTab();
+                }
             }
         } catch (error) {
             if (error instanceof AxiosError) {
@@ -327,7 +333,7 @@ const S3Connect = ({ handleClose, open, onSave, initApiKey, boxShadow, invalid_a
                                         }
                                     }}>
                                     <Tab label="API Key" value="1" sx={{ ...klaviyoStyles.tabHeading, cursor: 'pointer' }} />
-                                    <Tab label="Suppression Sync" value="2" sx={klaviyoStyles.tabHeading} />
+                                    {!fromAudience && <Tab label="Suppression Sync" value="2" sx={klaviyoStyles.tabHeading} />}
                                 </TabList>
                             </Box>
                             <TabPanel value="1" sx={{ p: 0 }}>

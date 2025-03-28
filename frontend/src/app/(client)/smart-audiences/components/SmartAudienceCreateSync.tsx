@@ -100,6 +100,7 @@ type ServiceHandlers = {
     mailchimp: () => void;
     sales_force: () => void;
     google_ads: () => void;
+    s3: () => void;
   };
 
 type ArrayMapping = {
@@ -658,6 +659,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         setCreateHubspot(false)
     }
 
+    const handleCreateS3Open = () => {
+        setOpenS3Connect(true)
+    }
+
     const handleCreateS3Close = () => {
         setOpenS3Connect(false)
     }
@@ -679,6 +684,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         mailchimp: handleOpenMailchimpConnect,
         sales_force: handleCreateSalesForceOpen,
         google_ads: handleCreateGoogleAdsClose,
+        s3: handleCreateS3Open,
     };
 
     const arrayWithCustomFields: ArrayMapping = {
@@ -1577,6 +1583,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                 onClose={handleCloseMetaConnectApp} 
                 onSave={handleSaveSettings} />
             <S3Connect
+                fromAudience={true}
                 open={openS3Connect}
                 handleClose={handleCreateS3Close}
                 initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 's3')?.access_token} 
