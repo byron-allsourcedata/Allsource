@@ -5,8 +5,8 @@ import { Typography, Box, Link } from "@mui/material";
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { shopifyLandingStyle } from "./shopify-landing";
-import { CustomInfoToast, showErrorToast, showInfoToast } from '../../../components/ToastNotification';
-import CustomizedProgressBar from '@/components/CustomizedProgressBar';
+import { CustomInfoToast, showErrorToast, showInfoToast } from '@/components/ToastNotification';
+import CustomizedProgressBar from '@/components/FirstLevelLoader';
 
 const ShopifyLanding = () => {
   const router = useRouter();

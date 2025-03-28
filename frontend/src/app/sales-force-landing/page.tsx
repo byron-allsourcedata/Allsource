@@ -5,8 +5,8 @@ import { Typography, Box, Link } from "@mui/material";
 import { useRouter, useSearchParams } from 'next/navigation';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { shopifyLandingStyle } from "./salesForce-landing";
-import { showErrorToast, showInfoToast, showToast } from '../../../components/ToastNotification';
-import CustomizedProgressBar from '@/components/CustomizedProgressBar';
+import { showErrorToast, showInfoToast, showToast } from '@/components/ToastNotification';
+import CustomizedProgressBar from '@/components/FirstLevelLoader';
 
 const GoogleAdsLanding = () => {
   const router = useRouter();

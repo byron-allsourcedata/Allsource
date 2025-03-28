@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { shopifyLandingStyle } from "./bingAds-landing";
 import { showErrorToast, showInfoToast, showToast } from '../../components/ToastNotification';
-import CustomizedProgressBar from '@/components/CustomizedProgressBar';
+import CustomizedProgressBar from '@/components/FirstLevelLoader';
 
 const BingAdsLanding = () => {
   const router = useRouter();
