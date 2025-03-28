@@ -168,7 +168,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification, NotificationDat
       <Box sx={{ ...headerStyles.headers, display: { xs: 'none', md: 'flex' } }}>
         <Box sx={headerStyles.logoContainer}>
           <IconButton onClick={handleLogoClick} sx={{ "&:hover": { backgroundColor: 'transparent' }, cursor: 'pointer', padding: '2px' }}>
-            <Image priority src="/logo.svg" alt="logo" height={31} width={130} />
+            <Image priority src="/logo.svg" alt="logo" height={30} width={130} />
           </IconButton>
           {visibleButton && (
             <Button
@@ -189,7 +189,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification, NotificationDat
             </Button>
           )}
           <Box sx={{display: 'flex', ml:3}}>
-            {!pathname.includes('sources') && !pathname.includes('lookalikes') && !pathname.includes('smart-audiences') && <DomainButton />}
+            {(pathname.includes('dashboard') || pathname.includes('leads') || pathname.includes('company') || pathname.includes('suppressions')) && <DomainButton />}
           </Box>
         </Box>
         <Box sx={{ display: "flex", alignItems: "center" }}>

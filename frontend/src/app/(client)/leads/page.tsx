@@ -948,7 +948,7 @@ const Leads: React.FC = () => {
                                 gap: '8px'
                             }
                         }}>
-                            <Button
+                            {/* <Button
                                 onClick={handleAudiencePopupOpen}
                                 aria-haspopup="true"
                                 disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
@@ -974,7 +974,7 @@ const Leads: React.FC = () => {
                                 }}>
                                     Create Contact Sync
                                 </Typography>
-                            </Button>
+                            </Button> */}
                             <Button
                                 aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
                                 aria-haspopup="true"
@@ -1098,7 +1098,7 @@ const Leads: React.FC = () => {
                                     {formattedDates}
                                 </Typography>
                             </Button>
-                            <Button
+                            {/* <Button
                                 onClick={handleAudiencePopupOpen}
                                 aria-haspopup="true"
                                 sx={{
@@ -1114,7 +1114,7 @@ const Leads: React.FC = () => {
                                 }}
                             >
                                 <Image src='/add.svg' alt='logo' height={24} width={24} />
-                            </Button>
+                            </Button> */}
                         </Box>
                     </Box>
                     <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, mb:2, overflowX: 'auto', "@media (max-width: 600px)": { mb: 1 } }}>

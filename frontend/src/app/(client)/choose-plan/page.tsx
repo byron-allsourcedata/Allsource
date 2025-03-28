@@ -98,7 +98,7 @@ const PlanPage: React.FC = () => {
     <>
       <Box sx={planStyles.headers}>
         <Box sx={planStyles.logoContainer}>
-          <Image src="/logo.svg" alt="logo" height={80} width={60} />
+          <Image src="/logo.svg" alt="logo" height={30} width={130} />
         </Box>
         <Button
           aria-controls={open ? 'profile-menu' : undefined}

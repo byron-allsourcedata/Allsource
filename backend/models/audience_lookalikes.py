@@ -8,6 +8,7 @@ class AudienceLookalikes(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, unique=True, nullable=False, server_default="gen_random_uuid()")
     name = Column(VARCHAR(128), nullable=False)
     lookalike_size = Column(VARCHAR(32), nullable=False)
+    target_schema = Column(VARCHAR(16), nullable=False)
     created_date = Column(TIMESTAMP, nullable=False)
     user_id = Column(Integer, ForeignKey('users.id', ondelete='cascade'), nullable=False)
     created_by_user_id = Column(Integer, ForeignKey('users.id', ondelete='SET NULL'), nullable=True)

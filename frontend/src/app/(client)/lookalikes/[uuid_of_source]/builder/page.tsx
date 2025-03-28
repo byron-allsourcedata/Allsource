@@ -2,7 +2,7 @@
 import React, { use, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
-import { Box, Typography, Button, TextField } from "@mui/material";
+import { Box, Typography, Button, TextField, ToggleButton } from "@mui/material";
 import AudienceSizeSelector from "@/app/(client)/lookalikes/components/SizeSelector";
 import SourceTableContainer from "@/app/(client)/lookalikes/components/SourceTableContainer";
 import useAxios from "axios-hooks";
@@ -84,7 +84,8 @@ const CreateLookalikePage: React.FC = () => {
     const [sourceData, setSourceData] = useState<TableData[]>([]);
     const [lookalike, setLookalikeData] = useState<LookalikeData[]>([]);
     const [loading, setLoading] = useState(false);
-    const [isLookalikeCreated, setIsLookalikeCreated] = useState(false);   
+    const [isLookalikeCreated, setIsLookalikeCreated] = useState(false);
+    const [targetAudience, setTargetAudience] = useState<string | ''>('');
 
     const handleSelectSize = (
         id: string,
@@ -139,6 +140,11 @@ const CreateLookalikePage: React.FC = () => {
         setCurrentStep((prev) => prev + 1);
     };
 
+    const handleTargetAudienceChange = (value: string) => {
+        setTargetAudience(value);
+        setCurrentStep(2)
+    };
+
     const toSnakeCase = (str: string) => {
         return str
             .replace(/\s+/g, '_')
@@ -164,7 +170,7 @@ const CreateLookalikePage: React.FC = () => {
     const handleGenerateLookalike = async () => {
         try {
             setLoading(true);
-            const response = await axiosInstance.post('/audience-lookalikes/builder', { uuid_of_source: params.uuid_of_source, lookalike_size: toSnakeCase(selectedLabel), lookalike_name: sourceName })
+            const response = await axiosInstance.post('/audience-lookalikes/builder', { uuid_of_source: params.uuid_of_source, lookalike_size: toSnakeCase(selectedLabel), lookalike_name: sourceName, target_schema: toSnakeCase(targetAudience) })
             if (response.data.status === "SUCCESS") {
                 showToast('Lookalike was created successfully!');
                 createLookalikeData(response.data.id)
@@ -191,7 +197,6 @@ const CreateLookalikePage: React.FC = () => {
         <Box sx={{
             display: 'flex',
             flexDirection: 'column',
-            height: 'calc(100vh - 4.25rem)',
             width: "100%",
             overflow: 'auto',
         }}>
@@ -259,13 +264,52 @@ const CreateLookalikePage: React.FC = () => {
                                     </Box>
                                 )}
                                 {currentStep >= 1 && (
+                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minWidth: '100%', flexGrow: 1, position: "relative", flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px", mt: 1, }}>
+                                        <Box sx={{ display: "flex", width: '100%', flexDirection: "row", justifyContent: 'space-between', gap: 1 }}>
+
+                                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, }}>
+                                                <Typography sx={{ fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500 }}>Select your Target Schema</Typography>
+                                                <Typography sx={{ fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)" }}>Choose what you would like to use it for.</Typography>
+                                            </Box>
+
+                                        </Box>
+                                        <Box sx={{ display: "flex", flexDirection: "row", gap: 2 }}>
+                                            {["B2B", "B2C"].map((option) => (
+                                                <ToggleButton
+                                                    key={option}
+                                                    value={option}
+                                                    selected={targetAudience === option}
+                                                    className="form-input-label"
+                                                    onClick={() => handleTargetAudienceChange(option)}
+                                                    sx={{
+                                                        textTransform: 'none',
+                                                        border: targetAudience === option
+                                                            ? "1px solid rgba(117, 168, 218, 1)"
+                                                            : "1px solid #ccc",
+                                                        color: "rgba(32, 33, 36, 1)",
+                                                        backgroundColor: "#fff !important",
+                                                        borderRadius: "4px",
+                                                        padding: '8px 12px',
+                                                        "&:hover": {
+                                                            backgroundColor: "rgba(117, 168, 218, 0.2)"
+                                                        }
+                                                    }}
+                                                >
+                                                    {option}
+                                                </ToggleButton>
+                                            ))}
+                                        </Box>
+
+                                    </Box>
+                                )}
+                                {currentStep >= 2 && (
                                     <AudienceSizeSelector
                                         onSelectSize={handleSelectSize}
                                         selectedSize={selectedSize}
                                     />
                                 )}
 
-                                {currentStep >= 2 && (
+                                {currentStep >= 3 && (
                                     <Box
                                         sx={{
                                             display: "flex",
@@ -274,7 +318,7 @@ const CreateLookalikePage: React.FC = () => {
                                             border: "1px solid #E4E4E4",
                                             backgroundColor: "white",
                                             padding: "24px 20px",
-                                            mt: 2,
+                                            mt: 1,
                                         }}
                                     >
                                         <Typography
@@ -322,7 +366,7 @@ const CreateLookalikePage: React.FC = () => {
                                     </Box>
                                 )}
                             </Box>
-                            {currentStep >= 2 && (
+                            {currentStep >= 3 && (
                                 <Box
                                     sx={{
                                         width: '100%',
@@ -334,7 +378,7 @@ const CreateLookalikePage: React.FC = () => {
                                         mt: 2,
                                         pr: 2,
                                         pt: "0.5rem",
-                                        pb: 2, // Добавьте отступ снизу
+                                        pb: 1, 
                                     }}
                                 >
                                     <Button
