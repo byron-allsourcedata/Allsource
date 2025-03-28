@@ -162,32 +162,6 @@ const DataSync = () => {
             }}
           >
             <Button
-              onClick={handleAudiencePopupOpen}
-              aria-haspopup="true"
-              disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
-              sx={{
-                textTransform: 'none',
-                color: status === 'PIXEL_INSTALLATION_NEEDED' ? 'rgba(128, 128, 128, 1)' : 'rgba(80, 82, 178, 1)',
-                border: '1px solid rgba(80, 82, 178, 1)',
-                borderRadius: '4px',
-                padding: '9px 16px',
-                opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.4' : '1',
-                minWidth: 'auto',
-                '@media (max-width: 900px)': {
-                  display: 'none'
-                }
-              }}
-            >
-              <Typography className='second-sub-title' sx={{
-                marginRight: '0.5em',
-                padding: 0.2,
-                textAlign: 'left',
-                color: '#5052B2 !important'
-              }}>
-                Create Contact Sync
-              </Typography>
-            </Button>
-            <Button
               onClick={handleFilterPopupOpen}
               aria-haspopup="true"
               sx={{
@@ -210,23 +184,6 @@ const DataSync = () => {
                   color: filters?.length > 0 ? 'rgba(80, 82, 178, 1)' : "rgba(128, 128, 128, 1)",
                 }}
               />
-            </Button>
-            <Button
-              onClick={handleAudiencePopupOpen}
-              aria-haspopup="true"
-              sx={{
-                textTransform: 'none',
-                color: 'rgba(80, 82, 178, 1)',
-                borderRadius: '4px',
-                padding: '0',
-                border: 'none',
-                minWidth: 'auto',
-                '@media (min-width: 901px)': {
-                  display: 'none'
-                }
-              }}
-            >
-              <Image src='/add.svg' alt='logo' height={24} width={24} />
             </Button>
           </Box>
         </Box>
