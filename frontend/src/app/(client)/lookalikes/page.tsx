@@ -22,6 +22,7 @@ import CustomTablePagination from "@/components/CustomTablePagination";
 import CustomizedProgressBar from '@/components/CustomizedProgressBar'
 import CalendarPopup from "@/components/CustomCalendar";
 import dayjs from "dayjs";
+import { useRouter } from "next/navigation";
 
 
 interface FilterParams {
@@ -52,6 +53,7 @@ interface TableRowData {
 }
 
 const CreateLookalikePage: React.FC = () => {
+    const router = useRouter();
     const [isLookalikeGenerated, setIsLookalikeGenerated] = useState(false);
     const [loading, setLoading] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -381,6 +383,26 @@ const CreateLookalikePage: React.FC = () => {
                         {isLookalikeGenerated &&
                             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, alignItems: 'center', width: '100%' }}>
                                 <Button
+                                    onClick={() => router.push('builder')}
+                                    variant="outlined"
+                                    sx={{
+                                        height: '40px',
+                                        borderRadius: '4px',
+                                        textTransform: 'none',
+                                        fontSize: '14px',
+                                        lineHeight: "19.6px",
+                                        fontWeight: '500',
+                                        color: '#5052B2',
+                                        borderColor: '#5052B2',
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(80, 82, 178, 0.1)',
+                                            borderColor: '#5052B2',
+                                        },
+                                    }}
+                                >
+                                    Create Lookalike
+                                </Button>
+                                <Button
                                     onClick={handleFilterPopupOpen}
                                     aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
                                     aria-haspopup="true"
@@ -586,7 +608,7 @@ const CreateLookalikePage: React.FC = () => {
                                 fontWeight: "600",
                                 lineHeight: "28px"
                             }}>
-                                Generate Your First Lookalike on Source Page
+                                Generate Your First Lookalike
                             </Typography>
                             <Image src='/pixel_installation_needed.svg' alt='Need Pixel Install'
                                 height={250} width={300} />
@@ -598,9 +620,9 @@ const CreateLookalikePage: React.FC = () => {
                                 fontWeight: "600",
                                 lineHeight: "20px"
                             }}>
-                                To generate your first Lookalike go to Source page and start creating.
+                                To generate your first Lookalike go to create lookalike page.
                             </Typography>
-                            <Link href="/sources" passHref>
+                            <Link href="/lookalikes/builder" passHref>
                                 <Button
                                     variant="contained"
                                     className="second-sub-title"
@@ -615,7 +637,7 @@ const CreateLookalikePage: React.FC = () => {
                                         },
                                     }}
                                 >
-                                    Go to Source Page
+                                    Generate Your First Lookalike
                                 </Button>
                             </Link>
                         </Box>

@@ -58,6 +58,14 @@ async def get_source(
     return lookalike_service.get_source_info(uuid_of_source, user=user)
 
 
+@router.get("/get-sources")
+async def get_all_sources(
+        user: dict = Depends(check_user_authorization_without_pixel),
+        lookalike_service: AudienceLookalikesService = Depends(get_lookalikes_service),
+):
+    return lookalike_service.get_all_sources(user=user)
+
+
 @router.post("/builder")
 async def create_lookalike(
     request: LookalikeCreateRequest,

@@ -139,9 +139,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   }, []);
 
   useEffect(() => {
-  }, [data]);
-
-  useEffect(() => {
     if (needsSync) {
       handleIntegrationsSync();
       setNeedsSync(false);

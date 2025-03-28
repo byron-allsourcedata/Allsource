@@ -4,7 +4,7 @@ from models.users import Users
 from enums import SourcePlatformEnum
 from models.users_domains import UserDomains
 from models.subscriptions import UserSubscriptions
-from sqlalchemy import func
+from sqlalchemy import func, desc
 from models.integrations.users_domains_integrations import UserIntegration
 
 class IntegrationsUserSyncPersistence:
@@ -124,7 +124,7 @@ class IntegrationsUserSyncPersistence:
                     'hook_url': sync.hook_url,
                     'method': sync.method
                 }
-        syncs = query.order_by(IntegrationUserSync.id).all()
+        syncs = query.order_by(desc(IntegrationUserSync.created_at)).all()
         return [{
             'id': sync.id,
             'createdDate': sync.created_at.strftime('%b %d, %Y') if sync.created_at else None,

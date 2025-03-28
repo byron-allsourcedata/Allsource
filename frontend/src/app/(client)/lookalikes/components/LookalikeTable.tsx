@@ -125,6 +125,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, order
     const handleDelete = async (rowId: string) => {
         try {
             const response = await axiosInstance.delete(`/audience-lookalikes/delete-lookalike`, { params: { uuid_of_lookalike: rowId } });
+            console.log(response)
             if (response.data.status === "SUCCESS") {
                 showToast("Lookalike has been successfully removed")
                 refreshData()
@@ -132,7 +133,10 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, order
             else {
                 showErrorToast("An error occurred while trying to remove lookalike")
             }
-        } catch (error) {
+        } catch (error: any) {
+            if(error.status === 400){
+                showErrorToast("Cannot remove lookalike because it is used for smart audience")
+            }
         }
     };
 

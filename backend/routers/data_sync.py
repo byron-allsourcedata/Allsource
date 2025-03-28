@@ -8,15 +8,15 @@ router = APIRouter()
 
 @router.get('/sync')
 async def get_sync(service_name: str | None = Query(None), integrations_users_sync_id: int | None = Query(None),
-                    integration_service: IntegrationService = Depends(get_integration_service),
-                   user = Depends(check_user_authorization), domain = Depends(check_domain)):
+                   integration_service: IntegrationService = Depends(get_integration_service),
+                   domain=Depends(check_domain)):
     return integration_service.get_sync_domain(domain.id, service_name, integrations_users_sync_id)
 
 
 @router.post('/sync')
 async def create_sync(data: SyncCreate, service_name: str = Query(...),
                       integration_service: IntegrationService = Depends(get_integration_service),
-                      user = Depends(check_user_authorization), domain = Depends(check_domain)):
+                      user=Depends(check_user_authorization), domain = Depends(check_domain)):
     if user.get('team_member'):
         team_member = user.get('team_member')
         if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value, TeamAccessLevel.STANDARD.value}:
