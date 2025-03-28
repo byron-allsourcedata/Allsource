@@ -74,16 +74,14 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 
 
     useEffect(() => {
-        const updatedData = tableData.map(item => {
+        tableData.forEach(item => {
             const progress = smartLookaLikeProgress[item.id];
-
             if (progress) {
-                setProgress(progress.processed)
-                setTotal(progress.total)
+                setProgress(progress.processed);
+                setTotal(progress.total);
             }
         });
-
-    }, [smartLookaLikeProgress]);
+    }, [smartLookaLikeProgress]);    
 
 
     return (

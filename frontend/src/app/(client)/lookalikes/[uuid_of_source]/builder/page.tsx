@@ -167,7 +167,7 @@ const CreateLookalikePage: React.FC = () => {
             const response = await axiosInstance.post('/audience-lookalikes/builder', { uuid_of_source: params.uuid_of_source, lookalike_size: toSnakeCase(selectedLabel), lookalike_name: sourceName })
             if (response.data.status === "SUCCESS") {
                 showToast('Lookalike was created successfully!');
-                createLookalikeData(response.data.id)
+                createLookalikeData(response.data.lookalike.id)
                 setIsLookalikeCreated(true);
             }
         }

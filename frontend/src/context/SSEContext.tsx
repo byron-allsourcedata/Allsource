@@ -67,46 +67,46 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
         if (data.status === "PIXEL_CODE_PARSE_FAILED") {
           showErrorToast("Could not find pixel code on your site")
         }
-        else if(data.notification_id && data.notification_text) {
+        else if (data.notification_id && data.notification_text) {
           setLatestNotification({
             id: data.notification_id,
             text: data.notification_text,
           })
         }
-        else if(data.update_subscription && data.status) {
+        else if (data.update_subscription && data.status) {
           showToast(`Subscription updated ${data.status}!`);
         }
-        else if(data.status == 'ZAPIER_CONNECTED') {
+        else if (data.status == 'ZAPIER_CONNECTED') {
           showToast("Zapier has been successfully integrated!");
           const currentPath = window.location.pathname;
           if (currentPath === "/account-setup") {
             window.location.href = "/dashboard";
-          }else{
+          } else {
             window.location.reload();
           }
         }
-        else if(data.status == 'PIXEL_CODE_INSTALLED' && data.need_reload_page) {
+        else if (data.status == 'PIXEL_CODE_INSTALLED' && data.need_reload_page) {
           showToast("Pixel code is installed successfully!");
           window.location.reload();
         }
         else if (data.status == 'SOURCE_PROCESSING_PROGRESS') {
           const { total, processed, source_id, matched } = data.data;
           if (!source_id) {
-              console.error("source_id is undefined");
-              return;
-          }
-      
-          updateSourceProgress(source_id, total, processed, matched);
-      }
-      else if (data.status == 'AUDIENCE_LOOKALIKES_PROGRESS') {
-        const { lookalike_id, total, processed } = data.data;
-        if (!lookalike_id) {
             console.error("source_id is undefined");
             return;
+          }
+
+          updateSourceProgress(source_id, total, processed, matched);
         }
-    
-        updateSmartAudienceProgress(lookalike_id, total, processed);
-    }
+        else if (data.status == 'AUDIENCE_LOOKALIKES_PROGRESS') {
+          const { lookalike_id, total, processed } = data.data;
+          if (!lookalike_id) {
+            console.error("source_id is undefined");
+            return;
+          }
+
+          updateSmartAudienceProgress(lookalike_id, total, processed);
+        }
         else {
           if (data.percent) {
             const meItem = sessionStorage.getItem('me');
