@@ -617,7 +617,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
     { image: 'google-ads.svg', service_name: 'google_ads' },
     { image: 'salesforce-icon.svg', service_name: 'sales_force' },
     { image: 'bingads-icon.svg', service_name: 'bing_ads' },
-    { image: 's3-icon.svg', service_name: 's3' }
+    { image: 's3.svg', service_name: 's3' }
   ];
 
   const integratedServices = integrationsCredentials.map(cred => cred.service_name);

@@ -318,7 +318,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
         );
       case "s3":
         return (
-          <Image src={"/s3-icon.svg"} alt="s3" width={18} height={18} />
+          <Image src={"/s3.svg"} alt="s3" width={18} height={18} />
         );
       case "webhook":
         return (
