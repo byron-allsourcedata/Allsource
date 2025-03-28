@@ -118,27 +118,27 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
       <Box sx={{ ...headerStyles.headers, display: { xs: 'none', md: 'flex' } }}>
         <Box sx={headerStyles.logoContainer}>
           <IconButton onClick={handleLogoClick} sx={{ "&:hover": { backgroundColor: 'transparent' } }}>
-            <Image src="/logo.svg" alt="logo" height={30} width={50} priority />
+            <Image src="/logo.svg" alt="logo" height={30} width={130} priority />
           </IconButton>
         </Box>
         <Box sx={{ display: "flex", alignItems: "center" }}>
-          <Button 
+          <Button
             onClick={handleNotificationIconPopupOpen}
-            ref={buttonRef} 
+            ref={buttonRef}
             sx={{
-            minWidth: '32px',
-            padding: '6px',
-            color: 'rgba(128, 128, 128, 1)',
-            border: (hasNewNotifications || hasNotification) ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
-            borderRadius: '3.27px',
-            marginRight: '1.5rem',
-            '&:hover': {
-              border: '1px solid rgba(80, 82, 178, 1)',
-              '& .MuiSvgIcon-root': {
-                color: 'rgba(80, 82, 178, 1)'
+              minWidth: '32px',
+              padding: '6px',
+              color: 'rgba(128, 128, 128, 1)',
+              border: (hasNewNotifications || hasNotification) ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
+              borderRadius: '3.27px',
+              marginRight: '1.5rem',
+              '&:hover': {
+                border: '1px solid rgba(80, 82, 178, 1)',
+                '& .MuiSvgIcon-root': {
+                  color: 'rgba(80, 82, 178, 1)'
+                }
               }
-            }
-          }}
+            }}
           >
             <NotificationsOutlinedIcon sx={{
               fontSize: '22px',
@@ -175,14 +175,14 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
               border: '1px solid rgba(184, 184, 184, 1)',
               borderRadius: '3.27px',
               '&:hover': {
-              border: '1px solid rgba(80, 82, 178, 1)',
-              '& .MuiSvgIcon-root': {
-                color: 'rgba(80, 82, 178, 1)'
+                border: '1px solid rgba(80, 82, 178, 1)',
+                '& .MuiSvgIcon-root': {
+                  color: 'rgba(80, 82, 178, 1)'
+                }
               }
-            }
             }}
           >
-            <PersonIcon sx={{fontSize: '22px'}} />
+            <PersonIcon sx={{ fontSize: '22px' }} />
           </Button>
           <Menu
             id="profile-menu"
@@ -197,7 +197,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
               ml: -1
             }}
           >
-            <MenuItem sx={{ paddingTop: 1, paddingLeft: 2, paddingRight: 2, paddingBottom: 1 }}>
+            <Box sx={{ paddingTop: 1, paddingLeft: 2, paddingRight: 2, paddingBottom: 1 }}>
               <Typography
                 variant="h6"
                 sx={{
@@ -224,7 +224,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
               >
                 {email}
               </Typography>
-            </MenuItem>
+            </Box>
             <MenuItem
               sx={{
                 fontFamily: 'Nunito Sans',

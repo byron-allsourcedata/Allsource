@@ -4,15 +4,14 @@ import Image from "next/image";
 import { Typography, Box, Link } from "@mui/material";
 import { useRouter, useSearchParams } from 'next/navigation';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
-import { shopifyLandingStyle } from "./googleAds-landing";
-import { showErrorToast, showToast } from '../../../components/ToastNotification';
-import CustomizedProgressBar from '@/components/CustomizedProgressBar';
+import { shopifyLandingStyle } from "./salesForce-landing";
+import { showErrorToast, showInfoToast, showToast } from '@/components/ToastNotification';
+import CustomizedProgressBar from '@/components/FirstLevelLoader';
 
 const GoogleAdsLanding = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const code = searchParams.get('code');
-  const scope = searchParams.get('scope');
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -22,24 +21,23 @@ const GoogleAdsLanding = () => {
         const response = await axiosInstance.post(
           '/integrations/',
           {
-            google_ads: {
-              code: code,
-              scope: scope
+            sales_force: {
+              code: code
             },
           },
           {
             params: {
-              service_name: 'google_ads',
+              service_name: 'sales_force',
             },
           }
         );
 
         if (response.data.status == 'SUCCESS') {
-          showToast('Connect to GoogleAds success!')
+          showToast('Connect to SalesForce success!')
           router.push(`/integrations`);
-        } 
+        }
       } catch (error) {
-        showErrorToast(`Error connect to GoogleAds ${error}`);
+        showErrorToast(`Error connect to SalesForce ${error}`);
         router.push(`/integrations`);
       }
     };
@@ -59,7 +57,7 @@ const GoogleAdsLanding = () => {
       </Link>
       <Image src={'/app_intalled.svg'} width={330} height={246} alt="Maximiz installed" />
       <Typography variant="h6" fontSize={'16px'} fontWeight={400} mt={2}>
-        Wait for GoogleAds token verification
+        Wait for SalesForce token verification
       </Typography>
     </Box>
   );

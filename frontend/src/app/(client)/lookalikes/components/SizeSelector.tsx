@@ -65,7 +65,7 @@ const AudienceSizeSelector: React.FC<AudienceSizeSelectorProps> = ({
                     flexDirection: "column",
                     padding: "18px",
                     gap: "8px",
-                    mt: 2,
+                    mt: 1,
                 }}
             >
                 <Typography className="second-sub-title">

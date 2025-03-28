@@ -5,10 +5,10 @@ import { Typography, Box, Link } from "@mui/material";
 import { useRouter, useSearchParams } from 'next/navigation';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { shopifyLandingStyle } from "./bingAds-landing";
-import { showErrorToast, showInfoToast, showToast } from '../../../components/ToastNotification';
-import CustomizedProgressBar from '@/components/CustomizedProgressBar';
+import { showErrorToast, showInfoToast, showToast } from '../../components/ToastNotification';
+import CustomizedProgressBar from '@/components/FirstLevelLoader';
 
-const GoogleAdsLanding = () => {
+const BingAdsLanding = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const code = searchParams.get('code');
@@ -16,7 +16,6 @@ const GoogleAdsLanding = () => {
   const error = searchParams.get('error');
 
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
 
     const fetchBingAdsLandingData = async () => {
       if (error){
@@ -63,9 +62,9 @@ const GoogleAdsLanding = () => {
 
   return (
     <Box sx={shopifyLandingStyle.mainContent}>
-      <Link display={'flex'} sx={{ alignItems: 'center', textDecoration: 'none' }} href='https://maximiz.ai'>
-        <Image src={'/logo.svg'} width={61} height={39} alt="Maximiz" />
-        <Typography variant="h1" color={'#F8464B'} fontSize={'51.21px'} fontWeight={400}>Maximiz</Typography>
+      <Link display={'flex'} sx={{ alignItems: 'center', textDecoration: 'none' }}>
+        <Image src={'/logo-icon.svg'} width={61} height={39} alt="AllSource" />
+        <Typography variant="h1" color={'#002868'} fontSize={'51.21px'} fontWeight={400}>AllSource</Typography>
       </Link>
       <Image src={'/app_intalled.svg'} width={330} height={246} alt="Maximiz installed" />
       <Typography variant="h6" fontSize={'16px'} fontWeight={400} mt={2}>
@@ -75,12 +74,12 @@ const GoogleAdsLanding = () => {
   );
 };
 
-const GoogleAdsLandingPage: React.FC = () => {
+const BingAdsLandingPage: React.FC = () => {
   return (
     <Suspense fallback={<CustomizedProgressBar />}>
-      <GoogleAdsLanding />
+      <BingAdsLanding />
     </Suspense>
   );
 };
 
-export default GoogleAdsLandingPage;
+export default BingAdsLandingPage;

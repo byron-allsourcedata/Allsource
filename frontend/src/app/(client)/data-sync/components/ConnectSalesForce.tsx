@@ -602,7 +602,7 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({ open, onClose, 
                                                 minWidth: '196px'
                                             }
                                         }}>
-                                            <Image src='/logo.svg' alt='logo' height={22} width={34} />
+                                            <Image src='/logo-icon.svg' alt='logo' height={22} width={34} />
                                         </Grid>
                                         <Grid item xs="auto" sm={1} sx={{
                                             '@media (max-width:599px)': {

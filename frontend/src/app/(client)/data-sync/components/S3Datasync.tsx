@@ -863,7 +863,7 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({ open, onClose, data, isEdit
                                                 minWidth: '196px'
                                             }
                                         }}>
-                                            <Image src='/logo.svg' alt='logo' height={15} width={24} />
+                                            <Image src='/logo-icon.svg' alt='logo' height={20} width={24} />
                                         </Grid>
                                         <Grid item xs="auto" sm={1} sx={{
                                             '@media (max-width:599px)': {

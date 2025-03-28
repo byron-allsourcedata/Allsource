@@ -58,9 +58,9 @@ class AudienceLookalikesService:
         except IntegrityError:
             raise HTTPException(status_code=400, detail="Cannot remove lookalike because it is used for smart audience")
 
-    def create_lookalike(self, user, uuid_of_source, lookalike_size, lookalike_name, created_by_user_id):
+    def create_lookalike(self, user, uuid_of_source, lookalike_size, lookalike_name, target_schema, created_by_user_id):
         lookalike = self.lookalikes_persistence_service.create_lookalike(
-            uuid_of_source, user.get('id'), lookalike_size, lookalike_name, created_by_user_id
+            uuid_of_source, user.get('id'), lookalike_size, lookalike_name, target_schema, created_by_user_id
         )
         return {
             'status': BaseEnum.SUCCESS.value,
