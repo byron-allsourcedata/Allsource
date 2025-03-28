@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Drawer, Box, Typography, IconButton, List, LinearProgress, Grid, ClickAwayListener, 
-        Button, ListItemText, Popover, Tooltip, Tab, Slider, TextField, Card, CardContent,
-        InputAdornment, MenuItem, Menu, Divider, FormControl, InputLabel, Select, Link} from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Drawer, Box, Typography, IconButton, List, LinearProgress, Grid, 
+        Button, Popover, Tooltip, Tab, Slider, TextField, Card, CardContent,
+        MenuItem, Link} from '@mui/material';
 import TabList from "@mui/lab/TabList";
 import TabPanel from '@mui/lab/TabPanel';
 import TabContext from "@mui/lab/TabContext";
@@ -17,6 +17,7 @@ import HubspotIntegrationPopup from '@/components/HubspotIntegrationPopup';
 import { UpgradePlanPopup } from '@/app/(client)/components/UpgradePlanPopup';
 import IntegrationBox from './IntegrationBox';
 import GoogleAdsContactSyncTab from './GoogleAdsContactSyncTab';
+import MailchimpContactSyncTab from './MailchimpContactSyncTab';
 import MetaContactSyncTab from './MetaContactSyncTab'
 import { styled } from '@mui/material/styles';
 import { useIntegrationContext } from "@/context/IntegrationContext";
@@ -67,18 +68,6 @@ interface CustomRow {
 interface MetaAuidece {
     id: string
     list_name: string
-}
-
-interface MetaCampaign {
-    id: string
-    list_name: string
-}
-
-interface FormValues {
-    campaignName: string;
-    campaignObjective: string;
-    bidAmount: number;
-    dailyBudget: number;
 }
 
 interface adAccount {
@@ -316,13 +305,12 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     const [upgradePlanPopup, setUpgradePlanPopup] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [value, setValue] = useState('1');
-    const [isDropdownValid, setIsDropdownValid] = useState(false);
     const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(null)
     const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
 
     const [customFields, setCustomFields] = useState<CustomRow[]>([]);
     const [rows, setRows] = useState(defaultRows);
-    const { needsSync, setNeedsSync } = useIntegrationContext();
+    const { needsSync } = useIntegrationContext();
 
     //GENERAL
 
@@ -700,13 +688,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
 
     // Mailchimp
 
-    const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
-    const [newListName, setNewListName] = useState<string>('');
-    const [showCreateFormMailchimp, setShowCreateFormMailchimp] = useState<boolean>(false);
-    const [listNameError, setListNameError] = useState(false);
-    const [isShrunkMailchimp, setIsShrunkMailchimp] = useState<boolean>(false);
-    const [anchorElMailchimp, setAnchorElMailchimp] = useState<null | HTMLElement>(null);
-    const textFieldRefMailchimp = useRef<HTMLDivElement>(null);
     const [klaviyoList, setKlaviyoList] = useState<KlaviyoList[]>([])
     const [selectedOptionMailchimp, setSelectedOptionMailchimp] = useState<KlaviyoList | null>(null);
 
@@ -731,76 +712,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
             return newListResponse.data;
         } catch (error) { }
 
-    };
-
-    const handleSelectOptionMailchimp = (value: KlaviyoList | string) => {
-        if (value === 'createNew') {
-            setShowCreateFormMailchimp(prev => !prev);
-            if (!showCreateFormMailchimp) {
-                setAnchorElMailchimp(textFieldRefMailchimp.current);
-            }
-        } else if (isKlaviyoList(value)) {
-            // Проверка, является ли value объектом KlaviyoList
-            setSelectedOptionMailchimp({
-                id: value.id,
-                list_name: value.list_name
-            });
-            setIsDropdownValid(true);
-            handleCloseSelectMailchimp();
-        } else {
-            setIsDropdownValid(false);
-            setSelectedOptionMailchimp(null);
-        }
-    };
-
-
-    const handleClickMailchimp = (event: React.MouseEvent<HTMLInputElement>) => {
-        setIsShrunkMailchimp(true);
-        setIsDropdownOpen(prev => !prev);
-        setAnchorElMailchimp(event.currentTarget);
-        setShowCreateFormMailchimp(false); // Reset form when menu opens
-    };
-
-    const handleCloseSelectMailchimp = () => {
-        setAnchorElMailchimp(null);
-        setShowCreateFormMailchimp(false);
-        setIsDropdownOpen(false);
-        setNewListName(''); // Clear new list name when closing
-    };
-
-    const isKlaviyoList = (value: any): value is KlaviyoList => {
-        return value !== null &&
-            typeof value === 'object' &&
-            'id' in value &&
-            'list_name' in value;
-    };
-
-    const handleDropdownToggleMailchimp = (event: React.MouseEvent) => {
-        event.stopPropagation(); // Prevent triggering the input field click
-        setIsDropdownOpen(prev => !prev);
-        setAnchorElMailchimp(textFieldRefMailchimp.current);
-    };
-
-    const handleSave = async () => {
-        let valid = true;
-
-        // Validate List Name
-        if (newListName.trim() === '') {
-            setListNameError(true);
-            valid = false;
-        } else {
-            setListNameError(false);
-        }
-
-        // If valid, save and close
-        if (valid) {
-            const newKlaviyoList = { id: '-1', list_name: newListName }
-            setSelectedOptionMailchimp(newKlaviyoList);
-            if (isKlaviyoList(newKlaviyoList)) {
-                setIsDropdownValid(true);
-            }
-            handleCloseSelectMailchimp();
-        }
     };
 
     const getList = async () => {
@@ -1084,241 +995,12 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                 </Tooltip>
                                             </Box>
 
-                                            {activeService === "mailchimp" &&
-                                                <ClickAwayListener onClickAway={handleCloseSelectMailchimp}>
-                                                    <Box>
-                                                        <TextField
-                                                            ref={textFieldRefMailchimp}
-                                                            variant="outlined"
-                                                            value={selectedOptionMailchimp?.list_name}
-                                                            onClick={handleClickMailchimp}
-                                                            size="small"
-                                                            fullWidth
-                                                            label={selectedOptionMailchimp ? '' : 'Select or Create new list'}
-                                                            InputLabelProps={{
-                                                                shrink: selectedOptionMailchimp ? false : isShrunkMailchimp,
-                                                                sx: {
-                                                                    fontFamily: 'Nunito Sans',
-                                                                    fontSize: '12px',
-                                                                    lineHeight: '16px',
-                                                                    color: 'rgba(17, 17, 19, 0.60)',
-                                                                    letterSpacing: '0.06px',
-                                                                    top: '5px',
-                                                                    '&.Mui-focused': {
-                                                                        color: 'rgba(80, 82, 178, 1)',
-                                                                    },
-                                                                }
-                                                            }}
-                                                            InputProps={{
-
-                                                                endAdornment: (
-                                                                    <InputAdornment position="end">
-                                                                        <IconButton onClick={handleDropdownToggleMailchimp} edge="end">
-                                                                            {isDropdownOpen ? <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} /> : <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />}
-                                                                        </IconButton>
-                                                                    </InputAdornment>
-                                                                ),
-                                                                sx: styles.formInput
-                                                            }}
-                                                            sx={{
-                                                                '& input': {
-                                                                    caretColor: 'transparent', // Hide caret with transparent color
-                                                                    fontFamily: "Nunito Sans",
-                                                                    fontSize: "14px",
-                                                                    color: "rgba(0, 0, 0, 0.89)",
-                                                                    fontWeight: "600",
-                                                                    lineHeight: "normal",
-                                                                },
-                                                                '& .MuiOutlinedInput-input': {
-                                                                    cursor: 'default', // Prevent showing caret on input field
-                                                                    top: '5px'
-                                                                },
-
-                                                            }}
-                                                        />
-
-                                                        <Menu
-                                                            anchorEl={anchorElMailchimp}
-                                                            open={Boolean(anchorElMailchimp) && isDropdownOpen}
-                                                            onClose={handleCloseSelectMailchimp}
-                                                            PaperProps={{
-                                                                sx: {
-                                                                    width: anchorElMailchimp ? `${anchorElMailchimp.clientWidth}px` : '538px', borderRadius: '4px',
-                                                                    border: '1px solid #e4e4e4'
-                                                                }, // Match dropdown width to input
-                                                            }}
-                                                            sx={{
-
-                                                            }}
-                                                        >
-                                                            {/* Show "Create New List" option */}
-                                                            <MenuItem onClick={() => handleSelectOptionMailchimp('createNew')} sx={{
-                                                                borderBottom: showCreateFormMailchimp ? "none" : "1px solid #cdcdcd",
-                                                                '&:hover': {
-                                                                    background: 'rgba(80, 82, 178, 0.10)'
-                                                                }
-                                                            }}>
-                                                                <ListItemText primary={`+ Create new list`} primaryTypographyProps={{
-                                                                    sx: {
-                                                                        fontFamily: "Nunito Sans",
-                                                                        fontSize: "14px",
-                                                                        color: showCreateFormMailchimp ? "#5052B2" : "#202124",
-                                                                        fontWeight: "500",
-                                                                        lineHeight: "20px",
-
-                                                                    }
-                                                                }} />
-                                                            </MenuItem>
-
-                                                            {/* Show Create New List form if 'showCreateForm' is true */}
-                                                            {showCreateFormMailchimp && (
-                                                                <Box>
-                                                                    <Box sx={{
-                                                                        display: 'flex',
-                                                                        flexDirection: 'column',
-                                                                        gap: '24px',
-                                                                        p: 2,
-                                                                        width: anchorElMailchimp ? `${anchorElMailchimp.clientWidth}px` : '538px',
-                                                                        pt: 0
-                                                                    }}>
-                                                                        <Box
-                                                                            sx={{
-
-
-                                                                                mt: 1, // Margin-top to separate form from menu item
-                                                                                display: 'flex',
-                                                                                justifyContent: 'space-between',
-                                                                                gap: '16px',
-                                                                                '@media (max-width: 600px)': {
-                                                                                    flexDirection: 'column'
-                                                                                },
-                                                                            }}
-                                                                        >
-                                                                            <TextField
-                                                                                label="List Name"
-                                                                                variant="outlined"
-                                                                                value={newListName}
-                                                                                onChange={(e) => setNewListName(e.target.value)}
-                                                                                size="small"
-                                                                                fullWidth
-                                                                                onKeyDown={(e) => e.stopPropagation()}
-                                                                                error={listNameError}
-                                                                                helperText={listNameError ? 'List Name is required' : ''}
-                                                                                InputLabelProps={{
-                                                                                    sx: {
-                                                                                        fontFamily: 'Nunito Sans',
-                                                                                        fontSize: '12px',
-                                                                                        lineHeight: '16px',
-                                                                                        fontWeight: '400',
-                                                                                        color: 'rgba(17, 17, 19, 0.60)',
-                                                                                        '&.Mui-focused': {
-                                                                                            color: 'rgba(80, 82, 178, 1)',
-                                                                                        },
-                                                                                    }
-                                                                                }}
-                                                                                InputProps={{
-
-                                                                                    endAdornment: (
-                                                                                        newListName && ( // Conditionally render close icon if input is not empty
-                                                                                            <InputAdornment position="end">
-                                                                                                <IconButton
-                                                                                                    edge="end"
-                                                                                                    onClick={() => setNewListName('')} // Clear the text field when clicked
-                                                                                                >
-                                                                                                    <Image
-                                                                                                        src='/close-circle.svg'
-                                                                                                        alt='close-circle'
-                                                                                                        height={18}
-                                                                                                        width={18} // Adjust the size as needed
-                                                                                                    />
-                                                                                                </IconButton>
-                                                                                            </InputAdornment>
-                                                                                        )
-                                                                                    ),
-                                                                                    sx: {
-                                                                                        '&.MuiOutlinedInput-root': {
-                                                                                            height: '32px',
-                                                                                            '& .MuiOutlinedInput-input': {
-                                                                                                padding: '5px 16px 4px 16px',
-                                                                                                fontFamily: 'Roboto',
-                                                                                                color: '#202124',
-                                                                                                fontSize: '14px',
-                                                                                                fontWeight: '400',
-                                                                                                lineHeight: '20px'
-                                                                                            },
-                                                                                            '& .MuiOutlinedInput-notchedOutline': {
-                                                                                                borderColor: '#A3B0C2',
-                                                                                            },
-                                                                                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                                                borderColor: '#A3B0C2',
-                                                                                            },
-                                                                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                                                borderColor: 'rgba(80, 82, 178, 1)',
-                                                                                            },
-                                                                                        },
-                                                                                        '&+.MuiFormHelperText-root': {
-                                                                                            marginLeft: '0',
-                                                                                        },
-                                                                                    }
-                                                                                }}
-                                                                            />
-                                                                        </Box>
-                                                                        <Box sx={{ textAlign: 'right' }}>
-                                                                            <Button variant="contained" onClick={handleSave}
-                                                                                disabled={listNameError || !newListName}
-                                                                                sx={{
-                                                                                    borderRadius: '4px',
-                                                                                    border: '1px solid #5052B2',
-                                                                                    background: '#fff',
-                                                                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                                                                    fontFamily: 'Nunito Sans',
-                                                                                    fontSize: '14px',
-                                                                                    fontWeight: '600',
-                                                                                    lineHeight: '20px',
-                                                                                    color: '#5052b2',
-                                                                                    textTransform: 'none',
-                                                                                    padding: '4px 22px',
-                                                                                    '&:hover': {
-                                                                                        background: 'transparent'
-                                                                                    },
-                                                                                    '&.Mui-disabled': {
-                                                                                        background: 'transparent',
-                                                                                        color: '#5052b2'
-                                                                                    }
-                                                                                }}>
-                                                                                Save
-                                                                            </Button>
-                                                                        </Box>
-
-                                                                    </Box>
-
-
-                                                                    {/* Add a Divider to separate form from options */}
-                                                                    <Divider sx={{ borderColor: '#cdcdcd' }} />
-                                                                </Box>
-                                                            )}
-
-                                                            {/* Show static options */}
-                                                            {klaviyoList && klaviyoList.map((klaviyo, option) => (
-                                                                <MenuItem key={klaviyo.id} onClick={() => handleSelectOptionMailchimp(klaviyo)} sx={{
-                                                                    '&:hover': {
-                                                                        background: 'rgba(80, 82, 178, 0.10)'
-                                                                    }
-                                                                }}>
-                                                                    <ListItemText primary={klaviyo.list_name} primaryTypographyProps={{
-                                                                        sx: {
-                                                                            fontFamily: "Nunito Sans",
-                                                                            fontSize: "14px",
-                                                                            color: "#202124",
-                                                                            fontWeight: "500",
-                                                                            lineHeight: "20px"
-                                                                        }
-                                                                    }} />
-                                                                </MenuItem>
-                                                            ))}
-                                                        </Menu>
-                                                    </Box>
-                                                </ClickAwayListener>
+                                            {activeService === "mailchimp" && 
+                                                <MailchimpContactSyncTab 
+                                                    selectedOptionMailchimp={selectedOptionMailchimp}
+                                                    setSelectedOptionMailchimp={setSelectedOptionMailchimp}
+                                                    klaviyoList={klaviyoList}
+                                                />
                                             }
 
                                             {activeService === "meta" && 
@@ -1394,7 +1076,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                         </Grid>
 
                                         {defaultRows.map((row, index) => (
-                                            <Box key={row.id} sx={{ mb: 2 }}> {/* Add margin between rows */}
+                                            <Box key={row.id} sx={{ mb: 2 }}>
                                                 <Grid container spacing={2} alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' } }}>
                                                     {/* Left Input Field */}
                                                     <Grid item xs="auto" sm={5}>
@@ -1458,7 +1140,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                                     src='/chevron-right-purple.svg'
                                                                     alt='chevron-right-purple'
                                                                     height={18}
-                                                                    width={18} // Adjust the size as needed
+                                                                    width={18}
                                                                 />
 
                                                             ) : (
@@ -1466,7 +1148,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                                     src='/close-circle.svg'
                                                                     alt='close-circle'
                                                                     height={18}
-                                                                    width={18} // Adjust the size as needed
+                                                                    width={18}
                                                                 />
                                                             )
                                                         ) : (
@@ -1474,8 +1156,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                                 src='/chevron-right-purple.svg'
                                                                 alt='chevron-right-purple'
                                                                 height={18}
-                                                                width={18} // Adjust the size as needed
-                                                            /> // For the first two rows, always show the right arrow
+                                                                width={18}
+                                                            />
                                                         )}
                                                     </Grid>
 
@@ -1543,7 +1225,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                                         src='/trash-icon-filled.svg'
                                                                         alt='trash-icon-filled'
                                                                         height={18}
-                                                                        width={18} // Adjust the size as needed
+                                                                        width={18}
                                                                     />
                                                                 </IconButton>
                                                                 <Popover
@@ -1625,7 +1307,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                         ))}
                                         <Box sx={{ mb: 2 }}>
                                             {customFields.map((field, index) => (
-                                                // <Box>{field.type}</Box>
                                                 <Grid container spacing={2} alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' } }} key={index}>
                                                     <Grid item xs="auto" sm={5} mb={2}>
                                                         <TextField
