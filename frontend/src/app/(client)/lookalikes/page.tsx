@@ -383,7 +383,7 @@ const CreateLookalikePage: React.FC = () => {
                         {isLookalikeGenerated &&
                             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, alignItems: 'center', width: '100%' }}>
                                 <Button
-                                    onClick={() => router.push('builder')}
+                                    onClick={() => router.push('/lookalikes/builder')}
                                     variant="outlined"
                                     sx={{
                                         height: '40px',
@@ -620,7 +620,7 @@ const CreateLookalikePage: React.FC = () => {
                                 fontWeight: "600",
                                 lineHeight: "20px"
                             }}>
-                                To generate your first Lookalike go to create lookalike page.
+                                To create your first Lookalike, simply click the button below to get started.
                             </Typography>
                             <Link href="/lookalikes/builder" passHref>
                                 <Button

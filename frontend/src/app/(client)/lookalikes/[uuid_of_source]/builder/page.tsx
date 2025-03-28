@@ -137,10 +137,17 @@ const CreateLookalikePage: React.FC = () => {
         setCurrentStep((prev) => prev + 1);
     };
 
+    const toSnakeCase = (str: string) => {
+        return str
+            .replace(/\s+/g, '_')
+            .replace(/([a-z])([A-Z])/g, '$1_$2')
+            .toLowerCase();
+    };
+
     const handleGenerateLookalike = async () => {
         try {
             setLoading(true);
-            const response = await axiosInstance.post('/audience-lookalikes/builder', { uuid_of_source: params.uuid_of_source, lookalike_size: selectedLabel, lookalike_name: sourceName })
+            const response = await axiosInstance.post('/audience-lookalikes/builder', { uuid_of_source: params.uuid_of_source, lookalike_size: toSnakeCase(selectedLabel), lookalike_name: sourceName })
             if (response.data.status === "SUCCESS") {
                 showToast('Lookalike was created successfully!');
                 setIsLookalikeCreated(true);
@@ -235,7 +242,6 @@ const CreateLookalikePage: React.FC = () => {
                                 )}
                                 {currentStep >= 1 && (
                                     <AudienceSizeSelector
-                                        audienceSize={audienceSize}
                                         onSelectSize={handleSelectSize}
                                         selectedSize={selectedSize}
                                     />

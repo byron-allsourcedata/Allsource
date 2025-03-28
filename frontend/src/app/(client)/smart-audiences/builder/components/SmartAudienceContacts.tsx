@@ -2,7 +2,7 @@
 import { LinearProgress, Typography, TextField, Chip, Button, FormControl, Select, MenuItem, InputAdornment, IconButton, TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody, SelectChangeEvent } from "@mui/material"
 import { Box } from "@mui/system"
 import { smartAudiences } from "../../smartAudiences"
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from "@mui/icons-material/Search";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -63,6 +63,9 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({ useCaseT
     const [showTable, setShowTable] = useState(true);
     const [showForm, setShowForm] = useState(true);
     const [isTableVisible, setIsTableVisible] = useState(true);
+
+    const [filteredSourceData, setFilteredSourceData] = useState<DataItem[]>([]);
+    const [filteredLookalikeData, setFilteredLookalikeData] = useState<DataItem[]>([]);
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setAudienceName(event.target.value);
@@ -162,6 +165,14 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({ useCaseT
             setLoading(false)
         }
     };
+
+    useEffect(() => {
+            if (sourceType === "Source") {
+                setFilteredSourceData(getFilteredData(sourceData));
+            } else if (sourceType === "Lookalike") {
+                setFilteredLookalikeData(getFilteredData(lookalikeData));
+            }
+        }, [sourceType,  sourceData, lookalikeData, selectedSources]);
 
     return (
         <Box>
@@ -324,13 +335,13 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({ useCaseT
                                                 </TableRow>
                                             </TableHead>
                                             <TableBody>
-                                                {filteredData.map((row) => (
-                                                    <TableRow key={row.name} hover sx={{ cursor: "pointer" }} onClick={() => handleSelectRow(row)}>
-                                                        <TableCell className="black-table-header">{row.name}</TableCell>
-                                                        <TableCell className="black-table-header">{row.type}</TableCell>
-                                                        <TableCell className="black-table-header">{row.size}</TableCell>
-                                                    </TableRow>
-                                                ))}
+                                                    {(sourceType === "Source" ? filteredSourceData : filteredLookalikeData).map((row) => (
+                                                        <TableRow key={row.id} hover sx={{ cursor: "pointer" }} onClick={() => handleSelectRow(row)}>
+                                                            <TableCell className="black-table-header">{row.name}</TableCell>
+                                                            <TableCell className="black-table-header">{row.type}</TableCell>
+                                                            <TableCell className="black-table-header">{row.size}</TableCell>
+                                                        </TableRow>
+                                                    ))}
                                             </TableBody>
                                         </Table>
                                     </TableContainer>

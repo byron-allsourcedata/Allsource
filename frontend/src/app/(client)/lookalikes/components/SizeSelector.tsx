@@ -1,22 +1,50 @@
 import React from "react";
 import { Box, Typography, Button, Slider } from "@mui/material";
 
-interface AudienceSize {
-    id: string;
-    label: string;
-    text: string;
-    min_value: number;
-    max_value: number;
-}
+const audienceSize = [
+    {
+        id: "almost",
+        label: "Almost identical",
+        text: "Lookalike size 0-3%",
+        min_value: 0,
+        max_value: 3,
+    },
+    {
+        id: "extremely",
+        label: "Extremely similar",
+        text: "Lookalike size 0-7%",
+        min_value: 0,
+        max_value: 7,
+    },
+    {
+        id: "very",
+        label: "Very similar",
+        text: "Lookalike size 0-10%",
+        min_value: 0,
+        max_value: 10,
+    },
+    {
+        id: "quite",
+        label: "Quite similar",
+        text: "Lookalike size 0-15%",
+        min_value: 0,
+        max_value: 15,
+    },
+    {
+        id: "broad",
+        label: "Broad",
+        text: "Lookalike size 0-20%",
+        min_value: 0,
+        max_value: 20,
+    },
+];
 
 interface AudienceSizeSelectorProps {
-    audienceSize: AudienceSize[];
     onSelectSize: (id: string, min: number, max: number, label: string) => void;
     selectedSize: string;
 }
 
 const AudienceSizeSelector: React.FC<AudienceSizeSelectorProps> = ({
-    audienceSize,
     onSelectSize,
     selectedSize,
 }) => {
