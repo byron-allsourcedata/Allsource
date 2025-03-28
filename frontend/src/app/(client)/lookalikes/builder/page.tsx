@@ -29,13 +29,13 @@ interface TableData {
 }
 
 interface LookalikeData {
+    id: string;
     lookalike_name: string;
     source: string;
     type: string;
     lookalike_size: string;
     created_date: string;
     created_by: string;
-    size: string;
 }
 
 
@@ -116,28 +116,29 @@ const CreateLookalikePage: React.FC = () => {
         setCurrentStep((prev) => prev + 1);
     };
 
-    const createLookalikeData = async () => {
+    const createLookalikeData = async (id: string) => {
         const lookalikeData = selectSourceData.map(row => ({
+            id: id,
             lookalike_name: sourceName,
             source: row.source,
             type: row.type,
             lookalike_size: selectedLabel,
             created_date: new Date().toISOString(),
             created_by: row.created_by,
-            size: (Math.floor(Math.random() * 10000)).toString()
         }));
 
         setLookalikeData(lookalikeData)
+        setIsLookalikeCreated(true);
     };
 
     const handleGenerateLookalike = async () => {
         try {
             setLoading(true);
-            await createLookalikeData();
             const response = await axiosInstance.post('/audience-lookalikes/builder', { uuid_of_source: selectedSourceId, lookalike_size: toSnakeCase(selectedLabel), lookalike_name: sourceName })
             if (response.data.status === "SUCCESS") {
+                await createLookalikeData(response.data.id);
                 showToast('Lookalike was created successfully!');
-                setIsLookalikeCreated(true);
+
             }
         }
         catch {
