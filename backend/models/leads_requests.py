@@ -1,6 +1,8 @@
 from sqlalchemy import Column, Integer, VARCHAR, ForeignKey, TIMESTAMP
 
 from .base import Base
+from .five_x_five_users import FiveXFiveUser
+from .users_domains import UserDomains
 
 
 class LeadsRequests(Base):
@@ -13,3 +15,5 @@ class LeadsRequests(Base):
     requested_at = Column(TIMESTAMP, nullable=False)
     visit_id = Column(Integer, ForeignKey('leads_visits.id'), nullable=False)
     spent_time_sec = Column(Integer, nullable=False)
+    domain_id = Column(Integer, ForeignKey(UserDomains.id), nullable=False)
+    five_x_five_user_id = Column(Integer, ForeignKey(FiveXFiveUser.id), nullable=False)
