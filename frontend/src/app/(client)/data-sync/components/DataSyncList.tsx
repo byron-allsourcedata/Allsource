@@ -329,7 +329,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
         );
       case "slack":
         return (
-          <Image src={"/slack-icon.svg"} alt="slack" width={18} height={18} />
+          <Image src={"/slack-icon.svg"} alt="Slack" width={18} height={18} />
         );
       case "hubspot":
         return (
@@ -337,7 +337,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
         );
       case "google_ads":
         return (
-          <Image src={"/google-ads.svg"} alt="slack" width={18} height={18} />
+          <Image src={"/google-ads.svg"} alt="googleAds" width={18} height={18} />
         );
       case "sales_force":
         return (

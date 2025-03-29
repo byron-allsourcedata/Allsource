@@ -203,7 +203,7 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
             },
           },
         }}
-        title={is_integrated ? `A ${service_name} account is already integrated. To connect a different account, please remove the existing ${service_name} integration first.` : ""}>
+        title={is_integrated ? `A ${service_name.charAt(0).toUpperCase() + service_name.slice(1)} account is already integrated. To connect a different account, please remove the existing ${service_name.charAt(0).toUpperCase() + service_name.slice(1)} integration first.` : ""}>
         <Box sx={{
           backgroundColor: !is_integrated ? 'rgba(0, 0, 0, 0.04)' : active
             ? 'rgba(80, 82, 178, 0.1)'

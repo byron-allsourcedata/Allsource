@@ -850,7 +850,7 @@ const AccountSetup = () => {
     { label: "Omnisend", src: "omnisend_icon_black.svg", setState: setOmnisendPopupOpen },
     { label: "Sendlane", src: "sendlane-icon.svg", setState: setSendlanePopupOpen },
     { label: "S3", src: "s3-icon.svg", setState: setS3PopupOpen },
-    { label: "Slack", src: "slack-icon.svg", setState: setSlackPopupOpen },
+    { label: "Slack", src: "Slack-icon.svg", setState: setSlackPopupOpen },
     { label: "GoogleAds", src: "google-ads.svg", setState: setGoogleADSPopupOpen },
     { label: "BingAds", src: "bingads-icon.svg", setState: setBingAdsPopupOpen },
     { label: "Zapier", src: "zapier-icon.svg", setState: setZapierPopupOpen },
