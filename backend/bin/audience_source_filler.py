@@ -6,16 +6,20 @@ import asyncio
 import functools
 import json
 from datetime import datetime
+from typing import List
 
 import chardet
 import io
 import csv
 import boto3
 import aioboto3
-from aio_pika import IncomingMessage
+from aio_pika import IncomingMessage, Connection
+from aiormq.abc import AbstractConnection
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 from itertools import islice
+
+from schemas.scripts.audience_source import MessageBody, PersonRow, PersonID, DataBodyFromSource
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -35,8 +39,8 @@ from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 load_dotenv()
 
-AUDIENCE_SOURCES_READER = 'aud_sources_files'
-AUDIENCE_SOURCES_MATCHING = 'aud_sources_matching'
+AUDIENCE_SOURCES_READER = 'aud_sources_files2'
+AUDIENCE_SOURCES_MATCHING = 'aud_sources_matching2'
 SOURCE_PROCESSING_PROGRESS = "SOURCE_PROCESSING_PROGRESS"
 S3_BUCKET_NAME = "maximiz-data"
 SELECTED_ROW_COUNT = 500
@@ -72,7 +76,7 @@ def extract_amount(amount_raw: str) -> float:
     else:
         return 0.0
 
-async def parse_csv_file(*, data, source_id, db_session, s3_session, connection, user_id):
+async def parse_csv_file(*, data, source_id: str, db_session: Session, s3_session: Session, connection: Connection, user_id: int):
     logging.info(f"Processing AudienceSource with ID: {source_id}")
 
     source = db_session.query(AudienceSource).filter_by(id=source_id).first()
@@ -102,7 +106,7 @@ async def parse_csv_file(*, data, source_id, db_session, s3_session, connection,
             db_session.rollback()
             logging.error(f"Error reading S3 object: {s3_error}")
             return False
-        
+
     result = chardet.detect(body)
     encoding = result['encoding']
     batch_content = body.decode(encoding, errors='replace')
@@ -121,49 +125,46 @@ async def parse_csv_file(*, data, source_id, db_session, s3_session, connection,
 
     send_rows = 0
     while send_rows < total_rows:
-        batch_rows = []
+        batch_rows: List[PersonRow] = []
         for row in islice(csv_reader, SELECTED_ROW_COUNT):
             # first_name = row.get("FirstName", "").strip()
             # last_name = row.get("LastName", "").strip()
             # phone = row.get("Phone", "").strip()
-            email = row.get("Email", "").strip()
-            transaction_date = row.get("TransactionDate", "").strip()
-            sale_amount_raw = row.get("SaleAmount", "").strip()
+            email: str = row.get("Email", "").strip()
+            transaction_date: str = row.get("TransactionDate", "").strip()
+            sale_amount_raw: str = row.get("SaleAmount", "").strip()
 
             try:
-                parsed_date = datetime.strptime(transaction_date, '%m/%d/%Y %H:%M')
+                parsed_date: datetime = datetime.strptime(transaction_date, '%m/%d/%Y %H:%M')
                 transaction_date = parsed_date.isoformat()
             except Exception as date_error:
                 logging.warning(f"Error date: '{transaction_date}': {date_error}")
 
             try:
-                sale_amount = extract_amount(sale_amount_raw)
+                sale_amount: float = extract_amount(sale_amount_raw)
             except Exception as sale_error:
                 logging.warning(f"Error amount: '{sale_amount_raw}': {sale_error}")
                 sale_amount = 0.0
 
-            batch_rows.append({
-                # "first_name": first_name,
-                # "last_name": last_name,
-                # "phone": phone,
-                "email": email,
-                "transaction_date": transaction_date,
-                "sale_amount": sale_amount,
-            })
+            batch_rows.append(PersonRow(
+                email=email,
+                transaction_date=transaction_date,
+                sale_amount=sale_amount,
+            ))
 
         if batch_rows:
-            message_body = {
-                "type": 'emails',
-                "data": {
-                    "persons": batch_rows,
-                    "source_id": source_id,
-                    "user_id": user_id
-                },
-            }
+            message_body = MessageBody(
+        type='emails',
+        data=DataBodyFromSource(
+            persons=batch_rows,
+            source_id=str(source_id),
+            user_id=user_id
+        )
+    )
 
             await publish_rabbitmq_message(connection=connection, queue_name=AUDIENCE_SOURCES_MATCHING, message_body=message_body)
         send_rows += SELECTED_ROW_COUNT
-    
+
     db_session.commit()
     return True
 
@@ -223,10 +224,10 @@ def get_max_ids(db_session, domain_id, statuses):
                 )
             )
         )
-            
+
     if filters:
         query = query.filter(or_(*filters))
-        
+
     max_id, total_count = query.one()
 
     return max_id, total_count
@@ -240,14 +241,14 @@ async def send_pixel_contacts(*, data, source_id, db_session, connection, user_i
     if not source:
         logging.warning(f"AudienceSource with ID {source_id} not found.")
         return False
-    
+
     max_id, total_rows = get_max_ids(db_session, domain_id, statuses)
     processed_rows = 0
     logging.info(f"Total row in pixel file: {total_rows}")
     source.total_records = total_rows
     db_session.add(source)
     db_session.commit()
-    
+
     await send_sse(connection, user_id, {"source_id": source_id, "total": total_rows, "processed": processed_rows})
     if not max_id:
         return False
@@ -302,30 +303,30 @@ async def send_pixel_contacts(*, data, source_id, db_session, connection, user_i
                     )
                 )
             )
-                
+
         if filters:
             query = query.filter(or_(*filters))
-        
+
         query = query.order_by(LeadUser.id.asc()).limit(SELECTED_ROW_COUNT)
         results = query.all()
-        persons = []
+        persons: List[PersonID] = []
         for result in results:
             user_id, current_id = result
-                
+
             if current_id <= max_id:
-                persons.append({'user_id': user_id})
-            
-        message_body = {
-            "type": 'user_ids',
-            "data": {
-                "persons": persons,
-                "source_id": source_id,
-                "user_id": user_id
-            },
-        }
+                persons.append(PersonID(user_id=user_id))
+
+        message_body = MessageBody(
+            type="user_ids",
+            data=DataBodyFromSource(
+                persons=persons,
+                source_id=str(source_id),
+                user_id=user_id
+            )
+        )
 
         await publish_rabbitmq_message(connection=connection, queue_name=AUDIENCE_SOURCES_MATCHING, message_body=message_body)
-    
+
     return True
 
 async def aud_sources_reader(message: IncomingMessage, db_session: Session, s3_session, connection):
@@ -337,11 +338,11 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, s3_s
             logging.warning("Message data is missing.")
             await message.ack()
             return
-        user_id = data.get('user_id') 
+        user_id = data.get('user_id')
         source_id = str(data.get('source_id'))
         if type == SourceType.CSV.value:
             await parse_csv_file(data=data, source_id=source_id, db_session=db_session, s3_session=s3_session, connection=connection, user_id=user_id)
-        
+
         if type == SourceType.PIXEL.value:
             await send_pixel_contacts(data=data, source_id=source_id, db_session=db_session, connection=connection, user_id=user_id)
 
@@ -359,7 +360,7 @@ def extract_key_from_url(s3_url: str):
     return parsed_url[1].split("?", 1)[0]
 
 
-async def send_sse(connection, user_id: int, data: dict):
+async def send_sse(connection: Connection, user_id: int, data: dict):
     try:
         logging.info(f"send client throught SSE: {data, user_id}")
         await publish_rabbitmq_message(
@@ -382,7 +383,7 @@ async def main():
             log_level = logging.DEBUG
         elif arg != 'INFO':
             sys.exit("Invalid log level argument. Use 'DEBUG' or 'INFO'.")
-    
+
     setup_logging(log_level)
     db_username = os.getenv('DB_USERNAME')
     db_password = os.getenv('DB_PASSWORD')
@@ -401,7 +402,7 @@ async def main():
         Session = sessionmaker(bind=engine)
         db_session = Session()
         s3_session = aioboto3.Session()
-        
+
         reader_queue = await channel.declare_queue(
             name=AUDIENCE_SOURCES_READER,
             durable=True,

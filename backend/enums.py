@@ -7,7 +7,7 @@ class BaseEnum(Enum):
 
 class QueueName(Enum):
     AUDIENCE_SOURCE_MATCHING = 'aud_sources_matching'
-    AUDIENCE_SOURCES_READER = 'aud_sources_files'
+    AUDIENCE_SOURCES_READER = 'aud_sources_files2'
     
 class OauthShopify(Enum):
     USER_NOT_FOUND = 'USER_NOT_FOUND'

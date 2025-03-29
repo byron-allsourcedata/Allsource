@@ -1,7 +1,13 @@
 import os
+from typing import Union
+
 from aio_pika import connect, Message, DeliveryMode, Connection
 import json
 import logging
+
+from pydantic import BaseModel
+
+from schemas.scripts.audience_source import MessageBody
 
 logger = logging.getLogger(__name__)
 
@@ -29,14 +35,16 @@ class RabbitMQConnection:
             await self._connection.close()
 
 
-async def publish_rabbitmq_message(connection: Connection, queue_name: str, message_body: dict):
+async def publish_rabbitmq_message(connection, queue_name: str, message_body: Union[MessageBody, dict]):
     channel = await connection.channel()
 
     try:
-        json_data = json.dumps(message_body).encode("utf-8")
-        message = Message(
-          body=json_data
-        )
+        if isinstance(message_body, BaseModel):
+            json_data = json.dumps(message_body.model_dump()).encode("utf-8")
+        else:
+            json_data = json.dumps(message_body).encode("utf-8")
+
+        message = Message(body=json_data)
         await channel.default_exchange.publish(message, routing_key=queue_name)
     except Exception as e:
         logger.error(e)
