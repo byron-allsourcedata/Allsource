@@ -19,7 +19,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 from itertools import islice
 
-from schemas.scripts.audience_source import MessageBody, PersonRow, PersonID, DataBodyFromSource
+from schemas.scripts.audience_source import MessageBody, PersonRow, DataBodyFromSource
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -39,8 +39,8 @@ from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 load_dotenv()
 
-AUDIENCE_SOURCES_READER = 'aud_sources_files2'
-AUDIENCE_SOURCES_MATCHING = 'aud_sources_matching2'
+AUDIENCE_SOURCES_READER = 'aud_sources_files'
+AUDIENCE_SOURCES_MATCHING = 'aud_sources_matching'
 SOURCE_PROCESSING_PROGRESS = "SOURCE_PROCESSING_PROGRESS"
 S3_BUCKET_NAME = "maximiz-data"
 SELECTED_ROW_COUNT = 500
@@ -309,12 +309,12 @@ async def send_pixel_contacts(*, data, source_id, db_session, connection, user_i
 
         query = query.order_by(LeadUser.id.asc()).limit(SELECTED_ROW_COUNT)
         results = query.all()
-        persons: List[PersonID] = []
+        persons: List[PersonRow] = []
         for result in results:
             user_id, current_id = result
 
             if current_id <= max_id:
-                persons.append(PersonID(user_id=user_id))
+                persons.append(PersonRow(user_id=user_id))
 
         message_body = MessageBody(
             type="user_ids",
@@ -362,7 +362,6 @@ def extract_key_from_url(s3_url: str):
 
 async def send_sse(connection: Connection, user_id: int, data: dict):
     try:
-        logging.info(f"send client throught SSE: {data, user_id}")
         await publish_rabbitmq_message(
                     connection=connection,
                     queue_name=f'sse_events_{str(user_id)}',

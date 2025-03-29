@@ -17,8 +17,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 
-from schemas.scripts.audience_source import PersonEntry, MessageBody, DataBodyNormalize, PersonRow, DataForNormalize, \
-    PersonID, DataBodyFromSource
+from schemas.scripts.audience_source import PersonEntry, MessageBody, DataBodyNormalize, PersonRow, DataForNormalize, DataBodyFromSource
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -32,7 +31,7 @@ from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 load_dotenv()
 
-AUDIENCE_SOURCES_MATCHING = 'aud_sources_matching2'
+AUDIENCE_SOURCES_MATCHING = 'aud_sources_matching'
 SOURCE_PROCESSING_PROGRESS = "SOURCE_PROCESSING_PROGRESS"
 BATCH_SIZE = 500
 
@@ -175,8 +174,7 @@ async def process_email(persons: List[PersonRow], db_session: Session, source_id
     return processed_count
 
 
-async def process_user_id(persons: List[PersonID], db_session: Session, source_id: str) -> int:
-    print("12331231231312321")
+async def process_user_id(persons: List[PersonRow], db_session: Session, source_id: str) -> int:
     five_x_five_user_ids = [p.user_id for p in persons]
     logging.info(f"user_ids find {len(five_x_five_user_ids)} for source_id {source_id}")
 
@@ -322,7 +320,7 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
             return
 
         type: str = message_body.type
-        persons: Union[List[PersonID], List[PersonRow], List[PersonEntry]] = data.persons
+        persons: Union[List[PersonRow], List[PersonEntry]] = data.persons
         data_for_normalize: Optional[DataForNormalize] = (
             data.data_for_normalize if isinstance(data, DataBodyNormalize) else None
         )
@@ -349,13 +347,13 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
 
         total_records, processed_records, matched_records = db_session.execute(
             update(AudienceSource)
-            .where(AudienceSource.id == source_id
+            .where(AudienceSource.id == source_id)
             .values(
                 matched_records=AudienceSource.matched_records + count,
                 processed_records=AudienceSource.processed_records + len(persons)
             )
             .returning(AudienceSource.total_records, AudienceSource.processed_records, AudienceSource.matched_records)
-        ).fetchone())
+        ).fetchone()
 
         db_session.flush()
         logging.info(f"Updated processed and matched records for source_id {source_id}.")

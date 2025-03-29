@@ -10,11 +10,6 @@ class PersonEntry(BaseModel):
     orders_count: int
     recency: int
 
-
-
-class PersonID(BaseModel):
-    user_id: int
-
 class DataForNormalize(BaseModel):
     matched_size: int
     all_size: int
@@ -38,10 +33,11 @@ class PersonRow(BaseModel):
     email: Optional[str] = ""
     transaction_date: Optional[str] = ""
     sale_amount: Optional[float] = 0
+    user_id: Optional[int] = None
 
 
 class DataBodyFromSource(BaseModel):
-    persons: Union[List[PersonRow], List[PersonID]]
+    persons: List[PersonRow]
     source_id: str
     user_id: int
 
