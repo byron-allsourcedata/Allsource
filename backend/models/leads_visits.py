@@ -1,6 +1,8 @@
 from sqlalchemy import Column, Integer, DATE, TIME, VARCHAR, ForeignKey
 
 from .base import Base
+from .five_x_five_users import FiveXFiveUser
+from .users_domains import UserDomains
 
 
 class LeadsVisits(Base):
@@ -16,3 +18,5 @@ class LeadsVisits(Base):
     full_time_sec = Column(Integer, nullable=True, default=10)
     lead_id = Column(Integer, ForeignKey('leads_users.id'), nullable=False)
     behavior_type = Column(VARCHAR, nullable=True)
+    domain_id = Column(Integer, ForeignKey(UserDomains.id), nullable=False)
+    five_x_five_user_id = Column(Integer, ForeignKey(FiveXFiveUser.id), nullable=False)
