@@ -94,7 +94,6 @@ const StatCard: React.FC<StatCardProps> = ({
   );
 };
 
-// Карточка "Pixel Contacts"
 const PixelContactsCard: React.FC<{ value: number }> = ({ value }) => (
   <StatCard
     value={value}
@@ -105,7 +104,6 @@ const PixelContactsCard: React.FC<{ value: number }> = ({ value }) => (
   />
 );
 
-// Карточка "Sources"
 const SourcesCard: React.FC<{ value: number }> = ({ value }) => (
   <StatCard
     value={value}
@@ -116,7 +114,6 @@ const SourcesCard: React.FC<{ value: number }> = ({ value }) => (
   />
 );
 
-// Карточка "Lookalikes"
 const LookalikesCard: React.FC<{ value: number }> = ({ value }) => (
   <StatCard
     value={value}
@@ -127,7 +124,6 @@ const LookalikesCard: React.FC<{ value: number }> = ({ value }) => (
   />
 );
 
-// Карточка "Smart Audience"
 const SmartAudienceCard: React.FC<{ value: number }> = ({ value }) => (
   <StatCard
     value={value}
@@ -138,7 +134,6 @@ const SmartAudienceCard: React.FC<{ value: number }> = ({ value }) => (
   />
 );
 
-// Карточка "Data sync"
 const DataSyncCard: React.FC<{ value: number }> = ({ value }) => (
   <StatCard
     value={value}

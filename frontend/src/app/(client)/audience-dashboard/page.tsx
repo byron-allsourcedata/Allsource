@@ -31,13 +31,13 @@ const AudienceDashboard: React.FC = () => {
   const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
   const isCalendarOpen = Boolean(calendarAnchorEl);
   const [values, setValues] = useState({
-          totalRevenue: 0,
-          totalVisitors: 0,
-          viewProducts: 0,
-          totalAbandonedCart: 0,
-      });
-    const { hasNotification } = useNotification();
-    const [formattedDates, setFormattedDates] = useState<string>('');
+    totalRevenue: 0,
+    totalVisitors: 0,
+    viewProducts: 0,
+    totalAbandonedCart: 0,
+  });
+  const { hasNotification } = useNotification();
+  const [formattedDates, setFormattedDates] = useState<string>('');
   const [selectedDateLabel, setSelectedDateLabel] = useState<string>('');
   const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
   const handleCalendarClose = () => {
@@ -76,167 +76,56 @@ const AudienceDashboard: React.FC = () => {
       setAppliedDates({ start: null, end: null })
     }
   };
-    const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-      setCalendarAnchorEl(event.currentTarget);
-    };
+  const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setCalendarAnchorEl(event.currentTarget);
+  };
   return (
     <Box>
-     <Grid
+      <Grid
         sx={{
           display: "flex",
           flexDirection: "column",
-          '@media (max-width: 600px)':{
+          '@media (max-width: 600px)': {
             paddingRight: 0
           }
         }}
       >
         <Box sx={{
-          display: 'flex', flexDirection: 'row', alignItems: 'center', position: 'sticky', top: 0, pt: '12px', pb: '12px', pl:'8px', pr:'1.5rem', zIndex: 1, backgroundColor: '#fff', justifyContent: 'space-between', width: '100%', "@media (max-width: 600px)": { flexDirection: 'column', display: 'flex', alignItems: 'flex-start', zIndex: 1, width: '100%', pr:1.5 }, "@media (max-width: 440px)": { flexDirection: 'column', pt: hasNotification ? '3rem' : '0.75rem', top: hasNotification ? '4.5rem' : '', zIndex: 1, justifyContent: 'flex-start' }, "@media (max-width: 400px)": { pt: hasNotification ? '4.25rem' : '', pb: '6px', }
+          display: 'flex', flexDirection: 'row', alignItems: 'center', position: 'sticky', top: 0, pt: '12px', pb: '12px', pl: '8px', pr: '1.5rem', zIndex: 1, backgroundColor: '#fff', justifyContent: 'space-between', width: '100%', "@media (max-width: 600px)": { flexDirection: 'column', display: 'flex', alignItems: 'flex-start', zIndex: 1, width: '100%', pr: 1.5 }, "@media (max-width: 440px)": { flexDirection: 'column', pt: hasNotification ? '3rem' : '0.75rem', top: hasNotification ? '4.5rem' : '', zIndex: 1, justifyContent: 'flex-start' }, "@media (max-width: 400px)": { pt: hasNotification ? '4.25rem' : '', pb: '6px', }
         }}>
+          <Typography
+            variant="h4"
+            component="h1"
+            className="first-sub-title"
+            sx={{
+              ...dashboardStyles.title, '@media (max-width: 600px)': {
+                display: 'none',
+              },
+            }}
+          >
+            Dashboard <CustomTooltip title={"Indicates the count of resolved identities and revenue figures for the specified time"} linkText="Learn More" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/dashboard" />
+          </Typography>
+          <Box sx={{
+            display: 'none', width: '100%', justifyContent: 'space-between', alignItems: 'start', '@media (max-width: 600px)': {
+              display: 'flex'
+            }
+          }}>
             <Typography
               variant="h4"
               component="h1"
               className="first-sub-title"
-              sx={{
-                ...dashboardStyles.title, '@media (max-width: 600px)': {
-                  display: 'none',
-                },
-              }}
+              sx={dashboardStyles.title}
             >
-              Dashboard <CustomTooltip title={"Indicates the count of resolved identities and revenue figures for the specified time"} linkText="Learn More" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/dashboard" />
+              Dashboard
             </Typography>
+
             <Box sx={{
-              display: 'none', width: '100%', justifyContent: 'space-between', alignItems: 'start', '@media (max-width: 600px)': {
-                display: 'flex'
+              display: 'none', justifyContent: 'flex-end', alignItems: 'start', pt: 0.5, gap: 1, '@media (max-width: 600px)': {
+                display: 'flex',
               }
             }}>
-              <Typography
-                variant="h4"
-                component="h1"
-                className="first-sub-title"
-                sx={dashboardStyles.title}
-              >
-                Dashboard
-              </Typography>
-
-              <Box sx={{
-                display: 'none', justifyContent: 'flex-end', alignItems: 'start', pt: 0.5, gap: 1, '@media (max-width: 600px)': {
-                  display: 'flex',
-                }
-              }}>
-                {/* Calendary picker*/}
-                <Typography className="second-sub-title">{selectedDateLabel}</Typography>
-                <Button
-                  aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
-                  aria-haspopup="true"
-                  aria-expanded={isCalendarOpen ? 'true' : undefined}
-                  onClick={handleCalendarClick}
-                  sx={{
-                    textTransform: 'none',
-                    color: 'rgba(128, 128, 128, 1)',
-                    border: '1px solid rgba(184, 184, 184, 1)',
-                    borderRadius: '4px',
-                    padding: '8px',
-                    minWidth: 'auto',
-                  }}
-                >
-                  <DateRangeIcon fontSize='small' />
-                </Button>
-              </Box>
-            </Box>
-            
-
-            {/* {typeBusiness == 'd2c' && (
-              <Box sx={{
-                flexGrow: 1, display: 'flex', width: '100%', justifyContent: 'center', alignItems: 'start', '@media (max-width: 600px)': {
-                  width: '100%',
-                  mt: hasNotification ? 1 : 2
-                }
-              }}>
-                <Tabs
-                  value={tabIndex}
-                  onChange={handleTabChange}
-                  sx={{
-                    textTransform: 'none',
-                    minHeight: 0,
-                    alignItems: 'start',
-                    '& .MuiTabs-indicator': {
-                      backgroundColor: 'rgba(80, 82, 178, 1)',
-                      height: '1.4px',
-                    },
-                    "@media (max-width: 600px)": {
-                      border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px', width: '100%', '& .MuiTabs-indicator': {
-                        height: '0',
-                      },
-                    }
-                  }}
-                  aria-label="dashboard tabs"
-                >
-                  <Tab className="main-text"
-                    sx={{
-                      textTransform: 'none',
-                      padding: '4px 10px',
-                      flexGrow: 1,
-                      marginRight: '3em',
-                      minHeight: 'auto',
-                      minWidth: 'auto',
-                      fontSize: '14px',
-                      fontWeight: 700,
-                      lineHeight: '19.1px',
-                      textAlign: 'left',
-                      mr: 2,
-                      '&.Mui-selected': {
-                        color: 'rgba(80, 82, 178, 1)'
-                      },
-                      "@media (max-width: 600px)": {
-                        mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                          backgroundColor: 'rgba(249, 249, 253, 1)',
-                          border: '1px solid rgba(220, 220, 239, 1)'
-                        },
-                      }
-                    }}
-                    label="Revenue"
-                  />
-                  <Tab className="main-text"
-                    sx={{
-                      textTransform: 'none',
-                      padding: '4px 10px',
-                      minHeight: 'auto',
-                      flexGrow: 1,
-                      textAlign: 'center',
-                      fontSize: '14px',
-                      fontWeight: 700,
-                      lineHeight: '19.1px',
-                      minWidth: 'auto',
-                      '&.Mui-selected': {
-                        color: 'rgba(80, 82, 178, 1)'
-                      },
-                      "@media (max-width: 600px)": {
-                        mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                          backgroundColor: 'rgba(249, 249, 253, 1)',
-                          border: '1px solid rgba(220, 220, 239, 1)'
-                        },
-                      }
-                    }}
-                    label="Contacts"
-                  />
-                </Tabs>
-              </Box>
-            )} */}
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                alignItems: 'center',
-                gap: 2,
-                // width: typeBusiness == 'd2c' ? '' : '100%',
-                '@media (max-width: 600px)': {
-                  display: 'none',
-                }
-              }}
-            >
               {/* Calendary picker*/}
-              <Typography className="second-sub-title">{selectedDateLabel ? selectedDateLabel : ''}</Typography>
+              <Typography className="second-sub-title">{selectedDateLabel}</Typography>
               <Button
                 aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
                 aria-haspopup="true"
@@ -244,93 +133,114 @@ const AudienceDashboard: React.FC = () => {
                 onClick={handleCalendarClick}
                 sx={{
                   textTransform: 'none',
-                  color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
-                  border: formattedDates ? '1.5px solid rgba(80, 82, 178, 1)' : '1.5px solid rgba(184, 184, 184, 1)',
+                  color: 'rgba(128, 128, 128, 1)',
+                  border: '1px solid rgba(184, 184, 184, 1)',
                   borderRadius: '4px',
                   padding: '8px',
                   minWidth: 'auto',
-                  '@media (max-width: 900px)': {
-                    border: 'none',
-                    padding: 0
-                  },
-                  '&:hover': {
-                    border: '1.5px solid rgba(80, 82, 178, 1)',
-                    '& .MuiSvgIcon-root': {
-                      color: 'rgba(80, 82, 178, 1)'
-                    }
-                  }
                 }}
               >
-                <DateRangeIcon
-                  fontSize="medium"
-                  sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }}
-                />
-                <Typography variant="body1" sx={{
-                  fontFamily: 'Roboto',
-                  fontSize: '14px',
-                  fontWeight: '400',
-                  color: 'rgba(32, 33, 36, 1)',
-                  lineHeight: '19.6px',
-                  textAlign: 'left',
-                  whiteSpace: 'nowrap',
-
-                }}>
-                  {formattedDates}
-                </Typography>
-                {formattedDates &&
-                  <Box sx={{ pl: 2, display: 'flex', alignItems: 'center' }}>
-                    <Image src="/arrow_down.svg" alt="arrow down" width={16} height={16} />
-                  </Box>
-                }
+                <DateRangeIcon fontSize='small' />
               </Button>
             </Box>
           </Box>
           <Box
             sx={{
               display: 'flex',
-              flexDirection: 'column',
-              overflow: 'auto', flexGrow: 1,
+              justifyContent: 'flex-end',
+              alignItems: 'center',
+              gap: 2,
+              '@media (max-width: 600px)': {
+                display: 'none',
+              }
             }}
           >
-            <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', pr: 2 }}>
-            <Box sx={{ width: '100%', mt: 1, mb: 1, '@media (max-width: 900px)': { mt: 0, mb: 0, } }}>
-            <CustomCards
-              values={{
-                pixelContacts: 1054,
-                sources: 100,
-                lookalikes: 80,
-                smartAudience: 25,
-                dataSync: 25,
+            {/* Calendary picker*/}
+            <Typography className="second-sub-title">{selectedDateLabel ? selectedDateLabel : ''}</Typography>
+            <Button
+              aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
+              aria-haspopup="true"
+              aria-expanded={isCalendarOpen ? 'true' : undefined}
+              onClick={handleCalendarClick}
+              sx={{
+                textTransform: 'none',
+                color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
+                border: formattedDates ? '1.5px solid rgba(80, 82, 178, 1)' : '1.5px solid rgba(184, 184, 184, 1)',
+                borderRadius: '4px',
+                padding: '8px',
+                minWidth: 'auto',
+                '@media (max-width: 900px)': {
+                  border: 'none',
+                  padding: 0
+                },
+                '&:hover': {
+                  border: '1.5px solid rgba(80, 82, 178, 1)',
+                  '& .MuiSvgIcon-root': {
+                    color: 'rgba(80, 82, 178, 1)'
+                  }
+                }
               }}
-            />
+            >
+              <DateRangeIcon
+                fontSize="medium"
+                sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }}
+              />
+              <Typography variant="body1" sx={{
+                fontFamily: 'Roboto',
+                fontSize: '14px',
+                fontWeight: '400',
+                color: 'rgba(32, 33, 36, 1)',
+                lineHeight: '19.6px',
+                textAlign: 'left',
+                whiteSpace: 'nowrap',
+
+              }}>
+                {formattedDates}
+              </Typography>
+              {formattedDates &&
+                <Box sx={{ pl: 2, display: 'flex', alignItems: 'center' }}>
+                  <Image src="/arrow_down.svg" alt="arrow down" width={16} height={16} />
+                </Box>
+              }
+            </Button>
+          </Box>
+        </Box>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'auto', flexGrow: 1,
+          }}
+        >
+          <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', pr: 2 }}>
+            <Box sx={{ width: '100%', mt: 1, mb: 1, '@media (max-width: 900px)': { mt: 0, mb: 0, } }}>
+              <CustomCards
+                values={{
+                  pixelContacts: 1054,
+                  sources: 100,
+                  lookalikes: 80,
+                  smartAudience: 25,
+                  dataSync: 25,
+                }}
+              />
             </Box>
             <ExampleChart data={mockData}>
 
-</ExampleChart>
-            </Box>
-              
-            {/* <TabPanel value={tabIndex} index={0}>
-              <DashboardRevenue appliedDates={appliedDates} />
-            </TabPanel>
-            <TabPanel value={tabIndex} index={1}>
-              {typeBusiness === 'd2c' ? (
-                <DashboardContactD2C appliedDates={appliedDates} typeBusiness={typeBusiness} />
-              ) : (
-                <DashboardContactB2B appliedDates={appliedDates} typeBusiness={typeBusiness} />
-              )}
-            </TabPanel> */}
+            </ExampleChart>
           </Box>
 
-          <CalendarPopup
-            anchorEl={calendarAnchorEl}
-            open={isCalendarOpen}
-            onClose={handleCalendarClose}
-            onDateChange={handleDateChange}
-            onDateLabelChange={handleDateLabelChange}
-            onApply={handleApply}
-          />
+        </Box>
 
-        </Grid>
+        <CalendarPopup
+          anchorEl={calendarAnchorEl}
+          open={isCalendarOpen}
+          onClose={handleCalendarClose}
+          onDateChange={handleDateChange}
+          onDateLabelChange={handleDateLabelChange}
+          onApply={handleApply}
+        />
+
+      </Grid>
     </Box>
   );
 };
