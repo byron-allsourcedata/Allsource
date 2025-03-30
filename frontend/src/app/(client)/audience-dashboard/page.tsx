@@ -12,18 +12,18 @@ import CustomCards from "./components/CustomCards";
 import ExampleChart from "./components/ExampleChart";
 
 const mockData = [
-  { total_contact_collected: 120, total_visitors: 300, view_products: 150, abandoned_cart: 50, converted_sale: 20 },
-  { total_contact_collected: 100, total_visitors: 280, view_products: 140, abandoned_cart: 45, converted_sale: 25 },
-  { total_contact_collected: 130, total_visitors: 320, view_products: 160, abandoned_cart: 55, converted_sale: 30 },
-  { total_contact_collected: 140, total_visitors: 340, view_products: 170, abandoned_cart: 60, converted_sale: 35 },
-  { total_contact_collected: 150, total_visitors: 360, view_products: 180, abandoned_cart: 65, converted_sale: 40 },
-  { total_contact_collected: 160, total_visitors: 380, view_products: 190, abandoned_cart: 70, converted_sale: 45 },
-  { total_contact_collected: 170, total_visitors: 400, view_products: 200, abandoned_cart: 75, converted_sale: 50 },
-  { total_contact_collected: 180, total_visitors: 420, view_products: 210, abandoned_cart: 80, converted_sale: 55 },
-  { total_contact_collected: 190, total_visitors: 440, view_products: 220, abandoned_cart: 85, converted_sale: 60 },
-  { total_contact_collected: 200, total_visitors: 460, view_products: 230, abandoned_cart: 90, converted_sale: 65 },
-  { total_contact_collected: 210, total_visitors: 480, view_products: 240, abandoned_cart: 95, converted_sale: 70 },
-  { total_contact_collected: 220, total_visitors: 500, view_products: 250, abandoned_cart: 100, converted_sale: 75 },
+  { pixel_contacts: 120, sources: 300, lookalikes: 150, smart_audience: 50, data_sync: 20 },
+  { pixel_contacts: 100, sources: 280, lookalikes: 140, smart_audience: 45, data_sync: 25 },
+  { pixel_contacts: 130, sources: 320, lookalikes: 160, smart_audience: 55, data_sync: 30 },
+  { pixel_contacts: 140, sources: 340, lookalikes: 170, smart_audience: 60, data_sync: 35 },
+  { pixel_contacts: 150, sources: 360, lookalikes: 180, smart_audience: 65, data_sync: 40 },
+  { pixel_contacts: 160, sources: 380, lookalikes: 190, smart_audience: 70, data_sync: 45 },
+  { pixel_contacts: 170, sources: 400, lookalikes: 200, smart_audience: 75, data_sync: 50 },
+  { pixel_contacts: 180, sources: 420, lookalikes: 210, smart_audience: 80, data_sync: 55 },
+  { pixel_contacts: 190, sources: 440, lookalikes: 220, smart_audience: 85, data_sync: 60 },
+  { pixel_contacts: 200, sources: 460, lookalikes: 230, smart_audience: 90, data_sync: 65 },
+  { pixel_contacts: 210, sources: 480, lookalikes: 240, smart_audience: 95, data_sync: 70 },
+  { pixel_contacts: 220, sources: 500, lookalikes: 250, smart_audience: 100, data_sync: 75 },
 ];
 
 

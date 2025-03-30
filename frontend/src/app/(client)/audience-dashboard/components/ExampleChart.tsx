@@ -8,11 +8,11 @@ const colorPalette = ["#4285F4", "#EA4335", "#FBBC05", "#34A853", "#A142F4"];
 const ExampleChart = ({ data }: { data: any[] }) => {
     const [chartType, setChartType] = useState<"line" | "bar">("line");
     const [visibleSeries, setVisibleSeries] = useState({
-        total_contact_collected: true,
-        total_visitors: true,
-        view_products: true,
-        abandoned_cart: true,
-        converted_sale: true,
+        pixel_contacts: true,
+        Sources: true,
+        Lookalikes: true,
+        smart_audience: true,
+        data_sync: true,
     });
 
     const toggleChartType = (type: "line" | "bar") => setChartType(type);
