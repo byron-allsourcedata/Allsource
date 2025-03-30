@@ -52,7 +52,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     }
   );
   const [regions, setTags] = useState<string[]>([]);
-  const [pages, setPageUrlTags] = useState<string[]>([]);
+  const [pageUrlTags, setPageUrlTags] = useState<string[]>([]);
   const [selectedFunnels, setSelectedFunnels] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
   const [buttonFilters, setButtonFilters] = useState<ButtonFilters>(null);
@@ -95,7 +95,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
 
   const handleAddPage = (e: { key: string }) => {
     if (e.key === "Enter" && pageUrl.trim()) {
-      setPageUrlTags([...pages, pageUrl.trim()]);
+      setPageUrlTags([...pageUrlTags, pageUrl.trim()]);
       setPageUrls("");
     }
   };
@@ -684,11 +684,11 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       checkedFiltersPageVisits,
       checkedFilters,
       regions,
+      pageUrlTags,
       checkedFiltersTimeSpent,
       selectedStatus,
       recurringVisits: selectedValues,
-      searchQuery,
-      pages
+      searchQuery
     };
 
     saveFiltersToSessionStorage(filters);
@@ -706,10 +706,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     checkedFiltersTime: { morning: boolean; evening: boolean; afternoon: boolean; all_day: boolean; };
     checkedFiltersPageVisits: { page: boolean; two_page: boolean; three_page: boolean; more_three: boolean; };
     regions: string[];
+    pageUrlTags: string[];
     checkedFiltersTimeSpent: { under_10: boolean; over_10: boolean; over_30: boolean; over_60: boolean; };
     selectedStatus: string[]; recurringVisits: string[];
     searchQuery: string; dateRange?: { fromDate: number | null; toDate: number | null; } | undefined;
-    pages: string[];
   }) => {
     sessionStorage.setItem('filters', JSON.stringify(filters));
   };
@@ -871,15 +871,15 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           return Array.from(uniqueTags);
         });
       }
-      // if (savedFilters.pageUrls) {
-      //   setTags((prevTags) => {
-      //     const uniqueTags = new Set(prevTags);
-      //     savedFilters.pageUrls.forEach((urlTag: string) => {
-      //       uniqueTags.add(urlTag);
-      //     });
-      //     return Array.from(uniqueTags);
-      //   });
-      // }
+      if (savedFilters.pageUrlTags) {
+        setPageUrlTags((prevTags) => {
+          const uniqueTags = new Set(prevTags);
+          savedFilters.pageUrlTags.forEach((urlPageUrlTag: string) => {
+            uniqueTags.add(urlPageUrlTag);
+          });
+          return Array.from(uniqueTags);
+        });
+      }
     };
   }
 
@@ -2334,12 +2334,12 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               <Box
                 sx={{ display: "flex", flexWrap: "wrap", gap: "8px", mb: 2 }}
               >
-                {pages.map((tag, index) => (
+                {pageUrlTags.map((tag, index) => (
                   <CustomChip
                     key={index}
                     label={tag}
                     onDelete={() =>
-                      setTags(pages.filter((_, i) => i !== index))
+                      setTags(pageUrlTags.filter((_, i) => i !== index))
                     }
                   />
                 ))}

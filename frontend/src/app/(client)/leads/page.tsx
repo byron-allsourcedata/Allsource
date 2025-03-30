@@ -84,7 +84,7 @@ const Leads: React.FC = () => {
         to_time: string | null;
         selectedStatus: string[];
         regions: string[];
-        pages: string[];
+        pageUrlTags: string[];
         emails: string[];
         selectedFunnels: string[];
         searchQuery: string | null;
@@ -122,7 +122,7 @@ const Leads: React.FC = () => {
         selectedStatus: [],
         regions: [],
         emails: [],
-        pages: [],
+        pageUrlTags: [],
         selectedFunnels: [],
         searchQuery: '',
         checkedFilters: { lastWeek: false, last30Days: false, last6Months: false, allTime: false },
@@ -261,9 +261,9 @@ const Leads: React.FC = () => {
             }
 
             if (selectedFilters.some(filter => filter.label === 'PageUrl')) {
-                const pages = selectedFilters.find(filter => filter.label === 'PageUrl')?.value.split(', ') || [];
-                if (pages.length > 0) {
-                    url += `&page_url=${encodeURIComponent(pages.join(','))}`;
+                const pageUrlTags = selectedFilters.find(filter => filter.label === 'PageUrl')?.value.split(', ') || [];
+                if (pageUrlTags.length > 0) {
+                    url += `&page_url=${encodeURIComponent(pageUrlTags.join(','))}`;
                 }
             }
 
@@ -394,7 +394,7 @@ const Leads: React.FC = () => {
             { condition: filters.selectedStatus?.length, label: 'Visitor Type', value: () => filters.selectedStatus!.join(', ') },
             { condition: filters.selectedFunnels?.length, label: 'Lead Status', value: () => filters.selectedFunnels!.join(', ') },
             { condition: filters.regions?.length, label: 'Regions', value: () => filters.regions!.join(', ') },
-            { condition: filters.pages?.length, label: 'PageUrl', value: () => filters.pages!.join(', ') },
+            { condition: filters.pageUrlTags?.length, label: 'PageUrl', value: () => filters.pageUrlTags!.join(', ') },
             { condition: filters.recurringVisits?.length, label: 'Recurring Visits', value: () => filters.recurringVisits!.join(', ') },
             { condition: filters.searchQuery?.trim() !== '', label: 'Search', value: filters.searchQuery || '' },
             { condition: filters.from_time, label: 'From Time', value: filters.from_time! },
@@ -461,7 +461,7 @@ const Leads: React.FC = () => {
             setData(Array.isArray(leads) ? leads : []);
             setCount(count || 0);
             setStatus(response.data.status);
-            setSelectedDates({start: null, end: null})
+            setSelectedDates({ start: null, end: null })
             setSelectedFilters([]);
         } catch (error) {
             console.error('Error fetching leads:', error);
@@ -482,11 +482,11 @@ const Leads: React.FC = () => {
         switch (filterToDelete.label) {
             case 'From Date':
                 filters.from_date = null;
-                setSelectedDates({start: null, end: null})
+                setSelectedDates({ start: null, end: null })
                 break;
             case 'To Date':
                 filters.to_date = null;
-                setSelectedDates({start: null, end: null})
+                setSelectedDates({ start: null, end: null })
                 break;
             case 'From Time':
                 filters.from_time = null;
@@ -505,7 +505,7 @@ const Leads: React.FC = () => {
                 filters.regions = '';
                 break;
             case 'PageUrl':
-                filters.pages = '';
+                filters.pageUrlTags = '';
                 break;
             case 'Visitor Type':
                 filters.selectedStatus = filters.selectedStatus.filter((status: string) => status !== filterToDelete.value);
@@ -569,7 +569,7 @@ const Leads: React.FC = () => {
         if (filterToDelete.label === 'Dates') {
             setAppliedDates({ start: null, end: null });
             setFormattedDates('');
-            setSelectedDates({start: null, end: null})
+            setSelectedDates({ start: null, end: null })
         }
 
         // Обновляем фильтры для применения
@@ -578,7 +578,7 @@ const Leads: React.FC = () => {
             to_date: updatedFilters.find(f => f.label === 'To Date') ? dayjs(updatedFilters.find(f => f.label === 'To Date')!.value).unix() : null,
             selectedStatus: updatedFilters.find(f => f.label === 'Visitor Type') ? updatedFilters.find(f => f.label === 'Visitor Type')!.value.split(', ') : [],
             regions: updatedFilters.find(f => f.label === 'Regions') ? updatedFilters.find(f => f.label === 'Regions')!.value.split(', ') : [],
-            pages: updatedFilters.find(f => f.label === 'PageUrl') ? updatedFilters.find(f => f.label === 'PageUrl')!.value.split(', ') : [],
+            pageUrlTags: updatedFilters.find(f => f.label === 'PageUrl') ? updatedFilters.find(f => f.label === 'PageUrl')!.value.split(', ') : [],
             emails: updatedFilters.find(f => f.label === 'Emails') ? updatedFilters.find(f => f.label === 'Emails')!.value.split(', ') : [],
             selectedFunnels: updatedFilters.find(f => f.label === 'Lead Status') ? updatedFilters.find(f => f.label === 'Lead Status')!.value.split(', ') : [],
             searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',
@@ -752,9 +752,9 @@ const Leads: React.FC = () => {
             }
 
             if (selectedFilters.some(filter => filter.label === 'PageUrl')) {
-                const pages = selectedFilters.find(filter => filter.label === 'PageUrl')?.value.split(', ') || [];
-                if (pages.length > 0) {
-                    params.push(`page_url=${encodeURIComponent(pages.join(','))}`);
+                const pageUrlTags = selectedFilters.find(filter => filter.label === 'PageUrl')?.value.split(', ') || [];
+                if (pageUrlTags.length > 0) {
+                    params.push(`page_url=${encodeURIComponent(pageUrlTags.join(','))}`);
                 }
             }
 
@@ -922,7 +922,7 @@ const Leads: React.FC = () => {
                 </Box>
             )}
             <Box sx={{
-                display: 'flex', flexDirection: 'column', height: '100%', pr:'16px',
+                display: 'flex', flexDirection: 'column', height: '100%', pr: '16px',
                 '@media (max-width: 900px)': {
                     paddingRight: 2,
                     minHeight: '100vh'
@@ -1131,7 +1131,7 @@ const Leads: React.FC = () => {
                             </Button>
                         </Box>
                     </Box>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, mb:2, overflowX: 'auto', "@media (max-width: 600px)": { mb: 1 } }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, mb: 2, overflowX: 'auto', "@media (max-width: 600px)": { mb: 1 } }}>
                         {selectedFilters.length > 0 && (
                             <Chip
                                 className='second-sub-title'
@@ -1155,11 +1155,10 @@ const Leads: React.FC = () => {
                                 <Chip
                                     className='paragraph'
                                     key={filter.label}
-                                    label={`${filter.label}: ${
-                                        filter.label === "PageUrl"
-                                          ? displayValue
-                                          : displayValue.charAt(0).toUpperCase() + displayValue.slice(1)
-                                      }`}                                      
+                                    label={`${filter.label}: ${filter.label === "PageUrl"
+                                            ? displayValue
+                                            : displayValue.charAt(0).toUpperCase() + displayValue.slice(1)
+                                        }`}
                                     onDelete={() => handleDeleteFilter(filter)}
                                     deleteIcon={
                                         <CloseIcon
@@ -1181,7 +1180,7 @@ const Leads: React.FC = () => {
                         })}
                     </Box>
                     <Box sx={{
-                         display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0,
+                        display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0,
                         '@media (max-width: 900px)': {
                             pt: '2px',
                             pb: '18px'
@@ -1255,7 +1254,7 @@ const Leads: React.FC = () => {
                                 </Typography>
                             </Box>
                         ) : (
-                            <Grid container spacing={1} sx={{ }}>
+                            <Grid container spacing={1} sx={{}}>
                                 <Grid item xs={12}>
                                     <TableContainer
                                         component={Paper}
@@ -1288,7 +1287,7 @@ const Leads: React.FC = () => {
                                                         { key: 'first_visited_date', label: 'Visited date', sortable: true },
                                                         { key: 'funnel', label: 'Lead Status' },
                                                         { key: 'status', label: 'Visitor Type' },
-                                                        { key: 'number_of_page', label: 'URL Visited'},
+                                                        { key: 'number_of_page', label: 'URL Visited' },
                                                         { key: 'average_time_sec', label: 'Time on site', sortable: true },
                                                     ].map(({ key, label, sortable = false }) => (
                                                         <TableCell
@@ -1453,10 +1452,10 @@ const Leads: React.FC = () => {
                                                         </TableCell>
 
                                                         <TableCell onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleOpenPopup(row)
-                                                         }} sx={{ ...leadsStyles.table_array, position: 'relative', cursor: 'pointer', color: 'rgba(80, 82, 178, 1)' }}>
-                                                        {Array.isArray(row.page_visits) ? row.page_visits.length : '--'}
+                                                            e.stopPropagation();
+                                                            handleOpenPopup(row)
+                                                        }} sx={{ ...leadsStyles.table_array, position: 'relative', cursor: 'pointer', color: 'rgba(80, 82, 178, 1)' }}>
+                                                            {Array.isArray(row.page_visits) ? row.page_visits.length : '--'}
                                                         </TableCell>
 
                                                         <TableCell sx={{ ...leadsStyles.table_array, "::after": { content: 'none' } }}>
