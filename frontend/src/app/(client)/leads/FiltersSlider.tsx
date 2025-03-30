@@ -2326,7 +2326,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               />
               <Typography
                 sx={{
-                  ...filterStyles.filter_name
+                  ...filterStyles.filter_name,
+                  whiteSpace: 'nowrap',
                 }}
               >
                 Page url
