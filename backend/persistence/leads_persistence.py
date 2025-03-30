@@ -77,7 +77,7 @@ class LeadsPersistence:
         self.db = db
 
     def filter_leads(self, domain_id, page, per_page, from_date, to_date, from_time, to_time, regions, page_visits,
-                     average_time_sec, behavior_type, recurring_visits, sort_by, sort_order, search_query, status):
+                     average_time_sec, behavior_type, recurring_visits, sort_by, sort_order, search_query, status, page_url):
         
         FirstNameAlias = aliased(FiveXFiveNames)
         LastNameAlias = aliased(FiveXFiveNames)
@@ -310,6 +310,17 @@ class LeadsPersistence:
 
                 if len(region_data) > 1 and region_data[1]:
                     filters.append(States.state_name.ilike(f'{region_data[1]}%'))
+
+            query = query.filter(or_(*filters))
+        
+        if page_url:
+            query = query.outerjoin(
+                        LeadsRequests, LeadsRequests.lead_id == LeadUser.id
+                    )
+            filters = []
+            page_list = page_url.split(',')
+            for page_url in page_list:
+                filters.append(LeadsRequests.page.like(page_url))
 
             query = query.filter(or_(*filters))
 
@@ -683,7 +694,7 @@ class LeadsPersistence:
 
     def get_full_user_leads_by_filters(self, domain_id, from_date, to_date, regions, page_visits,
                                    average_time_spent, behavior_type, status, recurring_visits, sort_by, sort_order,
-                                   search_query, from_time, to_time):
+                                   search_query, from_time, to_time, page_url):
         FirstNameAlias = aliased(FiveXFiveNames)
         LastNameAlias = aliased(FiveXFiveNames)
 
@@ -755,6 +766,17 @@ class LeadsPersistence:
         if regions:
             region_filters = [FiveXFiveLocations.city.ilike(f'{region.split("-")[0]}%') for region in regions.split(',')]
             query = query.filter(or_(*region_filters))
+                    
+        if page_url:
+            query = query.outerjoin(
+                        LeadsRequests, LeadsRequests.lead_id == LeadUser.id
+                    )
+            filters = []
+            page_list = page_url.split(',')
+            for page_url in page_list:
+                filters.append(LeadsRequests.page.like(page_url))
+
+            query = query.filter(or_(*filters))
         
         if behavior_type:
             behavior_map = {
@@ -1008,7 +1030,7 @@ class LeadsPersistence:
         return leads
     
 
-    def search_location(self, start_letter, dommain_id):
+    def search_location(self, start_letter, domain_id):
         query = (
             self.db.query(
                 FiveXFiveLocations.city,
@@ -1018,7 +1040,7 @@ class LeadsPersistence:
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUsersLocations.five_x_five_user_id)
             .outerjoin(States, States.id == FiveXFiveLocations.state_id)
             .filter(
-                LeadUser.domain_id == dommain_id,
+                LeadUser.domain_id == domain_id,
                 or_(
                     FiveXFiveLocations.city.ilike(f'{start_letter}%'),
                     States.state_name.ilike(f'{start_letter}%')
@@ -1029,6 +1051,20 @@ class LeadsPersistence:
         )
         locations = query.all()
         return locations
+    
+    def search_page_url(self, start_letter: str, domain_id: int):
+        query = (
+            self.db.query(LeadsRequests.page)
+            .join(LeadUser, LeadUser.id == LeadsRequests.lead_id)
+            .filter(
+                LeadUser.domain_id == domain_id,
+                LeadsRequests.page.ilike(f'%{start_letter}%')
+            )
+            .distinct()
+            .limit(10)
+        )
+        result = query.all()
+        return result
 
     def get_lead_user_by_up_id(self, domain_id, up_id):
         return self.db.query(LeadUser).join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id).filter(FiveXFiveUser.up_id == up_id, LeadUser.domain_id == domain_id).first()
