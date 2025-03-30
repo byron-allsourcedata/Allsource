@@ -84,6 +84,7 @@ const Leads: React.FC = () => {
         to_time: string | null;
         selectedStatus: string[];
         regions: string[];
+        pages: string[];
         emails: string[];
         selectedFunnels: string[];
         searchQuery: string | null;
@@ -121,6 +122,7 @@ const Leads: React.FC = () => {
         selectedStatus: [],
         regions: [],
         emails: [],
+        pages: [],
         selectedFunnels: [],
         searchQuery: '',
         checkedFilters: { lastWeek: false, last30Days: false, last6Months: false, allTime: false },
@@ -258,6 +260,13 @@ const Leads: React.FC = () => {
                 }
             }
 
+            if (selectedFilters.some(filter => filter.label === 'PageUrl')) {
+                const pages = selectedFilters.find(filter => filter.label === 'PageUrl')?.value.split(', ') || [];
+                if (pages.length > 0) {
+                    url += `&page_url=${encodeURIComponent(pages.join(','))}`;
+                }
+            }
+
             // Processing "From Date"
             if (selectedFilters.some(filter => filter.label === 'From Date')) {
                 const fromDate = selectedFilters.find(filter => filter.label === 'From Date')?.value || '';
@@ -385,6 +394,7 @@ const Leads: React.FC = () => {
             { condition: filters.selectedStatus?.length, label: 'Visitor Type', value: () => filters.selectedStatus!.join(', ') },
             { condition: filters.selectedFunnels?.length, label: 'Lead Status', value: () => filters.selectedFunnels!.join(', ') },
             { condition: filters.regions?.length, label: 'Regions', value: () => filters.regions!.join(', ') },
+            { condition: filters.pages?.length, label: 'PageUrl', value: () => filters.pages!.join(', ') },
             { condition: filters.recurringVisits?.length, label: 'Recurring Visits', value: () => filters.recurringVisits!.join(', ') },
             { condition: filters.searchQuery?.trim() !== '', label: 'Search', value: filters.searchQuery || '' },
             { condition: filters.from_time, label: 'From Time', value: filters.from_time! },
@@ -494,6 +504,9 @@ const Leads: React.FC = () => {
             case 'Regions':
                 filters.regions = '';
                 break;
+            case 'PageUrl':
+                filters.pages = '';
+                break;
             case 'Visitor Type':
                 filters.selectedStatus = filters.selectedStatus.filter((status: string) => status !== filterToDelete.value);
                 break;
@@ -565,6 +578,7 @@ const Leads: React.FC = () => {
             to_date: updatedFilters.find(f => f.label === 'To Date') ? dayjs(updatedFilters.find(f => f.label === 'To Date')!.value).unix() : null,
             selectedStatus: updatedFilters.find(f => f.label === 'Visitor Type') ? updatedFilters.find(f => f.label === 'Visitor Type')!.value.split(', ') : [],
             regions: updatedFilters.find(f => f.label === 'Regions') ? updatedFilters.find(f => f.label === 'Regions')!.value.split(', ') : [],
+            pages: updatedFilters.find(f => f.label === 'PageUrl') ? updatedFilters.find(f => f.label === 'PageUrl')!.value.split(', ') : [],
             emails: updatedFilters.find(f => f.label === 'Emails') ? updatedFilters.find(f => f.label === 'Emails')!.value.split(', ') : [],
             selectedFunnels: updatedFilters.find(f => f.label === 'Lead Status') ? updatedFilters.find(f => f.label === 'Lead Status')!.value.split(', ') : [],
             searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',
@@ -734,6 +748,13 @@ const Leads: React.FC = () => {
                 const regions = selectedFilters.find(filter => filter.label === 'Regions')?.value.split(', ') || [];
                 if (regions.length > 0) {
                     params.push(`regions=${encodeURIComponent(regions.join(','))}`);
+                }
+            }
+
+            if (selectedFilters.some(filter => filter.label === 'PageUrl')) {
+                const pages = selectedFilters.find(filter => filter.label === 'PageUrl')?.value.split(', ') || [];
+                if (pages.length > 0) {
+                    params.push(`page_url=${encodeURIComponent(pages.join(','))}`);
                 }
             }
 
@@ -1134,7 +1155,11 @@ const Leads: React.FC = () => {
                                 <Chip
                                     className='paragraph'
                                     key={filter.label}
-                                    label={`${filter.label}: ${displayValue.charAt(0).toUpperCase() + displayValue.slice(1)}`}
+                                    label={`${filter.label}: ${
+                                        filter.label === "PageUrl"
+                                          ? displayValue
+                                          : displayValue.charAt(0).toUpperCase() + displayValue.slice(1)
+                                      }`}                                      
                                     onDelete={() => handleDeleteFilter(filter)}
                                     deleteIcon={
                                         <CloseIcon
