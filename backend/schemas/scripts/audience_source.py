@@ -32,7 +32,7 @@ class DataBodyNormalize(BaseModel):
 class PersonRow(BaseModel):
     email: Optional[str] = ""
     transaction_date: Optional[str] = ""
-    sale_amount: Optional[float] = 0
+    sale_amount: Optional[float] = 0.0
     user_id: Optional[int] = None
 
 
