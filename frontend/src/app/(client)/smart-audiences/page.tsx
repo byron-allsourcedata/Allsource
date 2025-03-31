@@ -965,7 +965,7 @@ const SmartAudiences: React.FC = () => {
                                                                                                     handleDetailsPopupOpen()
                                                                                                 }} 
                                                                                                 sx={{ backgroundColor: '#fff', margin: 0, padding: 0, display: 'flex', flexDirection: 'row', cursor: "pointer", alignItems: 'center', }}>
-                                                                                            <Typography className='table-data' component='div' sx={{ fontSize: '12px !important', }}>
+                                                                                            <Typography className='table-data' component='div'style={{color: "rgba(80, 82, 178, 1)"}} sx={{ fontSize: '12px !important' }}>
                                                                                                 {row.name}
                                                                                             </Typography>
                                                                                             </Box>
@@ -989,6 +989,9 @@ const SmartAudiences: React.FC = () => {
                                                                                         placement='right'
                                                                                     >
                                                                                         <Typography className='table-data'
+                                                                                            style={{
+                                                                                                color: "rgba(80, 82, 178, 1)"
+                                                                                            }}
                                                                                             sx={{
                                                                                                 whiteSpace: 'nowrap',
                                                                                                 overflow: 'hidden',
@@ -1374,6 +1377,7 @@ const SmartAudiences: React.FC = () => {
                                     <DetailsPopup open={detailsPopupOpen}
                                         onClose={handleDetailsPopupClose}
                                         id={selectedRowData?.id}
+                                        name={selectedRowData?.name}
                                     />
                                     <CalendarPopup
                                         anchorEl={calendarAnchorEl}
