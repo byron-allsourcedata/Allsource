@@ -5,8 +5,8 @@ import sys
 import asyncio
 import functools
 import json
-from datetime import datetime
-from typing import List
+from datetime import datetime, timezone
+from typing import List, Optional, Dict
 
 import chardet
 import io
@@ -26,7 +26,7 @@ from schemas.scripts.audience_source import MessageBody, PersonRow, DataBodyFrom
 from models.five_x_five_emails import FiveXFiveEmails
 from models.leads_users import LeadUser
 from sqlalchemy import and_, or_, func, create_engine
-from enums import SourceType, LeadStatus
+from enums import SourceType, LeadStatus, TypeOfCustomer
 from models.five_x_five_users_emails import FiveXFiveUsersEmails
 from models.audience_sources import AudienceSource
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
@@ -38,8 +38,8 @@ from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 load_dotenv()
 
-AUDIENCE_SOURCES_READER = 'aud_sources_files'
-AUDIENCE_SOURCES_MATCHING = 'aud_sources_matching'
+AUDIENCE_SOURCES_READER = 'aud_sources_files1'
+AUDIENCE_SOURCES_MATCHING = 'aud_sources_matching1'
 SOURCE_PROCESSING_PROGRESS = "SOURCE_PROCESSING_PROGRESS"
 S3_BUCKET_NAME = "maximiz-data"
 SELECTED_ROW_COUNT = 500
@@ -74,6 +74,28 @@ def extract_amount(amount_raw: str) -> float:
         return float(match.group(0).replace(',', ''))
     else:
         return 0.0
+
+def parse_date(date_str: str) -> str | None:
+    if not date_str:
+        return None
+
+    formats = [
+        '%m/%d/%Y %H:%M',
+        '%Y-%m-%dT%H:%M:%S%z',
+        '%Y-%m-%dT%H:%M:%S',
+    ]
+
+    for fmt in formats:
+        try:
+            parsed_date = datetime.strptime(date_str, fmt)
+            if parsed_date.tzinfo is not None:
+                parsed_date = parsed_date.astimezone(timezone.utc).replace(tzinfo=None)
+            return parsed_date.isoformat()
+        except ValueError:
+            continue
+
+    logging.warning(f"Unknown date format: {date_str}")
+    return None
 
 async def parse_csv_file(*, data, source_id: str, db_session: Session, s3_session: Session, connection: Connection, user_id: int):
     logging.info(f"Processing AudienceSource with ID: {source_id}")
@@ -123,31 +145,45 @@ async def parse_csv_file(*, data, source_id: str, db_session: Session, s3_sessio
     await send_sse(connection, user_id, {"source_id": source_id, "total": total_rows, "processed": processed_rows})
 
     send_rows = 0
+    mapped_fields: Dict[str, str] = data.get("mapped_fields", {})
+    status = data.get("statuses", "").strip() or None
     while send_rows < total_rows:
         batch_rows: List[PersonRow] = []
         for row in islice(csv_reader, SELECTED_ROW_COUNT):
-            email = row.get(data.get('email'), "").strip()
-            transaction_date: str = row.get("TransactionDate", "").strip()
-            sale_amount_raw: str = row.get("SaleAmount", '').strip()
-            transaction_date = ''
+
+            extracted_data = {
+                key: row.get(mapped_fields.get(key, ""), "").strip()
+                for key in mapped_fields
+            }
+
+            email = extracted_data.get("Email", "")
+            sale_amount_raw = extracted_data.get("Order Amount", "")
+
+            date_field = None
+            if status == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
+                date_field = "Transaction Date"
+            if status == TypeOfCustomer.FAILED_LEADS.value:
+                date_field = "Lead Date"
+            if status == TypeOfCustomer.INTEREST.value:
+                date_field = "Interest Date"
+
+            date = extracted_data.get(date_field, "") if date_field else None
+
+            if date:
+                date = parse_date(date)
+
             sale_amount = 0.0
-            if transaction_date:
-                try:
-                    parsed_date: datetime = datetime.strptime(transaction_date, '%m/%d/%Y %H:%M')
-                    transaction_date = parsed_date.isoformat()
-                except Exception as date_error:
-                    logging.warning(f"Error date: '{transaction_date}': {date_error}")
-                    
             if sale_amount_raw:
                 try:
-                    sale_amount: float = extract_amount(sale_amount_raw)
-                except Exception as sale_error:
-                    logging.warning(f"Error amount: '{sale_amount_raw}': {sale_error}")
-                    sale_amount = 0.0
+                    sale_amount = extract_amount(sale_amount_raw)
+                except ValueError as sale_error:
+                    logging.warning(f"Error parsing amount '{sale_amount_raw}': {sale_error}")
+
+            # logging.info(f"{date}")
 
             batch_rows.append(PersonRow(
                 email=email,
-                transaction_date=transaction_date,
+                date=date,
                 sale_amount=sale_amount,
             ))
 
@@ -158,7 +194,8 @@ async def parse_csv_file(*, data, source_id: str, db_session: Session, s3_sessio
                 persons=batch_rows,
                 source_id=str(source_id),
                 user_id=user_id
-            )
+            ),
+            status=status
         )
 
             await publish_rabbitmq_message(connection=connection, queue_name=AUDIENCE_SOURCES_MATCHING, message_body=message_body)
