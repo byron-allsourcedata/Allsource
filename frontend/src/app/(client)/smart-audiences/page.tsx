@@ -1210,7 +1210,7 @@ const SmartAudiences: React.FC = () => {
                                                                                             width: '100%', maxWidth: 360, boxShadow: 'none'
                                                                                         }}
                                                                                     >
-                                                                                        <ListItemButton disabled={selectedRowData?.status === "validating"} sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
+                                                                                        <ListItemButton disabled={!(selectedRowData?.status === "ready")} sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
                                                                                             handleCloseMorePopover()
                                                                                             handleDataSyncPopupOpen()
                                                                                         }}>

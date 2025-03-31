@@ -376,6 +376,13 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     }, [open, needsSync])
 
 
+    const formatServiceName = (serviceName: string) => {
+        return serviceName
+          .replace(/([a-z])([A-Z])/g, '$1 $2')
+          .replace(/^./, (match) => match.toUpperCase());
+      };
+
+
     const toCamelCase = (name: string) => {
         const updatedName = name?.split('_').map((word, index) =>
             index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)
@@ -871,7 +878,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                 )}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: 11, backgroundColor: '#fff' }}>
                     <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
-                        Create smart audience sync
+                        Create smart audience sync {activeService ? `with ${formatServiceName(toCamelCase(activeService))}` : ""}
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
                         <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/data-sync" className="main-text" sx={{
