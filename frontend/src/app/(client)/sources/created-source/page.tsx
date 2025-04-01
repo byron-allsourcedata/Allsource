@@ -407,12 +407,12 @@ const SourcesList: React.FC = () => {
                                         </Typography>
                                     </Box>
                                     {/* need chnage < on !== */}
-                                    <IconButton disabled={createdSource?.id && sourceProgress[createdSource.id]?.processed !== sourceProgress[createdSource.id]?.total} onClick={(event) => handleOpenPopover(event)} sx={{ '@media (max-width: 900px)': {display: 'none'}, ':hover': { backgroundColor: 'transparent' }}} >
+                                    <IconButton onClick={(event) => handleOpenPopover(event)} sx={{ '@media (max-width: 900px)': {display: 'none'}, ':hover': { backgroundColor: 'transparent' }}} >
                                         <MoreVert sx={{color: "rgba(32, 33, 36, 1)"}} height={8} width={24}/>
                                     </IconButton>
                                 </Box>
                                     {/* need chnage < on !== */}
-                                <IconButton disabled={createdSource?.id && sourceProgress[createdSource.id]?.processed !== sourceProgress[createdSource.id]?.total} onClick={(event) => handleOpenPopover(event)} sx={{ display: 'none', '@media (max-width: 900px)': {display: 'block'}, ':hover': { backgroundColor: 'transparent' }}} >
+                                <IconButton onClick={(event) => handleOpenPopover(event)} sx={{ display: 'none', '@media (max-width: 900px)': {display: 'block'}, ':hover': { backgroundColor: 'transparent' }}} >
                                         <MoreVert sx={{color: "rgba(32, 33, 36, 1)"}} height={8} width={24}/>
                                 </IconButton>             
                             </Box>
