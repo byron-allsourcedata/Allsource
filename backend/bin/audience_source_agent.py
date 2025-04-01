@@ -506,9 +506,10 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         await message.ack()
         logging.info(f"Processing completed for source_id {source_id}.")
 
-    except Exception as e:
-        await message.nack(requeue=False)
+    except BaseException as e:
         logging.warning(f"Message for source_id failed and will be reprocessed. {e}")
+        db_session.rollback()
+        await message.ack()
 
 
 async def main():
