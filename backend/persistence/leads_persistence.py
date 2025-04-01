@@ -170,7 +170,7 @@ class LeadsPersistence:
             .outerjoin(FiveXFiveLocations, FiveXFiveLocations.id == FiveXFiveUsersLocations.location_id)
             .outerjoin(States, States.id == FiveXFiveLocations.state_id)
             .outerjoin(recurring_visits_subquery, recurring_visits_subquery.c.lead_id == LeadUser.id)
-            .filter(LeadUser.domain_id == domain_id)
+            .filter(LeadUser.domain_id == domain_id, LeadUser.is_confirmed == True)
             .group_by(
                 FiveXFiveUser.id,
                 LeadUser.behavior_type,
@@ -720,7 +720,7 @@ class LeadsPersistence:
             .outerjoin(FiveXFiveLocations, FiveXFiveLocations.id == FiveXFiveUsersLocations.location_id)
             .outerjoin(States, States.id == FiveXFiveLocations.state_id)
             .outerjoin(recurring_visits_subquery, recurring_visits_subquery.c.lead_id == LeadUser.id)
-            .filter(LeadUser.domain_id == domain_id, LeadUser.is_active.is_(True))
+            .filter(LeadUser.domain_id == domain_id, LeadUser.is_active.is_(True), LeadUser.is_confirmed == True)
             .group_by(FiveXFiveUser.id, LeadUser.id, LeadsVisits.start_date)
             .order_by(desc(LeadsVisits.start_date))
         )
@@ -1002,7 +1002,7 @@ class LeadsPersistence:
             .outerjoin(FiveXFiveUsersPhones, FiveXFiveUsersPhones.user_id == FiveXFiveUser.id)
             .outerjoin(FiveXFivePhones, FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id)
             .filter(
-                LeadUser.domain_id == domain_id,
+                LeadUser.domain_id == domain_id, LeadUser.is_confirmed == True
             ).group_by(FiveXFiveUser.first_name, FiveXFiveUser.last_name, FiveXFiveEmails.email, FiveXFivePhones.number,
                        LeadUser.five_x_five_user_id)
         )
@@ -1041,6 +1041,7 @@ class LeadsPersistence:
             .outerjoin(States, States.id == FiveXFiveLocations.state_id)
             .filter(
                 LeadUser.domain_id == domain_id,
+                LeadUser.is_confirmed == True,
                 or_(
                     FiveXFiveLocations.city.ilike(f'{start_letter}%'),
                     States.state_name.ilike(f'{start_letter}%')
@@ -1058,6 +1059,7 @@ class LeadsPersistence:
             .join(LeadUser, LeadUser.id == LeadsRequests.lead_id)
             .filter(
                 LeadUser.domain_id == domain_id,
+                LeadUser.is_confirmed == True,
                 LeadsRequests.page.ilike(f'%{start_letter}%')
             )
             .distinct()

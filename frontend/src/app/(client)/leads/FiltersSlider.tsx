@@ -2340,7 +2340,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                     key={index}
                     label={tag}
                     onDelete={() =>
-                      setTags(pageUrlTags.filter((_, i) => i !== index))
+                      setPageUrlTags(pageUrlTags.filter((_, i) => i !== index))
                     }
                   />
                 ))}

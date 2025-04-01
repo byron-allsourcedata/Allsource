@@ -225,29 +225,27 @@ async def process_payment_unlocked_five_x_five_user(session, five_x_five_user_up
 
 
 def check_certain_urls(page, suppression_rule):
-    if suppression_rule.is_url_certain_activation and suppression_rule.activate_certain_urls:
-        page_path = urlparse(page).path.strip('/')
-        urls_to_check = suppression_rule.activate_certain_urls.split(', ')
+    page_path = urlparse(page).path.strip('/')
+    urls_to_check = suppression_rule.activate_certain_urls.split(', ')
 
-        for url in urls_to_check:
-            url_path = urlparse(url.strip()).path.strip('/')
-            if (page_path == url_path or
-                    page_path.startswith(url_path + '/') or
-                    url_path in page_path.split('/')):
-                logging.info(f"activate_certain_urls exists: {page}")
-                return True
+    for url in urls_to_check:
+        url_path = urlparse(url.strip()).path.strip('/')
+        if (page_path == url_path or
+                page_path.startswith(url_path + '/') or
+                url_path in page_path.split('/')):
+            logging.info(f"activate_certain_urls exists: {page}")
+            return True
 
     return False
 
 
 def check_activate_based_urls(page, suppression_rule):
-    if suppression_rule.is_based_activation and suppression_rule.activate_based_urls:
-        parsed_url = urlparse(page)
-        query_params = parse_qs(parsed_url.query)
-        activate_based_urls = suppression_rule.activate_based_urls.split(', ')
-        if any(url in values for values in query_params.values() for url in activate_based_urls):
-            logging.info(f"activate_based_urls exists: {page}")
-            return True
+    parsed_url = urlparse(page)
+    query_params = parse_qs(parsed_url.query)
+    activate_based_urls = suppression_rule.activate_based_urls.split(', ')
+    if any(url in values for values in query_params.values() for url in activate_based_urls):
+        logging.info(f"activate_based_urls exists: {page}")
+        return True
 
     return False
 
@@ -427,12 +425,15 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
                                                   domain_id=user_domain_id).first()
     is_first_request = False
     if not lead_user:
+        is_confirmed = True
         suppression_rule = session.query(SuppressionRule).filter(SuppressionRule.domain_id == user_domain_id).first()
         suppression_list = session.query(SuppressionList).filter(SuppressionList.domain_id == user_domain_id).first()
         suppressions_emails = []
         if suppression_list and suppression_list.total_emails:
+            is_confirmed = False
             suppressions_emails.extend(suppression_list.total_emails.split(', '))
         if suppression_rule and suppression_rule.suppressions_multiple_emails:
+            is_confirmed = False
             suppressions_emails.extend(suppression_rule.suppressions_multiple_emails.split(', '))
         suppressions_emails = list(set(suppressions_emails))
         if suppressions_emails:
@@ -454,6 +455,7 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
                     return
         if suppression_rule:
             if suppression_rule.is_url_certain_activation and suppression_rule.activate_certain_urls:
+                is_confirmed = False
                 if check_certain_urls(page, suppression_rule):
                     suppressed_contact = SuppressedContact(
                         five_x_five_user_id=five_x_five_user.id,
@@ -463,10 +465,11 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
                         created_at=datetime.now()
                     )
                     session.add(suppressed_contact)
-                    session.commit() 
+                    session.commit()
                     return
-
-            if suppression_rule.is_based_activation and suppression_rule.activate_certain_urls:
+                    
+            if suppression_rule.is_based_activation and suppression_rule.activate_based_urls:
+                is_confirmed = False
                 if check_activate_based_urls(page, suppression_rule):
                     suppressed_contact = SuppressedContact(
                         five_x_five_user_id=five_x_five_user.id,
@@ -502,8 +505,9 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
             return
 
         is_first_request = True
+        is_checked = True if is_confirmed == True else False
         lead_user = LeadUser(five_x_five_user_id=five_x_five_user.id, user_id=user.id, behavior_type=behavior_type,
-                             domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0)
+                             domain_id=user_domain_id, total_visit=0, avarage_visit_time=0, total_visit_time=0, is_confirmed=is_confirmed, is_checked=is_checked)
         
         session.add(lead_user)
         session.flush()
@@ -806,6 +810,62 @@ async def process_files(session, rabbitmq_connection, root_user):
         update_last_processed_file(str(last_processed_file_name))
 
 
+def process_confirmed(session: Session):
+    logging.info('Start process confirmed')
+    
+    lead_users = session.query(LeadUser) \
+        .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id) \
+        .filter(LeadUser.is_confirmed == False, LeadUser.is_checked == False) \
+        .all()
+        
+    if not lead_users:
+        logging.info('All leads are checked')
+        return
+    
+    threshold_time = datetime.now(timezone.utc) - timedelta(minutes=30)
+    domain_rule_cache = {}
+
+    for lead_user in lead_users:
+        leads_requests = session.query(LeadsRequests) \
+            .join(LeadsVisits, LeadsVisits.id == LeadsRequests.visit_id) \
+            .filter(LeadsVisits.id == lead_user.first_visit_id) \
+            .order_by(LeadsRequests.id) \
+            .all()
+
+        if not leads_requests:
+            logging.warning("No leads requests found for lead_user id=%s", lead_user.id)
+            continue
+
+        last_request = leads_requests[-1]
+        last_request_time = last_request.requested_at.replace(tzinfo=timezone.utc)
+        if last_request_time >= threshold_time:
+            logging.info('Not enough time passed for lead_user id=%s', lead_user.id)
+            continue
+        
+        if lead_user.domain_id in domain_rule_cache:
+            suppression_rule = domain_rule_cache[lead_user.domain_id]
+        else:
+            suppression_rule = session.query(SuppressionRule) \
+                .filter(SuppressionRule.domain_id == lead_user.domain_id) \
+                .first()
+            domain_rule_cache[lead_user.domain_id] = suppression_rule
+
+        is_confirmed = True
+        for request in leads_requests:
+            if check_certain_urls(request.page, suppression_rule):
+                logging.info('Suppression rule matched for lead_user id=%s', lead_user.id)
+                is_confirmed = False
+                break
+
+        lead_user.is_checked = True
+        if is_confirmed:
+            lead_user.is_confirmed = True
+            
+        session.flush()
+
+    session.commit()
+    logging.info('Lead confirmed')
+
 async def main():
     engine = create_engine(
         f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}", pool_pre_ping=True)
@@ -848,6 +908,7 @@ async def main():
         try:
             await process_files(session=session, rabbitmq_connection=connection, root_user=result)
             await connection.close()
+            process_confirmed(session=session)
             logging.info('Sleeping for 10 minutes...')
             time.sleep(60 * 10)
             connection = await rabbitmq_connection.connect()
