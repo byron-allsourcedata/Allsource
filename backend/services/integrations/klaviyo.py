@@ -221,7 +221,6 @@ class KlaviyoIntegrationsService:
     async def process_data_sync(self, five_x_five_user, user_integration, data_sync, lead_user):
         data_map = data_sync.data_map if data_sync.data_map else None
         profile = self.__create_profile(five_x_five_user, user_integration.access_token, data_map)
-        print(profile)
         if profile in (ProccessDataSyncResult.AUTHENTICATION_FAILED.value, ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return profile
 

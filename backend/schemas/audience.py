@@ -40,6 +40,15 @@ class AudienceResponse(BaseModel):
     created_at: datetime
     exported_on: Optional[datetime] = None
 
+class DataSource(BaseModel):
+    name: str
+    source_type: str
+    size: int
+
+class DataSourcesResponse(BaseModel):
+    includes: List[DataSource]
+    excludes: List[DataSource]
+
 class DomainsSourceResponse(BaseModel):
     domains: List[str]
     has_more: bool
