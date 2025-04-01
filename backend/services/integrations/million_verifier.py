@@ -7,21 +7,21 @@ from persistence.million_verifier import MillionVerifierPersistence
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-API_KEY = os.getenv('MILLION_VERIFIER_KEY')
-API_URL = 'https://api.millionverifier.com/api/v3/'
 class MillionVerifierIntegrationsService:
 
     def __init__(self, million_verifier_persistence: MillionVerifierPersistence):
         self.million_verifier_persistence = million_verifier_persistence
+        self.api_key = os.getenv('MILLION_VERIFIER_KEY')
+        self.api_url = 'https://api.millionverifier.com/api/v3/'
     
     def check_verify_email(self, email: str) -> dict:
         params = {
             'email': email,
-            'api': API_KEY
+            'api': self.api_key
         }
         
         try:
-            response = requests.get(API_URL, params=params)
+            response = requests.get(self.api_url, params=params)
             response.raise_for_status()
             return response.json()
         except requests.HTTPError as e:
