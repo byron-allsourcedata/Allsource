@@ -38,7 +38,7 @@ class MillionVerifierIntegrationsService:
         result = self.check_verify_email(email)
         if result.get('credits') == 0:
             logger.warning(result.get('error'))
-            return False
+            raise Exception(f"Insufficient credits for million_verifier")
         
         if result.get('resultcode') in (3, 4, 5, 6):
             error_text = result.get('error')
