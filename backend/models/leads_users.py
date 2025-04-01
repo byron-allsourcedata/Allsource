@@ -28,7 +28,6 @@ class LeadUser(Base):
 Index('leads_users_is_active_idx', LeadUser.is_active)
 Index('leads_users_is_confirmed_idx', LeadUser.is_confirmed)
 Index('leads_users_is_confirmed_is_checked_idx', LeadUser.is_confirmed, LeadUser.is_checked)
-Index('leads_users_is_confirmed_domain_id_idx', LeadUser.is_confirmed, LeadUser.domain_id)
 Index('leads_users_id_domain_id_is_active_idx', LeadUser.id, LeadUser.domain_id, LeadUser.is_active)
 Index('leads_users_id_behavior_type_idx', LeadUser.id, LeadUser.behavior_type)
 Index('leads_users_id_domain_id_is_active_is_converted_sales_idx', LeadUser.id, LeadUser.domain_id, LeadUser.is_active, LeadUser.is_converted_sales)
