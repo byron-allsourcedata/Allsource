@@ -16,7 +16,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
-from utils import normalize_url, get_url_params_list
+from utils import normalize_url, get_url_params_list, check_certain_urls
 from enums import NotificationTitles, PlanAlias
 from persistence.leads_persistence import LeadsPersistence
 from persistence.notification import NotificationPersistence
@@ -222,21 +222,6 @@ async def process_payment_unlocked_five_x_five_user(session, five_x_five_user_up
         await handle_payment_notification(user, notification_persistence, plan_leads_credits, user.leads_credits,
                                         contact_credit_price)
     session.flush()
-
-
-def check_certain_urls(page, suppression_rule):
-    page_path = urlparse(page).path.strip('/')
-    urls_to_check = suppression_rule.activate_certain_urls.split(', ')
-
-    for url in urls_to_check:
-        url_path = urlparse(url.strip()).path.strip('/')
-        if (page_path == url_path or
-                page_path.startswith(url_path + '/') or
-                url_path in page_path.split('/')):
-            logging.info(f"activate_certain_urls exists: {page}")
-            return True
-
-    return False
 
 
 def check_activate_based_urls(page, suppression_rule):
@@ -454,7 +439,7 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
         if suppression_rule:
             if suppression_rule.is_url_certain_activation and suppression_rule.activate_certain_urls:
                 is_confirmed = False
-                if check_certain_urls(page, suppression_rule):
+                if check_certain_urls(page, suppression_rule.activate_certain_urls):
                     suppressed_contact = SuppressedContact(
                         five_x_five_user_id=five_x_five_user.id,
                         domain_id=user_domain_id,
@@ -850,7 +835,7 @@ def process_confirmed(session: Session):
 
         is_confirmed = True
         for request in leads_requests:
-            if suppression_rule and suppression_rule.is_url_certain_activation and suppression_rule.activate_certain_urls and check_certain_urls(request.page, suppression_rule):
+            if suppression_rule and suppression_rule.is_url_certain_activation and suppression_rule.activate_certain_urls and check_certain_urls(request.page.strip() + '?' + request.page_parameters.replace(", ", "&"), suppression_rule.activate_certain_urls):
                 logging.info('Suppression rule matched for lead_user id=%s', lead_user.id)
                 is_confirmed = False
                 break
@@ -904,7 +889,7 @@ async def main():
         .first()
     while True:
         try:
-            await process_files(session=session, rabbitmq_connection=connection, root_user=result)
+            #await process_files(session=session, rabbitmq_connection=connection, root_user=result)
             await connection.close()
             process_confirmed(session=session)
             logging.info('Sleeping for 10 minutes...')

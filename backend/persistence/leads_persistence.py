@@ -1059,7 +1059,6 @@ class LeadsPersistence:
             .join(LeadUser, LeadUser.id == LeadsRequests.lead_id)
             .filter(
                 LeadUser.domain_id == domain_id,
-                LeadUser.is_confirmed == True,
                 LeadsRequests.page.ilike(f'%{start_letter}%')
             )
             .distinct()
