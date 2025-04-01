@@ -12,7 +12,7 @@ class AudienceSourcesMatchedPerson(Base):
     five_x_five_user_id = Column(Integer, ForeignKey('5x5_users.id'), nullable=False)
     mapped_fields = Column(JSON, nullable=True)
 
-    email = Column(VARCHAR(50), nullable=False)
+    email = Column(VARCHAR(64), nullable=False)
     orders_amount = Column(DECIMAL(10, 2), default=0)
     orders_amount_normalized = Column(DECIMAL(10, 2), default=0)
     orders_count = Column(Integer, default=1)
