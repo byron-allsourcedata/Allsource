@@ -8,6 +8,8 @@ from sqlalchemy.orm import Session
 from models.audience_smarts import AudienceSmart
 from models.audience_smarts_use_cases import AudienceSmartsUseCase
 from models.audience_smarts_data_sources import AudienceSmartsDataSources
+from models.audience_lookalikes import AudienceLookalikes
+from models.audience_sources import AudienceSource
 from models.users import Users
 from typing import Optional, Tuple, List
 from sqlalchemy.engine.row import Row
@@ -158,6 +160,25 @@ class AudienceSmartsPersistence:
         count = query.count()
         
         return smarts, count
+    
+
+    def get_datasources_by_aud_smart_id(self, id: UUID) -> Tuple[List[Row]]: 
+        query = (
+            self.db.query(
+                AudienceSmartsDataSources.data_type,
+                AudienceLookalikes.name.label("lookalike_name"),
+                AudienceLookalikes.size.label("lookalike_size"),
+                AudienceSource.name.label("source_name"),
+                AudienceSource.source_type,
+                AudienceSource.matched_records
+            )
+                .select_from(AudienceSmart)
+                .join(AudienceSmartsDataSources, AudienceSmartsDataSources.smart_audience_id == AudienceSmart.id)
+                .outerjoin(AudienceLookalikes, AudienceSmartsDataSources.lookalike_id == AudienceLookalikes.id)
+                .outerjoin(AudienceSource, (AudienceSmartsDataSources.source_id == AudienceSource.id) | (AudienceLookalikes.source_uuid == AudienceSource.id)) 
+                .filter(AudienceSmart.id == id)
+        )
+        return query.all()
 
 
     def search_audience_smart(self, start_letter: str, user_id: int):
