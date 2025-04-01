@@ -107,6 +107,7 @@ type ArrayMapping = {
     hubspot: CustomRow[];
     mailchimp: CustomRow[];
     default: CustomRow[]
+    CSV: CustomRow[]
   };
 
 const styles = {
@@ -488,6 +489,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
             setCustomFields(customFieldsListHubspot.map(field => ({ type: field.value, value: field.type })))
         }
 
+        if (activeService === "CSV") {
+            setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
+        }
+
         if (activeService === "sales_force") {
             setRows(defaultRowsSalesForce)
         }
@@ -688,6 +693,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     const arrayWithCustomFields: ArrayMapping = {
         hubspot: customFieldsListHubspot,
         mailchimp: customFieldsList,
+        CSV: customFieldsList,
         default: customFieldsList
     };
 
