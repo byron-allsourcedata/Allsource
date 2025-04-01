@@ -4,7 +4,7 @@ from datetime import datetime
 
 from openai import OpenAI
 import logging
-from typing import List, Optional
+from typing import List, Optional, Dict
 from schemas.audience import Row, SourcesObjectResponse, SourceResponse, NewSource, DomainsSourceResponse
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
 from persistence.domains import UserDomainsPersistence
@@ -98,21 +98,23 @@ class AudienceSourceService:
             logger.error("Error with ChatGPT API", exc_info=True)
             return None
         
-    async def send_matching_status(self, source_id, user_id, type, statuses, domain_id=None, email_field = None):
+    async def send_matching_status(self, source_id, user_id, type, statuses, domain_id=None, mapped_fields = None):
         queue_name = QueueName.AUDIENCE_SOURCES_READER.value
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
         data = {
             'source_id': str(source_id),
-            'user_id': user_id
+            'user_id': user_id,
+            'type': type,
         }
         if type == SourceType.CSV.value:
-            data['email'] = email_field
+            data['mapped_fields'] = mapped_fields
+            data['statuses'] = statuses
             
         if type == SourceType.PIXEL.value:
             data['domain_id'] = domain_id
             data['statuses'] = statuses
-            
+
         try:
             message_body = {
                 'type': type,
@@ -139,12 +141,19 @@ class AudienceSourceService:
             "rows": json.dumps([row.dict() for row in payload.rows]) if payload.rows else None,
         }
         created_data = self.audience_sources_persistence.create_source(**creating_data)
-        email_field = payload.rows[0].value if payload.rows else None
-        await self.send_matching_status(created_data.id, user.get("id"), payload.source_origin, payload.source_type, payload.domain_id, email_field)
+        mapped_fields: Dict[str, str] = {row.type: row.value for row in payload.rows} if payload.rows else {}
+
+        await self.send_matching_status(
+            created_data.id,
+            user.get("id"),
+            payload.source_origin,
+            payload.source_type,
+            payload.domain_id,
+            mapped_fields
+        )
         
         if not created_data:
             logger.debug('Database error during creation')
-
 
         domain_name = self.domain_persistence.get_domain_name(created_data.domain_id)
 

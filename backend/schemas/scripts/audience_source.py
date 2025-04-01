@@ -8,7 +8,7 @@ class PersonEntry(BaseModel):
     email: str
     orders_amount: float
     orders_count: int
-    recency: int
+    recency: float
 
 class DataForNormalize(BaseModel):
     matched_size: int
@@ -31,9 +31,10 @@ class DataBodyNormalize(BaseModel):
 
 class PersonRow(BaseModel):
     email: Optional[str] = ""
-    transaction_date: Optional[str] = ""
+    date: Optional[str] = ""
     sale_amount: Optional[float] = 0.0
     user_id: Optional[int] = None
+    status: Optional[str] = None
 
 
 class DataBodyFromSource(BaseModel):
@@ -44,3 +45,4 @@ class DataBodyFromSource(BaseModel):
 class MessageBody(BaseModel):
     type: str
     data: Union[DataBodyFromSource, DataBodyNormalize]
+    status: Optional[str] = None
