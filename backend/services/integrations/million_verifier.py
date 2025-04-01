@@ -36,6 +36,10 @@ class MillionVerifierIntegrationsService:
             return checked_email.is_verify
         
         result = self.check_verify_email(email)
+        if result.get('credits') == 0:
+            logger.warning(result.get('error'))
+            return False
+        
         if result.get('resultcode') in (3, 4, 5, 6):
             error_text = result.get('error')
             result_error = result.get('result')
@@ -43,7 +47,6 @@ class MillionVerifierIntegrationsService:
                 logger.debug(f"millionverifier error: {error_text}")
             if result_error:
                 logger.debug(f"millionverifier error: {result_error}")
-            is_verify = False
         
         subresult_value = result.get('subresult')
         
