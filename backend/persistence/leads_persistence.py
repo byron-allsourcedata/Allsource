@@ -1002,9 +1002,9 @@ class LeadsPersistence:
             .outerjoin(FiveXFiveUsersPhones, FiveXFiveUsersPhones.user_id == FiveXFiveUser.id)
             .outerjoin(FiveXFivePhones, FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id)
             .filter(
-                LeadUser.domain_id == domain_id,
+                LeadUser.domain_id == domain_id, LeadUser.is_confirmed == True
             ).group_by(FiveXFiveUser.first_name, FiveXFiveUser.last_name, FiveXFiveEmails.email, FiveXFivePhones.number,
-                       LeadUser.five_x_five_user_id, LeadUser.is_confirmed == True)
+                       LeadUser.five_x_five_user_id)
         )
         email_host = start_letter.split('@')
         if len(email_host) == 2:

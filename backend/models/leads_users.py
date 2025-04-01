@@ -25,15 +25,19 @@ class LeadUser(Base):
     is_confirmed = Column(Boolean, nullable=False, default=False)
     is_checked = Column(Boolean, nullable=False, default=False)
     
-    __table_args__ = (
-        Index('leads_users_is_active_idx', 'is_active'),
-        Index('leads_users_id_domain_id_is_active_idx', 'id', 'domain_id', 'is_active'),
-        Index('leads_users_id_behavior_type_idx', 'id', 'behavior_type'),
-        Index('leads_users_id_domain_id_is_active_is_converted_sales_idx', 'id', 'domain_id', 'is_active', 'is_converted_sales'),
-        Index('leads_users_id_domain_id_is_active_is_converted_sales_behavior_', 'id', 'domain_id', 'is_active', 'is_converted_sales', 'behavior_type'),
-        Index('leads_users_id_domain_id_idx', 'id', 'domain_id'),
-        Index('leads_users_id_domain_id_idx', 'five_x_five_user_id', 'domain_id'),
-    )
+Index('leads_users_is_active_idx', LeadUser.is_active)
+Index('leads_users_is_confirmed_idx', LeadUser.is_confirmed)
+Index('leads_users_is_confirmed_is_checked_idx', LeadUser.is_confirmed, LeadUser.is_checked)
+Index('leads_users_is_confirmed_domain_id_idx', LeadUser.is_confirmed, LeadUser.domain_id)
+Index('leads_users_id_domain_id_is_active_idx', LeadUser.id, LeadUser.domain_id, LeadUser.is_active)
+Index('leads_users_id_behavior_type_idx', LeadUser.id, LeadUser.behavior_type)
+Index('leads_users_id_domain_id_is_active_is_converted_sales_idx', LeadUser.id, LeadUser.domain_id, LeadUser.is_active, LeadUser.is_converted_sales)
+Index('leads_users_id_domain_id_is_active_is_converted_sales_behavior_', LeadUser.id, LeadUser.domain_id, LeadUser.is_active, LeadUser.is_converted_sales, LeadUser.behavior_type)
+Index('leads_users_id_domain_id_idx', LeadUser.id, LeadUser.domain_id)
+Index('leads_users_domain_id_is_confirmed_idx', LeadUser.is_confirmed, LeadUser.domain_id)
+Index('leads_users_domain_id_is_active_is_confirmed_idx', LeadUser.domain_id, LeadUser.is_active, LeadUser.is_confirmed)
+Index('leads_users_five_x_five_user_id_domain_id_idx', LeadUser.five_x_five_user_id, LeadUser.domain_id)
+Index('leads_users_five_x_five_user_id_user_id_idx', LeadUser.five_x_five_user_id, LeadUser.user_id)
 
 
 event.listen(LeadUser, "before_insert", create_timestamps)
