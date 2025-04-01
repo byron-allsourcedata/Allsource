@@ -432,7 +432,6 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
         if suppression_list and suppression_list.total_emails:
             suppressions_emails.extend(suppression_list.total_emails.split(', '))
         if suppression_rule and suppression_rule.suppressions_multiple_emails:
-            is_confirmed = False
             suppressions_emails.extend(suppression_rule.suppressions_multiple_emails.split(', '))
         suppressions_emails = list(set(suppressions_emails))
         if suppressions_emails:
