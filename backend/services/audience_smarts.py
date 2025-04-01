@@ -4,9 +4,11 @@ import json
 
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
-from schemas.audience import SmartsAudienceObjectResponse
+from schemas.audience import SmartsAudienceObjectResponse, DataSourcesResponse
 from persistence.audience_smarts import AudienceSmartsPersistence
 from models.users import User
+from enums import AudienceSmartDataSource
+from uuid import UUID
 
 logger = logging.getLogger(__name__)
 
@@ -108,6 +110,25 @@ class AudienceSmartsService:
             data_sources=data_sources,
             contacts_to_validate=contacts_to_validate
         )
+    
+    def get_datasources_by_aud_smart_id(self, id: UUID) -> DataSourcesResponse:
+        data_sources = self.audience_smarts_persistence.get_datasources_by_aud_smart_id(id)
+        includes = []
+        excludes = []
+
+        for data_source in data_sources:
+            source_data = {
+                "name": data_source.lookalike_name or data_source.source_name,
+                "source_type": data_source.source_type,
+                "size": data_source.lookalike_size if data_source.lookalike_name else data_source.matched_records
+            }
+
+            if data_source.data_type == AudienceSmartDataSource.INCLUDE.value:
+                includes.append(source_data)
+            elif data_source.data_type == AudienceSmartDataSource.EXCLUDE.value:
+                excludes.append(source_data)
+
+        return {"includes": includes, "excludes": excludes}
 
     def get_datasource(self, user: dict):
         lookalikes, count, max_page = self.lookalikes_persistence_service.get_lookalikes(

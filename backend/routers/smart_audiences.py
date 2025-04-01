@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from dependencies import get_audience_smarts_service, check_user_authorization_without_pixel
 from services.audience_smarts import AudienceSmartsService
-from schemas.audience import SmartsAudienceObjectResponse, UpdateSmartAudienceRequest, CreateSmartAudienceRequest
+from schemas.audience import SmartsAudienceObjectResponse, UpdateSmartAudienceRequest, CreateSmartAudienceRequest, DataSourcesResponse
 from typing import Optional, List
 from uuid import UUID
 
@@ -38,6 +38,16 @@ def get_audience_smarts(
         "audience_smarts_list": smarts_audience_list,
         "count": count
     }
+
+@router.get("/{id}/data-sources", response_model=DataSourcesResponse)
+def get_datasource_by_id(
+        id: UUID,
+        audience_smarts_service: AudienceSmartsService = Depends(get_audience_smarts_service)
+):
+        data_sources = audience_smarts_service.get_datasources_by_aud_smart_id(
+            id=id,
+        )
+        return data_sources
 
 
 @router.post("/builder")
