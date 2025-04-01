@@ -430,7 +430,6 @@ async def process_user_data(states_dict, possible_lead, five_x_five_user: FiveXF
         suppression_list = session.query(SuppressionList).filter(SuppressionList.domain_id == user_domain_id).first()
         suppressions_emails = []
         if suppression_list and suppression_list.total_emails:
-            is_confirmed = False
             suppressions_emails.extend(suppression_list.total_emails.split(', '))
         if suppression_rule and suppression_rule.suppressions_multiple_emails:
             is_confirmed = False
@@ -852,7 +851,7 @@ def process_confirmed(session: Session):
 
         is_confirmed = True
         for request in leads_requests:
-            if check_certain_urls(request.page, suppression_rule):
+            if suppression_rule and suppression_rule.is_url_certain_activation and suppression_rule.activate_certain_urls and check_certain_urls(request.page, suppression_rule):
                 logging.info('Suppression rule matched for lead_user id=%s', lead_user.id)
                 is_confirmed = False
                 break
