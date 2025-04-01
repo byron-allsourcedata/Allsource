@@ -6,8 +6,8 @@ class BaseEnum(Enum):
     FAILURE = 'FAILURE'
 
 class QueueName(Enum):
-    AUDIENCE_SOURCE_MATCHING = 'aud_sources_matching1'
-    AUDIENCE_SOURCES_READER = 'aud_sources_files1'
+    AUDIENCE_SOURCE_MATCHING = 'aud_sources_matching'
+    AUDIENCE_SOURCES_READER = 'aud_sources_files'
     
 class OauthShopify(Enum):
     USER_NOT_FOUND = 'USER_NOT_FOUND'

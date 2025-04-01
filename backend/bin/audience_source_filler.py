@@ -38,8 +38,8 @@ from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 load_dotenv()
 
-AUDIENCE_SOURCES_READER = 'aud_sources_files1'
-AUDIENCE_SOURCES_MATCHING = 'aud_sources_matching1'
+AUDIENCE_SOURCES_READER = 'aud_sources_files'
+AUDIENCE_SOURCES_MATCHING = 'aud_sources_matching'
 SOURCE_PROCESSING_PROGRESS = "SOURCE_PROCESSING_PROGRESS"
 S3_BUCKET_NAME = "maximiz-data"
 SELECTED_ROW_COUNT = 500
@@ -178,8 +178,6 @@ async def parse_csv_file(*, data, source_id: str, db_session: Session, s3_sessio
                     sale_amount = extract_amount(sale_amount_raw)
                 except ValueError as sale_error:
                     logging.warning(f"Error parsing amount '{sale_amount_raw}': {sale_error}")
-
-            # logging.info(f"{date}")
 
             batch_rows.append(PersonRow(
                 email=email,
