@@ -6,7 +6,9 @@ from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
 from schemas.audience import SmartsAudienceObjectResponse
 from persistence.audience_smarts import AudienceSmartsPersistence
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from models.users import User
+from enums import QueueName
 
 logger = logging.getLogger(__name__)
 
@@ -87,8 +89,31 @@ class AudienceSmartsService:
     def update_audience_smart(self, id, new_name) -> bool:
         count_updated = self.audience_smarts_persistence.update_audience_smart(id, new_name)
         return count_updated > 0
+    
+    async def send_matching_status(self, source_id, user_id, type, statuses):
+        queue_name = QueueName.AUDIENCE_SMARTS_FILLER.value
+        rabbitmq_connection = RabbitMQConnection()
+        connection = await rabbitmq_connection.connect()
+        data = {
+            'source_id': str(source_id),
+            'user_id': user_id
+        }
+            
+        try:
+            message_body = {
+                'data': data
+                }
+            await publish_rabbitmq_message(
+                connection=connection,
+                queue_name=queue_name,
+                message_body=message_body
+            )
+        except Exception as e:
+            logger.error(e)
+        finally:
+            await rabbitmq_connection.close()
 
-    def create_audience_smart(
+    async def create_audience_smart(
             self,
             name: str,
             user: dict,
@@ -99,7 +124,7 @@ class AudienceSmartsService:
             contacts_to_validate: int
     ):
 
-        return self.audience_smarts_persistence.create_audience_smart(
+        created_data = self.audience_smarts_persistence.create_audience_smart(
             name=name,
             user_id=user.get('id'),
             created_by_user_id=created_by_user_id,
@@ -108,6 +133,8 @@ class AudienceSmartsService:
             data_sources=data_sources,
             contacts_to_validate=contacts_to_validate
         )
+        await self.send_matching_status(created_data.id, user.get("id"))
+        return created_data
 
     def get_datasource(self, user: dict):
         lookalikes, count, max_page = self.lookalikes_persistence_service.get_lookalikes(
