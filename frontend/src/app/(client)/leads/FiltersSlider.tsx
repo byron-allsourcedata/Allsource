@@ -26,10 +26,12 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
   const [isTimeSpentOpen, setIsTimeSpentOpen] = useState(false);
   const [isVisitedTimeOpen, setIsVisitedTimeOpen] = useState(false);
   const [isRegionOpen, setIsRegionOpen] = useState(false);
+  const [isPageUrlOpen, setIsPageUrlOpen] = useState(false);
   const [isLeadFunnel, setIsLeadFunnel] = useState(false);
   const [isStatus, setIsStatus] = useState(false);
   const [isRecurringVisits, setIsRecurringVisits] = useState(false);
   const [region, setRegions] = useState("");
+  const [pageUrl, setPageUrls] = useState("");
   const [selectedDateRange, setSelectedDateRange] = useState<string | null>(
     null
   );
@@ -37,17 +39,20 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     null
   );
   const [cities, setCities] = useState<{ city: string, state: string }[]>([]);
+  const [pageUrls, setUrls] = useState<{page_url: string}[]>([]);
   const [contacts, setContacts] = useState<{ name: string }[]>([]);
   const [selectedTags, setSelectedTags] = useState<{ [key: string]: string[] }>(
     {
       visitedDate: [],
       visitedTime: [],
       region: [],
+      pageUrl: [],
       pageVisits: [],
       timeSpents: [],
     }
   );
   const [regions, setTags] = useState<string[]>([]);
+  const [pageUrlTags, setPageUrlTags] = useState<string[]>([]);
   const [selectedFunnels, setSelectedFunnels] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
   const [buttonFilters, setButtonFilters] = useState<ButtonFilters>(null);
@@ -87,6 +92,15 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       setRegions("");
     }
   };
+
+  const handleAddPage = (e: { key: string }) => {
+    if (e.key === "Enter" && pageUrl.trim()) {
+      setPageUrlTags([...pageUrlTags, pageUrl.trim()]);
+      setPageUrls("");
+    }
+  };
+
+
 
   const [selectedValues, setSelectedValues] = useState<string[]>([]);
 
@@ -396,7 +410,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
 
       const newTag = fromDate && toDate ? `From ${fromDate} to ${toDate}` : null;
 
-    
+
       setSelectedTags((prevTags) => {
         const updatedTags = {
           ...prevTags,
@@ -627,11 +641,11 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       toTime = "23:59";   // 11:59PM
     }
 
-  // Determine from_date and to_date values ​​based on active filters
-  let fromDateTime = null;
-  let toDateTime = null;
+    // Determine from_date and to_date values ​​based on active filters
+    let fromDateTime = null;
+    let toDateTime = null;
 
-  // If at least one date filter is active, use its ranges
+    // If at least one date filter is active, use its ranges
     if (isDateFilterChecked) {
       if (checkedFilters.lastWeek) {
         fromDateTime = filterDates.lastWeek.from;
@@ -670,14 +684,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       checkedFiltersPageVisits,
       checkedFilters,
       regions,
+      pageUrlTags,
       checkedFiltersTimeSpent,
       selectedStatus,
       recurringVisits: selectedValues,
-      searchQuery, 
+      searchQuery
     };
 
     saveFiltersToSessionStorage(filters);
-
 
     return filters;
   };
@@ -692,6 +706,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     checkedFiltersTime: { morning: boolean; evening: boolean; afternoon: boolean; all_day: boolean; };
     checkedFiltersPageVisits: { page: boolean; two_page: boolean; three_page: boolean; more_three: boolean; };
     regions: string[];
+    pageUrlTags: string[];
     checkedFiltersTimeSpent: { under_10: boolean; over_10: boolean; over_30: boolean; over_60: boolean; };
     selectedStatus: string[]; recurringVisits: string[];
     searchQuery: string; dateRange?: { fromDate: number | null; toDate: number | null; } | undefined;
@@ -852,6 +867,15 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
           const uniqueTags = new Set(prevTags);
           savedFilters.regions.forEach((cityTag: string) => {
             uniqueTags.add(cityTag);
+          });
+          return Array.from(uniqueTags);
+        });
+      }
+      if (savedFilters.pageUrlTags) {
+        setPageUrlTags((prevTags) => {
+          const uniqueTags = new Set(prevTags);
+          savedFilters.pageUrlTags.forEach((urlPageUrlTag: string) => {
+            uniqueTags.add(urlPageUrlTag);
           });
           return Array.from(uniqueTags);
         });
@@ -1084,6 +1108,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     setIsTimeSpentOpen(false);
     setIsVisitedTimeOpen(false);
     setIsRegionOpen(false);
+    setIsPageUrlOpen(false);
     setIsLeadFunnel(false);
     setIsStatus(false);
     setIsRecurringVisits(false);
@@ -1132,16 +1157,19 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
 
     // Reset filter values
     setRegions("");
+    setPageUrls("");
     setSelectedDateRange(null);
     setSelectedTimeRange(null);
     setSelectedTags({
       visitedDate: [],
       visitedTime: [],
       region: [],
+      pageUrl: [],
       pageVisits: [],
       timeSpents: [],
     });
     setTags([]);
+    setPageUrlTags([]);
     setSelectedFunnels([]);
     setSelectedStatus([]);
     setButtonFilters(null);
@@ -1164,6 +1192,20 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     }
   }, 300);
 
+  const fetchPages = debounce(async (pageValue: string) => {
+    if (pageValue.length >= 3) {
+      try {
+        const response = await axiosInstance.get('leads/search-page-url', {
+          params: { start_letter: pageValue },
+        });
+        setUrls(response.data);
+      } catch {
+      }
+    } else {
+      setCities([]);
+    }
+  }, 300);
+
 
   const handleRegionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -1177,6 +1219,19 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     setCities([]);
   };
 
+  const handlePageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPageUrls(value);
+    fetchPages(value);
+  };
+
+  const handleSelectPageUrl = ({ page_url }: { page_url: string }) => {
+    setPageUrlTags((prevTags) => [...prevTags, page_url]);
+    setPageUrls('');
+    setUrls([]);
+  };
+  
+  
 
   const fetchContacts = debounce(async (query: string) => {
     if (query.length >= 3) {
@@ -1620,7 +1675,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               </IconButton>
             </Box>
             <Collapse in={isStatus}>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, pt: 1, pl: 2, pb:0.75 }}>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, pt: 1, pl: 2, pb: 0.75 }}>
                 {["New", "Returning"].map((label) => {
                   const mappedStatus = statusMapping[label];
                   const isSelected = selectedStatus.includes(mappedStatus);
@@ -1651,7 +1706,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         backgroundColor: isSelected
                           ? "rgba(237, 237, 247, 1)"
                           : "rgba(255, 255, 255, 1)",
-                          lineHeight: '20px !important'
+                        lineHeight: '20px !important'
                       }}
                     >
                       {label}
@@ -1699,7 +1754,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               </IconButton>
             </Box>
             <Collapse in={isLeadFunnel}>
-              <Box sx={{ display: "flex", width: '100%', flexWrap: 'wrap', gap: 1, pt: 1, pl: 2, pb:0.75 }}>
+              <Box sx={{ display: "flex", width: '100%', flexWrap: 'wrap', gap: 1, pt: 1, pl: 2, pb: 0.75 }}>
                 {[
                   "Abandoned cart",
                   "View Product",
@@ -1727,8 +1782,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         alignItems: "center",
                         justifyContent: "center",
                         border: isSelected
-                        ? "1px solid rgba(80, 82, 178, 1)"
-                        : "1px solid rgba(220, 220, 239, 1)",
+                          ? "1px solid rgba(80, 82, 178, 1)"
+                          : "1px solid rgba(220, 220, 239, 1)",
                         color: isSelected
                           ? "rgba(80, 82, 178, 1) !important"
                           : "#5F6368 !important",
@@ -1887,7 +1942,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         }}
                       />
                     }
-                    label={<Typography className='table-data' sx={{  color: checkedFilters.allTime ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>All time</Typography>}
+                    label={<Typography className='table-data' sx={{ color: checkedFilters.allTime ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>All time</Typography>}
                   />
                 </Box>
               </Box>
@@ -2249,6 +2304,97 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
 
             </Collapse>
           </Box>
+          {/* Page url */}
+          <Box
+            sx={filterStyles.main_filter_form}
+          >
+            <Box
+              sx={filterStyles.filter_form}
+              onClick={() => setIsPageUrlOpen(!isPageUrlOpen)}
+            >
+              <Box
+                sx={{
+                  ...filterStyles.active_filter_dote,
+                  visibility: pageUrl.length > 0 ? 'visible' : "hidden",
+                }}
+              />
+              <Image
+                src="/url.svg"
+                alt="url"
+                width={18}
+                height={18}
+              />
+              <Typography
+                sx={{
+                  ...filterStyles.filter_name,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Page url
+              </Typography>
+              <Box
+                sx={{ display: "flex", flexWrap: "wrap", gap: "8px", mb: 2 }}
+              >
+                {pageUrlTags.map((tag, index) => (
+                  <CustomChip
+                    key={index}
+                    label={tag}
+                    onDelete={() =>
+                      setPageUrlTags(pageUrlTags.filter((_, i) => i !== index))
+                    }
+                  />
+                ))}
+              </Box>
+              <IconButton
+                onClick={() => setIsPageUrlOpen(!isPageUrlOpen)}
+                aria-label="toggle-content"
+              >
+                {isPageUrlOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </IconButton>
+            </Box>
+            <Collapse in={isPageUrlOpen}>
+              <TextField
+                placeholder="Search by page url.."
+                variant="outlined"
+                fullWidth
+                value={pageUrl}
+                onChange={handlePageUrlChange}
+                onKeyDown={handleAddPage}
+                InputProps={{
+                  sx: {
+                    fontFamily: 'Roboto',
+                    fontSize: '0.875rem',
+                    fontWeight: 400,
+                    lineHeight: '19.6px',
+                    textAlign: 'left',
+                    color: 'rgba(74, 74, 74, 1)',
+                  },
+                }}
+                sx={{
+                  mb: '3px',
+                  '& .MuiInputBase-input::placeholder': {
+                    fontFamily: 'Roboto',
+                    fontSize: '0.875rem',
+                    fontWeight: 400,
+                    lineHeight: '19.6px',
+                    textAlign: 'left',
+                    color: 'rgba(74, 74, 74, 1)',
+                  },
+                }}
+              />
+              {pageUrls.map((data, index) => (
+                <ListItem button key={index} onClick={() => handleSelectPageUrl(data)}>
+                  <ListItemText
+                    primary={
+                      <span style={{ fontFamily: 'Nunito Sans', fontSize: '13px', fontWeight: 600, lineHeight: '16.8px', textAlign: 'left', color: 'rgba(74, 74, 74, 1)' }}>
+                        {data.page_url}
+                      </span>
+                    }
+                  />
+                </ListItem>
+              ))}
+            </Collapse>
+          </Box>
           {/* Page visits */}
           <Box
             sx={filterStyles.main_filter_form}
@@ -2322,7 +2468,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         }}
                       />
                     }
-                    label={<Typography className='table-data' sx={{  color: checkedFiltersPageVisits.two_page ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>2 pages</Typography>}
+                    label={<Typography className='table-data' sx={{ color: checkedFiltersPageVisits.two_page ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>2 pages</Typography>}
                   />
                 </Box>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
@@ -2356,7 +2502,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         }}
                       />
                     }
-                    label={<Typography className='table-data' sx={{  color: checkedFiltersPageVisits.more_three ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>More than 3 pages</Typography>}
+                    label={<Typography className='table-data' sx={{ color: checkedFiltersPageVisits.more_three ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>More than 3 pages</Typography>}
                   />
                 </Box>
               </Box>
@@ -2440,7 +2586,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         }}
                       />
                     }
-                    label={<Typography className='table-data' sx={{  color: checkedFiltersTimeSpent.over_10 ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>10-30 secs</Typography>}
+                    label={<Typography className='table-data' sx={{ color: checkedFiltersTimeSpent.over_10 ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>10-30 secs</Typography>}
                   />
                 </Box>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
@@ -2458,7 +2604,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         }}
                       />
                     }
-                    label={<Typography className='table-data' sx={{  color: checkedFiltersTimeSpent.over_30 ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>30-60 secs</Typography>}
+                    label={<Typography className='table-data' sx={{ color: checkedFiltersTimeSpent.over_30 ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>30-60 secs</Typography>}
                   />
                   <FormControlLabel
                     control={

@@ -16,6 +16,7 @@ async def get_leads(
         from_date: int = Query(None, description="Start date in integer format"),
         to_date: int = Query(None, description="End date in integer format"),
         regions: str = Query(None, description="Comma-separated list of regions"),
+        page_url: str = Query(None, description="Comma-separated list of pages"),
         page_visits: str = Query(None, description="Minimum number of page visits"),
         average_time_sec: str = Query(None, description="average time sec on the page"),
         behavior_type: str = Query(None, description="funnel type stage"),
@@ -45,7 +46,8 @@ async def get_leads(
         search_query=search_query,
         from_time=from_time,
         to_time=to_time,
-        timezone_offset=timezone_offset
+        timezone_offset=timezone_offset,
+        page_url=page_url
     )
 
 
@@ -54,6 +56,10 @@ async def search_location(start_letter: str = Query(..., min_length=3),
                           leads_service: LeadsService = Depends(get_leads_service)):
     return leads_service.search_location(start_letter)
 
+@router.get("/search-page-url")
+async def search_page_url(start_letter: str = Query(..., min_length=2),
+                          leads_service: LeadsService = Depends(get_leads_service)):
+    return leads_service.search_page_url(start_letter)
 
 @router.get("/search-contact")
 async def search_contact(start_letter: str = Query(..., min_length=3),
@@ -76,6 +82,7 @@ async def download_leads(
         from_date: int = Query(None, description="Start date in integer format"),
         to_date: int = Query(None, description="End date in integer format"),
         regions: str = Query(None, description="Comma-separated list of regions"),
+        page_url: str = Query(None, description="Comma-separated list of pages"),
         page_visits: str = Query(None, description="Minimum number of page visits"),
         average_time_spent: float = Query(None, description="Average time spent on the page in minutes"),
         behavior_type: str = Query(None, description="funnel type stage"),
@@ -92,7 +99,7 @@ async def download_leads(
                                           behavior_type=behavior_type, status=status, recurring_visits=recurring_visits,
                                           sort_by=sort_by,
                                           sort_order=sort_order, search_query=search_query, from_time=from_time,
-                                          to_time=to_time)
+                                          to_time=to_time, page_url=page_url)
     if result:
         return StreamingResponse(result, media_type="text/csv",
                                  headers={"Content-Disposition": "attachment; filename=data.csv"})

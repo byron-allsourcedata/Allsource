@@ -231,7 +231,7 @@ const GoogleADSConnectPopup = ({ open, handlePopupClose, boxShadow, invalid_api_
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <Image src='/slack-icon.svg' alt='slack' height={26} width={32} />
+                                        <Image src='/slack-icon.svg' alt='Slack' height={26} width={32} />
                                         <Typography variant="h6" sx={{
                                             fontFamily: 'Nunito Sans',
                                             fontSize: '16px',
