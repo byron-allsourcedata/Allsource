@@ -4,7 +4,7 @@ import json
 
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
-from schemas.audience import SmartsAudienceObjectResponse
+from schemas.audience import SmartsAudienceObjectResponse, DataSourcesFormat
 from persistence.audience_smarts import AudienceSmartsPersistence
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from models.users import User
@@ -90,19 +90,34 @@ class AudienceSmartsService:
         count_updated = self.audience_smarts_persistence.update_audience_smart(id, new_name)
         return count_updated > 0
     
-    async def send_matching_status(self, source_id, user_id, type, statuses):
+    def transform_datasource(self, raw_data) -> DataSourcesFormat:
+        data_sources = {
+            "lookalike_ids": {"include": [], "exclude": []},
+            "source_ids": {"include": [], "exclude": []}
+        }
+
+        for item in raw_data:
+            key = "lookalike_ids" if item["sourceLookalike"] == "Lookalike" else "source_ids"
+            include_exclude = "include" if item["includeExclude"] == "Include" else "exclude"
+
+            data_sources[key][include_exclude].append(item["selectedSourceId"])
+
+        return data_sources
+
+    
+    async def start_scripts_for_matching(self, aud_smart_id, user_id, data_sources, contacts_to_validate):
         queue_name = QueueName.AUDIENCE_SMARTS_FILLER.value
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
         data = {
-            'source_id': str(source_id),
-            'user_id': user_id
+            'aud_smart_id': str(aud_smart_id),
+            'user_id': user_id,
+            'data_sources': self.transform_datasource(data_sources),
+            "active_segment": contacts_to_validate
         }
             
         try:
-            message_body = {
-                'data': data
-                }
+            message_body = {'data': data}
             await publish_rabbitmq_message(
                 connection=connection,
                 queue_name=queue_name,
@@ -133,7 +148,7 @@ class AudienceSmartsService:
             data_sources=data_sources,
             contacts_to_validate=contacts_to_validate
         )
-        await self.send_matching_status(created_data.id, user.get("id"))
+        await self.start_scripts_for_matching(created_data.id, user.get("id"), data_sources, contacts_to_validate)
         return created_data
 
     def get_datasource(self, user: dict):

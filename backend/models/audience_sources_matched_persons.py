@@ -23,7 +23,7 @@ class AudienceSourcesMatchedPerson(Base):
     updated_at = Column(TIMESTAMP, nullable=False)
 
     __table_args__ = (
-        Index('audience_sources_persons_pkey', 'id'),
+        Index('audience_sources_matched_persons_source_id_idx', 'source_id')
     )
 
 event.listen(AudienceSourcesMatchedPerson, "before_insert", create_timestamps)

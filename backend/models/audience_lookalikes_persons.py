@@ -12,7 +12,7 @@ class AudienceLookALikePerson(Base):
     created_at = Column(TIMESTAMP, nullable=False)
 
     __table_args__ = (
-        Index('audience_sources_persons_pkey', 'id'),
+        Index('audience_smarts_persons_lookalike_id', 'lookalike_id')
     )
 
 event.listen(AudienceLookALikePerson, "before_insert", create_timestamps)

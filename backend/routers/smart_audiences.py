@@ -41,7 +41,7 @@ def get_audience_smarts(
 
 
 @router.post("/builder")
-def create_smart_audience(
+async def create_smart_audience(
         request: CreateSmartAudienceRequest,
         user=Depends(check_user_authorization_without_pixel),
         audience_smarts_service: AudienceSmartsService = Depends(get_audience_smarts_service)
@@ -52,7 +52,7 @@ def create_smart_audience(
         else:
             user_id = user.get('id')
 
-        new_audience = audience_smarts_service.create_audience_smart(
+        new_audience = await audience_smarts_service.create_audience_smart(
             name=request.smart_audience_name,
             user=user,
             created_by_user_id=user_id,

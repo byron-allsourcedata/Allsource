@@ -87,6 +87,16 @@ class SmartsResponse(BaseModel):
         "from_attributes": True
     }
 
+
+class DataSource(BaseModel):
+    include: List[str]
+    exclude: List[str]
+
+
+class DataSourcesFormat(BaseModel):
+    lookalike_ids: DataSource
+    source_ids: DataSource
+
 class SourcesObjectResponse(BaseModel):
     source_list: List[SourceResponse]
     count: int
