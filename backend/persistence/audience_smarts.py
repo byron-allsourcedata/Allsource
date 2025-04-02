@@ -17,6 +17,7 @@ from models.users import Users
 from schemas.audience import DataSourcesFormat
 from typing import Optional, Tuple, List
 from sqlalchemy.engine.row import Row
+from uuid import UUID
 
 logger = logging.getLogger(__name__)
 
