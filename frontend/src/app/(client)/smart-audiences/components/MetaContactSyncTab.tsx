@@ -5,14 +5,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import CloseIcon from '@mui/icons-material/Close';
+import { showErrorToast } from '@/components/ToastNotification';
 
 interface MetaAuidece {
-    id: string
+    list_id: string
     list_name: string
 }
 
 interface MetaCampaign {
-    id: string
+    list_id: string
     list_name: string
 }
 
@@ -24,7 +25,7 @@ interface FormValues {
 }
 
 type KlaviyoList = {
-    id: string
+    list_id: string
     list_name: string
 }
 
@@ -133,7 +134,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
     const isKlaviyoList = (value: KlaviyoList | string): value is KlaviyoList => {
         return value !== null &&
             typeof value === 'object' &&
-            'id' in value &&
+            'list_id' in value &&
             'list_name' in value;
     };
 
@@ -151,7 +152,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
         setIsDropdownOpenAdAccountMeta(false)
         setShowCreateFormMeta(false);
         setIsDropdownOpen(false);
-        setNewListName(''); // Clear new list name when closing
+        setNewListName('');
     };
 
     const handleClickMeta = (event: React.MouseEvent<HTMLInputElement>) => {
@@ -176,7 +177,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
             }
         } else if (isKlaviyoList(value)) {
             setSelectedOptionCampaignMeta({
-                id: value.id,
+                list_id: value.list_id,
                 list_name: value.list_name
             });
             setInputValueCampaignMeta(value.list_name)
@@ -188,7 +189,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
 
     const handleSaveCampaignMeta = () => {
         if (isCheckedMeta) {
-            const newKlaviyoList = { id: '-1', list_name: formValues.campaignName }
+            const newKlaviyoList = { list_id: '-1', list_name: formValues.campaignName }
             setSelectedOptionCampaignMeta(newKlaviyoList);
             if (isKlaviyoList(newKlaviyoList)) {
                 setIsDropdownValid(true);
@@ -217,13 +218,13 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
     };
 
     const handleDropdownToggleAdAccount = (event: React.MouseEvent) => {
-        event.stopPropagation(); // Prevent triggering the input field click
+        event.stopPropagation(); 
         setIsDropdownOpenAdAccountMeta(prev => !prev);
         setAnchorElAdAccountMeta(textFieldRefAdAccountMeta.current);
     };
 
     const handleDropdownToggleMeta = (event: React.MouseEvent) => {
-        event.stopPropagation(); // Prevent triggering the input field click
+        event.stopPropagation();
         setIsDropdownOpen(prev => !prev);
         setAnchorElMeta(textFieldRefMeta.current);
     };
@@ -236,7 +237,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
             }
         } else if (isKlaviyoList(value)) {
             setSelectedOptionMeta({
-                id: value.id,
+                list_id: value.list_id,
                 list_name: value.list_name
             });
             setInputValueMeta(value.list_name)
@@ -279,6 +280,38 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
         handleCloseMeta();
     }
 
+    const createNewListMeta = async (name: string) => {
+        try {
+            setIsLoading(true)
+            const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
+                name: name,
+                ad_account_id: optionAdAccountMeta?.id
+            }, {
+                params: {
+                    service_name: "meta"
+                }
+            });
+
+            if (newListResponse.status === 201 && newListResponse.data.terms_link && !newListResponse.data.terms_accepted) {
+                showErrorToast('User has not accepted the Custom Audience Terms.')
+                window.open(newListResponse.data.terms_link, '_blank');
+                return
+            }
+            if (newListResponse.status !== 201) {
+                showErrorToast('Failed to create a new tags')
+            }
+            else {
+                const data = newListResponse.data
+                setSelectedOptionMeta(data)
+                setInputValueMeta(name)
+                setIsDropdownValid(true)
+            }
+        } catch  {
+        } finally {
+            setIsLoading(false)
+        }
+    };
+
     useEffect(() => {
         const getList = async () => {
             setIsLoading(true)
@@ -299,6 +332,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
         }
     }, [optionAdAccountMeta])
 
+    
     const handleSave = async () => {
         let valid = true;
 
@@ -309,14 +343,8 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
             setListNameError(false);
         }
 
-
         if (valid) {
-            const newKlaviyoList = { id: '-1', list_name: newListName }
-            setSelectedOptionMeta(newKlaviyoList);
-            if (isKlaviyoList(newKlaviyoList)) {
-                setIsDropdownValid(true);
-            }
-            setInputValueMeta(newKlaviyoList.list_name)
+            createNewListMeta(newListName)
             handleCloseMeta();
         }
     };
@@ -361,7 +389,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                     }}
                     sx={{
                         '& input': {
-                            caretColor: 'transparent', // Hide caret with transparent color
+                            caretColor: 'transparent',
                             fontFamily: "Nunito Sans",
                             fontSize: "14px",
                             color: "rgba(0, 0, 0, 0.89)",
@@ -369,7 +397,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                             lineHeight: "normal",
                         },
                         '& .MuiOutlinedInput-input': {
-                            cursor: 'default', // Prevent showing caret on input field
+                            cursor: 'default',
                             top: '5px'
                         },
                         marginBottom: '24px'
@@ -384,13 +412,9 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                         sx: {
                             width: anchorElAdAccountMeta ? `${anchorElAdAccountMeta.clientWidth}px` : '538px', borderRadius: '4px',
                             border: '1px solid #e4e4e4'
-                        }, // Match dropdown width to input
-                    }}
-                    sx={{
-
+                        },
                     }}
                 >
-                    {/* Show static options */}
                     {adAccountsMeta?.map((adAccount: adAccount) => (
                         <MenuItem key={adAccount.id} onClick={() => handleSelectAdAccountMeta(adAccount)} sx={{
                             '&:hover': {
@@ -453,7 +477,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                             lineHeight: "normal",
                         },
                         '& .MuiOutlinedInput-input': {
-                            cursor: 'default', // Prevent showing caret on input field
+                            cursor: 'default',
                             top: '5px'
                         },
                         marginBottom: '24px'
@@ -471,8 +495,10 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                         },
                     }}
                 >
-                    {/* Show "Create New List" option */}
-                    <MenuItem onClick={() => handleSelectOptionMeta('createNew')} sx={{
+                    <MenuItem onClick={() => {
+                        handleSelectOptionMeta('createNew')
+                        setSelectedOptionMeta(null)
+                    }} sx={{
                         borderBottom: showCreateFormMeta ? "none" : "1px solid #cdcdcd",
                         '&:hover': {
                             background: 'rgba(80, 82, 178, 0.10)'
@@ -502,9 +528,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                             }}>
                                 <Box
                                     sx={{
-
-
-                                        mt: 1, // Margin-top to separate form from menu item
+                                        mt: 1,
                                         display: 'flex',
                                         justifyContent: 'space-between',
                                         gap: '16px',
@@ -517,12 +541,17 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                                         label="Audience Name"
                                         variant="outlined"
                                         value={newListName}
-                                        onChange={(e) => setNewListName(e.target.value)}
+                                        onChange={(e) => {
+                                            if (newListName) {
+                                                setListNameError(false)
+                                            }
+                                            setNewListName(e.target.value)
+                                        }}
                                         size="small"
                                         fullWidth
                                         onKeyDown={(e) => e.stopPropagation()}
                                         error={listNameError}
-                                        helperText={listNameError ? 'Audience Name is required' : ''}
+                                        helperText={listNameError ? 'Audience Name is empty' : ''}
                                         InputLabelProps={{
                                             sx: {
                                                 fontFamily: 'Nunito Sans',
@@ -538,17 +567,17 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                                         InputProps={{
 
                                             endAdornment: (
-                                                newListName && ( // Conditionally render close icon if input is not empty
+                                                newListName && (
                                                     <InputAdornment position="end">
                                                         <IconButton
                                                             edge="end"
-                                                            onClick={() => setNewListName('')} // Clear the text field when clicked
+                                                            onClick={() => setNewListName('')}
                                                         >
                                                             <Image
                                                                 src='/close-circle.svg'
                                                                 alt='close-circle'
                                                                 height={18}
-                                                                width={18} // Adjust the size as needed
+                                                                width={18}
                                                             />
                                                         </IconButton>
                                                     </InputAdornment>
@@ -612,15 +641,13 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
 
                             </Box>
 
-
-                            {/* Add a Divider to separate form from options */}
                             <Divider sx={{ borderColor: '#cdcdcd' }} />
                         </Box>
                     )}
 
                     {/* Show static options */}
-                    {metaAudienceList && metaAudienceList.map((klaviyo, option) => (
-                        <MenuItem key={klaviyo.id} onClick={() => handleSelectOptionMeta(klaviyo)} sx={{
+                    {metaAudienceList && metaAudienceList.map((klaviyo) => (
+                        <MenuItem key={klaviyo.list_id} onClick={() => handleSelectOptionMeta(klaviyo)} sx={{
                             '&:hover': {
                                 background: 'rgba(80, 82, 178, 0.10)'
                             }
@@ -876,7 +903,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                         {/* Show static options */}
                         {metaCampaign && metaCampaign.map((klaviyo, option) => (
                             <MenuItem
-                                key={klaviyo.id}
+                                key={klaviyo.list_id}
                                 onClick={() => handleSelectOptionCampaignMeta(klaviyo)}
                                 sx={{
                                     '&:hover': {

@@ -4,7 +4,7 @@ import { LinearProgress } from '@mui/material';
 type Progress = {
   total: number;
   processed: number;
-  matched: number;
+  matched?: number;
 };
 
 interface ProgressBarProps {

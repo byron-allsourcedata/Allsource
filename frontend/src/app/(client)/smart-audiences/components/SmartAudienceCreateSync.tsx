@@ -33,7 +33,7 @@ interface AudiencePopupProps {
 }
 
 type KlaviyoList = {
-    id: string
+    list_id: string
     list_name: string
 }
 
@@ -67,7 +67,7 @@ interface CustomRow {
 }
 
 interface MetaAuidece {
-    id: string
+    list_id: string
     list_name: string
 }
 
@@ -107,6 +107,7 @@ type ArrayMapping = {
     hubspot: CustomRow[];
     mailchimp: CustomRow[];
     default: CustomRow[]
+    CSV: CustomRow[]
   };
 
 const styles = {
@@ -376,6 +377,13 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     }, [open, needsSync])
 
 
+    const formatServiceName = (serviceName: string) => {
+        return serviceName
+          .replace(/([a-z])([A-Z])/g, '$1 $2')
+          .replace(/^./, (match) => match.toUpperCase());
+      };
+
+
     const toCamelCase = (name: string) => {
         const updatedName = name?.split('_').map((word, index) =>
             index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)
@@ -399,39 +407,30 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
 
     const createDataSync = async () => {
         setIsLoading(true);
-        let list: KlaviyoList | null = null;
         try {
-            if ((selectedOptionMailchimp && selectedOptionMailchimp.id === '-1')) {
-                list = await createNewListMailchimp(selectedOptionMailchimp?.list_name);
-            } else if (selectedOptionMailchimp) {
-                list = selectedOptionMailchimp;
-            } else if (selectedOptionMeta && selectedOptionMeta.id === '-1') {
-                list = list = await createNewListMeta(selectedOptionMeta?.list_name);;
-            } else if (selectedOptionMeta) {
-                list = selectedOptionMeta;
-            } 
-
             const requestObj: RequestData = {
                 sent_contacts: valueContactSync,
                 smart_audience_id: id,
                 data_map: customFields
             }
 
-            if (list) {
-                requestObj.list_id = list?.id
-                requestObj.list_name = list?.list_name
-            }
-
             if (activeService === "mailchimp") {
-                if (!requestObj.list_id && !requestObj.list_name) {
+                if (selectedOptionMailchimp?.list_id && selectedOptionMailchimp?.list_name) {
+                    requestObj.list_id = String(selectedOptionMailchimp?.list_id),
+                    requestObj.list_name = selectedOptionMailchimp?.list_name
+                }
+                else {
                     showErrorToast("You have selected incorrect data!")
                     return
                 }
             }
 
             if (activeService === "meta") {
-                if (optionAdAccountMeta?.id && requestObj.list_name && requestObj.list_id)
+                if (optionAdAccountMeta?.id && selectedOptionMeta?.list_name && selectedOptionMeta?.list_id) {
                     requestObj.customer_id = String(optionAdAccountMeta?.id)
+                    requestObj.list_id = String(selectedOptionMeta?.list_id),
+                    requestObj.list_name = selectedOptionMeta?.list_name
+                }
                 else {
                     showErrorToast("You have selected incorrect data!")
                     return
@@ -488,6 +487,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         if (activeService === "hubspot") {
             setRows(defaultRowsHubspot)
             setCustomFields(customFieldsListHubspot.map(field => ({ type: field.value, value: field.type })))
+        }
+
+        if (activeService === "CSV") {
+            setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
         }
 
         if (activeService === "sales_force") {
@@ -690,6 +693,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     const arrayWithCustomFields: ArrayMapping = {
         hubspot: customFieldsListHubspot,
         mailchimp: customFieldsList,
+        CSV: customFieldsList,
         default: customFieldsList
     };
 
@@ -721,29 +725,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
 
     const [klaviyoList, setKlaviyoList] = useState<KlaviyoList[]>([])
     const [selectedOptionMailchimp, setSelectedOptionMailchimp] = useState<KlaviyoList | null>(null);
-
-    const createNewListMailchimp = async (name: string) => {
-        try {
-            const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
-                name,
-            }, {
-                params: {
-                    service_name: activeService
-                }
-            });
-            if (newListResponse.data.status === 'CREATED_IS_FAILED') {
-                showErrorToast("You've hit your audience limit. You already have the max amount of audiences allowed in your plan.")
-                throw new Error("You've hit your audience limit. You already have the max amount of audiences allowed in your plan.")
-            }
-            else if (newListResponse.data.status === 'CREDENTIALS_INVALID') {
-                showErrorToast("Credentials invalid, try updating the key.")
-                throw new Error("Credentials invalid, try updating the key.")
-            }
-
-            return newListResponse.data;
-        } catch (error) { }
-
-    };
 
     const getList = async () => {
         try {
@@ -779,27 +760,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         finally {
             setIsLoading(false);
         }
-    };
-
-    const createNewListMeta = async (name: string) => {
-        const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
-            name: name,
-            ad_account_id: optionAdAccountMeta?.id
-        }, {
-            params: {
-                service_name: activeService
-            }
-        });
-        if (newListResponse.status == 201 && newListResponse.data.terms_link && newListResponse.data.terms_accepted == false) {
-            showErrorToast('User has not accepted the Custom Audience Terms.')
-            window.open(newListResponse.data.terms_link, '_blank');
-            return
-        }
-        if (newListResponse.status !== 201) {
-            throw new Error('Failed to create a new tags')
-        }
-
-        return newListResponse.data;
     };
 
     ///Google Ads
@@ -871,7 +831,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                 )}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: 11, backgroundColor: '#fff' }}>
                     <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
-                        Create smart audience sync
+                        Create smart audience sync {activeService ? `with ${formatServiceName(toCamelCase(activeService))}` : ""}
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
                         <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/data-sync" className="main-text" sx={{
@@ -1031,6 +991,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                     selectedOptionMailchimp={selectedOptionMailchimp}
                                                     setSelectedOptionMailchimp={setSelectedOptionMailchimp}
                                                     klaviyoList={klaviyoList}
+                                                    setIsloading={setIsLoading}
                                                 />
                                             }
 

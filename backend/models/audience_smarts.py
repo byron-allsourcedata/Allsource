@@ -1,5 +1,5 @@
-from sqlalchemy import Column, event, Integer, TIMESTAMP, JSON, VARCHAR, ForeignKey, Index, UUID
-from .base import Base, create_timestamps, update_timestamps
+from sqlalchemy import Column, Integer, TIMESTAMP, JSON, VARCHAR, ForeignKey, Index, UUID
+from .base import Base
 from models.users import Users
 from models.audience_smarts_use_cases import AudienceSmartsUseCase
 from sqlalchemy.dialects.postgresql import ENUM
@@ -19,6 +19,7 @@ class AudienceSmart(Base):
     validated_records = Column(Integer, default=0, nullable=False)
     total_records = Column(Integer, default=0, nullable=False)
     active_segment_records = Column(Integer, default=0, nullable=False)
+    processed_active_segment_records = Column(Integer, default=0, nullable=False)
     status = Column(audience_smarts_statuses, default='unvalidated', nullable=False)
     validations = Column(JSON, nullable=True)
     use_case_id = Column(UUID, ForeignKey(AudienceSmartsUseCase.id), nullable=True)
