@@ -2,13 +2,16 @@ import { Box, IconButton, ClickAwayListener, Button, ListItemText, TextField,
     InputAdornment, MenuItem, Menu, Divider} from '@mui/material';
 import React, { useState, useRef } from 'react';
 import Image from 'next/image';
+import { showErrorToast } from '@/components/ToastNotification';
+import axiosInstance from '@/axios/axiosInterceptorInstance';
 
 type KlaviyoList = {
-    id: string
+    list_id: string
     list_name: string
 }
 
 interface MailchimpContactSyncTabProps { 
+    setIsloading: (state: boolean) => void
     selectedOptionMailchimp: KlaviyoList | null
     setSelectedOptionMailchimp: (state: KlaviyoList | null) => void
     klaviyoList: KlaviyoList[]
@@ -66,7 +69,7 @@ const styles = {
     },
 }
 
-const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({ selectedOptionMailchimp, setSelectedOptionMailchimp, klaviyoList }) => {
+const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({ setIsloading, selectedOptionMailchimp, setSelectedOptionMailchimp, klaviyoList }) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
     const [newListName, setNewListName] = useState<string>('');
     const [showCreateFormMailchimp, setShowCreateFormMailchimp] = useState<boolean>(false);
@@ -83,9 +86,8 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({ selec
                 setAnchorElMailchimp(textFieldRefMailchimp.current);
             }
         } else if (isKlaviyoList(value)) {
-            
             setSelectedOptionMailchimp({
-                id: value.id,
+                list_id: value.list_id,
                 list_name: value.list_name
             });
             setIsDropdownValid(true);
@@ -124,9 +126,36 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({ selec
         setAnchorElMailchimp(textFieldRefMailchimp.current);
     };
 
+    const createNewListMailchimp = async (name: string) => {
+        try {
+            setIsloading(true)
+            const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
+                name,
+            }, {
+                params: {
+                    service_name: "mailchimp"
+                }
+            });
+            if (newListResponse.data.status === 'CREATED_IS_FAILED') {
+                showErrorToast("You've hit your audience limit. You already have the max amount of audiences allowed in your plan.")
+            }
+            else if (newListResponse.data.status === 'CREDENTIALS_INVALID') {
+                showErrorToast("Credentials invalid, try updating the key.")
+            }
+            else {
+                const data = newListResponse.data.channel
+                setSelectedOptionMailchimp(data)
+                setIsDropdownValid(true)
+            }
+        } catch  {
+        } finally {
+            setIsloading(false)
+        }
+
+    };
+
     const handleSave = async () => {
         let valid = true;
-
         
         if (newListName.trim() === '') {
             setListNameError(true);
@@ -134,14 +163,9 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({ selec
         } else {
             setListNameError(false);
         }
-
         
         if (valid) {
-            const newKlaviyoList = { id: '-1', list_name: newListName }
-            setSelectedOptionMailchimp(newKlaviyoList);
-            if (isKlaviyoList(newKlaviyoList)) {
-                setIsDropdownValid(true);
-            }
+            createNewListMailchimp(newListName)
             handleCloseSelectMailchimp();
         }
     };
@@ -153,7 +177,7 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({ selec
                 <TextField
                     ref={textFieldRefMailchimp}
                     variant="outlined"
-                    value={selectedOptionMailchimp?.list_name}
+                    value={selectedOptionMailchimp?.list_name || ''}
                     onClick={handleClickMailchimp}
                     size="small"
                     fullWidth
@@ -210,16 +234,17 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({ selec
                             border: '1px solid #e4e4e4'
                         },
                     }}
-                    sx={{
-
-                    }}
                 >
-                    <MenuItem onClick={() => handleSelectOptionMailchimp('createNew')} sx={{
-                        borderBottom: showCreateFormMailchimp ? "none" : "1px solid #cdcdcd",
-                        '&:hover': {
-                            background: 'rgba(80, 82, 178, 0.10)'
-                        }
-                    }}>
+                    <MenuItem key={1} onClick={() => {
+                        handleSelectOptionMailchimp('createNew')
+                        setSelectedOptionMailchimp(null)
+                    }} 
+                        sx={{
+                            borderBottom: showCreateFormMailchimp ? "none" : "1px solid #cdcdcd",
+                            '&:hover': {
+                                background: 'rgba(80, 82, 178, 0.10)'
+                            }
+                        }}>
                         <ListItemText primary={`+ Create new list`} primaryTypographyProps={{
                             sx: {
                                 fontFamily: "Nunito Sans",
@@ -244,8 +269,6 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({ selec
                             }}>
                                 <Box
                                     sx={{
-
-
                                         mt: 1,
                                         display: 'flex',
                                         justifyContent: 'space-between',
@@ -259,12 +282,17 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({ selec
                                         label="List Name"
                                         variant="outlined"
                                         value={newListName}
-                                        onChange={(e) => setNewListName(e.target.value)}
+                                        onChange={(e) => {
+                                            if (newListName) {
+                                                setListNameError(false)
+                                            }
+                                            setNewListName(e.target.value)
+                                        }}
                                         size="small"
                                         fullWidth
                                         onKeyDown={(e) => e.stopPropagation()}
                                         error={listNameError}
-                                        helperText={listNameError ? 'List Name is required' : ''}
+                                        helperText={listNameError ? 'List Name is Empty' : ''}
                                         InputLabelProps={{
                                             sx: {
                                                 fontFamily: 'Nunito Sans',
@@ -284,7 +312,10 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({ selec
                                                     <InputAdornment position="end">
                                                         <IconButton
                                                             edge="end"
-                                                            onClick={() => setNewListName('')}
+                                                            onClick={() => {
+                                                                setNewListName('')
+                                                                setListNameError(false)
+                                                            }}
                                                         >
                                                             <Image
                                                                 src='/close-circle.svg'
@@ -358,7 +389,7 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({ selec
                     )}
 
                     {klaviyoList && klaviyoList.map((klaviyo) => (
-                        <MenuItem key={klaviyo.id} onClick={() => handleSelectOptionMailchimp(klaviyo)} sx={{
+                        <MenuItem key={klaviyo.list_id} onClick={() => handleSelectOptionMailchimp(klaviyo)} sx={{
                             '&:hover': {
                                 background: 'rgba(80, 82, 178, 0.10)'
                             }

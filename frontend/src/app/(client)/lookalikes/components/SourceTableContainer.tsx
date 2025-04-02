@@ -97,12 +97,7 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
               <TableCell>{dayjs(row.created_date).format('MMM D, YYYY')}</TableCell>
               <TableCell>{row.created_by}</TableCell>
               <TableCell>{row.number_of_customers}</TableCell>
-              <TableCell sx={{ position: 'relative' }}>
-                {row.matched_records >= row.number_of_customers
-                  ? row.matched_records.toLocaleString('en-US')
-                  : <ProgressBar progress={{ total: row.number_of_customers, processed: row.matched_records }} />
-                }
-              </TableCell>
+              <TableCell>{row.matched_records}</TableCell>
             </TableRow>
           ))}
         </TableBody>

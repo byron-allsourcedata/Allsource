@@ -15,16 +15,14 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from models.audience_smarts import AudienceSmart
-from models.audience_lookalikes import AudienceLookalikes
-from models.audience_lookalikes_persons import AudienceLookALikePerson
-from models.five_x_five_users import FiveXFiveUser
-from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
+from models.audience_smarts_persons import AudienceSmartPerson
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 load_dotenv()
 
-AUDIENCE_LOOKALIKES_MATCHING= 'audience_lookalikes_matching'
+AUDIENCE_SMARTS_AGENT = 'aud_smarts_agent'
 AUDIENCE_LOOKALIKES_PROGRESS = "AUDIENCE_LOOKALIKES_PROGRESS"
+AUDIENCE_SMARTS_PROGRESS = "AUDIENCE_SMARTS_PROGRESS"
 
 def setup_logging(level):
     logging.basicConfig(
@@ -33,58 +31,60 @@ def setup_logging(level):
         datefmt='%Y-%m-%d %H:%M:%S'
     )
     
+
 async def send_sse(connection, user_id: int, data: dict):
     try:
-        print(f"userd_id = {user_id}")
         logging.info(f"send client throught SSE: {data, user_id}")
         await publish_rabbitmq_message(
-                    connection=connection,
-                    queue_name=f'sse_events_{str(user_id)}',
-                    message_body={
-                        "status": AUDIENCE_LOOKALIKES_PROGRESS,
-                        "data": data
-                    }
-                )
+            connection=connection,
+            queue_name=f'sse_events_{str(user_id)}',
+            message_body={
+                "status": AUDIENCE_SMARTS_PROGRESS,
+                "data": data
+            }
+        )
     except Exception as e:
         logging.error(f"Error sending SSE: {e}")
 
-async def aud_sources_matching(message: IncomingMessage, db_session: Session, connection):
+
+async def aud_smarts_matching(message: IncomingMessage, db_session: Session, connection):
     try:
         message_body = json.loads(message.body)
         user_id = message_body.get("user_id")
-        lookalike_id = message_body.get("lookalike_id")
-        five_x_five_users_ids = message_body.get("five_x_five_users_ids")
-        logging.info(f"Processing lookalike_id with ID: {lookalike_id}")
-        logging.info(f"Processing len: {len(five_x_five_users_ids)}")
-        
-        for five_x_five_user_id in five_x_five_users_ids:
-            matched_person = AudienceLookALikePerson(
-                lookalike_id=lookalike_id,
-                five_x_five_user_id=five_x_five_user_id
-            )
-            db_session.add(matched_person)
-            
-        db_session.flush()
+        aud_smart_id = message_body.get("aud_smart_id")
+        five_x_five_users_ids = message_body.get("five_x_five_users_ids") or []
 
-        processed_size, total_records = db_session.execute(
-            update(AudienceLookalikes)
-            .where(AudienceLookalikes.id == lookalike_id)
+        bulk_data = [
+            {"smart_audience_id": str(aud_smart_id), "five_x_five_user_id": five_x_five_user_id}
+            for five_x_five_user_id in five_x_five_users_ids
+        ]
+
+        db_session.bulk_insert_mappings(AudienceSmartPerson, bulk_data)
+        db_session.flush() 
+
+        logging.info(f"inserted {len(five_x_five_users_ids)} persons") 
+
+        processed_records = db_session.execute(
+            update(AudienceSmart)
+            .where(AudienceSmart.id == str(aud_smart_id))
             .values(
-                processed_size=AudienceLookalikes.processed_size + len(five_x_five_users_ids)
+                processed_active_segment_records=(AudienceSmart.processed_active_segment_records + len(five_x_five_users_ids))
             )
-            .returning(AudienceLookalikes.processed_size, AudienceLookalikes.size)
+            .returning(AudienceSmart.processed_active_segment_records)
         ).fetchone()
                     
         db_session.commit()
             
-        await send_sse(connection, user_id, {"lookalike_id": lookalike_id, "total": total_records, "processed": processed_size})
-        logging.info(f"ack")
+        processed_records_value = processed_records[0] if processed_records else 0
+
+        await send_sse(connection, user_id, {"smart_audience_id": aud_smart_id, "processed": processed_records_value})
+        logging.info(f"sent {len(five_x_five_users_ids)} persons")
         await message.ack()
 
-    except BaseException as e:
+    except Exception as e:
         logging.error(f"Error processing matching: {e}", exc_info=True)
-        await message.ack()
-        db_session.rollback()
+        await message.nack()
+
 
 async def main():
     log_level = logging.INFO
@@ -115,11 +115,11 @@ async def main():
         db_session = Session()
 
         queue = await channel.declare_queue(
-            name=AUDIENCE_LOOKALIKES_MATCHING,
+            name=AUDIENCE_SMARTS_AGENT,
             durable=True,
         )
         await queue.consume(
-                functools.partial(aud_sources_matching, connection=connection, db_session=db_session)
+                functools.partial(aud_smarts_matching, connection=connection, db_session=db_session)
             )
 
         await asyncio.Future()

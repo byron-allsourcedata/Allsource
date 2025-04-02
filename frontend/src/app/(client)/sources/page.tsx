@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText, LinearProgress, Chip, Tooltip } from '@mui/material';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import axiosInstance from '../../../axios/axiosInterceptorInstance';
 import { sourcesStyles } from './sourcesStyles';
 import Slider from '../../../components/Slider';
@@ -91,6 +91,8 @@ const Sources: React.FC = () => {
     const isOpen = Boolean(anchorEl);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const [isMakeRequest, setIsMakeRequest] = useState(false);
+    const searchParams = useSearchParams();
+    const isDebug = searchParams.get('is_debug') === 'true';
 
     const columns = [
         { key: 'name', label: 'Name', widths: { width: '11vw', minWidth: '11vw', maxWidth: '11vw' } },
@@ -102,7 +104,7 @@ const Sources: React.FC = () => {
         { key: 'number_of_customers', label: 'No of Customers', widths: { width: '140px', minWidth: '140px', maxWidth: '140px' }, sortable: true },
         { key: 'matched_records', label: 'Matched Records', widths: { width: '145px', minWidth: '145px', maxWidth: '145px' }, sortable: true },
         { key: 'actions', label: 'Actions', widths: { width: '80px', minWidth: '80px', maxWidth: '80px' } }
-      ];
+    ];
 
     useEffect(() => {
         fetchSources({
@@ -283,6 +285,39 @@ const Sources: React.FC = () => {
         setOpenConfirmDialog(true);
     };
 
+    const downloadCSVFile = async () => {
+        setLoaderForTable(true);
+        handleClosePopover();
+        clearPollingInterval();
+    
+        try {
+            if (selectedRowData?.id) {
+                const response = await axiosInstance.get(`/audience-sources/download/${selectedRowData.id}`, {
+                    responseType: 'blob'
+                });
+    
+                if (response.status === 200 && response.data) {
+                    const url = window.URL.createObjectURL(new Blob([response.data]));
+                    const link = document.createElement('a');
+                    link.href = url;
+                    const selectedSource = data.find((source) => source.id === selectedRowData.id);
+                    link.setAttribute('download', `${selectedSource?.name}-${selectedSource?.source_origin}.csv`);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(url);
+    
+                    showToast("CSV File Successfully Downloaded!");
+                }
+            }
+        } catch (error) {
+            showErrorToast("Error downloading source");
+        } finally {
+            setLoaderForTable(false);
+        }
+    };
+    
+
     const handleCloseConfirmDialog = () => {
         setOpenConfirmDialog(false);
     };
@@ -458,27 +493,27 @@ const Sources: React.FC = () => {
             const container = tableContainerRef.current;
             const checkScroll = () => {
                 if (container) {
-                setIsScrolled(container.scrollLeft > 0);
+                    setIsScrolled(container.scrollLeft > 0);
                 }
             };
-    
+
             if (container) {
                 container.addEventListener('scroll', checkScroll);
             }
             window.addEventListener('resize', checkScroll);
-    
+
             checkScroll();
-    
+
             return () => {
                 if (container) {
-                container.removeEventListener('scroll', checkScroll);
+                    container.removeEventListener('scroll', checkScroll);
                 }
                 window.removeEventListener('resize', checkScroll);
             };
         } else {
-          console.warn("TableContainer ref is still null");
+            console.warn("TableContainer ref is still null");
         }
-      }, [tableContainerRef.current]);
+    }, [tableContainerRef.current]);
 
     return (
         <>
@@ -737,9 +772,9 @@ const Sources: React.FC = () => {
                                                 >
                                                     <Table stickyHeader aria-label="leads table">
                                                         <TableHead sx={{ position: "relative" }}>
-                                                        <TableRow>
+                                                            <TableRow>
                                                                 {columns.map(({ key, label, sortable = false, widths }) => (
-                                                                <TableCell
+                                                                    <TableCell
                                                                         key={key}
                                                                         sx={{
                                                                             ...sourcesStyles.table_column,
@@ -760,28 +795,28 @@ const Sources: React.FC = () => {
                                                                     </TableCell>
                                                                 ))}
                                                             </TableRow>
-                                                            {loaderForTable 
-                                                                    ? (
-                                                                        <TableRow sx={{
-                                                                            position: "sticky",
-                                                                            top: '56px',
-                                                                            zIndex: 11,
-                                                                        }}>
-                                                                            <TableCell colSpan={9} sx={{ p: 0, pb: "1px" }}>
-                                                                                <LinearProgress variant="indeterminate" sx={{ width: "100%", height: "2px", position: "absolute" }} />
-                                                                            </TableCell>
-                                                                        </TableRow>
-                                                                    )
-                                                                    : (
-                                                                        <TableRow sx={{
-                                                                            position: "sticky",
-                                                                            top: '56px',
-                                                                            zIndex: 11,
-                                                                        }}>
-                                                                            <TableCell colSpan={9} sx={{ p: 0, pb: "1px", backgroundColor: "rgba(235, 235, 235, 1)", borderColor: "rgba(235, 235, 235, 1)" }}/>
-                                                                        </TableRow>
-                                                                    )
-                                                                }
+                                                            {loaderForTable
+                                                                ? (
+                                                                    <TableRow sx={{
+                                                                        position: "sticky",
+                                                                        top: '56px',
+                                                                        zIndex: 11,
+                                                                    }}>
+                                                                        <TableCell colSpan={9} sx={{ p: 0, pb: "1px" }}>
+                                                                            <LinearProgress variant="indeterminate" sx={{ width: "100%", height: "2px", position: "absolute" }} />
+                                                                        </TableCell>
+                                                                    </TableRow>
+                                                                )
+                                                                : (
+                                                                    <TableRow sx={{
+                                                                        position: "sticky",
+                                                                        top: '56px',
+                                                                        zIndex: 11,
+                                                                    }}>
+                                                                        <TableCell colSpan={9} sx={{ p: 0, pb: "1px", backgroundColor: "rgba(235, 235, 235, 1)", borderColor: "rgba(235, 235, 235, 1)" }} />
+                                                                    </TableRow>
+                                                                )
+                                                            }
                                                         </TableHead>
                                                     </Table>
                                                 </TableContainer>
@@ -816,7 +851,7 @@ const Sources: React.FC = () => {
                                             <Grid container spacing={1} sx={{ flex: 1 }}>
                                                 <Grid item xs={12}>
                                                     <TableContainer
-                                                        ref={ tableContainerRef }
+                                                        ref={tableContainerRef}
                                                         component={Paper}
                                                         sx={{
                                                             border: '1px solid rgba(235, 235, 235, 1)',
@@ -838,10 +873,10 @@ const Sources: React.FC = () => {
                                                         }}
                                                     >
                                                         <Table stickyHeader aria-label="leads table" sx={{ tableLayout: 'fixed' }}>
-                                                        <TableHead sx={{ position: "relative" }}>
-                                                        <TableRow>
-                                                                {columns.map(({ key, label, sortable = false, widths }) => (
-                                                                <TableCell
+                                                            <TableHead sx={{ position: "relative" }}>
+                                                                <TableRow>
+                                                                    {columns.map(({ key, label, sortable = false, widths }) => (
+                                                                        <TableCell
                                                                             key={key}
                                                                             sx={{
                                                                                 ...widths,
@@ -892,7 +927,7 @@ const Sources: React.FC = () => {
                                                                     <TableCell
                                                                         colSpan={9}
                                                                         sx={{
-                                                                            p: 0, 
+                                                                            p: 0,
                                                                             pb: "2px",
                                                                             borderTop: "none",
                                                                             backgroundColor: "rgba(235, 235, 235, 1)", borderColor: "rgba(235, 235, 235, 1)"
@@ -933,7 +968,7 @@ const Sources: React.FC = () => {
                                                                                 zIndex: 9,
                                                                                 backgroundColor: loaderForTable ? '#fff' : '#fff',
                                                                                 boxShadow: isScrolled ? '2px 0px 6px 0px #00000033' : 'none',
-                                                                            }}/>
+                                                                            }} />
 
                                                                             {/* Source Column */}
                                                                             <TableCell
@@ -1029,6 +1064,16 @@ const Sources: React.FC = () => {
                                                                                         >
                                                                                             <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Remove" />
                                                                                         </ListItemButton>
+                                                                                        {isDebug && (
+                                                                                            <ListItemButton
+                                                                                                sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }}
+                                                                                                onClick={() => {
+                                                                                                    downloadCSVFile();
+                                                                                                }}
+                                                                                            >
+                                                                                                <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Download Value calculations" />
+                                                                                            </ListItemButton>
+                                                                                        )}
                                                                                         <Popover
                                                                                             open={openConfirmDialog}
                                                                                             onClose={handleCloseConfirmDialog}

@@ -178,7 +178,7 @@ const SlackConnectPopup = ({ open, handlePopupClose, boxShadow, invalid_api_key 
                         <TabPanel value="1" sx={{ p: 0 }}>
                             <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }} mt={2} mb={2}>
-                                    <Image src='/slack-icon.svg' alt='slack' height={24} width={24} />
+                                    <Image src='/slack-icon.svg' alt='Slack' height={24} width={24} />
                                     <Typography variant="h6" sx={{
                                         fontFamily: 'Nunito Sans',
                                         fontSize: '16px',
@@ -194,7 +194,7 @@ const SlackConnectPopup = ({ open, handlePopupClose, boxShadow, invalid_api_key 
                                         fullWidth
                                         onClick={handleLogin}
                                         variant="contained"
-                                        startIcon={<Image src='/slack-icon.svg' alt='slack' height={24} width={24} />}
+                                        startIcon={<Image src='/slack-icon.svg' alt='Slack' height={24} width={24} />}
                                         sx={{
                                             backgroundColor: '#f24e1e',
                                             fontFamily: "Nunito Sans",
@@ -233,7 +233,7 @@ const SlackConnectPopup = ({ open, handlePopupClose, boxShadow, invalid_api_key 
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <Image src='/slack-icon.svg' alt='slack' height={26} width={32} />
+                                        <Image src='/slack-icon.svg' alt='Slack' height={26} width={32} />
                                         <Typography variant="h6" sx={{
                                             fontFamily: 'Nunito Sans',
                                             fontSize: '16px',

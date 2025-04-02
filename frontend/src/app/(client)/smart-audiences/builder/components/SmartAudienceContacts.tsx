@@ -163,8 +163,21 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
   const currentData = sourceType === "Source" ? sourceData : lookalikeData;
   const filteredData = getFilteredData(currentData);
 
-  const handleCalculate = () => {
-    setAudienceSize(123);
+  const handleCalculate = async () => {
+    setLoading(true);
+    try {
+      const response = await axiosInstance.post(
+        "/audience-smarts/calculate",
+        selectedSources
+      );
+      if (response.status === 200) {
+        setAudienceSize(response.data);
+      }
+    } catch {
+      showErrorToast("An error occurred while calculate a new Smart Audience");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEditContacts = () => {
@@ -178,6 +191,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
         use_case: toSnakeCase(useCaseType),
         data_sources: selectedSources,
         smart_audience_name: audienceName,
+        contacts_to_validate: AudienceSize,
       };
 
       const filteredRequestData = Object.fromEntries(

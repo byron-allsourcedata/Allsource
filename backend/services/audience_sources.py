@@ -1,13 +1,20 @@
 import os
 import json
-from datetime import datetime
-
-from openai import OpenAI
+import csv
 import logging
-from typing import List, Optional
+import io
+from datetime import datetime
+from openai import OpenAI
+import csv
+import io
+from uuid import UUID
+from typing import List, Optional, Dict
+from uuid import UUID
 from schemas.audience import Row, SourcesObjectResponse, SourceResponse, NewSource, DomainsSourceResponse
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
 from persistence.domains import UserDomainsPersistence
+from enums import TypeOfCustomer
+from persistence.audience_sources_matched_persons import AudienceSourcesMatchedPersonsPersistence
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from enums import QueueName, SourceType
 from models.users import User
@@ -16,9 +23,10 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 logger = logging.getLogger(__name__)
 
 class AudienceSourceService:
-    def __init__(self, audience_sources_persistence: AudienceSourcesPersistence, domain_persistence: UserDomainsPersistence):
+    def __init__(self, audience_sources_persistence: AudienceSourcesPersistence, domain_persistence: UserDomainsPersistence, audience_sources_matched_persons_persistence: AudienceSourcesMatchedPersonsPersistence):
         self.audience_sources_persistence = audience_sources_persistence
         self.domain_persistence = domain_persistence
+        self.audience_sources_matched_persons_persistence = audience_sources_matched_persons_persistence
         self.headings_map = {
             "Customer Conversions": ['Email', 'Phone number', 'Last Name', 'First Name', 'Transaction Date', 'Order Amount'],
             "Failed Leads": ['Email', 'Phone number', 'Last Name', 'First Name', 'Lead Date'],
@@ -70,6 +78,52 @@ class AudienceSourceService:
             })
 
         return source_list, count
+    
+    def download_value_calculation(self, source_id: UUID):
+        audience_source = self.audience_sources_persistence.get_source_by_id(source_id=source_id)
+        if not audience_source:
+            return
+        audience_sources_matched_persons = self.audience_sources_matched_persons_persistence.get_audience_sources_matched_persons_by_source_id(audience_source_id=source_id)
+        if not audience_sources_matched_persons:
+            return
+        
+        output = io.StringIO()
+        writer = csv.writer(output)
+        if audience_source.source_type == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
+            writer.writerow(['Email', 'Last Transaction', 'Total Spend','Normalized Total Spend', 'Frequency', 'Normalized Frequency', 'Recency', 'Normalized Recency', 'Value'])
+
+            for person in audience_sources_matched_persons:
+                relevant_data = [
+                    person.email or '',
+                    str(person.orders_date) if person.orders_date is not None else '',
+                    str(person.orders_amount) if person.orders_amount is not None else '',
+                    str(person.orders_amount_normalized) if person.orders_amount_normalized is not None else '',
+                    str(person.orders_count) if person.orders_count is not None else '',
+                    str(person.orders_count_normalized) if person.orders_count_normalized is not None else '',
+                    str(person.recency) if person.recency is not None else '',
+                    str(person.recency_normalized) if person.recency_normalized is not None else '',
+                    str(person.value_score) if person.value_score is not None else '',
+                ]
+                writer.writerow(relevant_data)
+                
+        if audience_source.source_type == TypeOfCustomer.FAILED_LEADS.value:
+            writer.writerow(['Email', 'LeadFailedDate', 'Frequency','Recency', 'Normalized Recency',  'Inverted Recency', 'Value'])
+
+            for person in audience_sources_matched_persons:
+                relevant_data = [
+                    person.email or '',
+                    str(person.orders_date) if person.orders_date is not None else '',
+                    str(person.orders_count) if person.orders_count is not None else '',
+                    str(person.recency) if person.recency is not None else '',
+                    str(person.recency_failed) if person.inverted_recency is not None else '',
+                    str(person.inverted_recency) if person.inverted_recency is not None else '',
+                    str(person.value_score) if person.value_score is not None else '',    
+                ]
+                writer.writerow(relevant_data)
+
+        output.seek(0)
+
+        return output
 
     def substitution_headings(self, source_type: str, headers: List[str]) -> Optional[List[str]]:
         default_headings = self.headings_map.get(source_type)
@@ -98,21 +152,23 @@ class AudienceSourceService:
             logger.error("Error with ChatGPT API", exc_info=True)
             return None
         
-    async def send_matching_status(self, source_id, user_id, type, statuses, domain_id=None, email_field = None):
+    async def send_matching_status(self, source_id, user_id, type, statuses, domain_id=None, mapped_fields = None):
         queue_name = QueueName.AUDIENCE_SOURCES_READER.value
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
         data = {
             'source_id': str(source_id),
-            'user_id': user_id
+            'user_id': user_id,
+            'type': type,
         }
         if type == SourceType.CSV.value:
-            data['email'] = email_field
+            data['mapped_fields'] = mapped_fields
+            data['statuses'] = statuses
             
         if type == SourceType.PIXEL.value:
             data['domain_id'] = domain_id
             data['statuses'] = statuses
-            
+
         try:
             message_body = {
                 'type': type,
@@ -139,12 +195,19 @@ class AudienceSourceService:
             "rows": json.dumps([row.dict() for row in payload.rows]) if payload.rows else None,
         }
         created_data = self.audience_sources_persistence.create_source(**creating_data)
-        email_field = payload.rows[0].value if payload.rows else None
-        await self.send_matching_status(created_data.id, user.get("id"), payload.source_origin, payload.source_type, payload.domain_id, email_field)
+        mapped_fields: Dict[str, str] = {row.type: row.value for row in payload.rows} if payload.rows else {}
+
+        await self.send_matching_status(
+            created_data.id,
+            user.get("id"),
+            payload.source_origin,
+            payload.source_type,
+            payload.domain_id,
+            mapped_fields
+        )
         
         if not created_data:
             logger.debug('Database error during creation')
-
 
         domain_name = self.domain_persistence.get_domain_name(created_data.domain_id)
 

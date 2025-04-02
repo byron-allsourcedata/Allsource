@@ -13,6 +13,7 @@ interface SSEContextType {
   NotificationData: { id: number; text: string } | null;
   sourceProgress: Record<string, { total: number; processed: number, matched: number }>
   smartLookaLikeProgress: Record<string, { total: number; processed: number }>
+  smartAudienceProgress: Record<string, { processed: number }>
 }
 
 interface SSEProviderProps {
@@ -28,11 +29,19 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   const [NotificationData, setLatestNotification] = useState<{ id: number; text: string } | null>(null);
   const [sourceProgress, setSourceProgress] = useState<Record<string, { total: number; processed: number, matched: number }>>({});
   const [smartLookaLikeProgress, setLookaLikeProgress] = useState<Record<string, { total: number; processed: number }>>({});
+  const [smartAudienceProgress, setSmartAudienceProgress] = useState<Record<string, { processed: number }>>({});
 
-  const updateSmartAudienceProgress = (lookalike_id: string, total: number, processed: number) => {
+  const updateLookalikeProgress = (lookalike_id: string, total: number, processed: number) => {
     setLookaLikeProgress((prev) => ({
       ...prev,
       [lookalike_id]: { total, processed },
+    }));
+  };
+
+  const updateSmartAudienceProgress = (smart_audience_id: string, processed: number) => {
+    setSmartAudienceProgress((prev) => ({
+      ...prev,
+      [smart_audience_id]: { processed },
     }));
   };
 
@@ -105,7 +114,16 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
             return;
           }
 
-          updateSmartAudienceProgress(lookalike_id, total, processed);
+          updateLookalikeProgress(lookalike_id, total, processed);
+        }
+        else if (data.status === "AUDIENCE_SMARTS_PROGRESS") {
+          const { smart_audience_id, processed } = data.data;
+          if (!smart_audience_id) {
+            console.error("source_id is undefined");
+            return;
+          }
+
+          updateSmartAudienceProgress(smart_audience_id, processed);
         }
         else {
           if (data.percent) {
@@ -130,7 +148,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   }, [url]);
 
   return (
-    <SSEContext.Provider value={{ data, newNotification, NotificationData, sourceProgress, smartLookaLikeProgress }}>
+    <SSEContext.Provider value={{ data, newNotification, NotificationData, sourceProgress, smartLookaLikeProgress, smartAudienceProgress }}>
       {children}
     </SSEContext.Provider>
   );
