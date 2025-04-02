@@ -122,17 +122,19 @@ async def send_error_msg(user_id: int, service_name: str, notification_persisten
     queue_name = f"sse_events_{str(user_id)}"
     account_notification = notification_persistence.get_account_notification_by_title(title)
     notification_text = account_notification.text.format(service_name)
-    save_account_notification = notification_persistence.save_account_notification(user_id=user_id, account_notification_id=account_notification.id, params=service_name)
-    try:
-        await publish_rabbitmq_message(
-            connection=connection,
-            queue_name=queue_name,
-            message_body={'notification_text': notification_text, 'notification_id': save_account_notification.id}
-        )
-    except:
-        logging.error('Failed to publish rabbitmq message')
-    finally:
-        await rabbitmq_connection.close()
+    notification = notification_persistence.find_account_with_notification(user_id=user_id, account_notification_id=account_notification.id, params=service_name)
+    if not notification:
+        save_account_notification = notification_persistence.save_account_notification(user_id=user_id, account_notification_id=account_notification.id, params=service_name)
+        try:
+            await publish_rabbitmq_message(
+                connection=connection,
+                queue_name=queue_name,
+                message_body={'notification_text': notification_text, 'notification_id': save_account_notification.id}
+            )
+        except:
+            logging.error('Failed to publish rabbitmq message')
+        finally:
+            await rabbitmq_connection.close()
 
 async def ensure_integration(message: IncomingMessage, integration_service: IntegrationService, session: Session, notification_persistence: NotificationPersistence):
     try:
