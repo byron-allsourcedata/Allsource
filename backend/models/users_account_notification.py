@@ -12,7 +12,6 @@ class UserAccountNotification(Base):
     params = Column(TEXT, nullable=False)
     is_checked = Column(BOOLEAN, nullable=False, default=False)
     created_at = Column(DateTime(timezone=True), nullable=False, default=func.now())
-
-    __table_args__ = (
-        Index('user_notification', 'user_id', 'id'),
-    )
+    
+Index('user_notification', UserAccountNotification.user_id, UserAccountNotification.id)
+Index('users_account_notifications_user_id_notification_id_is_checked_', UserAccountNotification.user_id, UserAccountNotification.notification_id, UserAccountNotification.is_checked)
