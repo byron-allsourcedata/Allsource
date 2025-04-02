@@ -272,8 +272,7 @@ async def process_and_send_chunks(db_session: Session, source_id: str, batch_siz
 
     logging.info(f"Processing {result}")
 
-    offset = 0
-    while True:
+    for offset in range(0, total_count, batch_size):
         matched_persons_list = db_session.query(AudienceSourcesMatchedPerson) \
             .filter_by(source_id=source_id) \
             .offset(offset) \
@@ -281,7 +280,7 @@ async def process_and_send_chunks(db_session: Session, source_id: str, batch_siz
             .all()
 
         if not matched_persons_list:
-            logging.warning(f"No more matched persons found for source_id {source_id}")
+            logging.warning(f"No more matched persons found for source_id {source_id} at offset {offset}")
             break
 
         logging.info(f"Processing {len(matched_persons_list)} matched persons for source_id {source_id}")
@@ -320,8 +319,6 @@ async def process_and_send_chunks(db_session: Session, source_id: str, batch_siz
 
         await publish_rabbitmq_message(connection=connection, queue_name=queue_name, message_body=message_body)
         logging.info(f"RMQ message sent for batch starting at offset {offset} of size {total_count}")
-
-        offset += batch_size
 
     logging.info(f"All chunks processed and messages sent for source_id {source_id}")
 
