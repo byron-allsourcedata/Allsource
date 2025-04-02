@@ -151,6 +151,10 @@ class AudienceSmartsService:
         await self.start_scripts_for_matching(created_data.id, user.get("id"), data_sources, contacts_to_validate)
         return created_data
 
+    def calculate_smart_audience(self, request):
+        transformed_data_source = self.transform_datasource(request)
+        return self.audience_smarts_persistence.calculate_smart_audience(transformed_data_source)
+
     def get_datasource(self, user: dict):
         lookalikes, count, max_page = self.lookalikes_persistence_service.get_lookalikes(
             user_id=user.get('id'), page=1, per_page=50

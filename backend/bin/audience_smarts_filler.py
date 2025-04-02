@@ -6,15 +6,16 @@ import functools
 import json
 import aioboto3
 from aio_pika import IncomingMessage
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker, Session, aliased
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from sqlalchemy import create_engine, text
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
-
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from models.audience_lookalikes_persons import AudienceLookALikePerson
+from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 
 load_dotenv()
 
@@ -49,7 +50,6 @@ async def send_sse(connection, user_id: int, data: dict):
 def format_ids(ids):
     return tuple(ids) if ids else ('NULL',)
 
-
 async def aud_smarts_reader(message: IncomingMessage, db_session: Session, connection):
     try:
         message_body = json.loads(message.body)
@@ -66,35 +66,37 @@ async def aud_smarts_reader(message: IncomingMessage, db_session: Session, conne
         lookalike_exclude = format_ids(data_sources["lookalike_ids"]["exclude"])
         source_include = format_ids(data_sources["source_ids"]["include"])
         source_exclude = format_ids(data_sources["source_ids"]["exclude"])
-        
+
+        AudienceLALP = aliased(AudienceLookALikePerson)
+        AudienceSMP = aliased(AudienceSourcesMatchedPerson)
+
+        lookalike_include = lookalike_include or None
+        lookalike_exclude = lookalike_exclude or None
+        source_include = source_include or None
+        source_exclude = source_exclude or None
+
         while offset < active_segment:
-            sql_query = """
-            WITH CombinedPersons AS (
-                SELECT five_x_five_user_id FROM AudienceLookALikePerson
-                WHERE lookalike_id IN :include_lookalike_ids
-                  AND lookalike_id NOT IN :exclude_lookalike_ids
-                UNION
-                SELECT five_x_five_user_id FROM AudienceSourcesMatchedPerson
-                WHERE source_id IN :include_source_ids
-                  AND source_id NOT IN :exclude_source_ids
+            lalp_query = (
+                db_session.query(AudienceLALP.five_x_five_user_id.label("five_x_five_user_id"))
+                .filter(AudienceLALP.lookalike_id.in_(lookalike_include) if lookalike_include else True)
+                .filter(~AudienceLALP.lookalike_id.in_(lookalike_exclude) if lookalike_exclude else True)
             )
-            SELECT five_x_five_user_id FROM CombinedPersons
-            LIMIT :batch_size OFFSET :offset;
-            """
 
-            persons = db_session.execute(
-                sql_query,
-                {
-                    "include_lookalike_ids": lookalike_include,
-                    "exclude_lookalike_ids": lookalike_exclude,
-                    "include_source_ids": source_include,
-                    "exclude_source_ids": source_exclude,
-                    "batch_size": SELECTED_ROW_COUNT,
-                    "offset": offset,
-                }
-            ).fetchall()
+            smp_query = (
+                db_session.query(AudienceSMP.five_x_five_user_id.label("five_x_five_user_id"))
+                .filter(AudienceSMP.source_id.in_(source_include) if source_include else True)
+                .filter(~AudienceSMP.source_id.in_(source_exclude) if source_exclude else True)
+            )
 
-            persons = [row[0] for row in persons]
+            combined_query = lalp_query.union_all(smp_query).subquery().alias("combined_persons")
+
+            final_query = (
+                db_session.query(combined_query.c.five_x_five_user_id)
+                .limit(SELECTED_ROW_COUNT)
+                .offset(offset)
+            )
+
+            persons = [row[0] for row in final_query.all()]
 
             if not persons:
                 break

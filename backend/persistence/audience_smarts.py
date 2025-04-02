@@ -3,18 +3,17 @@ from datetime import datetime
 
 import pytz
 from sqlalchemy import desc, asc, or_
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
+from sqlalchemy.sql import func
 
 from models.audience_smarts import AudienceSmart
+from models.audience_lookalikes_persons import AudienceLookALikePerson
+from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from models.audience_smarts_use_cases import AudienceSmartsUseCase
 from models.audience_smarts_data_sources import AudienceSmartsDataSources
 from models.users import Users
 from typing import Optional, Tuple, List
 from sqlalchemy.engine.row import Row
-from uuid import UUID
-from urllib.parse import unquote
-
-from persistence.utils import apply_filters
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +28,27 @@ class AudienceSmartsPersistence:
                 .first()
         )
         return use_case[0] if use_case else None
+    
+    def calculate_smart_audience(self, data):   
+        AudienceLALP = aliased(AudienceLookALikePerson)
+        AudienceSMP = aliased(AudienceSourcesMatchedPerson)
+
+        lalp_query = (
+            self.db.query(AudienceLALP.five_x_five_user_id)
+            .filter(AudienceLALP.lookalike_id.in_(data["lookalike_ids"]["include"]))
+            .filter(AudienceLALP.lookalike_id.notin_(data["lookalike_ids"]["exclude"]))
+        )
+
+        smp_query = (
+            self.db.query(AudienceSMP.five_x_five_user_id)
+            .filter(AudienceSMP.source_id.in_(data["source_ids"]["include"]))
+            .filter(AudienceSMP.source_id.notin_(data["source_ids"]["exclude"]))
+        )
+
+        combined_query = lalp_query.union_all(smp_query).subquery()
+
+        count_query = self.db.query(func.count()).select_from(combined_query)
+        return count_query.scalar()
 
     def create_audience_smarts_data_sources(
             self,

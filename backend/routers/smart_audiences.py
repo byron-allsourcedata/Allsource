@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, Query, Body, HTTPException
 from dependencies import get_audience_smarts_service, check_user_authorization_without_pixel
 from services.audience_smarts import AudienceSmartsService
 from schemas.audience import SmartsAudienceObjectResponse, UpdateSmartAudienceRequest, CreateSmartAudienceRequest
@@ -38,6 +38,15 @@ def get_audience_smarts(
         "audience_smarts_list": smarts_audience_list,
         "count": count
     }
+
+@router.post("/calculate")
+def calculate_smart_audience(
+    request = Body(...),
+    audience_smarts_service: AudienceSmartsService = Depends(get_audience_smarts_service)
+):
+    return audience_smarts_service.calculate_smart_audience(
+        request=request
+    )
 
 
 @router.post("/builder")
@@ -80,9 +89,10 @@ def get_datasource(
 
 @router.get("/search")
 def search_audience_smart(
-    start_letter: str = Query(..., min_length=3),
-    audience_smarts_service: AudienceSmartsService = Depends(get_audience_smarts_service),
-    user: dict = Depends(check_user_authorization_without_pixel)):
+        start_letter: str = Query(..., min_length=3),
+        audience_smarts_service: AudienceSmartsService = Depends(get_audience_smarts_service),
+        user: dict = Depends(check_user_authorization_without_pixel)
+):
     return audience_smarts_service.search_audience_smart(start_letter, user=user)
 
 

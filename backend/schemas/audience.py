@@ -108,7 +108,6 @@ class SmartsAudienceObjectResponse(BaseModel):
 class UpdateSmartAudienceRequest(BaseModel):
     new_name: str
 
-
 class CreateSmartAudienceRequest(BaseModel):
     smart_audience_name: str
     use_case: str
