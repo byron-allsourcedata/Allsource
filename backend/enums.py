@@ -49,6 +49,10 @@ class SourceType(Enum):
     CSV = 'csv'
     PIXEL = 'pixel'
 
+class AudienceSmartDataSource(Enum):
+    INCLUDE = 'Include'
+    EXCLUDE = 'Exclude'
+
 class CreateDataSync(Enum):
     ZAPIER_CONNECTED = 'ZAPIER_CONNECTED'
     

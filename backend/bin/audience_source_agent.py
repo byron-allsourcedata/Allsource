@@ -6,12 +6,13 @@ import functools
 import json
 import time
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+from decimal import Decimal
 from typing import List, Dict, Union, Optional
 
 import boto3
 from aiormq.abc import AbstractConnection
-from sqlalchemy import update
+from sqlalchemy import update, func
 from aio_pika import IncomingMessage, Message, Connection
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
@@ -20,6 +21,7 @@ from dotenv import load_dotenv
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+from enums import TypeOfCustomer
 from schemas.scripts.audience_source import PersonEntry, MessageBody, DataBodyNormalize, PersonRow, DataForNormalize, DataBodyFromSource
 from models.five_x_five_emails import FiveXFiveEmails
 from models.five_x_five_users_emails import FiveXFiveUsersEmails
@@ -33,6 +35,7 @@ load_dotenv()
 AUDIENCE_SOURCES_MATCHING = 'aud_sources_matching'
 SOURCE_PROCESSING_PROGRESS = "SOURCE_PROCESSING_PROGRESS"
 BATCH_SIZE = 500
+DATE_LIMIT = 180
 
 
 def setup_logging(level):
@@ -77,15 +80,50 @@ async def send_sse(connection, user_id: int, data: dict):
         logging.error(f"Error sending SSE: {e}")
 
 
-async def process_email(persons: List[PersonRow], db_session: Session, source_id: str) -> int:
-    matched_persons = defaultdict(lambda: {"orders_amount": 0.0, "orders_count": 0, "orders_date": None})
+async def process_email_leads(
+    persons: List[PersonRow], db_session: Session, source_id: str, include_amount: bool = False
+) -> int:
+    days_ago = datetime.now() - timedelta(days=DATE_LIMIT)
+
+    matched_persons = defaultdict(lambda: {
+        "orders_amount": 0.0 if include_amount else None,
+        "orders_count": 0,
+        "orders_date": None,
+        "five_x_five_user_id": None
+    })
 
     logging.info(f"Start processing {len(persons)} persons for source_id {source_id}")
 
-    for person in persons:
+    emails = {p.email.strip().lower() for p in persons if p.email}
+    if not emails:
+        logging.info("No valid emails found in input data.")
+        return 0
+
+    email_records = db_session.query(FiveXFiveEmails).filter(FiveXFiveEmails.email.in_(emails)).all()
+    if not email_records:
+        logging.info("No matching emails found in FiveXFiveEmails table.")
+        return 0
+
+    email_to_id = {record.email: record.id for record in email_records}
+
+    email_ids = list(email_to_id.values())
+    user_records = db_session.query(FiveXFiveUsersEmails.email_id, FiveXFiveUsersEmails.user_id).filter(
+        FiveXFiveUsersEmails.email_id.in_(email_ids)
+    ).all()
+
+    email_id_to_user_id = {record.email_id: record.user_id for record in user_records}
+
+    email_to_user_id = {email: email_id_to_user_id[email_id] for email, email_id in email_to_id.items() if
+                        email_id in email_id_to_user_id}
+
+    filtered_persons = [p for p in persons if p.email.strip().lower() in email_to_user_id]
+    if not filtered_persons:
+        logging.info("No valid persons left after filtering by existing emails.")
+        return 0
+
+    for person in filtered_persons:
         email = (person.email or "").strip().lower()
-        sale_amount = person.sale_amount or 0.0
-        transaction_date = (person.transaction_date or "").strip()
+        transaction_date = (person.date or "").strip()
 
         transaction_date_obj = None
         if transaction_date:
@@ -94,9 +132,16 @@ async def process_email(persons: List[PersonRow], db_session: Session, source_id
             except Exception as date_error:
                 logging.warning(f"Error parsing date '{transaction_date}': {date_error}")
 
+        # if transaction_date_obj and transaction_date_obj < days_ago:
+        #     continue
+
+        sale_amount = Decimal(person.sale_amount) if include_amount and person.sale_amount is not None else Decimal(
+            "0.0")
+
         if email in matched_persons:
-            matched_persons[email]["orders_amount"] += sale_amount
             matched_persons[email]["orders_count"] += 1
+            if include_amount:
+                matched_persons[email]["orders_amount"] += sale_amount
             if transaction_date_obj:
                 existing_date = matched_persons[email]["orders_date"]
                 if existing_date is None or transaction_date_obj > existing_date:
@@ -104,10 +149,12 @@ async def process_email(persons: List[PersonRow], db_session: Session, source_id
                     logging.debug(f"Updated orders_date for {email}: {transaction_date_obj}")
         else:
             matched_persons[email] = {
-                "orders_amount": sale_amount,
                 "orders_count": 1,
-                "orders_date": transaction_date_obj
+                "orders_date": transaction_date_obj,
+                "five_x_five_user_id": email_to_user_id[email]
             }
+            if include_amount:
+                matched_persons[email]["orders_amount"] = sale_amount
             logging.debug(
                 f"Added new person {email} with sale amount {sale_amount} and transaction date {transaction_date_obj}")
 
@@ -128,19 +175,19 @@ async def process_email(persons: List[PersonRow], db_session: Session, source_id
 
         if email in existing_persons:
             matched_person = existing_persons[email]
-            matched_person.orders_amount += data["orders_amount"]
             matched_person.orders_count += data["orders_count"]
+            if include_amount:
+                matched_person.orders_amount += data["orders_amount"]
 
             if data["orders_date"]:
                 if matched_person.orders_date is None or data["orders_date"] > matched_person.orders_date:
                     matched_person.orders_date = data["orders_date"]
                     matched_person.recency = recency
-                    logging.debug(
-                        f"Updated matched person {email}: orders_amount={matched_person.orders_amount}, orders_count={matched_person.orders_count}")
+                    logging.debug(f"Updated matched person {email}: orders_count={matched_person.orders_count}")
 
             matched_persons_to_update.append({
                 "id": matched_person.id,
-                "orders_amount": matched_person.orders_amount,
+                "orders_amount": matched_person.orders_amount if include_amount else 0.0,
                 "orders_count": matched_person.orders_count,
                 "orders_date": matched_person.orders_date,
                 "recency": recency
@@ -149,14 +196,16 @@ async def process_email(persons: List[PersonRow], db_session: Session, source_id
             new_matched_person = AudienceSourcesMatchedPerson(
                 source_id=source_id,
                 email=email,
-                orders_amount=data["orders_amount"],
                 orders_count=data["orders_count"],
                 orders_date=data["orders_date"],
-                recency=recency
+                recency=recency,
+                five_x_five_user_id=data["five_x_five_user_id"]
             )
+            if include_amount:
+                new_matched_person.orders_amount = data["orders_amount"]
+
             matched_persons_to_add.append(new_matched_person)
-            logging.debug(
-                f"Added new matched person {email}: orders_amount={data['orders_amount']}, orders_count={data['orders_count']}")
+            logging.debug(f"Added new matched person {email}: orders_count={data['orders_count']}")
 
     if matched_persons_to_update:
         logging.info(f"Updating {len(matched_persons_to_update)} persons in the database")
@@ -166,12 +215,15 @@ async def process_email(persons: List[PersonRow], db_session: Session, source_id
         logging.info(f"Adding {len(matched_persons_to_add)} new persons to the database")
         db_session.bulk_save_objects(matched_persons_to_add)
 
-    db_session.flush()
-
-    processed_count = len(persons)
+    processed_count = len(filtered_persons)
     logging.info(f"Processed {processed_count} persons for source_id {source_id}")
     return processed_count
 
+async def process_email_customer_conversion(persons: List[PersonRow], db_session: Session, source_id: str) -> int:
+    return await process_email_leads(persons, db_session, source_id, include_amount=True)
+
+async def process_email_failed_leads(persons: List[PersonRow], db_session: Session, source_id: str) -> int:
+    return await process_email_leads(persons, db_session, source_id, include_amount=False)
 
 async def process_user_id(persons: List[PersonRow], db_session: Session, source_id: str) -> int:
     five_x_five_user_ids = [p.user_id for p in persons]
@@ -188,9 +240,39 @@ async def process_user_id(persons: List[PersonRow], db_session: Session, source_
 
 
 async def process_and_send_chunks(db_session: Session, source_id: str, batch_size: int, queue_name: str,
-                                  connection: Connection):
+                                  connection, status: str):
+    result = db_session.query(
+        func.min(AudienceSourcesMatchedPerson.orders_amount).label('min_orders_amount'),
+        func.max(AudienceSourcesMatchedPerson.orders_amount).label('max_orders_amount'),
+        func.min(AudienceSourcesMatchedPerson.orders_count).label('min_orders_count'),
+        func.max(AudienceSourcesMatchedPerson.orders_count).label('max_orders_count'),
+        func.min(AudienceSourcesMatchedPerson.recency).label('min_recency'),
+        func.max(AudienceSourcesMatchedPerson.recency).label('max_recency'),
+        func.min(AudienceSourcesMatchedPerson.orders_date).label('min_orders_date'),
+        func.max(AudienceSourcesMatchedPerson.orders_date).label('max_orders_date'),
+        func.count().label('total_count')
+    ).filter_by(source_id=source_id).first()
+
+    min_orders_amount = float(result.min_orders_amount) if result.min_orders_amount is not None else 0.0
+    max_orders_amount = float(result.max_orders_amount) if result.max_orders_amount is not None else 1.0
+    min_orders_count = int(result.min_orders_count or 0)
+    max_orders_count = int(result.max_orders_count or 1)
+    min_recency = float(result.min_recency) if result.min_recency is not None else 0.0
+    max_recency = float(result.max_recency) if result.max_recency is not None else 1.0
+
+    if status == TypeOfCustomer.FAILED_LEADS.value:
+        min_recency = 1.0 / (min_recency + 1.0)
+        max_recency = 1.0 / (max_recency + 1.0)
+        if min_recency > max_recency:
+            min_recency, max_recency = max_recency, min_recency
+
+    min_orders_date = result.min_orders_date
+    max_orders_date = result.max_orders_date
+    total_count = int(result.total_count or 0)
+
+    logging.info(f"Processing {result}")
+
     offset = 0
-    total_count = db_session.query(AudienceSourcesMatchedPerson).filter_by(source_id=source_id).count()
     while True:
         matched_persons_list = db_session.query(AudienceSourcesMatchedPerson) \
             .filter_by(source_id=source_id) \
@@ -204,30 +286,13 @@ async def process_and_send_chunks(db_session: Session, source_id: str, batch_siz
 
         logging.info(f"Processing {len(matched_persons_list)} matched persons for source_id {source_id}")
 
-        min_orders_amount = min(p.orders_amount for p in matched_persons_list)
-        max_orders_amount = max(p.orders_amount for p in matched_persons_list)
-        min_orders_count = min(p.orders_count for p in matched_persons_list)
-        max_orders_count = max(p.orders_count for p in matched_persons_list)
-
-        valid_dates = [p.orders_date for p in matched_persons_list if p.orders_date is not None]
-        min_orders_date = min(valid_dates) if valid_dates else None
-        max_orders_date = max(valid_dates) if valid_dates else None
-
-        valid_recencies = [p.recency for p in matched_persons_list if p.recency is not None]
-        min_recency = min(valid_recencies) if valid_recencies else None
-        max_recency = max(valid_recencies) if valid_recencies else None
-
-        logging.info(f"Normalization ranges: min_orders_amount={min_orders_amount}, max_orders_amount={max_orders_amount}, "
-                     f"min_orders_count={min_orders_count}, max_orders_count={max_orders_count}, "
-                     f"min_recency={min_recency}, max_recency={max_recency}")
-
         batch_rows: List[PersonEntry] = [
             PersonEntry(
                 id=str(p.id),
                 email=str(p.email),
-                orders_amount=float(p.orders_amount),
+                orders_amount=float(p.orders_amount) if p.orders_amount is not None else 0.0,
                 orders_count=int(p.orders_count),
-                recency=int(p.recency),
+                recency=float(p.recency) if p.recency is not None else 0.0
             )
             for p in matched_persons_list
         ]
@@ -250,6 +315,7 @@ async def process_and_send_chunks(db_session: Session, source_id: str, batch_siz
                     max_recency=max_recency,
                 ),
             ),
+            status=status
         )
 
         await publish_rabbitmq_message(connection=connection, queue_name=queue_name, message_body=message_body)
@@ -259,36 +325,48 @@ async def process_and_send_chunks(db_session: Session, source_id: str, batch_siz
 
     logging.info(f"All chunks processed and messages sent for source_id {source_id}")
 
-
-async def normalize_persons(persons: List[PersonEntry], source_id: str, data_for_normalize: DataForNormalize,
-                            db_session: Session):
+async def normalize_persons_customer_conversion(
+    persons: List[PersonEntry], source_id: str, data_for_normalize: DataForNormalize, db_session: Session
+):
     logging.info(f"Processing normalization data for source_id {source_id}")
 
-    min_orders_amount = data_for_normalize.min_orders_count
-    max_orders_amount = data_for_normalize.max_orders_amount
-    min_orders_count = data_for_normalize.min_orders_count
-    max_orders_count = data_for_normalize.max_orders_count
-    min_recency = data_for_normalize.min_recency
-    max_recency = data_for_normalize.max_recency
+    min_orders_amount = float(data_for_normalize.min_orders_amount) if data_for_normalize.min_orders_amount is not None else 0.0
+    max_orders_amount = float(data_for_normalize.max_orders_amount) if data_for_normalize.max_orders_amount is not None else 1.0
+    min_orders_count = float(data_for_normalize.min_orders_count)
+    max_orders_count = float(data_for_normalize.max_orders_count)
+    min_recency = float(data_for_normalize.min_recency) if data_for_normalize.min_recency is not None else 0.0
+    max_recency = float(data_for_normalize.max_recency) if data_for_normalize.max_recency is not None else 1.0
 
-    def normalize(value, min_val, max_val):
-        return (value - min_val) / (max_val - min_val) if max_val > min_val else 0
+    def normalize(value: float, min_val: float, max_val: float) -> float:
+        return (value - min_val) / (max_val - min_val) if max_val > min_val else 0.0
 
-    w1, w2, w3 = 1, 1, 1
+    w1, w2, w3 = 1.0, 1.0, 1.0
 
     updates = []
 
     for person in persons:
+        orders_amount = float(person.orders_amount) if person.orders_amount is not None else 0.0
+        orders_count = float(person.orders_count)
+        recency = float(person.recency) if person.recency is not None else 0.0
+
+        recency_normalized = normalize(recency, min_recency, max_recency)
+        orders_count_normalized = normalize(orders_count, min_orders_count, max_orders_count)
+        orders_amount_normalized = normalize(orders_amount, min_orders_amount, max_orders_amount)
+
         value_score = (
-                w1 * normalize(person.orders_amount, min_orders_amount, max_orders_amount) +
-                w2 * normalize(person.orders_count, min_orders_count, max_orders_count) -
-                w3 * normalize(person.recency, min_recency, max_recency) + 1
+                w1 * orders_amount_normalized
+                + w2 * orders_count_normalized
+                - w3 * recency_normalized
+                + 1
         )
 
         updates.append({
             'id': person.id,
             'source_id': source_id,
             'email': person.email,
+            'recency_normalized': recency_normalized,
+            'orders_amount_normalized': orders_amount_normalized,
+            'orders_count_normalized': orders_count_normalized,
             'value_score': value_score
         })
 
@@ -303,7 +381,45 @@ async def normalize_persons(persons: List[PersonEntry], source_id: str, data_for
         f"from {data_for_normalize.all_size} matched records."
     )
 
+async def normalize_persons_failed_leads(
+    persons: List[PersonEntry], source_id: str, data_for_normalize: DataForNormalize, db_session: Session
+):
+    logging.info(f"Processing normalization data for source_id {source_id}")
 
+    inverted_min_recency = float(data_for_normalize.min_recency) if data_for_normalize.min_recency is not None else 0.0
+    inverted_max_recency = float(data_for_normalize.max_recency) if data_for_normalize.max_recency is not None else 1.0
+
+    logging.info(f"Inverted recency bounds: {inverted_min_recency} {inverted_max_recency}")
+
+    def normalize(value: float, min_val: float, max_val: float) -> float:
+        return (value - min_val) / (max_val - min_val) if max_val > min_val else 0.0
+
+    updates = []
+
+    for person in persons:
+        current_recency = float(person.recency) if person.recency is not None else 0.0
+        inverted_recency = 1.0 / (current_recency + 1.0)
+        value_score = normalize(inverted_recency, inverted_min_recency, inverted_max_recency)
+
+        updates.append({
+            'id': person.id,
+            'source_id': source_id,
+            'email': person.email,
+            'value_score': value_score,
+            'inverted_recency': inverted_recency,
+            'recency_failed': value_score,
+        })
+
+    if updates:
+        db_session.bulk_update_mappings(AudienceSourcesMatchedPerson, updates)
+        logging.info(f"Updated {len(updates)} persons.")
+
+    db_session.commit()
+
+    logging.info(
+        f"RMQ message sent for matched records {data_for_normalize.matched_size} matched persons "
+        f"from {data_for_normalize.all_size} matched records."
+    )
 
 async def aud_sources_matching(message: IncomingMessage, db_session: Session, connection: Connection):
     try:
@@ -325,8 +441,14 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         )
 
         if type == 'emails' and data_for_normalize:
-            await normalize_persons(persons=persons, source_id=source_id, data_for_normalize=data_for_normalize,
-                                    db_session=db_session)
+            if message_body.status == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
+                await normalize_persons_customer_conversion(persons=persons, source_id=source_id, data_for_normalize=data_for_normalize,
+                                                            db_session=db_session)
+
+            if message_body.status == TypeOfCustomer.FAILED_LEADS.value:
+                await normalize_persons_failed_leads(persons=persons, source_id=source_id, data_for_normalize=data_for_normalize,
+                                                            db_session=db_session)
+
             await message.ack()
             return
 
@@ -339,8 +461,13 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
             count = await process_user_id(persons=persons, db_session=db_session, source_id=source_id)
 
         if type == 'emails':
-            logging.info(f"Processing {len(persons)} email records.")
-            count = await process_email(persons=persons, db_session=db_session, source_id=source_id)
+            if message_body.status == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
+                logging.info(f"Processing {len(persons)} customer conversions.")
+                count = await process_email_customer_conversion(persons=persons, db_session=db_session, source_id=source_id)
+
+            if message_body.status == TypeOfCustomer.FAILED_LEADS.value:
+                logging.info(f"Processing {len(persons)} failed lead records.")
+                count = await process_email_failed_leads(persons=persons, db_session=db_session, source_id=source_id)
 
         logging.info(f"Updated processed and matched records for source_id {count}.")
 
@@ -370,7 +497,7 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         if type == 'emails' and processed_records >= total_records:
             await process_and_send_chunks(db_session=db_session, source_id=source_id,
                                           batch_size=BATCH_SIZE, queue_name=AUDIENCE_SOURCES_MATCHING,
-                                          connection=connection)
+                                          connection=connection, status=message_body.status)
 
         await send_sse(connection, user_id,
                        {"source_id": source_id, "total": total_records, "processed": processed_records,
@@ -379,9 +506,10 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         await message.ack()
         logging.info(f"Processing completed for source_id {source_id}.")
 
-    except Exception as e:
-        await message.nack(requeue=False)
+    except BaseException as e:
         logging.warning(f"Message for source_id failed and will be reprocessed. {e}")
+        db_session.rollback()
+        await message.ack()
 
 
 async def main():

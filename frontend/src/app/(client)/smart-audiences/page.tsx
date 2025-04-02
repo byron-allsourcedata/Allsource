@@ -24,14 +24,13 @@ import { showErrorToast, showToast } from '@/components/ToastNotification';
 import { MoreVert } from '@mui/icons-material'
 import { useSSE } from '../../../context/SSEContext';
 import FilterPopup from './components/SmartAudienceFilter';
+import DetailsPopup from './components/SmartAudienceDataSources'
 import CloseIcon from '@mui/icons-material/Close';
 import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import CalendarPopup from "@/components/CustomCalendar";
 import EditIcon from '@mui/icons-material/Edit';
 import HeadsetMicOutlinedIcon from '@mui/icons-material/HeadsetMicOutlined';
-import { color } from 'framer-motion';
-import { yellow } from '@mui/material/colors';
 
 interface Smarts {
     id: string
@@ -131,6 +130,8 @@ const SmartAudiences: React.FC = () => {
     //xz cho eto
     const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
     const dropdownOpen = Boolean(dropdownEl);
+
+    const [detailsPopupOpen, setDetailsPopupOpen] = useState(false);
 
     const [filterPopupOpen, setFilterPopupOpen] = useState(false);
     const [selectedFilters, setSelectedFilters] = useState<{ label: string, value: string }[]>([]);
@@ -351,6 +352,14 @@ const SmartAudiences: React.FC = () => {
 
     const handleFilterPopupClose = () => {
         setFilterPopupOpen(false);
+    };
+
+    const handleDetailsPopupOpen = () => {
+        setDetailsPopupOpen(true);
+    };
+
+    const handleDetailsPopupClose = () => {
+        setDetailsPopupOpen(false);
     };
 
     const handleDataSyncPopupOpen = () => {
@@ -951,8 +960,12 @@ const SmartAudiences: React.FC = () => {
                                                                                 <Box sx={{display: 'flex', justifyContent: "space-between"}}>
                                                                                     <Tooltip
                                                                                         title={
-                                                                                            <Box sx={{ backgroundColor: '#fff', margin: 0, padding: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', }}>
-                                                                                            <Typography className='table-data' component='div' sx={{ fontSize: '12px !important', }}>
+                                                                                            <Box onClick={ () => {
+                                                                                                    setSelectedRowData(row)
+                                                                                                    handleDetailsPopupOpen()
+                                                                                                }} 
+                                                                                                sx={{ backgroundColor: '#fff', margin: 0, padding: 0, display: 'flex', flexDirection: 'row', cursor: "pointer", alignItems: 'center', }}>
+                                                                                            <Typography className='table-data' component='div'style={{color: "rgba(80, 82, 178, 1)"}} sx={{ fontSize: '12px !important' }}>
                                                                                                 {row.name}
                                                                                             </Typography>
                                                                                             </Box>
@@ -976,6 +989,9 @@ const SmartAudiences: React.FC = () => {
                                                                                         placement='right'
                                                                                     >
                                                                                         <Typography className='table-data'
+                                                                                            style={{
+                                                                                                color: "rgba(80, 82, 178, 1)"
+                                                                                            }}
                                                                                             sx={{
                                                                                                 whiteSpace: 'nowrap',
                                                                                                 overflow: 'hidden',
@@ -1357,6 +1373,11 @@ const SmartAudiences: React.FC = () => {
                                     <FilterPopup open={filterPopupOpen}
                                         onClose={handleFilterPopupClose}
                                         onApply={handleApplyFilters}
+                                    />
+                                    <DetailsPopup open={detailsPopupOpen}
+                                        onClose={handleDetailsPopupClose}
+                                        id={selectedRowData?.id}
+                                        name={selectedRowData?.name}
                                     />
                                     <CalendarPopup
                                         anchorEl={calendarAnchorEl}

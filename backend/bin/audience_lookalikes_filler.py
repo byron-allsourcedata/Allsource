@@ -171,7 +171,7 @@ async def main():
 
         await asyncio.Future()
 
-    except Exception:
+    except BaseException:
         db_session.rollback()
         logging.error('Unhandled Exception:', exc_info=True)
 

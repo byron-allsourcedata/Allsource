@@ -1,5 +1,7 @@
 import csv
 import io
+import re
+from typing import List, Dict
 from utils import format_phone_number
 from persistence.leads_persistence import LeadsPersistence
 from datetime import datetime, timedelta
@@ -28,7 +30,8 @@ class LeadsService:
         return None
 
     def get_leads(self, page, per_page, from_date, to_date, regions, page_visits, average_time_sec,
-                  recurring_visits, sort_by, sort_order, search_query, from_time, to_time, behavior_type, status, timezone_offset):
+                  recurring_visits, sort_by, sort_order, search_query, from_time, to_time, behavior_type, status, timezone_offset,
+                  page_url):
         leads, count, max_page, states, leads_requests = self.leads_persistence_service.filter_leads(
             domain_id=self.domain.id,
             page=page,
@@ -46,6 +49,7 @@ class LeadsService:
             from_time=from_time,
             to_time=to_time,
             status=status,
+            page_url=page_url
         )
         state_dict = {state.state_code: state.state_name for state in states} if states else {}
         leads_list = []
@@ -148,7 +152,7 @@ class LeadsService:
 
     def download_leads(self, from_date=None, to_date=None, regions=None, page_visits=None, average_time_spent=None,
                    behavior_type=None, status=None, recurring_visits=None, sort_by=None,
-                   sort_order=None, search_query=None, from_time=None, to_time=None, leads_ids=0):
+                   sort_order=None, search_query=None, from_time=None, to_time=None, leads_ids=0, page_url=None):
         if leads_ids == 0:
             result_five_x_five_users, states, leads_requests = self.leads_persistence_service.get_full_user_leads_by_filters(domain_id=self.domain.id,
                                                                                                         from_date=from_date,
@@ -161,7 +165,8 @@ class LeadsService:
                                                                                                         sort_by=sort_by,
                                                                                                         sort_order=sort_order,
                                                                                                         search_query=search_query,
-                                                                                                        from_time=from_time, to_time=to_time
+                                                                                                        from_time=from_time, to_time=to_time,
+                                                                                                        page_url=page_url
                                                                                                         )
         else:
             result_five_x_five_users, states, leads_requests = self.leads_persistence_service.get_full_user_leads_by_ids(self.domain.id, leads_ids)
@@ -291,7 +296,7 @@ class LeadsService:
 
     def search_location(self, start_letter):
         location_data = self.leads_persistence_service.search_location(start_letter=start_letter,
-                                                                       dommain_id=self.domain.id)
+                                                                       domain_id=self.domain.id)
         results_set = set()
 
         for location in location_data:
@@ -304,3 +309,19 @@ class LeadsService:
         results = [dict(item) for item in results_set]
         limited_results = list(results)[:10]
         return limited_results
+    
+    def format_url(self, url):
+        url = re.sub(r'^https?://', '', url)
+        return re.sub(r'^www\.', '', url)
+
+    def search_page_url(self, start_letter: str) -> List[Dict[str, str]]:
+        start_letter = self.format_url(start_letter)
+        
+        page_url_data = self.leads_persistence_service.search_page_url(
+            start_letter=start_letter,
+            domain_id=self.domain.id
+        )
+        result_urls = [row[0].lower() for row in page_url_data]
+        unique_urls = list(dict.fromkeys(result_urls))
+        results_list = [{'page_url': page_url} for page_url in unique_urls]
+        return results_list

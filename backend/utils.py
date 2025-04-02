@@ -105,3 +105,12 @@ def normalize_url(url):
     path = path.rstrip('/')
     normalized_url = scheme + path
     return normalized_url
+
+def check_certain_urls(page, activate_certain_urls):
+    page_path = re.sub(r'^(https?://)?(www\.)?', '', page).strip('/')
+    urls_to_check = activate_certain_urls.split(', ')
+    for url in urls_to_check:
+        url = re.sub(r'^(https?://)?(www\.)?', '', url.strip()).strip('/')
+        if (page_path == url) or (url in page_path):
+            return True
+    return False

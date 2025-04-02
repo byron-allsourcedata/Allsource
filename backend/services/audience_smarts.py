@@ -4,11 +4,11 @@ import json
 
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
-from schemas.audience import SmartsAudienceObjectResponse, DataSourcesFormat
+from schemas.audience import SmartsAudienceObjectResponse, DataSourcesFormat, DataSourcesResponse
 from persistence.audience_smarts import AudienceSmartsPersistence
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from models.users import User
-from enums import QueueName
+from enums import AudienceSmartDataSource, QueueName
 from uuid import UUID
 
 logger = logging.getLogger(__name__)
@@ -164,6 +164,25 @@ class AudienceSmartsService:
     def calculate_smart_audience(self, raw_data_sources: dict) -> int:
         transformed_data_source = self.transform_datasource(raw_data_sources)
         return self.audience_smarts_persistence.calculate_smart_audience(transformed_data_source)
+    
+    def get_datasources_by_aud_smart_id(self, id: UUID) -> DataSourcesResponse:
+        data_sources = self.audience_smarts_persistence.get_datasources_by_aud_smart_id(id)
+        includes = []
+        excludes = []
+
+        for data_source in data_sources:
+            source_data = {
+                "name": data_source.lookalike_name or data_source.source_name,
+                "source_type": data_source.source_type,
+                "size": data_source.lookalike_size if data_source.lookalike_name else data_source.matched_records
+            }
+
+            if data_source.data_type == AudienceSmartDataSource.INCLUDE.value:
+                includes.append(source_data)
+            elif data_source.data_type == AudienceSmartDataSource.EXCLUDE.value:
+                excludes.append(source_data)
+
+        return {"includes": includes, "excludes": excludes}
 
 
     def get_datasource(self, user: dict):

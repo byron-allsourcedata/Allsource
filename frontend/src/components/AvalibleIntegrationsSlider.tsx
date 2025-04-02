@@ -510,7 +510,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                         }}>
                                             <ListItemButton onClick={() => setOpenSlackConnect(true)} sx={{ p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center' }}>
                                                 <ListItemIcon sx={{ minWidth: 'auto' }}>
-                                                    <Image src="/slack-icon.svg" alt="slack" height={24} width={24} />
+                                                    <Image src="/slack-icon.svg" alt="Slack" height={24} width={24} />
                                                 </ListItemIcon>
                                                 <ListItemText primary="Slack" primaryTypographyProps={{
                                                     sx: {
@@ -530,7 +530,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                         }}>
                                             <ListItemButton onClick={() => setOpenHubspotConnect(true)} sx={{ p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center' }}>
                                                 <ListItemIcon sx={{ minWidth: 'auto' }}>
-                                                    <Image src="/hubspot.svg" alt="slack" height={24} width={24} />
+                                                    <Image src="/hubspot.svg" alt="Slack" height={24} width={24} />
                                                 </ListItemIcon>
                                                 <ListItemText primary="Hubspot" primaryTypographyProps={{
                                                     sx: {

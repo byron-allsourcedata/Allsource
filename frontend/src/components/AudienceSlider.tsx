@@ -751,7 +751,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                             backgroundColor: selectedIntegration === 'omnisend' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
                                         }}>
                                             <ListItemIcon sx={{ minWidth: 'auto' }}>
-                                                <Image src="/slack-icon.svg" alt="slack" height={26} width={32} />
+                                                <Image src="/slack-icon.svg" alt="Slack" height={26} width={32} />
                                             </ListItemIcon>
                                             <ListItemText primary="Slack" primaryTypographyProps={{
                                                 sx: {
@@ -790,7 +790,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                             backgroundColor: selectedIntegration === 'google_ads' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
                                         }}>
                                             <ListItemIcon sx={{ minWidth: 'auto' }}>
-                                                <Image src="/google-ads.svg" alt="slack" height={26} width={32} />
+                                                <Image src="/google-ads.svg" alt="Slack" height={26} width={32} />
                                             </ListItemIcon>
                                             <ListItemText primary="GoogleAds" primaryTypographyProps={{
                                                 sx: {
