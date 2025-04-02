@@ -329,8 +329,8 @@ async def normalize_persons_customer_conversion(
 
     min_orders_amount = float(data_for_normalize.min_orders_amount) if data_for_normalize.min_orders_amount is not None else 0.0
     max_orders_amount = float(data_for_normalize.max_orders_amount) if data_for_normalize.max_orders_amount is not None else 1.0
-    min_orders_count = float(data_for_normalize.min_orders_count)
-    max_orders_count = float(data_for_normalize.max_orders_count)
+    min_orders_count = float(data_for_normalize.min_orders_count) if data_for_normalize.min_orders_count is not None else 0.0
+    max_orders_count = float(data_for_normalize.max_orders_count) if data_for_normalize.max_orders_count is not None else 1.0
     min_recency = float(data_for_normalize.min_recency) if data_for_normalize.min_recency is not None else 0.0
     max_recency = float(data_for_normalize.max_recency) if data_for_normalize.max_recency is not None else 1.0
 
