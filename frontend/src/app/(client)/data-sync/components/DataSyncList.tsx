@@ -154,9 +154,12 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
           service_name: service_name,
         };
       }
-      const response = await axiosInstance.get("/data-sync/sync", {
-        params: params,
-      });
+      const response = await axiosInstance.get(
+        "/data-sync/get-smart-audience-sync",
+        {
+          params: params,
+        }
+      );
       const { length: count } = response.data;
       setAllData(response.data);
       setTotalRows(count);
@@ -584,7 +587,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
     try {
       setIsLoading(true);
       const response = await axiosInterceptorInstance.delete(
-        `/data-sync/sync`,
+        `/data-sync/delete-smart-audience-sync`,
         {
           params: {
             list_id: selectedId,
@@ -818,7 +821,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
               border: "1px solid rgba(235, 235, 235, 1)",
               overflowY: "auto",
               maxHeight: "73vh",
-              height: '73vh'
             }}
           >
             <Table stickyHeader aria-label="datasync table">
@@ -834,24 +836,26 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                       label: "Created",
                       sortable: true,
                     },
-                    { key: "platform", label: "Platform" },
-                    { key: "data_sync", label: "Data Sync" },
                     { key: "last_sync", label: "Last Sync" },
-                    { key: "sync_status", label: "Sync Status" },
-                    { key: "action", label: "Action" },
+                    { key: "platform", label: "Sync" },
+                    { key: "data_sync", label: "Active segments" },
+                    { key: "record_synced", label: "Records Synced" },
+                    { key: "sync_status", label: "Status" },
+                    { key: "action", label: "Actions" },
                   ].map(({ key, label, sortable = false }) => (
                     <TableCell
                       key={key}
                       sx={{
                         ...datasyncStyle.table_column,
                         backgroundColor: "#fff",
-                        ...(key === "list_name" && {
+                        ...(key === "smart_audience_name" && {
                           position: "sticky",
                           left: 0,
                           zIndex: 99,
                         }),
                         ...(key === "action" && {
                           maxWidth: "50px",
+                          position: "relative",
                           "::after": {
                             content: "none",
                           },
@@ -899,139 +903,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  data
-                    .slice(page * rowsPerPage, (page + 1) * rowsPerPage)
-                    .map((row, index) => (
-                      <TableRow
-                        key={row.id}
-                        sx={{
-                          "&:hover": {
-                            backgroundColor: "rgba(247, 247, 247, 1)",
-                            "& .sticky-cell": {
-                              backgroundColor: "rgba(247, 247, 247, 1)",
-                            },
-                          },
-                        }}
-                      >
-                        <TableCell
-                          className="sticky-cell"
-                          sx={{
-                            ...datasyncStyle.table_array,
-                            position: "sticky",
-                            left: "0",
-                            zIndex: 9,
-                            backgroundColor: "#fff",
-                          }}
-                        >
-                          {row.name || "--"}
-                        </TableCell>
-                        <TableCell sx={datasyncStyle.table_array}>
-                          {listType(row.type) || "--"}
-                        </TableCell>
-                        <TableCell sx={datasyncStyle.table_array}>
-                          {row.contacts || "--"}
-                        </TableCell>
-                        <TableCell sx={datasyncStyle.table_array}>
-                          {row.createdBy || "--"}
-                        </TableCell>
-                        <TableCell sx={datasyncStyle.table_array}>
-                          {row.createdDate || "--"}
-                        </TableCell>
-                        <TableCell>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              padding: "2px 8px",
-                              borderRadius: "2px",
-                              justifyContent: "center",
-                              textTransform: "capitalize",
-                            }}
-                          >
-                            {platformIcon(row.platform) || "--"}
-                          </Box>
-                        </TableCell>
-                        <TableCell sx={datasyncStyle.table_array}>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              borderRadius: "2px",
-                              justifyContent: "start",
-                              textTransform: "capitalize",
-                            }}
-                          >
-                            <Typography
-                              className="paragraph"
-                              sx={{
-                                fontFamily: "Roboto",
-                                fontSize: "12px",
-                                color: row.dataSync
-                                  ? "rgba(43, 91, 0, 1) !important"
-                                  : "rgba(74, 74, 74, 1)!important",
-                                backgroundColor: row.dataSync
-                                  ? "rgba(234, 248, 221, 1) !important"
-                                  : "rgba(219, 219, 219, 1) !important",
-                                padding: "3px 14.5px",
-                                maxHeight: "1.25rem",
-                              }}
-                            >
-                              {formatFunnelText(row.dataSync) || "--"}
-                            </Typography>
-                          </Box>
-                        </TableCell>
-                        <TableCell sx={datasyncStyle.table_array}>
-                          {row.lastSync || "--"}
-                        </TableCell>
-                        <TableCell
-                          sx={{
-                            ...datasyncStyle.table_column,
-                            position: "relative",
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              display: "flex",
-                              padding: "2px 8px",
-                              borderRadius: "2px",
-                              justifyContent: "center",
-                            }}
-                          >
-                            {statusIcon(row.integration_is_failed ? false : row.syncStatus) || "--"}
-
-                          </Box>
-                        </TableCell>
-                        <TableCell sx={datasyncStyle.table_array}>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              padding: "2px 8px",
-                              borderRadius: "2px",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              textTransform: "capitalize",
-                              paddingLeft: 0,
-                            }}
-                          >
-                            {row.suppression}
-                            <IconButton
-                              sx={{
-                                padding: 0,
-                                margin: 0,
-                                borderRadius: 4,
-                                justifyContent: "start",
-                              }}
-                              onClick={(e) => handleClick(e, row.id)}
-                            >
-                              <Image
-                                src={"more.svg"}
-                                alt="more"
-                                width={20}
-                                height={20}
-                              />
-                            </IconButton>
-                          </Box>
-                        </TableCell>
-                      </TableRow>
-                    ))
                   data.map((row) => (
                     <TableRow
                       key={row.id}
@@ -1080,10 +951,14 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                         </Box>
                       </TableCell>
                       <TableCell sx={datasyncStyle.table_array}>
-                        {row.active_segments || "--"}
+                        {new Intl.NumberFormat("en-US").format(
+                          row.active_segments
+                        ) || "--"}
                       </TableCell>
                       <TableCell sx={datasyncStyle.table_array}>
-                        {row.record_synced}
+                        {new Intl.NumberFormat("en-US").format(
+                          row.records_synced
+                        )}
                       </TableCell>
                       <TableCell sx={datasyncStyle.table_array}>
                         <Box
@@ -1116,6 +991,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                           maxWidth: "40px",
                           padding: "8px",
                           textAlign: "center",
+                          position: "relative",
                         }}
                       >
                         <IconButton

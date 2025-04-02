@@ -13,6 +13,27 @@ async def get_sync(service_name: str | None = Query(None), integrations_users_sy
     return integration_service.get_sync_domain(domain.id, service_name, integrations_users_sync_id)
 
 
+@router.get('/get-smart-audience-sync')
+async def get_smart_sync(service_name: str | None = Query(None), integrations_users_sync_id: int | None = Query(None),
+                   integration_service: IntegrationService = Depends(get_integration_service),
+                   user=Depends(check_user_authorization)):
+    return integration_service.get_all_audience_sync(user, service_name, integrations_users_sync_id)
+
+
+@router.delete('/delete-smart-audience-sync')
+async def delete_smart_sync(list_id: str = Query(...),
+                            integration_service: IntegrationService = Depends(get_integration_service),
+                            user=Depends(check_user_authorization)):
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value, TeamAccessLevel.STANDARD.value}:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins and standard only."
+            )
+    return integration_service.delete_smart_sync(user, list_id)
+
+
 @router.post('/sync')
 async def create_sync(data: SyncCreate, service_name: str = Query(...),
                       integration_service: IntegrationService = Depends(get_integration_service),
@@ -39,7 +60,8 @@ def create_smart_audience_sync(
     data: SmartAudienceSyncCreate, 
     service_name: str = Query(...),
     integration_service: IntegrationService = Depends(get_integration_service),
-    user = Depends(check_user_authorization), domain = Depends(check_domain)):
+    user=Depends(check_user_authorization)
+):
     if user.get('team_member'):
         team_member = user.get('team_member')
         if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value, TeamAccessLevel.STANDARD.value}:
@@ -52,7 +74,6 @@ def create_smart_audience_sync(
         service = getattr(service, service_name.lower())
         service.create_smart_audience_sync(
             **data,
-            domain_id=domain.id,
             created_by=user.get('full_name'),
             user=user
         )

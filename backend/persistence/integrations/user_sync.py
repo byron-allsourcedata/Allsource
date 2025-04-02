@@ -1,3 +1,4 @@
+from models.audience_smarts import AudienceSmart
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from sqlalchemy.orm import Session
 from models.users import Users
@@ -29,6 +30,19 @@ class IntegrationsUserSyncPersistence:
     
     def delete_sync(self, domain_id, list_id):
         sync = self.db.query(IntegrationUserSync).filter(IntegrationUserSync.id == list_id, IntegrationUserSync.domain_id == domain_id).first()
+        if sync:
+            self.db.delete(sync)
+            self.db.commit()
+            return True
+        return False
+
+    def delete_smart_audience_sync(self, user_id, list_id):
+        sync = (
+            self.db.query(IntegrationUserSync)
+                .join(UserIntegration, IntegrationUserSync.integration_id == UserIntegration.id)
+                .filter(IntegrationUserSync.id == list_id, UserIntegration.user_id == user_id)
+                .first()
+        )
         if sync:
             self.db.delete(sync)
             self.db.commit()
@@ -149,6 +163,97 @@ class IntegrationsUserSyncPersistence:
             'hook_url': sync.hook_url,
             'method': sync.method
         } for sync in syncs]
+
+    def get_all_audience_sync(self, user_id: int, service_name: str = None, integrations_users_sync_id: str = None ):
+        query = self.db.query(
+            IntegrationUserSync.id,
+            IntegrationUserSync.created_at,
+            IntegrationUserSync.is_active,
+            IntegrationUserSync.last_sync_date,
+            IntegrationUserSync.leads_type,
+            IntegrationUserSync.integration_id,
+            IntegrationUserSync.sync_status,
+            IntegrationUserSync.no_of_contacts,
+            IntegrationUserSync.created_by,
+            IntegrationUserSync.data_map,
+            IntegrationUserSync.customer_id,
+            IntegrationUserSync.list_name,
+            IntegrationUserSync.list_id,
+            IntegrationUserSync.campaign_id,
+            IntegrationUserSync.campaign_name,
+            IntegrationUserSync.hook_url,
+            IntegrationUserSync.method,
+            UserIntegration.service_name,
+            UserIntegration.is_with_suppression,
+            UserIntegration.platform_user_id,
+            UserIntegration.error_message,
+            UserIntegration.is_failed,
+            AudienceSmart.name,
+            AudienceSmart.active_segment_records,
+            AudienceSmart.total_records
+        ).join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id) \
+        .join(AudienceSmart, IntegrationUserSync.smart_audience_id == AudienceSmart.id) \
+        .filter(UserIntegration.user_id == user_id)
+
+        if service_name:
+            query = query.filter(UserIntegration.service_name == service_name)
+        if integrations_users_sync_id:
+            sync = query.filter(IntegrationUserSync.id == integrations_users_sync_id).first()
+            if sync:
+                return {
+                    'id': sync.id,
+                    'createdDate': sync.created_at.strftime('%b %d, %Y') if sync.created_at else None,
+                    'name': sync.name,
+                    'lastSync': sync.last_sync_date.strftime('%b %d, %Y') if sync.last_sync_date else None,
+                    'type': sync.leads_type,
+                    'platform': sync.service_name.lower(),
+                    'integration_id': sync.integration_id,
+                    'dataSync': sync.is_active,
+                    'suppression': sync.is_with_suppression,
+                    'contacts': sync.no_of_contacts,
+                    'createdBy': sync.created_by,
+                    'accountId': sync.platform_user_id,
+                    'data_map': sync.data_map,
+                    'syncStatus': False if sync.is_failed == True else sync.sync_status,
+                    'integration_is_failed': sync.is_failed,
+                    'type_error': sync.error_message,
+                    'list_id': sync.list_id,
+                    'campaign_id': sync.campaign_id,
+                    'campaign_name': sync.campaign_name,
+                    'customer_id': sync.customer_id,
+                    'hook_url': sync.hook_url,
+                    'method': sync.method,
+                    'active_segment': sync.active_segment_records,
+                    'records_synced': sync.total_records
+                }
+        syncs = query.order_by(desc(IntegrationUserSync.created_at)).all()
+        return [{
+            'id': sync.id,
+            'createdDate': sync.created_at.strftime('%b %d, %Y') if sync.created_at else None,
+            'name': sync.name,
+            'lastSync': sync.last_sync_date.strftime('%b %d, %Y') if sync.last_sync_date else None,
+            'type': sync.leads_type,
+            'platform': sync.service_name.lower(),
+            'integration_id': sync.integration_id,
+            'dataSync': sync.is_active,
+            'suppression': sync.is_with_suppression,
+            'contacts': sync.no_of_contacts,
+            'createdBy': sync.created_by,
+            'accountId': sync.platform_user_id,
+            'campaign_id': sync.campaign_id,
+            'campaign_name': sync.campaign_name,
+            'data_map': sync.data_map,
+            'syncStatus': False if sync.is_failed == True else sync.sync_status,
+            'integration_is_failed': sync.is_failed,
+            'type_error': sync.error_message,
+            'customer_id': sync.customer_id,
+            'list_id': sync.list_id,
+            'hook_url': sync.hook_url,
+            'method': sync.method,
+            'active_segments': sync.active_segment_records,
+            'records_synced': sync.total_records
+        } for sync in syncs]
+
 
     def get_data_sync_filter_by(self, **filter_by):
         return self.db.query(IntegrationUserSync).filter_by(**filter_by).all()

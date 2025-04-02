@@ -55,6 +55,10 @@ class HubspotIntegrationsService:
         credential = self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.HUBSPOT.value)
         return credential
 
+    def get_smart_credentials(self, user_id: int):
+        credential = self.integrations_persisntece.get_smart_credentials_for_service(user_id=user_id, service_name=SourcePlatformEnum.HUBSPOT.value)
+        return credential
+
     def __save_integrations(self, api_key: str, domain_id: int, user: dict):
         credential = self.get_credentials(domain_id, user.get('id'))
         if credential:
@@ -76,13 +80,13 @@ class HubspotIntegrationsService:
         else:
             integration_data['domain_id'] = domain_id
             
-        integartion = self.integrations_persisntece.create_integration(integration_data)
+        integration = self.integrations_persisntece.create_integration(integration_data)
         
         
-        if not integartion:
+        if not integration:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
         
-        return integartion
+        return integration
 
     def test_API_key(self, access_token: str):
         json_data = {
@@ -128,12 +132,10 @@ class HubspotIntegrationsService:
         })
         return sync
 
-    def create_smart_audience_sync(self, smart_audience_id: UUID, sent_contacts: int, data_map: List[DataMap], domain_id: int, created_by: str,  user: dict):
-        credentials = self.get_credentials(domain_id, user_id=user.get('id'))
-
+    def create_smart_audience_sync(self, smart_audience_id: UUID, sent_contacts: int, data_map: List[DataMap], created_by: str,  user: dict):
+        credentials = self.get_smart_credentials(user_id=user.get('id'))
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
-            'domain_id': domain_id,
             'sent_contacts': sent_contacts,
             'sync_type': DataSyncType.AUDIENCE.value,
             'smart_audience_id': smart_audience_id,
