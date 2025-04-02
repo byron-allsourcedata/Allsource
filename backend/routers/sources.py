@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, Query
 from dependencies import get_audience_sources_service, get_domain_service, check_user_authorization_without_pixel
 from services.audience_sources import AudienceSourceService
 from services.domains import UserDomainsService
+from starlette.responses import StreamingResponse
+from enums import BaseEnum
 from schemas.audience import HeadingSubstitutionRequest, NewSource, SourcesObjectResponse, SourceResponse, \
     DomainsLeads, DomainsSourceResponse
 from uuid import UUID
@@ -44,6 +46,16 @@ def get_sources(
         "source_list": source_list,
         "count": count
     }
+
+@router.get("/download/{source_id}")
+async def download_value_calculation(source_id: UUID,
+                         user=Depends(check_user_authorization_without_pixel),
+                         sources_service: AudienceSourceService = Depends(get_audience_sources_service)):
+    result = sources_service.download_value_calculation(source_id)
+    if result:
+        return StreamingResponse(result, media_type="text/csv",
+                                 headers={"Content-Disposition": "attachment; filename=data.csv"})
+    return BaseEnum.FAILURE
 
 @router.get("/domains-with-leads", response_model=List[DomainsLeads])
 def get_domains_with_leads(

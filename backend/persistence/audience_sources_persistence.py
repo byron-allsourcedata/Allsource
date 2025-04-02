@@ -87,6 +87,9 @@ class AudienceSourcesPersistence:
         count = query.count()
         
         return sources, count
+    
+    def get_source_by_id(self, source_id) -> Optional[AudienceSource]:
+        return self.db.query(AudienceSource).filter(AudienceSource.id == source_id).first()
 
     def create_source(self, **creating_data) -> Optional[AudienceSource]:
         source_type = creating_data.get("source_type")

@@ -43,6 +43,7 @@ from persistence.plans_persistence import PlansPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.settings_persistence import SettingsPersistence
 from persistence.suppression_persistence import SuppressionPersistence
+from persistence.audience_sources_matched_persons import AudienceSourcesMatchedPersonsPersistence
 from persistence.partners_asset_persistence import PartnersAssetPersistence
 from persistence.partners_persistence import PartnersPersistence
 from persistence.user_persistence import UserPersistence
@@ -98,6 +99,9 @@ async def verify_signature(request: Request):
 
 def get_audience_sources_persistence(db: Session = Depends(get_db)):
     return AudienceSourcesPersistence(db)
+
+def get_audience_sources_matched_persons_persistence(db: Session = Depends(get_db)):
+    return AudienceSourcesMatchedPersonsPersistence(db)
 
 def get_audience_smarts_persistence(db: Session = Depends(get_db)):
     return AudienceSmartsPersistence(db)
@@ -200,8 +204,9 @@ def get_aws_service(s3_client=Depends(get_s3_client)) -> AWSService:
 
 def get_audience_sources_service(
         audience_sources_persistence: AudienceSourcesPersistence = Depends(get_audience_sources_persistence),
+        audience_sources_matched_persons_persistence: AudienceSourcesMatchedPersonsPersistence = Depends(get_audience_sources_matched_persons_persistence),
         domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)):
-    return AudienceSourceService(audience_sources_persistence=audience_sources_persistence, domain_persistence=domain_persistence)
+    return AudienceSourceService(audience_sources_persistence=audience_sources_persistence, domain_persistence=domain_persistence, audience_sources_matched_persons_persistence=audience_sources_matched_persons_persistence)
 
 def get_audience_smarts_service(
         audience_smarts_persistence: AudienceSmartsPersistence = Depends(get_audience_smarts_persistence),
