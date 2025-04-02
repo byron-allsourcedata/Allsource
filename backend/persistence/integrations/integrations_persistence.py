@@ -5,18 +5,18 @@ from sqlalchemy.orm import Session
 from typing import Optional
 from sqlalchemy import and_, or_
 
+
 class IntegrationsPresistence:
 
     def __init__(self, db: Session) -> None:
         self.db = db
-
 
     def create_integration(self, data: dict) -> UserIntegration:
         integration = UserIntegration(**data)
         self.db.add(integration)
         self.db.commit()
         return integration
-    
+
     def create_kajabi(self, text):
         kajabi_model = Kajabi(
             text=text
@@ -24,35 +24,36 @@ class IntegrationsPresistence:
         self.db.add(kajabi_model)
         self.db.commit()
         return kajabi_model
-        
+
     def get_integration_by_shop_id(self, shop_id: str) -> UserIntegration:
         user_integration = (
             self.db.query(UserIntegration)
-            .filter(
+                .filter(
                 UserIntegration.shop_id == str(shop_id)
             )
-            .first()
+                .first()
         )
         return user_integration
-    
+
     def get_integration_by_shop_url(self, shop_url):
         user_integration = (
             self.db.query(UserIntegration)
-            .filter(
+                .filter(
                 UserIntegration.shop_domain.like(f"%{shop_url}")
             )
-            .first()
+                .first()
         )
         return user_integration
-    
+
     def get_external_apps_installations_by_shop_hash(self, shop_hash):
-        external_apps_install = self.db.query(ExternalAppsInstall).filter(ExternalAppsInstall.store_hash==shop_hash).first()
+        external_apps_install = self.db.query(ExternalAppsInstall).filter(
+            ExternalAppsInstall.store_hash == shop_hash).first()
         return external_apps_install
-    
+
     def delete_external_apps_installations(self, shop_hash):
         self.db.query(ExternalAppsInstall).filter(ExternalAppsInstall.store_hash == shop_hash).delete()
         self.db.commit()
-        
+
     def get_integration_by_user(self, domain_id: Optional[int], filters: list, user_id: Optional[int]):
         query = self.db.query(UserIntegration)
 
@@ -69,18 +70,18 @@ class IntegrationsPresistence:
             query = query.filter(UserIntegration.service_name.notin_(filters))
 
         return query.all()
-    
+
     def update_credential_for_service(self, domain_id: int, service_name: str, access_token):
-        user_integration = self.db.query(UserIntegration)\
+        user_integration = self.db.query(UserIntegration) \
             .filter(UserIntegration.domain_id == domain_id, UserIntegration.service_name == service_name).first()
         user_integration.access_token = access_token
         self.db.commit()
-        
+
         return user_integration
-    
+
     def get_credential(self, **filter_by):
         return self.db.query(UserIntegration).filter_by(**filter_by).first()
-    
+
     def update_app_home_opened(self, slack_team_id):
         self.db.query(UserIntegration) \
             .filter(UserIntegration.slack_team_id == slack_team_id) \
@@ -96,8 +97,10 @@ class IntegrationsPresistence:
 
         return query.filter_by(**filter_by).first()
 
+    def get_smart_credentials_for_service(self, user_id, service_name: str):
+        return self.db.query(UserIntegration) \
+            .filter(UserIntegration.service_name == service_name, UserIntegration.user_id == user_id).first()
 
-        
     def delete_integration_by_slack_team_id(self, team_id: str):
         self.db.query(UserIntegration) \
             .filter(UserIntegration.slack_team_id == team_id).delete()
@@ -118,7 +121,6 @@ class IntegrationsPresistence:
         query.delete()
         self.db.commit()
 
-
     def edit_integrations(self, id: int, data: dict) -> UserIntegration:
         result = self.db.query(UserIntegration) \
             .filter(UserIntegration.id == id).update(data, synchronize_session='fetch')
@@ -132,7 +134,7 @@ class IntegrationsPresistence:
             else:
                 query = query.filter_by(**{key: value})
         return query.order_by(Integration.service_name.asc()).filter(Integration.data_sync == True).all()
-    
+
     def get_all_integrations_filter_by(self, **filter_by):
         return self.db.query(UserIntegration).filter_by(**filter_by).all()
 
