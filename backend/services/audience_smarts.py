@@ -9,6 +9,7 @@ from persistence.audience_smarts import AudienceSmartsPersistence
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from models.users import User
 from enums import QueueName
+from uuid import UUID
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +67,7 @@ class AudienceSmartsService:
         return audience_smarts_list, count
     
 
-    def search_audience_smart(self, start_letter, user):
+    def search_audience_smart(self, start_letter: str, user: User):
         smarts = self.audience_smarts_persistence.search_audience_smart(
             user_id=user.get('id'),
             start_letter=start_letter
@@ -82,15 +83,17 @@ class AudienceSmartsService:
         return limited_results
 
 
-    def delete_audience_smart(self, id) -> bool:
+    def delete_audience_smart(self, id: UUID) -> bool:
         count_deleted = self.audience_smarts_persistence.delete_audience_smart(id)
         return count_deleted > 0
 
-    def update_audience_smart(self, id, new_name) -> bool:
+
+    def update_audience_smart(self, id: UUID, new_name: str) -> bool:
         count_updated = self.audience_smarts_persistence.update_audience_smart(id, new_name)
         return count_updated > 0
     
-    def transform_datasource(self, raw_data) -> DataSourcesFormat:
+
+    def transform_datasource(self, raw_data: dict) -> DataSourcesFormat:
         data_sources = {
             "lookalike_ids": {"include": [], "exclude": []},
             "source_ids": {"include": [], "exclude": []}
@@ -105,7 +108,13 @@ class AudienceSmartsService:
         return data_sources
 
     
-    async def start_scripts_for_matching(self, aud_smart_id, user_id, data_sources, contacts_to_validate):
+    async def start_scripts_for_matching(self, 
+            aud_smart_id: UUID, 
+            user_id: int, 
+            data_sources: dict, 
+            contacts_to_validate: int
+        ):
+
         queue_name = QueueName.AUDIENCE_SMARTS_FILLER.value
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
@@ -124,7 +133,7 @@ class AudienceSmartsService:
                 message_body=message_body
             )
         except Exception as e:
-            logger.error(e)
+            logger.error(f"Failed to publish message to {queue_name}. Error: {e}")
         finally:
             await rabbitmq_connection.close()
 
@@ -151,9 +160,11 @@ class AudienceSmartsService:
         await self.start_scripts_for_matching(created_data.id, user.get("id"), data_sources, contacts_to_validate)
         return created_data
 
-    def calculate_smart_audience(self, request):
-        transformed_data_source = self.transform_datasource(request)
+
+    def calculate_smart_audience(self, raw_data_sources: dict) -> int:
+        transformed_data_source = self.transform_datasource(raw_data_sources)
         return self.audience_smarts_persistence.calculate_smart_audience(transformed_data_source)
+
 
     def get_datasource(self, user: dict):
         lookalikes, count, max_page = self.lookalikes_persistence_service.get_lookalikes(

@@ -39,13 +39,13 @@ def get_audience_smarts(
         "count": count
     }
 
-@router.post("/calculate")
+@router.post("/calculate", response_model=int)
 def calculate_smart_audience(
-    request = Body(...),
-    audience_smarts_service: AudienceSmartsService = Depends(get_audience_smarts_service)
+        request = Body(...),
+        audience_smarts_service: AudienceSmartsService = Depends(get_audience_smarts_service)
 ):
     return audience_smarts_service.calculate_smart_audience(
-        request=request
+        raw_data_sources=request
     )
 
 

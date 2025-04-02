@@ -12,6 +12,7 @@ from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from models.audience_smarts_use_cases import AudienceSmartsUseCase
 from models.audience_smarts_data_sources import AudienceSmartsDataSources
 from models.users import Users
+from schemas.audience import DataSourcesFormat
 from typing import Optional, Tuple, List
 from sqlalchemy.engine.row import Row
 
@@ -29,7 +30,7 @@ class AudienceSmartsPersistence:
         )
         return use_case[0] if use_case else None
     
-    def calculate_smart_audience(self, data):   
+    def calculate_smart_audience(self, data: DataSourcesFormat) -> int:   
         AudienceLALP = aliased(AudienceLookALikePerson)
         AudienceSMP = aliased(AudienceSourcesMatchedPerson)
 
