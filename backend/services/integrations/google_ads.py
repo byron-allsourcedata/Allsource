@@ -56,6 +56,10 @@ class GoogleAdsIntegrationsService:
     def get_credentials(self, domain_id: int, user_id: int):
         credential = self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.GOOGLE_ADS.value)
         return credential
+
+    def get_smart_credentials(self, user_id: int):
+        credential = self.integrations_persisntece.get_smart_credentials_for_service(user_id=user_id, service_name=SourcePlatformEnum.SALES_FORCE.value)
+        return credential
         
 
     def __save_integrations(self, access_token: str, domain_id: int, user: dict):
@@ -116,8 +120,7 @@ class GoogleAdsIntegrationsService:
             'integrations': integrations,
             'status': IntegrationsStatus.SUCCESS.value
         }
-    
-    
+
     async def create_sync(self, customer_id: str, leads_type: str, list_id: str, list_name: str, domain_id: int, created_by: str, user: dict, data_map: List[DataMap] = []):
         credentials = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
         sync = self.sync_persistence.create_sync({
@@ -132,14 +135,13 @@ class GoogleAdsIntegrationsService:
         })
         return sync 
 
-    def create_smart_audience_sync(self, customer_id: str, smart_audience_id: UUID, sent_contacts: int, list_id: str, list_name: str, domain_id: int, created_by: str, user: dict, data_map: List[DataMap] = []):
-        credentials = self.get_credentials(domain_id, user_id=user.get('id'))
+    def create_smart_audience_sync(self, customer_id: str, smart_audience_id: UUID, sent_contacts: int, list_id: str, list_name: str, created_by: str, user: dict, data_map: List[DataMap] = []):
+        credentials = self.get_smart_credentials(user_id=user.get('id'))
 
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'list_id': list_id,
             'list_name': list_name,
-            'domain_id': domain_id,
             'data_map': data_map,
             'sent_contacts': sent_contacts,
             'sync_type': DataSyncType.AUDIENCE.value,

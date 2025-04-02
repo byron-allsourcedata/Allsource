@@ -56,6 +56,10 @@ class MetaIntegrationsService:
     def get_credentials(self, domain_id: int, user_id: int):
         return self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.META.value)
 
+    def get_smart_credentials(self, user_id: int):
+        credential = self.integrations_persisntece.get_smart_credentials_for_service(user_id=user_id, service_name=SourcePlatformEnum.HUBSPOT.value)
+        return credential
+
     def get_info_by_access_token(self, access_token: str):
         url = 'https://graph.facebook.com/v20.0/me'
         params = {
@@ -300,8 +304,8 @@ class MetaIntegrationsService:
         })
         return sync
     
-    def create_smart_audience_sync(self, customer_id: int, domain_id: int, created_by: str, user: dict, smart_audience_id: UUID, sent_contacts: int, campaign = {}, data_map: List[DataMap] = None, list_id: str = None, list_name: str = None,):
-        credentials = self.get_credentials(domain_id, user_id=user.get('id'))
+    def create_smart_audience_sync(self, customer_id: int, created_by: str, user: dict, smart_audience_id: UUID, sent_contacts: int, campaign = {}, data_map: List[DataMap] = None, list_id: str = None, list_name: str = None,):
+        credentials = self.get_smart_credentials(user_id=user.get('id'))
         campaign_id = campaign.get('campaign_id')
         if campaign_id == -1 and campaign.get('campaign_name'):
             campaign_id = self.create_campaign(campaign['campaign_name'], campaign['daily_budget'], credentials.access_token, customer_id)
@@ -311,7 +315,6 @@ class MetaIntegrationsService:
             'integration_id': credentials.id,
             'list_id': list_id,
             'list_name': list_name,
-            'domain_id': domain_id,
             'customer_id': customer_id,
             'sent_contacts': sent_contacts,
             'sync_type': DataSyncType.AUDIENCE.value,
