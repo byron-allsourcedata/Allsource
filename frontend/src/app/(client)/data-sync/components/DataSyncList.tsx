@@ -71,12 +71,65 @@ interface IntegrationsCredentials {
   is_failed?: boolean;
 }
 
+const AnimatedDots = () => {
+  return (
+    <div className="dots-loader">
+      <span className="dot"></span>
+      <span className="dot"></span>
+      <span className="dot"></span>
+      <style jsx>{`
+        .dots-loader {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+        }
+
+        @media {
+          max-width: 600px;
+        }
+        : {
+          .dots-loader {
+            justify-content: flex-start;
+          }
+        }
+
+        .dot {
+          width: 4px;
+          height: 4px;
+          background-color: rgba(217, 217, 217, 1);
+          border-radius: 5px;
+          animation: dot-blink 1.2s infinite ease-out;
+        }
+
+        .dot:nth-child(2) {
+          animation-delay: 0.2s;
+        }
+
+        .dot:nth-child(3) {
+          animation-delay: 0.4s;
+        }
+
+        @keyframes dot-blink {
+          0%,
+          100% {
+            background-color: rgba(217, 217, 217, 1);
+          }
+          50% {
+            background-color: rgba(45, 45, 45, 1);
+          }
+        }
+      `}</style>
+    </div>
+  );
+};
+
 const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   const { needsSync, setNeedsSync } = useIntegrationContext();
   const [order, setOrder] = useState<"asc" | "desc" | undefined>(undefined);
   const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
-  const [Loading, setLoading] = useState(true);
+  const [Loading, setLoading] = useState(false);
   const [data, setData] = useState<any[]>([]);
   const [allData, setAllData] = useState<any[]>([]);
   const [klaviyoIconPopupOpen, setKlaviyoIconPopupOpen] = useState(false);
@@ -135,7 +188,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 
   useEffect(() => {
     handleIntegrationsSync();
-    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -143,7 +195,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
       handleIntegrationsSync();
       setNeedsSync(false);
     }
-  }, [needsSync, setNeedsSync]);
+  }, [needsSync]);
 
   const handleIntegrationsSync = async () => {
     try {
@@ -242,41 +294,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
       }
     }
   }, [filters, allData]);
-
-  const statusIcon = (status: boolean) => {
-    if (status)
-      return <CheckCircleIcon sx={{ color: "green", fontSize: "16px" }} />;
-    else
-      return (
-        <Tooltip
-          title={"Please choose repair sync in action section."}
-          placement="bottom-end"
-          componentsProps={{
-            tooltip: {
-              sx: {
-                backgroundColor: "rgba(217, 217, 217, 1)",
-                color: "rgba(128, 128, 128, 1)",
-                fontFamily: "Roboto",
-                fontWeight: "400",
-                fontSize: "10px",
-                boxShadow: "0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
-                border: "0.2px solid rgba(240, 240, 240, 1)",
-                borderRadius: "4px",
-                maxWidth: "100%",
-                padding: "8px 10px",
-              },
-            },
-          }}
-        >
-          <Image
-            src={"/danger-icon.svg"}
-            alt="klaviyo"
-            width={16}
-            height={16}
-          />
-        </Tooltip>
-      );
-  };
 
   const platformIcon = (platform: string) => {
     switch (platform) {
@@ -394,7 +411,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
     try {
       setIsLoading(true);
       const response = await axiosInterceptorInstance.post(
-        `/data-sync/sync/switch-toggle`,
+        `/data-sync/sync/switch-toggle-smart-audience-sync`,
         {
           list_id: String(selectedId),
         }
@@ -698,45 +715,47 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
     return <CustomizedProgressBar />;
   }
 
-  const formatFunnelText = (text: boolean) => {
-    if (text === true) {
-      return "Enable";
+  const formatStatusText = (row: any) => {
+    if (row.dataSync === false) {
+      return "Disabled";
     }
-    if (text === false) {
-      return "Disable";
+    if (row.syncStatus === false) {
+      return "Failed";
     }
+    if (row.is_progress === true) {
+      return <AnimatedDots />;
+    }
+    if (row.is_progress === false) {
+      return "Synced";
+    }
+    return "--";
   };
 
-  const getStatusStyle = (
-    status: "failed" | "synced" | "disabled" | true | false
-  ) => {
-    switch (status) {
-      case "failed":
-        return {
-          background: "rgba(252, 205, 200, 1)",
-          color: "rgba(200, 62, 46, 1)",
-        };
-      case "synced":
-        return {
-          background: "rgba(234, 248, 221, 1)",
-          color: "rgba(43, 91, 0, 1)",
-        };
-      case "disabled":
-        return {
-          background: "rgba(219, 219, 219, 1)",
-          color: "rgba(74, 74, 74, 1)",
-        };
-      case true:
-        return {
-          background: "rgba(219, 219, 219, 1)",
-          color: "rgba(74, 74, 74, 1)",
-        };
-      case false:
-        return {
-          background: "rgba(219, 219, 219, 1)",
-          color: "rgba(74, 74, 74, 1)",
-        };
+  const getStatusStyle = (row: any) => {
+    if (row.dataSync === false) {
+      return {
+        background: "rgba(219, 219, 219, 1)",
+        color: "rgba(74, 74, 74, 1) !important",
+      };
     }
+    if (row.syncStatus === false) {
+      return {
+        background: "rgba(252, 205, 200, 1)",
+        color: "rgba(200, 62, 46, 1) !important",
+      };
+    }
+    if (row.is_progress) {
+      return {
+        color: "rgba(16, 163, 127, 1)",
+      };
+    }
+    if (row.is_progress === false) {
+      return {
+        background: "rgba(234, 248, 221, 1)",
+        color: "rgba(43, 91, 0, 1) !important",
+      };
+    }
+    return { background: "transparent", color: "rgba(74, 74, 74, 1)" };
   };
 
   if (service_name && data.length < 1) {
@@ -932,6 +951,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                           ...datasyncStyle.table_array,
                           display: "flex",
                           flexDirection: "column",
+                          pr: 0,
                         }}
                       >
                         <span>{row.createdBy || "--"}</span>
@@ -960,29 +980,53 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                           row.records_synced
                         )}
                       </TableCell>
-                      <TableCell sx={datasyncStyle.table_array}>
+                      <TableCell
+                        sx={{
+                          ...datasyncStyle.table_array,
+                          position: "relative",
+                          padding: 0,
+                          textAlign: "center",
+                        }}
+                      >
                         <Box
                           sx={{
                             display: "flex",
-                            borderRadius: "2px",
-                            justifyContent: "start",
-                            textTransform: "capitalize",
+                            justifyContent: "center", // Центрируем содержимое
                           }}
                         >
-                          <Typography
-                            className="paragraph"
+                          <Box
                             sx={{
-                              fontFamily: "Roboto",
-                              fontSize: "12px",
-                              color: getStatusStyle(row.dataSync).color,
-                              backgroundColor: getStatusStyle(row.dataSync)
-                                .background,
-                              padding: "3px 14.5px",
-                              maxHeight: "1.25rem",
+                              display: "inline-flex", // Используем inline-flex для авто-размера
+                              borderRadius: "2px",
+                              textTransform: "capitalize",
+                              minWidth: "80px", // Фиксированная минимальная ширина
+                              justifyContent: "center", // Центрируем текст
                             }}
                           >
-                            {formatFunnelText(row.dataSync) || "--"}
-                          </Typography>
+                            {(() => {
+                              const { color, background } = getStatusStyle(row);
+                              return (
+                                <Typography
+                                  className="paragraph"
+                                  sx={{
+                                    fontFamily: "Roboto",
+                                    fontSize: "12px",
+                                    color: color,
+                                    backgroundColor: background,
+                                    padding: "3px 12px", // Уменьшаем боковые отступы
+                                    height: "24px", // Фиксированная высота
+                                    display: "flex",
+                                    alignItems: "center", // Вертикальное выравнивание
+                                    justifyContent: "center", // Горизонтальное выравнивание
+                                    width: "100%", // Занимает всю ширину родителя
+                                    boxSizing: "border-box", // Учитываем padding в ширине
+                                  }}
+                                >
+                                  {formatStatusText(row) || "--"}
+                                </Typography>
+                              );
+                            })()}
+                          </Box>
                         </Box>
                       </TableCell>
                       <TableCell
