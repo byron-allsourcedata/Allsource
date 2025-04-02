@@ -889,7 +889,7 @@ async def main():
         .first()
     while True:
         try:
-            #await process_files(session=session, rabbitmq_connection=connection, root_user=result)
+            await process_files(session=session, rabbitmq_connection=connection, root_user=result)
             await connection.close()
             process_confirmed(session=session)
             logging.info('Sleeping for 10 minutes...')
