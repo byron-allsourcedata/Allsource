@@ -19,14 +19,17 @@ from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from enums import QueueName, SourceType
 from models.users import User
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 logger = logging.getLogger(__name__)
+
+def normalize(value: float, min_val: float, max_val: float) -> float:
+    return (value - min_val) / (max_val - min_val) if max_val > min_val else 0.0
 
 class AudienceSourceService:
     def __init__(self, audience_sources_persistence: AudienceSourcesPersistence, domain_persistence: UserDomainsPersistence, audience_sources_matched_persons_persistence: AudienceSourcesMatchedPersonsPersistence):
         self.audience_sources_persistence = audience_sources_persistence
         self.domain_persistence = domain_persistence
         self.audience_sources_matched_persons_persistence = audience_sources_matched_persons_persistence
+        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.headings_map = {
             "Customer Conversions": ['Email', 'Phone number', 'Last Name', 'First Name', 'Transaction Date', 'Order Amount'],
             "Failed Leads": ['Email', 'Phone number', 'Last Name', 'First Name', 'Lead Date'],
@@ -197,7 +200,7 @@ class AudienceSourceService:
             "Do not include any comments, explanations, or extra information."
         )
         try:
-            response = client.chat.completions.create(model="gpt-4",
+            response = self.client.chat.completions.create(model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant skilled in data mapping."},
                 {"role": "user", "content": prompt}

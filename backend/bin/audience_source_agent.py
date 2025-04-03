@@ -4,34 +4,30 @@ import sys
 import asyncio
 import functools
 import json
-import time
 import pytz
 from collections import defaultdict
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import List, Dict, Union, Optional
+from typing import List, Union, Optional
 import boto3
-from aiormq.abc import AbstractConnection
 from sqlalchemy import update, func
-from aio_pika import IncomingMessage, Message, Connection
+from aio_pika import IncomingMessage, Connection
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session, aliased
+from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from enums import TypeOfCustomer
-from models.five_x_five_hems import FiveXFiveHems
 from utils import get_utc_aware_date
 from models.leads_visits import LeadsVisits
+from models.emails import Email
+from models.emails_enrichment import EmailEnrichment
 from models.leads_users import LeadUser
 from schemas.scripts.audience_source import PersonEntry, MessageBody, DataBodyNormalize, PersonRow, DataForNormalize, DataBodyFromSource
-from models.five_x_five_emails import FiveXFiveEmails
 from services.audience_sources import normalize
-from models.five_x_five_users_emails import FiveXFiveUsersEmails
 from models.audience_sources import AudienceSource
-from models.five_x_five_users import FiveXFiveUser
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
@@ -103,8 +99,9 @@ async def process_email_leads(
     if not emails:
         logging.info("No valid emails found in input data.")
         return 0
-
-    email_records = db_session.query(FiveXFiveEmails).filter(FiveXFiveEmails.email.in_(emails)).all()
+    
+    email_records = db_session.query(Email).filter(Email.email.in_(emails)).all()
+    
     if not email_records:
         logging.info("No matching emails found in FiveXFiveEmails table.")
         return 0
@@ -112,11 +109,11 @@ async def process_email_leads(
     email_to_id = {record.email: record.id for record in email_records}
 
     email_ids = list(email_to_id.values())
-    user_records = db_session.query(FiveXFiveUsersEmails.email_id, FiveXFiveUsersEmails.user_id).filter(
-        FiveXFiveUsersEmails.email_id.in_(email_ids)
+    user_records = db_session.query(EmailEnrichment.email_id, EmailEnrichment.enrichment_user_id).filter(
+        EmailEnrichment.email_id.in_(email_ids)
     ).all()
 
-    email_id_to_user_id = {record.email_id: record.user_id for record in user_records}
+    email_id_to_user_id = {record.email_id: record.enrichment_user_id for record in user_records}
 
     email_to_user_id = {email: email_id_to_user_id[email_id] for email, email_id in email_to_id.items() if
                         email_id in email_id_to_user_id}
@@ -156,7 +153,7 @@ async def process_email_leads(
             matched_persons[email] = {
                 "orders_count": 1,
                 "orders_date": transaction_date_obj,
-                "five_x_five_user_id": email_to_user_id[email]
+                "enrichment_user_id": email_to_user_id[email]
             }
             if include_amount:
                 matched_persons[email]["orders_amount"] = sale_amount
@@ -204,7 +201,7 @@ async def process_email_leads(
                 orders_count=data["orders_count"],
                 orders_date=data["orders_date"],
                 recency=recency,
-                five_x_five_user_id=data["five_x_five_user_id"]
+                enrichment_user_id=data["enrichment_user_id"]
             )
             if include_amount:
                 new_matched_person.orders_amount = data["orders_amount"]
@@ -290,16 +287,15 @@ async def process_user_id(persons: List[PersonRow], db_session: Session, source_
         last_start_datetime = datetime.combine(last_visit.start_date, last_visit.start_time)
         last_end_datetime = datetime.combine(last_visit.end_date, last_visit.end_time)
         calculate_result = calculate_website_visitor_user_value(first_datetime, last_start_datetime, last_end_datetime)
-        matched_person = AudienceSourcesMatchedPerson(
-            source_id=source_id,
-            value_score=calculate_result['user_value_score'],
-            recency_normalized=calculate_result['recency_score'],
-            view_score=calculate_result['page_view_score']
-        )
-        updates.append(matched_person)
+        updates.append({
+            "source_id": source_id,
+            "value_score": calculate_result['user_value_score'],
+            "recency_normalized": calculate_result['recency_score'],
+            "view_score": calculate_result['page_view_score']
+        })
         
     if updates:
-        db_session.bulk_update_mappings(AudienceSourcesMatchedPerson, updates)
+        db_session.bulk_insert_mappings(AudienceSourcesMatchedPerson, updates)
         logging.info(f"Updated {len(updates)} persons.")
         db_session.commit()
     
@@ -580,7 +576,7 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
 
         if type == 'user_ids':
             logging.info(f"Processing {len(persons)} user_id records.")
-            count = await process_user_id(persons=persons, db_session=db_session, source_id=source_id)
+            count = await process_user_id(persons=persons, db_session=db_session, source_id=source_id, audience_source=audience_source)
 
         if type == 'emails':
             if message_body.status == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
@@ -590,9 +586,10 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
             if message_body.status == TypeOfCustomer.FAILED_LEADS.value:
                 logging.info(f"Processing {len(persons)} failed lead records.")
                 count = await process_email_failed_leads(persons=persons, db_session=db_session, source_id=source_id)
-                if message_body.status == TypeOfCustomer.INTEREST.value:
-                    logging.info(f"Processing {len(persons)} interest lead records.")
-                    count = await process_email_interest_leads(persons=persons, db_session=db_session, source_id=source_id)
+                
+            if message_body.status == TypeOfCustomer.INTEREST.value:
+                logging.info(f"Processing {len(persons)} interest lead records.")
+                count = await process_email_interest_leads(persons=persons, db_session=db_session, source_id=source_id)
 
         logging.info(f"Updated processed and matched records for source_id {count}.")
 
