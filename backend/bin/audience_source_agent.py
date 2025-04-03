@@ -407,9 +407,6 @@ async def normalize_persons_customer_conversion(
     min_recency = float(data_for_normalize.min_recency) if data_for_normalize.min_recency is not None else 0.0
     max_recency = float(data_for_normalize.max_recency) if data_for_normalize.max_recency is not None else 1.0
 
-    def normalize(value: float, min_val: float, max_val: float) -> float:
-        return (value - min_val) / (max_val - min_val) if max_val > min_val else 0.0
-
     w1, w2, w3 = 1.0, 1.0, 1.0
 
     updates = []
