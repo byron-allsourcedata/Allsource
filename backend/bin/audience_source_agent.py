@@ -501,6 +501,46 @@ async def normalize_persons_interest_leads(
         f"RMQ message sent for matched records {data_for_normalize.matched_size} matched persons "
         f"from {data_for_normalize.all_size} matched records."
     )
+    
+async def normalize_persons_failed_leads(
+    persons: List[PersonEntry], source_id: str, data_for_normalize: DataForNormalize, db_session: Session
+):
+    logging.info(f"Processing normalization data for source_id {source_id}")
+
+    inverted_min_recency = float(data_for_normalize.min_recency) if data_for_normalize.min_recency is not None else 0.0
+    inverted_max_recency = float(data_for_normalize.max_recency) if data_for_normalize.max_recency is not None else 1.0
+
+    logging.info(f"Inverted recency bounds: {inverted_min_recency} {inverted_max_recency}")
+
+    def normalize(value: float, min_val: float, max_val: float) -> float:
+        return (value - min_val) / (max_val - min_val) if max_val > min_val else 0.0
+
+    updates = []
+
+    for person in persons:
+        current_recency = float(person.recency) if person.recency is not None else 0.0
+        inverted_recency = 1.0 / (current_recency + 1.0)
+        value_score = normalize(inverted_recency, inverted_min_recency, inverted_max_recency)
+
+        updates.append({
+            'id': person.id,
+            'source_id': source_id,
+            'email': person.email,
+            'value_score': value_score,
+            'inverted_recency': inverted_recency,
+            'recency_failed': value_score,
+        })
+
+    if updates:
+        db_session.bulk_update_mappings(AudienceSourcesMatchedPerson, updates)
+        logging.info(f"Updated {len(updates)} persons.")
+
+    db_session.commit()
+
+    logging.info(
+        f"RMQ message sent for matched records {data_for_normalize.matched_size} matched persons "
+        f"from {data_for_normalize.all_size} matched records."
+    )
 
 async def aud_sources_matching(message: IncomingMessage, db_session: Session, connection: Connection):
     try:
@@ -525,9 +565,13 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
             if message_body.status == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
                 await normalize_persons_customer_conversion(persons=persons, source_id=source_id, data_for_normalize=data_for_normalize,
                                                             db_session=db_session)
+                
+            if message_body.status == TypeOfCustomer.INTEREST.value:
+                logging.info(f"Processing {len(persons)} interest lead records.")
+                count = await process_email_interest_leads(persons=persons, db_session=db_session, source_id=source_id)
 
             if message_body.status == TypeOfCustomer.FAILED_LEADS.value:
-                await normalize_persons_interest_leads(persons=persons, source_id=source_id, data_for_normalize=data_for_normalize,
+                await normalize_persons_failed_leads(persons=persons, source_id=source_id, data_for_normalize=data_for_normalize,
                                                             db_session=db_session)
 
             await message.ack()
