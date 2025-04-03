@@ -89,17 +89,17 @@ def update_users_integrations(session, status, integration_data_sync_id, service
         
     if status == ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
         logging.info(f"Authentication failed for  user_domain_integration_id {user_domain_integration_id}")
-        if service_name != SourcePlatformEnum.WEBHOOK.value:
+        if service_name == SourcePlatformEnum.WEBHOOK.value:
+            session.query(IntegrationUserSync).filter(IntegrationUserSync.id == integration_data_sync_id).update({
+                'sync_status': False,
+                })
+        else:
             session.query(UserIntegration).filter(UserIntegration.id == user_domain_integration_id).update({
                 'is_failed': True,
                 'error_message': status
                 })
             
             session.query(IntegrationUserSync).filter(IntegrationUserSync.integration_id == user_domain_integration_id).update({
-                'sync_status': False,
-                })
-        else:
-            session.query(IntegrationUserSync).filter(IntegrationUserSync.id == integration_data_sync_id).update({
                 'sync_status': False,
                 })
         session.commit()
