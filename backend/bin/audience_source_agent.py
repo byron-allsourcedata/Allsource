@@ -5,25 +5,30 @@ import asyncio
 import functools
 import json
 import time
+import pytz
 from collections import defaultdict
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 from typing import List, Dict, Union, Optional
-
 import boto3
 from aiormq.abc import AbstractConnection
 from sqlalchemy import update, func
 from aio_pika import IncomingMessage, Message, Connection
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker, Session, aliased
 from dotenv import load_dotenv
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from enums import TypeOfCustomer
+from models.five_x_five_hems import FiveXFiveHems
+from utils import get_utc_aware_date
+from models.leads_visits import LeadsVisits
+from models.leads_users import LeadUser
 from schemas.scripts.audience_source import PersonEntry, MessageBody, DataBodyNormalize, PersonRow, DataForNormalize, DataBodyFromSource
 from models.five_x_five_emails import FiveXFiveEmails
+from services.audience_sources import normalize
 from models.five_x_five_users_emails import FiveXFiveUsersEmails
 from models.audience_sources import AudienceSource
 from models.five_x_five_users import FiveXFiveUser
@@ -32,7 +37,7 @@ from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 load_dotenv()
 
-AUDIENCE_SOURCES_MATCHING = 'aud_sources_matching'
+AUDIENCE_SOURCES_MATCHING = 'aud_sources_matching_test'
 SOURCE_PROCESSING_PROGRESS = "SOURCE_PROCESSING_PROGRESS"
 BATCH_SIZE = 500
 DATE_LIMIT = 180
@@ -81,8 +86,9 @@ async def send_sse(connection, user_id: int, data: dict):
 
 
 async def process_email_leads(
-    persons: List[PersonRow], db_session: Session, source_id: str, include_amount: bool = False, date_range: Optional[int] = None
+    persons: List[PersonRow], db_session: Session, source_id: str, include_amount: bool = False
 ) -> int:
+    days_ago = datetime.now() - timedelta(days=DATE_LIMIT)
 
     matched_persons = defaultdict(lambda: {
         "orders_amount": 0.0 if include_amount else None,
@@ -131,8 +137,8 @@ async def process_email_leads(
             except Exception as date_error:
                 logging.warning(f"Error parsing date '{transaction_date}': {date_error}")
 
-        if date_range and transaction_date_obj and transaction_date_obj < (datetime.now() - timedelta(days=date_range)):
-            continue
+        # if transaction_date_obj and transaction_date_obj < days_ago:
+        #     continue
 
         sale_amount = Decimal(person.sale_amount) if include_amount and person.sale_amount is not None else Decimal(
             "0.0")
@@ -214,7 +220,7 @@ async def process_email_leads(
         logging.info(f"Adding {len(matched_persons_to_add)} new persons to the database")
         db_session.bulk_save_objects(matched_persons_to_add)
 
-    processed_count = len(matched_persons_to_update) + len(matched_persons_to_add)
+    processed_count = len(filtered_persons)
     logging.info(f"Processed {processed_count} persons for source_id {source_id}")
     return processed_count
 
@@ -224,20 +230,76 @@ async def process_email_customer_conversion(persons: List[PersonRow], db_session
 async def process_email_failed_leads(persons: List[PersonRow], db_session: Session, source_id: str) -> int:
     return await process_email_leads(persons, db_session, source_id, include_amount=False)
 
-async def process_email_interest_leads(persons: List[PersonRow], db_session: Session, source_id: str) -> int:
-    return await process_email_leads(persons, db_session, source_id, include_amount=False, date_range=90)
+def calculate_website_visitor_user_value(first_datetime, last_start_datetime, last_end_datetime):    
+    reference_date = get_utc_aware_date()
+    first_datetime = first_datetime.astimezone(pytz.utc)
+    last_start_datetime = last_start_datetime.astimezone(pytz.utc)
+    last_end_datetime = last_end_datetime.astimezone(pytz.utc)
+    recency = Decimal((reference_date - last_start_datetime).days)
+    recency_min = Decimal((reference_date - first_datetime).days)
+    recency_max = Decimal((reference_date - last_end_datetime).days)
+    
+    inverted_recency = Decimal(1) / Decimal((recency + 1)) if recency > 0 else 0
+    inverted_recency_min = Decimal(1) / Decimal(recency_min + 1) if recency_min > 0 else 0
+    inverted_recency_max = Decimal(1) / Decimal(recency_max + 1) if recency_max > 0 else 0
+    
+    recency_score = Decimal(0.5) * Decimal(normalize(inverted_recency, inverted_recency_min, inverted_recency_max))
+    
+    duration_minutes = Decimal((last_end_datetime - last_start_datetime).total_seconds()) / Decimal(60)
 
-async def process_user_id(persons: List[PersonRow], db_session: Session, source_id: str) -> int:
+    page_view_score = 0.0
+    if duration_minutes >= 2:
+        page_view_score = 0.5
+    elif duration_minutes >= 1:
+        page_view_score = 0.25
+    else:
+        page_view_score = 0.0
+
+
+    user_value_score = Decimal(recency_score) + Decimal(page_view_score)
+    return {
+        "recency_score": recency_score,
+        "page_view_score": page_view_score,
+        "user_value_score": user_value_score
+    }
+
+async def process_user_id(persons: List[PersonRow], db_session: Session, source_id: str, audience_source: AudienceSource) -> int:
     five_x_five_user_ids = [p.user_id for p in persons]
     logging.info(f"user_ids find {len(five_x_five_user_ids)} for source_id {source_id}")
+    
+    results_query = (
+        db_session.query(
+            LeadUser.id,
+        )
+        .filter(
+            LeadUser.user_id == audience_source.user_id
+        )
+        .all()
+    )
+    updates = []
+    for user_visit in results_query:
+        lead_id = user_visit[0]
 
-    for five_x_five_user_id in five_x_five_user_ids:
+        first_visit = db_session.query(LeadsVisits).filter(LeadsVisits.lead_id == lead_id).order_by(LeadsVisits.end_date.asc(), LeadsVisits.end_time.asc()).first()
+        last_visit = db_session.query(LeadsVisits).filter(LeadsVisits.lead_id == lead_id).order_by(LeadsVisits.end_date.desc(), LeadsVisits.end_time.desc()).first()
+        
+        first_datetime = datetime.combine(first_visit.end_date, first_visit.end_time)
+        last_start_datetime = datetime.combine(last_visit.start_date, last_visit.start_time)
+        last_end_datetime = datetime.combine(last_visit.end_date, last_visit.end_time)
+        calculate_result = calculate_website_visitor_user_value(first_datetime, last_start_datetime, last_end_datetime)
         matched_person = AudienceSourcesMatchedPerson(
             source_id=source_id,
-            five_x_five_user_id=five_x_five_user_id
+            value_score=calculate_result['user_value_score'],
+            recency_normalized=calculate_result['recency_score'],
+            view_score=calculate_result['page_view_score']
         )
-        db_session.add(matched_person)
-
+        updates.append(matched_person)
+        
+    if updates:
+        db_session.bulk_update_mappings(AudienceSourcesMatchedPerson, updates)
+        logging.info(f"Updated {len(updates)} persons.")
+        db_session.commit()
+    
     return len(five_x_five_user_ids)
 
 
@@ -253,13 +315,7 @@ async def process_and_send_chunks(db_session: Session, source_id: str, batch_siz
         func.min(AudienceSourcesMatchedPerson.orders_date).label('min_orders_date'),
         func.max(AudienceSourcesMatchedPerson.orders_date).label('max_orders_date'),
         func.count().label('total_count')
-    ).filter(
-        AudienceSourcesMatchedPerson.source_id == source_id,
-        AudienceSourcesMatchedPerson.orders_amount.isnot(None),
-        AudienceSourcesMatchedPerson.orders_count.isnot(None),
-        AudienceSourcesMatchedPerson.recency.isnot(None),
-        AudienceSourcesMatchedPerson.orders_date.isnot(None)
-    ).first()
+    ).filter_by(source_id=source_id).first()
 
     min_orders_amount = float(result.min_orders_amount) if result.min_orders_amount is not None else 0.0
     max_orders_amount = float(result.max_orders_amount) if result.max_orders_amount is not None else 1.0
@@ -268,7 +324,7 @@ async def process_and_send_chunks(db_session: Session, source_id: str, batch_siz
     min_recency = float(result.min_recency) if result.min_recency is not None else 0.0
     max_recency = float(result.max_recency) if result.max_recency is not None else 1.0
 
-    if status == TypeOfCustomer.FAILED_LEADS.value or status == TypeOfCustomer.INTEREST.value:
+    if status == TypeOfCustomer.FAILED_LEADS.value:
         min_recency = 1.0 / (min_recency + 1.0)
         max_recency = 1.0 / (max_recency + 1.0)
         if min_recency > max_recency:
@@ -426,57 +482,6 @@ async def normalize_persons_failed_leads(
         f"from {data_for_normalize.all_size} matched records."
     )
 
-async def normalize_persons_interest_leads(
-    persons: List[PersonEntry], source_id: str, data_for_normalize: DataForNormalize, db_session: Session
-):
-    logging.info(f"Processing normalization data for source_id {source_id}")
-
-    inverted_min_recency = float(data_for_normalize.min_recency) if data_for_normalize.min_recency is not None else 0.0
-    inverted_max_recency = float(data_for_normalize.max_recency) if data_for_normalize.max_recency is not None else 1.0
-    min_orders_count = float(data_for_normalize.min_orders_count)
-    max_orders_count = float(data_for_normalize.max_orders_count)
-
-    logging.info(f"Inverted recency bounds: {inverted_min_recency} {inverted_max_recency}")
-
-    def normalize(value: float, min_val: float, max_val: float) -> float:
-        return (value - min_val) / (max_val - min_val) if max_val > min_val else 0.0
-
-    updates = []
-
-    for person in persons:
-        current_recency = float(person.recency) if person.recency is not None else 0.0
-        inverted_recency = 1.0 / (current_recency + 1.0)
-        recency_normalized = 0.5 * normalize(inverted_recency, inverted_min_recency, inverted_max_recency)
-
-        orders_count = float(person.orders_count)
-        orders_count_score = 0.5 * normalize(orders_count, min_orders_count, max_orders_count)
-
-        user_value_score = recency_normalized + orders_count_score
-
-        if user_value_score < 0.0 or user_value_score > 1.0:
-            logging.warning(f"UserValueScore for person {person.id} out of bounds: {user_value_score}")
-
-        updates.append({
-            'id': person.id,
-            'source_id': source_id,
-            'email': person.email,
-            'inverted_recency': inverted_recency,
-            'recency_normalized': recency_normalized,
-            'value_score': user_value_score,
-            'orders_count_normalized': orders_count_score,
-        })
-
-    if updates:
-        db_session.bulk_update_mappings(AudienceSourcesMatchedPerson, updates)
-        logging.info(f"Updated {len(updates)} persons.")
-
-    db_session.commit()
-
-    logging.info(
-        f"RMQ message sent for matched records {data_for_normalize.matched_size} matched persons "
-        f"from {data_for_normalize.all_size} matched records."
-    )
-
 async def aud_sources_matching(message: IncomingMessage, db_session: Session, connection: Connection):
     try:
         message_body_dict = json.loads(message.body)
@@ -505,11 +510,6 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
                 await normalize_persons_failed_leads(persons=persons, source_id=source_id, data_for_normalize=data_for_normalize,
                                                             db_session=db_session)
 
-            if message_body.status == TypeOfCustomer.INTEREST.value:
-                await normalize_persons_interest_leads(persons=persons, source_id=source_id,
-                                                     data_for_normalize=data_for_normalize,
-                                                     db_session=db_session)
-
             await message.ack()
             return
 
@@ -519,7 +519,7 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
 
         if type == 'user_ids':
             logging.info(f"Processing {len(persons)} user_id records.")
-            count = await process_user_id(persons=persons, db_session=db_session, source_id=source_id)
+            count = await process_user_id(persons=persons, db_session=db_session, source_id=source_id, audience_source=audience_source)
 
         if type == 'emails':
             if message_body.status == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
@@ -529,10 +529,6 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
             if message_body.status == TypeOfCustomer.FAILED_LEADS.value:
                 logging.info(f"Processing {len(persons)} failed lead records.")
                 count = await process_email_failed_leads(persons=persons, db_session=db_session, source_id=source_id)
-
-            if message_body.status == TypeOfCustomer.INTEREST.value:
-                logging.info(f"Processing {len(persons)} interest lead records.")
-                count = await process_email_interest_leads(persons=persons, db_session=db_session, source_id=source_id)
 
         logging.info(f"Updated processed and matched records for source_id {count}.")
 
@@ -561,11 +557,11 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
 
         if type == 'emails' and processed_records >= total_records:
             await process_and_send_chunks(db_session=db_session, source_id=source_id,
-                                          batch_size=BATCH_SIZE, queue_name=AUDIENCE_SOURCES_MATCHING,
-                                          connection=connection, status=message_body.status)
+                                            batch_size=BATCH_SIZE, queue_name=AUDIENCE_SOURCES_MATCHING,
+                                            connection=connection, status=message_body.status)
 
         await send_sse(connection, user_id,
-                       {"source_id": source_id, "total": total_records, "processed": processed_records,
+                        {"source_id": source_id, "total": total_records, "processed": processed_records,
                         "matched": matched_records})
 
         await message.ack()
