@@ -19,6 +19,7 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from models.five_x_five_emails import FiveXFiveEmails
 from models.leads_users import LeadUser
+from models.enrichment_users import EnrichmentUser
 from models.audience_smarts import AudienceSmart
 from sqlalchemy import func, create_engine
 from models.audience_lookalikes_persons import AudienceLookalikes
@@ -55,7 +56,7 @@ async def send_sse(connection, user_id: int, data: dict):
     except Exception as e:
         logging.error(f"Error sending SSE: {e}")
 
-def get_max_ids(db_session, lookalike_size):
+def get_max_ids(lookalike_size):
     if lookalike_size == 'almost_identical':
         max = 250000
     if lookalike_size == 'extremely_similar':
@@ -68,17 +69,7 @@ def get_max_ids(db_session, lookalike_size):
         max = 250000
         
     num_users = random.randint(10000, max)
-    subquery = (
-        db_session.query(FiveXFiveUser.id)
-        .order_by(FiveXFiveUser.id.asc())
-        .limit(num_users)
-        .subquery()
-    )
-
-    max_id = db_session.query(func.max(subquery.c.id)).scalar()
-    total_count = db_session.query(func.count(subquery.c.id)).scalar()
-
-    return max_id, total_count
+    return num_users
 
 
 
@@ -93,33 +84,30 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, conn
             await message.ack()
             return
         
-        max_id, total_rows = get_max_ids(db_session, audience_lookalike.lookalike_size)
+        total_rows = get_max_ids(audience_lookalike.lookalike_size)
         processed_rows = 0
+        
+        results = db_session.query(EnrichmentUser.id).limit(total_rows).all()
+        
         logging.info(f"Total row in pixel file: {total_rows}")
-        audience_lookalike.size = total_rows
+        audience_lookalike.size = len(results)
         db_session.add(audience_lookalike)
         db_session.commit()
         await send_sse(connection, audience_lookalike.user_id, {"lookalike_id": str(audience_lookalike.id), "total": total_rows, "processed": processed_rows})
-        if not max_id:
-            return False
         
-        current_id = -1
-        while current_id < max_id:
-            results = db_session.query(FiveXFiveUser.id).filter(FiveXFiveUser.id <= max_id, FiveXFiveUser.id > current_id).order_by(FiveXFiveUser.id.asc()).limit(SELECTED_ROW_COUNT).query.all()
+        if not results:
+            await message.ack()
+            return
             
-            if not results:
-                break
-            
-            persons = [row.id for row in results]
-            current_id = results[-1].id
-            
-            message_body = {
-                'lookalike_id': str(audience_lookalike.id),
-                'user_id': audience_lookalike.user_id,
-                'five_x_five_users_ids': persons
-            }
+        persons = [str(row[0]) for row in results]
         
-            await publish_rabbitmq_message(connection=connection, queue_name=AUDIENCE_LOOKALIKES_MATCHING, message_body=message_body)
+        message_body = {
+            'lookalike_id': str(audience_lookalike.id),
+            'user_id': audience_lookalike.user_id,
+            'enrichment_user': persons
+        }
+    
+        await publish_rabbitmq_message(connection=connection, queue_name=AUDIENCE_LOOKALIKES_MATCHING, message_body=message_body)
         await message.ack()
     except BaseException as e:
         db_session.rollback()
