@@ -215,6 +215,10 @@ async def process_user_integrations(rmq_connection, session):
                 if (data_sync.last_sync_date is not None and data_sync.last_sync_date.replace(tzinfo=timezone.utc) > (datetime.now(timezone.utc) - timedelta(hours=24))) or \
                 (data_sync.created_at.replace(tzinfo=timezone.utc) > (datetime.now(timezone.utc) - timedelta(hours=24))):
                     logging.info(f"Attempt after failed Webhook, last_sync_date = {data_sync.last_sync_date}")
+                    
+                else:
+                    logging.info(f"Skip, Integration is failed {user_integrations[i].is_failed}, Data sync status {data_sync.sync_status}")
+                    continue
 
             else:
                 logging.info(f"Skip, Integration is failed {user_integrations[i].is_failed}, Data sync status {data_sync.sync_status}")
