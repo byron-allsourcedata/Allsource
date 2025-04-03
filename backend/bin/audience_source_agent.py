@@ -37,7 +37,7 @@ from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 load_dotenv()
 
-AUDIENCE_SOURCES_MATCHING = 'aud_sources_matching_test'
+AUDIENCE_SOURCES_MATCHING = 'aud_sources_matching'
 SOURCE_PROCESSING_PROGRESS = "SOURCE_PROCESSING_PROGRESS"
 BATCH_SIZE = 500
 DATE_LIMIT = 180
