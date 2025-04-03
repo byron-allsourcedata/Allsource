@@ -87,7 +87,7 @@ class WebhookIntegrationService:
             self.integration_persistence.db.commit()
             return IntegrationsStatus.INVALID_WEBHOOK_URL
         
-        return list.name
+        return IntegrationsStatus.SUCCESS
                     
     async def create_sync(self, leads_type: str, list_name: str, webhook_url: str, method: str, data_map: List[DataMap], domain_id: int, created_by: str, user: dict):
         credential = self.integration_persistence.get_credentials_for_service(domain_id=domain_id, user_id=user.get('id'), service_name=SourcePlatformEnum.WEBHOOK.value)
