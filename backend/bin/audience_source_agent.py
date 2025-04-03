@@ -86,7 +86,7 @@ async def send_sse(connection, user_id: int, data: dict):
 
 
 async def process_email_leads(
-    persons: List[PersonRow], db_session: Session, source_id: str, include_amount: bool = False
+    persons: List[PersonRow], db_session: Session, source_id: str, include_amount: bool = False, date_range: Optional[int] = None
 ) -> int:
     days_ago = datetime.now() - timedelta(days=DATE_LIMIT)
 
@@ -137,8 +137,8 @@ async def process_email_leads(
             except Exception as date_error:
                 logging.warning(f"Error parsing date '{transaction_date}': {date_error}")
 
-        # if transaction_date_obj and transaction_date_obj < days_ago:
-        #     continue
+        if date_range and transaction_date_obj and transaction_date_obj < (datetime.now() - timedelta(days=date_range)):
+            continue
 
         sale_amount = Decimal(person.sale_amount) if include_amount and person.sale_amount is not None else Decimal(
             "0.0")
@@ -220,7 +220,7 @@ async def process_email_leads(
         logging.info(f"Adding {len(matched_persons_to_add)} new persons to the database")
         db_session.bulk_save_objects(matched_persons_to_add)
 
-    processed_count = len(filtered_persons)
+    processed_count = len(matched_persons_to_update) + len(matched_persons_to_add)
     logging.info(f"Processed {processed_count} persons for source_id {source_id}")
     return processed_count
 
@@ -262,6 +262,9 @@ def calculate_website_visitor_user_value(first_datetime, last_start_datetime, la
         "page_view_score": page_view_score,
         "user_value_score": user_value_score
     }
+
+async def process_email_interest_leads(persons: List[PersonRow], db_session: Session, source_id: str) -> int:
+    return await process_email_leads(persons, db_session, source_id, include_amount=False, date_range=90)
 
 async def process_user_id(persons: List[PersonRow], db_session: Session, source_id: str, audience_source: AudienceSource) -> int:
     five_x_five_user_ids = [p.user_id for p in persons]
@@ -315,8 +318,14 @@ async def process_and_send_chunks(db_session: Session, source_id: str, batch_siz
         func.min(AudienceSourcesMatchedPerson.orders_date).label('min_orders_date'),
         func.max(AudienceSourcesMatchedPerson.orders_date).label('max_orders_date'),
         func.count().label('total_count')
-    ).filter_by(source_id=source_id).first()
-
+    ).filter(
+        AudienceSourcesMatchedPerson.source_id == source_id,
+        AudienceSourcesMatchedPerson.orders_amount.isnot(None),
+        AudienceSourcesMatchedPerson.orders_count.isnot(None),
+        AudienceSourcesMatchedPerson.recency.isnot(None),
+        AudienceSourcesMatchedPerson.orders_date.isnot(None)
+    ).first()
+    
     min_orders_amount = float(result.min_orders_amount) if result.min_orders_amount is not None else 0.0
     max_orders_amount = float(result.max_orders_amount) if result.max_orders_amount is not None else 1.0
     min_orders_count = int(result.min_orders_count or 0)
@@ -324,7 +333,7 @@ async def process_and_send_chunks(db_session: Session, source_id: str, batch_siz
     min_recency = float(result.min_recency) if result.min_recency is not None else 0.0
     max_recency = float(result.max_recency) if result.max_recency is not None else 1.0
 
-    if status == TypeOfCustomer.FAILED_LEADS.value:
+    if status == TypeOfCustomer.FAILED_LEADS.value or status == TypeOfCustomer.INTEREST.value:
         min_recency = 1.0 / (min_recency + 1.0)
         max_recency = 1.0 / (max_recency + 1.0)
         if min_recency > max_recency:
@@ -442,13 +451,15 @@ async def normalize_persons_customer_conversion(
         f"from {data_for_normalize.all_size} matched records."
     )
 
-async def normalize_persons_failed_leads(
+async def normalize_persons_interest_leads(
     persons: List[PersonEntry], source_id: str, data_for_normalize: DataForNormalize, db_session: Session
 ):
     logging.info(f"Processing normalization data for source_id {source_id}")
 
     inverted_min_recency = float(data_for_normalize.min_recency) if data_for_normalize.min_recency is not None else 0.0
     inverted_max_recency = float(data_for_normalize.max_recency) if data_for_normalize.max_recency is not None else 1.0
+    min_orders_count = float(data_for_normalize.min_orders_count)
+    max_orders_count = float(data_for_normalize.max_orders_count)
 
     logging.info(f"Inverted recency bounds: {inverted_min_recency} {inverted_max_recency}")
 
@@ -460,15 +471,24 @@ async def normalize_persons_failed_leads(
     for person in persons:
         current_recency = float(person.recency) if person.recency is not None else 0.0
         inverted_recency = 1.0 / (current_recency + 1.0)
-        value_score = normalize(inverted_recency, inverted_min_recency, inverted_max_recency)
+        recency_normalized = 0.5 * normalize(inverted_recency, inverted_min_recency, inverted_max_recency)
+
+        orders_count = float(person.orders_count)
+        orders_count_score = 0.5 * normalize(orders_count, min_orders_count, max_orders_count)
+
+        user_value_score = recency_normalized + orders_count_score
+
+        if user_value_score < 0.0 or user_value_score > 1.0:
+            logging.warning(f"UserValueScore for person {person.id} out of bounds: {user_value_score}")
 
         updates.append({
             'id': person.id,
             'source_id': source_id,
             'email': person.email,
-            'value_score': value_score,
             'inverted_recency': inverted_recency,
-            'recency_failed': value_score,
+            'recency_normalized': recency_normalized,
+            'value_score': user_value_score,
+            'orders_count_normalized': orders_count_score,
         })
 
     if updates:
@@ -507,7 +527,7 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
                                                             db_session=db_session)
 
             if message_body.status == TypeOfCustomer.FAILED_LEADS.value:
-                await normalize_persons_failed_leads(persons=persons, source_id=source_id, data_for_normalize=data_for_normalize,
+                await normalize_persons_interest_leads(persons=persons, source_id=source_id, data_for_normalize=data_for_normalize,
                                                             db_session=db_session)
 
             await message.ack()
@@ -519,7 +539,7 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
 
         if type == 'user_ids':
             logging.info(f"Processing {len(persons)} user_id records.")
-            count = await process_user_id(persons=persons, db_session=db_session, source_id=source_id, audience_source=audience_source)
+            count = await process_user_id(persons=persons, db_session=db_session, source_id=source_id)
 
         if type == 'emails':
             if message_body.status == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
@@ -529,6 +549,9 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
             if message_body.status == TypeOfCustomer.FAILED_LEADS.value:
                 logging.info(f"Processing {len(persons)} failed lead records.")
                 count = await process_email_failed_leads(persons=persons, db_session=db_session, source_id=source_id)
+                if message_body.status == TypeOfCustomer.INTEREST.value:
+                    logging.info(f"Processing {len(persons)} interest lead records.")
+                    count = await process_email_interest_leads(persons=persons, db_session=db_session, source_id=source_id)
 
         logging.info(f"Updated processed and matched records for source_id {count}.")
 
