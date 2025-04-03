@@ -95,9 +95,13 @@ def update_users_integrations(session, status, integration_data_sync_id, service
                 'error_message': status
                 })
             
-        session.query(IntegrationUserSync).filter(IntegrationUserSync.id == integration_data_sync_id).update({
-            'sync_status': False,
-            })
+            session.query(IntegrationUserSync).filter(IntegrationUserSync.integration_id == user_domain_integration_id).update({
+                'sync_status': False,
+                })
+        else:
+            session.query(IntegrationUserSync).filter(IntegrationUserSync.id == integration_data_sync_id).update({
+                'sync_status': False,
+                })
         session.commit()
         
 def update_data_sync_imported_leads(session, status, data_sync_imported_id, integration_data_sync: IntegrationUserSync, user_integration: UserIntegration):
