@@ -3,7 +3,6 @@ from typing import Optional, List
 import json
 import io
 import csv
-from utils import format_phone_number
 
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
@@ -229,7 +228,6 @@ class AudienceSmartsService:
         
         for lead in leads:
             relevant_data = [getattr(lead, field, "") for field in types]
-            # relevant_data.append(format_phone_number(lead.phone))
             writer.writerow(relevant_data)
 
         output.seek(0)
