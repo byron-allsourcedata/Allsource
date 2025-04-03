@@ -170,9 +170,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
         "/audience-smarts/calculate",
         selectedSources
       );
-      console.log(response)
       if (response.status === 200) {
-        console.log(response.data)
         setAudienceSize(response.data);
       }
     } catch {
