@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from utils import format_phone_number
 from models.integrations.integrations_users_sync import IntegrationUserSync
@@ -17,6 +18,8 @@ from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
 from httpx import Client
 from utils import extract_first_email
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class WebhookIntegrationService:
 
@@ -44,8 +47,10 @@ class WebhookIntegrationService:
                     response = self.client.request(method, redirect_url, headers=headers, json=json, data=data, params=params)
             return response
         except httpx.ConnectError as e:
+            logger.error(f"Connection error: {e}")
             return None
         except httpx.RequestError as e:
+            logger.error(f"Request error: {e}")
             return None
     
     def save_integration(self, domain_id: int, user: dict):
@@ -117,7 +122,7 @@ class WebhookIntegrationService:
         response = self.__handle_request(url=sync.hook_url, method=sync.method, json=data)
         if not response or response.status_code == 401:
                 return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
-        if not response or response.status_code == 405:
+        if response.status_code == 405:
                 return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
         if response.status_code == 400:
                 return ProccessDataSyncResult.INCORRECT_FORMAT.value
