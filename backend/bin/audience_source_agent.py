@@ -539,102 +539,102 @@ async def normalize_persons_failed_leads(
     )
 
 async def aud_sources_matching(message: IncomingMessage, db_session: Session, connection: Connection):
-    # try:
-    message_body_dict = json.loads(message.body)
-    message_body = MessageBody(**message_body_dict)
-    data: Union[DataBodyNormalize, DataBodyFromSource] = message_body.data
-    source_id: str = data.source_id
-    audience_source = db_session.query(AudienceSource).filter_by(id=source_id).first()
+    try:
+        message_body_dict = json.loads(message.body)
+        message_body = MessageBody(**message_body_dict)
+        data: Union[DataBodyNormalize, DataBodyFromSource] = message_body.data
+        source_id: str = data.source_id
+        audience_source = db_session.query(AudienceSource).filter_by(id=source_id).first()
 
-    if not data or not audience_source:
-        logging.warning("Message data is missing or audience source not found.")
-        await message.ack()
-        return
+        if not data or not audience_source:
+            logging.warning("Message data is missing or audience source not found.")
+            await message.ack()
+            return
 
-    type: str = message_body.type
-    persons: Union[List[PersonRow], List[PersonEntry]] = data.persons
-    data_for_normalize: Optional[DataForNormalize] = (
-        data.data_for_normalize if isinstance(data, DataBodyNormalize) else None
-    )
-
-    if type == 'emails' and data_for_normalize:
-        if message_body.status == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
-            await normalize_persons_customer_conversion(persons=persons, source_id=source_id, data_for_normalize=data_for_normalize,
-                                                        db_session=db_session)
-            
-        if message_body.status == TypeOfCustomer.INTEREST.value:
-            logging.info(f"Processing {len(persons)} interest lead records.")
-            count = await process_email_interest_leads(persons=persons, db_session=db_session, source_id=source_id)
-
-        if message_body.status == TypeOfCustomer.FAILED_LEADS.value:
-            await normalize_persons_failed_leads(persons=persons, source_id=source_id, data_for_normalize=data_for_normalize,
-                                                        db_session=db_session)
-
-        await message.ack()
-        return
-
-    count = 0
-
-    user_id = data.user_id
-
-    if type == 'user_ids':
-        logging.info(f"Processing {len(persons)} user_id records.")
-        count = await process_user_id(persons=persons, db_session=db_session, source_id=source_id, audience_source=audience_source)
-
-    if type == 'emails':
-        if message_body.status == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
-            logging.info(f"Processing {len(persons)} customer conversions.")
-            count = await process_email_customer_conversion(persons=persons, db_session=db_session, source_id=source_id)
-
-        if message_body.status == TypeOfCustomer.FAILED_LEADS.value:
-            logging.info(f"Processing {len(persons)} failed lead records.")
-            count = await process_email_failed_leads(persons=persons, db_session=db_session, source_id=source_id)
-            
-        if message_body.status == TypeOfCustomer.INTEREST.value:
-            logging.info(f"Processing {len(persons)} interest lead records.")
-            count = await process_email_interest_leads(persons=persons, db_session=db_session, source_id=source_id)
-
-    logging.info(f"Updated processed and matched records for source_id {count}.")
-
-    total_records, processed_records, matched_records = db_session.execute(
-        update(AudienceSource)
-        .where(AudienceSource.id == source_id)
-        .values(
-            matched_records=AudienceSource.matched_records + count,
-            processed_records=AudienceSource.processed_records + len(persons)
+        type: str = message_body.type
+        persons: Union[List[PersonRow], List[PersonEntry]] = data.persons
+        data_for_normalize: Optional[DataForNormalize] = (
+            data.data_for_normalize if isinstance(data, DataBodyNormalize) else None
         )
-        .returning(AudienceSource.total_records, AudienceSource.processed_records, AudienceSource.matched_records)
-    ).fetchone()
 
-    db_session.flush()
-    logging.info(f"Updated processed and matched records for source_id {source_id}.")
+        if type == 'emails' and data_for_normalize:
+            if message_body.status == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
+                await normalize_persons_customer_conversion(persons=persons, source_id=source_id, data_for_normalize=data_for_normalize,
+                                                            db_session=db_session)
+                
+            if message_body.status == TypeOfCustomer.INTEREST.value:
+                logging.info(f"Processing {len(persons)} interest lead records.")
+                count = await process_email_interest_leads(persons=persons, db_session=db_session, source_id=source_id)
 
-    if processed_records >= total_records:
-        db_session.execute(
+            if message_body.status == TypeOfCustomer.FAILED_LEADS.value:
+                await normalize_persons_failed_leads(persons=persons, source_id=source_id, data_for_normalize=data_for_normalize,
+                                                            db_session=db_session)
+
+            await message.ack()
+            return
+
+        count = 0
+
+        user_id = data.user_id
+
+        if type == 'user_ids':
+            logging.info(f"Processing {len(persons)} user_id records.")
+            count = await process_user_id(persons=persons, db_session=db_session, source_id=source_id, audience_source=audience_source)
+
+        if type == 'emails':
+            if message_body.status == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
+                logging.info(f"Processing {len(persons)} customer conversions.")
+                count = await process_email_customer_conversion(persons=persons, db_session=db_session, source_id=source_id)
+
+            if message_body.status == TypeOfCustomer.FAILED_LEADS.value:
+                logging.info(f"Processing {len(persons)} failed lead records.")
+                count = await process_email_failed_leads(persons=persons, db_session=db_session, source_id=source_id)
+                
+            if message_body.status == TypeOfCustomer.INTEREST.value:
+                logging.info(f"Processing {len(persons)} interest lead records.")
+                count = await process_email_interest_leads(persons=persons, db_session=db_session, source_id=source_id)
+
+        logging.info(f"Updated processed and matched records for source_id {count}.")
+
+        total_records, processed_records, matched_records = db_session.execute(
             update(AudienceSource)
             .where(AudienceSource.id == source_id)
-            .values(matched_records_status="complete")
-        )
-        logging.info(f"Source_id {source_id} processing complete.")
+            .values(
+                matched_records=AudienceSource.matched_records + count,
+                processed_records=AudienceSource.processed_records + len(persons)
+            )
+            .returning(AudienceSource.total_records, AudienceSource.processed_records, AudienceSource.matched_records)
+        ).fetchone()
 
-    db_session.commit()
+        db_session.flush()
+        logging.info(f"Updated processed and matched records for source_id {source_id}.")
 
-    if type == 'emails' and processed_records >= total_records:
-        await process_and_send_chunks(db_session=db_session, source_id=source_id,
-                                        batch_size=BATCH_SIZE, queue_name=AUDIENCE_SOURCES_MATCHING,
-                                        connection=connection, status=message_body.status)
+        if processed_records >= total_records:
+            db_session.execute(
+                update(AudienceSource)
+                .where(AudienceSource.id == source_id)
+                .values(matched_records_status="complete")
+            )
+            logging.info(f"Source_id {source_id} processing complete.")
 
-    await send_sse(connection, user_id,
-                    {"source_id": source_id, "total": total_records, "processed": processed_records,
-                    "matched": matched_records})
+        db_session.commit()
 
-    await message.ack()
-    logging.info(f"Processing completed for source_id {source_id}.")
+        if type == 'emails' and processed_records >= total_records:
+            await process_and_send_chunks(db_session=db_session, source_id=source_id,
+                                            batch_size=BATCH_SIZE, queue_name=AUDIENCE_SOURCES_MATCHING,
+                                            connection=connection, status=message_body.status)
 
-    # except BaseException as e:
-    #     logging.warning(f"Message for source_id failed and will be reprocessed. {e}")
-    #     db_session.rollback()
-    #     await message.ack()
+        await send_sse(connection, user_id,
+                        {"source_id": source_id, "total": total_records, "processed": processed_records,
+                        "matched": matched_records})
+
+        await message.ack()
+        logging.info(f"Processing completed for source_id {source_id}.")
+
+    except BaseException as e:
+        logging.warning(f"Message for source_id failed and will be reprocessed. {e}")
+        db_session.rollback()
+        await message.ack()
 
 
 async def main():
