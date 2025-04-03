@@ -71,59 +71,6 @@ interface IntegrationsCredentials {
   is_failed?: boolean;
 }
 
-const AnimatedDots = () => {
-  return (
-    <div className="dots-loader">
-      <span className="dot"></span>
-      <span className="dot"></span>
-      <span className="dot"></span>
-      <style jsx>{`
-        .dots-loader {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 4px;
-        }
-
-        @media {
-          max-width: 600px;
-        }
-        : {
-          .dots-loader {
-            justify-content: flex-start;
-          }
-        }
-
-        .dot {
-          width: 4px;
-          height: 4px;
-          background-color: rgba(217, 217, 217, 1);
-          border-radius: 5px;
-          animation: dot-blink 1.2s infinite ease-out;
-        }
-
-        .dot:nth-child(2) {
-          animation-delay: 0.2s;
-        }
-
-        .dot:nth-child(3) {
-          animation-delay: 0.4s;
-        }
-
-        @keyframes dot-blink {
-          0%,
-          100% {
-            background-color: rgba(217, 217, 217, 1);
-          }
-          50% {
-            background-color: rgba(45, 45, 45, 1);
-          }
-        }
-      `}</style>
-    </div>
-  );
-};
-
 const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   const { needsSync, setNeedsSync } = useIntegrationContext();
   const [order, setOrder] = useState<"asc" | "desc" | undefined>(undefined);
@@ -357,7 +304,12 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
         );
       case "google_ads":
         return (
-          <Image src={"/google-ads.svg"} alt="googleAds" width={18} height={18} />
+          <Image
+            src={"/google-ads.svg"}
+            alt="googleAds"
+            width={18}
+            height={18}
+          />
         );
       case "sales_force":
         return (
@@ -723,7 +675,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
       return "Failed";
     }
     if (row.is_progress === true) {
-      return <AnimatedDots />;
+      return "In Progress";
     }
     if (row.is_progress === false) {
       return "Synced";
@@ -746,7 +698,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
     }
     if (row.is_progress) {
       return {
-        color: "rgba(16, 163, 127, 1)",
+        background: "rgba(0, 129, 251, 0.2)",
+        color: "rgba(0, 129, 251, 1)!important",
       };
     }
     if (row.is_progress === false) {
@@ -991,16 +944,16 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                         <Box
                           sx={{
                             display: "flex",
-                            justifyContent: "center", // Центрируем содержимое
+                            justifyContent: "center",
                           }}
                         >
                           <Box
                             sx={{
-                              display: "inline-flex", // Используем inline-flex для авто-размера
+                              display: "inline-flex",
                               borderRadius: "2px",
                               textTransform: "capitalize",
-                              minWidth: "80px", // Фиксированная минимальная ширина
-                              justifyContent: "center", // Центрируем текст
+                              minWidth: "80px",
+                              justifyContent: "center",
                             }}
                           >
                             {(() => {
@@ -1013,13 +966,14 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                                     fontSize: "12px",
                                     color: color,
                                     backgroundColor: background,
-                                    padding: "3px 12px", // Уменьшаем боковые отступы
-                                    height: "24px", // Фиксированная высота
+                                    padding: "3px 12px",
+                                    height: "24px",
                                     display: "flex",
-                                    alignItems: "center", // Вертикальное выравнивание
-                                    justifyContent: "center", // Горизонтальное выравнивание
-                                    width: "100%", // Занимает всю ширину родителя
-                                    boxSizing: "border-box", // Учитываем padding в ширине
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    width: "100%",
+                                    boxSizing: "border-box",
+                                    borderRadius: "2px",
                                   }}
                                 >
                                   {formatStatusText(row) || "--"}
