@@ -20,17 +20,10 @@ sys.path.append(parent_dir)
 from models.five_x_five_emails import FiveXFiveEmails
 from models.leads_users import LeadUser
 from models.audience_smarts import AudienceSmart
-from sqlalchemy import and_, or_, func, create_engine
-from enums import SourceType, LeadStatus
+from sqlalchemy import func, create_engine
 from models.audience_lookalikes_persons import AudienceLookalikes
-from models.five_x_five_users_emails import FiveXFiveUsersEmails
-from models.audience_sources import AudienceSource
-from models.leads_users_added_to_cart import LeadsUsersAddedToCart
-from models.leads_users_ordered import LeadsUsersOrdered
-from models.users import Users
 import random
-from models.five_x_five_users import FiveXFiveUser
-from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
+from models.enrichment_users import EnrichmentUser
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 load_dotenv()
@@ -76,8 +69,8 @@ def get_max_ids(db_session, lookalike_size):
         
     num_users = random.randint(10000, max)
     subquery = (
-        db_session.query(FiveXFiveUser.id)
-        .order_by(FiveXFiveUser.id.asc())
+        db_session.query(EnrichmentUser.id)
+        .order_by(EnrichmentUser.id.asc())
         .limit(num_users)
         .subquery()
     )
@@ -112,7 +105,7 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, conn
         
         current_id = -1
         while current_id < max_id:
-            query = db_session.query(FiveXFiveUser.id).filter(FiveXFiveUser.id <= max_id, FiveXFiveUser.id > current_id).order_by(FiveXFiveUser.id.asc()).limit(SELECTED_ROW_COUNT)
+            query = db_session.query(EnrichmentUser.id).filter(EnrichmentUser.id <= max_id, EnrichmentUser.id > current_id).order_by(EnrichmentUser.id.asc()).limit(SELECTED_ROW_COUNT)
             results = query.all()
             
             if not results:

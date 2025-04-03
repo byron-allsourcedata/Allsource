@@ -4,34 +4,30 @@ import sys
 import asyncio
 import functools
 import json
-import time
 import pytz
 from collections import defaultdict
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import List, Dict, Union, Optional
+from typing import List, Union, Optional
 import boto3
-from aiormq.abc import AbstractConnection
 from sqlalchemy import update, func
-from aio_pika import IncomingMessage, Message, Connection
+from aio_pika import IncomingMessage, Connection
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session, aliased
+from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from enums import TypeOfCustomer
-from models.five_x_five_hems import FiveXFiveHems
 from utils import get_utc_aware_date
 from models.leads_visits import LeadsVisits
+from models.emails import Email
+from models.emails_enrichment import EmailEnrichment
 from models.leads_users import LeadUser
 from schemas.scripts.audience_source import PersonEntry, MessageBody, DataBodyNormalize, PersonRow, DataForNormalize, DataBodyFromSource
-from models.five_x_five_emails import FiveXFiveEmails
 from services.audience_sources import normalize
-from models.five_x_five_users_emails import FiveXFiveUsersEmails
 from models.audience_sources import AudienceSource
-from models.five_x_five_users import FiveXFiveUser
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
@@ -103,8 +99,9 @@ async def process_email_leads(
     if not emails:
         logging.info("No valid emails found in input data.")
         return 0
-
-    email_records = db_session.query(FiveXFiveEmails).filter(FiveXFiveEmails.email.in_(emails)).all()
+    
+    email_records = db_session.query(Email).filter(Email.email.in_(emails)).all()
+    
     if not email_records:
         logging.info("No matching emails found in FiveXFiveEmails table.")
         return 0
@@ -112,8 +109,8 @@ async def process_email_leads(
     email_to_id = {record.email: record.id for record in email_records}
 
     email_ids = list(email_to_id.values())
-    user_records = db_session.query(FiveXFiveUsersEmails.email_id, FiveXFiveUsersEmails.user_id).filter(
-        FiveXFiveUsersEmails.email_id.in_(email_ids)
+    user_records = db_session.query(EmailEnrichment.email_id, EmailEnrichment.enrichment_user_id).filter(
+        EmailEnrichment.email_id.in_(email_ids)
     ).all()
 
     email_id_to_user_id = {record.email_id: record.user_id for record in user_records}
