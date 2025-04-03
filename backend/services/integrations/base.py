@@ -193,6 +193,13 @@ class IntegrationService:
             return {'status': 'SUCCESS', 'data_sync': result}
         return {'status': 'FAILED'}
 
+    def switch_toggle_smart_sync(self, user: dict, list_id):
+        result = self.integrations_user_sync_persistence.switch_toggle_smart_sync(user_id=user.get('id'), list_id=list_id)
+        print(result)
+        if result is not None:
+            return {'status': 'SUCCESS', 'data_sync': result}
+        return {'status': 'FAILED'}
+
     def get_sync_users(self):
         return self.integrations_user_sync_persistence.get_filter_by()
 
