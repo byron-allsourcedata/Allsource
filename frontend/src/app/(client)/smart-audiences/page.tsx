@@ -20,7 +20,7 @@ import CustomTablePagination from '@/components/CustomTablePagination';
 import { useNotification } from '@/context/NotificationContext';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
 // import ThreeDotsLoader from './components/ThreeDotsLoader';
-// import ProgressBar from './components/ProgressLoader';
+import ProgressBar from '../sources/components/ProgressLoader';
 import { MoreVert } from '@mui/icons-material'
 import { useSSE } from '../../../context/SSEContext';
 import FilterPopup from './components/SmartAudienceFilter';
@@ -41,6 +41,7 @@ interface Smarts {
     total_records: number
     validated_records: number
     active_segment_records: number
+    processed_active_segment_records: number
     status: string
     integrations: string[]
 }
@@ -110,7 +111,7 @@ const getUseCaseStyle = (status: string) => {
 const SmartAudiences: React.FC = () => {
     const router = useRouter();
     const { hasNotification } = useNotification();
-    const { sourceProgress } = useSSE();
+    const { smartAudienceProgress } = useSSE();
     const [data, setData] = useState<Smarts[]>([]);
     const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
     const [selectedRowData, setSelectedRowData] = useState<Smarts>();
@@ -170,48 +171,55 @@ const SmartAudiences: React.FC = () => {
         });
     }, [orderBy, order, page, rowsPerPage, appliedDates, selectedFilters]);
 
-    // const fetchSmartsMemoized = useCallback(() => {
-    //     fetchSmarts({
-    //         sortBy: orderBy,
-    //         sortOrder: order,
-    //         page,
-    //         rowsPerPage,
-    //     });
-    // }, [orderBy, order, page, rowsPerPage]);
+    const fetchSmartsMemoized = useCallback(() => {
+        fetchSmarts({
+            sortBy: orderBy,
+            sortOrder: order,
+            page,
+            rowsPerPage,
+            appliedDates: {
+                start: appliedDates.start,
+                end: appliedDates.end,
+            }
+        });
+    }, [orderBy, order, page, rowsPerPage, appliedDates]);
+
+    const clearPollingInterval = () => {
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+            console.log("interval cleared");
+        }
+    }
     
-    // useEffect(() => {
-    //     console.log("longpol");
+    useEffect(() => {
+        console.log("pooling");
     
-    //     if (!intervalRef.current) {
-    //         console.log("longpol started");
-    //         intervalRef.current = setInterval(() => {
-    //             const hasPending = data.some(item => item.matched_records_status === "pending");
+        if (!intervalRef.current) {
+            console.log("pooling started");
+            intervalRef.current = setInterval(() => {
+                const hasPending = data.some(item => item.active_segment_records !== item.processed_active_segment_records);
     
-    //             if (hasPending) {
-    //                 console.log("Fetching due to pending records");
-    //                 fetchSmartsMemoized();
-    //             } else {
-    //                 console.log("No pending records, stopping interval");
-    //                 if (intervalRef.current) {
-    //                     clearInterval(intervalRef.current);
-    //                     intervalRef.current = null;
-    //                 }
-    //             }
-    //         }, 2000);
-    //     }
+                if (hasPending) {
+                    console.log("Fetching due to pending records");
+                    fetchSmartsMemoized();
+                } else {
+                    console.log("No pending records, stopping interval");
+                    clearPollingInterval()
+                }
+            }, 2000);
+        }
     
-    //     return () => {
-    //         if (intervalRef.current) {
-    //             clearInterval(intervalRef.current);
-    //             intervalRef.current = null;
-    //             console.log("interval cleared");
-    //         }
-    //     };
-    // }, [data, fetchSmartsMemoized]);
+        return () => {
+            clearPollingInterval()
+        };
+    }, [data, fetchSmartsMemoized, page, rowsPerPage]);
 
     const fetchSmarts = async ({ sortBy, sortOrder, page, rowsPerPage, appliedDates }: FetchDataParams) => {
         try {
-            isFirstLoad ? setLoading(true) : setLoaderForTable(true);
+            !intervalRef.current
+                ? isFirstLoad ? setLoading(true) : setLoaderForTable(true)
+                : () => { }
     
             const accessToken = localStorage.getItem("token");
             if (!accessToken) {
@@ -936,7 +944,7 @@ const SmartAudiences: React.FC = () => {
                                                             </TableHead>
                                                             <TableBody>
                                                                 {data.map((row: Smarts, index) => {
-                                                                    const progress = sourceProgress[row.id];
+                                                                    const progress = smartAudienceProgress[row.id];
                                                                     return (
                                                                         <TableRow
                                                                             key={row.id}
@@ -1167,7 +1175,12 @@ const SmartAudiences: React.FC = () => {
                                                                             <TableCell
                                                                                 sx={{ ...smartAudiences.table_array, position: 'relative' }}
                                                                             >
-                                                                                {row.active_segment_records.toLocaleString('en-US')}
+                                                                                {(progress?.processed && progress?.processed === row?.active_segment_records) || (row?.processed_active_segment_records ===  row?.active_segment_records && row?.processed_active_segment_records !== 0)
+                                                                                    ? row.active_segment_records.toLocaleString('en-US')
+                                                                                    : row?.processed_active_segment_records > progress?.processed
+                                                                                        ? <ProgressBar progress={{ total: row?.active_segment_records, processed: row?.processed_active_segment_records}} />
+                                                                                        : <ProgressBar progress={{...progress, total: row.active_segment_records}} />
+                                                                                }
                                                                             </TableCell>
 
                                                                             {/* Status Column */}

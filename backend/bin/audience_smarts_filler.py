@@ -4,11 +4,10 @@ import sys
 import asyncio
 import functools
 import json
-import aioboto3
 from aio_pika import IncomingMessage
 from sqlalchemy.orm import sessionmaker, Session, aliased
 from dotenv import load_dotenv
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -22,7 +21,6 @@ load_dotenv()
 AUDIENCE_SMARTS_AGENT = 'aud_smarts_agent'
 AUDIENCE_SMARTS_FILLER = 'aud_smarts_filler'
 SELECTED_ROW_COUNT = 1000
-AUDIENCE_SMARTS_PROGRESS = "AUDIENCE_SMARTS_PROGRESS"
 
 def setup_logging(level):
     logging.basicConfig(
@@ -32,23 +30,9 @@ def setup_logging(level):
     )
 
 
-async def send_sse(connection, user_id: int, data: dict):
-    try:
-        logging.info(f"send client throught SSE: {data, user_id}")
-        await publish_rabbitmq_message(
-            connection=connection,
-            queue_name=f'sse_events_{str(user_id)}',
-            message_body={
-                "status": AUDIENCE_SMARTS_PROGRESS,
-                "data": data
-            }
-        )
-    except Exception as e:
-        logging.error(f"Error sending SSE: {e}")
-
-
 def format_ids(ids):
-    return tuple(ids) if ids else ('NULL',)
+    return tuple(ids) if ids else None
+
 
 async def aud_smarts_reader(message: IncomingMessage, db_session: Session, connection):
     try:
@@ -70,11 +54,6 @@ async def aud_smarts_reader(message: IncomingMessage, db_session: Session, conne
         AudienceLALP = aliased(AudienceLookALikePerson)
         AudienceSMP = aliased(AudienceSourcesMatchedPerson)
 
-        lookalike_include = lookalike_include or None
-        lookalike_exclude = lookalike_exclude or None
-        source_include = source_include or None
-        source_exclude = source_exclude or None
-
         while offset < active_segment:
             lalp_query = (
                 db_session.query(AudienceLALP.five_x_five_user_id.label("five_x_five_user_id"))
@@ -92,7 +71,7 @@ async def aud_smarts_reader(message: IncomingMessage, db_session: Session, conne
 
             final_query = (
                 db_session.query(combined_query.c.five_x_five_user_id)
-                .limit(SELECTED_ROW_COUNT)
+                .limit(min(SELECTED_ROW_COUNT, active_segment - offset))
                 .offset(offset)
             )
 
@@ -111,10 +90,11 @@ async def aud_smarts_reader(message: IncomingMessage, db_session: Session, conne
                 queue_name=AUDIENCE_SMARTS_AGENT,
                 message_body=message_body
             )
+            logging.info(f"sent {len(persons)} persons")  
 
             offset += SELECTED_ROW_COUNT
 
-        await message.ack()
+        await message.ack() 
     except BaseException as e:
         db_session.rollback()
         logging.error(f"Error processing message: {e}", exc_info=True)
@@ -148,7 +128,6 @@ async def main():
         )
         Session = sessionmaker(bind=engine)
         db_session = Session()
-        s3_session = aioboto3.Session()
         
         reader_queue = await channel.declare_queue(
             name=AUDIENCE_SMARTS_FILLER,

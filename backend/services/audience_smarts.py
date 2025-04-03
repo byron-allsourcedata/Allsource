@@ -62,6 +62,7 @@ class AudienceSmartsService:
                 'active_segment_records': item[7],
                 'status': item[8],
                 'integrations': integrations,
+                'processed_active_segment_records': item[10],
             })
 
         return audience_smarts_list, count
