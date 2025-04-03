@@ -214,8 +214,7 @@ async def process_email_leads(
         logging.info(f"Adding {len(matched_persons_to_add)} new persons to the database")
         db_session.bulk_save_objects(matched_persons_to_add)
 
-    # TODO fix
-    processed_count = len(filtered_persons)
+    processed_count = len(matched_persons_to_update) + len(matched_persons_to_add)
     logging.info(f"Processed {processed_count} persons for source_id {source_id}")
     return processed_count
 
