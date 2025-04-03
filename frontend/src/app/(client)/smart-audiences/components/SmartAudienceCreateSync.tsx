@@ -30,6 +30,7 @@ interface AudiencePopupProps {
     id?: string
     activeSegmentRecords?: number
     isDownloadAction: boolean
+    setIsPageLoading: (state: boolean) => void
 }
 
 type KlaviyoList = {
@@ -219,12 +220,11 @@ const customFieldsList: Row[] = [
 ]
 
 const defaultRows: Row[] = [
-    { id: 1, type: 'Email', value: 'Email' },
-    { id: 2, type: 'Phone number', value: 'Phone number' },
+    { id: 1, type: 'Personal Emails', value: 'Personal Emails' },
+    { id: 2, type: 'Personal Phone', value: 'Personal Phone' },
     { id: 3, type: 'First name', value: 'First name' },
-    { id: 4, type: 'Second name', value: 'Second name' },
+    { id: 4, type: 'Last name', value: 'Last name' },
     { id: 5, type: 'Job Title', value: 'Job Title' },
-    { id: 6, type: 'Location', value: 'Location' }
 ];
 
 const defaultRowsMeta: Row[] = [
@@ -286,7 +286,7 @@ const defaultRowsGoogleAds: Row[] = [
     { id: 4, type: 'Address', value: 'Address' }
 ];
 
-const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrationsList: integ = [], id, activeSegmentRecords = 0, isDownloadAction }) => {
+const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrationsList: integ = [], id, activeSegmentRecords = 0, isDownloadAction, setIsPageLoading }) => {
     const { triggerSync } = useIntegrationContext();
     const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
     const [integrationsCredentials, setIntegrationsCredentials] = useState<IntegrationsCredentials[]>([])
@@ -347,8 +347,11 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
 
     useEffect(() => {
         if (isDownloadAction) {
-            // setIsLoading(true)
-            setValue("3")
+            setValue("2")
+            setCustomFields(
+                [...customFieldsList.map(field => ({ type: field.value, value: field.type })), 
+                ...defaultRows.map((item) => ({value: item.type, type: toSnakeCase(item.type)}))
+            ])
         }
         else {
             setValue("1")
@@ -392,6 +395,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         return updatedName
     }
 
+    const toSnakeCase = (name: string) => {
+        return name.toLowerCase().split(' ').join('_');
+    }
+
     const handleActive = (service: string) => {
         setActiveService(service);
         setActiveImageService(integrationsImage.filter((item) => item.service_name === service)[0].image)
@@ -404,6 +411,40 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     const canSendDataSync = () => {
         return value === '4' || !contactSyncTab
     };
+
+    const downloadPersons = async () => {
+        setIsPageLoading(true);
+        onClose()
+        try {
+
+            const requestObj: RequestData = {
+                sent_contacts: valueContactSync,
+                smart_audience_id: id,
+                data_map: customFields
+            }
+            const response = await axiosInstance.post('/audience-smarts/download-persons', requestObj, {
+                responseType: 'blob'
+            });
+
+            if (response.status === 200) {
+                const url = window.URL.createObjectURL(new Blob([response.data]));
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', 'data.csv');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+            } else {
+                showErrorToast(`Error downloading file`);
+            }
+        } catch {
+        } finally {
+            setIsPageLoading(false)
+            onClose()
+        }
+
+    }
 
     const createDataSync = async () => {
         setIsLoading(true);
@@ -512,7 +553,12 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         } 
         else if (value === '3' || value === '4') {
             if (canSendDataSync()) {
-                createDataSync()
+                if (isDownloadAction) {
+                    downloadPersons()
+                }
+                else {
+                    createDataSync()
+                }
             }
             else {
                 setValue((prevValue) => String(Number(prevValue) + 1));
@@ -831,7 +877,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                 )}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: 11, backgroundColor: '#fff' }}>
                     <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
-                        Create smart audience sync {activeService ? `with ${formatServiceName(toCamelCase(activeService))}` : ""}
+                        Create smart audience sync {isDownloadAction ? "with CSV" : activeService ? `with ${formatServiceName(toCamelCase(activeService))}` : ""}
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
                         <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/data-sync" className="main-text" sx={{
@@ -1506,8 +1552,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                     }}
                                     >
                                     {(value === "3" && !contactSyncTab) || value === "4" 
-                                        ? "Sync"
-                                        : "Next"
+                                            ? isDownloadAction 
+                                                ? "Download" 
+                                                : "Sync"
+                                            : "Next"
                                     }
                                 </Button>
                             </Box>

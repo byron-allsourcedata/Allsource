@@ -1,6 +1,9 @@
 import logging
 from typing import Optional, List
 import json
+import io
+import csv
+from utils import format_phone_number
 
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
@@ -214,3 +217,20 @@ class AudienceSmartsService:
 
         return {"lookalikes": lookalikes, "sources": source_list}
 
+
+    def download_persons(self, smart_audience_id, sent_contacts, data_map):
+        types = [contact.type for contact in data_map]
+        values = [contact.value for contact in data_map]
+        leads = self.audience_smarts_persistence.get_persons_by_smart_aud_id(smart_audience_id, sent_contacts, types)
+
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(values)
+        
+        for lead in leads:
+            relevant_data = [getattr(lead, field, "") for field in types]
+            # relevant_data.append(format_phone_number(lead.phone))
+            writer.writerow(relevant_data)
+
+        output.seek(0)
+        return output

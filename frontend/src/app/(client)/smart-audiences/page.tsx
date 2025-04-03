@@ -1382,6 +1382,7 @@ const SmartAudiences: React.FC = () => {
                                         onClose={handleDataSyncPopupClose}
                                         integrationsList={selectedRowData?.integrations}
                                         isDownloadAction={isDownloadAction}
+                                        setIsPageLoading={setLoading}
                                     />
                                     <FilterPopup open={filterPopupOpen}
                                         onClose={handleFilterPopupClose}
