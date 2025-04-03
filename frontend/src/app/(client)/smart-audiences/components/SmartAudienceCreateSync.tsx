@@ -716,6 +716,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         setOpenS3Connect(false)
     }
 
+    const handleCreateGoogleAdsOpen = () => {
+        setCreateGoogleAds(true)
+    }
+
     const handleCreateGoogleAdsClose = () => {
         setCreateGoogleAds(false)
     }
@@ -732,7 +736,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         hubspot: handleCreateHubspotOpen,
         mailchimp: handleOpenMailchimpConnect,
         sales_force: handleCreateSalesForceOpen,
-        google_ads: handleCreateGoogleAdsClose,
+        google_ads: handleCreateGoogleAdsOpen,
         s3: handleCreateS3Open,
     };
 
