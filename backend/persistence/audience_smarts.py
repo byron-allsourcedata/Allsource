@@ -3,17 +3,19 @@ from datetime import datetime
 
 import pytz
 from sqlalchemy import desc, asc, or_
-from sqlalchemy.orm import Session, aliased
+from sqlalchemy.orm import Session, aliased, load_only
 from sqlalchemy.sql import func
 
 from models.audience_smarts import AudienceSmart
 from models.audience_lookalikes_persons import AudienceLookALikePerson
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
+from models.audience_smarts_persons import AudienceSmartPerson
 from models.audience_smarts_use_cases import AudienceSmartsUseCase
 from models.audience_smarts_data_sources import AudienceSmartsDataSources
 from models.audience_lookalikes import AudienceLookalikes
 from models.audience_sources import AudienceSource
 from models.users import Users
+from models.five_x_five_users import FiveXFiveUser
 from schemas.audience import DataSourcesFormat
 from typing import Optional, Tuple, List
 from sqlalchemy.engine.row import Row
@@ -239,3 +241,18 @@ class AudienceSmartsPersistence:
         ).update({AudienceSmart.name: new_name}, synchronize_session=False)
         self.db.commit()
         return updated_count
+
+
+    def get_persons_by_smart_aud_id(self, smart_audience_id, sent_contacts, fields):
+        query = (
+            self.db.query(FiveXFiveUser).select_from(AudienceSmartPerson)
+                .join(FiveXFiveUser, FiveXFiveUser.id == AudienceSmartPerson.five_x_five_user_id)
+                .filter(AudienceSmartPerson.smart_audience_id == smart_audience_id)
+        )
+
+        orm_fields = [getattr(FiveXFiveUser, field) for field in fields if hasattr(FiveXFiveUser, field)]
+        if orm_fields:
+            query = query.options(load_only(*orm_fields))
+
+        smarts = query.limit(sent_contacts).all()
+        return smarts
