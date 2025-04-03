@@ -79,6 +79,9 @@ def parse_date(date_str: str) -> str | None:
     if not date_str:
         return None
 
+    if date_str.endswith("Z"):
+        date_str = date_str[:-1] + "+0000"
+
     formats = [
         '%m/%d/%Y %H:%M',
         '%Y-%m-%dT%H:%M:%S%z',
