@@ -23,7 +23,7 @@ from models.audience_smarts import AudienceSmart
 from sqlalchemy import func, create_engine
 from models.audience_lookalikes_persons import AudienceLookalikes
 import random
-from models.enrichment_users import EnrichmentUser
+from models.five_x_five_users import FiveXFiveUser
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 load_dotenv()
@@ -69,8 +69,8 @@ def get_max_ids(db_session, lookalike_size):
         
     num_users = random.randint(10000, max)
     subquery = (
-        db_session.query(EnrichmentUser.id)
-        .order_by(EnrichmentUser.id.asc())
+        db_session.query(FiveXFiveUser.id)
+        .order_by(FiveXFiveUser.id.asc())
         .limit(num_users)
         .subquery()
     )
@@ -105,8 +105,7 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, conn
         
         current_id = -1
         while current_id < max_id:
-            query = db_session.query(EnrichmentUser.id).filter(EnrichmentUser.id <= max_id, EnrichmentUser.id > current_id).order_by(EnrichmentUser.id.asc()).limit(SELECTED_ROW_COUNT)
-            results = query.all()
+            results = db_session.query(FiveXFiveUser.id).filter(FiveXFiveUser.id <= max_id, FiveXFiveUser.id > current_id).order_by(FiveXFiveUser.id.asc()).limit(SELECTED_ROW_COUNT).query.all()
             
             if not results:
                 break

@@ -1,6 +1,7 @@
 from sqlalchemy import Column, event, Integer, TIMESTAMP, JSON, ForeignKey, Index, UUID, String, Float, DECIMAL, VARCHAR
 
 from .audience_sources import AudienceSource
+from models.enrichment_users import EnrichmentUser
 from .base import Base, create_timestamps, update_timestamps
 
 
@@ -9,7 +10,7 @@ class AudienceSourcesMatchedPerson(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, unique=True, nullable=False, server_default="gen_random_uuid()")
     source_id = Column(UUID(as_uuid=True), ForeignKey(AudienceSource.id, ondelete='cascade'), nullable=False)
-    five_x_five_user_id = Column(Integer, ForeignKey('5x5_users.id'), nullable=True)
+    enrichment_user_id = Column(UUID, ForeignKey(EnrichmentUser.id), nullable=True)
     mapped_fields = Column(JSON, nullable=True)
 
     email = Column(VARCHAR(64), nullable=False)
@@ -23,7 +24,7 @@ class AudienceSourcesMatchedPerson(Base):
     value_score = Column(DECIMAL(10, 2), default=0)
     inverted_recency = Column(DECIMAL(10, 2), default=0)
     recency_failed = Column(DECIMAL(10, 2), default=0)
-
+    view_score = Column(DECIMAL(10, 2), default=0)
     created_at = Column(TIMESTAMP, nullable=False)
     updated_at = Column(TIMESTAMP, nullable=False)
 
