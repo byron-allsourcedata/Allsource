@@ -6,6 +6,11 @@ import json
 import regex
 from urllib.parse import urlparse, parse_qs
 
+from enums import ProccessDataSyncResult
+from models.five_x_five_users import FiveXFiveUser
+from services.integrations.million_verifier import MillionVerifierIntegrationsService
+
+
 def get_utc_aware_date():
     return datetime.now(timezone.utc).replace(microsecond=0)
 
@@ -23,6 +28,49 @@ def get_utc_aware_date_for_postgres():
 
 def timestamp_to_date(timestamp):
         return datetime.fromtimestamp(timestamp)
+
+def get_valid_email(user: FiveXFiveUser, million_verifier_integrations: MillionVerifierIntegrationsService) -> str:
+    email_fields = [
+        'business_email',
+        'personal_emails',
+        'additional_personal_emails',
+    ]
+    thirty_days_ago = datetime.now() - timedelta(days=30)
+    thirty_days_ago_str = thirty_days_ago.strftime('%Y-%m-%d %H:%M:%S')
+    verity = 0
+    for field in email_fields:
+        email = getattr(user, field, None)
+        if email:
+            emails = extract_first_email(email)
+            for e in emails:
+                if e and field == 'business_email' and user.business_email_last_seen:
+                    if user.business_email_last_seen.strftime('%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
+                        return e.strip()
+                if e and field == 'personal_emails' and user.personal_emails_last_seen:
+                    personal_emails_last_seen_str = user.personal_emails_last_seen.strftime('%Y-%m-%d %H:%M:%S')
+                    if personal_emails_last_seen_str > thirty_days_ago_str:
+                        return e.strip()
+                if e and million_verifier_integrations.is_email_verify(email=e.strip()):
+                    return e.strip()
+                verity += 1
+    if verity > 0:
+        return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
+    return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+def get_valid_email_without_million(user: FiveXFiveUser) -> str:
+    email_fields = [
+        'business_email',
+        'personal_emails',
+        'additional_personal_emails',
+    ]
+    for field in email_fields:
+        email = getattr(user, field, None)
+        if email:
+            emails = extract_first_email(email)
+            for e in emails:
+                return e
+                
+    return ProccessDataSyncResult.INCORRECT_FORMAT.value
     
 def format_phone_number(phones):
     if phones:

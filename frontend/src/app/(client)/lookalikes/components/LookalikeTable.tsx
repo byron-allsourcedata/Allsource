@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
     Table,
     TableBody,
@@ -16,11 +16,15 @@ import {
     DialogContentText,
     Popover,
     TextField,
+    InputAdornment
+
 } from "@mui/material";
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import dayjs from "dayjs";
+import { useSearchParams } from 'next/navigation';
 import { lookalikesStyles } from './lookalikeStyles';
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import EditIcon from '@mui/icons-material/Edit';
@@ -37,6 +41,7 @@ interface TableRowData {
     created_date: Date;
     created_by: string;
     size: number;
+    significant_fields: Record<string, any>
 }
 
 interface LookalikeTableProps {
@@ -88,6 +93,8 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, order
     const [isEditPopoverOpen, setIsEditPopoverOpen] = useState(false);
     const [confirmAnchorEl, setConfirmAnchorEl] = useState<null | HTMLElement>(null);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const searchParams = useSearchParams();
+    const isDebug = searchParams.get('is_debug') === 'true';
 
 
     const handleRename = (event: React.MouseEvent<HTMLElement>, rowId: string, rowName: string) => {
@@ -133,10 +140,23 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, order
                 showErrorToast("An error occurred while trying to remove lookalike")
             }
         } catch (error: any) {
-            if(error.status === 400){
+            if (error.status === 400) {
                 showErrorToast("Cannot remove lookalike because it is used for smart audience")
             }
         }
+    };
+
+    const handleCopy = (text: string) => {
+        if (text !== '---') {
+            navigator.clipboard.writeText(text);
+        }
+    };
+
+    const fullFormattedFields = (fields: Record<string, number> | null): string => {
+        if (!fields || typeof fields !== "object") return "---";
+        return Object.entries(fields)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join(", ");
     };
 
     const handleOpenConfirm = (event: React.MouseEvent<HTMLElement>, rowId: string, rowName: string) => {
@@ -192,6 +212,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, order
                             { key: "created_date", label: "Created Date", sortable: true },
                             { key: "created_by", label: "Created By" },
                             { key: "size", label: "Size", sortable: true },
+                            ...(isDebug ? [{ key: "significantField", label: "Significant field" }] : []),
                             { key: "actions", label: "" },
                         ].map(({ key, label, sortable = false }) => (
                             <TableCell
@@ -209,7 +230,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, order
                                         ...lookalikesStyles.table_column,
                                         maxWidth: '30px',
                                         "::after": { content: 'none' }
-                                    })
+                                    }),
                                 }}
                             >
                                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -425,6 +446,42 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({ tableData, order, order
                             <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>{dayjs(row.created_date).format('MMM D, YYYY')}</TableCell>
                             <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>{row.created_by}</TableCell>
                             <TableCell sx={{ ...lookalikesStyles.table_array, position: 'relative' }}>{row.size}</TableCell>
+                            {isDebug && (
+                                <TableCell
+                                sx={{
+                                  ...lookalikesStyles.table_array,
+                                  position: 'sticky',
+                                  left: 0,
+                                  zIndex: 9,
+                                  backgroundColor: "#fff",
+                                  maxWidth: '150px',
+                                }}
+                              >
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Typography
+                                            variant="body2"
+                                            sx={{
+                                                whiteSpace: 'nowrap',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                wordBreak: 'break-word',
+                                                width: '100%'
+                                            }}
+                                        >
+                                            {fullFormattedFields(row.significant_fields)}
+                                        </Typography>
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                onClick={() => handleCopy(fullFormattedFields(row.significant_fields))}
+                                                edge="end"
+                                            >
+                                                <ContentCopyIcon fontSize="small" />
+                                            </IconButton>
+                                        </InputAdornment>
+                                    </Box>
+                                </TableCell>
+
+                            )}
                             <TableCell sx={{ ...lookalikesStyles.table_array, maxWidth: '40px', padding: '8px', pr: 0 }}>
                                 <IconButton sx={{ pl: 0, pr: 0, pt: 0.25, pb: 0.25, margin: 0 }} onClick={(event) => handleOpenConfirm(event, row.id, row.name)}>
                                     <DeleteIcon sx={{ maxHeight: "18px" }} />

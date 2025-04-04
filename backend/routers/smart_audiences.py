@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Depends, Query, Body, HTTPException
+from starlette.responses import StreamingResponse
 from dependencies import get_audience_smarts_service, check_user_authorization_without_pixel
 from services.audience_smarts import AudienceSmartsService
 from schemas.audience import SmartsAudienceObjectResponse, UpdateSmartAudienceRequest, CreateSmartAudienceRequest, DataSourcesResponse
+from schemas.integrations.integrations import SmartAudienceSyncCreate
 from typing import Optional, List
 from uuid import UUID
+from enums import BaseEnum
 
 router = APIRouter(dependencies=[Depends(check_user_authorization_without_pixel)])
 
@@ -78,7 +81,8 @@ async def create_smart_audience(
             use_case_alias=request.use_case,
             validation_params=request.validation_params,
             data_sources=request.data_sources,
-            contacts_to_validate=request.contacts_to_validate
+            contacts_to_validate=request.contacts_to_validate,
+            total_records=request.total_records
         )
         return {'status': "SUCCESS"}
     except ValueError:
@@ -125,3 +129,19 @@ def update_audience_smart(
     return audience_smarts_service.update_audience_smart(
         id=id, new_name=payload.new_name
     )
+
+
+@router.post('/download-persons')
+def download_persons(
+        payload: SmartAudienceSyncCreate,
+        audience_smarts_service: AudienceSmartsService = Depends(get_audience_smarts_service)
+):
+    result = audience_smarts_service.download_persons(
+        smart_audience_id=payload.smart_audience_id, 
+        sent_contacts=payload.sent_contacts,
+        data_map=payload.data_map
+        )
+    
+    if result:
+        return StreamingResponse(result, media_type="text/csv", headers={"Content-Disposition": "attachment; filename=data.csv"})
+    return BaseEnum.FAILURE

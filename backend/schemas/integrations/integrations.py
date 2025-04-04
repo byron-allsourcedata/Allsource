@@ -3,12 +3,15 @@ from typing import Optional, List
 from enum import Enum
 from uuid import UUID
 
+
 class ShopifyOrBigcommerceCredentials(BaseModel):
     shop_domain: str
     access_token: str
 
+
 class ExternalAppInstalled(BaseModel):
     shop_domain: str
+
 
 class WoocommerceCredentials(BaseModel):
     url: str
@@ -17,36 +20,45 @@ class WoocommerceCredentials(BaseModel):
 
 
 class ApiKeyCredentials(BaseModel):
-    api_key: str 
+    api_key: str
+
 
 class HubSpotCredentials(BaseModel):
     access_token: str
+
 
 class MailchimpCredentials(BaseModel):
     data_center: str
     access_token: str
 
+
 class GoogleAdsCredentials(BaseModel):
     code: str
     scope: str
-    
+
+
 class BingAdsCredentials(BaseModel):
     code: str
     state: str
     code_verifier: str
 
+
 class SalesForceCredentials(BaseModel):
     code: str
 
+
 class MetaCredentials(BaseModel):
-    access_token:str 
+    access_token: str
+
 
 class SupperssionSet(BaseModel):
     suppression: bool
 
+
 class S3Credentials(BaseModel):
     secret_key: str
     secret_id: str
+
 
 class IntegrationCredentials(BaseModel):
     shopify: Optional[ShopifyOrBigcommerceCredentials] = None
@@ -88,9 +100,11 @@ class Lead(BaseModel):
 class ExportLeads(BaseModel):
     list_name: str
 
+
 class DataMap(BaseModel):
     type: str
     value: str
+
 
 class Campaign(BaseModel):
     campaign_id: int
@@ -98,6 +112,7 @@ class Campaign(BaseModel):
     campaign_objective: str
     bid_amount: int
     daily_budget: int
+
 
 class SyncCreate(BaseModel):
     list_id: Optional[str] = None
@@ -107,9 +122,14 @@ class SyncCreate(BaseModel):
     webhook_url: Optional[str] = None
     method: Optional[str] = None
     integrations_users_sync_id: Optional[int] = None
-    leads_type: Optional[str] = 'allContacts' 
+    leads_type: Optional[str] = 'allContacts'
     data_map: Optional[List[DataMap]] = None
     campaign: Optional[Campaign] = None
+
+
+class SyncRequest(BaseModel):
+    list_id: str
+
 
 class SmartAudienceSyncCreate(BaseModel):
     smart_audience_id: UUID
@@ -118,6 +138,7 @@ class SmartAudienceSyncCreate(BaseModel):
     sent_contacts: int
     list_name: Optional[str] = None
     data_map: Optional[List[DataMap]] = None
+
 
 class CreateListOrTags(BaseModel):
     name: str
@@ -128,15 +149,18 @@ class CreateListOrTags(BaseModel):
     description: Optional[str] = None
     ad_account_id: Optional[str] = None
 
+
 class ContactSuppression(BaseModel):
     id: str
     email: str
     phone_number: Optional[str] = None
 
+
 class ContactFiled(Enum):
     id = 'id'
     email = 'email'
     phone_number = 'phone_number'
+
 
 class OrderAPI(BaseModel):
     platform_order_id: Optional[int] = None
@@ -146,9 +170,11 @@ class OrderAPI(BaseModel):
     email: Optional[EmailStr] = None
     currency_code: Optional[str] = None
 
+
 class ListFromIntegration(BaseModel):
     id: str
     list_name: str
+
 
 class ReqestList(BaseModel):
     ad_account_id: Optional[str] = None

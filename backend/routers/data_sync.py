@@ -15,8 +15,8 @@ async def get_sync(service_name: str | None = Query(None), integrations_users_sy
 
 @router.get('/get-smart-audience-sync')
 async def get_smart_sync(service_name: str | None = Query(None), integrations_users_sync_id: int | None = Query(None),
-                   integration_service: IntegrationService = Depends(get_integration_service),
-                   user=Depends(check_user_authorization)):
+                         integration_service: IntegrationService = Depends(get_integration_service),
+                         user=Depends(check_user_authorization)):
     return integration_service.get_all_audience_sync(user, service_name, integrations_users_sync_id)
 
 
@@ -32,6 +32,20 @@ async def delete_smart_sync(list_id: str = Query(...),
                 detail="Access denied. Admins and standard only."
             )
     return integration_service.delete_smart_sync(user, list_id)
+
+
+@router.post('/sync/switch-toggle-smart-audience-sync')
+async def switch_toggle(data: SyncRequest,
+                        integration_service: IntegrationService = Depends(get_integration_service),
+                        user=Depends(check_user_authorization)):
+    if user.get('team_member'):
+        team_member = user.get('team_member')
+        if team_member.get('team_access_level') not in {TeamAccessLevel.ADMIN.value, TeamAccessLevel.OWNER.value, TeamAccessLevel.STANDARD.value}:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins and standard only."
+            )
+    return integration_service.switch_toggle_smart_sync(user=user, list_id=data.list_id)
 
 
 @router.post('/sync')

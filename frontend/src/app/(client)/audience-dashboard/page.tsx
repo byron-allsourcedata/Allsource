@@ -1,115 +1,274 @@
 "use client";
-import React, { useState, useEffect, Suspense, useRef } from "react";
-import { Box, Button, Grid, Skeleton, Tab, Tabs, Typography } from '@mui/material';
-import { dashboardStyles } from '../dashboard/dashboardStyles';
-import CustomTooltip from '@/components/customToolTip';
-import { DateRangeIcon } from '@mui/x-date-pickers';
-import CalendarPopup from '@/components/CustomCalendar';
-import { useNotification } from '../../../context/NotificationContext';
-import dayjs from "dayjs";
-import Image from "next/image";
+import React, { useState, useEffect } from "react";
+import { Box, Grid, Typography } from "@mui/material";
+import { dashboardStyles } from "../dashboard/dashboardStyles";
+import CustomTooltip from "@/components/customToolTip";
+import { useNotification } from "../../../context/NotificationContext";
 import CustomCards from "./components/CustomCards";
-import ExampleChart from "./components/ExampleChart";
+import AudienceChart from "./components/AudienceChart";
+import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
+import LookalikeCard from "./components/SelectedCards";
 
-const mockData = [
-  { pixel_contacts: 120, sources: 300, lookalikes: 150, smart_audience: 50, data_sync: 20 },
-  { pixel_contacts: 100, sources: 280, lookalikes: 140, smart_audience: 45, data_sync: 25 },
-  { pixel_contacts: 130, sources: 320, lookalikes: 160, smart_audience: 55, data_sync: 30 },
-  { pixel_contacts: 140, sources: 340, lookalikes: 170, smart_audience: 60, data_sync: 35 },
-  { pixel_contacts: 150, sources: 360, lookalikes: 180, smart_audience: 65, data_sync: 40 },
-  { pixel_contacts: 160, sources: 380, lookalikes: 190, smart_audience: 70, data_sync: 45 },
-  { pixel_contacts: 170, sources: 400, lookalikes: 200, smart_audience: 75, data_sync: 50 },
-  { pixel_contacts: 180, sources: 420, lookalikes: 210, smart_audience: 80, data_sync: 55 },
-  { pixel_contacts: 190, sources: 440, lookalikes: 220, smart_audience: 85, data_sync: 60 },
-  { pixel_contacts: 200, sources: 460, lookalikes: 230, smart_audience: 90, data_sync: 65 },
-  { pixel_contacts: 210, sources: 480, lookalikes: 240, smart_audience: 95, data_sync: 70 },
-  { pixel_contacts: 220, sources: 500, lookalikes: 250, smart_audience: 100, data_sync: 75 },
-];
-
+const colorMapping = {
+  pixel_contacts: "rgba(244, 87, 69, 1)",
+  sources: "rgba(80, 82, 178, 1)",
+  lookalikes: "rgba(224, 176, 5, 1)",
+  smart_audience: "rgba(144, 190, 109, 1)",
+  data_sync: "rgba(5, 115, 234, 1)",
+};
 
 const AudienceDashboard: React.FC = () => {
-  const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
-  const isCalendarOpen = Boolean(calendarAnchorEl);
   const [values, setValues] = useState({
-    totalRevenue: 0,
-    totalVisitors: 0,
-    viewProducts: 0,
-    totalAbandonedCart: 0,
+    pixel_contacts: 0,
+    sources: 0,
+    lookalikes: 0,
+    smart_audience: 0,
+    data_sync: 0,
   });
+  const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const { hasNotification } = useNotification();
-  const [formattedDates, setFormattedDates] = useState<string>('');
-  const [selectedDateLabel, setSelectedDateLabel] = useState<string>('');
-  const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
-  const handleCalendarClose = () => {
-    setCalendarAnchorEl(null);
-  };
-  const handleDateChange = (dates: { start: Date | null; end: Date | null }) => {
-    const { start, end } = dates;
-    if (start && end) {
-      const formattedStart = dayjs(start).format('MMM D');
-      const formattedEnd = dayjs(end).format('MMM D, YYYY');
+  const [loading, setLoading] = useState(true);
+  const [series, setSeries] = useState<
+    {
+      id: keyof typeof colorMapping;
+      label: string;
+      curve: string;
+      showMark: boolean;
+      area: boolean;
+      stackOrder: string;
+      data: number[];
+    }[]
+  >([
+    {
+      id: "pixel_contacts" as keyof typeof colorMapping,
+      label: "Pixel Contacts",
+      curve: "linear",
+      showMark: false,
+      area: false,
+      stackOrder: "ascending",
+      data: [],
+    },
+    {
+      id: "sources" as keyof typeof colorMapping,
+      label: "Sources",
+      curve: "linear",
+      showMark: false,
+      area: false,
+      stackOrder: "ascending",
+      data: [0],
+    },
+    {
+      id: "lookalikes" as keyof typeof colorMapping,
+      label: "Lookalikes",
+      curve: "linear",
+      showMark: false,
+      area: false,
+      stackOrder: "ascending",
+      data: [0],
+    },
+    {
+      id: "smart_audience" as keyof typeof colorMapping,
+      label: "Smart Audience",
+      curve: "linear",
+      showMark: false,
+      area: false,
+      stackOrder: "ascending",
+      data: [0],
+    },
+    {
+      id: "data_sync" as keyof typeof colorMapping,
+      label: "Data Sync",
+      curve: "linear",
+      showMark: false,
+      area: false,
+      stackOrder: "ascending",
+      data: [0],
+    },
+  ]);
+  const [date, setDays] = useState<string[]>([]);
 
-      setFormattedDates(`${formattedStart} - ${formattedEnd}`);
-    } else if (start) {
-      const formattedStart = dayjs(start).format('MMM D, YYYY');
-      setFormattedDates(formattedStart);
-    } else if (end) {
-      const formattedEnd = dayjs(end).format('MMM D, YYYY');
-      setFormattedDates(formattedEnd);
+  const handleCardClick = (card: string) => {
+    if (selectedCard === card) {
+      setSelectedCard(null);
     } else {
-      setFormattedDates('');
+      setSelectedCard(card);
     }
   };
-  const handleDateLabelChange = (label: string) => {
-    setSelectedDateLabel(label);
-  };
-  const handleApply = (dates: { start: Date | null; end: Date | null }) => {
-    if (dates.start && dates.end) {
 
-      setAppliedDates(dates);
-      setCalendarAnchorEl(null);
+  const fetchData = async () => {
+    try {
+      setLoading(true);
 
+      const response = await axiosInterceptorInstance.get(
+        "/audience-dashboard"
+      );
 
-      handleCalendarClose();
+      setValues((prev) => ({
+        pixel_contacts:
+          response.data?.total_counts.pixel_contacts ?? prev.pixel_contacts,
+        sources: response.data?.total_counts.sources_count ?? prev.sources,
+        lookalikes:
+          response.data?.total_counts.lookalike_count ?? prev.lookalikes,
+        smart_audience:
+          response.data?.total_counts.smart_audience_count ??
+          prev.smart_audience,
+        data_sync:
+          response.data?.total_counts.data_sync_count ?? prev.data_sync,
+      }));
+      const daily_data = response.data?.daily_data;
+      console.log(daily_data);
+      const days = Object.keys(daily_data).sort(
+        (a, b) => new Date(a).getTime() - new Date(b).getTime()
+      );
+
+      const pixelContacts = days.map(
+        (day) => daily_data[day].pixel_contacts || 0
+      );
+      const sourcesData = days.map((day) => daily_data[day].sources_count || 0);
+      const lookalikesData = days.map(
+        (day) => daily_data[day].lookalike_count || 0
+      );
+      const SmartAudinceData = days.map(
+        (day) => daily_data[day].smart_count || 0
+      );
+      const dataSyncData = days.map((day) => daily_data[day].sync_count || 0);
+
+      setSeries([
+        {
+          id: "pixel_contacts",
+          label: "Pixel Contacts",
+          data: pixelContacts,
+          curve: "linear",
+          showMark: false,
+          area: false,
+          stackOrder: "ascending",
+        },
+        {
+          id: "sources",
+          label: "Sources",
+          data: sourcesData,
+          curve: "linear",
+          showMark: false,
+          area: false,
+          stackOrder: "ascending",
+        },
+        {
+          id: "lookalikes",
+          label: "Lookalikes",
+          data: lookalikesData,
+          curve: "linear",
+          showMark: false,
+          area: false,
+          stackOrder: "ascending",
+        },
+        {
+          id: "smart_audience",
+          label: "Smart Audience",
+          data: SmartAudinceData,
+          curve: "linear",
+          showMark: false,
+          area: false,
+          stackOrder: "ascending",
+        },
+        {
+          id: "data_sync",
+          label: "Data Sync",
+          data: dataSyncData,
+          curve: "linear",
+          showMark: false,
+          area: false,
+          stackOrder: "ascending",
+        },
+      ]);
+      setDays(days);
+    } catch (error) {
+    } finally {
+      setLoading(false);
     }
-    else {
-      setAppliedDates({ start: null, end: null })
-    }
   };
-  const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setCalendarAnchorEl(event.currentTarget);
-  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   return (
     <Box>
       <Grid
         sx={{
           display: "flex",
           flexDirection: "column",
-          '@media (max-width: 600px)': {
-            paddingRight: 0
-          }
+          "@media (max-width: 600px)": {
+            paddingRight: 0,
+          },
         }}
       >
-        <Box sx={{
-          display: 'flex', flexDirection: 'row', alignItems: 'center', position: 'sticky', top: 0, pt: '12px', pb: '12px', pl: '8px', pr: '1.5rem', zIndex: 1, backgroundColor: '#fff', justifyContent: 'space-between', width: '100%', "@media (max-width: 600px)": { flexDirection: 'column', display: 'flex', alignItems: 'flex-start', zIndex: 1, width: '100%', pr: 1.5 }, "@media (max-width: 440px)": { flexDirection: 'column', pt: hasNotification ? '3rem' : '0.75rem', top: hasNotification ? '4.5rem' : '', zIndex: 1, justifyContent: 'flex-start' }, "@media (max-width: 400px)": { pt: hasNotification ? '4.25rem' : '', pb: '6px', }
-        }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            position: "sticky",
+            top: 0,
+            pt: "12px",
+            pb: "12px",
+            pl: "8px",
+            pr: "1.5rem",
+            zIndex: 1,
+            backgroundColor: "#fff",
+            justifyContent: "space-between",
+            width: "100%",
+            "@media (max-width: 600px)": {
+              flexDirection: "column",
+              display: "flex",
+              alignItems: "flex-start",
+              zIndex: 1,
+              width: "100%",
+              pr: 1.5,
+            },
+            "@media (max-width: 440px)": {
+              flexDirection: "column",
+              pt: hasNotification ? "3rem" : "0.75rem",
+              top: hasNotification ? "4.5rem" : "",
+              zIndex: 1,
+              justifyContent: "flex-start",
+            },
+            "@media (max-width: 400px)": {
+              pt: hasNotification ? "4.25rem" : "",
+              pb: "6px",
+            },
+          }}
+        >
           <Typography
             variant="h4"
             component="h1"
             className="first-sub-title"
             sx={{
-              ...dashboardStyles.title, '@media (max-width: 600px)': {
-                display: 'none',
+              ...dashboardStyles.title,
+              "@media (max-width: 600px)": {
+                display: "none",
               },
             }}
           >
-            Dashboard <CustomTooltip title={"Indicates the count of resolved identities and revenue figures for the specified time"} linkText="Learn More" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/dashboard" />
+            Dashboard{" "}
+            <CustomTooltip
+              title={
+                "Indicates the count of resolved identities and revenue figures for the specified time"
+              }
+              linkText="Learn More"
+              linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/dashboard"
+            />
           </Typography>
-          <Box sx={{
-            display: 'none', width: '100%', justifyContent: 'space-between', alignItems: 'start', '@media (max-width: 600px)': {
-              display: 'flex'
-            }
-          }}>
+          <Box
+            sx={{
+              display: "none",
+              width: "100%",
+              justifyContent: "space-between",
+              alignItems: "start",
+              "@media (max-width: 600px)": {
+                display: "flex",
+              },
+            }}
+          >
             <Typography
               variant="h4"
               component="h1"
@@ -118,128 +277,69 @@ const AudienceDashboard: React.FC = () => {
             >
               Dashboard
             </Typography>
-
-            <Box sx={{
-              display: 'none', justifyContent: 'flex-end', alignItems: 'start', pt: 0.5, gap: 1, '@media (max-width: 600px)': {
-                display: 'flex',
-              }
-            }}>
-              {/* Calendary picker*/}
-              <Typography className="second-sub-title">{selectedDateLabel}</Typography>
-              <Button
-                aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
-                aria-haspopup="true"
-                aria-expanded={isCalendarOpen ? 'true' : undefined}
-                onClick={handleCalendarClick}
-                sx={{
-                  textTransform: 'none',
-                  color: 'rgba(128, 128, 128, 1)',
-                  border: '1px solid rgba(184, 184, 184, 1)',
-                  borderRadius: '4px',
-                  padding: '8px',
-                  minWidth: 'auto',
-                }}
-              >
-                <DateRangeIcon fontSize='small' />
-              </Button>
-            </Box>
-          </Box>
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              alignItems: 'center',
-              gap: 2,
-              '@media (max-width: 600px)': {
-                display: 'none',
-              }
-            }}
-          >
-            {/* Calendary picker*/}
-            <Typography className="second-sub-title">{selectedDateLabel ? selectedDateLabel : ''}</Typography>
-            <Button
-              aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
-              aria-haspopup="true"
-              aria-expanded={isCalendarOpen ? 'true' : undefined}
-              onClick={handleCalendarClick}
-              sx={{
-                textTransform: 'none',
-                color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
-                border: formattedDates ? '1.5px solid rgba(80, 82, 178, 1)' : '1.5px solid rgba(184, 184, 184, 1)',
-                borderRadius: '4px',
-                padding: '8px',
-                minWidth: 'auto',
-                '@media (max-width: 900px)': {
-                  border: 'none',
-                  padding: 0
-                },
-                '&:hover': {
-                  border: '1.5px solid rgba(80, 82, 178, 1)',
-                  '& .MuiSvgIcon-root': {
-                    color: 'rgba(80, 82, 178, 1)'
-                  }
-                }
-              }}
-            >
-              <DateRangeIcon
-                fontSize="medium"
-                sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }}
-              />
-              <Typography variant="body1" sx={{
-                fontFamily: 'Roboto',
-                fontSize: '14px',
-                fontWeight: '400',
-                color: 'rgba(32, 33, 36, 1)',
-                lineHeight: '19.6px',
-                textAlign: 'left',
-                whiteSpace: 'nowrap',
-
-              }}>
-                {formattedDates}
-              </Typography>
-              {formattedDates &&
-                <Box sx={{ pl: 2, display: 'flex', alignItems: 'center' }}>
-                  <Image src="/arrow_down.svg" alt="arrow down" width={16} height={16} />
-                </Box>
-              }
-            </Button>
           </Box>
         </Box>
         <Box
           sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'auto', flexGrow: 1,
+            display: "flex",
+            flexDirection: "column",
+            overflow: "auto",
+            flexGrow: 1,
           }}
         >
-          <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', pr: 2 }}>
-            <Box sx={{ width: '100%', mt: 1, mb: 1, '@media (max-width: 900px)': { mt: 0, mb: 0, } }}>
-              <CustomCards
-                values={{
-                  pixelContacts: 1054,
-                  sources: 100,
-                  lookalikes: 80,
-                  smartAudience: 25,
-                  dataSync: 25,
-                }}
-              />
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              width: "100%",
+              pr: 2,
+            }}
+          >
+            <Box
+              sx={{
+                width: "100%",
+                mt: 1,
+                ml: 0.125,
+                mb: 1,
+                "@media (max-width: 900px)": { mt: 0, mb: 0 },
+              }}
+            >
+              <CustomCards values={values} onCardClick={handleCardClick} />
             </Box>
-            <ExampleChart data={mockData}>
-
-            </ExampleChart>
+            {selectedCard ? (
+              <Grid container justifyContent="center">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <Grid item xs={12} sm={6} key={index}>
+                    {selectedCard === "Sources" && (
+                      <LookalikeCard
+                        title={`Source Audience ${index + 1}`}
+                        description="Customer Conversions"
+                        size={Math.floor(Math.random() * 10000)}
+                        sizeLabel="Matched Records"
+                        lookalikeSize=""
+                        sourceName=""
+                        date="April 2, 2025"
+                      />
+                    )}
+                    {selectedCard === "Lookalikes" && (
+                      <LookalikeCard
+                        title={`My Lookalike ${index + 1}`}
+                        description="Similarity Match"
+                        size={Math.floor(Math.random() * 20000)}
+                        sizeLabel="Lookalike Size"
+                        lookalikeSize="Almost Identical 0-3%"
+                        sourceName="Premium Buyers"
+                        date="April 1, 2025"
+                      />
+                    )}
+                  </Grid>
+                ))}
+              </Grid>
+            ) : (
+              <AudienceChart data={series} days={date} loading={loading} />
+            )}
           </Box>
-
         </Box>
-
-        <CalendarPopup
-          anchorEl={calendarAnchorEl}
-          open={isCalendarOpen}
-          onClose={handleCalendarClose}
-          onDateChange={handleDateChange}
-          onDateLabelChange={handleDateLabelChange}
-          onApply={handleApply}
-        />
-
       </Grid>
     </Box>
   );

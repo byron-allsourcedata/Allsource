@@ -89,7 +89,7 @@ class SmartsResponse(BaseModel):
     total_records: int
     validated_records: int
     active_segment_records: int
-    processed_active_segment_records: int
+    processed_total_records: int
     status: str
     integrations: List[str]
 
@@ -124,3 +124,4 @@ class CreateSmartAudienceRequest(BaseModel):
     data_sources: List[dict]
     validation_params: Optional[dict] = None
     contacts_to_validate: Optional[int] = None
+    total_records: int

@@ -1,6 +1,8 @@
 import logging
 from typing import Optional, List
 import json
+import io
+import csv
 
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
@@ -62,7 +64,7 @@ class AudienceSmartsService:
                 'active_segment_records': item[7],
                 'status': item[8],
                 'integrations': integrations,
-                'processed_active_segment_records': item[10],
+                'processed_total_records': item[10],
             })
 
         return audience_smarts_list, count
@@ -102,7 +104,7 @@ class AudienceSmartsService:
 
         for item in raw_data:
             key = "lookalike_ids" if item["sourceLookalike"] == "Lookalike" else "source_ids"
-            include_exclude = "include" if item["includeExclude"] == "Include" else "exclude"
+            include_exclude = "include" if item["includeExclude"] == "include" else "exclude"
 
             data_sources[key][include_exclude].append(item["selectedSourceId"])
 
@@ -146,7 +148,8 @@ class AudienceSmartsService:
             use_case_alias: str,
             data_sources: List[dict],
             validation_params: Optional[dict],
-            contacts_to_validate: int
+            contacts_to_validate: Optional[int],
+            total_records: int
     ):
 
         created_data = self.audience_smarts_persistence.create_audience_smart(
@@ -156,9 +159,10 @@ class AudienceSmartsService:
             use_case_alias=use_case_alias,
             validation_params=validation_params,
             data_sources=data_sources,
-            contacts_to_validate=contacts_to_validate
+            contacts_to_validate=contacts_to_validate,
+            total_records=total_records
         )
-        await self.start_scripts_for_matching(created_data.id, user.get("id"), data_sources, contacts_to_validate)
+        await self.start_scripts_for_matching(created_data.id, user.get("id"), data_sources, total_records)
         return created_data
 
 
@@ -195,22 +199,45 @@ class AudienceSmartsService:
             user_id=user.get("id"), page=1, per_page=50
         )
 
-        source_list = [
+        lookalike_list = [
             {
-                'id': source[0],
-                'name': source[1],
-                'source_origin': source[2],
-                'source_type': source[3],
-                'created_at': source[5],
-                'created_by': source[4],
-                'domain': source[6],
-                'total_records': source[7],
-                'matched_records': source[8],
-                'matched_records_status': source[9],
-                'processed_records': source[10],
+                'id': l.get('id'),
+                'name': l.get('name'),
+                'source_type': l.get('source_type'),
+                'source_origin': l.get('source_origin'),
+                'domain': l.get('domain'),
+                'size': l.get('size'),
             }
-            for source in sources
+            for l in lookalikes
         ]
 
-        return {"lookalikes": lookalikes, "sources": source_list}
+        source_list = [
+            {
+                'id': s[0],
+                'name': s[1],
+                'source_type': s[2],
+                'source_origin': s[3],
+                'domain': s[6],
+                'matched_records': s[8],
+            }
+            for s in sources
+        ]
 
+        return {"lookalikes": lookalike_list, "sources": source_list}
+
+
+    def download_persons(self, smart_audience_id, sent_contacts, data_map):
+        types = [contact.type for contact in data_map]
+        values = [contact.value for contact in data_map]
+        leads = self.audience_smarts_persistence.get_persons_by_smart_aud_id(smart_audience_id, sent_contacts, types)
+
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(values)
+        
+        for lead in leads:
+            relevant_data = [getattr(lead, field, "") for field in types]
+            writer.writerow(relevant_data)
+
+        output.seek(0)
+        return output

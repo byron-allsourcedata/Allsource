@@ -23,17 +23,13 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from schemas.scripts.audience_source import MessageBody, PersonRow, DataBodyFromSource
-from models.five_x_five_emails import FiveXFiveEmails
 from models.leads_users import LeadUser
 from sqlalchemy import and_, or_, func, create_engine
 from enums import SourceType, LeadStatus, TypeOfCustomer
-from models.five_x_five_users_emails import FiveXFiveUsersEmails
 from models.audience_sources import AudienceSource
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
 from models.leads_users_ordered import LeadsUsersOrdered
-from models.users import Users
 from models.five_x_five_users import FiveXFiveUser
-from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 load_dotenv()
@@ -78,6 +74,9 @@ def extract_amount(amount_raw: str) -> float:
 def parse_date(date_str: str) -> str | None:
     if not date_str:
         return None
+
+    if date_str.endswith("Z"):
+        date_str = date_str[:-1] + "+0000"
 
     formats = [
         '%m/%d/%Y %H:%M',

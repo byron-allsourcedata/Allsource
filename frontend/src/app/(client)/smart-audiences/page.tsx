@@ -41,7 +41,7 @@ interface Smarts {
     total_records: number
     validated_records: number
     active_segment_records: number
-    processed_active_segment_records: number
+    processed_total_records: number
     status: string
     integrations: string[]
 }
@@ -198,7 +198,7 @@ const SmartAudiences: React.FC = () => {
         if (!intervalRef.current) {
             console.log("pooling started");
             intervalRef.current = setInterval(() => {
-                const hasPending = data.some(item => item.active_segment_records !== item.processed_active_segment_records);
+                const hasPending = data.some(item => item.total_records !== item.processed_total_records);
     
                 if (hasPending) {
                     console.log("Fetching due to pending records");
@@ -1153,7 +1153,7 @@ const SmartAudiences: React.FC = () => {
                                                                                 ? <Image src="./danger_yellow.svg" alt='danger' width={20} height={20}/>
                                                                                 : row.validated_records === 0 
                                                                                     ? "NA" 
-                                                                                    : row.validated_records.toLocaleString('en-US')}
+                                                                                    : row.active_segment_records.toLocaleString('en-US')}
                                                                             </TableCell>
 
                                                                             {/* Created Column */}
@@ -1168,19 +1168,19 @@ const SmartAudiences: React.FC = () => {
                                                                             <TableCell
                                                                                 sx={{ ...smartAudiences.table_array, position: 'relative'}}
                                                                             >
-                                                                                {row.total_records.toLocaleString('en-US')}
+                                                                                {(progress?.processed && progress?.processed === row?.total_records) || (row?.processed_total_records ===  row?.total_records && row?.processed_total_records !== 0)
+                                                                                    ? row.total_records.toLocaleString('en-US')
+                                                                                    : row?.processed_total_records > progress?.processed
+                                                                                        ? <ProgressBar progress={{ total: row?.total_records, processed: row?.processed_total_records}} />
+                                                                                        : <ProgressBar progress={{...progress, total: row.total_records}} />
+                                                                                }
                                                                             </TableCell>
 
                                                                             {/* Active Segment Column */}
                                                                             <TableCell
                                                                                 sx={{ ...smartAudiences.table_array, position: 'relative' }}
                                                                             >
-                                                                                {(progress?.processed && progress?.processed === row?.active_segment_records) || (row?.processed_active_segment_records ===  row?.active_segment_records && row?.processed_active_segment_records !== 0)
-                                                                                    ? row.active_segment_records.toLocaleString('en-US')
-                                                                                    : row?.processed_active_segment_records > progress?.processed
-                                                                                        ? <ProgressBar progress={{ total: row?.active_segment_records, processed: row?.processed_active_segment_records}} />
-                                                                                        : <ProgressBar progress={{...progress, total: row.active_segment_records}} />
-                                                                                }
+                                                                                {row.active_segment_records.toLocaleString('en-US')}
                                                                             </TableCell>
 
                                                                             {/* Status Column */}
@@ -1382,6 +1382,7 @@ const SmartAudiences: React.FC = () => {
                                         onClose={handleDataSyncPopupClose}
                                         integrationsList={selectedRowData?.integrations}
                                         isDownloadAction={isDownloadAction}
+                                        setIsPageLoading={setLoading}
                                     />
                                     <FilterPopup open={filterPopupOpen}
                                         onClose={handleFilterPopupClose}
