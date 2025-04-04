@@ -148,7 +148,8 @@ class AudienceSmartsService:
             use_case_alias: str,
             data_sources: List[dict],
             validation_params: Optional[dict],
-            contacts_to_validate: int
+            contacts_to_validate: Optional[int],
+            total_records: int
     ):
 
         created_data = self.audience_smarts_persistence.create_audience_smart(
@@ -160,7 +161,7 @@ class AudienceSmartsService:
             data_sources=data_sources,
             contacts_to_validate=contacts_to_validate
         )
-        await self.start_scripts_for_matching(created_data.id, user.get("id"), data_sources, contacts_to_validate)
+        await self.start_scripts_for_matching(created_data.id, user.get("id"), data_sources, total_records)
         return created_data
 
 
