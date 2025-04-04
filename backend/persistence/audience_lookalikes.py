@@ -38,10 +38,10 @@ class AudienceLookalikesPersistence:
             AudienceSource.source_origin,
             UserDomains.domain)\
             .join(AudienceSource, AudienceLookalikes.source_uuid == AudienceSource.id)\
-            .join(UserDomains, AudienceSource.domain_id == UserDomains.id)\
+            .outerjoin(UserDomains, AudienceSource.domain_id == UserDomains.id)\
             .join(Users, Users.id == AudienceSource.created_by_user_id)\
             .filter(AudienceLookalikes.user_id == user_id)
-
+            
         if search_query:
             query = query.filter(
                 or_(
@@ -97,7 +97,7 @@ class AudienceLookalikesPersistence:
             }
             for lookalike, source_name, source_type, created_by, source_origin, domain in lookalikes
         ]
-
+        
         return result, count, max_page
 
     def create_lookalike(self, uuid_of_source, user_id, lookalike_size,
