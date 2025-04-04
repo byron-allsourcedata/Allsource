@@ -11,6 +11,7 @@ import {
 import Image from "next/image";
 import DownloadIcon from '@mui/icons-material/Download';
 import CloseIcon from '@mui/icons-material/Close';
+import { useRouter } from 'next/navigation';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import CustomToolTip from "@/components/customToolTip";
@@ -22,7 +23,6 @@ import CustomTablePagination from "@/components/CustomTablePagination";
 import CustomizedProgressBar from '@/components/CustomizedProgressBar'
 import CalendarPopup from "@/components/CustomCalendar";
 import dayjs from "dayjs";
-import { useRouter } from "next/navigation";
 
 
 interface FilterParams {
@@ -50,6 +50,7 @@ interface TableRowData {
     created_date: Date;
     created_by: string;
     size: number;
+    significant_fields: Record<string, any>
 }
 
 const CreateLookalikePage: React.FC = () => {

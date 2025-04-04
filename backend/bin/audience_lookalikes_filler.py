@@ -92,7 +92,7 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, conn
         logging.info(f"Total row in pixel file: {total_rows}")
         audience_lookalike.size = len(results)
         db_session.add(audience_lookalike)
-        db_session.commit()
+        db_session.flush()
         await send_sse(connection, audience_lookalike.user_id, {"lookalike_id": str(audience_lookalike.id), "total": total_rows, "processed": processed_rows})
         
         if not results:
@@ -108,6 +108,31 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, conn
         }
     
         await publish_rabbitmq_message(connection=connection, queue_name=AUDIENCE_LOOKALIKES_MATCHING, message_body=message_body)
+        fields = [
+            "age",
+            "gender",
+            "estimated_household_income_code",
+            "estimated_current_home_value_code",
+            "homeowner_status",
+            "has_childer",
+            "number_of_children",
+            "credit_rating",
+            "net_worth_code",
+            "zip_code5",
+            "lat",
+            "lon",
+            "has_credit_card",
+            "length_of_residence_years",
+            "marital_status",
+            "occupation_group_code",
+            "is_book_reader",
+            "is_online_puchaser",
+            "state_abbr",
+            "is_traveler"
+        ]
+        significant_fields = {field: round(random.uniform(0, 1), 2) for field in fields}
+        audience_lookalike.significant_fields = significant_fields
+        db_session.commit()
         await message.ack()
     except BaseException as e:
         db_session.rollback()
