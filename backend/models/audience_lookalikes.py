@@ -16,3 +16,6 @@ class AudienceLookalikes(Base):
     size = Column(Integer, default=0, nullable=False)
     source_uuid = Column(UUID(as_uuid=True),
                          ForeignKey('audience_sources.id', ondelete='cascade'), nullable=False)
+
+
+Index("audiencelookalikes_user_created_date", AudienceLookalikes.user_id, AudienceLookalikes.created_date)
