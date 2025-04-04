@@ -70,7 +70,7 @@ async def aud_smarts_reader(message: IncomingMessage, db_session: Session, conne
             combined_query = lalp_query.union_all(smp_query).subquery().alias("combined_persons")
 
             final_query = (
-                db_session.query(combined_query.c.enrichment_user_id)
+                db_session.query(combined_query.c.five_x_five_user_id)
                 .limit(min(SELECTED_ROW_COUNT, active_segment - offset))
                 .offset(offset)
             )
