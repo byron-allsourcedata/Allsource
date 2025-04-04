@@ -6,7 +6,7 @@ import functools
 import json
 import boto3
 from sqlalchemy import update
-from aio_pika import IncomingMessage, Message
+from aio_pika import IncomingMessage
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
@@ -14,11 +14,8 @@ from dotenv import load_dotenv
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
-from models.audience_smarts import AudienceSmart
 from models.audience_lookalikes import AudienceLookalikes
 from models.audience_lookalikes_persons import AudienceLookALikePerson
-from models.five_x_five_users import FiveXFiveUser
-from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 load_dotenv()
@@ -53,24 +50,26 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         message_body = json.loads(message.body)
         user_id = message_body.get("user_id")
         lookalike_id = message_body.get("lookalike_id")
-        five_x_five_users_ids = message_body.get("five_x_five_users_ids")
+        enrichment_user_ids = message_body.get("enrichment_user")
         logging.info(f"Processing lookalike_id with ID: {lookalike_id}")
-        logging.info(f"Processing len: {len(five_x_five_users_ids)}")
-        
-        for five_x_five_user_id in five_x_five_users_ids:
+        logging.info(f"Processing len: {len(enrichment_user_ids)}")
+        lookalike_persons_to_add = []
+        for enrichment_user_id in enrichment_user_ids:
             matched_person = AudienceLookALikePerson(
                 lookalike_id=lookalike_id,
-                five_x_five_user_id=five_x_five_user_id
+                enrichment_user_id=enrichment_user_id
             )
-            db_session.add(matched_person)
+            lookalike_persons_to_add.append(matched_person)
             
-        db_session.flush()
+        if lookalike_persons_to_add:
+            db_session.bulk_save_objects(lookalike_persons_to_add)
+            db_session.flush()
 
         processed_size, total_records = db_session.execute(
             update(AudienceLookalikes)
             .where(AudienceLookalikes.id == lookalike_id)
             .values(
-                processed_size=AudienceLookalikes.processed_size + len(five_x_five_users_ids)
+                processed_size=AudienceLookalikes.processed_size + len(enrichment_user_ids)
             )
             .returning(AudienceLookalikes.processed_size, AudienceLookalikes.size)
         ).fetchone()

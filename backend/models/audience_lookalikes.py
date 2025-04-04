@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, TIMESTAMP, VARCHAR, ForeignKey, Index, UUID
 from .base import Base
+from models.audience_sources import AudienceSource
 
 
 class AudienceLookalikes(Base):
@@ -14,8 +15,7 @@ class AudienceLookalikes(Base):
     created_by_user_id = Column(Integer, ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
     processed_size = Column(Integer, default=0, nullable=False)
     size = Column(Integer, default=0, nullable=False)
-    source_uuid = Column(UUID(as_uuid=True),
-                         ForeignKey('audience_sources.id', ondelete='cascade'), nullable=False)
+    source_uuid = Column(UUID(as_uuid=True),ForeignKey(AudienceSource.id, ondelete='cascade'), nullable=False)
 
 
 Index("audiencelookalikes_user_created_date", AudienceLookalikes.user_id, AudienceLookalikes.created_date)

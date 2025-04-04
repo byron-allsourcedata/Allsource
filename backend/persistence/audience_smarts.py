@@ -40,13 +40,13 @@ class AudienceSmartsPersistence:
         AudienceSMP = aliased(AudienceSourcesMatchedPerson)
 
         lalp_query = (
-            self.db.query(AudienceLALP.five_x_five_user_id)
+            self.db.query(AudienceLALP.enrichment_user_id)
             .filter(AudienceLALP.lookalike_id.in_(data["lookalike_ids"]["include"]))
             .filter(AudienceLALP.lookalike_id.notin_(data["lookalike_ids"]["exclude"]))
         )
 
         smp_query = (
-            self.db.query(AudienceSMP.five_x_five_user_id)
+            self.db.query(AudienceSMP.enrichment_user_id)
             .filter(AudienceSMP.source_id.in_(data["source_ids"]["include"]))
             .filter(AudienceSMP.source_id.notin_(data["source_ids"]["exclude"]))
         )
@@ -97,7 +97,7 @@ class AudienceSmartsPersistence:
             created_by_user_id=created_by_user_id,
             use_case_id=use_case_id,
             validations=validation_params,
-            active_segment_records=contacts_to_validate,
+            total_records=contacts_to_validate,
             status="unvalidated"
         )
 
@@ -137,7 +137,7 @@ class AudienceSmartsPersistence:
                 AudienceSmart.active_segment_records,
                 AudienceSmart.status,
                 AudienceSmartsUseCase.integrations,
-                AudienceSmart.processed_active_segment_records,
+                AudienceSmart.processed_total_records,
             )
                 .join(Users, Users.id == AudienceSmart.created_by_user_id)
                 .join(AudienceSmartsUseCase, AudienceSmartsUseCase.id == AudienceSmart.use_case_id)
