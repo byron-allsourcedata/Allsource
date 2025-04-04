@@ -81,7 +81,8 @@ async def create_smart_audience(
             use_case_alias=request.use_case,
             validation_params=request.validation_params,
             data_sources=request.data_sources,
-            contacts_to_validate=request.contacts_to_validate
+            contacts_to_validate=request.contacts_to_validate,
+            total_records=request.total_records
         )
         return {'status': "SUCCESS"}
     except ValueError:

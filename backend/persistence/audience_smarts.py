@@ -19,6 +19,7 @@ from models.five_x_five_users import FiveXFiveUser
 from schemas.audience import DataSourcesFormat
 from typing import Optional, Tuple, List
 from sqlalchemy.engine.row import Row
+from enums import AudienceSmartStatuses
 from uuid import UUID
 
 logger = logging.getLogger(__name__)
@@ -83,6 +84,7 @@ class AudienceSmartsPersistence:
             created_by_user_id: int,
             use_case_alias: str,
             data_sources: List[dict],
+            total_records: int,
             validation_params: Optional[dict],
             contacts_to_validate: Optional[int]
     ) -> AudienceSmart:
@@ -97,8 +99,9 @@ class AudienceSmartsPersistence:
             created_by_user_id=created_by_user_id,
             use_case_id=use_case_id,
             validations=validation_params,
-            total_records=contacts_to_validate,
-            status="unvalidated"
+            total_records=total_records,
+            active_segment_records=contacts_to_validate,
+            status=AudienceSmartStatuses.READY.value
         )
 
         self.db.add(new_audience)

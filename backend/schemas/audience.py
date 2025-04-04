@@ -124,3 +124,4 @@ class CreateSmartAudienceRequest(BaseModel):
     data_sources: List[dict]
     validation_params: Optional[dict] = None
     contacts_to_validate: Optional[int] = None
+    total_records: int

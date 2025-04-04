@@ -53,6 +53,12 @@ class AudienceSmartDataSource(Enum):
     INCLUDE = 'Include'
     EXCLUDE = 'Exclude'
 
+class AudienceSmartStatuses(Enum):
+    UNVALIDATED = 'unvalidated'
+    VALIDATING = 'validating'
+    READY = 'ready'
+    SYNCED = 'synced'
+
 class CreateDataSync(Enum):
     ZAPIER_CONNECTED = 'ZAPIER_CONNECTED'
     

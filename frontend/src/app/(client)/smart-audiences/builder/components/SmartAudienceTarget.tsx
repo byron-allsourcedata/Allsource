@@ -297,6 +297,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
         validation_params: validationFilters,
         contacts_to_validate: isValidateSkip ? null : value,
         smart_audience_name: audienceName,
+        total_records: AudienceSize,
       };
 
       const filteredRequestData = Object.fromEntries(

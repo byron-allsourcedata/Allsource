@@ -195,7 +195,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
         use_case: toSnakeCase(useCaseType),
         data_sources: selectedSources,
         smart_audience_name: audienceName,
-        contacts_to_validate: AudienceSize,
+        total_records: AudienceSize,
       };
 
       const filteredRequestData = Object.fromEntries(
