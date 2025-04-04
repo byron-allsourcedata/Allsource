@@ -1,11 +1,11 @@
-import React from 'react';
-import { Grid, Typography, Box } from '@mui/material';
-import LegendToggleIcon from '@mui/icons-material/LegendToggle';
-import AllInboxIcon from '@mui/icons-material/AllInbox';
-import ContactsIcon from '@mui/icons-material/Contacts';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
-import CategoryIcon from '@mui/icons-material/Category';
-import Image from 'next/image';
+import React from "react";
+import { Grid, Typography, Box } from "@mui/material";
+import LegendToggleIcon from "@mui/icons-material/LegendToggle";
+import AllInboxIcon from "@mui/icons-material/AllInbox";
+import ContactsIcon from "@mui/icons-material/Contacts";
+import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
+import CategoryIcon from "@mui/icons-material/Category";
+import Image from "next/image";
 
 interface StatCardProps {
   value: number;
@@ -23,38 +23,38 @@ const StatCard: React.FC<StatCardProps> = ({
   title,
   icon,
   imageUrl,
-  bgColor = '#fff',
-  textColor = 'rgba(32,33,36,1)',
-  borderColor = 'transparent',
-  border = '',
+  bgColor = "#fff",
+  textColor = "rgba(32,33,36,1)",
+  borderColor = "transparent",
+  border = "",
 }) => {
   return (
     <Box
       sx={{
-        display: 'flex',
-        justifyContent: 'flex-start',
-        alignItems: 'center',
+        display: "flex",
+        justifyContent: "flex-start",
+        alignItems: "center",
         backgroundColor: bgColor,
         color: textColor,
-        borderRadius: '8px',
-        padding: '16px',
-        width: '100%',
+        borderRadius: "8px",
+        padding: "16px",
+        width: "100%",
         gap: 1.5,
         mb: 2,
-        boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.25)',
-        height: '84px',
+        boxShadow: "0px 1px 4px 0px rgba(0, 0, 0, 0.25)",
+        height: "84px",
       }}
     >
       <Box
         sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
           backgroundColor: borderColor,
-          borderRadius: '20%',
-          padding: '12px',
-          width: '52px',
-          height: '52px',
+          borderRadius: "20%",
+          padding: "12px",
+          width: "52px",
+          height: "52px",
         }}
       >
         {imageUrl ? (
@@ -63,14 +63,16 @@ const StatCard: React.FC<StatCardProps> = ({
           icon
         )}
       </Box>
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start' }}>
+      <Box
+        sx={{ display: "flex", flexDirection: "column", alignItems: "start" }}
+      >
         <Typography
           variant="h5"
           sx={{
-            fontWeight: '700',
-            fontSize: '22px',
-            fontFamily: 'Nunito Sans',
-            lineHeight: '30.01px',
+            fontWeight: "700",
+            fontSize: "22px",
+            fontFamily: "Nunito Sans",
+            lineHeight: "30.01px",
             color: textColor,
           }}
         >
@@ -79,12 +81,12 @@ const StatCard: React.FC<StatCardProps> = ({
         <Typography
           variant="body1"
           sx={{
-            fontFamily: 'Nunito Sans',
-            fontSize: '14px',
-            fontWeight: '500',
-            lineHeight: '19.6px',
-            textAlign: 'left',
-            color: 'rgba(74,74,74,1)',
+            fontFamily: "Nunito Sans",
+            fontSize: "14px",
+            fontWeight: "500",
+            lineHeight: "19.6px",
+            textAlign: "left",
+            color: "rgba(74,74,74,1)",
           }}
         >
           {title}
@@ -98,7 +100,7 @@ const PixelContactsCard: React.FC<{ value: number }> = ({ value }) => (
   <StatCard
     value={value}
     title="Pixel Contacts"
-    icon={<LegendToggleIcon sx={{ color: '#F45745', fontSize: '36px' }} />}
+    icon={<LegendToggleIcon sx={{ color: "#F45745", fontSize: "36px" }} />}
     textColor="rgba(32,33,36,1)"
     borderColor="#F4574533"
   />
@@ -108,7 +110,7 @@ const SourcesCard: React.FC<{ value: number }> = ({ value }) => (
   <StatCard
     value={value}
     title="Sources"
-    icon={<AllInboxIcon sx={{ color: '#5052B2', fontSize: '36px' }} />}
+    icon={<AllInboxIcon sx={{ color: "#5052B2", fontSize: "36px" }} />}
     textColor="rgba(32,33,36,1)"
     borderColor="#5052B233"
   />
@@ -118,7 +120,7 @@ const LookalikesCard: React.FC<{ value: number }> = ({ value }) => (
   <StatCard
     value={value}
     title="Lookalikes"
-    icon={<ContactsIcon sx={{ color: '#E0B005', fontSize: '36px' }} />}
+    icon={<ContactsIcon sx={{ color: "#E0B005", fontSize: "36px" }} />}
     textColor="rgba(32,33,36,1)"
     borderColor="#FCE18233"
   />
@@ -128,7 +130,7 @@ const SmartAudienceCard: React.FC<{ value: number }> = ({ value }) => (
   <StatCard
     value={value}
     title="Smart Audience"
-    icon={<AutoFixHighIcon sx={{ color: '#6EC125', fontSize: '36px' }} />}
+    icon={<AutoFixHighIcon sx={{ color: "#6EC125", fontSize: "36px" }} />}
     textColor="rgba(32,33,36,1)"
     borderColor="#CAEFA980"
   />
@@ -138,7 +140,7 @@ const DataSyncCard: React.FC<{ value: number }> = ({ value }) => (
   <StatCard
     value={value}
     title="Data sync"
-    icon={<CategoryIcon sx={{ color: '#0569E2', fontSize: '36px' }} />}
+    icon={<CategoryIcon sx={{ color: "#0569E2", fontSize: "36px" }} />}
     textColor="rgba(32,33,36,1)"
     borderColor="#DEEDFF"
   />
@@ -146,11 +148,11 @@ const DataSyncCard: React.FC<{ value: number }> = ({ value }) => (
 
 interface CustomCardsProps {
   values: {
-    pixelContacts: number;
+    pixel_contacts: number;
     sources: number;
     lookalikes: number;
-    smartAudience: number;
-    dataSync: number;
+    smart_audience: number;
+    data_sync: number;
   };
 }
 
@@ -158,7 +160,7 @@ const CustomCards: React.FC<CustomCardsProps> = ({ values }) => {
   return (
     <Grid container spacing={{ xs: 1, sm: 1.5, md: 2, lg: 4 }}>
       <Grid item xs={12} md={2.4}>
-        <PixelContactsCard value={values.pixelContacts} />
+        <PixelContactsCard value={values.pixel_contacts} />
       </Grid>
       <Grid item xs={12} md={2.4}>
         <SourcesCard value={values.sources} />
@@ -167,10 +169,10 @@ const CustomCards: React.FC<CustomCardsProps> = ({ values }) => {
         <LookalikesCard value={values.lookalikes} />
       </Grid>
       <Grid item xs={12} md={2.4}>
-        <SmartAudienceCard value={values.smartAudience} />
+        <SmartAudienceCard value={values.smart_audience} />
       </Grid>
       <Grid item xs={12} md={2.4}>
-        <DataSyncCard value={values.dataSync} />
+        <DataSyncCard value={values.data_sync} />
       </Grid>
     </Grid>
   );
