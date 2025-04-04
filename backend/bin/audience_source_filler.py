@@ -167,7 +167,7 @@ async def parse_csv_file(*, data, source_id: str, db_session: Session, s3_sessio
                 date_field = "Interest Date"
 
             date = extracted_data.get(date_field, "") if date_field else None
-            logging.info(date)
+
             if date:
                 date = parse_date(date)
 
