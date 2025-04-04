@@ -7,6 +7,7 @@ import { useNotification } from "../../../context/NotificationContext";
 import CustomCards from "./components/CustomCards";
 import AudienceChart from "./components/AudienceChart";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
+import LookalikeCard from "./components/SelectedCards";
 
 const colorMapping = {
   pixel_contacts: "rgba(244, 87, 69, 1)",
@@ -306,11 +307,34 @@ const AudienceDashboard: React.FC = () => {
               <CustomCards values={values} onCardClick={handleCardClick} />
             </Box>
             {selectedCard ? (
-              <Box>
-                <Typography variant="h6">
-                  Details for: {selectedCard}
-                </Typography>
-              </Box>
+              <Grid container justifyContent="center">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <Grid item xs={12} sm={6} key={index}>
+                    {selectedCard === "Sources" && (
+                      <LookalikeCard
+                        title={`Source Audience ${index + 1}`}
+                        description="Customer Conversions"
+                        size={Math.floor(Math.random() * 10000)}
+                        sizeLabel="Matched Records"
+                        lookalikeSize=""
+                        sourceName=""
+                        date="April 2, 2025"
+                      />
+                    )}
+                    {selectedCard === "Lookalikes" && (
+                      <LookalikeCard
+                        title={`My Lookalike ${index + 1}`}
+                        description="Similarity Match"
+                        size={Math.floor(Math.random() * 20000)}
+                        sizeLabel="Lookalike Size"
+                        lookalikeSize="Almost Identical 0-3%"
+                        sourceName="Premium Buyers"
+                        date="April 1, 2025"
+                      />
+                    )}
+                  </Grid>
+                ))}
+              </Grid>
             ) : (
               <AudienceChart data={series} days={date} loading={loading} />
             )}
