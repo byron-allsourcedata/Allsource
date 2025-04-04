@@ -81,9 +81,9 @@ async def aud_smarts_reader(message: IncomingMessage, db_session: Session, conne
                 break
 
             message_body = {
-                'aud_smart_id': aud_smart_id,
+                'aud_smart_id': str(aud_smart_id),
                 'user_id': user_id,
-                'five_x_five_users_ids': persons
+                'five_x_five_users_ids': [str(person_id) for person_id in persons]
             }
             await publish_rabbitmq_message(
                 connection=connection,

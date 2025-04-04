@@ -19,7 +19,6 @@ class AudienceSmart(Base):
     validated_records = Column(Integer, default=0, nullable=False)
     total_records = Column(Integer, default=0, nullable=False)
     active_segment_records = Column(Integer, default=0, nullable=False)
-    processed_active_segment_records = Column(Integer, default=0, nullable=False)
     processed_total_records = Column(Integer, default=0, nullable=False)
     status = Column(audience_smarts_statuses, default='unvalidated', nullable=False)
     validations = Column(JSON, nullable=True)
