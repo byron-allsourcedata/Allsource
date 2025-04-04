@@ -324,18 +324,6 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
     }
   }, [sourceType, sourceData, lookalikeData, selectedSources]);
 
-  const setSourceTypeText = (sourceType: string) => {
-    return sourceType
-      ?.split(",")
-      .map((item) =>
-        item
-          .split("_")
-          .map((subItem) => subItem.charAt(0).toUpperCase() + subItem.slice(1))
-          .join(" ")
-      )
-      .join(", ");
-  };
-
   return (
     <Box sx={{ mb: 4 }}>
       {loading && <CustomizedProgressBar />}
@@ -773,7 +761,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                                 {row.name}
                               </TableCell>
                               <TableCell className="black-table-header">
-                                {setSourceTypeText(row.type)}
+                                {row.type}
                               </TableCell>
                               <TableCell className="black-table-header">
                                 {row.size}

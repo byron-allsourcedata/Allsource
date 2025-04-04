@@ -4,6 +4,7 @@ import pytz
 
 from models.audience_sources import AudienceSource
 from models.audience_lookalikes import AudienceLookalikes
+from models.users_domains import UserDomains
 from sqlalchemy.orm import Session
 from typing import Optional
 import math
@@ -30,8 +31,14 @@ class AudienceLookalikesPersistence:
                        lookalike_size: Optional[str] = None, lookalike_type: Optional[str] = None,
                        search_query: Optional[str] = None):
         query = self.db.query(
-            AudienceLookalikes, AudienceSource.name, AudienceSource.source_type, Users.full_name)\
+            AudienceLookalikes,
+            AudienceSource.name,
+            AudienceSource.source_type,
+            Users.full_name,
+            AudienceSource.source_origin,
+            UserDomains.domain)\
             .join(AudienceSource, AudienceLookalikes.source_uuid == AudienceSource.id)\
+            .join(UserDomains, AudienceSource.domain_id == UserDomains.id)\
             .join(Users, Users.id == AudienceSource.created_by_user_id)\
             .filter(AudienceLookalikes.user_id == user_id)
 
@@ -84,9 +91,11 @@ class AudienceLookalikesPersistence:
                 **lookalike.__dict__,
                 "source": source_name,
                 "source_type": source_type,
-                "created_by": created_by
+                "created_by": created_by,
+                "source_origin": source_origin,
+                "domain": domain,
             }
-            for lookalike, source_name, source_type, created_by in lookalikes
+            for lookalike, source_name, source_type, created_by, source_origin, domain in lookalikes
         ]
 
         return result, count, max_page
