@@ -220,7 +220,7 @@ const customFieldsList: Row[] = [
 ]
 
 const defaultRows: Row[] = [
-    { id: 1, type: 'Personal Emails', value: 'Personal Emails' },
+    { id: 1, type: 'Email', value: 'Email' },
     { id: 2, type: 'Personal Phone', value: 'Personal Phone' },
     { id: 3, type: 'First name', value: 'First name' },
     { id: 4, type: 'Last name', value: 'Last name' },
@@ -349,8 +349,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         if (isDownloadAction) {
             setValue("2")
             setCustomFields(
-                [...customFieldsList.map(field => ({ type: field.value, value: field.type })), 
-                ...defaultRows.map((item) => ({value: item.type, type: toSnakeCase(item.type)}))
+                [...customFieldsList.map(field => ({ type: field.value, value: field.type }))
             ])
         }
         else {
@@ -420,7 +419,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
             const requestObj: RequestData = {
                 sent_contacts: valueContactSync,
                 smart_audience_id: id,
-                data_map: customFields
+                data_map: [
+                    ...defaultRows.map((item) => ({value: item.type, type: toSnakeCase(item.type)})),
+                    ...customFields
+                ]
             }
             const response = await axiosInstance.post('/audience-smarts/download-persons', requestObj, {
                 responseType: 'blob'

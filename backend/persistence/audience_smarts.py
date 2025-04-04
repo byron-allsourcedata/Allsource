@@ -15,7 +15,9 @@ from models.audience_smarts_data_sources import AudienceSmartsDataSources
 from models.audience_lookalikes import AudienceLookalikes
 from models.audience_sources import AudienceSource
 from models.users import Users
-from models.five_x_five_users import FiveXFiveUser
+from models.enrichment_users import EnrichmentUser
+from models.emails_enrichment import EmailEnrichment
+from models.emails import Email
 from schemas.audience import DataSourcesFormat
 from typing import Optional, Tuple, List
 from sqlalchemy.engine.row import Row
@@ -247,15 +249,26 @@ class AudienceSmartsPersistence:
 
 
     def get_persons_by_smart_aud_id(self, smart_audience_id, sent_contacts, fields):
-        query = (
-            self.db.query(FiveXFiveUser).select_from(AudienceSmartPerson)
-                .join(FiveXFiveUser, FiveXFiveUser.id == AudienceSmartPerson.five_x_five_user_id)
+        #AFTER REPLACE FIVEXFIVEUSER ON  EnrichmentUser ALL THIS DATA ABSENT!
+
+        # query = (
+        #     self.db.query(EnrichmentUser).select_from(AudienceSmartPerson)
+        #         .join(EnrichmentUser, EnrichmentUser.id == AudienceSmartPerson.five_x_five_user_id)
+        #         .filter(AudienceSmartPerson.smart_audience_id == smart_audience_id)
+        # )
+
+        # orm_fields = [getattr(EnrichmentUser, field) for field in fields if hasattr(EnrichmentUser, field)]
+        # if orm_fields:
+        #     query = query.options(load_only(*orm_fields))
+
+        query=(
+            self.db.query(Email.email).select_from(AudienceSmartPerson)
+                .join(EnrichmentUser, AudienceSmartPerson.five_x_five_user_id == EnrichmentUser.id)
+                .outerjoin(EmailEnrichment, EmailEnrichment.enrichment_user_id == EnrichmentUser.id)
+                .outerjoin(Email, Email.id == EmailEnrichment.email_id)
                 .filter(AudienceSmartPerson.smart_audience_id == smart_audience_id)
         )
 
-        orm_fields = [getattr(FiveXFiveUser, field) for field in fields if hasattr(FiveXFiveUser, field)]
-        if orm_fields:
-            query = query.options(load_only(*orm_fields))
 
         smarts = query.limit(sent_contacts).all()
         return smarts
