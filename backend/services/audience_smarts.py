@@ -159,7 +159,8 @@ class AudienceSmartsService:
             use_case_alias=use_case_alias,
             validation_params=validation_params,
             data_sources=data_sources,
-            contacts_to_validate=contacts_to_validate
+            contacts_to_validate=contacts_to_validate,
+            total_records=total_records
         )
         await self.start_scripts_for_matching(created_data.id, user.get("id"), data_sources, total_records)
         return created_data
