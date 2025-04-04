@@ -84,6 +84,7 @@ class AudienceSourceService:
     
     def download_value_calculation(self, source_id: UUID):
         audience_source = self.audience_sources_persistence.get_source_by_id(source_id=source_id)
+
         if not audience_source:
             return
         audience_sources_matched_persons = self.audience_sources_matched_persons_persistence.get_audience_sources_matched_persons_by_source_id(audience_source_id=source_id)
@@ -92,18 +93,23 @@ class AudienceSourceService:
         
         output = io.StringIO()
         writer = csv.writer(output)
+        logging.info(f"uuid {source_id}")
+        logging.info( audience_source.source_origin)
 
-        if audience_source.source_origin == TypeOfSourceOrigin.PIXEL:
+        if audience_source.source_origin == TypeOfSourceOrigin.PIXEL.value:
+            logging.info(f"PIXEL source: {audience_source.source_origin}")
             writer.writerow([
-                'Email', 'Recency Score', 'Page View Score', 'User Value  Score'
+                'First Name', 'Last Name', 'Email', 'Recency Score', 'Page View Score', 'User Value  Score'
             ])
             writer.writerow([
-                '', '0.5 * (Inverted Recency - min(Inverted Recency)) / (max(Inverted Recency) - min(Inverted Recency)',
+                '', '', '', '0.5 * (Inverted Recency - min(Inverted Recency)) / (max(Inverted Recency) - min(Inverted Recency)',
                 'duration_minutes >= 2 ? 0.5 : duration_minutes >= 1 ? 0.25 : 0.0',
                 'Recency Score + Page View Score'
             ])
             for person in audience_sources_matched_persons:
                 relevant_data = [
+                    person.first_name,
+                    person.last_name,
                     person.email or '',
                     str(person.recency_normalized) if person.recency_normalized is not None else '',
                     str(person.view_score) if person.view_score is not None else '',
@@ -111,76 +117,77 @@ class AudienceSourceService:
                 ]
                 writer.writerow(relevant_data)
 
-        if audience_source.source_type == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
-            writer.writerow([
-                'Email', 'Last Transaction', 'Total Spend','Normalized Total Spend', 'Frequency',
-                'Normalized Frequency', 'Recency', 'Normalized Recency', 'Value'
-            ])
-            writer.writerow([
-                '', 'max(Transaction date)', 'sum(Amount)',
-                '(Totals Spend - min(Totals Spend)) / (max(Totals Spend) - min(Totals Spend))',
-                'count(transaction)', '(Frequency - min(Frequency)) / (max(Frequency) - min(Frequency)',
-                '(current_date - last_transaction).days',
-                '(Recency - min(Recency)) / (max(Recency) - min(Recency)',
-                'Normalized Total Spend + Normalized Frequency - Normalized Recency + 1'
-            ])
-            for person in audience_sources_matched_persons:
-                relevant_data = [
-                    person.email or '',
-                    str(person.orders_date) if person.orders_date is not None else '',
-                    str(person.orders_amount) if person.orders_amount is not None else '',
-                    str(person.orders_amount_normalized) if person.orders_amount_normalized is not None else '',
-                    str(person.orders_count) if person.orders_count is not None else '',
-                    str(person.orders_count_normalized) if person.orders_count_normalized is not None else '',
-                    str(person.recency) if person.recency is not None else '',
-                    str(person.recency_normalized) if person.recency_normalized is not None else '',
-                    str(person.value_score) if person.value_score is not None else '',
-                ]
-                writer.writerow(relevant_data)
-                
-        if audience_source.source_type == TypeOfCustomer.FAILED_LEADS.value:
-            writer.writerow([
-                'Email', 'LastLeadFailedDate', 'Frequency','Recency', 'Normalized Recency',
-                'Inverted Recency', 'Value'
-            ])
-            writer.writerow([
-                '', 'max(LastLeadFailedDate)', 'count(transaction)', '(current_date - last_transaction).days',
-                '(Inverted Recency - min(Inverted Recency)) / (max(Inverted Recency) - min(Inverted Recency)',
-                '1 / (Recency + 1)',
-                '(Inverted Recency - min(Inverted Recency)) / (max(Inverted Recency) - min(Inverted Recency)'
-            ])
-            for person in audience_sources_matched_persons:
-                relevant_data = [
-                    person.email or '',
-                    str(person.orders_date) if person.orders_date is not None else '',
-                    str(person.orders_count) if person.orders_count is not None else '',
-                    str(person.recency) if person.recency is not None else '',
-                    str(person.recency_failed) if person.recency_failed is not None else '',
-                    str(person.inverted_recency) if person.inverted_recency is not None else '',
-                    str(person.value_score) if person.value_score is not None else '',    
-                ]
-                writer.writerow(relevant_data)
+        if audience_source.source_origin == TypeOfSourceOrigin.CSV.value:
+            if audience_source.source_type == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
+                writer.writerow([
+                    'Email', 'Last Transaction', 'Total Spend','Normalized Total Spend', 'Frequency',
+                    'Normalized Frequency', 'Recency', 'Normalized Recency', 'Value'
+                ])
+                writer.writerow([
+                    '', 'max(Transaction date)', 'sum(Amount)',
+                    '(Totals Spend - min(Totals Spend)) / (max(Totals Spend) - min(Totals Spend))',
+                    'count(transaction)', '(Frequency - min(Frequency)) / (max(Frequency) - min(Frequency)',
+                    '(current_date - last_transaction).days',
+                    '(Recency - min(Recency)) / (max(Recency) - min(Recency)',
+                    'Normalized Total Spend + Normalized Frequency - Normalized Recency + 1'
+                ])
+                for person in audience_sources_matched_persons:
+                    relevant_data = [
+                        person.email or '',
+                        str(person.orders_date) if person.orders_date is not None else '',
+                        str(person.orders_amount) if person.orders_amount is not None else '',
+                        str(person.orders_amount_normalized) if person.orders_amount_normalized is not None else '',
+                        str(person.orders_count) if person.orders_count is not None else '',
+                        str(person.orders_count_normalized) if person.orders_count_normalized is not None else '',
+                        str(person.recency) if person.recency is not None else '',
+                        str(person.recency_normalized) if person.recency_normalized is not None else '',
+                        str(person.value_score) if person.value_score is not None else '',
+                    ]
+                    writer.writerow(relevant_data)
 
-        if audience_source.source_type == TypeOfCustomer.INTEREST.value:
-            writer.writerow([
-                'Email', 'Intent data', 'FrequencyScore', 'RecencyScore',
-                'Inverted Recency', 'UserValue'
-            ])
-            writer.writerow([
-                '', 'max(Intent data)', '0.5 * Frequency - min(Frequency)) / (max(Frequency) - min(Frequency))',
-                '0.5 * (Inverted Recency - min(Inverted Recency)) / (max(Inverted Recency) - min(Inverted Recency)',
-                '1 / (Recency + 1)', 'RecencyScore + FrequencyScore'
-            ])
-            for person in audience_sources_matched_persons:
-                relevant_data = [
-                    person.email or '',
-                    str(person.orders_date) if person.orders_date is not None else '',
-                    str(person.orders_count_normalized) if person.orders_count_normalized is not None else '',
-                    str(person.recency_normalized) if person.recency_normalized is not None else '',
-                    str(person.inverted_recency) if person.inverted_recency is not None else '',
-                    str(person.value_score) if person.value_score is not None else '',
-                ]
-                writer.writerow(relevant_data)
+            if audience_source.source_type == TypeOfCustomer.FAILED_LEADS.value:
+                writer.writerow([
+                    'Email', 'LastLeadFailedDate', 'Frequency','Recency', 'Normalized Recency',
+                    'Inverted Recency', 'Value'
+                ])
+                writer.writerow([
+                    '', 'max(LastLeadFailedDate)', 'count(transaction)', '(current_date - last_transaction).days',
+                    '(Inverted Recency - min(Inverted Recency)) / (max(Inverted Recency) - min(Inverted Recency)',
+                    '1 / (Recency + 1)',
+                    '(Inverted Recency - min(Inverted Recency)) / (max(Inverted Recency) - min(Inverted Recency)'
+                ])
+                for person in audience_sources_matched_persons:
+                    relevant_data = [
+                        person.email or '',
+                        str(person.orders_date) if person.orders_date is not None else '',
+                        str(person.orders_count) if person.orders_count is not None else '',
+                        str(person.recency) if person.recency is not None else '',
+                        str(person.recency_failed) if person.recency_failed is not None else '',
+                        str(person.inverted_recency) if person.inverted_recency is not None else '',
+                        str(person.value_score) if person.value_score is not None else '',
+                    ]
+                    writer.writerow(relevant_data)
+
+            if audience_source.source_type == TypeOfCustomer.INTEREST.value:
+                writer.writerow([
+                    'Email', 'Intent data', 'FrequencyScore', 'RecencyScore',
+                    'Inverted Recency', 'UserValue'
+                ])
+                writer.writerow([
+                    '', 'max(Intent data)', '0.5 * Frequency - min(Frequency)) / (max(Frequency) - min(Frequency))',
+                    '0.5 * (Inverted Recency - min(Inverted Recency)) / (max(Inverted Recency) - min(Inverted Recency)',
+                    '1 / (Recency + 1)', 'RecencyScore + FrequencyScore'
+                ])
+                for person in audience_sources_matched_persons:
+                    relevant_data = [
+                        person.email or '',
+                        str(person.orders_date) if person.orders_date is not None else '',
+                        str(person.orders_count_normalized) if person.orders_count_normalized is not None else '',
+                        str(person.recency_normalized) if person.recency_normalized is not None else '',
+                        str(person.inverted_recency) if person.inverted_recency is not None else '',
+                        str(person.value_score) if person.value_score is not None else '',
+                    ]
+                    writer.writerow(relevant_data)
 
         output.seek(0)
 
