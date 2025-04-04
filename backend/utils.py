@@ -56,6 +56,21 @@ def get_valid_email(user: FiveXFiveUser, million_verifier_integrations: MillionV
     if verity > 0:
         return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
     return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+def get_valid_email_without_million(user: FiveXFiveUser) -> str:
+    email_fields = [
+        'business_email',
+        'personal_emails',
+        'additional_personal_emails',
+    ]
+    for field in email_fields:
+        email = getattr(user, field, None)
+        if email:
+            emails = extract_first_email(email)
+            for e in emails:
+                return e
+                
+    return ProccessDataSyncResult.INCORRECT_FORMAT.value
     
 def format_phone_number(phones):
     if phones:

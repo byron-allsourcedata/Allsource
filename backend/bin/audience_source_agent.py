@@ -24,7 +24,7 @@ from models.five_x_five_users import FiveXFiveUser
 from persistence.million_verifier import MillionVerifierPersistence
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from enums import TypeOfCustomer, ProccessDataSyncResult
-from utils import get_utc_aware_date, get_valid_email
+from utils import get_utc_aware_date, get_valid_email_without_million
 from models.leads_visits import LeadsVisits
 from models.emails import Email
 from models.emails_enrichment import EmailEnrichment
@@ -266,8 +266,7 @@ def calculate_website_visitor_user_value(first_datetime, last_start_datetime, la
 async def process_email_interest_leads(persons: List[PersonRow], db_session: Session, source_id: str) -> int:
     return await process_email_leads(persons, db_session, source_id, include_amount=False, date_range=90)
 
-async def process_user_id(persons: List[PersonRow], db_session: Session, source_id: str, audience_source: AudienceSource,
-                          million_verifier_service: MillionVerifierIntegrationsService) -> int:
+async def process_user_id(persons: List[PersonRow], db_session: Session, source_id: str, audience_source: AudienceSource) -> int:
     five_x_five_user_ids = [p.user_id for p in persons]
     logging.info(f"user_ids find {len(five_x_five_user_ids)} for source_id {source_id}")
 
@@ -302,10 +301,9 @@ async def process_user_id(persons: List[PersonRow], db_session: Session, source_
         last_end_datetime = datetime.combine(last_visit.end_date, last_visit.end_time)
 
         calculate_result = calculate_website_visitor_user_value(first_datetime, last_start_datetime, last_end_datetime)
-        valid_email = get_valid_email(five_x_five_user, million_verifier_service)
+        valid_email = get_valid_email_without_million(five_x_five_user)
         email = ""
-        if (not (valid_email == ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value) and
-                not (valid_email == ProccessDataSyncResult.INCORRECT_FORMAT.value)):
+        if not (valid_email == ProccessDataSyncResult.INCORRECT_FORMAT.value):
             email = valid_email
         updates.append({
             "source_id": source_id,
@@ -567,8 +565,7 @@ async def normalize_persons_failed_leads(
         f"from {data_for_normalize.all_size} matched records."
     )
 
-async def aud_sources_matching(message: IncomingMessage, db_session: Session, connection: Connection,
-                               million_verifier_service: MillionVerifierIntegrationsService):
+async def aud_sources_matching(message: IncomingMessage, db_session: Session, connection: Connection):
     try:
         message_body_dict = json.loads(message.body)
         message_body = MessageBody(**message_body_dict)
@@ -610,7 +607,7 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         if type == 'user_ids':
             logging.info(f"Processing {len(persons)} user_id records.")
             count = await process_user_id(persons=persons, db_session=db_session, source_id=source_id,
-                                          audience_source=audience_source, million_verifier_service=million_verifier_service)
+                                          audience_source=audience_source)
 
         if type == 'emails':
             if message_body.status == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
@@ -695,14 +692,13 @@ async def main():
         )
         Session = sessionmaker(bind=engine)
         db_session = Session()
-        million_verifier_service = MillionVerifierIntegrationsService(MillionVerifierPersistence(db=db_session))
 
         queue = await channel.declare_queue(
             name=AUDIENCE_SOURCES_MATCHING,
             durable=True,
         )
         await queue.consume(
-            functools.partial(aud_sources_matching, connection=connection, db_session=db_session, million_verifier_service=million_verifier_service)
+            functools.partial(aud_sources_matching, connection=connection, db_session=db_session)
         )
 
         await asyncio.Future()
