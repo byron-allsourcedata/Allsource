@@ -16,6 +16,8 @@ interface StatCardProps {
   textColor?: string;
   borderColor?: string;
   border?: string;
+  onClick?: () => void;
+  isActive?: boolean;
 }
 
 const StatCard: React.FC<StatCardProps> = ({
@@ -27,14 +29,17 @@ const StatCard: React.FC<StatCardProps> = ({
   textColor = "rgba(32,33,36,1)",
   borderColor = "transparent",
   border = "",
+  onClick,
+  isActive = false,
 }) => {
   return (
     <Box
+      onClick={onClick}
       sx={{
         display: "flex",
         justifyContent: "flex-start",
         alignItems: "center",
-        backgroundColor: bgColor,
+        backgroundColor: isActive ? "rgba(246, 248, 250, 1)" : bgColor,
         color: textColor,
         borderRadius: "8px",
         padding: "16px",
@@ -43,6 +48,11 @@ const StatCard: React.FC<StatCardProps> = ({
         mb: 2,
         boxShadow: "0px 1px 4px 0px rgba(0, 0, 0, 0.25)",
         height: "84px",
+        border: isActive ? "1px solid rgba(117, 168, 218, 1)" : "none",
+        cursor: onClick ? "pointer" : "default",
+        "&:hover": {
+          border: onClick ? "1px solid rgba(117, 168, 218, 0.5)" : undefined,
+        },
       }}
     >
       <Box
@@ -96,53 +106,77 @@ const StatCard: React.FC<StatCardProps> = ({
   );
 };
 
-const PixelContactsCard: React.FC<{ value: number }> = ({ value }) => (
+interface CardProps {
+  value: number;
+  onClick?: () => void;
+  isActive?: boolean;
+}
+
+const PixelContactsCard: React.FC<CardProps> = ({
+  value,
+  onClick,
+  isActive,
+}) => (
   <StatCard
     value={value}
     title="Pixel Contacts"
     icon={<LegendToggleIcon sx={{ color: "#F45745", fontSize: "36px" }} />}
     textColor="rgba(32,33,36,1)"
     borderColor="#F4574533"
+    onClick={onClick}
+    isActive={isActive}
   />
 );
 
-const SourcesCard: React.FC<{ value: number }> = ({ value }) => (
+const SourcesCard: React.FC<CardProps> = ({ value, onClick, isActive }) => (
   <StatCard
     value={value}
     title="Sources"
     icon={<AllInboxIcon sx={{ color: "#5052B2", fontSize: "36px" }} />}
     textColor="rgba(32,33,36,1)"
     borderColor="#5052B233"
+    onClick={onClick}
+    isActive={isActive}
   />
 );
 
-const LookalikesCard: React.FC<{ value: number }> = ({ value }) => (
+const LookalikesCard: React.FC<CardProps> = ({ value, onClick, isActive }) => (
   <StatCard
     value={value}
     title="Lookalikes"
     icon={<ContactsIcon sx={{ color: "#E0B005", fontSize: "36px" }} />}
     textColor="rgba(32,33,36,1)"
     borderColor="#FCE18233"
+    onClick={onClick}
+    isActive={isActive}
   />
 );
 
-const SmartAudienceCard: React.FC<{ value: number }> = ({ value }) => (
+const SmartAudienceCard: React.FC<CardProps> = ({
+  value,
+  onClick,
+  isActive,
+}) => (
   <StatCard
     value={value}
     title="Smart Audience"
     icon={<AutoFixHighIcon sx={{ color: "#6EC125", fontSize: "36px" }} />}
     textColor="rgba(32,33,36,1)"
     borderColor="#CAEFA980"
+    onClick={onClick}
+    isActive={isActive}
   />
 );
 
-const DataSyncCard: React.FC<{ value: number }> = ({ value }) => (
+const DataSyncCard: React.FC<CardProps> = ({ value, onClick, isActive }) => (
   <StatCard
     value={value}
     title="Data sync"
     icon={<CategoryIcon sx={{ color: "#0569E2", fontSize: "36px" }} />}
     textColor="rgba(32,33,36,1)"
     borderColor="#DEEDFF"
+    onClick={onClick}
+    isActive={isActive}
   />
 );
 
@@ -154,25 +188,53 @@ interface CustomCardsProps {
     smart_audience: number;
     data_sync: number;
   };
+  onCardClick: (card: string) => void;
 }
 
-const CustomCards: React.FC<CustomCardsProps> = ({ values }) => {
+const CustomCards: React.FC<CustomCardsProps> = ({ values, onCardClick }) => {
+  const [activeCard, setActiveCard] = React.useState<string | null>(null);
+
+  const handleCardClick = (cardName: string) => {
+    setActiveCard(cardName === activeCard ? null : cardName);
+    onCardClick(cardName);
+  };
+
   return (
     <Grid container spacing={{ xs: 1, sm: 1.5, md: 2, lg: 4 }}>
       <Grid item xs={12} md={2.4}>
-        <PixelContactsCard value={values.pixel_contacts} />
+        <PixelContactsCard
+          value={values.pixel_contacts}
+          onClick={() => handleCardClick("Pixel Contacts")}
+          isActive={activeCard === "Pixel Contacts"}
+        />
       </Grid>
       <Grid item xs={12} md={2.4}>
-        <SourcesCard value={values.sources} />
+        <SourcesCard
+          value={values.sources}
+          onClick={() => handleCardClick("Sources")}
+          isActive={activeCard === "Sources"}
+        />
       </Grid>
       <Grid item xs={12} md={2.4}>
-        <LookalikesCard value={values.lookalikes} />
+        <LookalikesCard
+          value={values.lookalikes}
+          onClick={() => handleCardClick("Lookalikes")}
+          isActive={activeCard === "Lookalikes"}
+        />
       </Grid>
       <Grid item xs={12} md={2.4}>
-        <SmartAudienceCard value={values.smart_audience} />
+        <SmartAudienceCard
+          value={values.smart_audience}
+          onClick={() => handleCardClick("Smart Audience")}
+          isActive={activeCard === "Smart Audience"}
+        />
       </Grid>
       <Grid item xs={12} md={2.4}>
-        <DataSyncCard value={values.data_sync} />
+        <DataSyncCard
+          value={values.data_sync}
+          onClick={() => handleCardClick("Data sync")}
+          isActive={activeCard === "Data sync"}
+        />
       </Grid>
     </Grid>
   );
