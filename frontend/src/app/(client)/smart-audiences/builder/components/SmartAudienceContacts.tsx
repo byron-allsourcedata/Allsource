@@ -171,7 +171,11 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
         selectedSources
       );
       if (response.status === 200) {
-        setAudienceSize(response.data);
+        if (response.data == 0) {
+          setAudienceSize(null);
+        } else {
+          setAudienceSize(response.data);
+        }
       }
     } catch {
       showErrorToast("An error occurred while calculate a new Smart Audience");
@@ -222,6 +226,18 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
       setFilteredLookalikeData(getFilteredData(lookalikeData));
     }
   }, [sourceType, sourceData, lookalikeData, selectedSources]);
+
+  const setSourceTypeText = (sourceType: string) => {
+    return sourceType
+      ?.split(",")
+      .map((item) =>
+        item
+          .split("_")
+          .map((subItem) => subItem.charAt(0).toUpperCase() + subItem.slice(1))
+          .join(" ")
+      )
+      .join(", ");
+  };
 
   return (
     <Box>
@@ -295,7 +311,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
             </Typography>
           </Box>
 
-          {AudienceSize && (
+          {AudienceSize !== null && AudienceSize !== undefined && (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
               <Typography
                 className="table-data"
@@ -548,7 +564,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
                               {row.name}
                             </TableCell>
                             <TableCell className="black-table-header">
-                              {row.type}
+                              {setSourceTypeText(row.type)}
                             </TableCell>
                             <TableCell className="black-table-header">
                               {row.size}
@@ -565,7 +581,11 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
 
           {!showForm && selectedSources.length !== 0 && !AudienceSize && (
             <Box
-              sx={{ display: "flex", width: "100%", alignItems: "self-start" }}
+              sx={{
+                display: "flex",
+                width: "100%",
+                alignItems: "self-start",
+              }}
             >
               <Button
                 onClick={handleAddMore}

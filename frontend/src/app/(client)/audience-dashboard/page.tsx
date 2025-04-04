@@ -17,10 +17,6 @@ const colorMapping = {
 };
 
 const AudienceDashboard: React.FC = () => {
-  const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(
-    null
-  );
-  const isCalendarOpen = Boolean(calendarAnchorEl);
   const [values, setValues] = useState({
     pixel_contacts: 0,
     sources: 0,
@@ -28,9 +24,9 @@ const AudienceDashboard: React.FC = () => {
     smart_audience: 0,
     data_sync: 0,
   });
+  const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const { hasNotification } = useNotification();
   const [loading, setLoading] = useState(true);
-
   const [series, setSeries] = useState<
     {
       id: keyof typeof colorMapping;
@@ -88,8 +84,15 @@ const AudienceDashboard: React.FC = () => {
       data: [0],
     },
   ]);
-
   const [date, setDays] = useState<string[]>([]);
+
+  const handleCardClick = (card: string) => {
+    if (selectedCard === card) {
+      setSelectedCard(null);
+    } else {
+      setSelectedCard(card);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -186,6 +189,7 @@ const AudienceDashboard: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
   return (
     <Box>
       <Grid
@@ -299,9 +303,17 @@ const AudienceDashboard: React.FC = () => {
                 "@media (max-width: 900px)": { mt: 0, mb: 0 },
               }}
             >
-              <CustomCards values={values} />
+              <CustomCards values={values} onCardClick={handleCardClick} />
             </Box>
-            <AudienceChart data={series} days={date} loading={loading} />
+            {selectedCard ? (
+              <Box>
+                <Typography variant="h6">
+                  Details for: {selectedCard}
+                </Typography>
+              </Box>
+            ) : (
+              <AudienceChart data={series} days={date} loading={loading} />
+            )}
           </Box>
         </Box>
       </Grid>
