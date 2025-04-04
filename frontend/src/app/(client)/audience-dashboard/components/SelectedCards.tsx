@@ -48,7 +48,7 @@ const SelectedCards: React.FC<StatCardProps> = ({
         </Box>
         <Box display="flex" justifyContent="space-between" mt={2}>
           <Box>
-            <Typography variant="h6" fontWeight="bold">
+            <Typography className="second-sub-title">
               {size.toLocaleString()}
             </Typography>
             <Typography variant="body2" color="textSecondary">
@@ -57,7 +57,7 @@ const SelectedCards: React.FC<StatCardProps> = ({
           </Box>
           {lookalikeSize && (
             <Box>
-              <Typography variant="h6" fontWeight="bold">
+              <Typography className="second-sub-title">
                 {lookalikeSize}
               </Typography>
               <Typography variant="body2" color="textSecondary">
@@ -67,9 +67,7 @@ const SelectedCards: React.FC<StatCardProps> = ({
           )}
           {sourceName && (
             <Box>
-              <Typography variant="h6" fontWeight="bold">
-                {sourceName}
-              </Typography>
+              <Typography className="second-sub-title">{sourceName}</Typography>
               <Typography variant="body2" color="textSecondary">
                 Source Name
               </Typography>
