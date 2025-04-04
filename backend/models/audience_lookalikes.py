@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, TIMESTAMP, VARCHAR, ForeignKey, JSON, UUID
+from sqlalchemy import Column, Integer, TIMESTAMP, VARCHAR, ForeignKey, JSON, UUID, Index
 from .base import Base
 from models.audience_sources import AudienceSource
 
