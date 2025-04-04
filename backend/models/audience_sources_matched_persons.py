@@ -13,6 +13,8 @@ class AudienceSourcesMatchedPerson(Base):
     enrichment_user_id = Column(UUID, ForeignKey(EnrichmentUser.id), nullable=True)
     mapped_fields = Column(JSON, nullable=True)
 
+    first_name = Column(VARCHAR(64), nullable=True)
+    last_name = Column(VARCHAR(64), nullable=True)
     email = Column(VARCHAR(64), nullable=False)
     orders_amount = Column(DECIMAL(10, 2), default=0)
     orders_amount_normalized = Column(DECIMAL(10, 2), default=0)
