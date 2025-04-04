@@ -30,6 +30,7 @@ class UserIntegration(Base):
         Index('users_domains_integrations_pkey', 'id'),
         Index('users_domains_integrations_suppression_idx', 'is_with_suppression', 'domain_id'),
         Index('users_domains_integrations_slack_team_id_idx', 'slack_team_id'),
+        Index("users_domains_integrations_user", "user_id")
     )
 
 class Integration(Base):

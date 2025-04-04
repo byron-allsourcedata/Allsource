@@ -56,13 +56,13 @@ async def aud_smarts_reader(message: IncomingMessage, db_session: Session, conne
 
         while offset < active_segment:
             lalp_query = (
-                db_session.query(AudienceLALP.five_x_five_user_id.label("five_x_five_user_id"))
+                db_session.query(AudienceLALP.enrichment_user_id.label("five_x_five_user_id"))
                 .filter(AudienceLALP.lookalike_id.in_(lookalike_include) if lookalike_include else True)
                 .filter(~AudienceLALP.lookalike_id.in_(lookalike_exclude) if lookalike_exclude else True)
             )
 
             smp_query = (
-                db_session.query(AudienceSMP.five_x_five_user_id.label("five_x_five_user_id"))
+                db_session.query(AudienceSMP.enrichment_user_id.label("five_x_five_user_id"))
                 .filter(AudienceSMP.source_id.in_(source_include) if source_include else True)
                 .filter(~AudienceSMP.source_id.in_(source_exclude) if source_exclude else True)
             )
@@ -70,7 +70,7 @@ async def aud_smarts_reader(message: IncomingMessage, db_session: Session, conne
             combined_query = lalp_query.union_all(smp_query).subquery().alias("combined_persons")
 
             final_query = (
-                db_session.query(combined_query.c.five_x_five_user_id)
+                db_session.query(combined_query.c.enrichment_user_id)
                 .limit(min(SELECTED_ROW_COUNT, active_segment - offset))
                 .offset(offset)
             )

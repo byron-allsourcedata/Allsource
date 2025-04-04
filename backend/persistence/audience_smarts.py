@@ -40,13 +40,13 @@ class AudienceSmartsPersistence:
         AudienceSMP = aliased(AudienceSourcesMatchedPerson)
 
         lalp_query = (
-            self.db.query(AudienceLALP.five_x_five_user_id)
+            self.db.query(AudienceLALP.enrichment_user_id)
             .filter(AudienceLALP.lookalike_id.in_(data["lookalike_ids"]["include"]))
             .filter(AudienceLALP.lookalike_id.notin_(data["lookalike_ids"]["exclude"]))
         )
 
         smp_query = (
-            self.db.query(AudienceSMP.five_x_five_user_id)
+            self.db.query(AudienceSMP.enrichment_user_id)
             .filter(AudienceSMP.source_id.in_(data["source_ids"]["include"]))
             .filter(AudienceSMP.source_id.notin_(data["source_ids"]["exclude"]))
         )

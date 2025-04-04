@@ -38,4 +38,5 @@ class IntegrationUserSync(Base):
         Index('integrations_users_sync_domain_id_idx', 'domain_id'),
         Index('integrations_users_sync_leads_type_idx', 'sync_type'),
         Index('integrations_users_sync_smart_audience_id_idx', 'smart_audience_id'),
+        Index("integrations_users_sync_integration_created_at", "integration_id", "created_at"),
     )
