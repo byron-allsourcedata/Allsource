@@ -64,7 +64,7 @@ class AudienceSmartsService:
                 'active_segment_records': item[7],
                 'status': item[8],
                 'integrations': integrations,
-                'processed_active_segment_records': item[10],
+                'processed_total_records': item[10],
             })
 
         return audience_smarts_list, count
@@ -104,7 +104,7 @@ class AudienceSmartsService:
 
         for item in raw_data:
             key = "lookalike_ids" if item["sourceLookalike"] == "Lookalike" else "source_ids"
-            include_exclude = "include" if item["includeExclude"] == "Include" else "exclude"
+            include_exclude = "include" if item["includeExclude"] == "include" else "exclude"
 
             data_sources[key][include_exclude].append(item["selectedSourceId"])
 

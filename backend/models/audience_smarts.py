@@ -20,6 +20,7 @@ class AudienceSmart(Base):
     total_records = Column(Integer, default=0, nullable=False)
     active_segment_records = Column(Integer, default=0, nullable=False)
     processed_active_segment_records = Column(Integer, default=0, nullable=False)
+    processed_total_records = Column(Integer, default=0, nullable=False)
     status = Column(audience_smarts_statuses, default='unvalidated', nullable=False)
     validations = Column(JSON, nullable=True)
     use_case_id = Column(UUID, ForeignKey(AudienceSmartsUseCase.id), nullable=True)

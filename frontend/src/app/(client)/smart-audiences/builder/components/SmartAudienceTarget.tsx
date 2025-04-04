@@ -258,8 +258,21 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
     return acc;
   }, {} as Record<string, { source: string; type: string; id: string }[]>);
 
-  const handleCalculate = () => {
-    setAudienceSize(123);
+  const handleCalculate = async () => {
+      setLoading(true);
+      try {
+        const response = await axiosInstance.post(
+          "/audience-smarts/calculate",
+          selectedSources
+        );
+        if (response.status === 200) {
+          setAudienceSize(response.data);
+        }
+      } catch {
+        showErrorToast("An error occurred while calculate a new Smart Audience");
+      } finally {
+        setLoading(false);
+      }
   };
 
   const handleEditContacts = () => {
