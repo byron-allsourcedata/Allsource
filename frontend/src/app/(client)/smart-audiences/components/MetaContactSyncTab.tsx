@@ -134,7 +134,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
     const isKlaviyoList = (value: KlaviyoList | string): value is KlaviyoList => {
         return value !== null &&
             typeof value === 'object' &&
-            'list_id' in value &&
+            'id' in value &&
             'list_name' in value;
     };
 
