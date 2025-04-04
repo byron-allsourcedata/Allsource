@@ -227,17 +227,6 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
     }
   }, [sourceType, sourceData, lookalikeData, selectedSources]);
 
-  const setSourceTypeText = (sourceType: string) => {
-    return sourceType
-      ?.split(",")
-      .map((item) =>
-        item
-          .split("_")
-          .map((subItem) => subItem.charAt(0).toUpperCase() + subItem.slice(1))
-          .join(" ")
-      )
-      .join(", ");
-  };
 
   return (
     <Box>
@@ -564,7 +553,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
                               {row.name}
                             </TableCell>
                             <TableCell className="black-table-header">
-                              {setSourceTypeText(row.type)}
+                              {row.type}
                             </TableCell>
                             <TableCell className="black-table-header">
                               {row.size}
