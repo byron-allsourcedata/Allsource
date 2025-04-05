@@ -30,7 +30,7 @@ from models.emails import Email
 from models.emails_enrichment import EmailEnrichment
 from models.leads_users import LeadUser
 from schemas.scripts.audience_source import PersonEntry, MessageBody, DataBodyNormalize, PersonRow, DataForNormalize, DataBodyFromSource
-from services.audience_sources import normalize
+from services.audience_sources import AudienceSourceMath
 from models.audience_sources import AudienceSource
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
@@ -92,7 +92,7 @@ async def process_email_leads(
     matched_persons = defaultdict(lambda: {
         "orders_amount": 0.0 if include_amount else None,
         "orders_count": 0,
-        "orders_date": None,
+        "start_date": None,
         "five_x_five_user_id": None
     })
 
@@ -148,14 +148,14 @@ async def process_email_leads(
             if include_amount:
                 matched_persons[email]["orders_amount"] += sale_amount
             if transaction_date_obj:
-                existing_date = matched_persons[email]["orders_date"]
+                existing_date = matched_persons[email]["start_date"]
                 if existing_date is None or transaction_date_obj > existing_date:
-                    matched_persons[email]["orders_date"] = transaction_date_obj
-                    logging.debug(f"Updated orders_date for {email}: {transaction_date_obj}")
+                    matched_persons[email]["start_date"] = transaction_date_obj
+                    logging.debug(f"Updated start_date for {email}: {transaction_date_obj}")
         else:
             matched_persons[email] = {
                 "orders_count": 1,
-                "orders_date": transaction_date_obj,
+                "start_date": transaction_date_obj,
                 "enrichment_user_id": email_to_user_id[email]
             }
             if include_amount:
@@ -175,39 +175,39 @@ async def process_email_leads(
     matched_persons_to_update = []
     matched_persons_to_add = []
     for email, data in matched_persons.items():
-        last_transaction = data["orders_date"]
+        last_transaction = data["start_date"]
         recency = (reference_date - last_transaction).days if last_transaction else None
 
         if email in existing_persons:
             matched_person = existing_persons[email]
-            matched_person.orders_count += data["orders_count"]
+            matched_person.count += data["orders_count"]
             if include_amount:
-                matched_person.orders_amount += data["orders_amount"]
+                matched_person.count += data["orders_amount"]
 
-            if data["orders_date"]:
-                if matched_person.orders_date is None or data["orders_date"] > matched_person.orders_date:
-                    matched_person.orders_date = data["orders_date"]
+            if data["start_date"]:
+                if matched_person.start_date is None or data["start_date"] > matched_person.start_date:
+                    matched_person.start_date = data["start_date"]
                     matched_person.recency = recency
-                    logging.debug(f"Updated matched person {email}: orders_count={matched_person.orders_count}")
+                    logging.debug(f"Updated matched person {email}: orders_count={matched_person.count}")
 
             matched_persons_to_update.append({
                 "id": matched_person.id,
-                "orders_amount": matched_person.orders_amount if include_amount else 0.0,
-                "orders_count": matched_person.orders_count,
-                "orders_date": matched_person.orders_date,
+                "amount": matched_person.amount if include_amount else 0.0,
+                "count": matched_person.count,
+                "start_date": matched_person.start_date,
                 "recency": recency
             })
         else:
             new_matched_person = AudienceSourcesMatchedPerson(
                 source_id=source_id,
                 email=email,
-                orders_count=data["orders_count"],
-                orders_date=data["orders_date"],
+                count=data["orders_count"],
+                start_date = data["start_date"],
                 recency=recency,
                 enrichment_user_id=data["enrichment_user_id"]
             )
             if include_amount:
-                new_matched_person.orders_amount = data["orders_amount"]
+                new_matched_person.amount = data["orders_amount"]
 
             matched_persons_to_add.append(new_matched_person)
             logging.debug(f"Added new matched person {email}: orders_count={data['orders_count']}")
@@ -235,15 +235,15 @@ def calculate_website_visitor_user_value(first_datetime, last_start_datetime, la
     first_datetime = first_datetime.astimezone(pytz.utc)
     last_start_datetime = last_start_datetime.astimezone(pytz.utc)
     last_end_datetime = last_end_datetime.astimezone(pytz.utc)
-    recency = Decimal((reference_date - last_start_datetime).days)
+    recency = (reference_date - last_start_datetime).days
     recency_min = Decimal((reference_date - first_datetime).days)
     recency_max = Decimal((reference_date - last_end_datetime).days)
     
-    inverted_recency = Decimal(1) / Decimal((recency + 1)) if recency > 0 else 0
-    inverted_recency_min = Decimal(1) / Decimal(recency_min + 1) if recency_min > 0 else 0
-    inverted_recency_max = Decimal(1) / Decimal(recency_max + 1) if recency_max > 0 else 0
+    inverted_recency = AudienceSourceMath.inverted_decimal(value=recency) if recency > 0 else 0
+    inverted_recency_min = AudienceSourceMath.inverted_decimal(value=recency_min) if recency_min > 0 else 0
+    inverted_recency_max = AudienceSourceMath.inverted_decimal(value=recency_max) if recency_max > 0 else 0
     
-    recency_score = Decimal(0.5) * Decimal(normalize(inverted_recency, inverted_recency_min, inverted_recency_max))
+    recency_score = AudienceSourceMath.normalize_decimal(value=inverted_recency, min_val=inverted_recency_min, max_val=inverted_recency_max, coefficient=Decimal(0.5))
     
     duration_minutes = Decimal((last_end_datetime - last_start_datetime).total_seconds()) / Decimal(60)
 
@@ -258,6 +258,15 @@ def calculate_website_visitor_user_value(first_datetime, last_start_datetime, la
 
     user_value_score = Decimal(recency_score) + Decimal(page_view_score)
     return {
+        "recency":recency,
+        "recency_min": recency_min,
+        "recency_max": recency_max,
+        "inverted_recency": inverted_recency,
+        "inverted_recency_min": inverted_recency_min,
+        "inverted_recency_max": inverted_recency_max,
+        "active_end_date": last_end_datetime,
+        "active_start_date": last_start_datetime,
+        "duration": duration_minutes,
         "recency_score": recency_score,
         "page_view_score": page_view_score,
         "user_value_score": user_value_score
@@ -307,12 +316,21 @@ async def process_user_id(persons: List[PersonRow], db_session: Session, source_
             email = valid_email
         updates.append({
             "source_id": source_id,
-            "value_score": calculate_result['user_value_score'],
-            "recency_normalized": calculate_result['recency_score'],
-            "view_score": calculate_result['page_view_score'],
             "first_name": five_x_five_user.first_name,
             "last_name": five_x_five_user.last_name,
             "email": email,
+            "start_date": calculate_result['active_start_date'],
+            "end_date": calculate_result['active_end_date'],
+            "recency": calculate_result['recency'],
+            "recency_min": calculate_result['recency_min'],
+            "recency_max": calculate_result['recency_max'],
+            "inverted_recency": calculate_result['inverted_recency'],
+            "inverted_recency_min": calculate_result['inverted_recency_min'],
+            "inverted_recency_max": calculate_result['inverted_recency_max'],
+            "duration": calculate_result['duration'],
+            "recency_score": calculate_result['recency_score'],
+            "view_score": calculate_result['page_view_score'],
+            "value_score": calculate_result['user_value_score'],
         })
 
     if updates:
@@ -326,21 +344,21 @@ async def process_user_id(persons: List[PersonRow], db_session: Session, source_
 async def process_and_send_chunks(db_session: Session, source_id: str, batch_size: int, queue_name: str,
                                   connection, status: str):
     result = db_session.query(
-        func.min(AudienceSourcesMatchedPerson.orders_amount).label('min_orders_amount'),
-        func.max(AudienceSourcesMatchedPerson.orders_amount).label('max_orders_amount'),
-        func.min(AudienceSourcesMatchedPerson.orders_count).label('min_orders_count'),
-        func.max(AudienceSourcesMatchedPerson.orders_count).label('max_orders_count'),
+        func.min(AudienceSourcesMatchedPerson.amount).label('min_orders_amount'),
+        func.max(AudienceSourcesMatchedPerson.amount).label('max_orders_amount'),
+        func.min(AudienceSourcesMatchedPerson.count).label('min_orders_count'),
+        func.max(AudienceSourcesMatchedPerson.count).label('max_orders_count'),
         func.min(AudienceSourcesMatchedPerson.recency).label('min_recency'),
         func.max(AudienceSourcesMatchedPerson.recency).label('max_recency'),
-        func.min(AudienceSourcesMatchedPerson.orders_date).label('min_orders_date'),
-        func.max(AudienceSourcesMatchedPerson.orders_date).label('max_orders_date'),
+        func.min(AudienceSourcesMatchedPerson.start_date).label('min_start_date'),
+        func.max(AudienceSourcesMatchedPerson.start_date).label('max_start_date'),
         func.count().label('total_count')
     ).filter(
         AudienceSourcesMatchedPerson.source_id == source_id,
-        AudienceSourcesMatchedPerson.orders_amount.isnot(None),
-        AudienceSourcesMatchedPerson.orders_count.isnot(None),
+        AudienceSourcesMatchedPerson.amount.isnot(None),
+        AudienceSourcesMatchedPerson.count.isnot(None),
         AudienceSourcesMatchedPerson.recency.isnot(None),
-        AudienceSourcesMatchedPerson.orders_date.isnot(None)
+        AudienceSourcesMatchedPerson.start_date.isnot(None)
     ).first()
     
     min_orders_amount = float(result.min_orders_amount) if result.min_orders_amount is not None else 0.0
@@ -349,15 +367,8 @@ async def process_and_send_chunks(db_session: Session, source_id: str, batch_siz
     max_orders_count = int(result.max_orders_count or 1)
     min_recency = float(result.min_recency) if result.min_recency is not None else 0.0
     max_recency = float(result.max_recency) if result.max_recency is not None else 1.0
-
-    if status == TypeOfCustomer.FAILED_LEADS.value or status == TypeOfCustomer.INTEREST.value:
-        min_recency = 1.0 / (min_recency + 1.0)
-        max_recency = 1.0 / (max_recency + 1.0)
-        if min_recency > max_recency:
-            min_recency, max_recency = max_recency, min_recency
-
-    min_orders_date = result.min_orders_date
-    max_orders_date = result.max_orders_date
+    min_start_date = result.min_start_date
+    max_start_date = result.max_start_date
     total_count = int(result.total_count or 0)
 
     logging.info(f"Processing {result}")
@@ -379,8 +390,8 @@ async def process_and_send_chunks(db_session: Session, source_id: str, batch_siz
             PersonEntry(
                 id=str(p.id),
                 email=str(p.email),
-                orders_amount=float(p.orders_amount) if p.orders_amount is not None else 0.0,
-                orders_count=int(p.orders_count),
+                sum_amount=float(p.amount) if p.amount is not None else 0.0,
+                count=int(p.count),
                 recency=float(p.recency) if p.recency is not None else 0.0
             )
             for p in matched_persons_list
@@ -394,12 +405,12 @@ async def process_and_send_chunks(db_session: Session, source_id: str, batch_siz
                 data_for_normalize=DataForNormalize(
                     matched_size=offset + len(batch_rows),
                     all_size=total_count,
-                    min_orders_amount=min_orders_amount,
-                    max_orders_amount=max_orders_amount,
-                    min_orders_count=min_orders_count,
-                    max_orders_count=max_orders_count,
-                    min_orders_date=min_orders_date.isoformat() if min_orders_date else None,
-                    max_orders_date=max_orders_date.isoformat() if max_orders_date else None,
+                    min_amount=min_orders_amount,
+                    max_amount=max_orders_amount,
+                    min_count=min_orders_count,
+                    max_count=max_orders_count,
+                    min_start_date=min_start_date.isoformat() if min_start_date else None,
+                    max_start_date=max_start_date.isoformat() if max_start_date else None,
                     min_recency=min_recency,
                     max_recency=max_recency,
                 ),
@@ -417,44 +428,62 @@ async def normalize_persons_customer_conversion(
 ):
     logging.info(f"Processing normalization data for source_id {source_id}")
 
-    min_orders_amount = Decimal(str(data_for_normalize.min_orders_amount)) if data_for_normalize.min_orders_amount is not None else Decimal("0.0")
-    max_orders_amount = Decimal(str(data_for_normalize.max_orders_amount)) if data_for_normalize.max_orders_amount is not None else Decimal("1.0")
-    min_orders_count = Decimal(str(data_for_normalize.min_orders_count))
-    max_orders_count = Decimal(str(data_for_normalize.max_orders_count))
+    min_orders_amount = Decimal(str(data_for_normalize.min_amount)) if data_for_normalize.min_amount is not None else Decimal("0.0")
+    max_orders_amount = Decimal(str(data_for_normalize.max_amount)) if data_for_normalize.max_amount is not None else Decimal("1.0")
+    min_orders_count = Decimal(str(data_for_normalize.min_count))
+    max_orders_count = Decimal(str(data_for_normalize.max_count))
     min_recency = Decimal(str(data_for_normalize.min_recency)) if data_for_normalize.min_recency is not None else Decimal("0.0")
     max_recency = Decimal(str(data_for_normalize.max_recency)) if data_for_normalize.max_recency is not None else Decimal("1.0")
-
-    w1 = Decimal("1.0")
-    w2 = Decimal("1.0")
-    w3 = Decimal("1.0")
-
-    def normalize(value: Decimal, min_val: Decimal, max_val: Decimal) -> Decimal:
-        if max_val > min_val:
-            return (value - min_val) / (max_val - min_val)
-        else:
-            return Decimal("0.0")
 
     updates = []
 
     for person in persons:
-        orders_amount = Decimal(str(person.orders_amount)) if person.orders_amount is not None else Decimal("0.0")
-        orders_count = Decimal(str(person.orders_count))
-        recency = Decimal(str(person.recency)) if person.recency is not None else Decimal("0.0")
+        if person.sum_amount is None:
+            logging.warning(f"Missing orders_amount for person with id {person.id}")
+            orders_amount = Decimal("0.0")
+        else:
+            orders_amount = Decimal(str(person.sum_amount))
 
-        recency_normalized = normalize(recency, min_recency, max_recency)
-        orders_count_normalized = normalize(orders_count, min_orders_count, max_orders_count)
-        orders_amount_normalized = normalize(orders_amount, min_orders_amount, max_orders_amount)
+        if person.count is None:
+            logging.warning(f"Missing orders_count for person with id {person.id}")
+            orders_count = Decimal("0.0")
+        else:
+            orders_count = Decimal(str(person.count))
 
-        value_score = (w1 * orders_amount_normalized + w2 * orders_count_normalized - w3 * recency_normalized + Decimal("1"))
+        if person.recency is None:
+            logging.warning(f"Missing recency for person with id {person.id}")
+            recency = Decimal("0.0")
+        else:
+            recency = Decimal(str(person.recency))
+
+        recency_normalized = AudienceSourceMath.normalize_decimal(value=recency, min_val=min_recency, max_val=max_recency)
+        orders_count_normalized = AudienceSourceMath.normalize_decimal(value=orders_count, min_val=min_orders_count, max_val=max_orders_count)
+        orders_amount_normalized = AudienceSourceMath.normalize_decimal(value=orders_amount, min_val=min_orders_amount, max_val=max_orders_amount)
+
+        value_score = AudienceSourceMath.weighted_score(
+            first_data=orders_amount_normalized,
+            second_data=orders_count_normalized,
+            third_data=recency_normalized,
+            w1=Decimal("1"),
+            w2=Decimal("1"),
+            w3=Decimal("1"),
+            correction=Decimal("1")
+        )
 
         updates.append({
             'id': person.id,
             'source_id': source_id,
             'email': person.email,
-            'recency_normalized': recency_normalized,
-            'orders_amount_normalized': orders_amount_normalized,
-            'orders_count_normalized': orders_count_normalized,
-            'value_score': value_score
+            'amount_min': min_orders_amount,
+            'amount_max': max_orders_amount,
+            'count_min': min_orders_count,
+            'count_max': max_orders_count,
+            'recency_min': min_recency,
+            'recency_max': max_recency,
+            'recency_score': recency_normalized,
+            'view_score':orders_count_normalized,
+            'sum_score': orders_amount_normalized,
+            'value_score': value_score,
         })
 
     if updates:
@@ -474,28 +503,28 @@ async def normalize_persons_interest_leads(
     import logging
     logging.info(f"Processing normalization data for source_id {source_id}")
 
-    inverted_min_recency = Decimal(str(data_for_normalize.min_recency)) if data_for_normalize.min_recency is not None else Decimal("0.0")
-    inverted_max_recency = Decimal(str(data_for_normalize.max_recency)) if data_for_normalize.max_recency is not None else Decimal("1.0")
-    min_orders_count = Decimal(str(data_for_normalize.min_orders_count))
-    max_orders_count = Decimal(str(data_for_normalize.max_orders_count))
+    min_recency = Decimal(
+        str(data_for_normalize.min_recency)) if data_for_normalize.min_recency is not None else Decimal("0.0")
+    max_recency = Decimal(
+        str(data_for_normalize.max_recency)) if data_for_normalize.max_recency is not None else Decimal("1.0")
+    inverted_min_recency = AudienceSourceMath.inverted_decimal(value=min_recency)
+    inverted_max_recency = AudienceSourceMath.inverted_decimal(value=max_recency)
+    if inverted_min_recency > inverted_max_recency:
+        inverted_min_recency, inverted_max_recency = inverted_max_recency, inverted_min_recency
+    min_count = Decimal(str(data_for_normalize.min_count))
+    max_count = Decimal(str(data_for_normalize.max_count))
 
     logging.info(f"Inverted recency bounds: {inverted_min_recency} {inverted_max_recency}")
-
-    def normalize(value: Decimal, min_val: Decimal, max_val: Decimal) -> Decimal:
-        if max_val > min_val:
-            return (value - min_val) / (max_val - min_val)
-        else:
-            return Decimal("0.0")
 
     updates = []
 
     for person in persons:
         current_recency = Decimal(str(person.recency)) if person.recency is not None else Decimal("0.0")
-        inverted_recency = Decimal("1.0") / (current_recency + Decimal("1.0"))
-        recency_normalized = Decimal("0.5") * normalize(inverted_recency, inverted_min_recency, inverted_max_recency)
+        inverted_recency = AudienceSourceMath.inverted_decimal(value=current_recency)
+        recency_normalized = AudienceSourceMath.normalize_decimal(value=inverted_recency, min_val=inverted_min_recency, max_val=inverted_max_recency, coefficient=Decimal("0.5"))
 
-        orders_count = Decimal(str(person.orders_count))
-        orders_count_score = Decimal("0.5") * normalize(orders_count, min_orders_count, max_orders_count)
+        orders_count = Decimal(str(person.count))
+        orders_count_score = AudienceSourceMath.normalize_decimal(value=orders_count, min_val=min_count, max_val=max_count, coefficient=Decimal("0.5"))
 
         user_value_score = recency_normalized + orders_count_score
 
@@ -506,10 +535,16 @@ async def normalize_persons_interest_leads(
             'id': person.id,
             'source_id': source_id,
             'email': person.email,
+            'count_min': min_count,
+            'count_max': max_count,
+            'recency_min': min_recency,
+            'recency_max': max_recency,
             'inverted_recency': inverted_recency,
-            'recency_normalized': recency_normalized,
+            'inverted_recency_max': inverted_max_recency,
+            'inverted_recency_min': inverted_min_recency,
+            'view_score': orders_count_score,
+            'recency_score': recency_normalized,
             'value_score': user_value_score,
-            'orders_count_normalized': orders_count_score,
         })
 
     if updates:
@@ -528,30 +563,35 @@ async def normalize_persons_failed_leads(
 ):
     logging.info(f"Processing normalization data for source_id {source_id}")
 
-    inverted_min_recency = Decimal(str(data_for_normalize.min_recency)) if data_for_normalize.min_recency is not None else Decimal("0.0")
-    inverted_max_recency = Decimal(str(data_for_normalize.max_recency)) if data_for_normalize.max_recency is not None else Decimal("1.0")
-    logging.info(f"Inverted recency bounds: {inverted_min_recency} {inverted_max_recency}")
+    min_recency = Decimal(
+        str(data_for_normalize.min_recency)) if data_for_normalize.min_recency is not None else Decimal("0.0")
+    max_recency = Decimal(
+        str(data_for_normalize.max_recency)) if data_for_normalize.max_recency is not None else Decimal("1.0")
+    inverted_min_recency = AudienceSourceMath.inverted_decimal(value=min_recency)
+    inverted_max_recency = AudienceSourceMath.inverted_decimal(value=max_recency)
+    if inverted_min_recency > inverted_max_recency:
+        inverted_min_recency, inverted_max_recency = inverted_max_recency, inverted_min_recency
 
-    def normalized(value: Decimal, min_val: Decimal, max_val: Decimal) -> Decimal:
-        if max_val > min_val:
-            return (value - min_val) / (max_val - min_val)
-        else:
-            return Decimal("0.0")
+    logging.info(f"Inverted recency bounds: {inverted_min_recency} {inverted_max_recency}")
 
     updates = []
 
     for person in persons:
         current_recency = Decimal(str(person.recency)) if person.recency is not None else Decimal("0.0")
-        inverted_recency = Decimal("1.0") / (current_recency + Decimal("1.0"))
-        value_score = normalized(inverted_recency, inverted_min_recency, inverted_max_recency)
+        inverted_recency = AudienceSourceMath.inverted_decimal(current_recency)
+        value_score = AudienceSourceMath.normalize_decimal(value=inverted_recency, min_val=inverted_min_recency, max_val=inverted_max_recency)
 
         updates.append({
             'id': person.id,
             'source_id': source_id,
             'email': person.email,
-            'value_score': value_score,
+            'recency_min': min_recency,
+            'recency_max': max_recency,
             'inverted_recency': inverted_recency,
-            'recency_failed': value_score,
+            'inverted_recency_min': inverted_min_recency,
+            'inverted_recency_max': inverted_max_recency,
+            'recency_score': value_score,
+            'value_score': value_score,
         })
 
     if updates:
