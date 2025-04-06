@@ -7,6 +7,7 @@ class EnrichmentUser(Base):
     __tablename__ = 'enrichment_users'
 
     id = Column(UUID(as_uuid=True), primary_key=True, unique=True, nullable=False, server_default="gen_random_uuid()")
+    cid = Column(Integer, primary_key=True)
     age = Column(INT4RANGE, nullable=False)
     gender = Column(SmallInteger, nullable=False)
     estimated_household_income_code = Column(SmallInteger, nullable=False)
@@ -26,4 +27,6 @@ class EnrichmentUser(Base):
     is_book_reader = Column(SmallInteger, nullable=False)
     is_online_purchaser = Column(SmallInteger, nullable=False)
     state_abbr = Column(TEXT, nullable=True)
+    is_traveler = Column(SmallInteger, nullable=False)
+    rec_id = Column(Integer, nullable=False)
     
