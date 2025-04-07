@@ -126,7 +126,7 @@ async def send_error_msg(user_id: int, service_name: str, notification_persisten
     queue_name = f"sse_events_{str(user_id)}"
     account_notification = notification_persistence.get_account_notification_by_title(title)
     notification_text = account_notification.text.format(service_name)
-    notification = notification_persistence.find_account_with_notification(user_id=user_id, account_notification_id=account_notification.id, params=service_name)
+    notification = notification_persistence.find_account_with_notification(user_id=user_id, account_notification_id=account_notification.id)
     if not notification:
         save_account_notification = notification_persistence.save_account_notification(user_id=user_id, account_notification_id=account_notification.id, params=service_name)
         try:
@@ -142,15 +142,15 @@ async def send_error_msg(user_id: int, service_name: str, notification_persisten
 
 async def ensure_integration(message: IncomingMessage, integration_service: IntegrationService, session: Session, notification_persistence: NotificationPersistence):
     try:
-        logging.info(f"Start ensure integration")
         message_body = json.loads(message.body)
         service_name = message_body.get('service_name')
         five_x_five_up_id = message_body.get('five_x_five_up_id')
         lead_users_id = message_body.get('lead_users_id')
         data_sync_imported_id = message_body.get('data_sync_imported_id')
         data_sync_id = message_body.get('data_sync_id')
+        logging.info(f"Data sync id {data_sync_id}")
         if not check_correct_data_sync(five_x_five_up_id, lead_users_id, data_sync_imported_id, session):
-            logging.info(f"Data sync not correct")
+            logging.debug(f"Data sync not correct")
             await message.ack()
             return
         
@@ -175,14 +175,10 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
             result = None
             try:
                 result = await service.process_data_sync(five_x_five_user, user_integration, integration_data_sync, lead_user)
-            except requests.HTTPError as e:
-                logging.error(f"{e}", exc_info=True)
-                await message.ack()
-                return
             except BaseException as e:
                 logging.error(f"Error processing data sync: {e}", exc_info=True)
                 await message.ack()
-                return
+                raise
 
             import_status = DataSyncImportedStatus.SENT.value
             match result:
@@ -283,7 +279,7 @@ async def main():
             )
             await asyncio.Future()
 
-    except Exception as err:
+    except BaseException as e:
         logging.error('Unhandled Exception:', exc_info=True)
 
     finally:
@@ -294,6 +290,7 @@ async def main():
             logging.info("Closing RabbitMQ connection...")
             await rabbitmq_connection.close()
         logging.info("Shutting down...")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
