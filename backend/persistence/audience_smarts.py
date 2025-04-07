@@ -41,21 +41,41 @@ class AudienceSmartsPersistence:
     def calculate_smart_audience(self, data: DataSourcesFormat) -> int:   
         AudienceLALP = aliased(AudienceLookALikePerson)
         AudienceSMP = aliased(AudienceSourcesMatchedPerson)
+        
+        includes_lookalikes = self.db.query(AudienceLALP.lookalike_id).filter(
+            AudienceLALP.lookalike_id.in_(data["lookalike_ids"]["include"])
+        ).subquery()
+
+        excludes_lookalikes = self.db.query(AudienceLALP.lookalike_id).filter(
+            AudienceLALP.lookalike_id.in_(data["lookalike_ids"]["exclude"])
+        ).subquery()
+
+        includes_sources = self.db.query(AudienceSMP.source_id).filter(
+            AudienceSMP.source_id.in_(data["source_ids"]["include"])
+        ).subquery()
+
+        excludes_sources = self.db.query(AudienceSMP.source_id).filter(
+            AudienceSMP.source_id.in_(data["source_ids"]["exclude"])
+        ).subquery()
 
         lalp_query = (
             self.db.query(AudienceLALP.enrichment_user_id)
-            .filter(AudienceLALP.lookalike_id.in_(data["lookalike_ids"]["include"]))
-            .filter(AudienceLALP.lookalike_id.notin_(data["lookalike_ids"]["exclude"]))
+            .outerjoin(includes_lookalikes, AudienceLALP.lookalike_id == includes_lookalikes.c.lookalike_id)
+            .outerjoin(excludes_lookalikes, AudienceLALP.lookalike_id == excludes_lookalikes.c.lookalike_id)
+            .filter(includes_lookalikes.c.lookalike_id.isnot(None))
+            .filter(excludes_lookalikes.c.lookalike_id.is_(None))
         )
 
         smp_query = (
             self.db.query(AudienceSMP.enrichment_user_id)
-            .filter(AudienceSMP.source_id.in_(data["source_ids"]["include"]))
-            .filter(AudienceSMP.source_id.notin_(data["source_ids"]["exclude"]))
+            .outerjoin(includes_sources, AudienceSMP.source_id == includes_sources.c.source_id)
+            .outerjoin(excludes_sources, AudienceSMP.source_id == excludes_sources.c.source_id)
+            .filter(includes_sources.c.source_id.isnot(None))
+            .filter(excludes_sources.c.source_id.is_(None))
         )
 
-        combined_query = lalp_query.union_all(smp_query).subquery()
-
+        combined_query = lalp_query.union(smp_query).subquery()
+        
         count_query = self.db.query(func.count()).select_from(combined_query)
         return count_query.scalar()
 
