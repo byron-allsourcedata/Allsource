@@ -6,19 +6,19 @@ from pydantic import BaseModel
 class PersonEntry(BaseModel):
     id: str
     email: str
-    orders_amount: float
-    orders_count: int
+    sum_amount: float
+    count: int
     recency: float
 
 class DataForNormalize(BaseModel):
     matched_size: int
     all_size: int
-    min_orders_amount: Optional[float] = 0
-    max_orders_amount: Optional[float] = 1
-    min_orders_count: Optional[int] = 0
-    max_orders_count: Optional[int] = 1
-    min_orders_date: Optional[str] = None
-    max_orders_date: Optional[str] = None
+    min_amount: Optional[float] = 0
+    max_amount: Optional[float] = 1
+    min_count: Optional[int] = 0
+    max_count: Optional[int] = 1
+    min_start_date: Optional[str] = None
+    max_start_date: Optional[str] = None
     min_recency: Optional[float] = 0
     max_recency: Optional[float] = 1
 
