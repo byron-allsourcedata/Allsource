@@ -153,6 +153,7 @@ class DashboardAudiencePersistence:
     def get_last_smart_audiences_and_data_syncs(self, *, user_id, limit=5):        
         audience_smart = self.db.query(
             AudienceLookalikes.name.label('lookalike_name'),
+            AudienceSource.name.label('source_name'),
             AudienceSmart.created_at.label('created_at'),
             AudienceSmart.name.label('name'),
             AudienceSmartsUseCase.name.label('use_case_name'),
@@ -180,6 +181,7 @@ class DashboardAudiencePersistence:
             AudienceSmart.user_id == user_id
         ).group_by(
             AudienceLookalikes.name,
+            AudienceSource.name,
             AudienceSmart.created_at, 
             AudienceSmart.name, 
             AudienceSmartsUseCase.name, 
