@@ -152,6 +152,7 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
         data_sync_imported_id = message_body.get('data_sync_imported_id')
         data_sync_id = message_body.get('data_sync_id')
         logging.info(f"Data sync id {data_sync_id}")
+        logging.info(f"Lead User id {lead_users_id}")
         if not check_correct_data_sync(five_x_five_up_id, lead_users_id, data_sync_imported_id, session):
             logging.warning(f"Data sync not correct")
             await message.ack()
