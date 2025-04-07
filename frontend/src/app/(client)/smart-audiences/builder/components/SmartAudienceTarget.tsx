@@ -310,9 +310,10 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
         "/audience-smarts/builder",
         filteredRequestData
       );
-      if (response.data.status === "SUCCESS") {
+      if (response.status === 200) {
         showToast("New Smart Audience successfully created");
-        router.push("/smart-audiences");
+        const dataString = encodeURIComponent(JSON.stringify(response.data));
+        router.push(`/smart-audiences/smart-audience-created?data=${dataString}`);
       }
     } catch {
       showErrorToast("An error occurred while creating a new Smart Audience");
