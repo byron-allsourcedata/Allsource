@@ -155,10 +155,11 @@ class AudienceSmartsService:
             contacts_to_validate: Optional[int] = None,
     ):
 
-        if not contacts_to_validate:
-            status = AudienceSmartStatuses.N_A.value
-        elif is_validate_skip:
+
+        if is_validate_skip:
             status = AudienceSmartStatuses.UNVALIDATED.value
+        elif not contacts_to_validate:
+            status = AudienceSmartStatuses.N_A.value
         else: 
             status = AudienceSmartStatuses.VALIDATING.value
 
