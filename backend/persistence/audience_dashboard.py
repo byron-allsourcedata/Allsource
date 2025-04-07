@@ -125,25 +125,7 @@ class DashboardAudiencePersistence:
                     UserDomains.domain,
                     LeadUser.behavior_type
                 ).all()
-    
-    
-    def get_last_data_syncs(self, *, user_id: int, limit: int):
-        three_hours_ago = datetime.now(timezone.utc) - timedelta(hours=3)
-        return self.db.query(
-                        AudienceSmart.name.label('list_name'),
-                        IntegrationUserSync.created_at.label('created_at'),
-                        IntegrationUserSync.sent_contacts.label('sent_contacts'),
-                        AudienceSmartsUseCase.name.label('use_case_name'),
-                    )\
-                    .join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id)\
-                    .join(AudienceSmart, AudienceSmart.id == IntegrationUserSync.smart_audience_id)\
-                    .join(AudienceSmartsUseCase, AudienceSmartsUseCase.id == AudienceSmart.use_case_id)\
-                    .filter(
-                        UserIntegration.user_id == user_id,
-                        IntegrationUserSync.last_sync_date <= three_hours_ago
-                    )\
-                    .order_by(IntegrationUserSync.created_at.desc()).limit(limit).all()
-        
+            
     def get_last_sources_and_lookalikes(self, *, user_id, limit=5):
         sources = self.db.query(
             AudienceSource.name.label('name'),
@@ -155,43 +137,22 @@ class DashboardAudiencePersistence:
         ).order_by(AudienceSource.created_at.desc()).limit(5).all()
 
         lookalikes = self.db.query(
+            AudienceSource.name.label('source_name'),
             AudienceLookalikes.name.label('name'),
             AudienceLookalikes.created_date.label('created_at'),
             AudienceLookalikes.lookalike_size.label('lookalike_size'),
             AudienceLookalikes.size.label('size')
-        ).filter(
+        )\
+        .join(AudienceSource, AudienceSource.id == AudienceLookalikes.source_uuid)\
+        .filter(
             AudienceLookalikes.user_id == user_id
         ).order_by(AudienceLookalikes.created_date.desc()).limit(limit).all()
         
         return sources, lookalikes
     
-    def get_last_lookalikes_and_smart_audiences(self, *, user_id, limit=5):
-        lookalikes = self.db.query(
-            AudienceLookalikes.name.label('name'),
-            AudienceLookalikes.created_date.label('created_at'),
-            AudienceLookalikes.lookalike_size.label('source_type'),
-            AudienceLookalikes.size.label('matched_records'),
-        ).filter(
-            AudienceLookalikes.user_id == user_id
-        ).order_by(AudienceLookalikes.created_date.desc()).limit(5).all()
-        
-        audience_smart = self.db.query(
-            AudienceSmart.name.label('name'),
-            AudienceLookalikes.name.label('lookalike_name'),
-            AudienceSource.name.label('source_name'),
-            AudienceSmart.created_at.label('created_at'),
-        )\
-        .join(AudienceSmartsDataSources, AudienceSmartsDataSources.smart_audience_id == AudienceSmart.id)\
-        .outerjoin(AudienceLookalikes, AudienceSmartsDataSources.lookalike_id == AudienceLookalikes.id)\
-        .outerjoin(AudienceSource, (AudienceSmartsDataSources.source_id == AudienceSource.id) | (AudienceLookalikes.source_uuid == AudienceSource.id))\
-        .filter(
-                AudienceSmart.user_id == user_id
-        ).order_by(AudienceSmart.created_at.desc()).limit(limit).all()
-        
-        return lookalikes, audience_smart
-    
     def get_last_smart_audiences_and_data_syncs(self, *, user_id, limit=5):        
         audience_smart = self.db.query(
+            AudienceLookalikes.name.label('lookalike_name'),
             AudienceSmart.created_at.label('created_at'),
             AudienceSmart.name.label('name'),
             AudienceSmartsUseCase.name.label('use_case_name'),
@@ -218,6 +179,7 @@ class DashboardAudiencePersistence:
         ).filter(
             AudienceSmart.user_id == user_id
         ).group_by(
+            AudienceLookalikes.name,
             AudienceSmart.created_at, 
             AudienceSmart.name, 
             AudienceSmartsUseCase.name, 
@@ -227,17 +189,22 @@ class DashboardAudiencePersistence:
             AudienceSmart.created_at.desc()
         ).limit(limit).all()
         
+        three_hours_ago = datetime.now(timezone.utc) - timedelta(hours=3)
         data_syncs = self.db.query(
-                    IntegrationUserSync.created_at.label('created_at'),
-                    AudienceSmart.name.label('list_name'),
+                        AudienceSmart.name.label('list_name'),
+                        IntegrationUserSync.created_at.label('created_at'),
+                        IntegrationUserSync.sent_contacts.label('sent_contacts'),
+                        AudienceSmartsUseCase.name.label('use_case_name'),
                     )\
                     .join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id)\
                     .join(AudienceSmart, AudienceSmart.id == IntegrationUserSync.smart_audience_id)\
+                    .join(AudienceSmartsUseCase, AudienceSmartsUseCase.id == AudienceSmart.use_case_id)\
                     .filter(
                         UserIntegration.user_id == user_id,
+                        IntegrationUserSync.last_sync_date <= three_hours_ago
                     )\
                     .order_by(IntegrationUserSync.created_at.desc()).limit(limit).all()
-        
+                    
         return audience_smart, data_syncs
                          
     def get_contacts_for_pixel_contacts_by_domain_id(self, *, user_id: int, domain_id: int):

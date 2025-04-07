@@ -73,15 +73,13 @@ class DashboardAudienceService:
             datasets=[(sources, 'source'), (lookalikes, 'lookalike')],
             limit=self.LIMIT
         )
-        data_syncs = self.dashboard_persistence.get_last_data_syncs(user_id=user.get('id'), limit=self.LIMIT)
-        lookalikes, smart_audience = self.dashboard_persistence.get_last_lookalikes_and_smart_audiences(user_id=user.get('id'), limit=self.LIMIT)
+        smart_audience, data_syncs = self.dashboard_persistence.get_last_smart_audiences_and_data_syncs(user_id=user.get('id'), limit=self.LIMIT)
         last_lookalikes_audience_smart = self.merge_and_sort(
             datasets=[(lookalikes, 'lookalikes'), (smart_audience, 'smart_audience')],
             limit=self.LIMIT
         )
-        audience_smart, data_syncs = self.dashboard_persistence.get_last_smart_audiences_and_data_syncs(user_id=user.get('id'), limit=self.LIMIT)
         last_audience_smart_data_sync = self.merge_and_sort(
-            datasets=[(audience_smart, 'audience_smart'), (data_syncs, 'data_syncs')],
+            datasets=[(smart_audience, 'smart_audience'), (data_syncs, 'data_syncs')],
             limit=self.LIMIT
         )
         return {
