@@ -119,6 +119,8 @@ class WebhookIntegrationService:
         data = self.__mapped_lead(five_x_five_user, sync.data_map, lead_user)
         if data in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return data
+        
+        logger.info(f"sending data: {data}")
         response = self.__handle_request(url=sync.hook_url, method=sync.method, json=data)
         if not response or response.status_code == 401:
                 return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
