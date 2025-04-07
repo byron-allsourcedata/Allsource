@@ -82,6 +82,7 @@ async def create_smart_audience(
             validation_params=request.validation_params,
             data_sources=request.data_sources,
             contacts_to_validate=request.contacts_to_validate,
+            active_segment_records=request.active_segment_records,
             total_records=request.total_records
         )
         return {'status': "SUCCESS"}

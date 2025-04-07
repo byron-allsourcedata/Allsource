@@ -960,7 +960,24 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                     max={maxContacts}
                                                     aria-label="Contacts Sync Slider"
                                                     valueLabelDisplay="auto"
-                                                    sx={{ color: "rgba(80, 82, 178, 1)", "&.MuiSlider-thumb": { width: "14px", height: "14px", transform: "translate(0, -50%)" }, "&.MuiSlider-rail": { backgroundColor: "rgba(231, 231, 231, 1)" } }}
+                                                    // sx={{
+                                                    //     "&.MuiSlider-thumb": { width: "14px", height: "14px", transform: "translate(0, -50%)" }, 
+                                                    //     "&.MuiSlider-rail": { backgroundColor: "rgba(231, 231, 231, 1)" } 
+                                                    // }}
+
+                                                    sx={{
+                                                        color:
+                                                        valueContactSync === 0
+                                                            ? "rgba(231, 231, 231, 1)"
+                                                            : "rgba(80, 82, 178, 1)",
+                                                        maxWidth: "280px",
+                                                        "& .MuiSlider-track": {
+                                                          backgroundColor: "rgba(80, 82, 178, 1)",
+                                                        },
+                                                        "& .MuiSlider-thumb": {
+                                                          backgroundColor: "rgba(80, 82, 178, 1)",
+                                                        },
+                                                      }}
                                                 />
                                             </Box>
                                         </CardContent>

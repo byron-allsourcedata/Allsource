@@ -58,6 +58,8 @@ class AudienceSmartStatuses(Enum):
     VALIDATING = 'validating'
     READY = 'ready'
     SYNCED = 'synced'
+    N_A = 'n_a'
+    DATA_SYNCING = 'data_syncing'
 
 class CreateDataSync(Enum):
     ZAPIER_CONNECTED = 'ZAPIER_CONNECTED'
