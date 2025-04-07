@@ -115,7 +115,7 @@ class AudienceSourceService:
 
         if not audience_source:
             return
-        audience_sources_matched_persons = self.audience_sources_matched_persons_persistence.get_audience_sources_matched_persons_by_source_id(audience_source_id=source_id)
+        audience_sources_matched_persons, five_x_five_persons = self.audience_sources_matched_persons_persistence.get_audience_sources_matched_persons_by_source_id(audience_source_id=source_id)
         if not audience_sources_matched_persons:
             return
         
@@ -140,23 +140,23 @@ class AudienceSourceService:
                 'duration >= 2 ? 0.5 : duration >= 1 ? 0.25 : 0.0', 'RecencyScore + PageViewScore'
             ])
 
-            for person in audience_sources_matched_persons:
+            for matched_person, five_x_five_person in zip(audience_sources_matched_persons, five_x_five_persons):
                 relevant_data = [
-                    person.last_name or '',
-                    person.first_name or '',
-                    str(person.start_date) if person.start_date else '',
-                    str(person.recency) if person.recency is not None else '',
-                    str(person.recency_min) if person.recency_min is not None else '',
-                    str(person.recency_max) if person.recency_max is not None else '',
-                    str(person.inverted_recency) if person.inverted_recency is not None else '',
-                    str(person.inverted_recency_min) if person.inverted_recency_min is not None else '',
-                    str(person.inverted_recency_max) if person.inverted_recency_max is not None else '',
-                    str(person.end_date) if person.end_date else '',
-                    str(person.start_date) if person.start_date else '',
-                    str(person.duration) if person.duration is not None else '',
-                    str(person.recency_score) if person.recency_score is not None else '',
-                    str(person.view_score) if person.view_score is not None else '',
-                    str(person.value_score) if person.value_score is not None else '',
+                    str(five_x_five_person.last_name) if five_x_five_person and five_x_five_person.last_name else '',
+                    str(five_x_five_person.first_name) if five_x_five_person and five_x_five_person.first_name else '',
+                    str(matched_person.start_date) if matched_person.start_date else '',
+                    str(matched_person.recency) if matched_person.recency is not None else '',
+                    str(matched_person.recency_min) if matched_person.recency_min is not None else '',
+                    str(matched_person.recency_max) if matched_person.recency_max is not None else '',
+                    str(matched_person.inverted_recency) if matched_person.inverted_recency is not None else '',
+                    str(matched_person.inverted_recency_min) if matched_person.inverted_recency_min is not None else '',
+                    str(matched_person.inverted_recency_max) if matched_person.inverted_recency_max is not None else '',
+                    str(matched_person.end_date) if matched_person.end_date else '',
+                    str(matched_person.start_date) if matched_person.start_date else '',
+                    str(matched_person.duration) if matched_person.duration is not None else '',
+                    str(matched_person.recency_score) if matched_person.recency_score is not None else '',
+                    str(matched_person.view_score) if matched_person.view_score is not None else '',
+                    str(matched_person.value_score) if matched_person.value_score is not None else '',
                 ]
                 writer.writerow(relevant_data)
 

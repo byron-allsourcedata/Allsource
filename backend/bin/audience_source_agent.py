@@ -21,8 +21,6 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
 from models.five_x_five_users import FiveXFiveUser
-from persistence.million_verifier import MillionVerifierPersistence
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from enums import TypeOfCustomer, ProccessDataSyncResult
 from utils import get_utc_aware_date, get_valid_email_without_million
 from models.leads_visits import LeadsVisits
@@ -316,8 +314,7 @@ async def process_user_id(persons: List[PersonRow], db_session: Session, source_
             email = valid_email
         updates.append({
             "source_id": source_id,
-            "first_name": five_x_five_user.first_name,
-            "last_name": five_x_five_user.last_name,
+            "five_x_five_user_id": five_x_five_user.id,
             "email": email,
             "start_date": calculate_result['active_start_date'],
             "end_date": calculate_result['active_end_date'],
