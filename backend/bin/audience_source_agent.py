@@ -284,10 +284,12 @@ async def process_user_id(persons: List[PersonRow], db_session: Session, source_
         )
         .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)
         .filter(
-            LeadUser.user_id == audience_source.user_id
+            LeadUser.user_id == audience_source.user_id,
+            FiveXFiveUser.id.in_(five_x_five_user_ids)
         )
         .all()
     )
+
     updates = []
     for user_visit in results_query:
         lead_id, five_x_five_user = user_visit
@@ -335,7 +337,7 @@ async def process_user_id(persons: List[PersonRow], db_session: Session, source_
         logging.info(f"Updated {len(updates)} persons.")
         db_session.commit()
 
-    return len(five_x_five_user_ids)
+    return len(updates)
 
 
 async def process_and_send_chunks(db_session: Session, source_id: str, batch_size: int, queue_name: str,
