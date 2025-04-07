@@ -36,13 +36,16 @@ load_dotenv()
 
 CRON_DATA_SYNC_LEADS = 'cron_data_sync_leads'
 
-
+for handler in logging.root.handlers[:]:
+    logging.root.removeHandler(handler)
+    
 def setup_logging(level):
     logging.basicConfig(
         level=level,
         format='%(asctime)s - %(levelname)s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
+
 
 def check_correct_data_sync(five_x_five_up_id: str, lead_users_id: int, data_sync_imported_id: int, session: Session):
     data_sync_imported_lead = session.query(DataSyncImportedLeads).filter(DataSyncImportedLeads.id==data_sync_imported_id).first()
@@ -150,7 +153,7 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
         data_sync_id = message_body.get('data_sync_id')
         logging.info(f"Data sync id {data_sync_id}")
         if not check_correct_data_sync(five_x_five_up_id, lead_users_id, data_sync_imported_id, session):
-            logging.debug(f"Data sync not correct")
+            logging.warning(f"Data sync not correct")
             await message.ack()
             return
         
@@ -168,13 +171,13 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
             'sales_force': integration_service.sales_force,
             's3': integration_service.s3
         }
-        
         service = service_map.get(service_name)
         lead_user, five_x_five_user, user_integration, integration_data_sync = get_lead_attributes(session, lead_users_id, data_sync_id)
         if service:
             result = None
             try:
                 result = await service.process_data_sync(five_x_five_user, user_integration, integration_data_sync, lead_user)
+                logging.info(f"Result {result}")
             except BaseException as e:
                 logging.error(f"Error processing data sync: {e}", exc_info=True)
                 await message.ack()
@@ -227,7 +230,7 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
         await asyncio.sleep(5)
         await message.reject(requeue=True)
     
-async def main():
+async def main():    
     log_level = logging.INFO
     if len(sys.argv) > 1:
         arg = sys.argv[1].upper()
