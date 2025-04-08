@@ -1,76 +1,87 @@
 import React from "react";
 import { Card, CardContent, Typography, Box } from "@mui/material";
+import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 
-interface StatCardProps {
-  title: string;
-  description: string;
-  size: number;
-  lookalikeSize: string;
-  sourceName: string;
+interface CardData {
+  status: string;
   date: string;
-  sizeLabel: string;
+  left: Record<string, string | number>;
+  right?: Record<string, string | number>;
+  tabType?: string;
+  isMainSection?: boolean | false;
 }
 
-const SelectedCards: React.FC<StatCardProps> = ({
-  title,
-  description,
-  size,
-  lookalikeSize,
-  sizeLabel,
-  sourceName,
-  date,
-}) => {
+const getStatusColor = (status: string, tabType?: string): string => {
+  if (status.includes("Audience")) return "rgba(110, 193, 37, 1)";
+  if (status.includes("Lookalikes")) return "rgba(224, 176, 5, 1)";
+  if (tabType) {
+    if (tabType.includes("Lookalikes")) return "rgba(224, 176, 5, 1)";
+  }
+
+  return "blue"; // default
+};
+
+const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
+  const { status, date, left, right, tabType, isMainSection } = data;
+  const color = getStatusColor(status, tabType);
+
+  const renderSection = (sectionData: Record<string, string | number>) =>
+    Object.entries(sectionData).map(([label, value]) => (
+      <Box key={label} mb={1}>
+        <Typography variant="body2" color="textSecondary">
+          {label}
+        </Typography>
+        <Typography sx={{ fontWeight: 600, fontSize: "16px" }}>
+          {typeof value === "number" ? value.toLocaleString() : value}
+        </Typography>
+      </Box>
+    ));
+
   return (
     <Card
       sx={{
         borderRadius: 2,
-        boxShadow: 4,
-        padding: 2,
-        minWidth: 300,
+        boxShadow: "0px 1px 4px 0px rgba(0, 0, 0, 0.25)",
+        padding: "1rem 1.5rem",
         maxWidth: "100%",
-        margin: 1,
       }}
     >
-      <CardContent sx={{ padding: 0.5 }}>
-        <Box display="flex" justifyContent="space-between">
-          <Box>
-            <Typography
-              className="second-sub-title"
-              sx={{ fontSize: "20px !important", fontWeight: "700 !important" }}
-            >
-              {title}
-            </Typography>
-            <Typography variant="body2" color="textSecondary">
-              {description}
-            </Typography>
+      <CardContent sx={{ p: 0 }}>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={2}
+        >
+          <Box display="flex" alignItems="center">
+            <FiberManualRecordIcon sx={{ fontSize: 12, color, mr: 1 }} />
+            <Typography sx={{ fontWeight: 600 }}>{status}</Typography>
           </Box>
-          <Typography className="table-data">{date}</Typography>
+          <Typography variant="body2" color="textSecondary">
+            {date}
+          </Typography>
         </Box>
-        <Box display="flex" justifyContent="space-between" mt={2}>
-          <Box>
-            <Typography className="second-sub-title">
-              {size.toLocaleString()}
-            </Typography>
-            <Typography variant="body2" color="textSecondary">
-              {sizeLabel}
-            </Typography>
-          </Box>
-          {lookalikeSize && (
-            <Box>
-              <Typography className="second-sub-title">
-                {lookalikeSize}
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                Lookalike Size
-              </Typography>
+
+        {/* Content */}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "row",
+            width: "100%",
+            justifyContent: "space-between",
+          }}
+        >
+          {/* Левая колонка */}
+          {!isMainSection && (
+            <Box display="flex" flexDirection="column">
+              {renderSection(left)}
             </Box>
           )}
-          {sourceName && (
-            <Box>
-              <Typography className="second-sub-title">{sourceName}</Typography>
-              <Typography variant="body2" color="textSecondary">
-                Source Name
-              </Typography>
+
+          {/* Правая колонка (если есть) */}
+          {right && (
+            <Box display="flex" flexDirection="column">
+              {renderSection(right)}
             </Box>
           )}
         </Box>
@@ -79,4 +90,4 @@ const SelectedCards: React.FC<StatCardProps> = ({
   );
 };
 
-export default SelectedCards;
+export default InfoCard;
