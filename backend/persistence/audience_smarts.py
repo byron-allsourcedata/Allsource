@@ -107,8 +107,9 @@ class AudienceSmartsPersistence:
             use_case_alias: str,
             data_sources: List[dict],
             total_records: int,
+            status: str,
             validation_params: Optional[dict],
-            contacts_to_validate: Optional[int]
+            active_segment_records: int,
     ) -> AudienceSmart:
 
         use_case_id = self.get_use_case_id_by_alias(use_case_alias)
@@ -122,8 +123,8 @@ class AudienceSmartsPersistence:
             use_case_id=use_case_id,
             validations=validation_params,
             total_records=total_records,
-            active_segment_records=contacts_to_validate,
-            status=AudienceSmartStatuses.READY.value
+            active_segment_records=active_segment_records,
+            status=status
         )
 
         self.db.add(new_audience)
@@ -162,7 +163,7 @@ class AudienceSmartsPersistence:
                 AudienceSmart.active_segment_records,
                 AudienceSmart.status,
                 AudienceSmartsUseCase.integrations,
-                AudienceSmart.processed_total_records,
+                AudienceSmart.processed_active_segment_records,
             )
                 .join(Users, Users.id == AudienceSmart.created_by_user_id)
                 .join(AudienceSmartsUseCase, AudienceSmartsUseCase.id == AudienceSmart.use_case_id)

@@ -68,9 +68,9 @@ async def aud_smarts_matching(message: IncomingMessage, db_session: Session, con
             update(AudienceSmart)
             .where(AudienceSmart.id == str(aud_smart_id))
             .values(
-                processed_total_records=(AudienceSmart.processed_total_records + len(five_x_five_users_ids))
+                processed_active_segment_records=(AudienceSmart.processed_active_segment_records + len(five_x_five_users_ids))
             )
-            .returning(AudienceSmart.processed_total_records)
+            .returning(AudienceSmart.processed_active_segment_records)
         ).fetchone()
                     
         db_session.commit()

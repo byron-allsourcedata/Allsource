@@ -111,7 +111,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 
   // Generate Active Segments
   const [value, setValue] = useState<number | null>(0);
-  const [maxValue, setMaxValue] = useState<number | null>(100000);
+  // const [maxValue, setMaxValue] = useState<number | null>(100000);
   const [numberToValidate, setNumberToValidate] = useState<number | null>(null);
   const [estimatedContacts, setEstimatedContacts] = useState<number | null>(
     null
@@ -151,8 +151,8 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
     let newValue = event.target.value.replace(/,/g, "");
     if (/^\d*$/.test(newValue)) {
       let numericValue = Number(newValue);
-      if (maxValue) {
-        if (numericValue <= maxValue) {
+      if (AudienceSize) {
+        if (numericValue <= AudienceSize) {
           setValue(numericValue);
         }
       }
@@ -296,7 +296,9 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
         data_sources: selectedSources,
         validation_params: validationFilters,
         contacts_to_validate: isValidateSkip ? null : value,
+        is_validate_skip: isValidateSkip,
         smart_audience_name: audienceName,
+        active_segment_records: value,
         total_records: AudienceSize,
       };
 
@@ -517,7 +519,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                   size="small"
                   margin="none"
                   variant="outlined"
-                  value={AudienceSize}
+                  value={formatNumber(AudienceSize ? AudienceSize.toString() : "0")}
                   disabled
                   sx={{
                     maxHeight: "40px",
@@ -955,7 +957,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
             </Typography>
           </Box>
           <Typography>
-            {formatNumber(maxValue ? maxValue.toString() : "0")}
+            {formatNumber(AudienceSize ? AudienceSize.toString() : "0")}
           </Typography>
 
           {!isCalculateActiveSegments ? (
@@ -987,9 +989,9 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                   <TextField
                     value={value}
                     type="number"
-                    label="Enter a number"
+                    variant="outlined"
                     onChange={handleInputNumberChange}
-                    inputProps={{ max: maxValue }}
+                    inputProps={{ max: AudienceSize }}
                     InputLabelProps={{
                       sx: { fontFamily: "Nunito Sans", pl: "2px" },
                     }}
@@ -1000,7 +1002,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                     value={value ? value : 0}
                     onChange={handleSliderChange}
                     min={0}
-                    max={maxValue ? maxValue : 0}
+                    max={AudienceSize ? AudienceSize : 0}
                     sx={{
                       color:
                         value === 0
