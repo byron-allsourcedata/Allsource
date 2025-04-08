@@ -107,7 +107,7 @@ def get_previous_imported_encrhment_users(session, data_sync_id):
         DataSyncImportedEncrichment.data_sync_id == data_sync_id,
         DataSyncImportedEncrichment.status == DataSyncImportedStatus.SENT.value,
         UserDomains.is_enable == True
-    )
+    ).order_by(EnrichmentUser.id).limit(BATCH_SIZE)
        
     return query.all()
 
