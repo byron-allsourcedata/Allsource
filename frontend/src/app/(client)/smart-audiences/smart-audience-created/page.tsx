@@ -25,8 +25,9 @@ interface SmartAudienceSource {
     total_records: number
     validated_records: number
     active_segment_records: number
-    processed_total_records: number
+    processed_active_segment_records: number
     status: string
+    // integrations: string[]
 }
 
 const SourcesList: React.FC = () => {
@@ -58,12 +59,12 @@ const SourcesList: React.FC = () => {
     };
 
     useEffect(() => {
-        console.log("longpol");
+        console.log("pooling");
     
         if (!intervalRef.current) {
-            console.log("longpol started");
+            console.log("pooling started");
             intervalRef.current = setInterval(() => {
-                const hasPending = createdSmartAudienceSource?.total_records !== createdSmartAudienceSource?.processed_total_records;
+                const hasPending = createdSmartAudienceSource?.total_records !== createdSmartAudienceSource?.processed_active_segment_records;
     
                 if (hasPending) {
                     console.log("Fetching due to pending records");
@@ -140,21 +141,6 @@ const SourcesList: React.FC = () => {
         setOpenConfirmDialog(false);
     };
 
-    const setSourceType = (sourceType: string) => {
-        return sourceType
-            .split(',')
-            .map(item =>
-                item
-                    .split('_')
-                    .map(subItem => subItem.charAt(0).toUpperCase() + subItem.slice(1))
-                    .join(' ')
-            )
-            .join(', ');
-    }
-
-    const truncateText = (text: string, maxLength: number) => {
-        return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
-    };
 
     const buttonClickAllSources = () => {
         if (sessionStorage.getItem('filtersBySmarts')) {
@@ -166,7 +152,16 @@ const SourcesList: React.FC = () => {
     const { smartAudienceProgress } = useSSE();
     const progress = createdSmartAudienceSource?.id ? smartAudienceProgress[createdSmartAudienceSource.id] : null;
 
+    const activeRecords = createdSmartAudienceSource?.active_segment_records ?? 0;
+    const processedActiveRecords = createdSmartAudienceSource?.processed_active_segment_records ?? 0;
+    const processed = progress?.processed ?? 0;
 
+    const preRenderStatus = (status: string) => {
+        if (status === "N_a") {
+            return "Ready"
+        }
+        return status
+    }
     return (
         <>
             {loading && (
@@ -337,39 +332,7 @@ const SourcesList: React.FC = () => {
                                             Total Universe
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
-                                        {
-                                            (progress?.processed !== undefined &&
-                                                createdSmartAudienceSource?.total_records !== undefined &&
-                                                progress.processed === createdSmartAudienceSource.total_records) ||
-                                            (createdSmartAudienceSource?.processed_total_records !== undefined &&
-                                                createdSmartAudienceSource.total_records !== undefined &&
-                                                createdSmartAudienceSource.processed_total_records === createdSmartAudienceSource.total_records &&
-                                                createdSmartAudienceSource.processed_total_records !== 0) ? (
-                                                createdSmartAudienceSource.total_records.toLocaleString('en-US')
-                                            ) : createdSmartAudienceSource?.processed_total_records !== undefined &&
-                                                progress?.processed !== undefined &&
-                                                createdSmartAudienceSource.processed_total_records > progress.processed ? (
-                                                <ProgressBar
-                                                progress={{
-                                                    total: createdSmartAudienceSource.total_records || 0,
-                                                    processed: createdSmartAudienceSource.processed_total_records,
-                                                }}
-                                                />
-                                            ) : (
-                                                <ProgressBar
-                                                progress={{
-                                                    total: createdSmartAudienceSource?.total_records || 0,
-                                                    processed: progress?.processed || 0,
-                                                }}
-                                                />
-                                            )
-                                            }
-                                        {/* {sourceProgress[createdSmartAudienceSource.id]?.total && sourceProgress[createdSmartAudienceSource.id]?.total > 0 || createdData?.total_records > 0
-                                            ? sourceProgress[createdSmartAudienceSource.id]?.total > 0
-                                                ? sourceProgress[createdSmartAudienceSource.id]?.total.toLocaleString('en-US')
-                                                : createdData?.total_records?.toLocaleString('en-US')
-                                            :  <ThreeDotsLoader />
-                                            } */}
+                                        {createdSmartAudienceSource?.total_records.toLocaleString('en-US')}
                                         </Typography>
                                     </Box>
                                     <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
@@ -378,19 +341,17 @@ const SourcesList: React.FC = () => {
                                             className="table-heading"
                                             sx={{ textAlign: "left" }}
                                         >
-                                            Matched Records
+                                            Active Segment
                                         </Typography>
                                         
                                         <Typography variant="subtitle1" className="table-data">
-                                            {/* {createdSmartAudienceSource?.id && (sourceProgress[createdSmartAudienceSource.id]?.processed && sourceProgress[createdSmartAudienceSource.id]?.processed == sourceProgress[createdSmartAudienceSource.id]?.total) || (createdData?.processed_records == createdData?.total_records && createdData?.processed_records !== 0)
-                                                ? sourceProgress[createdSmartAudienceSource.id]?.matched > createdData?.matched_records 
-                                                    ? sourceProgress[createdSmartAudienceSource.id]?.matched.toLocaleString('en-US')
-                                                    : createdData.matched_records.toLocaleString('en-US')
-                                                :  createdData?.processed_records !== 0 
-                                                    ? <ProgressBar progress={{total: createdData?.total_records, processed: createdData?.processed_records, matched: createdData?.matched_records}}/> 
-                                                    : <ProgressBar progress={sourceProgress[createdSmartAudienceSource.id]}/> 
-                                            } */}
-                                            {createdSmartAudienceSource?.active_segment_records}
+                                            {(processed && processed === activeRecords) ||
+                                            (processedActiveRecords === activeRecords && processedActiveRecords !== 0)
+                                                ? activeRecords.toLocaleString('en-US')
+                                                : processedActiveRecords > processed
+                                                ? <ProgressBar progress={{ total: activeRecords, processed: processedActiveRecords }} />
+                                                : <ProgressBar progress={{ ...progress, total: activeRecords, processed: progress?.processed ?? 0 }} />
+                                            }
                                         </Typography>
                                     </Box>
                                     <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
@@ -404,10 +365,7 @@ const SourcesList: React.FC = () => {
                                             sx={{
                                                 width: "100px",
                                                 margin: 0,
-                                                background: getStatusStyle(
-                                                    createdSmartAudienceSource.status.charAt(0).toUpperCase() +
-                                                    createdSmartAudienceSource.status.slice(1)
-                                                ).background,
+                                                background: getStatusStyle(preRenderStatus(createdSmartAudienceSource.status.charAt(0).toUpperCase() + createdSmartAudienceSource.status.slice(1))).background,
                                                 padding: '3px 8px',
                                                 borderRadius: '2px',
                                                 fontFamily: 'Roboto',
@@ -415,14 +373,10 @@ const SourcesList: React.FC = () => {
                                                 fontWeight: '400',
                                                 lineHeight: '16px',
                                                 textAlign: "center",
-                                                color: getStatusStyle(
-                                                    createdSmartAudienceSource.status.charAt(0).toUpperCase() +
-                                                    createdSmartAudienceSource.status.slice(1)
-                                                ).color,
+                                                color: getStatusStyle(preRenderStatus(createdSmartAudienceSource.status.charAt(0).toUpperCase() + createdSmartAudienceSource.status.slice(1))).color,
                                             }}
                                         >
-                                            {createdSmartAudienceSource.status.charAt(0).toUpperCase() +
-                                                createdSmartAudienceSource.status.slice(1)}
+                                            {preRenderStatus(createdSmartAudienceSource.status.charAt(0).toUpperCase() + createdSmartAudienceSource.status.slice(1))}
                                         </Typography>
                                     )}
                                     </Box>
@@ -459,7 +413,7 @@ const SourcesList: React.FC = () => {
                                 </Button>
                                 <Button
                                     variant="contained"/* need chnage < on !== */
-                                    disabled={ (createdData?.processed_total_records === 0) || (createdData?.processed_total_records !== createdData?.total_records) }
+                                    disabled={ (createdData?.processed_active_segment_records === 0) || (createdData?.processed_active_segment_records !== createdData?.total_records) }
                                     onClick={() => router.push(`/smart-audiences/builder`)}
                                     className='second-sub-title'
                                     sx={{

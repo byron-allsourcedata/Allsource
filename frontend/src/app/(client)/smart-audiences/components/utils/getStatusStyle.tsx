@@ -20,6 +20,11 @@ export const getStatusStyle = (status: string) => {
                 background: 'rgba(0, 129, 251, 0.2)',
                 color: 'rgba(0, 129, 251, 1)',
             };
+        case 'Data Syncing':
+            return {
+                background: 'rgba(0, 129, 251, 0.2)',
+                color: 'rgba(0, 129, 251, 1)',
+            };
         default:
             return {
                 background: 'transparent',
