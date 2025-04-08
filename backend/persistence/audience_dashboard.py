@@ -137,8 +137,8 @@ class DashboardAudiencePersistence:
         ).order_by(AudienceSource.created_at.desc()).limit(5).all()
 
         lookalikes = self.db.query(
-            AudienceSource.name.label('source_name'),
-            AudienceLookalikes.name.label('name'),
+            AudienceSource.name.label('name'),
+            AudienceLookalikes.name.label('lookalike_name'),
             AudienceLookalikes.created_date.label('created_at'),
             AudienceLookalikes.lookalike_size.label('lookalike_size'),
             AudienceLookalikes.size.label('size')
@@ -155,19 +155,19 @@ class DashboardAudiencePersistence:
             AudienceLookalikes.name.label('lookalike_name'),
             AudienceSource.name.label('source_name'),
             AudienceSmart.created_at.label('created_at'),
-            AudienceSmart.name.label('name'),
-            AudienceSmartsUseCase.name.label('use_case_name'),
-            AudienceSmart.active_segment_records.label('active_segment_records'),
+            AudienceSmart.name.label('audience_name'),
+            AudienceSmartsUseCase.name.label('use_case'),
+            AudienceSmart.active_segment_records.label('active_segment'),
             case(
                 (AudienceSmartsDataSources.data_type == 'include', 
                 func.string_agg(AudienceSource.name, ', ').label('include_names')),
                 else_=''
-            ).label('include_names'),
+            ).label('included'),
             case(
                 (AudienceSmartsDataSources.data_type == 'exclude', 
                 func.string_agg(AudienceSource.name, ', ').label('exclude_names')),
                 else_=''
-            ).label('exclude_names')
+            ).label('excluded')
         ).outerjoin(
             AudienceSmartsDataSources, AudienceSmartsDataSources.smart_audience_id == AudienceSmart.id
         ).join(
@@ -193,10 +193,10 @@ class DashboardAudiencePersistence:
         
         three_hours_ago = datetime.now(timezone.utc) - timedelta(hours=3)
         data_syncs = self.db.query(
-                        AudienceSmart.name.label('list_name'),
+                        AudienceSmart.name.label('name'),
                         IntegrationUserSync.created_at.label('created_at'),
-                        IntegrationUserSync.sent_contacts.label('sent_contacts'),
-                        AudienceSmartsUseCase.name.label('use_case_name'),
+                        IntegrationUserSync.sent_contacts.label('synced_contacts'),
+                        AudienceSmartsUseCase.name.label('destination'),
                     )\
                     .join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id)\
                     .join(AudienceSmart, AudienceSmart.id == IntegrationUserSync.smart_audience_id)\

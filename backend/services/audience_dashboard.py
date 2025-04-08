@@ -115,13 +115,14 @@ class DashboardAudienceService:
 
             if behavior_type == 'viewed_product':
                 accumulated_view_products += lead_count
-                data['view_products'] = accumulated_view_products
             elif behavior_type == 'product_added_to_cart':
                 accumulated_abandoned_cart += lead_count
-                data['abandoned_cart'] = accumulated_abandoned_cart
             elif behavior_type == 'visitor':
                 accumulated_visitors += lead_count
-                data['visitors'] = accumulated_visitors
+            
+            data['view_products'] = accumulated_view_products
+            data['abandoned_cart'] = accumulated_abandoned_cart
+            data['visitors'] = accumulated_visitors
 
 
         return {
