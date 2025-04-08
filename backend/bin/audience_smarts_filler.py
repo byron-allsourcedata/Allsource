@@ -69,7 +69,7 @@ async def aud_smarts_reader(message: IncomingMessage, db_session: Session, conne
 
         while offset < active_segment:
             lalp_query = (
-                db_session.query(AudienceLALP.enrichment_user_id.label("five_x_five_user_id"))
+                db_session.query(AudienceLALP.enrichment_user_id.label("enrichment_user_id"))
                 .outerjoin(includes_lookalikes, AudienceLALP.lookalike_id == includes_lookalikes.c.lookalike_id)
                 .outerjoin(excludes_lookalikes, AudienceLALP.lookalike_id == excludes_lookalikes.c.lookalike_id)
                 .filter(includes_lookalikes.c.lookalike_id.isnot(None))
@@ -77,7 +77,7 @@ async def aud_smarts_reader(message: IncomingMessage, db_session: Session, conne
             )
 
             smp_query = (
-                db_session.query(AudienceSMP.enrichment_user_id.label("five_x_five_user_id"))
+                db_session.query(AudienceSMP.enrichment_user_id.label("enrichment_user_id"))
                 .outerjoin(includes_sources, AudienceSMP.source_id == includes_sources.c.source_id)
                 .outerjoin(excludes_sources, AudienceSMP.source_id == excludes_sources.c.source_id)
                 .filter(includes_sources.c.source_id.isnot(None))
@@ -87,7 +87,7 @@ async def aud_smarts_reader(message: IncomingMessage, db_session: Session, conne
             combined_query = lalp_query.union(smp_query).subquery()
 
             final_query = (
-                db_session.query(combined_query.c.five_x_five_user_id)
+                db_session.query(combined_query.c.enrichment_user_id)
                 .limit(min(SELECTED_ROW_COUNT, active_segment - offset))
                 .offset(offset)
             )
@@ -100,7 +100,7 @@ async def aud_smarts_reader(message: IncomingMessage, db_session: Session, conne
             message_body = {
                 'aud_smart_id': str(aud_smart_id),
                 'user_id': user_id,
-                'five_x_five_users_ids': [str(person_id) for person_id in persons]
+                'enrichment_users_ids': [str(person_id) for person_id in persons]
             }
             await publish_rabbitmq_message(
                 connection=connection,

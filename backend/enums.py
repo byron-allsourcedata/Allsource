@@ -50,8 +50,8 @@ class SourceType(Enum):
     PIXEL = 'pixel'
 
 class AudienceSmartDataSource(Enum):
-    INCLUDE = 'Include'
-    EXCLUDE = 'Exclude'
+    INCLUDE = 'include'
+    EXCLUDE = 'exclude'
 
 class AudienceSmartStatuses(Enum):
     UNVALIDATED = 'unvalidated'
