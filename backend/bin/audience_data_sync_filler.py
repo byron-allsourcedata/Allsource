@@ -26,7 +26,8 @@ load_dotenv()
 
 CRON_DATA_SYNC_LEADS = 'cron_data_sync_leads_test'
 BATCH_SIZE = 200
-SLEEP_INTERVAL = 60 * 10
+LONG_SLEEP = 60 * 10
+SHORT_SLEEP = 10
 
 def setup_logging(level):
     logging.basicConfig(
@@ -183,7 +184,7 @@ async def main():
             sys.exit("Invalid log level argument. Use 'DEBUG' or 'INFO'.")
 
     setup_logging(log_level)
-
+    logging.info("Started")
     db_username = os.getenv('DB_USERNAME')
     db_password = os.getenv('DB_PASSWORD')
     db_host = os.getenv('DB_HOST')
@@ -193,13 +194,11 @@ async def main():
         f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}", pool_pre_ping=True
     )
     Session = sessionmaker(bind=engine)
-
+    sleep_interval = LONG_SLEEP
     while True:
         db_session = None
         rabbitmq_connection = None
         try:
-            logging.info("Starting processing...")
-
             rabbitmq_connection = RabbitMQConnection()
             rmq_connection = await rabbitmq_connection.connect()
             channel = await rmq_connection.channel()
@@ -208,10 +207,14 @@ async def main():
                 name=CRON_DATA_SYNC_LEADS,
                 durable=True,
             )
-            db_session = Session()
             if queue.declaration_result.message_count == 0:
+                db_session = Session()
                 await process_user_integrations(rmq_connection, db_session)
                 logging.info("Processing completed. Sleeping for 10 minutes...")
+            else:
+                sleep_interval = SHORT_SLEEP
+                logging.info("Queue is not empty. Skipping processing.")
+                
         except Exception as err:
             logging.error('Unhandled Exception:', exc_info=True)
         finally:
@@ -221,7 +224,7 @@ async def main():
             if rabbitmq_connection:
                 logging.info("Closing RabbitMQ connection...")
                 await rabbitmq_connection.close()
-        await asyncio.sleep(SLEEP_INTERVAL)
+        await asyncio.sleep(sleep_interval)
 
 if __name__ == "__main__":
     asyncio.run(main())
