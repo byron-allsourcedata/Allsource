@@ -387,7 +387,6 @@ const SmartAudiences: React.FC = () => {
     const handleOpenMorePopover = (event: React.MouseEvent<HTMLElement>, rowData: Smarts) => {
         setAnchorEl(event.currentTarget);
         setSelectedRowData(rowData);
-        console.log(rowData)
     };
 
     const handleCloseMorePopover = () => {
