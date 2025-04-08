@@ -20,7 +20,7 @@ from models.audience_smarts import AudienceSmart
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 from config.aws import get_s3_client
 from enums import ProccessDataSyncResult, DataSyncImportedStatus, SourcePlatformEnum, NotificationTitles
-from backend.models.data_sync_imported_enrichment import DataSyncImportedEncrichment
+from backend.models.audience_data_sync_imported_persons import AudienceDataSyncImportedPersons
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
 from sqlalchemy.orm import sessionmaker, Session
@@ -35,7 +35,7 @@ from dependencies import (IntegrationsPresistence, LeadsPersistence, AudiencePer
 
 load_dotenv()
 
-CRON_DATA_SYNC_LEADS = 'cron_data_sync_leads_test'
+AUDIENCE_DATA_SYNC_PERSONS = 'audience_data_sync_persons'
 
 for handler in logging.root.handlers[:]:
     logging.root.removeHandler(handler)
@@ -49,7 +49,7 @@ def setup_logging(level):
 
 
 def check_correct_data_sync(encrhment_user_id: int, data_sync_imported_id: int, session: Session):
-    data_sync_imported_lead = session.query(DataSyncImportedEncrichment).filter(DataSyncImportedEncrichment.id==data_sync_imported_id).first()
+    data_sync_imported_lead = session.query(AudienceDataSyncImportedPersons).filter(AudienceDataSyncImportedPersons.id==data_sync_imported_id).first()
     if not data_sync_imported_lead:
         return False
     
@@ -114,7 +114,7 @@ def update_users_integrations(session, status, integration_data_sync_id, service
         session.commit()
         
 def update_data_sync_imported_leads(session, status, data_sync_imported_id, integration_data_sync: IntegrationUserSync, user_integration: UserIntegration):
-    session.query(DataSyncImportedEncrichment).filter(DataSyncImportedEncrichment.id == data_sync_imported_id).update({
+    session.query(AudienceDataSyncImportedPersons).filter(AudienceDataSyncImportedPersons.id == data_sync_imported_id).update({
             'status': status
             })
     session.flush()
@@ -261,7 +261,7 @@ async def main():
         await channel.set_qos(prefetch_count=1)
 
         queue = await channel.declare_queue(
-            name=CRON_DATA_SYNC_LEADS,
+            name=AUDIENCE_DATA_SYNC_PERSONS,
             durable=True,
         )
         engine = create_engine(

@@ -41,7 +41,7 @@ def get_valid_email(
         return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
     return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
-def get_valid_phone(user: FiveXFiveUser) -> Optional[str]:
+def get_valid_phone(user: EnrichmentUser) -> Optional[str]:
     return (
         getattr(user, 'mobile_phone') or
         getattr(user, 'personal_phone') or
@@ -49,7 +49,7 @@ def get_valid_phone(user: FiveXFiveUser) -> Optional[str]:
         getattr(user, 'company_phone', None)
     )
 
-def get_valid_location(user: FiveXFiveUser) -> list:
+def get_valid_location(user: EnrichmentUser) -> list:
     return [
             getattr(user, "personal_address") or getattr(user, "company_address", None),
             getattr(user, "personal_city") or getattr(user, "company_city", None),

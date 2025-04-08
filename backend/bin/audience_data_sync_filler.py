@@ -13,18 +13,20 @@ from datetime import datetime, timezone
 from enums import DataSyncImportedStatus, ProccessDataSyncResult
 from utils import get_utc_aware_date
 from models.enrichment_users import EnrichmentUser
+from typing import Optional
+from uuid import UUID
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.audience_smarts import AudienceSmart
 from models.users_domains import UserDomains
 from sqlalchemy.dialects.postgresql import insert
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
-from models.data_sync_imported_enrichment import DataSyncImportedEncrichment
+from models.audience_data_sync_imported_persons import AudienceDataSyncImportedPersons
 from models.leads_users import LeadUser
 
 load_dotenv()
 
-CRON_DATA_SYNC_LEADS = 'cron_data_sync_leads_test'
+AUDIENCE_DATA_SYNC_PERSONS = 'audience_data_sync_persons'
 BATCH_SIZE = 200
 LONG_SLEEP = 60 * 10
 SHORT_SLEEP = 10
@@ -41,7 +43,7 @@ async def send_leads_to_queue(rmq_connection, msg):
     message_str = json.dumps(msg)
     await publish_rabbitmq_message(
         connection=rmq_connection,
-        queue_name=CRON_DATA_SYNC_LEADS,
+        queue_name=AUDIENCE_DATA_SYNC_PERSONS,
         message_body=message_str
     )
 
@@ -55,9 +57,9 @@ def fetch_data_syncs(session):
     return user_integrations, data_syncs
 
 def update_data_sync_integration(session, data_sync_id):
-    no_of_contacts = session.query(DataSyncImportedEncrichment).filter(
-        DataSyncImportedEncrichment.status == ProccessDataSyncResult.SUCCESS.value, 
-        DataSyncImportedEncrichment.data_sync_id == data_sync_id
+    no_of_contacts = session.query(AudienceDataSyncImportedPersons).filter(
+        AudienceDataSyncImportedPersons.status == ProccessDataSyncResult.SUCCESS.value, 
+        AudienceDataSyncImportedPersons.data_sync_id == data_sync_id
     ).count()
     update_data = {
         'last_sync_date': get_utc_aware_date(),
@@ -67,29 +69,35 @@ def update_data_sync_integration(session, data_sync_id):
     session.query(IntegrationUserSync).filter(IntegrationUserSync.id == data_sync_id).update(update_data)
     session.commit()
 
-def fetch_encrihment_users_by_data_sync(session: Session, data_sync_id, limit, last_sent_lead_id):
-    if last_sent_lead_id is None:
-        last_sent_lead_id = 0
+def fetch_enrichment_users_by_data_sync(
+    session: Session,
+    data_sync_id: int,
+    limit: int,
+    last_sent_enrichment_id: Optional[UUID] = None
+):
+    query = (
+        session
+        .query(EnrichmentUser)
+        .join(AudienceSmartPerson, AudienceSmartPerson.enrichment_user_id == EnrichmentUser.id)
+        .join(AudienceSmart, AudienceSmart.id == AudienceSmartPerson.smart_audience_id)
+        .join(IntegrationUserSync, IntegrationUserSync.smart_audience_id == AudienceSmart.id)
+        .filter(IntegrationUserSync.id == data_sync_id)
+    )
+    
+    if last_sent_enrichment_id is not None:
+        query = query.filter(EnrichmentUser.id > last_sent_enrichment_id)
 
-    query = session.query(EnrichmentUser.id) \
-        .join(AudienceSmartPerson, AudienceSmartPerson.enrichment_user_id == EnrichmentUser.id) \
-        .join(AudienceSmart, AudienceSmart.id == AudienceSmartPerson.smart_audience_id) \
-        .join(IntegrationUserSync, IntegrationUserSync.smart_audience_id == AudienceSmart.id) \
-        .filter(
-            IntegrationUserSync.id == data_sync_id
-        )
-   
-    result = query.order_by(LeadUser.id).limit(limit).all()
-    return result or []
+    result = query.order_by(EnrichmentUser.id).limit(limit).all()
+    return result
 
 def update_last_sent_encrihment_user(session, data_sync_id, last_encrichment_id):
     session.query(IntegrationUserSync).filter(
         IntegrationUserSync.id == data_sync_id
-    ).update({IntegrationUserSync.last_sent_encrichment_id: last_encrichment_id})
+    ).update({IntegrationUserSync.last_sent_enrichment_id: last_encrichment_id})
     session.commit()
     
 def update_data_sync_imported_leads(session, status, data_sync_id):
-    session.db.query(DataSyncImportedEncrichment).filter(DataSyncImportedEncrichment.id == data_sync_id).update({
+    session.db.query(AudienceDataSyncImportedPersons).filter(AudienceDataSyncImportedPersons.id == data_sync_id).update({
             'status': status
             })
     session.db.commit()
@@ -100,13 +108,12 @@ def get_previous_imported_encrhment_users(session, data_sync_id):
     ).join(
         AudienceSmartPerson, AudienceSmartPerson.enrichment_user_id == EnrichmentUser.id
     ).join(
-        DataSyncImportedEncrichment, DataSyncImportedEncrichment.enrichment_user_id == EnrichmentUser.id
+        AudienceDataSyncImportedPersons, AudienceDataSyncImportedPersons.enrichment_user_id == EnrichmentUser.id
     ).join(
         AudienceSmart, AudienceSmart.id == AudienceSmartPerson.smart_audience_id
     ).filter(
-        DataSyncImportedEncrichment.data_sync_id == data_sync_id,
-        DataSyncImportedEncrichment.status == DataSyncImportedStatus.SENT.value,
-        UserDomains.is_enable == True
+        AudienceDataSyncImportedPersons.data_sync_id == data_sync_id,
+        AudienceDataSyncImportedPersons.status == DataSyncImportedStatus.SENT.value,
     ).order_by(EnrichmentUser.id).limit(BATCH_SIZE)
        
     return query.all()
@@ -117,7 +124,7 @@ async def send_leads_to_rmq(session, rmq_connection, encrhment_users, data_sync,
     arr_enrichment_users = []
     for encrhment_user_id in encrhment_user_ids:
         data_sync_imported_leads = (
-            insert(DataSyncImportedEncrichment)
+            insert(AudienceDataSyncImportedPersons)
             .values(
                 status=DataSyncImportedStatus.SENT.value,
                 enrichment_user_id=encrhment_user_id,
@@ -126,7 +133,7 @@ async def send_leads_to_rmq(session, rmq_connection, encrhment_users, data_sync,
                 created_at=datetime.now(timezone.utc),
                 updated_at=datetime.now(timezone.utc)
             )
-            .returning(DataSyncImportedEncrichment.id)
+            .returning(AudienceDataSyncImportedPersons.id)
             .on_conflict_do_nothing()
         )
         data_sync_imported_leads = session.execute(data_sync_imported_leads)
@@ -154,7 +161,7 @@ async def process_user_integrations(rmq_connection, session):
         encrhment_users = get_previous_imported_encrhment_users(session, data_sync.id)
         logging.info(f"Re imported leads= {len(encrhment_users)}")
         if BATCH_SIZE - len(encrhment_users) > 0:
-            additional_leads = fetch_encrihment_users_by_data_sync(session, data_sync.id, BATCH_SIZE - len(encrhment_users), data_sync.last_sent_lead_id)
+            additional_leads = fetch_enrichment_users_by_data_sync(session, data_sync.id, BATCH_SIZE - len(encrhment_users), data_sync.last_sent_enrichment_id)
             encrhment_users.extend(additional_leads)
 
         update_data_sync_integration(session, data_sync.id)
@@ -166,10 +173,10 @@ async def process_user_integrations(rmq_connection, session):
         encrhment_users = sorted(encrhment_users, key=lambda x: x.id)
         await send_leads_to_rmq(session, rmq_connection, encrhment_users, data_sync, user_integrations[i].service_name)
         last_encrichment_id = encrhment_users[-1].id
-    if last_encrichment_id:
-        logging.info(f"last_lead_id = {last_encrichment_id}")
-        update_last_sent_encrihment_user(session, data_sync.id, last_encrichment_id)
-        update_data_sync_integration(session, data_sync.id)
+        if last_encrichment_id:
+            logging.info(f"last_lead_id = {last_encrichment_id}")
+            update_last_sent_encrihment_user(session, data_sync.id, last_encrichment_id)
+            update_data_sync_integration(session, data_sync.id)
             
 
 async def main():
@@ -204,7 +211,7 @@ async def main():
             channel = await rmq_connection.channel()
             await channel.set_qos(prefetch_count=1)
             queue = await channel.declare_queue(
-                name=CRON_DATA_SYNC_LEADS,
+                name=AUDIENCE_DATA_SYNC_PERSONS,
                 durable=True,
             )
             if queue.declaration_result.message_count == 0:
