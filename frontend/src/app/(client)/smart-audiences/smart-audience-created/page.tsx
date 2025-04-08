@@ -64,7 +64,7 @@ const SourcesList: React.FC = () => {
         if (!intervalRef.current) {
             console.log("pooling started");
             intervalRef.current = setInterval(() => {
-                const hasPending = createdSmartAudienceSource?.total_records !== createdSmartAudienceSource?.processed_active_segment_records;
+                const hasPending = createdSmartAudienceSource?.active_segment_records !== createdSmartAudienceSource?.processed_active_segment_records;
     
                 if (hasPending) {
                     console.log("Fetching due to pending records");
@@ -155,6 +155,15 @@ const SourcesList: React.FC = () => {
     const activeRecords = createdSmartAudienceSource?.active_segment_records ?? 0;
     const processedActiveRecords = createdSmartAudienceSource?.processed_active_segment_records ?? 0;
     const processed = progress?.processed ?? 0;
+
+    {
+        (processed && processed === activeRecords) ||
+        (processedActiveRecords === activeRecords && processedActiveRecords !== 0)
+            ? activeRecords.toLocaleString('en-US')
+            : processedActiveRecords > processed
+            ? <ProgressBar progress={{ total: activeRecords, processed: processedActiveRecords }} />
+            : <ProgressBar progress={{ ...progress, total: activeRecords, processed: progress?.processed ?? 0 }} />
+    }
 
     const preRenderStatus = (status: string) => {
         if (status === "N_a") {
@@ -306,8 +315,8 @@ const SourcesList: React.FC = () => {
                                         {createdSmartAudienceSource?.status === "unvalidated" 
                                         ? <Image src="./danger_yellow.svg" alt='danger' width={20} height={20}/>
                                         : createdSmartAudienceSource?.validated_records === 0 
-                                        ? "NA" 
-                                        : createdSmartAudienceSource?.active_segment_records.toLocaleString('en-US')}
+                                            ? "NA" 
+                                            : createdSmartAudienceSource?.active_segment_records.toLocaleString('en-US')}
                                         </Typography>
                                     </Box>
 
