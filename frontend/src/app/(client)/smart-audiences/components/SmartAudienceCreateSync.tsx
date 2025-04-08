@@ -110,6 +110,7 @@ type ArrayMapping = {
     hubspot: CustomRow[];
     mailchimp: CustomRow[];
     default: CustomRow[]
+    meta: CustomRow[]
     CSV: CustomRow[]
 };
 
@@ -208,9 +209,8 @@ const customFieldsList: Row[] = [
     { id: 18, type: 'Is book reader', value: 'is_book_reader' },
     { id: 19, type: 'Is online purchaser', value: 'is_online_purchaser' },
     { id: 20, type: 'Is book reader', value: 'is_book_reader' },
-    { id: 21, type: 'State abbr', value: 'state_abbr' },
-    { id: 22, type: 'Is traveler', value: 'is_traveler' },
-    { id: 23, type: 'Rec id', value: 'rec_id' },
+    { id: 21, type: 'Is traveler', value: 'is_traveler' },
+    { id: 22, type: 'Rec id', value: 'rec_id' },
 ]
 
 const defaultRows: Row[] = [
@@ -686,7 +686,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         hubspot: customFieldsList,
         mailchimp: customFieldsList,
         CSV: customFieldsList,
-        default: customFieldsList
+        default: customFieldsList,
+        meta: customFieldsList
     };
 
     const handleAddIntegration = async (service_name: string) => {
@@ -969,7 +970,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                         valueContactSync === 0
                                                             ? "rgba(231, 231, 231, 1)"
                                                             : "rgba(80, 82, 178, 1)",
-                                                        maxWidth: "280px",
                                                         "& .MuiSlider-track": {
                                                           backgroundColor: "rgba(80, 82, 178, 1)",
                                                         },

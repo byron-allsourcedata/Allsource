@@ -7,6 +7,7 @@ import json
 from aio_pika import IncomingMessage
 from sqlalchemy.orm import sessionmaker, Session, aliased
 from sqlalchemy.sql import func
+from sqlalchemy.exc import IntegrityError
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 
@@ -50,66 +51,90 @@ async def aud_smarts_reader(message: IncomingMessage, db_session: Session, conne
         AudienceLALP = aliased(AudienceLookALikePerson)
         AudienceSMP = aliased(AudienceSourcesMatchedPerson)
         
-        includes_lookalikes = db_session.query(AudienceLALP.lookalike_id).filter(
-            AudienceLALP.lookalike_id.in_(data_sources["lookalike_ids"]["include"])
-        ).subquery()
+        # includes_lookalikes = db_session.query(AudienceLALP.lookalike_id).filter(
+        #     AudienceLALP.lookalike_id.in_(data_sources["lookalike_ids"]["include"])
+        # ).subquery()
 
-        excludes_lookalikes = db_session.query(AudienceLALP.lookalike_id).filter(
-            AudienceLALP.lookalike_id.in_(data_sources["lookalike_ids"]["exclude"])
-        ).subquery()
+        # excludes_lookalikes = db_session.query(AudienceLALP.lookalike_id).filter(
+        #     AudienceLALP.lookalike_id.in_(data_sources["lookalike_ids"]["exclude"])
+        # ).subquery()
 
-        includes_sources = db_session.query(AudienceSMP.source_id).filter(
-            AudienceSMP.source_id.in_(data_sources["source_ids"]["include"])
-        ).subquery()
+        # includes_sources = db_session.query(AudienceSMP.source_id).filter(
+        #     AudienceSMP.source_id.in_(data_sources["source_ids"]["include"])
+        # ).subquery()
 
-        excludes_sources = db_session.query(AudienceSMP.source_id).filter(
-            AudienceSMP.source_id.in_(data_sources["source_ids"]["exclude"])
-        ).subquery()
+        # excludes_sources = db_session.query(AudienceSMP.source_id).filter(
+        #     AudienceSMP.source_id.in_(data_sources["source_ids"]["exclude"])
+        # ).subquery()
+
+        lookalike_include = format_ids(data_sources["lookalike_ids"]["include"])
+        lookalike_exclude = format_ids(data_sources["lookalike_ids"]["exclude"])
+        source_include = format_ids(data_sources["source_ids"]["include"])
+        source_exclude = format_ids(data_sources["source_ids"]["exclude"])
         
 
         while offset < active_segment:
-            lalp_query = (
-                db_session.query(AudienceLALP.enrichment_user_id.label("five_x_five_user_id"))
-                .outerjoin(includes_lookalikes, AudienceLALP.lookalike_id == includes_lookalikes.c.lookalike_id)
-                .outerjoin(excludes_lookalikes, AudienceLALP.lookalike_id == excludes_lookalikes.c.lookalike_id)
-                .filter(includes_lookalikes.c.lookalike_id.isnot(None))
-                .filter(excludes_lookalikes.c.lookalike_id.is_(None))
-            )
+            try:
+                lalp_query = (
+                    db_session.query(AudienceLALP.enrichment_user_id.label("enrichment_user_id"))
+                    .filter(AudienceLALP.lookalike_id.in_(lookalike_include) if lookalike_include else True)
+                    .filter(~AudienceLALP.lookalike_id.in_(lookalike_exclude) if lookalike_exclude else True)
+                )
 
-            smp_query = (
-                db_session.query(AudienceSMP.enrichment_user_id.label("five_x_five_user_id"))
-                .outerjoin(includes_sources, AudienceSMP.source_id == includes_sources.c.source_id)
-                .outerjoin(excludes_sources, AudienceSMP.source_id == excludes_sources.c.source_id)
-                .filter(includes_sources.c.source_id.isnot(None))
-                .filter(excludes_sources.c.source_id.is_(None))
-            )
+                smp_query = (
+                    db_session.query(AudienceSMP.enrichment_user_id.label("enrichment_user_id"))
+                    .filter(AudienceSMP.source_id.in_(source_include) if source_include else True)
+                    .filter(~AudienceSMP.source_id.in_(source_exclude) if source_exclude else True)
+                )
 
-            combined_query = lalp_query.union(smp_query).subquery()
+                combined_query = lalp_query.union(smp_query).subquery()
 
-            final_query = (
-                db_session.query(combined_query.c.five_x_five_user_id)
-                .limit(min(SELECTED_ROW_COUNT, active_segment - offset))
-                .offset(offset)
-            )
+                # lalp_query = (
+                #     db_session.query(AudienceLALP.enrichment_user_id.label("enrichment_user_id"))
+                #     .outerjoin(includes_lookalikes, AudienceLALP.lookalike_id == includes_lookalikes.c.lookalike_id)
+                #     .outerjoin(excludes_lookalikes, AudienceLALP.lookalike_id == excludes_lookalikes.c.lookalike_id)
+                #     .filter(includes_lookalikes.c.lookalike_id.isnot(None))
+                #     .filter(excludes_lookalikes.c.lookalike_id.is_(None))
+                # )
 
-            persons = [row[0] for row in final_query.all()]
+                # smp_query = (
+                #     db_session.query(AudienceSMP.enrichment_user_id.label("enrichment_user_id"))
+                #     .outerjoin(includes_sources, AudienceSMP.source_id == includes_sources.c.source_id)
+                #     .outerjoin(excludes_sources, AudienceSMP.source_id == excludes_sources.c.source_id)
+                #     .filter(includes_sources.c.source_id.isnot(None))
+                #     .filter(excludes_sources.c.source_id.is_(None))
+                # )
 
-            if not persons:
+                # combined_query = lalp_query.union(smp_query).subquery()
+
+                final_query = (
+                    db_session.query(combined_query.c.enrichment_user_id)
+                    .limit(min(SELECTED_ROW_COUNT, active_segment - offset))
+                    .offset(offset)
+                )
+
+                persons = [row[0] for row in final_query.all()]
+
+                if not persons:
+                    break
+
+                message_body = {
+                    'aud_smart_id': str(aud_smart_id),
+                    'user_id': user_id,
+                    'enrichment_users_ids': [str(person_id) for person_id in persons]
+                }
+                await publish_rabbitmq_message(
+                    connection=connection,
+                    queue_name=AUDIENCE_SMARTS_AGENT,
+                    message_body=message_body
+                )
+                logging.info(f"sent {len(persons)} persons")  
+
+                offset += SELECTED_ROW_COUNT
+
+            except IntegrityError as e:
+                logging.warning(f"SmartAudience with ID {aud_smart_id} might have been deleted. Skipping.")
                 break
-
-            message_body = {
-                'aud_smart_id': str(aud_smart_id),
-                'user_id': user_id,
-                'five_x_five_users_ids': [str(person_id) for person_id in persons]
-            }
-            await publish_rabbitmq_message(
-                connection=connection,
-                queue_name=AUDIENCE_SMARTS_AGENT,
-                message_body=message_body
-            )
-            logging.info(f"sent {len(persons)} persons")  
-
-            offset += SELECTED_ROW_COUNT
 
         await message.ack() 
     except BaseException as e:

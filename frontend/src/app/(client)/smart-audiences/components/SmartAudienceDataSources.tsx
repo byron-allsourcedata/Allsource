@@ -102,6 +102,7 @@ const DetailsPopup: React.FC<DetailsPopupProps> = ({ open, onClose, id, name }) 
         try {
             const response = await axiosInstance.get(`/audience-smarts/${id}/data-sources`);
             if (response.status === 200) {
+              console.log({response})
               const {includes, excludes} = response.data
               setDataSourcesExclude(excludes)
               setDataSourcesInclude(includes)

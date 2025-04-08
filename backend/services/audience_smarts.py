@@ -6,7 +6,7 @@ import csv
 
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
-from schemas.audience import SmartsAudienceObjectResponse, DataSourcesFormat, DataSourcesResponse
+from schemas.audience import SmartsAudienceObjectResponse, DataSourcesFormat, DataSourcesResponse, SmartsResponse
 from persistence.audience_smarts import AudienceSmartsPersistence
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from models.users import User
@@ -153,14 +153,14 @@ class AudienceSmartsService:
             total_records: int,
             is_validate_skip: Optional[bool] = None,
             contacts_to_validate: Optional[int] = None,
-    ):
+    ) -> SmartsResponse:
 
 
         if is_validate_skip:
             status = AudienceSmartStatuses.UNVALIDATED.value
         elif not contacts_to_validate:
             status = AudienceSmartStatuses.N_A.value
-        else: 
+        else:
             status = AudienceSmartStatuses.VALIDATING.value
 
 
@@ -176,7 +176,13 @@ class AudienceSmartsService:
             status=status
         )
         await self.start_scripts_for_matching(created_data.id, user.get("id"), data_sources, active_segment_records)
-        return created_data
+
+        return SmartsResponse(
+            id=created_data.id, name=created_data.name, use_case_alias=use_case_alias, created_by=user.get('full_name'),
+            created_at=created_data.created_at, total_records=created_data.total_records,
+            validated_records=created_data.validated_records, active_segment_records=created_data.active_segment_records,
+            processed_active_segment_records=created_data.processed_active_segment_records, status=created_data.status, integrations=None
+        )
 
 
     def calculate_smart_audience(self, raw_data_sources: dict) -> int:

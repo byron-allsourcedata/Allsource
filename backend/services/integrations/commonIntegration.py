@@ -14,28 +14,16 @@ EMAIL_LAST_SEEN_EXAMPLE:  Dict[str, str] = {
 }
 
 def get_valid_email(
-    user: EnrichmentUser,
-    email_verifier: MillionVerifierIntegrationsService,
-    email_fields: List[str] = EMAIL_FIELDS_EXAMPLE,
-    email_last_seen_fields: Dict[str, str] = EMAIL_LAST_SEEN_EXAMPLE
-) -> str:
-    thirty_days_ago = datetime.now() - timedelta(days=30)
-    thirty_days_ago_str = thirty_days_ago.strftime('%Y-%m-%d %H:%M:%S')
+    emails_list: List[str],
+    email_verifier: MillionVerifierIntegrationsService) -> str:
+    
     verity = 0
-
-    for field in email_fields:
-        email = getattr(user, field, None)
-        if email:
-            emails = extract_first_email(email)
-            for e in emails:
-                last_seen_field = email_last_seen_fields.get(field)
-                if e and last_seen_field:
-                    last_seen_value = getattr(user, last_seen_field, None)
-                    if last_seen_value and last_seen_value.strftime('%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
-                        return e.strip()
-                if e and email_verifier.is_email_verify(email=e.strip()):
-                    return e.strip()
-                verity += 1
+    # emails_list = extract_first_email(emails_list)
+    for email in emails_list:
+        return email
+        if email_verifier.is_email_verify(email=email):
+            return email
+        verity += 1
 
     if verity > 0:
         return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value

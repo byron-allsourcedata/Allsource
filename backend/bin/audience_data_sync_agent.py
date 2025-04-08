@@ -8,6 +8,7 @@ import sys
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+from uuid import UUID
 from sqlalchemy import create_engine
 from sqlalchemy.exc import PendingRollbackError
 from dotenv import load_dotenv
@@ -20,7 +21,7 @@ from models.audience_smarts import AudienceSmart
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 from config.aws import get_s3_client
 from enums import ProccessDataSyncResult, DataSyncImportedStatus, SourcePlatformEnum, NotificationTitles
-from backend.models.audience_data_sync_imported_persons import AudienceDataSyncImportedPersons
+from models.audience_data_sync_imported_persons import AudienceDataSyncImportedPersons
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
 from sqlalchemy.orm import sessionmaker, Session
@@ -48,7 +49,7 @@ def setup_logging(level):
     )
 
 
-def check_correct_data_sync(encrhment_user_id: int, data_sync_imported_id: int, session: Session):
+def check_correct_data_sync(enrichment_user_id: int, data_sync_imported_id: int, session: Session):
     data_sync_imported_lead = session.query(AudienceDataSyncImportedPersons).filter(AudienceDataSyncImportedPersons.id==data_sync_imported_id).first()
     if not data_sync_imported_lead:
         return False
@@ -56,7 +57,7 @@ def check_correct_data_sync(encrhment_user_id: int, data_sync_imported_id: int, 
     if data_sync_imported_lead.status != DataSyncImportedStatus.SENT.value:
         return False
     
-    if data_sync_imported_lead.encrhment_user_id != encrhment_user_id:
+    if data_sync_imported_lead.enrichment_user_id != UUID(enrichment_user_id):
         return False
     
     return True
@@ -180,7 +181,8 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
             'hubspot': integration_service.hubspot,
             's3': integration_service.s3
         }
-        service = service_map.get(user_integration.service_name)
+        service_name = user_integration.service_name
+        service = service_map.get(service_name)
         
         if service:
             result = None

@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 
 import pytz
-from sqlalchemy import desc, asc, or_
+from sqlalchemy import desc, asc, or_, union
 from sqlalchemy.orm import Session, aliased, load_only
 from sqlalchemy.sql import func
 
@@ -21,7 +21,6 @@ from models.emails import Email
 from schemas.audience import DataSourcesFormat
 from typing import Optional, Tuple, List
 from sqlalchemy.engine.row import Row
-from enums import AudienceSmartStatuses
 from uuid import UUID
 
 logger = logging.getLogger(__name__)
@@ -41,43 +40,61 @@ class AudienceSmartsPersistence:
     def calculate_smart_audience(self, data: DataSourcesFormat) -> int:   
         AudienceLALP = aliased(AudienceLookALikePerson)
         AudienceSMP = aliased(AudienceSourcesMatchedPerson)
-        
-        includes_lookalikes = self.db.query(AudienceLALP.lookalike_id).filter(
-            AudienceLALP.lookalike_id.in_(data["lookalike_ids"]["include"])
-        ).subquery()
-
-        excludes_lookalikes = self.db.query(AudienceLALP.lookalike_id).filter(
-            AudienceLALP.lookalike_id.in_(data["lookalike_ids"]["exclude"])
-        ).subquery()
-
-        includes_sources = self.db.query(AudienceSMP.source_id).filter(
-            AudienceSMP.source_id.in_(data["source_ids"]["include"])
-        ).subquery()
-
-        excludes_sources = self.db.query(AudienceSMP.source_id).filter(
-            AudienceSMP.source_id.in_(data["source_ids"]["exclude"])
-        ).subquery()
 
         lalp_query = (
             self.db.query(AudienceLALP.enrichment_user_id)
-            .outerjoin(includes_lookalikes, AudienceLALP.lookalike_id == includes_lookalikes.c.lookalike_id)
-            .outerjoin(excludes_lookalikes, AudienceLALP.lookalike_id == excludes_lookalikes.c.lookalike_id)
-            .filter(includes_lookalikes.c.lookalike_id.isnot(None))
-            .filter(excludes_lookalikes.c.lookalike_id.is_(None))
+            .filter(AudienceLALP.lookalike_id.in_(data["lookalike_ids"]["include"]))
+            .filter(AudienceLALP.lookalike_id.notin_(data["lookalike_ids"]["exclude"]))
         )
 
         smp_query = (
             self.db.query(AudienceSMP.enrichment_user_id)
-            .outerjoin(includes_sources, AudienceSMP.source_id == includes_sources.c.source_id)
-            .outerjoin(excludes_sources, AudienceSMP.source_id == excludes_sources.c.source_id)
-            .filter(includes_sources.c.source_id.isnot(None))
-            .filter(excludes_sources.c.source_id.is_(None))
+            .filter(AudienceSMP.source_id.in_(data["source_ids"]["include"]))
+            .filter(AudienceSMP.source_id.notin_(data["source_ids"]["exclude"]))
         )
 
         combined_query = lalp_query.union(smp_query).subquery()
-        
+
         count_query = self.db.query(func.count()).select_from(combined_query)
         return count_query.scalar()
+        
+        # includes_lookalikes = self.db.query(AudienceLALP.lookalike_id).filter(
+        #     AudienceLALP.lookalike_id.in_(data["lookalike_ids"]["include"])
+        # ).subquery()
+
+        # excludes_lookalikes = self.db.query(AudienceLALP.lookalike_id).filter(
+        #     AudienceLALP.lookalike_id.in_(data["lookalike_ids"]["exclude"])
+        # ).subquery()
+
+        # includes_sources = self.db.query(AudienceSMP.source_id).filter(
+        #     AudienceSMP.source_id.in_(data["source_ids"]["include"])
+        # ).subquery()
+
+        # excludes_sources = self.db.query(AudienceSMP.source_id).filter(
+        #     AudienceSMP.source_id.in_(data["source_ids"]["exclude"])
+        # ).subquery()
+
+        # lalp_query = (
+        #     self.db.query(AudienceLALP.enrichment_user_id)
+        #     .outerjoin(includes_lookalikes, AudienceLALP.lookalike_id == includes_lookalikes.c.lookalike_id)
+        #     .outerjoin(excludes_lookalikes, AudienceLALP.lookalike_id == excludes_lookalikes.c.lookalike_id)
+        #     .filter(includes_lookalikes.c.lookalike_id.isnot(None))
+        #     .filter(excludes_lookalikes.c.lookalike_id.is_(None))
+        # )
+
+        # smp_query = (
+        #     self.db.query(AudienceSMP.enrichment_user_id)
+        #     .outerjoin(includes_sources, AudienceSMP.source_id == includes_sources.c.source_id)
+        #     .outerjoin(excludes_sources, AudienceSMP.source_id == excludes_sources.c.source_id)
+        #     .filter(includes_sources.c.source_id.isnot(None))
+        #     .filter(excludes_sources.c.source_id.is_(None))
+        # )
+
+        # combined_query = union(lalp_query, smp_query)
+        # # combined_query = lalp_query.union(smp_query).subquery()
+        
+        # count_query = self.db.query(func.count()).select_from(combined_query)
+        # return count_query.scalar()
 
     def create_audience_smarts_data_sources(
             self,
@@ -270,21 +287,12 @@ class AudienceSmartsPersistence:
 
 
     def get_persons_by_smart_aud_id(self, smart_audience_id, sent_contacts, fields):
-        #AFTER REPLACE FIVEXFIVEUSER ON  EnrichmentUser ALL THIS DATA ABSENT!
-
-        # query = (
-        #     self.db.query(EnrichmentUser).select_from(AudienceSmartPerson)
-        #         .join(EnrichmentUser, EnrichmentUser.id == AudienceSmartPerson.five_x_five_user_id)
-        #         .filter(AudienceSmartPerson.smart_audience_id == smart_audience_id)
-        # )
-
-        # orm_fields = [getattr(EnrichmentUser, field) for field in fields if hasattr(EnrichmentUser, field)]
-        # if orm_fields:
-        #     query = query.options(load_only(*orm_fields))
-
-        query=(
-            self.db.query(Email.email).select_from(AudienceSmartPerson)
-                .join(EnrichmentUser, AudienceSmartPerson.five_x_five_user_id == EnrichmentUser.id)
+        query = (
+            self.db.query(
+                        Email.email, 
+                        *[getattr(EnrichmentUser, field) for field in fields if hasattr(EnrichmentUser, field)])
+                .select_from(AudienceSmartPerson)
+                .join(EnrichmentUser, EnrichmentUser.id == AudienceSmartPerson.five_x_five_user_id)
                 .outerjoin(EmailEnrichment, EmailEnrichment.enrichment_user_id == EnrichmentUser.id)
                 .outerjoin(Email, Email.id == EmailEnrichment.email_id)
                 .filter(AudienceSmartPerson.smart_audience_id == smart_audience_id)

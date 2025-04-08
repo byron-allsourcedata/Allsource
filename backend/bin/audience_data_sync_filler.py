@@ -27,7 +27,7 @@ from models.leads_users import LeadUser
 load_dotenv()
 
 AUDIENCE_DATA_SYNC_PERSONS = 'audience_data_sync_persons'
-BATCH_SIZE = 200
+BATCH_SIZE = 500
 LONG_SLEEP = 60 * 10
 SHORT_SLEEP = 10
 
@@ -39,12 +39,10 @@ def setup_logging(level):
     )
 
 async def send_leads_to_queue(rmq_connection, msg):
-    import json
-    message_str = json.dumps(msg)
     await publish_rabbitmq_message(
         connection=rmq_connection,
         queue_name=AUDIENCE_DATA_SYNC_PERSONS,
-        message_body=message_str
+        message_body=msg
     )
 
 def fetch_data_syncs(session):
@@ -141,8 +139,8 @@ async def send_leads_to_rmq(session, rmq_connection, encrhment_users, data_sync,
         sync_imported_encrichment_id = data_sync_imported_leads.scalar()
         arr_enrichment_users.append(
             {
-                'data_sync_imported_id': sync_imported_encrichment_id,
-                'enrichment_user_id': encrhment_user_id,
+                'data_sync_imported_id': str(sync_imported_encrichment_id),
+                'enrichment_user_id': str(encrhment_user_id),
             }
         )
     msg = {

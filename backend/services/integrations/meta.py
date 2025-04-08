@@ -57,7 +57,7 @@ class MetaIntegrationsService:
         return self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.META.value)
 
     def get_smart_credentials(self, user_id: int):
-        credential = self.integrations_persisntece.get_smart_credentials_for_service(user_id=user_id, service_name=SourcePlatformEnum.HUBSPOT.value)
+        credential = self.integrations_persisntece.get_smart_credentials_for_service(user_id=user_id, service_name=SourcePlatformEnum.META.value)
         return credential
 
     def get_info_by_access_token(self, access_token: str):

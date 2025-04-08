@@ -498,6 +498,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                     <MenuItem onClick={() => {
                         handleSelectOptionMeta('createNew')
                         setSelectedOptionMeta(null)
+                        setInputValueMeta('')
                     }} sx={{
                         borderBottom: showCreateFormMeta ? "none" : "1px solid #cdcdcd",
                         '&:hover': {

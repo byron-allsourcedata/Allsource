@@ -60,7 +60,7 @@ class GoogleAdsIntegrationsService:
         return credential
 
     def get_smart_credentials(self, user_id: int):
-        credential = self.integrations_persistence.get_smart_credentials_for_service(user_id=user_id, service_name=SourcePlatformEnum.SALES_FORCE.value)
+        credential = self.integrations_persistence.get_smart_credentials_for_service(user_id=user_id, service_name=SourcePlatformEnum.GOOGLE_ADS.value)
         return credential
         
 
@@ -156,8 +156,10 @@ class GoogleAdsIntegrationsService:
     async def process_data_sync(self, user_integration, data_sync, enrichment_users: EnrichmentUser):
         profiles = []
         for enrichment_user in enrichment_users:
-            profile = self.__mapped_googleads_profile(enrichment_users)
-            profiles.append(profile)
+            result = self.__mapped_googleads_profile(enrichment_user)
+            if result in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
+                continue
+            profiles.append(result)
         
         list_response = self.__add_profile_to_list(access_token=user_integration.access_token, customer_id=data_sync.customer_id, user_list_id=data_sync.list_id, profiles=profiles)
         
@@ -245,7 +247,8 @@ class GoogleAdsIntegrationsService:
             return {'message': 'successfuly'}  
     
     def __mapped_googleads_profile(self, enrichment_user: EnrichmentUser) -> GoogleAdsProfile:
-        first_email = get_valid_email(enrichment_user, self.million_verifier_integrations)
+        emails_list = [e.email.email for e in enrichment_user.emails_enrichment]
+        first_email = get_valid_email(emails_list, self.million_verifier_integrations)
 
         if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return first_email
@@ -255,7 +258,7 @@ class GoogleAdsIntegrationsService:
         fake = Faker()
 
         first_phone = fake.phone_number()
-        address_parts = fake.address().split("\n")
+        address_parts = fake.address()
         first_name = fake.first_name()
         last_name = fake.last_name()
         return GoogleAdsProfile(
@@ -263,9 +266,9 @@ class GoogleAdsIntegrationsService:
             first_name=first_name,
             last_name=last_name,
             phone=validate_and_format_phone(first_phone),
-            city=address_parts[1],
-            state=address_parts[2],
-            address=address_parts[0]
+            # city=address_parts[1],
+            # state=address_parts[2],
+            address=address_parts
             )
         
     def get_google_ads_client(self, refresh_token):
