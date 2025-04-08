@@ -57,29 +57,43 @@ class DashboardAudienceService:
             "pixel_contacts": daily_data
         }
     
-    def merge_and_sort(self, *, datasets, limit: int):
+    def merge_and_sort(self, *, datasets: list[tuple], limit: int):
         combined = []
-        
-        for data, data_type in datasets:
-            combined.extend([row._asdict() | {'type': data_type} for row in data])
-        
-        sorted_combined = sorted(combined, key=lambda x: x['created_at'], reverse=True)
+
+        for data, data_type, fields in datasets:
+            for row in data:
+                if hasattr(row, '_asdict'):
+                    row_dict = row._asdict()
+                else:
+                    row_dict = {field: getattr(row, field, None) for field in fields}
+
+                filtered_data = {field: row_dict.get(field) for field in fields}
+                filtered_data['type'] = data_type
+                combined.append(filtered_data)
+
+        sorted_combined = sorted(combined, key=lambda x: x.get('created_at'), reverse=True)
         return sorted_combined[:limit]
 
-
     def get_events(self, *, user: dict):
-        sources, lookalikes = self.dashboard_persistence.get_last_sources_and_lookalikes(user_id=user.get('id'), limit=self.LIMIT)
+        sources, lookalikes = self.dashboard_persistence.get_last_sources_and_lookalikes(user_id=user.get('id'), limit=self.LIMIT)          
         last_sources_lookalikes = self.merge_and_sort(
-            datasets=[(sources, 'source'), (lookalikes, 'lookalike')],
+            datasets=[
+                (sources, 'source', ['source_name', 'created_at', 'source_type', 'matched_records']),
+                (lookalikes, 'lookalike', ['source_name', 'lookalike_name', 'created_at'])
+            ],
             limit=self.LIMIT
         )
-        smart_audience, data_syncs = self.dashboard_persistence.get_last_smart_audiences_and_data_syncs(user_id=user.get('id'), limit=self.LIMIT)
+
+        smart_audience, data_syncs = self.dashboard_persistence.get_last_smart_audiences_and_data_syncs(user_id=user.get('id'), limit=self.LIMIT)              
         last_lookalikes_audience_smart = self.merge_and_sort(
-            datasets=[(lookalikes, 'lookalikes'), (smart_audience, 'smart_audience')],
+            datasets=[(lookalikes, 'lookalikes', ['lookalike_size', 'lookalike_name', 'created_at', 'size']), 
+                      (smart_audience, 'smart_audience', ['lookalike_name', 'source_name', 'audience_name', 'created_at']),],
             limit=self.LIMIT
         )
+        
         last_audience_smart_data_sync = self.merge_and_sort(
-            datasets=[(smart_audience, 'smart_audience'), (data_syncs, 'data_syncs')],
+            datasets=[(smart_audience, 'smart_audience', ['audience_name', 'created_at', 'use_case', 'active_segment', 'include_names', 'exclude_names']), 
+                      (data_syncs, 'data_syncs', ['audience_name', 'created_at'])],
             limit=self.LIMIT
         )
         return {

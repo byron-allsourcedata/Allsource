@@ -2,7 +2,7 @@ from datetime import datetime, timezone, timedelta
 from collections import defaultdict
 from sqlalchemy.sql import func, select, union_all, literal_column, extract, case
 from sqlalchemy.orm import aliased
-
+from enums import AudienceSmartStatuses
 from models.audience_lookalikes import AudienceLookalikes
 from models.audience_smarts import AudienceSmart
 from models.audience_smarts_data_sources import AudienceSmartsDataSources
@@ -128,7 +128,7 @@ class DashboardAudiencePersistence:
             
     def get_last_sources_and_lookalikes(self, *, user_id, limit=5):
         sources = self.db.query(
-            AudienceSource.name.label('name'),
+            AudienceSource.name.label('source_name'),
             AudienceSource.created_at.label('created_at'),
             AudienceSource.source_type.label('source_type'),
             AudienceSource.matched_records.label('matched_records'),
@@ -137,7 +137,7 @@ class DashboardAudiencePersistence:
         ).order_by(AudienceSource.created_at.desc()).limit(5).all()
 
         lookalikes = self.db.query(
-            AudienceSource.name.label('name'),
+            AudienceSource.name.label('source_name'),
             AudienceLookalikes.name.label('lookalike_name'),
             AudienceLookalikes.created_date.label('created_at'),
             AudienceLookalikes.lookalike_size.label('lookalike_size'),
@@ -190,10 +190,9 @@ class DashboardAudiencePersistence:
         ).order_by(
             AudienceSmart.created_at.desc()
         ).limit(limit).all()
-        
-        three_hours_ago = datetime.now(timezone.utc) - timedelta(hours=3)
+    
         data_syncs = self.db.query(
-                        AudienceSmart.name.label('name'),
+                        AudienceSmart.name.label('audience_name'),
                         IntegrationUserSync.created_at.label('created_at'),
                         IntegrationUserSync.sent_contacts.label('synced_contacts'),
                         AudienceSmartsUseCase.name.label('destination'),
@@ -203,7 +202,7 @@ class DashboardAudiencePersistence:
                     .join(AudienceSmartsUseCase, AudienceSmartsUseCase.id == AudienceSmart.use_case_id)\
                     .filter(
                         UserIntegration.user_id == user_id,
-                        IntegrationUserSync.last_sync_date <= three_hours_ago
+                        AudienceSmart.status == AudienceSmartStatuses.SYNCED.value,
                     )\
                     .order_by(IntegrationUserSync.created_at.desc()).limit(limit).all()
                     
