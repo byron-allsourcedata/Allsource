@@ -17,41 +17,37 @@ import Image from 'next/image';
 import { getStatusStyle } from '../components/utils/getStatusStyle';
 
 interface SmartAudienceSource {
-    id: string
-    name: string
-    use_case_alias: string
-    created_by: string
-    created_at: Date
-    total_records: number
-    validated_records: number
-    active_segment_records: number
-    processed_active_segment_records: number
-    status: string
-    // integrations: string[]
+    id: string,
+    name: string,
+    use_case_alias: string,
+    created_by: string,
+    created_at: Date,
+    total_records: number,
+    validated_records: number,
+    active_segment_records: number,
+    processed_active_segment_records: number,
+    status: string,
+    integrations: string[] | null
 }
 
 const SourcesList: React.FC = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const data = searchParams.get('data'); 
-    const createdSmartAudienceSource: SmartAudienceSource | null = data ? JSON.parse(data) : null;
+    const createdSmartAudienceSource: SmartAudienceSource = data ? JSON.parse(data) : null;
     const { hasNotification } = useNotification();
     const [loading, setLoading] = useState(false);
 
-    const [createdData, setCreatedData] = useState<SmartAudienceSource | null>(createdSmartAudienceSource);
+    const [createdData, setCreatedData] = useState<SmartAudienceSource>(createdSmartAudienceSource);
     const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [anchorElFullName, setAnchorElFullName] = React.useState<null | HTMLElement>(null);
     const [selectedName, setSelectedName] = React.useState<string | null>(null);
-    const { sourceProgress } = useSSE();
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
     const isOpenFullName = Boolean(anchorElFullName);
 
-    const handleOpenPopoverFullName = (event: React.MouseEvent<HTMLElement>, industry: string) => {
-        setSelectedName(industry);
-        setAnchorElFullName(event.currentTarget);
-    };
+    const { smartAudienceProgress } = useSSE();
+    const progress = smartAudienceProgress[createdData.id];
 
     const handleClosePopoverFullName = () => {
         setAnchorElFullName(null);
@@ -64,8 +60,8 @@ const SourcesList: React.FC = () => {
         if (!intervalRef.current) {
             console.log("pooling started");
             intervalRef.current = setInterval(() => {
-                const hasPending = createdSmartAudienceSource?.active_segment_records !== createdSmartAudienceSource?.processed_active_segment_records;
-    
+                const hasPending = createdData.active_segment_records !== createdData.processed_active_segment_records;
+                
                 if (hasPending) {
                     console.log("Fetching due to pending records");
                 
@@ -92,9 +88,10 @@ const SourcesList: React.FC = () => {
 
     const fetchData = async () => {
         try {
-            if (createdSmartAudienceSource) {
-                const response = await axiosInstance.get(`/audience-sources/get-processing-source?&id=${createdSmartAudienceSource.id}`)
+            if (createdData) {
+                const response = await axiosInstance.get(`/audience-smarts/get-processing-smart-source?&id=${createdData.id}`)
                 const updatedItem = response.data
+                console.log(updatedItem)
                 setCreatedData(updatedItem);
             }
         } catch (error) {
@@ -117,8 +114,8 @@ const SourcesList: React.FC = () => {
     const handleDeleteSource = async () => {
         setLoading(true);
         try {
-            if (createdSmartAudienceSource && createdSmartAudienceSource.id) {
-                const response = await axiosInstance.delete(`/audience-smarts/${createdSmartAudienceSource.id}`);
+            if (createdData && createdData.id) {
+                const response = await axiosInstance.delete(`/audience-smarts/${createdData.id}`);
                 if (response.status === 200 && response.data) {
                     showToast("Source successfully deleted!");
                     router.push("/smart-audiences")
@@ -147,22 +144,6 @@ const SourcesList: React.FC = () => {
             sessionStorage.setItem('filtersBySmarts', JSON.stringify({}));
         }
         router.push("/smart-audiences")
-    }
-
-    const { smartAudienceProgress } = useSSE();
-    const progress = createdSmartAudienceSource?.id ? smartAudienceProgress[createdSmartAudienceSource.id] : null;
-
-    const activeRecords = createdSmartAudienceSource?.active_segment_records ?? 0;
-    const processedActiveRecords = createdSmartAudienceSource?.processed_active_segment_records ?? 0;
-    const processed = progress?.processed ?? 0;
-
-    {
-        (processed && processed === activeRecords) ||
-        (processedActiveRecords === activeRecords && processedActiveRecords !== 0)
-            ? activeRecords.toLocaleString('en-US')
-            : processedActiveRecords > processed
-            ? <ProgressBar progress={{ total: activeRecords, processed: processedActiveRecords }} />
-            : <ProgressBar progress={{ ...progress, total: activeRecords, processed: progress?.processed ?? 0 }} />
     }
 
     const preRenderStatus = (status: string) => {
@@ -209,11 +190,11 @@ const SourcesList: React.FC = () => {
                                     gap: '8px'
                                 }
                             }}>
-                                <Button
-                                    variant="contained"/* need chnage < on !== */
+                                {/* <Button
+                                    variant="contained"
                                     // disabled={ (createdData?.processed_total_records === 0) || (createdData?.processed_total_records !== createdData?.total_records) }
                                     disabled={true}
-                                    onClick={() => router.push(`/lookalikes/${createdSmartAudienceSource?.id}/builder`)}
+                                    onClick={() => router.push(`/lookalikes/${createdData?.id}/builder`)}
                                     className='second-sub-title'
                                     sx={{
                                         backgroundColor: 'rgba(80, 82, 178, 1)',
@@ -231,7 +212,7 @@ const SourcesList: React.FC = () => {
                                     }}
                                 >
                                     Sync
-                                </Button>
+                                </Button> */}
                         </Box>
                     </Box>
                     <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -286,7 +267,7 @@ const SourcesList: React.FC = () => {
                                             Name
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
-                                            {createdSmartAudienceSource?.name}
+                                            {createdData?.name}
                                         </Typography>
                                     </Box>
                                     <Box sx={{display: "flex", flexDirection: "column", gap: 1, alignItems: 'center'}}>
@@ -298,8 +279,8 @@ const SourcesList: React.FC = () => {
                                             Use Case
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
-                                            {/* {setSourceOrigin(createdSmartAudienceSource?.source_origin)} */}
-                                            {getUseCaseIcon(createdSmartAudienceSource?.use_case_alias || "")}
+                                            {/* {setSourceOrigin(createdData?.source_origin)} */}
+                                            {getUseCaseIcon(createdData?.use_case_alias || "")}
                                         </Typography>
                                     </Box>
 
@@ -312,11 +293,11 @@ const SourcesList: React.FC = () => {
                                             Validations
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
-                                        {createdSmartAudienceSource?.status === "unvalidated" 
+                                        {createdData?.status === "unvalidated" 
                                         ? <Image src="./danger_yellow.svg" alt='danger' width={20} height={20}/>
-                                        : createdSmartAudienceSource?.validated_records === 0 
+                                        : createdData?.validated_records === 0 
                                             ? "NA" 
-                                            : createdSmartAudienceSource?.active_segment_records.toLocaleString('en-US')}
+                                            : createdData?.active_segment_records.toLocaleString('en-US')}
                                         </Typography>
                                     </Box>
 
@@ -329,9 +310,9 @@ const SourcesList: React.FC = () => {
                                             Created
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
-                                        {createdSmartAudienceSource?.created_by + ", " + 
-                                        (dayjs(createdSmartAudienceSource?.created_at).isValid() 
-                                        ? dayjs(createdSmartAudienceSource?.created_at).format('MMM D, YYYY') 
+                                        {createdData?.created_by + ", " + 
+                                        (dayjs(createdData?.created_at).isValid() 
+                                        ? dayjs(createdData?.created_at).format('MMM D, YYYY') 
                                         : '--')}
                                         </Typography>
                                     </Box>
@@ -341,7 +322,7 @@ const SourcesList: React.FC = () => {
                                             Total Universe
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
-                                        {createdSmartAudienceSource?.total_records.toLocaleString('en-US')}
+                                        {createdData?.total_records.toLocaleString('en-US')}
                                         </Typography>
                                     </Box>
                                     <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
@@ -354,13 +335,12 @@ const SourcesList: React.FC = () => {
                                         </Typography>
                                         
                                         <Typography variant="subtitle1" className="table-data">
-                                            {(processed && processed === activeRecords) ||
-                                            (processedActiveRecords === activeRecords && processedActiveRecords !== 0)
-                                                ? activeRecords.toLocaleString('en-US')
-                                                : processedActiveRecords > processed
-                                                ? <ProgressBar progress={{ total: activeRecords, processed: processedActiveRecords }} />
-                                                : <ProgressBar progress={{ ...progress, total: activeRecords, processed: progress?.processed ?? 0 }} />
-                                            }
+                                        {(progress?.processed && progress?.processed === createdData?.active_segment_records) || (createdData?.processed_active_segment_records ===  createdData?.active_segment_records && (createdData.status === "unvalidated"  || createdData?.processed_active_segment_records !== 0))
+                                            ? createdData.active_segment_records.toLocaleString('en-US')
+                                            : createdData?.processed_active_segment_records > progress?.processed
+                                                ? <ProgressBar progress={{ total: createdData?.active_segment_records, processed: createdData?.processed_active_segment_records}} />
+                                                : <ProgressBar progress={{...progress, total: createdData.active_segment_records}} />
+                                        }
                                         </Typography>
                                     </Box>
                                     <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
@@ -368,13 +348,13 @@ const SourcesList: React.FC = () => {
                                         <Typography variant="body2" className="table-heading">
                                             Status
                                         </Typography>
-                                        {createdSmartAudienceSource && (
+                                        {createdData && (
                                         <Typography
                                             component="div"
                                             sx={{
                                                 width: "100px",
                                                 margin: 0,
-                                                background: getStatusStyle(preRenderStatus(createdSmartAudienceSource.status.charAt(0).toUpperCase() + createdSmartAudienceSource.status.slice(1))).background,
+                                                background: getStatusStyle(preRenderStatus(createdData.status.charAt(0).toUpperCase() + createdData.status.slice(1))).background,
                                                 padding: '3px 8px',
                                                 borderRadius: '2px',
                                                 fontFamily: 'Roboto',
@@ -382,10 +362,10 @@ const SourcesList: React.FC = () => {
                                                 fontWeight: '400',
                                                 lineHeight: '16px',
                                                 textAlign: "center",
-                                                color: getStatusStyle(preRenderStatus(createdSmartAudienceSource.status.charAt(0).toUpperCase() + createdSmartAudienceSource.status.slice(1))).color,
+                                                color: getStatusStyle(preRenderStatus(createdData.status.charAt(0).toUpperCase() + createdData.status.slice(1))).color,
                                             }}
                                         >
-                                            {preRenderStatus(createdSmartAudienceSource.status.charAt(0).toUpperCase() + createdSmartAudienceSource.status.slice(1))}
+                                            {preRenderStatus(createdData.status.charAt(0).toUpperCase() + createdData.status.slice(1))}
                                         </Typography>
                                     )}
                                     </Box>
@@ -422,7 +402,6 @@ const SourcesList: React.FC = () => {
                                 </Button>
                                 <Button
                                     variant="contained"/* need chnage < on !== */
-                                    disabled={ (createdData?.processed_active_segment_records === 0) || (createdData?.processed_active_segment_records !== createdData?.total_records) }
                                     onClick={() => router.push(`/smart-audiences/builder`)}
                                     className='second-sub-title'
                                     sx={{
@@ -440,7 +419,7 @@ const SourcesList: React.FC = () => {
                                         },
                                     }}
                                 >
-                                    Generate another Smart Audience
+                                    Generate Smart Audience
                                 </Button>
                             </Box>
                         </Box>
@@ -503,17 +482,17 @@ const SourcesList: React.FC = () => {
                                     sx={{ 
                                     width: '100%', maxWidth: 360}}
                                     >
-                                    <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
+                                    {/* <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
                                             handleClosePopover()
-                                            // router.push(`/lookalikes/${createdSmartAudienceSource?.id}/builder`)
+                                            // router.push(`/lookalikes/${createdData?.id}/builder`)
                                         }}>
-                                    <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Sync"/>
-                                    </ListItemButton>
-                                    <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
+                                        <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Sync"/>
+                                    </ListItemButton> */}
+                                    {/* <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
                                             // handleOpenConfirmDialog()
                                         }}>
-                                    <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Clone"/>
-                                    </ListItemButton>
+                                        <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Clone"/>
+                                    </ListItemButton> */}
                                     <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
                                             handleOpenConfirmDialog()
                                         }}>

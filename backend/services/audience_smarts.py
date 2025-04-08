@@ -260,3 +260,27 @@ class AudienceSmartsService:
 
         output.seek(0)
         return output
+
+    def get_processing_source(self, id: str) -> Optional[SmartsResponse]:
+        smart_source = self.audience_smarts_persistence.get_processing_sources(id)
+        if not smart_source:
+            return None
+
+        (source_id, name, use_case_alias, created_by, created_at,
+         total_records, validated_records,
+         active_segment_records, processed_active_segment_records,
+         status) = smart_source
+
+        return SmartsResponse(
+            id=source_id,
+            name=name,
+            use_case_alias=use_case_alias,
+            created_by=created_by,
+            created_at=created_at,
+            total_records=total_records,
+            validated_records=validated_records,
+            active_segment_records=active_segment_records,
+            processed_active_segment_records=processed_active_segment_records,
+            status=status,
+            integrations=None
+        )
