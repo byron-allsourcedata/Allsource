@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 class DashboardAudienceService:
     def __init__(self, dashboard_audience_persistence: DashboardAudiencePersistence):
         self.dashboard_persistence = dashboard_audience_persistence
+        self.LIMIT = 5
         
     def get_contacts_for_pixel_contacts_statistics(self, *, user: dict):
         results = self.dashboard_persistence.get_contacts_for_pixel_contacts_statistics(user_id=user.get('id'))
@@ -56,15 +57,36 @@ class DashboardAudienceService:
             "pixel_contacts": daily_data
         }
     
-    def get_events(self, *, user: dict):
-        sources, lookalikes = self.dashboard_persistence.get_last_sources_and_lookalikes(user_id=user.get('id'))
-        source_dicts = [row._asdict() | {'type': 'source'} for row in sources]
-        lookalike_dicts = [row._asdict() | {'type': 'lookalike'} for row in lookalikes]
-        combined = source_dicts + lookalike_dicts
+    def merge_and_sort(self, *, datasets, limit: int):
+        combined = []
+        
+        for data, data_type in datasets:
+            combined.extend([row._asdict() | {'type': data_type} for row in data])
+        
         sorted_combined = sorted(combined, key=lambda x: x['created_at'], reverse=True)
-        top_5 = sorted_combined[:5]
+        return sorted_combined[:limit]
+
+
+    def get_events(self, *, user: dict):
+        sources, lookalikes = self.dashboard_persistence.get_last_sources_and_lookalikes(user_id=user.get('id'), limit=self.LIMIT)
+        last_sources_lookalikes = self.merge_and_sort(
+            datasets=[(sources, 'source'), (lookalikes, 'lookalike')],
+            limit=self.LIMIT
+        )
+        smart_audience, data_syncs = self.dashboard_persistence.get_last_smart_audiences_and_data_syncs(user_id=user.get('id'), limit=self.LIMIT)
+        last_lookalikes_audience_smart = self.merge_and_sort(
+            datasets=[(lookalikes, 'lookalikes'), (smart_audience, 'smart_audience')],
+            limit=self.LIMIT
+        )
+        last_audience_smart_data_sync = self.merge_and_sort(
+            datasets=[(smart_audience, 'smart_audience'), (data_syncs, 'data_syncs')],
+            limit=self.LIMIT
+        )
         return {
-            'sources': top_5
+            'sources': last_sources_lookalikes,
+            'lookalikes': last_lookalikes_audience_smart,
+            'smart_audiences': last_audience_smart_data_sync,
+            'data_sync': [row._asdict() for row in data_syncs]
         }
     
     def get_contacts_for_pixel_contacts_by_domain_id(self, *, user: dict, domain_id: int):
