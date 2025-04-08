@@ -5,7 +5,7 @@ from models.users import Users
 from enums import SourcePlatformEnum
 from models.users_domains import UserDomains
 from models.subscriptions import UserSubscriptions
-from models.data_sync_imported_leads import DataSyncImportedLeads
+from backend.models.data_sync_imported_enrichment import DataSyncImportedLeads
 from sqlalchemy import func, desc
 from models.integrations.users_domains_integrations import UserIntegration
 

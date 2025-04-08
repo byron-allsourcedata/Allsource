@@ -10,6 +10,8 @@ from services.integrations.commonIntegration import get_valid_email, get_valid_p
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from persistence.domains import UserDomainsPersistence
 from schemas.integrations.integrations import *
+from models.enrichment_users import EnrichmentUser
+from faker import Faker
 from google.auth.transport.requests import Request
 from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
@@ -34,7 +36,7 @@ class GoogleAdsIntegrationsService:
     def __init__(self, domain_persistence: UserDomainsPersistence, integrations_persistence: IntegrationsPresistence,
                  sync_persistence: IntegrationsUserSyncPersistence, client: httpx.Client, million_verifier_integrations: MillionVerifierIntegrationsService):
         self.domain_persistence = domain_persistence
-        self.integrations_persisntece = integrations_persistence
+        self.integrations_persistence = integrations_persistence
         self.sync_persistence = sync_persistence
         self.million_verifier_integrations = million_verifier_integrations
         self.client = client
@@ -54,11 +56,11 @@ class GoogleAdsIntegrationsService:
         return response
 
     def get_credentials(self, domain_id: int, user_id: int):
-        credential = self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.GOOGLE_ADS.value)
+        credential = self.integrations_persistence.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.GOOGLE_ADS.value)
         return credential
 
     def get_smart_credentials(self, user_id: int):
-        credential = self.integrations_persisntece.get_smart_credentials_for_service(user_id=user_id, service_name=SourcePlatformEnum.SALES_FORCE.value)
+        credential = self.integrations_persistence.get_smart_credentials_for_service(user_id=user_id, service_name=SourcePlatformEnum.SALES_FORCE.value)
         return credential
         
 
@@ -68,7 +70,7 @@ class GoogleAdsIntegrationsService:
             credential.access_token = access_token
             credential.is_failed = False
             credential.error_message = None
-            self.integrations_persisntece.db.commit()
+            self.integrations_persistence.db.commit()
             return credential
         
         common_integration = os.getenv('COMMON_INTEGRATION') == 'True'
@@ -83,7 +85,7 @@ class GoogleAdsIntegrationsService:
         else:
             integration_data['domain_id'] = domain_id
             
-        integartion = self.integrations_persisntece.create_integration(integration_data)
+        integartion = self.integrations_persistence.create_integration(integration_data)
         
         if not integartion:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
@@ -151,12 +153,13 @@ class GoogleAdsIntegrationsService:
         })
         return sync
 
-    async def process_data_sync(self, five_x_five_user, user_integration, data_sync, lead_user: LeadUser):
-        profile = self.__mapped_googleads_profile(five_x_five_user, lead_user)
-        if profile in (ProccessDataSyncResult.AUTHENTICATION_FAILED.value, ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-            return profile
+    async def process_data_sync(self, user_integration, data_sync, enrichment_users: EnrichmentUser):
+        profiles = []
+        for enrichment_user in enrichment_users:
+            profile = self.__mapped_googleads_profile(enrichment_users)
+            profiles.append(profile)
         
-        list_response = self.__add_profile_to_list(access_token=user_integration.access_token, customer_id=data_sync.customer_id, user_list_id=data_sync.list_id, profile=profile)
+        list_response = self.__add_profile_to_list(access_token=user_integration.access_token, customer_id=data_sync.customer_id, user_list_id=data_sync.list_id, profiles=profiles)
         
         if not list_response:
             return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
@@ -194,7 +197,7 @@ class GoogleAdsIntegrationsService:
             logger.error(f"Error: {str(e)}")
             return None
         
-    def __add_profile_to_list(self, access_token, customer_id, user_list_id, profile):
+    def __add_profile_to_list(self, access_token, customer_id, user_list_id, profiles):
         client = self.get_google_ads_client(access_token)
         ad_user_data_consent = client.enums.ConsentStatusEnum.GRANTED
         ad_personalization_consent = client.enums.ConsentStatusEnum.GRANTED
@@ -207,7 +210,7 @@ class GoogleAdsIntegrationsService:
                     customer_id, user_list_id
                 )
             self.add_users_to_customer_match_user_list(
-                profile=profile,
+                profiles=profiles,
                 client=client,
                 customer_id=customer_id,
                 user_list_resource_name=user_list_resource_name,
@@ -238,25 +241,28 @@ class GoogleAdsIntegrationsService:
             if not credential:
                 raise HTTPException(status_code=403, detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value)
             credential.suppression = suppression
-            self.integrations_persisntece.db.commit()
+            self.integrations_persistence.db.commit()
             return {'message': 'successfuly'}  
     
-    def __mapped_googleads_profile(self, five_x_five_user: FiveXFiveUser, lead_user: LeadUser) -> GoogleAdsProfile:
-
-        first_email = get_valid_email(five_x_five_user, self.million_verifier_integrations)
+    def __mapped_googleads_profile(self, enrichment_user: EnrichmentUser) -> GoogleAdsProfile:
+        first_email = get_valid_email(enrichment_user, self.million_verifier_integrations)
 
         if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return first_email
         
-        first_phone = get_valid_phone(five_x_five_user)
+        # first_phone = get_valid_phone(five_x_five_user)
+        # address_parts = get_valid_location(five_x_five_user)
+        fake = Faker()
 
-        address_parts = get_valid_location(five_x_five_user)
-        
+        first_phone = fake.phone_number()
+        address_parts = fake.address().split("\n")
+        first_name = fake.first_name()
+        last_name = fake.last_name()
         return GoogleAdsProfile(
             email=first_email,
-            first_name=getattr(five_x_five_user, 'first_name', None),
-            last_name=getattr(five_x_five_user, 'last_name', None),
-            phone=validate_and_format_phone(format_phone_number(first_phone)),
+            first_name=first_name,
+            last_name=last_name,
+            phone=validate_and_format_phone(first_phone),
             city=address_parts[1],
             state=address_parts[2],
             address=address_parts[0]
@@ -312,7 +318,7 @@ class GoogleAdsIntegrationsService:
         
         return user_list_resource_name
             
-    def add_users_to_customer_match_user_list(self, profile, client, customer_id, user_list_resource_name, 
+    def add_users_to_customer_match_user_list(self, profiles, client, customer_id, user_list_resource_name, 
                                               offline_user_data_job_id, 
                                               ad_user_data_consent,
                                               ad_personalization_consent):
@@ -355,7 +361,7 @@ class GoogleAdsIntegrationsService:
                         
         request = client.get_type("AddOfflineUserDataJobOperationsRequest")
         request.resource_name = offline_user_data_job_resource_name
-        request.operations.extend(self.build_offline_user_data_job_operations(client, profile))
+        request.operations.extend(self.build_offline_user_data_job_operations(client, profiles))
         request.enable_partial_failure = True
 
         offline_user_data_job_service_client.add_offline_user_data_job_operations(request=request)
@@ -365,18 +371,20 @@ class GoogleAdsIntegrationsService:
             resource_name=offline_user_data_job_resource_name
         )
     
-    def build_offline_user_data_job_operations(self, client, profile: GoogleAdsProfile):
-        raw_record = {
-            "email": profile.email,
-            "first_name": profile.first_name,
-            "last_name": profile.last_name,
-            "country_code": "US",
-            "phone": profile.phone,
-            "city": profile.city,
-            "state": profile.state,
-            "address": profile.address
-        }
-        raw_records = [raw_record]
+    def build_offline_user_data_job_operations(self, client, profiles: GoogleAdsProfile):
+        raw_records = []
+        for profile in profiles:
+            raw_record = {
+                "email": profile.email,
+                "first_name": profile.first_name,
+                "last_name": profile.last_name,
+                "country_code": "US",
+                "phone": profile.phone,
+                "city": profile.city,
+                "state": profile.state,
+                "address": profile.address
+            }
+            raw_records.append(raw_record)
 
         operations = []
         for record in raw_records:

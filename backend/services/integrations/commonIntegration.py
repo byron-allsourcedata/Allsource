@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from typing import Optional, List, Dict
 
 from enums import ProccessDataSyncResult
-from models.five_x_five_users import FiveXFiveUser
+from models.enrichment_users import EnrichmentUser
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from utils import extract_first_email
 
@@ -14,7 +14,7 @@ EMAIL_LAST_SEEN_EXAMPLE:  Dict[str, str] = {
 }
 
 def get_valid_email(
-    user: FiveXFiveUser,
+    user: EnrichmentUser,
     email_verifier: MillionVerifierIntegrationsService,
     email_fields: List[str] = EMAIL_FIELDS_EXAMPLE,
     email_last_seen_fields: Dict[str, str] = EMAIL_LAST_SEEN_EXAMPLE
