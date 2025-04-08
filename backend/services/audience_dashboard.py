@@ -19,7 +19,7 @@ class DashboardAudienceService:
             'abandoned_cart': 0,
             'converted_sale': 0,
         })
-
+        
         for domain, behavior_type, count_converted_sales, lead_count in results:                    
             data = daily_data[domain]
             data['total_leads'] += lead_count
@@ -98,20 +98,30 @@ class DashboardAudienceService:
             'abandoned_cart': 0,
             'converted_sale': 0,
         })
+        
+        accumulated_total_leads = 0
+        accumulated_visitors = 0
+        accumulated_view_products = 0
+        accumulated_abandoned_cart = 0
+        accumulated_converted_sale = 0
 
         for date, behavior_type, converted_sales_count, lead_count in results:
             date_str = date.isoformat()
             data = daily_data[date_str]
-
-            data['total_leads'] += lead_count
-            data['converted_sale'] += converted_sales_count
+            accumulated_total_leads += lead_count
+            accumulated_converted_sale += converted_sales_count
+            data['total_leads'] = accumulated_total_leads
+            data['converted_sale'] = accumulated_converted_sale
 
             if behavior_type == 'viewed_product':
-                data['view_products'] += lead_count
+                accumulated_view_products += lead_count
+                data['view_products'] = accumulated_view_products
             elif behavior_type == 'product_added_to_cart':
-                data['abandoned_cart'] += lead_count
+                accumulated_abandoned_cart += lead_count
+                data['abandoned_cart'] = accumulated_abandoned_cart
             elif behavior_type == 'visitor':
-                data['visitors'] += lead_count
+                accumulated_visitors += lead_count
+                data['visitors'] = accumulated_visitors
 
 
         return {
