@@ -21,7 +21,6 @@ from models.emails import Email
 from schemas.audience import DataSourcesFormat
 from typing import Optional, Tuple, List
 from sqlalchemy.engine.row import Row
-from enums import AudienceSmartStatuses
 from uuid import UUID
 
 logger = logging.getLogger(__name__)
@@ -270,21 +269,12 @@ class AudienceSmartsPersistence:
 
 
     def get_persons_by_smart_aud_id(self, smart_audience_id, sent_contacts, fields):
-        #AFTER REPLACE FIVEXFIVEUSER ON  EnrichmentUser ALL THIS DATA ABSENT!
-
-        # query = (
-        #     self.db.query(EnrichmentUser).select_from(AudienceSmartPerson)
-        #         .join(EnrichmentUser, EnrichmentUser.id == AudienceSmartPerson.five_x_five_user_id)
-        #         .filter(AudienceSmartPerson.smart_audience_id == smart_audience_id)
-        # )
-
-        # orm_fields = [getattr(EnrichmentUser, field) for field in fields if hasattr(EnrichmentUser, field)]
-        # if orm_fields:
-        #     query = query.options(load_only(*orm_fields))
-
-        query=(
-            self.db.query(Email.email).select_from(AudienceSmartPerson)
-                .join(EnrichmentUser, AudienceSmartPerson.five_x_five_user_id == EnrichmentUser.id)
+        query = (
+            self.db.query(
+                        Email.email, 
+                        *[getattr(EnrichmentUser, field) for field in fields if hasattr(EnrichmentUser, field)])
+                .select_from(AudienceSmartPerson)
+                .join(EnrichmentUser, EnrichmentUser.id == AudienceSmartPerson.five_x_five_user_id)
                 .outerjoin(EmailEnrichment, EmailEnrichment.enrichment_user_id == EnrichmentUser.id)
                 .outerjoin(Email, Email.id == EmailEnrichment.email_id)
                 .filter(AudienceSmartPerson.smart_audience_id == smart_audience_id)

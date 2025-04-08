@@ -203,7 +203,7 @@ const SmartAudiences: React.FC = () => {
         if (!intervalRef.current) {
             console.log("pooling started");
             intervalRef.current = setInterval(() => {
-                const hasPending = data.some(item => item.total_records !== item.processed_active_segment_records);
+                const hasPending = data.some(item => item.active_segment_records !== item.processed_active_segment_records);
     
                 if (hasPending) {
                     console.log("Fetching due to pending records");
@@ -1187,7 +1187,7 @@ const SmartAudiences: React.FC = () => {
                                                                             <TableCell
                                                                                 sx={{ ...smartAudiences.table_array, position: 'relative' }}
                                                                             >
-                                                                                {(progress?.processed && progress?.processed === row?.active_segment_records) || (row?.processed_active_segment_records ===  row?.active_segment_records && row?.processed_active_segment_records !== 0)
+                                                                                {(progress?.processed && progress?.processed === row?.active_segment_records) || (row?.processed_active_segment_records ===  row?.active_segment_records && (row.status === "unvalidated"  || row?.processed_active_segment_records !== 0))
                                                                                     ? row.active_segment_records.toLocaleString('en-US')
                                                                                     : row?.processed_active_segment_records > progress?.processed
                                                                                         ? <ProgressBar progress={{ total: row?.active_segment_records, processed: row?.processed_active_segment_records}} />
@@ -1251,17 +1251,21 @@ const SmartAudiences: React.FC = () => {
                                                                                             width: '100%', maxWidth: 360, boxShadow: 'none'
                                                                                         }}
                                                                                     >
-                                                                                        <ListItemButton disabled={!(selectedRowData?.status === "ready")} sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
-                                                                                            handleCloseMorePopover()
-                                                                                            handleDataSyncPopupOpen()
-                                                                                        }}>
+                                                                                        <ListItemButton disabled={(selectedRowData?.status === "synced")} 
+                                                                                                        sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} 
+                                                                                                        onClick={() => {
+                                                                                                            handleCloseMorePopover()
+                                                                                                            handleDataSyncPopupOpen()
+                                                                                                        }}>
                                                                                             <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Sync" />
                                                                                         </ListItemButton>
-                                                                                        <ListItemButton sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
-                                                                                            setIsDownloadAction(true)
-                                                                                            handleCloseMorePopover()
-                                                                                            handleDataSyncPopupOpen()
-                                                                                        }}>
+                                                                                        <ListItemButton disabled={(selectedRowData?.active_segment_records !== selectedRowData?.processed_active_segment_records || selectedRowData?.status === "unvalidated")} 
+                                                                                                        sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} 
+                                                                                                        onClick={() => {
+                                                                                                            setIsDownloadAction(true)
+                                                                                                            handleCloseMorePopover()
+                                                                                                            handleDataSyncPopupOpen()
+                                                                                                        }}>
                                                                                             <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Download" />
                                                                                         </ListItemButton>
                                                                                         <ListItemButton

@@ -91,7 +91,7 @@ class SmartsResponse(BaseModel):
     active_segment_records: int
     processed_active_segment_records: int
     status: str
-    integrations: List[str]
+    integrations: Optional[List[str]]
 
     model_config = {
         "from_attributes": True
