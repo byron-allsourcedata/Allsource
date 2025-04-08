@@ -1,3 +1,4 @@
+import logging
 from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
@@ -15,6 +16,15 @@ import json
 from utils import format_phone_number
 from typing import List
 from utils import validate_and_format_phone, format_phone_number
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+)
+
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
 class KlaviyoIntegrationsService:

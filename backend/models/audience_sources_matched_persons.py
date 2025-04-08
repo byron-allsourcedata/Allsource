@@ -3,6 +3,7 @@ from sqlalchemy import Column, event, Integer, TIMESTAMP, JSON, ForeignKey, Inde
 from .audience_sources import AudienceSource
 from models.enrichment_users import EnrichmentUser
 from .base import Base, create_timestamps, update_timestamps
+from .five_x_five_users import FiveXFiveUser
 
 
 class AudienceSourcesMatchedPerson(Base):
@@ -11,10 +12,9 @@ class AudienceSourcesMatchedPerson(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, unique=True, nullable=False, server_default="gen_random_uuid()")
     source_id = Column(UUID(as_uuid=True), ForeignKey(AudienceSource.id, ondelete='cascade'), nullable=False)
     enrichment_user_id = Column(UUID, ForeignKey(EnrichmentUser.id), nullable=True)
+    five_x_five_user_id = Column(Integer, ForeignKey(FiveXFiveUser.id, ondelete='cascade'), nullable=True)
     mapped_fields = Column(JSON, nullable=True)
 
-    first_name = Column(VARCHAR(64), nullable=True)
-    last_name = Column(VARCHAR(64), nullable=True)
     email = Column(VARCHAR(64), nullable=False)
     start_date = Column(TIMESTAMP, nullable=True)
     end_date = Column(TIMESTAMP, nullable=True)
@@ -35,7 +35,6 @@ class AudienceSourcesMatchedPerson(Base):
     count_min = Column(Integer, default=1)
     count_max = Column(Integer, default=1)
     sum_score = Column(DECIMAL(10, 2), default=0)
-
 
     created_at = Column(TIMESTAMP, nullable=False)
     updated_at = Column(TIMESTAMP, nullable=False)
