@@ -283,3 +283,23 @@ class AudienceSmartsPersistence:
 
         smarts = query.limit(sent_contacts).all()
         return smarts
+
+    def get_processing_sources(self, id):
+        query = (
+            self.db.query(
+                AudienceSmart.id,
+                AudienceSmart.name,
+                AudienceSmartsUseCase.alias,
+                Users.full_name,
+                AudienceSmart.created_at,
+                AudienceSmart.total_records,
+                AudienceSmart.validated_records,
+                AudienceSmart.active_segment_records,
+                AudienceSmart.processed_active_segment_records,
+                AudienceSmart.status,
+            )
+            .join(Users, Users.id == AudienceSmart.created_by_user_id)
+            .join(AudienceSmartsUseCase, AudienceSmartsUseCase.id == AudienceSmart.use_case_id)
+            .filter(AudienceSmart.id == id)
+        ).first()
+        return query

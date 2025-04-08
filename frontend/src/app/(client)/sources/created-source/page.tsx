@@ -88,7 +88,7 @@ const SourcesList: React.FC = () => {
 
     const fetchData = async () => {
         try {
-            const response = await axiosInstance.get(`/audience-sources/get-processing-source?&id=${createdSource.id}`)
+            const response = await axiosInstance.get(`/audience-sources/get-processing-source?&id=${createdData.id}`)
             const updatedItem = response.data
 
             setCreatedData(updatedItem);
@@ -117,8 +117,8 @@ const SourcesList: React.FC = () => {
     const handleDeleteSource = async () => {
         setLoading(true);
         try {
-            if (createdSource && createdSource.id) {
-                const response = await axiosInstance.delete(`/audience-sources/${createdSource.id}`);
+            if (createdData && createdData.id) {
+                const response = await axiosInstance.delete(`/audience-sources/${createdData.id}`);
                 if (response.status === 200 && response.data) {
                     showToast("Source successfully deleted!");
                     router.push("/sources")
@@ -278,7 +278,7 @@ const SourcesList: React.FC = () => {
                                             Name
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
-                                            {createdSource?.name}
+                                            {createdData?.name}
                                         </Typography>
                                     </Box>
                                     <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
@@ -290,7 +290,7 @@ const SourcesList: React.FC = () => {
                                             Source
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
-                                            {setSourceOrigin(createdSource?.source_origin)}
+                                            {setSourceOrigin(createdData?.source_origin)}
                                         </Typography>
                                     </Box>
 
@@ -303,7 +303,7 @@ const SourcesList: React.FC = () => {
                                             Domain
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
-                                            {createdSource?.domain ?? "--"}
+                                            {createdData?.domain ?? "--"}
                                         </Typography>
                                     </Box>
 
@@ -311,12 +311,12 @@ const SourcesList: React.FC = () => {
                                         <Typography variant="body2" className="table-heading">
                                             Type
                                         </Typography>
-                                        <Typography variant="subtitle1" className="table-data" sx={{cursor: "pointer"}} onClick={(e) => createdSource?.source_type ? handleOpenPopoverFullName(e, setSourceType(createdSource?.source_type)) : {}}>
+                                        <Typography variant="subtitle1" className="table-data" sx={{cursor: "pointer"}} onClick={(e) => createdData?.source_type ? handleOpenPopoverFullName(e, setSourceType(createdData?.source_type)) : {}}>
                                             <Tooltip
                                                 title={
                                                     <Box sx={{ backgroundColor: '#fff', margin: 0, padding: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', }}>
                                                         <Typography className='table-data' component='div' sx={{ fontSize: '12px !important', }}>
-                                                        {setSourceType(createdSource?.source_type)}
+                                                        {setSourceType(createdData?.source_type)}
                                                         </Typography>
                                                     </Box>
                                                     }
@@ -346,7 +346,7 @@ const SourcesList: React.FC = () => {
                                                         maxWidth:'150px',
                                                     }}
                                                 >
-                                                    {truncateText(setSourceType(createdSource?.source_type), 20)}
+                                                    {truncateText(setSourceType(createdData?.source_type), 20)}
                                                 </Typography>
                                             </Tooltip>
                                         </Typography>
@@ -360,7 +360,7 @@ const SourcesList: React.FC = () => {
                                             Created By
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
-                                            {createdSource?.created_by}
+                                            {createdData?.created_by}
                                         </Typography>
                                     </Box>
 
@@ -370,7 +370,7 @@ const SourcesList: React.FC = () => {
                                             Created Date
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
-                                            {dayjs(createdSource?.created_at).isValid() ? dayjs(createdSource?.created_at).format('MMM D, YYYY') : '--'}
+                                            {dayjs(createdData?.created_at).isValid() ? dayjs(createdData?.created_at).format('MMM D, YYYY') : '--'}
                                         </Typography>
                                     </Box>
 
@@ -379,9 +379,9 @@ const SourcesList: React.FC = () => {
                                             Number of Customers
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
-                                        {sourceProgress[createdSource.id]?.total && sourceProgress[createdSource.id]?.total > 0 || createdData?.total_records > 0
-                                            ? sourceProgress[createdSource.id]?.total > 0
-                                                ? sourceProgress[createdSource.id]?.total.toLocaleString('en-US')
+                                        {sourceProgress[createdData.id]?.total && sourceProgress[createdData.id]?.total > 0 || createdData?.total_records > 0
+                                            ? sourceProgress[createdData.id]?.total > 0
+                                                ? sourceProgress[createdData.id]?.total.toLocaleString('en-US')
                                                 : createdData?.total_records?.toLocaleString('en-US')
                                             :  <ThreeDotsLoader />
                                             }
@@ -396,13 +396,13 @@ const SourcesList: React.FC = () => {
                                             Matched Records
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
-                                            {createdSource?.id && (sourceProgress[createdSource.id]?.processed && sourceProgress[createdSource.id]?.processed == sourceProgress[createdSource.id]?.total) || (createdData?.processed_records == createdData?.total_records && createdData?.processed_records !== 0)
-                                                ? sourceProgress[createdSource.id]?.matched > createdData?.matched_records 
-                                                    ? sourceProgress[createdSource.id]?.matched.toLocaleString('en-US')
+                                            {createdData?.id && (sourceProgress[createdData.id]?.processed && sourceProgress[createdData.id]?.processed == sourceProgress[createdData.id]?.total) || (createdData?.processed_records == createdData?.total_records && createdData?.processed_records !== 0)
+                                                ? sourceProgress[createdData.id]?.matched > createdData?.matched_records 
+                                                    ? sourceProgress[createdData.id]?.matched.toLocaleString('en-US')
                                                     : createdData.matched_records.toLocaleString('en-US')
                                                 :  createdData?.processed_records !== 0 
                                                     ? <ProgressBar progress={{total: createdData?.total_records, processed: createdData?.processed_records, matched: createdData?.matched_records}}/> 
-                                                    : <ProgressBar progress={sourceProgress[createdSource.id]}/> 
+                                                    : <ProgressBar progress={sourceProgress[createdData.id]}/> 
                                             }
                                         </Typography>
                                     </Box>
@@ -440,7 +440,7 @@ const SourcesList: React.FC = () => {
                                 <Button
                                     variant="contained"/* need chnage < on !== */
                                     disabled={ (createdData?.processed_records === 0) || (createdData?.processed_records !== createdData?.total_records) }
-                                    onClick={() => router.push(`/lookalikes/${createdSource?.id}/builder`)}
+                                    onClick={() => router.push(`/lookalikes/${createdData?.id}/builder`)}
                                     className='second-sub-title'
                                     sx={{
                                         backgroundColor: 'rgba(80, 82, 178, 1)',
@@ -522,7 +522,7 @@ const SourcesList: React.FC = () => {
                                     >
                                     <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
                                             handleClosePopover()
-                                            router.push(`/lookalikes/${createdSource?.id}/builder`)
+                                            router.push(`/lookalikes/${createdData?.id}/builder`)
                                         }}>
                                     <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Lookalike"/>
                                     </ListItemButton>

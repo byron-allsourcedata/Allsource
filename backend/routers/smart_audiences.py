@@ -147,3 +147,9 @@ def download_persons(
     if result:
         return StreamingResponse(result, media_type="text/csv", headers={"Content-Disposition": "attachment; filename=data.csv"})
     return BaseEnum.FAILURE
+
+@router.get("/get-processing-smart-source", response_model=Optional[SmartsResponse])
+def get_processing_source(
+        id: str = Query(...),
+        audience_smarts_service: AudienceSmartsService = Depends(get_audience_smarts_service)):
+    return audience_smarts_service.get_processing_source(id)
