@@ -218,9 +218,7 @@ async def process_email_leads(
         logging.info(f"Adding {len(matched_persons_to_add)} new persons to the database")
         db_session.bulk_save_objects(matched_persons_to_add)
 
-    processed_count = len(matched_persons_to_update) + len(matched_persons_to_add)
-    logging.info(f"Processed {processed_count} persons for source_id {source_id}")
-    return processed_count
+    return len(matched_persons_to_add)
 
 async def process_email_customer_conversion(persons: List[PersonRow], db_session: Session, source_id: str) -> int:
     return await process_email_leads(persons, db_session, source_id, include_amount=True)
