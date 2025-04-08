@@ -209,8 +209,8 @@ const SourcesList: React.FC = () => {
                                     gap: '8px'
                                 }
                             }}>
-                                <Button
-                                    variant="contained"/* need chnage < on !== */
+                                {/* <Button
+                                    variant="contained"
                                     // disabled={ (createdData?.processed_total_records === 0) || (createdData?.processed_total_records !== createdData?.total_records) }
                                     disabled={true}
                                     onClick={() => router.push(`/lookalikes/${createdSmartAudienceSource?.id}/builder`)}
@@ -231,7 +231,7 @@ const SourcesList: React.FC = () => {
                                     }}
                                 >
                                     Sync
-                                </Button>
+                                </Button> */}
                         </Box>
                     </Box>
                     <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -422,7 +422,6 @@ const SourcesList: React.FC = () => {
                                 </Button>
                                 <Button
                                     variant="contained"/* need chnage < on !== */
-                                    disabled={ (createdData?.processed_active_segment_records === 0) || (createdData?.processed_active_segment_records !== createdData?.total_records) }
                                     onClick={() => router.push(`/smart-audiences/builder`)}
                                     className='second-sub-title'
                                     sx={{
@@ -503,17 +502,17 @@ const SourcesList: React.FC = () => {
                                     sx={{ 
                                     width: '100%', maxWidth: 360}}
                                     >
-                                    <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
+                                    {/* <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
                                             handleClosePopover()
                                             // router.push(`/lookalikes/${createdSmartAudienceSource?.id}/builder`)
                                         }}>
-                                    <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Sync"/>
-                                    </ListItemButton>
-                                    <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
+                                        <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Sync"/>
+                                    </ListItemButton> */}
+                                    {/* <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
                                             // handleOpenConfirmDialog()
                                         }}>
-                                    <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Clone"/>
-                                    </ListItemButton>
+                                        <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Clone"/>
+                                    </ListItemButton> */}
                                     <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
                                             handleOpenConfirmDialog()
                                         }}>
