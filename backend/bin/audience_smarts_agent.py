@@ -7,6 +7,7 @@ import json
 import boto3
 from sqlalchemy import update
 from aio_pika import IncomingMessage, Message
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
@@ -54,32 +55,38 @@ async def aud_smarts_matching(message: IncomingMessage, db_session: Session, con
         aud_smart_id = message_body.get("aud_smart_id")
         enrichment_users_ids = message_body.get("enrichment_users_ids") or []
 
-        bulk_data = [
-            {"smart_audience_id": str(aud_smart_id), "enrichment_user_id": enrichment_user_id}
-            for enrichment_user_id in enrichment_users_ids
-        ]
+        try:
+            bulk_data = [
+                {"smart_audience_id": str(aud_smart_id), "enrichment_user_id": enrichment_user_id}
+                for enrichment_user_id in enrichment_users_ids
+            ]
 
-        db_session.bulk_insert_mappings(AudienceSmartPerson, bulk_data)
-        db_session.flush() 
+            db_session.bulk_insert_mappings(AudienceSmartPerson, bulk_data)
+            db_session.flush() 
 
-        logging.info(f"inserted {len(enrichment_users_ids)} persons") 
+            logging.info(f"inserted {len(enrichment_users_ids)} persons") 
 
-        processed_records = db_session.execute(
-            update(AudienceSmart)
-            .where(AudienceSmart.id == str(aud_smart_id))
-            .values(
-                processed_active_segment_records=(AudienceSmart.processed_active_segment_records + len(enrichment_users_ids))
-            )
-            .returning(AudienceSmart.processed_active_segment_records)
-        ).fetchone()
-                    
-        db_session.commit()
-            
-        processed_records_value = processed_records[0] if processed_records else 0
+            processed_records = db_session.execute(
+                update(AudienceSmart)
+                .where(AudienceSmart.id == str(aud_smart_id))
+                .values(
+                    processed_active_segment_records=(AudienceSmart.processed_active_segment_records + len(enrichment_users_ids))
+                )
+                .returning(AudienceSmart.processed_active_segment_records)
+            ).fetchone()
+                        
+            db_session.commit()
+                
+            processed_records_value = processed_records[0] if processed_records else 0
 
-        await send_sse(connection, user_id, {"smart_audience_id": aud_smart_id, "processed": processed_records_value})
-        logging.info(f"sent {len(enrichment_users_ids)} persons")
-        await message.ack()
+            await send_sse(connection, user_id, {"smart_audience_id": aud_smart_id, "processed": processed_records_value})
+            logging.info(f"sent {len(enrichment_users_ids)} persons")
+            await message.ack()
+    
+        except IntegrityError as e:
+            logging.warning(f"SmartAudience with ID {aud_smart_id} might have been deleted. Skipping.")
+            db_session.rollback()
+            await message.ack()
 
     except Exception as e:
         logging.error(f"Error processing matching: {e}", exc_info=True)
