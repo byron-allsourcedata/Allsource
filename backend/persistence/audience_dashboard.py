@@ -213,7 +213,7 @@ class DashboardAudiencePersistence:
         one_year_ago = datetime.now(timezone.utc) - timedelta(days=365)
 
         results = self.db.query(
-                func.date(LeadUser.created_at).label("date"),
+                func.date(LeadsVisits.start_date).label("date"),
                 LeadUser.behavior_type,
                 func.sum(
                     case(
@@ -230,10 +230,10 @@ class DashboardAudiencePersistence:
                 LeadUser.domain_id == domain_id
             )\
             .group_by(
-                func.date(LeadUser.created_at),
+                func.date(LeadsVisits.start_date),
                 LeadUser.behavior_type
             )\
-            .order_by(func.date(LeadUser.created_at))\
+            .order_by(func.date(LeadsVisits.start_date))\
             .all()
 
         return results
