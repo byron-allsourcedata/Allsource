@@ -139,8 +139,7 @@ class DashboardAudiencePersistence:
         ).order_by(AudienceSource.created_at.desc()).limit(5).all()
 
         lookalikes = self.db.query(
-            AudienceLookalikes.id.label('lookalike_id'),
-            AudienceSource.id.label('id'),
+            AudienceLookalikes.id.label('id'),
             AudienceSource.name.label('source_name'),
             AudienceLookalikes.name.label('lookalike_name'),
             AudienceLookalikes.created_date.label('created_at'),
@@ -194,52 +193,64 @@ class DashboardAudiencePersistence:
 
         return self.db.execute(stmt).all()
 
-    
     def get_last_smart_audiences_and_data_syncs(self, *, user_id, limit=5):        
-        audience_smart = self.db.query(
-            AudienceLookalikes.id.label('id'),
-            AudienceLookalikes.name.label('lookalike_name'),
-            AudienceSource.name.label('source_name'),
-            AudienceSmart.id.label('smart_audience_id'),
-            AudienceSmart.created_at.label('created_at'),
-            AudienceSmart.name.label('audience_name'),
-            AudienceSmartsUseCase.name.label('use_case'),
-            AudienceSmart.active_segment_records.label('active_segment'),
-            case(
-                (AudienceSmartsDataSources.data_type == 'include', 
-                func.string_agg(AudienceSource.name, ', ').label('include_names')),
-                else_=''
-            ).label('included'),
-            case(
-                (AudienceSmartsDataSources.data_type == 'exclude', 
-                func.string_agg(AudienceSource.name, ', ').label('exclude_names')),
-                else_=''
-            ).label('excluded')
-        ).outerjoin(
-            AudienceSmartsDataSources, AudienceSmartsDataSources.smart_audience_id == AudienceSmart.id
-        ).join(
-            AudienceSmartsUseCase, AudienceSmartsUseCase.id == AudienceSmart.use_case_id
-        ).outerjoin(
-            AudienceLookalikes, AudienceSmartsDataSources.lookalike_id == AudienceLookalikes.id
-        ).outerjoin(
-            AudienceSource, 
-            (AudienceSmartsDataSources.source_id == AudienceSource.id) | (AudienceLookalikes.source_uuid == AudienceSource.id)
-        )\
-        .filter(
-            AudienceSmart.user_id == user_id
-        ).group_by(
-            AudienceLookalikes.id,
-            AudienceSmart.id,
-            AudienceLookalikes.name,
-            AudienceSource.name,
-            AudienceSmart.created_at, 
-            AudienceSmart.name, 
-            AudienceSmartsUseCase.name, 
-            AudienceSmart.active_segment_records, 
-            AudienceSmartsDataSources.data_type
-        ).order_by(
-            AudienceSmart.created_at.desc()
-        ).limit(limit).all()
+        audience_smart = (
+            self.db.query(
+                AudienceSmart.id.label('id'),
+                AudienceLookalikes.name.label('lookalike_name'),
+                AudienceSmart.created_at.label('created_at'),
+                AudienceSmart.name.label('audience_name'),
+                AudienceSmartsUseCase.name.label('use_case'),
+                AudienceSmart.active_segment_records.label('active_segment'),
+                func.string_agg(
+                    case(
+                        (AudienceSmartsDataSources.data_type == 'include', AudienceSource.name),
+                        else_=AudienceLookalikes.name
+                    ),
+                    ', '
+                ).label('include_names'),
+                func.string_agg(
+                    case(
+                        (AudienceSmartsDataSources.data_type == 'exclude', AudienceSource.name),
+                        else_=AudienceLookalikes.name
+                    ),
+                    ', '
+                ).label('exclude_names'),
+            )
+            .outerjoin(
+                AudienceSmartsDataSources,
+                AudienceSmartsDataSources.smart_audience_id == AudienceSmart.id
+            )
+            .join(
+                AudienceSmartsUseCase,
+                AudienceSmartsUseCase.id == AudienceSmart.use_case_id
+            )
+            .outerjoin(
+                AudienceLookalikes,
+                AudienceSmartsDataSources.lookalike_id == AudienceLookalikes.id
+            )
+            .outerjoin(
+                AudienceSource,
+                (AudienceSmartsDataSources.source_id == AudienceSource.id) |
+                (AudienceLookalikes.source_uuid == AudienceSource.id)
+            )
+            .filter(
+                AudienceSmart.user_id == user_id
+            )
+            .group_by(
+                AudienceSmart.id,
+                AudienceLookalikes.name,
+                AudienceSmart.created_at,
+                AudienceSmart.name,
+                AudienceSmartsUseCase.name,
+                AudienceSmart.active_segment_records,
+            )
+            .order_by(
+                AudienceSmart.created_at.desc()
+            )
+            .limit(limit)
+            .all()
+        )
         
         data_syncs = self.db.query(
                         IntegrationUserSync.id.label('id'),

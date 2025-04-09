@@ -103,15 +103,19 @@ class DashboardAudienceService:
     def merge_data_with_chain(self, data, chains, data_id_field):
         result = []
         for row in data:
-            data_id = getattr(row, data_id_field, None)
+            data_id = row.get(data_id_field) if isinstance(row, dict) else getattr(row, data_id_field, None)
+            if isinstance(row, dict):
+                row_data = row
+            elif hasattr(row, '_asdict'):
+                row_data = row._asdict()
+            else:
+                row_data = {col: getattr(row, col) for col in dir(row)
+                            if not col.startswith("_") and not callable(getattr(row, col))}
+                
             matching_chain = next((chain for chain in chains if data_id in chain), None)
-            row_data = row._asdict() if hasattr(row, '_asdict') else dict(row)
             if matching_chain:
                 row_data['chain_ids'] = matching_chain
-                result.append(row_data)
-            else:
-                result.append(row_data)
-
+            result.append(row_data)
         return result
 
     def get_events(self, *, user: dict):
@@ -125,6 +129,7 @@ class DashboardAudienceService:
             limit=self.LIMIT
         )
         smart_audiences, data_syncs = self.dashboard_persistence.get_last_smart_audiences_and_data_syncs(user_id=user.get('id'), limit=self.LIMIT)
+        
         last_lookalikes_audience_smart = self.merge_and_sort(
             datasets=[(lookalikes, 'lookalikes', ['id', 'lookalike_size', 'lookalike_name', 'created_at', 'size']), 
                       ([smart_audience for smart_audience in smart_audiences if smart_audience[0]], 'smart_audience', ['id', 'lookalike_name', 'source_name', 'audience_name', 'created_at']),],
@@ -136,7 +141,7 @@ class DashboardAudienceService:
                       (data_syncs, 'data_syncs', ['id', 'audience_name', 'created_at'])],
             limit=self.LIMIT
         )
-                        
+      
         return {
             'sources': self.merge_data_with_chain(last_sources_lookalikes, data_syncs_chain, 'id'),
             'lookalikes': self.merge_data_with_chain(last_lookalikes_audience_smart, data_syncs_chain, 'id'),

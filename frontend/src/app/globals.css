@@ -228,10 +228,10 @@ body {
 .dashboard-card-heading {
   font-family: 'Nunito Sans';
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 140%;
   letter-spacing: 0%;
-  color: 'rgba(74,74,74,1)'
+  color: rgba(74,74,74,1)
 }
 .dashboard-card-text {
   font-family: 'Nunito Sans';
@@ -239,7 +239,7 @@ body {
   font-weight: 500;
   line-height: 140%;
   letter-spacing: 0%;
-  color: 'rgba(74,74,74,1)'
+  color: rgba(74,74,74,1)
 }
 .MuiInputLabel.MuiInputLabel-outlined {
   color: rgba(17, 17, 19, 0.6);
