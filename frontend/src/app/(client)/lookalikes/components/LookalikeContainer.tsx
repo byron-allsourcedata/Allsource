@@ -134,7 +134,7 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
             <TableCell>Name</TableCell>
             <TableCell>Source</TableCell>
             <TableCell>Source Type</TableCell>
-            <TableCell>Target Schema</TableCell>
+            <TableCell>Target Type</TableCell>
             <TableCell>Lookalike Size</TableCell>
             <TableCell>Created date</TableCell>
             <TableCell>Created By</TableCell>
@@ -266,10 +266,7 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
               <Box>Name: {row.lookalike_name}</Box>
               <Box> Source: {row.source}</Box>
               <Box> Source Type: {row.type}</Box>
-              <Box>
-                {" "}
-                Target Schema: {row.source_target_schema.toUpperCase()}
-              </Box>
+              <Box> Target Type: {row.source_target_schema.toUpperCase()}</Box>
               <Box> Lookalike Size: {row.lookalike_size}</Box>
               <Box> Created Date: {row.created_date}</Box>
               <Box> Created By: {row.created_by}</Box>

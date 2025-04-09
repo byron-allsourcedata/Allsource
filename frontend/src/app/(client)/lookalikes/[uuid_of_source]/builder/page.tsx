@@ -128,19 +128,6 @@ const CreateLookalikePage: React.FC = () => {
     setSourceName(event.target.value);
   };
 
-  const handleSliderChange = (newValue: number | number[]) => {
-    const value = newValue as number[];
-    setSliderValue(value);
-
-    const selectedRange = audienceSize.find(
-      (size) => value[1] >= size.min_value && value[1] <= size.max_value
-    );
-
-    if (selectedRange) {
-      setSelectedSize(selectedRange.id);
-    }
-  };
-
   const handleCancel = () => {
     router.push("/sources");
   };

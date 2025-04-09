@@ -230,7 +230,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
               { key: "name", label: "Name", sortable: true },
               { key: "source", label: "Source" },
               { key: "source_type", label: "Source Type" },
-              { key: "target_schema", label: "Target schema" },
+              { key: "target_schema", label: "Target Type" },
               { key: "lookalike_size", label: "Lookalike Size" },
               { key: "created_date", label: "Created Date", sortable: true },
               { key: "created_by", label: "Created By" },
