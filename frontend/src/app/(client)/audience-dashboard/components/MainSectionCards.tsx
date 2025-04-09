@@ -3,10 +3,18 @@ import { Card, CardContent, Typography, Box } from "@mui/material";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 
 interface CardData {
+  id: string;
+  chain_ids: string[];
   status: string;
   date: string;
   event_info: Record<string, string | number>;
   tabType: string;
+}
+
+interface MainSectionCardProps {
+  data: CardData;
+  onClick?: () => void;
+  highlighted?: boolean;
 }
 
 const getStatusColor = (status: string, tabType?: string): string => {
@@ -22,13 +30,18 @@ const getStatusColor = (status: string, tabType?: string): string => {
   return "";
 };
 
-const MainSectionCard: React.FC<{ data: CardData }> = ({ data }) => {
+const MainSectionCard: React.FC<MainSectionCardProps> = ({
+  data,
+  onClick,
+  highlighted = false,
+}) => {
   const { status, date, event_info, tabType } = data;
   const color = getStatusColor(status, tabType);
 
   const renderSection = (sectionData: Record<string, string | number>) =>
     Object.entries(sectionData)
-      .filter(([_, value]) => {
+      .filter(([key, value]) => {
+        if (["id", "chain_ids"].includes(key)) return false;
         if (typeof value === "number") return true;
         if (typeof value === "string") return value.trim() !== "";
         return false;
@@ -44,11 +57,14 @@ const MainSectionCard: React.FC<{ data: CardData }> = ({ data }) => {
 
   return (
     <Card
+      onClick={onClick}
       sx={{
         borderRadius: 2,
         boxShadow: "0px 1px 4px 0px rgba(0, 0, 0, 0.25)",
         padding: "1rem 1.5rem",
         maxWidth: "100%",
+        border: highlighted ? `2px solid rgba(5, 105, 226, 1)` : "transparent",
+        transition: "border 0.2s ease",
       }}
     >
       <CardContent

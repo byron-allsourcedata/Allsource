@@ -13,6 +13,8 @@ import MainSectionCard from "./components/MainSectionCards";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 
 interface EventCardData {
+  id: string;
+  chain_ids: string[];
   status: string;
   date: string;
   event_info: Record<string, string | number>;
@@ -39,6 +41,7 @@ const AudienceDashboard: React.FC = () => {
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const { hasNotification } = useNotification();
   const [loading, setLoading] = useState(true);
+  const [activeChainIds, setActiveChainIds] = useState<string[]>([]);
   const [eventCards, setEventCards] = useState<Record<string, EventCardData[]>>(
     {
       lookalikes: [],
@@ -110,7 +113,7 @@ const AudienceDashboard: React.FC = () => {
       const eventInfoBuilder = (
         event: Record<string, any>
       ): Record<string, string | number> => {
-        const excludeKeys = ["created_at", "type"];
+        const excludeKeys = ["created_at", "type", "id", "chain_ids"];
 
         return Object.entries(event)
           .filter(([key]) => !excludeKeys.includes(key))
@@ -147,6 +150,8 @@ const AudienceDashboard: React.FC = () => {
           const type = event.type ?? tabType;
 
           groupedCards[tabType].push({
+            id: event.id,
+            chain_ids: event.chain_ids ?? [],
             status: formatKey(buildStatus(type, tabType)),
             date: formatDate(event.created_at),
             event_info: eventInfoBuilder(event),
@@ -367,7 +372,18 @@ const AudienceDashboard: React.FC = () => {
                   <Grid item xs={12} md={2.4}>
                     {eventCards.sources.map((card, index) => (
                       <Box key={index} mt={1}>
-                        <MainSectionCard data={card} />
+                        <MainSectionCard
+                          key={card.id}
+                          data={card}
+                          highlighted={activeChainIds.includes(card.id)}
+                          onClick={() => {
+                            if (activeChainIds.includes(card.id)) {
+                              setActiveChainIds([]);
+                            } else {
+                              setActiveChainIds(card.chain_ids);
+                            }
+                          }}
+                        />
                       </Box>
                     ))}
                   </Grid>
@@ -375,21 +391,54 @@ const AudienceDashboard: React.FC = () => {
                   <Grid item xs={12} md={2.4}>
                     {eventCards.lookalikes.map((card, index) => (
                       <Box key={index} mt={1}>
-                        <MainSectionCard data={card} />
+                        <MainSectionCard
+                          key={card.id}
+                          data={card}
+                          highlighted={activeChainIds.includes(card.id)}
+                          onClick={() => {
+                            if (activeChainIds.includes(card.id)) {
+                              setActiveChainIds([]);
+                            } else {
+                              setActiveChainIds(card.chain_ids);
+                            }
+                          }}
+                        />
                       </Box>
                     ))}
                   </Grid>
                   <Grid item xs={12} md={2.4}>
                     {eventCards.smart_audience.map((card, index) => (
                       <Box key={index} mt={1}>
-                        <MainSectionCard data={card} />
+                        <MainSectionCard
+                          key={card.id}
+                          data={card}
+                          highlighted={activeChainIds.includes(card.id)}
+                          onClick={() => {
+                            if (activeChainIds.includes(card.id)) {
+                              setActiveChainIds([]);
+                            } else {
+                              setActiveChainIds(card.chain_ids);
+                            }
+                          }}
+                        />
                       </Box>
                     ))}
                   </Grid>
                   <Grid item xs={12} md={2.4}>
                     {eventCards.data_sync.map((card, index) => (
                       <Box key={index} mt={1}>
-                        <MainSectionCard data={card} />
+                        <MainSectionCard
+                          key={card.id}
+                          data={card}
+                          highlighted={activeChainIds.includes(card.id)}
+                          onClick={() => {
+                            if (activeChainIds.includes(card.id)) {
+                              setActiveChainIds([]);
+                            } else {
+                              setActiveChainIds(card.chain_ids);
+                            }
+                          }}
+                        />
                       </Box>
                     ))}
                   </Grid>
