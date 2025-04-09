@@ -67,7 +67,7 @@ const MainSectionCard: React.FC<MainSectionCardProps> = ({
         transition: "border 0.2s ease",
         cursor: "pointer",
         "&:hover": {
-          border: "2px solid rgba(5, 105, 226, 1)",
+          border: `1px solid rgba(5, 105, 226, 1)`,
           transition: "none",
         },
       }}

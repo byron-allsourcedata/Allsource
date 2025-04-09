@@ -1,6 +1,15 @@
 import React from "react";
-import { Table, TableBody, TableCell, TableHead, TableRow, Paper, TableContainer, Box } from "@mui/material";
-import ProgressBar from './ProgressLoader';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Paper,
+  TableContainer,
+  Box,
+} from "@mui/material";
+import ProgressBar from "./ProgressLoader";
 import dayjs from "dayjs";
 
 interface TableData {
@@ -20,15 +29,15 @@ interface TableContainerProps {
 
 const setSourceType = (sourceType: string) => {
   return sourceType
-    ?.split(',')
-    .map(item =>
+    ?.split(",")
+    .map((item) =>
       item
-        .split('_')
-        .map(subItem => subItem.charAt(0).toUpperCase() + subItem.slice(1))
-        .join(' ')
+        .split("_")
+        .map((subItem) => subItem.charAt(0).toUpperCase() + subItem.slice(1))
+        .join(" ")
     )
-    .join(', ');
-}
+    .join(", ");
+};
 
 const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
   return (
@@ -69,7 +78,7 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
         >
           <TableRow>
             <TableCell>Name</TableCell>
-            <TableCell>Target Schema</TableCell>
+            <TableCell>Target Type</TableCell>
             <TableCell>Source</TableCell>
             <TableCell>Type</TableCell>
             <TableCell>Created date</TableCell>
@@ -97,7 +106,9 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
               <TableCell>{row.target_schema.toUpperCase()}</TableCell>
               <TableCell>{setSourceType(row.source)}</TableCell>
               <TableCell>{setSourceType(row.type)}</TableCell>
-              <TableCell>{dayjs(row.created_date).format('MMM D, YYYY')}</TableCell>
+              <TableCell>
+                {dayjs(row.created_date).format("MMM D, YYYY")}
+              </TableCell>
               <TableCell>{row.created_by}</TableCell>
               <TableCell>{row.number_of_customers}</TableCell>
               <TableCell>{row.matched_records}</TableCell>
@@ -121,15 +132,14 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
               backgroundColor: "#FFF",
             }}
           >
-
             <Box sx={{ display: "flex", flexDirection: "column", gap: "4px" }}>
               <Box>Name: {row.name}</Box>
               <Box> Source: {row.source}</Box>
-              <Box> Type:  {row.type}</Box>
-              <Box> Created Date:  {row.created_date}</Box>
-              <Box> Created By:  {row.created_by}</Box>
-              <Box> Number of Customers:  {row.number_of_customers}</Box>
-              <Box> Matched Records:  {row.matched_records}</Box>
+              <Box> Type: {row.type}</Box>
+              <Box> Created Date: {row.created_date}</Box>
+              <Box> Created By: {row.created_by}</Box>
+              <Box> Number of Customers: {row.number_of_customers}</Box>
+              <Box> Matched Records: {row.matched_records}</Box>
             </Box>
           </Box>
         ))}
