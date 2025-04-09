@@ -204,7 +204,7 @@ class DashboardAudiencePersistence:
                         UserIntegration.user_id == user_id,
                         AudienceSmart.status == AudienceSmartStatuses.SYNCED.value,
                     )\
-                    .order_by(IntegrationUserSync.created_at.desc()).limit(limit).all()
+                    .order_by(IntegrationUserSync.last_sync_date.desc()).limit(limit).all()
                     
         return audience_smart, data_syncs
                          
