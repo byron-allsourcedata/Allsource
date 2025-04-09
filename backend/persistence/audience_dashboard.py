@@ -128,7 +128,7 @@ class DashboardAudiencePersistence:
             
     def get_last_sources_and_lookalikes(self, *, user_id, limit=5):
         sources = self.db.query(
-            AudienceSource.id.label('id'),
+            AudienceSource.id.label('source_id'),
             AudienceSource.name.label('source_name'),
             AudienceSource.created_at.label('created_at'),
             AudienceSource.source_type.label('source_type'),
@@ -140,7 +140,7 @@ class DashboardAudiencePersistence:
 
         lookalikes = self.db.query(
             AudienceLookalikes.id.label('lookalike_id'),
-            AudienceSource.id.label('id'),
+            AudienceSource.id.label('source_id'),
             AudienceSource.name.label('source_name'),
             AudienceLookalikes.name.label('lookalike_name'),
             AudienceLookalikes.created_date.label('created_at'),
@@ -197,7 +197,7 @@ class DashboardAudiencePersistence:
     
     def get_last_smart_audiences_and_data_syncs(self, *, user_id, limit=5):        
         audience_smart = self.db.query(
-            AudienceLookalikes.id.label('id'),
+            AudienceLookalikes.id.label('lookalikes_id'),
             AudienceLookalikes.name.label('lookalike_name'),
             AudienceSource.name.label('source_name'),
             AudienceSmart.id.label('smart_audience_id'),
@@ -242,8 +242,9 @@ class DashboardAudiencePersistence:
         ).limit(limit).all()
         
         data_syncs = self.db.query(
-                        IntegrationUserSync.id.label('id'),
+                        IntegrationUserSync.id.label('data_sync_id'),
                         AudienceSmart.name.label('audience_name'),
+                        AudienceSmart.id.label('smart_audience_id'),
                         AudienceSmart.status.label('audience_status'),
                         IntegrationUserSync.created_at.label('created_at'),
                         IntegrationUserSync.sent_contacts.label('synced_contacts'),
