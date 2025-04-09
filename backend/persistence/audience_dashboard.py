@@ -193,7 +193,6 @@ class DashboardAudiencePersistence:
 
         return self.db.execute(stmt).all()
 
-    
     def get_last_smart_audiences_and_data_syncs(self, *, user_id, limit=5):        
         audience_smart = (
             self.db.query(
@@ -202,13 +201,21 @@ class DashboardAudiencePersistence:
                 AudienceSmart.created_at.label('created_at'),
                 AudienceSmart.name.label('audience_name'),
                 AudienceSmartsUseCase.name.label('use_case'),
-                AudienceSmart.active_segment_records .label('active_segment'),
-                func.string_agg(AudienceSource.name, ', ')
-                    .filter(AudienceSmartsDataSources.data_type == 'include')
-                    .label('include_names'),
-                func.string_agg(AudienceSource.name, ', ')
-                    .filter(AudienceSmartsDataSources.data_type == 'exclude')
-                    .label('exclude_names'),
+                AudienceSmart.active_segment_records.label('active_segment'),
+                func.string_agg(
+                    case(
+                        (AudienceSmartsDataSources.data_type == 'include', AudienceSource.name),
+                        else_=AudienceLookalikes.name
+                    ),
+                    ', '
+                ).label('include_names'),
+                func.string_agg(
+                    case(
+                        (AudienceSmartsDataSources.data_type == 'exclude', AudienceSource.name),
+                        else_=AudienceLookalikes.name
+                    ),
+                    ', '
+                ).label('exclude_names'),
             )
             .outerjoin(
                 AudienceSmartsDataSources,
@@ -224,16 +231,15 @@ class DashboardAudiencePersistence:
             )
             .outerjoin(
                 AudienceSource,
-                (AudienceSmartsDataSources.source_id   == AudienceSource.id) |
-                (AudienceLookalikes.source_uuid       == AudienceSource.id)
+                (AudienceSmartsDataSources.source_id == AudienceSource.id) |
+                (AudienceLookalikes.source_uuid == AudienceSource.id)
             )
             .filter(
                 AudienceSmart.user_id == user_id
             )
             .group_by(
-                AudienceLookalikes.id,
-                AudienceLookalikes.name,
                 AudienceSmart.id,
+                AudienceLookalikes.name,
                 AudienceSmart.created_at,
                 AudienceSmart.name,
                 AudienceSmartsUseCase.name,
