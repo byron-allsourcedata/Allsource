@@ -22,12 +22,13 @@ class AudienceLookalikesService:
             sources, created_by = source_info
             return {
                 'name': sources.name,
-                 'source': sources.source_origin,
-                 'type': sources.source_type,
-                 'created_date': sources.created_at,
+                'target_schema': sources.target_schema,
+                'source': sources.source_origin,
+                'type': sources.source_type,
+                'created_date': sources.created_at,
                 'created_by': created_by,
                 'number_of_customers': sources.total_records,
-                 'matched_records': sources.matched_records,
+                'matched_records': sources.matched_records,
             }
         return {}
 
@@ -36,6 +37,7 @@ class AudienceLookalikesService:
         result = [
             {'id': source.id,
              'name': source.name,
+             'target_schema': source.target_schema,
              'source': source.source_origin,
              'type': source.source_type,
              'created_date': source.created_at,
@@ -58,9 +60,9 @@ class AudienceLookalikesService:
         except IntegrityError:
             raise HTTPException(status_code=400, detail="Cannot remove lookalike because it is used for smart audience")
 
-    def create_lookalike(self, user, uuid_of_source, lookalike_size, lookalike_name, target_schema, created_by_user_id):
+    def create_lookalike(self, user, uuid_of_source, lookalike_size, lookalike_name, created_by_user_id):
         lookalike = self.lookalikes_persistence_service.create_lookalike(
-            uuid_of_source, user.get('id'), lookalike_size, lookalike_name, target_schema, created_by_user_id
+            uuid_of_source, user.get('id'), lookalike_size, lookalike_name, created_by_user_id
         )
         return {
             'status': BaseEnum.SUCCESS.value,
