@@ -6,12 +6,13 @@ import csv
 
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
-from schemas.audience import SmartsAudienceObjectResponse, DataSourcesFormat, DataSourcesResponse
+from schemas.audience import SmartsAudienceObjectResponse, DataSourcesFormat, DataSourcesResponse, SmartsResponse
 from persistence.audience_smarts import AudienceSmartsPersistence
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from models.users import User
 from enums import AudienceSmartDataSource, QueueName
 from uuid import UUID
+from enums import AudienceSmartStatuses
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +65,7 @@ class AudienceSmartsService:
                 'active_segment_records': item[7],
                 'status': item[8],
                 'integrations': integrations,
-                'processed_total_records': item[10],
+                'processed_active_segment_records': item[10],
             })
 
         return audience_smarts_list, count
@@ -115,7 +116,7 @@ class AudienceSmartsService:
             aud_smart_id: UUID, 
             user_id: int, 
             data_sources: dict, 
-            contacts_to_validate: int
+            active_segment_records: int
         ):
 
         queue_name = QueueName.AUDIENCE_SMARTS_FILLER.value
@@ -125,7 +126,7 @@ class AudienceSmartsService:
             'aud_smart_id': str(aud_smart_id),
             'user_id': user_id,
             'data_sources': self.transform_datasource(data_sources),
-            "active_segment": contacts_to_validate
+            "active_segment": active_segment_records
         }
             
         try:
@@ -148,9 +149,20 @@ class AudienceSmartsService:
             use_case_alias: str,
             data_sources: List[dict],
             validation_params: Optional[dict],
-            contacts_to_validate: Optional[int],
-            total_records: int
-    ):
+            active_segment_records: int,
+            total_records: int,
+            is_validate_skip: Optional[bool] = None,
+            contacts_to_validate: Optional[int] = None,
+    ) -> SmartsResponse:
+
+
+        if is_validate_skip:
+            status = AudienceSmartStatuses.UNVALIDATED.value
+        elif not contacts_to_validate:
+            status = AudienceSmartStatuses.N_A.value
+        else:
+            status = AudienceSmartStatuses.VALIDATING.value
+
 
         created_data = self.audience_smarts_persistence.create_audience_smart(
             name=name,
@@ -159,11 +171,18 @@ class AudienceSmartsService:
             use_case_alias=use_case_alias,
             validation_params=validation_params,
             data_sources=data_sources,
-            contacts_to_validate=contacts_to_validate,
-            total_records=total_records
+            active_segment_records=active_segment_records,
+            total_records=total_records,
+            status=status
         )
-        await self.start_scripts_for_matching(created_data.id, user.get("id"), data_sources, total_records)
-        return created_data
+        await self.start_scripts_for_matching(created_data.id, user.get("id"), data_sources, active_segment_records)
+
+        return SmartsResponse(
+            id=created_data.id, name=created_data.name, use_case_alias=use_case_alias, created_by=user.get('full_name'),
+            created_at=created_data.created_at, total_records=created_data.total_records,
+            validated_records=created_data.validated_records, active_segment_records=created_data.active_segment_records,
+            processed_active_segment_records=created_data.processed_active_segment_records, status=created_data.status, integrations=None
+        )
 
 
     def calculate_smart_audience(self, raw_data_sources: dict) -> int:
@@ -241,3 +260,27 @@ class AudienceSmartsService:
 
         output.seek(0)
         return output
+
+    def get_processing_source(self, id: str) -> Optional[SmartsResponse]:
+        smart_source = self.audience_smarts_persistence.get_processing_sources(id)
+        if not smart_source:
+            return None
+
+        (source_id, name, use_case_alias, created_by, created_at,
+         total_records, validated_records,
+         active_segment_records, processed_active_segment_records,
+         status) = smart_source
+
+        return SmartsResponse(
+            id=source_id,
+            name=name,
+            use_case_alias=use_case_alias,
+            created_by=created_by,
+            created_at=created_at,
+            total_records=total_records,
+            validated_records=validated_records,
+            active_segment_records=active_segment_records,
+            processed_active_segment_records=processed_active_segment_records,
+            status=status,
+            integrations=None
+        )

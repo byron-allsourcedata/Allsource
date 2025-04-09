@@ -67,6 +67,10 @@ const toSnakeCase = (str: string) => {
     .toLowerCase();
 };
 
+const formatNumber = (value: string) => {
+  return value.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+};
+
 const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
   useCaseType,
   sourceData,
@@ -196,6 +200,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
         data_sources: selectedSources,
         smart_audience_name: audienceName,
         total_records: AudienceSize,
+        active_segment_records: AudienceSize
       };
 
       const filteredRequestData = Object.fromEntries(
@@ -208,9 +213,10 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
         "/audience-smarts/builder",
         filteredRequestData
       );
-      if (response.data.status === "SUCCESS") {
+      if (response.status === 200) {
         showToast("New Smart Audience successfully created");
-        router.push("/smart-audiences");
+        const dataString = encodeURIComponent(JSON.stringify(response.data));
+        router.push(`/smart-audiences/smart-audience-created?data=${dataString}`);
       }
     } catch {
       showErrorToast("An error occurred while creating a new Smart Audience");
@@ -316,7 +322,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
                 size="small"
                 margin="none"
                 variant="outlined"
-                value={AudienceSize}
+                value={formatNumber(AudienceSize ? AudienceSize.toString() : "0")}
                 disabled
                 sx={{
                   maxHeight: "40px",

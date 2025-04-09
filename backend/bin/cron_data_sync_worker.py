@@ -36,13 +36,16 @@ load_dotenv()
 
 CRON_DATA_SYNC_LEADS = 'cron_data_sync_leads'
 
-
+for handler in logging.root.handlers[:]:
+    logging.root.removeHandler(handler)
+    
 def setup_logging(level):
     logging.basicConfig(
         level=level,
         format='%(asctime)s - %(levelname)s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
+
 
 def check_correct_data_sync(five_x_five_up_id: str, lead_users_id: int, data_sync_imported_id: int, session: Session):
     data_sync_imported_lead = session.query(DataSyncImportedLeads).filter(DataSyncImportedLeads.id==data_sync_imported_id).first()
@@ -89,15 +92,19 @@ def update_users_integrations(session, status, integration_data_sync_id, service
         
     if status == ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
         logging.info(f"Authentication failed for  user_domain_integration_id {user_domain_integration_id}")
-        if service_name != SourcePlatformEnum.WEBHOOK.value:
+        if service_name == SourcePlatformEnum.WEBHOOK.value:
+            session.query(IntegrationUserSync).filter(IntegrationUserSync.id == integration_data_sync_id).update({
+                'sync_status': False,
+                })
+        else:
             session.query(UserIntegration).filter(UserIntegration.id == user_domain_integration_id).update({
                 'is_failed': True,
                 'error_message': status
                 })
             
-        session.query(IntegrationUserSync).filter(IntegrationUserSync.integration_id == user_domain_integration_id).update({
-            'sync_status': False,
-            })
+            session.query(IntegrationUserSync).filter(IntegrationUserSync.integration_id == user_domain_integration_id).update({
+                'sync_status': False,
+                })
         session.commit()
         
 def update_data_sync_imported_leads(session, status, data_sync_imported_id, integration_data_sync: IntegrationUserSync, user_integration: UserIntegration):
@@ -122,7 +129,7 @@ async def send_error_msg(user_id: int, service_name: str, notification_persisten
     queue_name = f"sse_events_{str(user_id)}"
     account_notification = notification_persistence.get_account_notification_by_title(title)
     notification_text = account_notification.text.format(service_name)
-    notification = notification_persistence.find_account_with_notification(user_id=user_id, account_notification_id=account_notification.id, params=service_name)
+    notification = notification_persistence.find_account_with_notification(user_id=user_id, account_notification_id=account_notification.id)
     if not notification:
         save_account_notification = notification_persistence.save_account_notification(user_id=user_id, account_notification_id=account_notification.id, params=service_name)
         try:
@@ -138,15 +145,16 @@ async def send_error_msg(user_id: int, service_name: str, notification_persisten
 
 async def ensure_integration(message: IncomingMessage, integration_service: IntegrationService, session: Session, notification_persistence: NotificationPersistence):
     try:
-        logging.info(f"Start ensure integration")
         message_body = json.loads(message.body)
         service_name = message_body.get('service_name')
         five_x_five_up_id = message_body.get('five_x_five_up_id')
         lead_users_id = message_body.get('lead_users_id')
         data_sync_imported_id = message_body.get('data_sync_imported_id')
         data_sync_id = message_body.get('data_sync_id')
+        logging.info(f"Data sync id {data_sync_id}")
+        logging.info(f"Lead User id {lead_users_id}")
         if not check_correct_data_sync(five_x_five_up_id, lead_users_id, data_sync_imported_id, session):
-            logging.info(f"Data sync not correct")
+            logging.warning(f"Data sync not correct")
             await message.ack()
             return
         
@@ -164,21 +172,17 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
             'sales_force': integration_service.sales_force,
             's3': integration_service.s3
         }
-        
         service = service_map.get(service_name)
         lead_user, five_x_five_user, user_integration, integration_data_sync = get_lead_attributes(session, lead_users_id, data_sync_id)
         if service:
             result = None
             try:
                 result = await service.process_data_sync(five_x_five_user, user_integration, integration_data_sync, lead_user)
-            except requests.HTTPError as e:
-                logging.error(f"{e}", exc_info=True)
-                await message.ack()
-                return
+                logging.info(f"Result {result}")
             except BaseException as e:
                 logging.error(f"Error processing data sync: {e}", exc_info=True)
                 await message.ack()
-                return
+                raise
 
             import_status = DataSyncImportedStatus.SENT.value
             match result:
@@ -227,7 +231,7 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
         await asyncio.sleep(5)
         await message.reject(requeue=True)
     
-async def main():
+async def main():    
     log_level = logging.INFO
     if len(sys.argv) > 1:
         arg = sys.argv[1].upper()
@@ -279,7 +283,7 @@ async def main():
             )
             await asyncio.Future()
 
-    except Exception as err:
+    except BaseException as e:
         logging.error('Unhandled Exception:', exc_info=True)
 
     finally:
@@ -290,6 +294,7 @@ async def main():
             logging.info("Closing RabbitMQ connection...")
             await rabbitmq_connection.close()
         logging.info("Shutting down...")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

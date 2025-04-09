@@ -5,49 +5,49 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import dayjs from 'dayjs';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
-import ThreeDotsLoader from '../components/ThreeDotsLoader';
 import { useNotification } from '@/context/NotificationContext';
 import { useSSE } from '../../../../context/SSEContext';
 import { MoreVert } from '@mui/icons-material';
 import { SliderProvider } from '../../../../context/SliderContext';
-import ProgressBar from '../components/ProgressLoader';
 import { showToast, showErrorToast } from '@/components/ToastNotification';
+import ProgressBar from '../../sources/components/ProgressLoader';
+import ThreeDotsLoader from '../../sources/components/ThreeDotsLoader';
+import { getUseCaseIcon } from '../components/utils/getUseCaseIcon'
+import Image from 'next/image';
+import { getStatusStyle } from '../components/utils/getStatusStyle';
 
-interface Source {
-    id: string
-    name: string
-    source_origin: string
-    source_type: string
-    created_at: Date
-    domain: string
-    created_by: string
-    processed_records: number
-    total_records: number
-    matched_records: number
-    matched_records_status: string
+interface SmartAudienceSource {
+    id: string,
+    name: string,
+    use_case_alias: string,
+    created_by: string,
+    created_at: Date,
+    total_records: number,
+    validated_records: number,
+    active_segment_records: number,
+    processed_active_segment_records: number,
+    status: string,
+    integrations: string[] | null
 }
 
 const SourcesList: React.FC = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const data = searchParams.get('data'); 
-    const createdSource = data ? JSON.parse(data) : null;
+    const createdSmartAudienceSource: SmartAudienceSource = data ? JSON.parse(data) : null;
     const { hasNotification } = useNotification();
     const [loading, setLoading] = useState(false);
-    const [createdData, setCreatedData] = useState<Source>(createdSource);
+
+    const [createdData, setCreatedData] = useState<SmartAudienceSource>(createdSmartAudienceSource);
     const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [anchorElFullName, setAnchorElFullName] = React.useState<null | HTMLElement>(null);
     const [selectedName, setSelectedName] = React.useState<string | null>(null);
-    const { sourceProgress } = useSSE();
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
     const isOpenFullName = Boolean(anchorElFullName);
 
-    const handleOpenPopoverFullName = (event: React.MouseEvent<HTMLElement>, industry: string) => {
-        setSelectedName(industry);
-        setAnchorElFullName(event.currentTarget);
-    };
+    const { smartAudienceProgress } = useSSE();
+    const progress = smartAudienceProgress[createdData.id];
 
     const handleClosePopoverFullName = () => {
         setAnchorElFullName(null);
@@ -55,13 +55,13 @@ const SourcesList: React.FC = () => {
     };
 
     useEffect(() => {
-        console.log("longpol");
+        console.log("pooling");
     
         if (!intervalRef.current) {
-            console.log("longpol started");
+            console.log("pooling started");
             intervalRef.current = setInterval(() => {
-                const hasPending = createdData?.matched_records_status === "pending";
-    
+                const hasPending = createdData.active_segment_records !== createdData.processed_active_segment_records;
+                
                 if (hasPending) {
                     console.log("Fetching due to pending records");
                 
@@ -88,10 +88,12 @@ const SourcesList: React.FC = () => {
 
     const fetchData = async () => {
         try {
-            const response = await axiosInstance.get(`/audience-sources/get-processing-source?&id=${createdData.id}`)
-            const updatedItem = response.data
-
-            setCreatedData(updatedItem);
+            if (createdData) {
+                const response = await axiosInstance.get(`/audience-smarts/get-processing-smart-source?&id=${createdData.id}`)
+                const updatedItem = response.data
+                console.log(updatedItem)
+                setCreatedData(updatedItem);
+            }
         } catch (error) {
             console.error('Failed to fetch data:', error);
         }
@@ -109,19 +111,14 @@ const SourcesList: React.FC = () => {
 
     const isOpen = Boolean(anchorEl);
 
-
-    const setSourceOrigin = (sourceOrigin: string) => {
-        return sourceOrigin === "pixel" ? "Pixel" : "CSV File"
-    }
-
     const handleDeleteSource = async () => {
         setLoading(true);
         try {
             if (createdData && createdData.id) {
-                const response = await axiosInstance.delete(`/audience-sources/${createdData.id}`);
+                const response = await axiosInstance.delete(`/audience-smarts/${createdData.id}`);
                 if (response.status === 200 && response.data) {
                     showToast("Source successfully deleted!");
-                    router.push("/sources")
+                    router.push("/smart-audiences")
                 }
             }
         } catch {
@@ -141,29 +138,20 @@ const SourcesList: React.FC = () => {
         setOpenConfirmDialog(false);
     };
 
-    const setSourceType = (sourceType: string) => {
-        return sourceType
-            .split(',')
-            .map(item =>
-                item
-                    .split('_')
-                    .map(subItem => subItem.charAt(0).toUpperCase() + subItem.slice(1))
-                    .join(' ')
-            )
-            .join(', ');
-    }
-
-    const truncateText = (text: string, maxLength: number) => {
-        return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
-    };
 
     const buttonClickAllSources = () => {
-        if (sessionStorage.getItem('filtersBySource')) {
-            sessionStorage.setItem('filtersBySource', JSON.stringify({}));
+        if (sessionStorage.getItem('filtersBySmarts')) {
+            sessionStorage.setItem('filtersBySmarts', JSON.stringify({}));
         }
-        router.push("/sources")
+        router.push("/smart-audiences")
     }
 
+    const preRenderStatus = (status: string) => {
+        if (status === "N_a") {
+            return "Ready"
+        }
+        return status
+    }
     return (
         <>
             {loading && (
@@ -193,7 +181,7 @@ const SourcesList: React.FC = () => {
                         }}>
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
                             <Typography className='first-sub-title'>
-                                Created Source  
+                                Generate Smart Audience
                             </Typography>
                         </Box>
                         <Box sx={{
@@ -202,28 +190,29 @@ const SourcesList: React.FC = () => {
                                     gap: '8px'
                                 }
                             }}>
-                                <Button
-                                    variant="outlined"
+                                {/* <Button
+                                    variant="contained"
+                                    // disabled={ (createdData?.processed_total_records === 0) || (createdData?.processed_total_records !== createdData?.total_records) }
+                                    disabled={true}
+                                    onClick={() => router.push(`/lookalikes/${createdData?.id}/builder`)}
+                                    className='second-sub-title'
                                     sx={{
-                                        height: '40px',
-                                        borderRadius: '4px',
+                                        backgroundColor: 'rgba(80, 82, 178, 1)',
                                         textTransform: 'none',
-                                        fontSize: '14px',
-                                        lineHeight: "19.6px",
-                                        fontWeight: '500',
-                                        color: '#5052B2',
-                                        borderColor: '#5052B2',
-                                        '&:hover': {
-                                            backgroundColor: 'rgba(80, 82, 178, 0.1)',
-                                            borderColor: '#5052B2',
+                                        padding: '10px 24px',
+                                        color: '#fff !important',
+                                        ":hover": {
+                                            backgroundColor: "rgba(62, 64, 142, 1)"},
+                                        ":active": {
+                                            backgroundColor: "rgba(80, 82, 178, 1)"},
+                                        ":disabled": {
+                                            backgroundColor: "rgba(80, 82, 178, 1)",
+                                            opacity: 0.6,
                                         },
                                     }}
-                                    onClick={() => {
-                                        router.push("/sources/builder")
-                                    }}
                                 >
-                                    Add Another Source
-                                </Button>
+                                    Sync
+                                </Button> */}
                         </Box>
                     </Box>
                     <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -281,16 +270,34 @@ const SourcesList: React.FC = () => {
                                             {createdData?.name}
                                         </Typography>
                                     </Box>
-                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
+                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1, alignItems: 'center'}}>
                                         <Typography
                                             variant="body2"
                                             className="table-heading"
                                             sx={{ textAlign: "left" }}
                                         >
-                                            Source
+                                            Use Case
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
-                                            {setSourceOrigin(createdData?.source_origin)}
+                                            {/* {setSourceOrigin(createdData?.source_origin)} */}
+                                            {getUseCaseIcon(createdData?.use_case_alias || "")}
+                                        </Typography>
+                                    </Box>
+
+                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1, alignItems: 'center'}}>
+                                        <Typography
+                                            variant="body2"
+                                            className="table-heading"
+                                            sx={{ textAlign: "left" }}
+                                        >
+                                            Validations
+                                        </Typography>
+                                        <Typography variant="subtitle1" className="table-data">
+                                        {createdData?.status === "unvalidated" 
+                                        ? <Image src="./danger_yellow.svg" alt='danger' width={20} height={20}/>
+                                        : createdData?.validated_records === 0 
+                                            ? "NA" 
+                                            : createdData?.active_segment_records.toLocaleString('en-US')}
                                         </Typography>
                                     </Box>
 
@@ -300,55 +307,22 @@ const SourcesList: React.FC = () => {
                                             className="table-heading"
                                             sx={{ textAlign: "left" }}
                                         >
-                                            Domain
+                                            Created
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
-                                            {createdData?.domain ?? "--"}
+                                        {createdData?.created_by + ", " + 
+                                        (dayjs(createdData?.created_at).isValid() 
+                                        ? dayjs(createdData?.created_at).format('MMM D, YYYY') 
+                                        : '--')}
                                         </Typography>
                                     </Box>
 
                                     <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
                                         <Typography variant="body2" className="table-heading">
-                                            Type
+                                            Total Universe
                                         </Typography>
-                                        <Typography variant="subtitle1" className="table-data" sx={{cursor: "pointer"}} onClick={(e) => createdData?.source_type ? handleOpenPopoverFullName(e, setSourceType(createdData?.source_type)) : {}}>
-                                            <Tooltip
-                                                title={
-                                                    <Box sx={{ backgroundColor: '#fff', margin: 0, padding: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', }}>
-                                                        <Typography className='table-data' component='div' sx={{ fontSize: '12px !important', }}>
-                                                        {setSourceType(createdData?.source_type)}
-                                                        </Typography>
-                                                    </Box>
-                                                    }
-                                                sx={{marginLeft:'0.5rem !important'}}
-                                                componentsProps={{
-                                                    tooltip: {
-                                                        sx: {
-                                                            backgroundColor: '#fff',
-                                                            color: '#000',
-                                                            boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
-                                                            border: '0.2px solid rgba(255, 255, 255, 1)',
-                                                            borderRadius: '4px',
-                                                            maxHeight: '100%',
-                                                            maxWidth: '500px',
-                                                            padding: '11px 10px',
-                                                            marginLeft: '0.5rem !important',
-                                                        },
-                                                    },
-                                                }}
-                                                placement='right'
-                                            >
-                                                <Typography className='table-data'
-                                                    sx={{
-                                                        whiteSpace: 'nowrap',
-                                                        overflow: 'hidden',
-                                                        textOverflow: 'ellipsis',
-                                                        maxWidth:'150px',
-                                                    }}
-                                                >
-                                                    {truncateText(setSourceType(createdData?.source_type), 20)}
-                                                </Typography>
-                                            </Tooltip>
+                                        <Typography variant="subtitle1" className="table-data">
+                                        {createdData?.total_records.toLocaleString('en-US')}
                                         </Typography>
                                     </Box>
                                     <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
@@ -357,54 +331,43 @@ const SourcesList: React.FC = () => {
                                             className="table-heading"
                                             sx={{ textAlign: "left" }}
                                         >
-                                            Created By
+                                            Active Segment
                                         </Typography>
+                                        
                                         <Typography variant="subtitle1" className="table-data">
-                                            {createdData?.created_by}
+                                        {(progress?.processed && progress?.processed === createdData?.active_segment_records) || (createdData?.processed_active_segment_records ===  createdData?.active_segment_records && (createdData.status === "unvalidated"  || createdData?.processed_active_segment_records !== 0))
+                                            ? createdData.active_segment_records.toLocaleString('en-US')
+                                            : createdData?.processed_active_segment_records > progress?.processed
+                                                ? <ProgressBar progress={{ total: createdData?.active_segment_records, processed: createdData?.processed_active_segment_records}} />
+                                                : <ProgressBar progress={{...progress, total: createdData.active_segment_records}} />
+                                        }
                                         </Typography>
                                     </Box>
-
-
                                     <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
+                                        
                                         <Typography variant="body2" className="table-heading">
-                                            Created Date
+                                            Status
                                         </Typography>
-                                        <Typography variant="subtitle1" className="table-data">
-                                            {dayjs(createdData?.created_at).isValid() ? dayjs(createdData?.created_at).format('MMM D, YYYY') : '--'}
-                                        </Typography>
-                                    </Box>
-
-                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
-                                        <Typography variant="body2" className="table-heading">
-                                            Number of Customers
-                                        </Typography>
-                                        <Typography variant="subtitle1" className="table-data">
-                                        {sourceProgress[createdData.id]?.total && sourceProgress[createdData.id]?.total > 0 || createdData?.total_records > 0
-                                            ? sourceProgress[createdData.id]?.total > 0
-                                                ? sourceProgress[createdData.id]?.total.toLocaleString('en-US')
-                                                : createdData?.total_records?.toLocaleString('en-US')
-                                            :  <ThreeDotsLoader />
-                                            }
-                                        </Typography>
-                                    </Box>
-                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
+                                        {createdData && (
                                         <Typography
-                                            variant="body2"
-                                            className="table-heading"
-                                            sx={{ textAlign: "left" }}
+                                            component="div"
+                                            sx={{
+                                                width: "100px",
+                                                margin: 0,
+                                                background: getStatusStyle(preRenderStatus(createdData.status.charAt(0).toUpperCase() + createdData.status.slice(1))).background,
+                                                padding: '3px 8px',
+                                                borderRadius: '2px',
+                                                fontFamily: 'Roboto',
+                                                fontSize: '12px',
+                                                fontWeight: '400',
+                                                lineHeight: '16px',
+                                                textAlign: "center",
+                                                color: getStatusStyle(preRenderStatus(createdData.status.charAt(0).toUpperCase() + createdData.status.slice(1))).color,
+                                            }}
                                         >
-                                            Matched Records
+                                            {preRenderStatus(createdData.status.charAt(0).toUpperCase() + createdData.status.slice(1))}
                                         </Typography>
-                                        <Typography variant="subtitle1" className="table-data">
-                                            {createdData?.id && (sourceProgress[createdData.id]?.processed && sourceProgress[createdData.id]?.processed == sourceProgress[createdData.id]?.total) || (createdData?.processed_records == createdData?.total_records && createdData?.processed_records !== 0)
-                                                ? sourceProgress[createdData.id]?.matched > createdData?.matched_records 
-                                                    ? sourceProgress[createdData.id]?.matched.toLocaleString('en-US')
-                                                    : createdData.matched_records.toLocaleString('en-US')
-                                                :  createdData?.processed_records !== 0 
-                                                    ? <ProgressBar progress={{total: createdData?.total_records, processed: createdData?.processed_records, matched: createdData?.matched_records}}/> 
-                                                    : <ProgressBar progress={sourceProgress[createdData.id]}/> 
-                                            }
-                                        </Typography>
+                                    )}
                                     </Box>
                                     {/* need chnage < on !== */}
                                     <IconButton onClick={(event) => handleOpenPopover(event)} sx={{ '@media (max-width: 900px)': {display: 'none'}, ':hover': { backgroundColor: 'transparent' }}} >
@@ -435,12 +398,11 @@ const SourcesList: React.FC = () => {
                                         },
                                     }}
                                 >
-                                    All Sources
+                                    All Smart Audiences
                                 </Button>
                                 <Button
                                     variant="contained"/* need chnage < on !== */
-                                    disabled={ (createdData?.processed_records === 0) || (createdData?.processed_records !== createdData?.total_records) }
-                                    onClick={() => router.push(`/lookalikes/${createdData?.id}/builder`)}
+                                    onClick={() => router.push(`/smart-audiences/builder`)}
                                     className='second-sub-title'
                                     sx={{
                                         backgroundColor: 'rgba(80, 82, 178, 1)',
@@ -457,7 +419,7 @@ const SourcesList: React.FC = () => {
                                         },
                                     }}
                                 >
-                                    Create Lookalike
+                                    Generate Smart Audience
                                 </Button>
                             </Box>
                         </Box>
@@ -520,12 +482,17 @@ const SourcesList: React.FC = () => {
                                     sx={{ 
                                     width: '100%', maxWidth: 360}}
                                     >
-                                    <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
+                                    {/* <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
                                             handleClosePopover()
-                                            router.push(`/lookalikes/${createdData?.id}/builder`)
+                                            // router.push(`/lookalikes/${createdData?.id}/builder`)
                                         }}>
-                                    <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Lookalike"/>
-                                    </ListItemButton>
+                                        <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Sync"/>
+                                    </ListItemButton> */}
+                                    {/* <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
+                                            // handleOpenConfirmDialog()
+                                        }}>
+                                        <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Clone"/>
+                                    </ListItemButton> */}
                                     <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
                                             handleOpenConfirmDialog()
                                         }}>

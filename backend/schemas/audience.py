@@ -89,9 +89,9 @@ class SmartsResponse(BaseModel):
     total_records: int
     validated_records: int
     active_segment_records: int
-    processed_total_records: int
+    processed_active_segment_records: int
     status: str
-    integrations: List[str]
+    integrations: Optional[List[str]]
 
     model_config = {
         "from_attributes": True
@@ -124,4 +124,6 @@ class CreateSmartAudienceRequest(BaseModel):
     data_sources: List[dict]
     validation_params: Optional[dict] = None
     contacts_to_validate: Optional[int] = None
+    is_validate_skip: Optional[bool] = None
     total_records: int
+    active_segment_records: int

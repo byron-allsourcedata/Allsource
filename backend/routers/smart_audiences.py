@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, Query, Body, HTTPException
 from starlette.responses import StreamingResponse
 from dependencies import get_audience_smarts_service, check_user_authorization_without_pixel
 from services.audience_smarts import AudienceSmartsService
-from schemas.audience import SmartsAudienceObjectResponse, UpdateSmartAudienceRequest, CreateSmartAudienceRequest, DataSourcesResponse
+from schemas.audience import SmartsAudienceObjectResponse, UpdateSmartAudienceRequest, CreateSmartAudienceRequest, \
+    DataSourcesResponse, SmartsResponse
 from schemas.integrations.integrations import SmartAudienceSyncCreate
 from typing import Optional, List
 from uuid import UUID
@@ -62,7 +63,7 @@ def get_datasource_by_id(
         return data_sources
 
 
-@router.post("/builder")
+@router.post("/builder", response_model=SmartsResponse)
 async def create_smart_audience(
         request: CreateSmartAudienceRequest,
         user=Depends(check_user_authorization_without_pixel),
@@ -74,7 +75,7 @@ async def create_smart_audience(
         else:
             user_id = user.get('id')
 
-        new_audience = await audience_smarts_service.create_audience_smart(
+        return await audience_smarts_service.create_audience_smart(
             name=request.smart_audience_name,
             user=user,
             created_by_user_id=user_id,
@@ -82,9 +83,10 @@ async def create_smart_audience(
             validation_params=request.validation_params,
             data_sources=request.data_sources,
             contacts_to_validate=request.contacts_to_validate,
+            active_segment_records=request.active_segment_records,
+            is_validate_skip=request.is_validate_skip,
             total_records=request.total_records
         )
-        return {'status': "SUCCESS"}
     except ValueError:
         raise HTTPException(status_code=400)
 
@@ -145,3 +147,9 @@ def download_persons(
     if result:
         return StreamingResponse(result, media_type="text/csv", headers={"Content-Disposition": "attachment; filename=data.csv"})
     return BaseEnum.FAILURE
+
+@router.get("/get-processing-smart-source", response_model=Optional[SmartsResponse])
+def get_processing_source(
+        id: str = Query(...),
+        audience_smarts_service: AudienceSmartsService = Depends(get_audience_smarts_service)):
+    return audience_smarts_service.get_processing_source(id)

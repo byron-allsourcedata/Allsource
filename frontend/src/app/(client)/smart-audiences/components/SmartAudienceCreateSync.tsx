@@ -110,6 +110,7 @@ type ArrayMapping = {
     hubspot: CustomRow[];
     mailchimp: CustomRow[];
     default: CustomRow[]
+    meta: CustomRow[]
     CSV: CustomRow[]
 };
 
@@ -191,27 +192,25 @@ const customFieldsList: Row[] = [
     { id: 1, type: 'Gender', value: 'gender' },
     { id: 2, type: 'Cid', value: 'cid' },
     { id: 3, type: 'Age', value: 'age' },
-    { id: 4, type: 'Gender', value: 'gender' },
-    { id: 5, type: 'Estimated household income code', value: 'estimated_household_income_code' },
-    { id: 6, type: 'Estimated current home value code', value: 'estimated_current_home_value_code' },
-    { id: 7, type: 'Homeowner status', value: 'homeowner_status' },
-    { id: 8, type: 'Has children', value: 'has_children' },
-    { id: 9, type: 'Number of children', value: 'number_of_children' },
-    { id: 10, type: 'Credit rating', value: 'credit_rating' },
-    { id: 11, type: 'Net worth code', value: 'net_worth_code' },
-    { id: 12, type: 'Zipcode 5', value: 'zip_code5' },
-    { id: 13, type: 'Lat', value: 'lat' },
-    { id: 14, type: 'Lon', value: 'lon' },
-    { id: 15, type: 'Has credit card', value: 'has_credit_card' },
-    { id: 16, type: 'Length of residence years', value: 'length_of_residence_years' },
-    { id: 17, type: 'Marital status', value: 'marital_status' },
-    { id: 18, type: 'Occupation group code', value: 'occupation_group_code' },
-    { id: 19, type: 'Is book reader', value: 'is_book_reader' },
-    { id: 20, type: 'Is online purchaser', value: 'is_online_purchaser' },
-    { id: 21, type: 'Is book reader', value: 'is_book_reader' },
-    { id: 22, type: 'State abbr', value: 'state_abbr' },
-    { id: 23, type: 'Is traveler', value: 'is_traveler' },
-    { id: 24, type: 'Rec id', value: 'rec_id' },
+    { id: 4, type: 'Estimated household income code', value: 'estimated_household_income_code' },
+    { id: 5, type: 'Estimated current home value code', value: 'estimated_current_home_value_code' },
+    { id: 6, type: 'Homeowner status', value: 'homeowner_status' },
+    { id: 7, type: 'Has children', value: 'has_children' },
+    { id: 8, type: 'Number of children', value: 'number_of_children' },
+    { id: 9, type: 'Credit rating', value: 'credit_rating' },
+    { id: 10, type: 'Net worth code', value: 'net_worth_code' },
+    { id: 11, type: 'Zipcode 5', value: 'zip_code5' },
+    { id: 12, type: 'Lat', value: 'lat' },
+    { id: 13, type: 'Lon', value: 'lon' },
+    { id: 14, type: 'Has credit card', value: 'has_credit_card' },
+    { id: 15, type: 'Length of residence years', value: 'length_of_residence_years' },
+    { id: 16, type: 'Marital status', value: 'marital_status' },
+    { id: 17, type: 'Occupation group code', value: 'occupation_group_code' },
+    { id: 18, type: 'Is book reader', value: 'is_book_reader' },
+    { id: 19, type: 'Is online purchaser', value: 'is_online_purchaser' },
+    { id: 20, type: 'State abbr', value: 'state_abbr' },
+    { id: 21, type: 'Is traveler', value: 'is_traveler' },
+    { id: 22, type: 'Rec id', value: 'rec_id' },
 ]
 
 const defaultRows: Row[] = [
@@ -687,7 +686,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         hubspot: customFieldsList,
         mailchimp: customFieldsList,
         CSV: customFieldsList,
-        default: customFieldsList
+        default: customFieldsList,
+        meta: customFieldsList
     };
 
     const handleAddIntegration = async (service_name: string) => {
@@ -960,7 +960,23 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                     max={maxContacts}
                                                     aria-label="Contacts Sync Slider"
                                                     valueLabelDisplay="auto"
-                                                    sx={{ color: "rgba(80, 82, 178, 1)", "&.MuiSlider-thumb": { width: "14px", height: "14px", transform: "translate(0, -50%)" }, "&.MuiSlider-rail": { backgroundColor: "rgba(231, 231, 231, 1)" } }}
+                                                    // sx={{
+                                                    //     "&.MuiSlider-thumb": { width: "14px", height: "14px", transform: "translate(0, -50%)" }, 
+                                                    //     "&.MuiSlider-rail": { backgroundColor: "rgba(231, 231, 231, 1)" } 
+                                                    // }}
+
+                                                    sx={{
+                                                        color:
+                                                        valueContactSync === 0
+                                                            ? "rgba(231, 231, 231, 1)"
+                                                            : "rgba(80, 82, 178, 1)",
+                                                        "& .MuiSlider-track": {
+                                                          backgroundColor: "rgba(80, 82, 178, 1)",
+                                                        },
+                                                        "& .MuiSlider-thumb": {
+                                                          backgroundColor: "rgba(80, 82, 178, 1)",
+                                                        },
+                                                      }}
                                                 />
                                             </Box>
                                         </CardContent>

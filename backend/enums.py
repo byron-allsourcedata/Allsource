@@ -50,14 +50,16 @@ class SourceType(Enum):
     PIXEL = 'pixel'
 
 class AudienceSmartDataSource(Enum):
-    INCLUDE = 'Include'
-    EXCLUDE = 'Exclude'
+    INCLUDE = 'include'
+    EXCLUDE = 'exclude'
 
 class AudienceSmartStatuses(Enum):
     UNVALIDATED = 'unvalidated'
     VALIDATING = 'validating'
     READY = 'ready'
     SYNCED = 'synced'
+    N_A = 'n_a'
+    DATA_SYNCING = 'data_syncing'
 
 class CreateDataSync(Enum):
     ZAPIER_CONNECTED = 'ZAPIER_CONNECTED'
