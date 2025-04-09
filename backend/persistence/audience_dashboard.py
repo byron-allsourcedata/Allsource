@@ -128,7 +128,7 @@ class DashboardAudiencePersistence:
             
     def get_last_sources_and_lookalikes(self, *, user_id, limit=5):
         sources = self.db.query(
-            AudienceSource.id.label('source_id'),
+            AudienceSource.id.label('id'),
             AudienceSource.name.label('source_name'),
             AudienceSource.created_at.label('created_at'),
             AudienceSource.source_type.label('source_type'),
@@ -139,8 +139,7 @@ class DashboardAudiencePersistence:
         ).order_by(AudienceSource.created_at.desc()).limit(5).all()
 
         lookalikes = self.db.query(
-            AudienceLookalikes.id.label('lookalike_id'),
-            AudienceSource.id.label('source_id'),
+            AudienceSource.id.label('id'),
             AudienceSource.name.label('source_name'),
             AudienceLookalikes.name.label('lookalike_name'),
             AudienceLookalikes.created_date.label('created_at'),
@@ -198,9 +197,8 @@ class DashboardAudiencePersistence:
     def get_last_smart_audiences_and_data_syncs(self, *, user_id, limit=5):        
         audience_smart = (
             self.db.query(
-                AudienceLookalikes.id .label('lookalikes_id'),
+                AudienceLookalikes.id .label('id'),
                 AudienceLookalikes.name .label('lookalike_name'),
-                AudienceSmart.id.label('smart_audience_id'),
                 AudienceSmart.created_at.label('created_at'),
                 AudienceSmart.name.label('audience_name'),
                 AudienceSmartsUseCase.name.label('use_case'),
@@ -249,9 +247,8 @@ class DashboardAudiencePersistence:
         )
         
         data_syncs = self.db.query(
-                        IntegrationUserSync.id.label('data_sync_id'),
+                        IntegrationUserSync.id.label('id'),
                         AudienceSmart.name.label('audience_name'),
-                        AudienceSmart.id.label('smart_audience_id'),
                         AudienceSmart.status.label('audience_status'),
                         IntegrationUserSync.created_at.label('created_at'),
                         IntegrationUserSync.sent_contacts.label('synced_contacts'),

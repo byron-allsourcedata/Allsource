@@ -123,22 +123,22 @@ class DashboardAudienceService:
         sources, lookalikes = self.dashboard_persistence.get_last_sources_and_lookalikes(user_id=user.get('id'), limit=self.LIMIT)
         last_sources_lookalikes = self.merge_and_sort(
             datasets=[
-                (sources, 'source', ['source_id', 'source_name', 'created_at', 'source_type', 'matched_records']),
-                ([lookalike for lookalike in lookalikes if lookalike[0]], 'lookalike', ['source_id', 'source_name', 'lookalike_name', 'created_at'])
+                (sources, 'source', ['id', 'source_name', 'created_at', 'source_type', 'matched_records']),
+                ([lookalike for lookalike in lookalikes if lookalike[0]], 'lookalike', ['id', 'source_name', 'lookalike_name', 'created_at'])
             ],
             limit=self.LIMIT
         )
         smart_audiences, data_syncs = self.dashboard_persistence.get_last_smart_audiences_and_data_syncs(user_id=user.get('id'), limit=self.LIMIT)
         
         last_lookalikes_audience_smart = self.merge_and_sort(
-            datasets=[(lookalikes, 'lookalikes', ['lookalike_id', 'lookalike_size', 'lookalike_name', 'created_at', 'size']), 
-                      ([smart_audience for smart_audience in smart_audiences if smart_audience[0]], 'smart_audience', ['lookalike_id', 'lookalike_name', 'source_name', 'audience_name', 'created_at']),],
+            datasets=[(lookalikes, 'lookalikes', ['id', 'lookalike_size', 'lookalike_name', 'created_at', 'size']), 
+                      ([smart_audience for smart_audience in smart_audiences if smart_audience[0]], 'smart_audience', ['id', 'lookalike_name', 'source_name', 'audience_name', 'created_at']),],
             limit=self.LIMIT
         )
         
         last_audience_smart_data_sync = self.merge_and_sort(
-            datasets=[(smart_audiences, 'smart_audience', ['smart_audience_id', 'audience_name', 'created_at', 'use_case', 'active_segment', 'include_names', 'exclude_names']), 
-                      (data_syncs, 'data_syncs', ['smart_audience_id', 'data_sync_id', 'audience_name', 'created_at'])],
+            datasets=[(smart_audiences, 'smart_audience', ['id', 'audience_name', 'created_at', 'use_case', 'active_segment', 'include_names', 'exclude_names']), 
+                      (data_syncs, 'data_syncs', ['id', 'audience_name', 'created_at'])],
             limit=self.LIMIT
         )
       
