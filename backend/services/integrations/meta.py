@@ -9,11 +9,14 @@ from persistence.leads_persistence import LeadsPersistence
 from persistence.domains import UserDomainsPersistence
 import httpx
 import os
+from faker import Faker
+from services.integrations.commonIntegration import get_valid_email, get_valid_phone, get_valid_location
 from datetime import datetime, timedelta
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, DataSyncType
 from facebook_business.adobjects.adaccount import AdAccount
 from facebook_business.api import FacebookAdsApi
 from fastapi import HTTPException
+from models.enrichment_users import EnrichmentUser
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from datetime import datetime
 from utils import extract_first_email
@@ -324,22 +327,22 @@ class MetaIntegrationsService:
         })
         return sync
         
-    async def process_data_sync(self, five_x_five_user, user_integration, integration_data_sync, lead_user):
-        profile = self.__create_user(five_x_five_user=five_x_five_user, custom_audience_id=integration_data_sync.list_id, access_token=user_integration.access_token)
+    async def process_data_sync(self, user_integration, integration_data_sync, enrichment_users: EnrichmentUser):
+        for enrichment_user in enrichment_users:
+            profile = self.__create_user(custom_audience_id=integration_data_sync.list_id, access_token=user_integration.access_token, enrichment_user=enrichment_user)
+            if profile in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
+                continue
         
-        if profile in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-            return profile
-        
-        if profile.get('error'):
-            if profile.get('error').get('type') == 'OAuthException':
+            if profile.get('error', {}).get('type') == 'OAuthException':
                 return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
 
         return ProccessDataSyncResult.SUCCESS.value
 
-    def __create_user(self, five_x_five_user, custom_audience_id: str, access_token: str):
-        profile = self.__hash_mapped_meta_user(five_x_five_user)
+    def __create_user(self, custom_audience_id: str, access_token: str, enrichment_user: EnrichmentUser):
+        profile = self.__hash_mapped_meta_user(enrichment_user)
         if profile in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return profile
+        
         payload = {
             "schema": [
                 "EMAIL",
@@ -358,59 +361,35 @@ class MetaIntegrationsService:
             'payload': payload,
             'app_id': APP_ID
             })
+        
         return response.json()
 
-    def __hash_mapped_meta_user(self, five_x_five_user: FiveXFiveUser):
-        email_fields = [
-            'business_email', 
-            'personal_emails', 
-            'additional_personal_emails',
-        ]
-        
-        def get_valid_email(user) -> str:
-            thirty_days_ago = datetime.now() - timedelta(days=30)
-            thirty_days_ago_str = thirty_days_ago.strftime('%Y-%m-%d %H:%M:%S')
-            verity = 0
-            for field in email_fields:
-                email = getattr(user, field, None)
-                if email:
-                    emails = extract_first_email(email)
-                    for e in emails:
-                        if e and field == 'business_email' and five_x_five_user.business_email_last_seen:
-                            if five_x_five_user.business_email_last_seen.strftime('%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
-                                return e.strip()
-                        if e and field == 'personal_emails' and five_x_five_user.personal_emails_last_seen:
-                            personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime('%Y-%m-%d %H:%M:%S')
-                            if personal_emails_last_seen_str > thirty_days_ago_str:
-                                return e.strip()
-                        if e and self.million_verifier_integrations.is_email_verify(email=e.strip()):
-                            return e.strip()
-                        verity += 1
-            if verity > 0:
-                return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+    def __hash_mapped_meta_user(self, enrichment_user: EnrichmentUser):
+        emails_list = [e.email.email for e in enrichment_user.emails_enrichment]
+        first_email = get_valid_email(emails_list, self.million_verifier_integrations)
 
-        first_email = get_valid_email(five_x_five_user)
-        
         if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
             return first_email
         
-        first_phone = (
-            getattr(five_x_five_user, 'mobile_phone') or 
-            getattr(five_x_five_user, 'personal_phone') or 
-            getattr(five_x_five_user, 'direct_number') or 
-            getattr(five_x_five_user, 'company_phone', None)
-        )
-        first_phone = format_phone_number(first_phone)
+        # first_phone = get_valid_phone(five_x_five_user)
+        # address_parts = get_valid_location(five_x_five_user)
+        fake = Faker()
+
+        first_phone = fake.phone_number()
+        address_parts = fake.address().split("\n")
+        gender = fake.passport_gender()
+        first_name = fake.first_name()
+        last_name = fake.last_name()
 
         def hash_value(value):
             return hashlib.sha256(value.encode('utf-8')).hexdigest() if value else ""
+        
         return [
                 hash_value(first_email),                                                           # EMAIL
                 hash_value(first_phone),                                                           # PHONE
-                hash_value(five_x_five_user.gender),                                               # GEN
-                hash_value(five_x_five_user.last_name),                                            # LN
-                hash_value(five_x_five_user.first_name),                                           # FN
+                hash_value(gender),                                               # GEN
+                hash_value(first_name),                                            # LN
+                hash_value(last_name),                                           # FN
                 hash_value(five_x_five_user.personal_state),                                       # ST
                 hash_value(five_x_five_user.personal_city),                                        # CT
                 hash_value(five_x_five_user.personal_zip),                                         # ZIP
