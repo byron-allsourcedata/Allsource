@@ -292,7 +292,7 @@ class AudienceSmartsPersistence:
                         Email.email, 
                         *[getattr(EnrichmentUser, field) for field in fields if hasattr(EnrichmentUser, field)])
                 .select_from(AudienceSmartPerson)
-                .join(EnrichmentUser, EnrichmentUser.id == AudienceSmartPerson.five_x_five_user_id)
+                .join(EnrichmentUser, EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id)
                 .outerjoin(EmailEnrichment, EmailEnrichment.enrichment_user_id == EnrichmentUser.id)
                 .outerjoin(Email, Email.id == EmailEnrichment.email_id)
                 .filter(AudienceSmartPerson.smart_audience_id == smart_audience_id)
