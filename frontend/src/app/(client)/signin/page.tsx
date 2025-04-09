@@ -1,33 +1,41 @@
-'use client';
-import React, { Suspense, useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Image from 'next/image';
-import { Box, Button, TextField, Typography, Link, IconButton, InputAdornment } from '@mui/material';
-import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
-import { AxiosError } from 'axios';
-import { loginStyles } from './loginStyles';
-import { showErrorToast } from '@/components/ToastNotification';
-import { GoogleLogin } from '@react-oauth/google';
-import { fetchUserData } from '@/services/meService';
-import CustomizedProgressBar from '@/components/CustomizedProgressBar';
-import { useUser } from '@/context/UserContext';
+"use client";
+import React, { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Link,
+  IconButton,
+  InputAdornment,
+} from "@mui/material";
+import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
+import { AxiosError } from "axios";
+import { loginStyles } from "./loginStyles";
+import { showErrorToast } from "@/components/ToastNotification";
+import { GoogleLogin } from "@react-oauth/google";
+import { fetchUserData } from "@/services/meService";
+import CustomizedProgressBar from "@/components/CustomizedProgressBar";
+import { useUser } from "@/context/UserContext";
 
 const Signin: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { partner } = useUser();
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = "auto";
     };
   }, []);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("token");
       if (token) {
-        router.push(partner ? '/partners' : '/dashboard');
+        router.push(partner ? "/partners" : "/audience-dashboard");
       }
     }
   }, [router, partner]);
@@ -35,36 +43,38 @@ const Signin: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const initialShopifyData = {
-    code: searchParams.get('code') || null,
-    hmac: searchParams.get('hmac') || null,
-    host: searchParams.get('host') || null,
-    shop: searchParams.get('shop') || null,
-    state: searchParams.get('state') || null,
-    timestamp: searchParams.get('timestamp') || null,
+    code: searchParams.get("code") || null,
+    hmac: searchParams.get("hmac") || null,
+    host: searchParams.get("host") || null,
+    shop: searchParams.get("shop") || null,
+    state: searchParams.get("state") || null,
+    timestamp: searchParams.get("timestamp") || null,
   };
-  const isShopifyDataComplete = Object.values(initialShopifyData).every(value => value !== null);
+  const isShopifyDataComplete = Object.values(initialShopifyData).every(
+    (value) => value !== null
+  );
   const [formValues, setFormValues] = useState({
-    email: '', password: '',
-    ...(isShopifyDataComplete && { shopify_data: initialShopifyData })
+    email: "",
+    password: "",
+    ...(isShopifyDataComplete && { shopify_data: initialShopifyData }),
   });
-
 
   const validateField = (name: string, value: string) => {
     const newErrors: { [key: string]: string } = { ...errors };
 
     switch (name) {
-      case 'email':
+      case "email":
         if (!value) {
-          newErrors.email = 'Email address is required';
+          newErrors.email = "Email address is required";
         } else if (!/\S+@\S+\.\S+/.test(value)) {
-          newErrors.email = 'Email address is invalid';
+          newErrors.email = "Email address is invalid";
         } else {
           delete newErrors.email;
         }
         break;
-      case 'password':
+      case "password":
         if (!value) {
-          newErrors.password = 'Password is required';
+          newErrors.password = "Password is required";
         } else {
           delete newErrors.password;
         }
@@ -76,9 +86,7 @@ const Signin: React.FC = () => {
     setErrors(newErrors);
   };
 
-  const get_me = async () => {
-    
-  };
+  const get_me = async () => {};
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -91,24 +99,22 @@ const Signin: React.FC = () => {
 
   const checkPartner = (isPartner: boolean) => {
     if (isPartner) {
-      router.push('/partners')
+      router.push("/partners");
+    } else {
+      router.push("/audience-dashboard");
     }
-    else {
-      router.push('/dashboard')
-    }
-
-}  
+  };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     const newErrors: { [key: string]: string } = {};
 
     if (!formValues.email) {
-      newErrors.email = 'Email address is required';
+      newErrors.email = "Email address is required";
     }
 
     if (!formValues.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = "Password is required";
     }
 
     setErrors(newErrors);
@@ -118,13 +124,16 @@ const Signin: React.FC = () => {
     }
 
     try {
-      const response = await axiosInterceptorInstance.post('/login', formValues);
+      const response = await axiosInterceptorInstance.post(
+        "/login",
+        formValues
+      );
 
       if (response.status === 200) {
         const responseData = response.data;
-        if (typeof window !== 'undefined') {
+        if (typeof window !== "undefined") {
           if (responseData.token && responseData.token !== null) {
-            localStorage.setItem('token', responseData.token);
+            localStorage.setItem("token", responseData.token);
           }
         }
         if (responseData) {
@@ -146,12 +155,11 @@ const Signin: React.FC = () => {
               break;
           }
           switch (responseData.status) {
-
             case "SUCCESS":
               await fetchUserData();
-              checkPartner(response.data.is_partner)
+              checkPartner(response.data.is_partner);
               break;
-            case 'NON_SHOPIFY_ACCOUNT':
+            case "NON_SHOPIFY_ACCOUNT":
               showErrorToast("non shopify account");
               break;
 
@@ -161,44 +169,44 @@ const Signin: React.FC = () => {
 
             case "NEED_CONFIRM_EMAIL":
               await fetchUserData();
-              router.push('/email-verificate');
+              router.push("/email-verificate");
               break;
 
             case "NEED_CHOOSE_PLAN":
               await fetchUserData();
-              router.push('/settings?section=subscription')
+              router.push("/settings?section=subscription");
               break;
 
             case "FILL_COMPANY_DETAILS":
               await fetchUserData();
-              router.push('/account-setup')
+              router.push("/account-setup");
               break;
 
             case "NEED_BOOK_CALL":
               await fetchUserData();
-              router.push('/dashboard')
+              router.push("/audience-dashboard");
               break;
 
             case "PAYMENT_NEEDED":
               await fetchUserData();
-              router.push(`${response.data.stripe_payment_url}`)
+              router.push(`${response.data.stripe_payment_url}`);
               break;
 
             case "PIXEL_INSTALLATION_NEEDED":
               await fetchUserData();
-              router.push(partner ? '/partners' : '/dashboard');
+              router.push(partner ? "/partners" : "/audience-dashboard");
               break;
 
             default:
               await fetchUserData();
-              router.push('/dashboard')
+              router.push("/audience-dashboard");
               break;
           }
         } else {
-          console.error('Empty response data');
+          console.error("Empty response data");
         }
       } else {
-        console.error('HTTP error:', response.status);
+        console.error("HTTP error:", response.status);
       }
     } catch (err) {
       const error = err as AxiosError;
@@ -206,7 +214,7 @@ const Signin: React.FC = () => {
         const errorData = error.response.data as { [key: string]: string };
         setErrors(errorData);
       } else {
-        console.error('Error:', error);
+        console.error("Error:", error);
       }
     }
   };
@@ -215,30 +223,38 @@ const Signin: React.FC = () => {
     setShowPassword(!showPassword);
   };
 
-
-
   return (
     <>
       <Box sx={loginStyles.logoContainer}>
-        <Image src='/logo.svg' alt='logo' height={31} width={130} />
+        <Image src="/logo.svg" alt="logo" height={31} width={130} />
       </Box>
 
       <Box sx={loginStyles.mainContent}>
         <Box sx={loginStyles.container}>
-          <Typography variant="h4" component="h1" className='heading-text' sx={loginStyles.title}>
+          <Typography
+            variant="h4"
+            component="h1"
+            className="heading-text"
+            sx={loginStyles.title}
+          >
             Welcome Back!
           </Typography>
           <GoogleLogin
             onSuccess={async (credentialResponse) => {
               try {
-                const response = await axiosInterceptorInstance.post('/login-google', {
-                  token: credentialResponse.credential,
-                  ...(isShopifyDataComplete && { shopify_data: initialShopifyData })
-                });
+                const response = await axiosInterceptorInstance.post(
+                  "/login-google",
+                  {
+                    token: credentialResponse.credential,
+                    ...(isShopifyDataComplete && {
+                      shopify_data: initialShopifyData,
+                    }),
+                  }
+                );
                 const responseData = response.data;
-                if (typeof window !== 'undefined') {
+                if (typeof window !== "undefined") {
                   if (responseData.token && responseData.token !== null) {
-                    localStorage.setItem('token', responseData.token);
+                    localStorage.setItem("token", responseData.token);
                     get_me();
                   }
                 }
@@ -260,57 +276,63 @@ const Signin: React.FC = () => {
                     break;
                 }
                 switch (response.data.status) {
-                  case 'SUCCESS':
-                    router.push(partner ? '/partners' : '/dashboard');
+                  case "SUCCESS":
+                    router.push(partner ? "/partners" : "/audience-dashboard");
                     break;
-                  case 'NEED_CHOOSE_PLAN':
-                    router.push('/settings?section=subscription');
+                  case "NEED_CHOOSE_PLAN":
+                    router.push("/settings?section=subscription");
                     break;
-                  case 'NON_SHOPIFY_ACCOUNT':
+                  case "NON_SHOPIFY_ACCOUNT":
                     showErrorToast("non shopify account");
                     break;
-                  case 'FILL_COMPANY_DETAILS':
-                    router.push('/account-setup');
+                  case "FILL_COMPANY_DETAILS":
+                    router.push("/account-setup");
                     break;
-                  case 'NEED_BOOK_CALL':
-                    sessionStorage.setItem('is_slider_opened', 'true')
-                    router.push('/dashboard');
+                  case "NEED_BOOK_CALL":
+                    sessionStorage.setItem("is_slider_opened", "true");
+                    router.push("/audience-dashboard");
                     break;
-                  case 'PAYMENT_NEEDED':
+                  case "PAYMENT_NEEDED":
                     router.push(`${response.data.stripe_payment_url}`);
                     break;
-                  case 'INCORRECT_PASSWORD_OR_EMAIL':
+                  case "INCORRECT_PASSWORD_OR_EMAIL":
                     showErrorToast("User with this email does not exist");
                     break;
                   case "PIXEL_INSTALLATION_NEEDED":
-                    router.push(partner ? '/partners' : '/dashboard');
+                    router.push(partner ? "/partners" : "/audience-dashboard");
                     break;
                   default:
-                    router.push('/dashboard')
-                    console.error('Authorization failed:', response.data.status);
+                    router.push("/audience-dashboard");
+                    console.error(
+                      "Authorization failed:",
+                      response.data.status
+                    );
                 }
               } catch (error) {
-                console.error('Error during Google login:', error);
+                console.error("Error during Google login:", error);
               }
-
             }}
-            onError={() => {
-            }}
+            onError={() => {}}
             ux_mode="popup"
           />
           <Box sx={loginStyles.orDivider}>
-            <Box sx={{ borderBottom: '1px solid #DCE1E8', flexGrow: 1 }} />
-            <Typography variant="body1" className='third-sub-title' sx={loginStyles.orText}>
+            <Box sx={{ borderBottom: "1px solid #DCE1E8", flexGrow: 1 }} />
+            <Typography
+              variant="body1"
+              className="third-sub-title"
+              sx={loginStyles.orText}
+            >
               OR
             </Typography>
-            <Box sx={{ borderBottom: '1px solid #DCE1E8', flexGrow: 1 }} />
+            <Box sx={{ borderBottom: "1px solid #DCE1E8", flexGrow: 1 }} />
           </Box>
           <Box component="form" onSubmit={handleSubmit} sx={loginStyles.form}>
-            <TextField sx={loginStyles.formField}
+            <TextField
+              sx={loginStyles.formField}
               InputLabelProps={{
                 className: "form-input-label",
                 sx: loginStyles.inputLabel,
-                focused: false
+                focused: false,
               }}
               label="Email address"
               name="email"
@@ -323,19 +345,19 @@ const Signin: React.FC = () => {
               error={Boolean(errors.email)}
               helperText={errors.email}
               InputProps={{
-                className: "form-input"
+                className: "form-input",
               }}
             />
             <TextField
               InputLabelProps={{
                 className: "form-input-label",
                 sx: loginStyles.inputLabel,
-                focused: false
+                focused: false,
               }}
               autoComplete="new-password"
               label="Enter password"
               name="password"
-              type={showPassword ? 'text' : 'password'}
+              type={showPassword ? "text" : "password"}
               variant="outlined"
               fullWidth
               margin="normal"
@@ -350,9 +372,14 @@ const Signin: React.FC = () => {
                     <IconButton onClick={togglePasswordVisibility} edge="end">
                       {/* {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />} */}
                       <Image
-                        src={showPassword ? "/custom-visibility-icon-off.svg" : "/custom-visibility-icon.svg"}
+                        src={
+                          showPassword
+                            ? "/custom-visibility-icon-off.svg"
+                            : "/custom-visibility-icon.svg"
+                        }
                         alt={showPassword ? "Show password" : "Hide password"}
-                        height={18} width={18} // Adjust the size as needed
+                        height={18}
+                        width={18} // Adjust the size as needed
                         title={showPassword ? "Hide password" : "Show password"}
                       />
                     </IconButton>
@@ -360,12 +387,17 @@ const Signin: React.FC = () => {
                 ),
               }}
             />
-            <Typography variant="body2" className='hyperlink-red' sx={loginStyles.resetPassword}>
+            <Typography
+              variant="body2"
+              className="hyperlink-red"
+              sx={loginStyles.resetPassword}
+            >
               <Link href="/reset-password" sx={loginStyles.loginLink}>
                 Forgot Password
               </Link>
             </Typography>
-            <Button className='hyperlink-red'
+            <Button
+              className="hyperlink-red"
               type="submit"
               variant="contained"
               sx={loginStyles.submitButton}
@@ -375,9 +407,17 @@ const Signin: React.FC = () => {
             </Button>
           </Box>
 
-          <Typography variant="body2" className='second-sub-title' sx={loginStyles.loginText}>
-            Don’t have an account?{' '}
-            <Link href={`/signup?${searchParams.toString()}`} className='hyperlink-red' sx={loginStyles.loginLink}>
+          <Typography
+            variant="body2"
+            className="second-sub-title"
+            sx={loginStyles.loginText}
+          >
+            Don’t have an account?{" "}
+            <Link
+              href={`/signup?${searchParams.toString()}`}
+              className="hyperlink-red"
+              sx={loginStyles.loginLink}
+            >
               Signup now
             </Link>
           </Typography>
@@ -387,7 +427,6 @@ const Signin: React.FC = () => {
   );
 };
 
-
 const SigninPage: React.FC = () => {
   return (
     <Suspense fallback={<CustomizedProgressBar />}>
@@ -395,6 +434,5 @@ const SigninPage: React.FC = () => {
     </Suspense>
   );
 };
-
 
 export default SigninPage;
