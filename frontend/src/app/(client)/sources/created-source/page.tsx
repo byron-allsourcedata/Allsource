@@ -287,7 +287,7 @@ const SourcesList: React.FC = () => {
                                             Target Schema
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
-                                            {createdData?.target_schema}
+                                            {createdData?.target_schema.toUpperCase()}
                                         </Typography>
                                     </Box>
                                     <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
