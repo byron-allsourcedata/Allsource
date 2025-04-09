@@ -129,6 +129,7 @@ class DashboardAudienceService:
             limit=self.LIMIT
         )
         smart_audiences, data_syncs = self.dashboard_persistence.get_last_smart_audiences_and_data_syncs(user_id=user.get('id'), limit=self.LIMIT)
+        
         last_lookalikes_audience_smart = self.merge_and_sort(
             datasets=[(lookalikes, 'lookalikes', ['lookalike_id', 'lookalike_size', 'lookalike_name', 'created_at', 'size']), 
                       ([smart_audience for smart_audience in smart_audiences if smart_audience[0]], 'smart_audience', ['lookalike_id', 'lookalike_name', 'source_name', 'audience_name', 'created_at']),],
