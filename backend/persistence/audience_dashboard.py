@@ -139,7 +139,7 @@ class DashboardAudiencePersistence:
         ).order_by(AudienceSource.created_at.desc()).limit(5).all()
 
         lookalikes = self.db.query(
-            AudienceSource.id.label('id'),
+            AudienceLookalikes.id.label('id'),
             AudienceSource.name.label('source_name'),
             AudienceLookalikes.name.label('lookalike_name'),
             AudienceLookalikes.created_date.label('created_at'),
@@ -197,8 +197,8 @@ class DashboardAudiencePersistence:
     def get_last_smart_audiences_and_data_syncs(self, *, user_id, limit=5):        
         audience_smart = (
             self.db.query(
-                AudienceLookalikes.id .label('id'),
-                AudienceLookalikes.name .label('lookalike_name'),
+                AudienceSmart.id.label('id'),
+                AudienceLookalikes.name.label('lookalike_name'),
                 AudienceSmart.created_at.label('created_at'),
                 AudienceSmart.name.label('audience_name'),
                 AudienceSmartsUseCase.name.label('use_case'),

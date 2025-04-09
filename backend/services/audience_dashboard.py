@@ -143,10 +143,10 @@ class DashboardAudienceService:
         )
       
         return {
-            'sources': self.merge_data_with_chain(last_sources_lookalikes, data_syncs_chain, 'source_id'),
-            'lookalikes': self.merge_data_with_chain(last_lookalikes_audience_smart, data_syncs_chain, 'lookalike_id'),
-            'smart_audiences': self.merge_data_with_chain(last_audience_smart_data_sync, data_syncs_chain, 'smart_audience_id'),
-            'data_sync': self.merge_data_with_chain(data_syncs, data_syncs_chain, 'data_sync_id')
+            'sources': self.merge_data_with_chain(last_sources_lookalikes, data_syncs_chain, 'id'),
+            'lookalikes': self.merge_data_with_chain(last_lookalikes_audience_smart, data_syncs_chain, 'id'),
+            'smart_audiences': self.merge_data_with_chain(last_audience_smart_data_sync, data_syncs_chain, 'id'),
+            'data_sync': self.merge_data_with_chain(data_syncs, data_syncs_chain, 'id')
         }
     
     def get_contacts_for_pixel_contacts_by_domain_id(self, *, user: dict, domain_id: int):
