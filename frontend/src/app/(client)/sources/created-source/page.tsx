@@ -16,6 +16,7 @@ import { showToast, showErrorToast } from '@/components/ToastNotification';
 interface Source {
     id: string
     name: string
+    target_schema: string
     source_origin: string
     source_type: string
     created_at: Date
@@ -279,6 +280,14 @@ const SourcesList: React.FC = () => {
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
                                             {createdData?.name}
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
+                                        <Typography variant="body2" className="table-heading">
+                                            Target Schema
+                                        </Typography>
+                                        <Typography variant="subtitle1" className="table-data">
+                                            {createdData?.target_schema}
                                         </Typography>
                                     </Box>
                                     <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>

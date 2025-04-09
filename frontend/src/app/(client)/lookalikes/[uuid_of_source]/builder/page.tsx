@@ -55,6 +55,7 @@ const audienceSize = [
 interface TableData {
     id: number;
     name: string;
+    target_schema: string;
     source: string;
     type: string;
     created_date: string;

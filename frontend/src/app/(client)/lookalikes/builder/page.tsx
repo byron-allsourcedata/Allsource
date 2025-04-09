@@ -20,6 +20,7 @@ import LookalikeContainer from "../components/LookalikeContainer";
 
 interface TableData {
     name: string;
+    target_schema: string;
     source: string;
     type: string;
     created_date: string;

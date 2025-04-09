@@ -67,6 +67,7 @@ class DomainsLeads(BaseModel):
 class SourceResponse(BaseModel):
     id: UUID
     name: str
+    target_schema: str
     source_origin: str
     source_type: str
     created_at: datetime

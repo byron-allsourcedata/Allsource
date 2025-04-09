@@ -513,46 +513,7 @@ const SourcesImport: React.FC = () => {
                         <Box sx={{
                             flex: 1, gap: 2, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '16px', pb: '20px',
                         }}>
-                            <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minWidth: '100%', flexGrow: 1, position: "relative", flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px",}}>
-                                <Box sx={{ display: "flex", width: '100%', flexDirection: "row", justifyContent: 'space-between', gap: 1 }}>
-                
-                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, }}>
-                                        <Typography sx={{ fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500 }}>Select your target schema</Typography>
-                                        <Typography sx={{ fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)" }}>Choose what you would like to use it for.</Typography>
-                                    </Box>
-                
-                                </Box>
-                                <Box sx={{ display: "flex", flexDirection: "row", gap: 2 }}>
-                                    {["B2B", "B2C"].map((option) => (
-                                        <ToggleButton
-                                            key={option}
-                                            value={option}
-                                            selected={targetAudience === option}
-                                            className="form-input-label"
-                                            onClick={() => handleTargetAudienceChange(option)}
-                                            sx={{
-                                                textTransform: 'none',
-                                                border: targetAudience === option
-                                                    ? "1px solid rgba(117, 168, 218, 1)"
-                                                    : "1px solid #ccc",
-                                                color: "rgba(32, 33, 36, 1)",
-                                                backgroundColor: targetAudience === option 
-                                                    ? "rgba(246, 248, 250, 1)" 
-                                                    : "rgba(255, 255, 255, 1)",
-                                                borderRadius: "4px",
-                                                padding: '8px 12px',
-                                                ":hover": {
-                                                    borderColor: "rgba(208, 213, 221, 1)",
-                                                    backgroundColor: "rgba(236, 238, 241, 1)"
-                                                },
-                                            }}
-                                        >
-                                            {option}
-                                        </ToggleButton>
-                                    ))}
-                                </Box>
-                
-                            </Box>
+                            
                             <Box sx={{display: "flex", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
                                 <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
                                     <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500}}>Choose your data source</Typography>
@@ -616,8 +577,51 @@ const SourcesImport: React.FC = () => {
                                     </Button>
                                 </Box>
                             </Box>
+
+                            {sourceMethod !== 0  && 
+                                <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minWidth: '100%', flexGrow: 1, position: "relative", flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px",}}>
+                                    <Box sx={{ display: "flex", width: '100%', flexDirection: "row", justifyContent: 'space-between', gap: 1 }}>
+                    
+                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, }}>
+                                            <Typography sx={{ fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500 }}>Select your target schema</Typography>
+                                            <Typography sx={{ fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)" }}>Choose what you would like to use it for.</Typography>
+                                        </Box>
+                    
+                                    </Box>
+                                    <Box sx={{ display: "flex", flexDirection: "row", gap: 2 }}>
+                                        {["B2B", "B2C"].map((option) => (
+                                            <ToggleButton
+                                                key={option}
+                                                value={option}
+                                                selected={targetAudience === option}
+                                                className="form-input-label"
+                                                onClick={() => handleTargetAudienceChange(option)}
+                                                sx={{
+                                                    textTransform: 'none',
+                                                    border: targetAudience === option
+                                                        ? "1px solid rgba(117, 168, 218, 1)"
+                                                        : "1px solid #ccc",
+                                                    color: "rgba(32, 33, 36, 1)",
+                                                    backgroundColor: targetAudience === option 
+                                                        ? "rgba(246, 248, 250, 1)" 
+                                                        : "rgba(255, 255, 255, 1)",
+                                                    borderRadius: "4px",
+                                                    padding: '8px 12px',
+                                                    ":hover": {
+                                                        borderColor: "rgba(208, 213, 221, 1)",
+                                                        backgroundColor: "rgba(236, 238, 241, 1)"
+                                                    },
+                                                }}
+                                            >
+                                                {option}
+                                            </ToggleButton>
+                                        ))}
+                                    </Box>
+                    
+                                </Box>
+                            }
                             
-                            {sourceMethod === 1 && 
+                            {sourceMethod === 1 && targetAudience !== '' && 
                                 <Box sx={{display: "flex", flexDirection: "column", gap: 2, position: "relative", flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
                                     {uploadProgress !== null && (
                                                     <Box sx={{ width: "100%", position: "absolute", top: 0, left: 0, zIndex: 1200  }}>
@@ -763,7 +767,7 @@ const SourcesImport: React.FC = () => {
                                 </Box>
                             }
 
-                            {sourceMethod === 1 && 
+                            {sourceMethod === 1 && targetAudience !== '' && 
                                 <Box sx={{display: file ? "flex" : "none", flexDirection: "column", position: 'relative', gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
                                     {isChatGPTProcessing && <Box
                                         sx={{
@@ -935,7 +939,7 @@ const SourcesImport: React.FC = () => {
                             }
 
 
-                            {sourceMethod === 2 && 
+                            {sourceMethod === 2 && targetAudience !== '' && 
                                 <Box sx={{display: "flex", flexDirection: "column", gap: 2, position: "relative", flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
                                     {isDomainSearchProcessing && <Box
                                         sx={{
@@ -1007,7 +1011,7 @@ const SourcesImport: React.FC = () => {
                                 </Box>
                             }
                             {/* { sourceMethod === 2 && !pixelNotInstalled && selectedDomainId &&  */}
-                            <Box sx={{display: sourceMethod === 2 && !pixelNotInstalled && selectedDomainId ? "flex" : "none", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
+                            <Box sx={{display: sourceMethod === 2 && targetAudience !== '' && !pixelNotInstalled && selectedDomainId ? "flex" : "none", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
                                 <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
                                     <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500}}>Choose your data source</Typography>
                                     <Typography sx={{fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Please select your event type.</Typography>
@@ -1115,7 +1119,7 @@ const SourcesImport: React.FC = () => {
                             </Box>
                             {/* } */}
                             
-                            <Box sx={{display: sourceMethod !== 0 && file || selectedDomain !== "" && !pixelNotInstalled ? "flex" : "none", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
+                            <Box sx={{display: sourceMethod !== 0 && targetAudience !== '' && file || selectedDomain !== "" && !pixelNotInstalled ? "flex" : "none", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
                                 <Box sx={{display: "flex", alignItems: "center", gap: 2, "@media (max-width: 400px)": { justifyContent: "space-between" },}}>
                                     <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500}}>Create Name</Typography>
                                     <TextField

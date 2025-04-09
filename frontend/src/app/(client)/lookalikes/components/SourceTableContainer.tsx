@@ -5,6 +5,7 @@ import dayjs from "dayjs";
 
 interface TableData {
   name: string;
+  target_schema: string;
   source: string;
   type: string;
   created_date: string;
@@ -68,6 +69,7 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
         >
           <TableRow>
             <TableCell>Name</TableCell>
+            <TableCell>Target Schema</TableCell>
             <TableCell>Source</TableCell>
             <TableCell>Type</TableCell>
             <TableCell>Created date</TableCell>
@@ -92,6 +94,7 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
           {tableData.map((row, index) => (
             <TableRow key={index}>
               <TableCell>{row.name}</TableCell>
+              <TableCell>{row.target_schema.toUpperCase()}</TableCell>
               <TableCell>{setSourceType(row.source)}</TableCell>
               <TableCell>{setSourceType(row.type)}</TableCell>
               <TableCell>{dayjs(row.created_date).format('MMM D, YYYY')}</TableCell>

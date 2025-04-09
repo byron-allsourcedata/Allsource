@@ -22,12 +22,13 @@ class AudienceLookalikesService:
             sources, created_by = source_info
             return {
                 'name': sources.name,
-                 'source': sources.source_origin,
-                 'type': sources.source_type,
-                 'created_date': sources.created_at,
+                'target_schema': sources.target_schema,
+                'source': sources.source_origin,
+                'type': sources.source_type,
+                'created_date': sources.created_at,
                 'created_by': created_by,
                 'number_of_customers': sources.total_records,
-                 'matched_records': sources.matched_records,
+                'matched_records': sources.matched_records,
             }
         return {}
 
@@ -36,6 +37,7 @@ class AudienceLookalikesService:
         result = [
             {'id': source.id,
              'name': source.name,
+             'target_schema': source.target_schema,
              'source': source.source_origin,
              'type': source.source_type,
              'created_date': source.created_at,

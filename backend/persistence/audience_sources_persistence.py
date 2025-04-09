@@ -40,6 +40,7 @@ class AudienceSourcesPersistence:
             self.db.query(
                 AudienceSource.id,
                 AudienceSource.name,
+                AudienceSource.target_schema,
                 AudienceSource.source_type,
                 AudienceSource.source_origin,
                 Users.full_name,

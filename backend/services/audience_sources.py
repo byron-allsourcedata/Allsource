@@ -97,15 +97,16 @@ class AudienceSourceService:
             source_list.append({
                 'id': source[0],
                 'name': source[1],
-                'source_origin': source[2],
-                'source_type': source[3],
-                'created_at': source[5],
-                'created_by': source[4],
-                'domain': source[6],
-                'total_records': source[7],
-                'matched_records': source[8],
-                'matched_records_status': source[9],
-                'processed_records': source[10],
+                'target_schema': source[2],
+                'source_origin': source[3],
+                'source_type': source[4],
+                'created_at': source[6],
+                'created_by': source[5],
+                'domain': source[7],
+                'total_records': source[8],
+                'matched_records': source[9],
+                'matched_records_status': source[10],
+                'processed_records': source[11],
             })
 
         return source_list, count

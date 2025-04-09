@@ -29,6 +29,7 @@ import CustomCell from './components/CustomCell';
 interface Source {
     id: string
     name: string
+    target_schema: string
     source_origin: string
     source_type: string
     created_at: Date
@@ -96,6 +97,7 @@ const Sources: React.FC = () => {
 
     const columns = [
         { key: 'name', label: 'Name', widths: { width: '11vw', minWidth: '11vw', maxWidth: '11vw' } },
+        { key: 'target_schema', label: 'Target Schema', widths: { width: '115px', minWidth: '115px', maxWidth: '115px' } },
         { key: 'source', label: 'Source', widths: { width: '80px', minWidth: '80px', maxWidth: '80px' } },
         { key: 'domain', label: 'Domain', widths: { width: '12vw', minWidth: '12vw', maxWidth: '12vw' } },
         { key: 'type', label: 'Type', widths: { width: '13vw', minWidth: '13vw', maxWidth: '20vw' } },
@@ -802,7 +804,7 @@ const Sources: React.FC = () => {
                                                                         top: '56px',
                                                                         zIndex: 11,
                                                                     }}>
-                                                                        <TableCell colSpan={9} sx={{ p: 0, pb: "1px" }}>
+                                                                        <TableCell colSpan={columns.length} sx={{ p: 0, pb: "1px" }}>
                                                                             <LinearProgress variant="indeterminate" sx={{ width: "100%", height: "2px", position: "absolute" }} />
                                                                         </TableCell>
                                                                     </TableRow>
@@ -813,7 +815,7 @@ const Sources: React.FC = () => {
                                                                         top: '56px',
                                                                         zIndex: 11,
                                                                     }}>
-                                                                        <TableCell colSpan={9} sx={{ p: 0, pb: "1px", backgroundColor: "rgba(235, 235, 235, 1)", borderColor: "rgba(235, 235, 235, 1)" }} />
+                                                                        <TableCell colSpan={columns.length} sx={{ p: 0, pb: "1px", backgroundColor: "rgba(235, 235, 235, 1)", borderColor: "rgba(235, 235, 235, 1)" }} />
                                                                     </TableRow>
                                                                 )
                                                             }
@@ -925,7 +927,7 @@ const Sources: React.FC = () => {
                                                                     }}
                                                                 >
                                                                     <TableCell
-                                                                        colSpan={9}
+                                                                        colSpan={columns.length}
                                                                         sx={{
                                                                             p: 0,
                                                                             pb: "2px",
@@ -969,6 +971,13 @@ const Sources: React.FC = () => {
                                                                                 backgroundColor: loaderForTable ? '#fff' : '#fff',
                                                                                 boxShadow: isScrolled ? '2px 0px 6px 0px #00000033' : 'none',
                                                                             }} />
+
+                                                                            {/* Target Schema Column */}
+                                                                            <TableCell
+                                                                                sx={{ ...sourcesStyles.table_array, position: 'relative', minWidth: '80px', maxWidth: '80px', width: '80px' }}
+                                                                            >
+                                                                                {row.target_schema.toUpperCase()}
+                                                                            </TableCell>
 
                                                                             {/* Source Column */}
                                                                             <TableCell
