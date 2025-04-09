@@ -1,5 +1,5 @@
-
-
+import json
+import re
 import hashlib
 from schemas.integrations.meta import AdAccountScheme
 from models.five_x_five_users import FiveXFiveUser
@@ -309,7 +309,7 @@ class MetaIntegrationsService:
     
     def create_smart_audience_sync(self, customer_id: int, created_by: str, user: dict, smart_audience_id: UUID, sent_contacts: int, campaign = {}, data_map: List[DataMap] = None, list_id: str = None, list_name: str = None,):
         credentials = self.get_smart_credentials(user_id=user.get('id'))
-        campaign_id = campaign.get('campaign_id')
+        campaign_id = campaign.get('campaign_id')        
         if campaign_id == -1 and campaign.get('campaign_name'):
             campaign_id = self.create_campaign(campaign['campaign_name'], campaign['daily_budget'], credentials.access_token, customer_id)
         if campaign_id and campaign_id != -1:
@@ -322,43 +322,41 @@ class MetaIntegrationsService:
             'sent_contacts': sent_contacts,
             'sync_type': DataSyncType.AUDIENCE.value,
             'smart_audience_id': smart_audience_id,
-            'data_map': [data.model_dump_json() for data in data_map] if data_map else None,
+            'data_map': data_map if data_map else None,
             'created_by': created_by
         })
         return sync
         
     async def process_data_sync(self, user_integration, integration_data_sync, enrichment_users: EnrichmentUser):
-        for enrichment_user in enrichment_users:
-            profile = self.__create_user(custom_audience_id=integration_data_sync.list_id, access_token=user_integration.access_token, enrichment_user=enrichment_user)
-            if profile in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-                continue
+        profile = self.__create_user(custom_audience_id=integration_data_sync.list_id, access_token=user_integration.access_token, enrichment_users=enrichment_users)
         
-            if profile.get('error', {}).get('type') == 'OAuthException':
-                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+        if profile.get('error', {}).get('type') == 'OAuthException':
+            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
 
         return ProccessDataSyncResult.SUCCESS.value
 
-    def __create_user(self, custom_audience_id: str, access_token: str, enrichment_user: EnrichmentUser):
-        profile = self.__hash_mapped_meta_user(enrichment_user)
-        if profile in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-            return profile
+    def __create_user(self, custom_audience_id: str, access_token: str, enrichment_users: EnrichmentUser):
+        profiles = []
+        for enrichment_user in enrichment_users:
+            profile = self.__hash_mapped_meta_user(enrichment_user)
+            if profile in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
+                continue
+            profiles.append(profile)
         
         payload = {
-            "schema": [
-                "EMAIL",
-                "PHONE",
-                "GEN",
-                "LN",
-                "FN",
-                "ST",
-                "CT",
-                "ZIP"
-            ],
-            "data": [profile]
+            "schema": ["EMAIL","PHONE","GEN","LN","FN","ST","CT","ZIP"],
+            "data":   profiles
+        }
+        session = {
+            "session_id": 1,
+            "batch_seq": 1,
+            "last_batch_flag": True,
+            "estimated_num_total": len(profiles)
         }
         url = f'https://graph.facebook.com/v20.0/{custom_audience_id}/users'
         response = self.__handle_request(method='POST', url=url, params={'access_token': access_token}, data={
-            'payload': payload,
+            "session": json.dumps(session),
+            'payload': json.dumps(payload),
             'app_id': APP_ID
             })
         
@@ -377,6 +375,17 @@ class MetaIntegrationsService:
 
         first_phone = fake.phone_number()
         address_parts = fake.address().split("\n")
+        city_state_zip = address_parts[-1]
+
+        match = re.match(r'^(.*?)(?:, ([A-Z]{2}) (\d{5}))?$', city_state_zip)
+
+        if match:
+            city = match.group(1).strip()
+            state = match.group(2) if match.group(2) else ''
+            zip_code = match.group(3) if match.group(3) else ''
+        else:
+            city, state, zip_code = '', '', ''
+            
         gender = fake.passport_gender()
         first_name = fake.first_name()
         last_name = fake.last_name()
@@ -390,9 +399,9 @@ class MetaIntegrationsService:
                 hash_value(gender),                                               # GEN
                 hash_value(first_name),                                            # LN
                 hash_value(last_name),                                           # FN
-                hash_value(five_x_five_user.personal_state),                                       # ST
-                hash_value(five_x_five_user.personal_city),                                        # CT
-                hash_value(five_x_five_user.personal_zip),                                         # ZIP
+                hash_value(state),                                       # ST
+                hash_value(city),                                        # CT
+                hash_value(zip_code),                                         # ZIP
             ]
             
     def __mapped_meta_list(self, list):

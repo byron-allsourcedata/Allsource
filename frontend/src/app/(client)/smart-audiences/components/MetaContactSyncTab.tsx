@@ -8,12 +8,12 @@ import CloseIcon from '@mui/icons-material/Close';
 import { showErrorToast } from '@/components/ToastNotification';
 
 interface MetaAuidece {
-    list_id: string
+    id: string
     list_name: string
 }
 
 interface MetaCampaign {
-    list_id: string
+    id: string
     list_name: string
 }
 
@@ -25,7 +25,7 @@ interface FormValues {
 }
 
 type KlaviyoList = {
-    list_id: string
+    id: string
     list_name: string
 }
 
@@ -177,7 +177,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
             }
         } else if (isKlaviyoList(value)) {
             setSelectedOptionCampaignMeta({
-                list_id: value.list_id,
+                id: value.id,
                 list_name: value.list_name
             });
             setInputValueCampaignMeta(value.list_name)
@@ -189,7 +189,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
 
     const handleSaveCampaignMeta = () => {
         if (isCheckedMeta) {
-            const newKlaviyoList = { list_id: '-1', list_name: formValues.campaignName }
+            const newKlaviyoList = { id: '-1', list_name: formValues.campaignName }
             setSelectedOptionCampaignMeta(newKlaviyoList);
             if (isKlaviyoList(newKlaviyoList)) {
                 setIsDropdownValid(true);
@@ -237,7 +237,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
             }
         } else if (isKlaviyoList(value)) {
             setSelectedOptionMeta({
-                list_id: value.list_id,
+                id: value.id,
                 list_name: value.list_name
             });
             setInputValueMeta(value.list_name)
@@ -648,7 +648,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
 
                     {/* Show static options */}
                     {metaAudienceList && metaAudienceList.map((klaviyo) => (
-                        <MenuItem key={klaviyo.list_id} onClick={() => handleSelectOptionMeta(klaviyo)} sx={{
+                        <MenuItem key={klaviyo.id} onClick={() => handleSelectOptionMeta(klaviyo)} sx={{
                             '&:hover': {
                                 background: 'rgba(80, 82, 178, 0.10)'
                             }
@@ -904,7 +904,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                         {/* Show static options */}
                         {metaCampaign && metaCampaign.map((klaviyo, option) => (
                             <MenuItem
-                                key={klaviyo.list_id}
+                                key={klaviyo.id}
                                 onClick={() => handleSelectOptionCampaignMeta(klaviyo)}
                                 sx={{
                                     '&:hover': {

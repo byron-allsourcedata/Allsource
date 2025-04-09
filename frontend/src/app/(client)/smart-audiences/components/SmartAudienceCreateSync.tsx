@@ -70,7 +70,7 @@ interface CustomRow {
 }
 
 interface MetaAuidece {
-    list_id: string
+    id: string
     list_name: string
 }
 
@@ -404,9 +404,9 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
             }
 
             if (activeService === "meta") {
-                if (optionAdAccountMeta?.id && selectedOptionMeta?.list_name && selectedOptionMeta?.list_id) {
+                if (optionAdAccountMeta?.id && selectedOptionMeta?.list_name && selectedOptionMeta?.id) {
                     requestObj.customer_id = String(optionAdAccountMeta?.id)
-                    requestObj.list_id = String(selectedOptionMeta?.list_id),
+                    requestObj.list_id = String(selectedOptionMeta?.id),
                         requestObj.list_name = selectedOptionMeta?.list_name
                 }
                 else {
