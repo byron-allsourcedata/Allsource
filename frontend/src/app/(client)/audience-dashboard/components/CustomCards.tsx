@@ -201,35 +201,35 @@ const CustomCards: React.FC<CustomCardsProps> = ({ values, onCardClick }) => {
 
   return (
     <Grid container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}>
-      <Grid item xs={2.4} md={2.4}>
+      <Grid item xs={12} md={2.4}>
         <PixelContactsCard
           value={values.pixel_contacts}
           onClick={() => handleCardClick("Pixel Contacts")}
           isActive={activeCard === "Pixel Contacts"}
         />
       </Grid>
-      <Grid item xs={2.4} md={2.4}>
+      <Grid item xs={12} md={2.4}>
         <SourcesCard
           value={values.sources}
           onClick={() => handleCardClick("Sources")}
           isActive={activeCard === "Sources"}
         />
       </Grid>
-      <Grid item xs={2.4} md={2.4}>
+      <Grid item xs={12} md={2.4}>
         <LookalikesCard
           value={values.lookalikes}
           onClick={() => handleCardClick("Lookalikes")}
           isActive={activeCard === "Lookalikes"}
         />
       </Grid>
-      <Grid item xs={2.4} md={2.4}>
+      <Grid item xs={12} md={2.4}>
         <SmartAudienceCard
           value={values.smart_audience}
           onClick={() => handleCardClick("Smart Audience")}
           isActive={activeCard === "Smart Audience"}
         />
       </Grid>
-      <Grid item xs={2.4} md={2.4}>
+      <Grid item xs={12} md={2.4}>
         <DataSyncCard
           value={values.data_sync}
           onClick={() => handleCardClick("Data sync")}

@@ -95,17 +95,39 @@ const AudienceDashboard: React.FC = () => {
       const formatKey = (key: string): string =>
         key.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 
+      const formatLookalikeSize = (value: string): string => {
+        const map: Record<string, string> = {
+          almost_identical: "Almost Identical 0–3%",
+          extremely_similar: "Extremely Similar 0–7%",
+          very_similar: "Very Similar 0–10%",
+          quite_similar: "Quite Similar 0–15%",
+          broad: "Broad 0–20%",
+        };
+
+        return map[value] ?? value;
+      };
+
       const eventInfoBuilder = (
         event: Record<string, any>
       ): Record<string, string | number> => {
         const excludeKeys = ["created_at", "type"];
+
         return Object.entries(event)
           .filter(([key]) => !excludeKeys.includes(key))
           .filter(
             ([, value]) => value !== null && value !== undefined && value !== ""
           )
           .reduce((acc, [key, value]) => {
-            acc[formatKey(key)] = value;
+            const formattedKey = formatKey(key);
+
+            if (key === "lookalike_size" && typeof value === "string") {
+              acc["Lookalike Size"] = formatLookalikeSize(value);
+            } else if (key === "source_type" && typeof value === "string") {
+              acc[formattedKey] = formatKey(value);
+            } else {
+              acc[formattedKey] = value;
+            }
+
             return acc;
           }, {} as Record<string, string | number>);
       };
@@ -326,7 +348,7 @@ const AudienceDashboard: React.FC = () => {
             ) : (
               <Box sx={{ width: "100%", mb: 2, pl: 0.5 }}>
                 <Grid container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}>
-                  <Grid item xs={6} md={2.4}>
+                  <Grid item xs={12} md={2.4}>
                     {pixelContacts.map((contact, index) => (
                       <PixelCard
                         key={index}
@@ -342,7 +364,7 @@ const AudienceDashboard: React.FC = () => {
                       />
                     ))}
                   </Grid>
-                  <Grid item xs={6} md={2.4}>
+                  <Grid item xs={12} md={2.4}>
                     {eventCards.sources.map((card, index) => (
                       <Box key={index} mt={1}>
                         <MainSectionCard data={card} />
@@ -350,21 +372,21 @@ const AudienceDashboard: React.FC = () => {
                     ))}
                   </Grid>
 
-                  <Grid item xs={6} md={2.4}>
+                  <Grid item xs={12} md={2.4}>
                     {eventCards.lookalikes.map((card, index) => (
                       <Box key={index} mt={1}>
                         <MainSectionCard data={card} />
                       </Box>
                     ))}
                   </Grid>
-                  <Grid item xs={6} md={2.4}>
+                  <Grid item xs={12} md={2.4}>
                     {eventCards.smart_audience.map((card, index) => (
                       <Box key={index} mt={1}>
                         <MainSectionCard data={card} />
                       </Box>
                     ))}
                   </Grid>
-                  <Grid item xs={6} md={2.4}>
+                  <Grid item xs={12} md={2.4}>
                     {eventCards.data_sync.map((card, index) => (
                       <Box key={index} mt={1}>
                         <MainSectionCard data={card} />
