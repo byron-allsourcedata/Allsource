@@ -65,6 +65,11 @@ const MainSectionCard: React.FC<MainSectionCardProps> = ({
         maxWidth: "100%",
         border: highlighted ? `2px solid rgba(5, 105, 226, 1)` : "transparent",
         transition: "border 0.2s ease",
+        cursor: "pointer",
+        "&:hover": {
+          border: `1px solid rgba(5, 105, 226, 1)`,
+          transition: "none",
+        },
       }}
     >
       <CardContent
