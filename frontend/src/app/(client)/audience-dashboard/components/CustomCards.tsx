@@ -200,7 +200,7 @@ const CustomCards: React.FC<CustomCardsProps> = ({ values, onCardClick }) => {
   };
 
   return (
-    <Grid container spacing={{ xs: 1, sm: 1.5, md: 2, lg: 4 }}>
+    <Grid container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}>
       <Grid item xs={12} md={2.4}>
         <PixelContactsCard
           value={values.pixel_contacts}

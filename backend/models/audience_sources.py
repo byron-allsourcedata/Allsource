@@ -1,6 +1,9 @@
 from sqlalchemy import Column, event, Integer, TIMESTAMP, JSON, VARCHAR, ForeignKey, Index, UUID
 from .base import Base, create_timestamps, update_timestamps
 from models.users_domains import UserDomains
+from sqlalchemy.dialects.postgresql import ENUM
+
+target_schemas = ENUM('b2c', 'b2b', name='target_schemas', create_type=True)
 
 class AudienceSource(Base):
     __tablename__ = 'audience_sources'
@@ -12,6 +15,7 @@ class AudienceSource(Base):
     updated_at = Column(TIMESTAMP, nullable=False)
     name = Column(VARCHAR(128), nullable=False)
     source_type = Column(VARCHAR(128), nullable=False)
+    target_schema = Column(target_schemas, default='b2c', nullable=False)
     source_origin = Column(VARCHAR(64), nullable=False)
     matched_records = Column(Integer, default=0, nullable=False)
     total_records = Column(Integer, default=0, nullable=False)

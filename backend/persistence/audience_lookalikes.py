@@ -36,7 +36,8 @@ class AudienceLookalikesPersistence:
             AudienceSource.source_type,
             Users.full_name,
             AudienceSource.source_origin,
-            UserDomains.domain)\
+            UserDomains.domain,
+            AudienceSource.target_schema)\
             .join(AudienceSource, AudienceLookalikes.source_uuid == AudienceSource.id)\
             .outerjoin(UserDomains, AudienceSource.domain_id == UserDomains.id)\
             .join(Users, Users.id == AudienceSource.created_by_user_id)\
@@ -94,14 +95,15 @@ class AudienceLookalikesPersistence:
                 "created_by": created_by,
                 "source_origin": source_origin,
                 "domain": domain,
+                "target_schema": source_schema,
             }
-            for lookalike, source_name, source_type, created_by, source_origin, domain in lookalikes
+            for lookalike, source_name, source_type, created_by, source_origin, domain, source_schema in lookalikes
         ]
         
         return result, count, max_page
 
     def create_lookalike(self, uuid_of_source, user_id, lookalike_size,
-                         lookalike_name, target_schema, created_by_user_id):
+                         lookalike_name, created_by_user_id):
         source_info = self.get_source_info(uuid_of_source, user_id)
         if not source_info:
             raise HTTPException(status_code=404, detail="Source not found or access denied")
@@ -114,7 +116,6 @@ class AudienceLookalikesPersistence:
             user_id=user_id,
             created_date=datetime.utcnow(),
             created_by_user_id=created_by_user_id,
-            target_schema=target_schema,
             source_uuid=uuid_of_source,
         )
         self.db.add(lookalike)
