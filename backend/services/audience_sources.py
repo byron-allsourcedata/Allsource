@@ -320,6 +320,7 @@ class AudienceSourceService:
     async def create_source(self, user: User, payload: NewSource) -> SourceResponse:
         creating_data = {
             "user_id": user.get("id"),
+            "target_schema": payload.target_schema,
             "source_type": payload.source_type,
             "source_origin": payload.source_origin,
             "source_name": payload.source_name,

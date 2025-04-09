@@ -1,6 +1,6 @@
 "use client";
 import React, { ChangeEvent, useState, useEffect } from 'react';
-import { Box, Grid, Typography, TextField, Button, FormControl, MenuItem, Select, LinearProgress, SelectChangeEvent, IconButton } from '@mui/material';
+import { Box, Grid, Typography, TextField, Button, FormControl, MenuItem, Select, LinearProgress, SelectChangeEvent, IconButton, ToggleButton } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import axiosInstance from "@/axios/axiosInterceptorInstance";
@@ -29,6 +29,7 @@ interface EventTypeInterface {
 }
 
 interface NewSource {
+    target_schema: string;
     source_type: string;
     source_origin: string;
     source_name: string;
@@ -79,6 +80,7 @@ const SourcesImport: React.FC = () => {
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
     const [headersinCSV, setHeadersinCSV] = useState<string[]>([]);
     const { hasNotification } = useNotification();
+    const [targetAudience, setTargetAudience] = useState<string | ''>('');
 
     const [eventType, setEventType] = useState<number[]>([]);
     const [domains, setDomains] = useState<DomainsLeads[]>([]);
@@ -192,12 +194,23 @@ const SourcesImport: React.FC = () => {
             .filter(name => name)
             .join(',');
     };
+
+
+    const toSnakeCase = (str: string) => {
+        return str
+            .replace(/\s+/g, '_')
+            .replace(/([a-z])([A-Z])/g, '$1_$2')
+            .toLowerCase();
+    };
+
+
     const handleSumbit = async () => {
         setLoading(true)
 
         const rowsToSubmit = rows.map(({ id, canDelete, isHidden, ...rest }) => rest);
 
         const newSource: NewSource = {
+            target_schema: toSnakeCase(targetAudience),
             source_type: sourceMethod === 1  ? convertToDBFormat(sourceType) : convertToDBFormat2(eventType),
             source_origin: sourceMethod === 1 ? "csv" : "pixel",
             source_name: sourceName,
@@ -265,6 +278,11 @@ const SourcesImport: React.FC = () => {
         setFileSizeStr(fileSize + " MB");
         setFileName(file.name);
         return true;
+    };
+
+
+    const handleTargetAudienceChange = (value: string) => {
+        setTargetAudience(value);
     };
 
     const getFileUploadUrl = async (fileType: string): Promise<string> => {
@@ -495,6 +513,46 @@ const SourcesImport: React.FC = () => {
                         <Box sx={{
                             flex: 1, gap: 2, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '16px', pb: '20px',
                         }}>
+                            <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minWidth: '100%', flexGrow: 1, position: "relative", flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px",}}>
+                                <Box sx={{ display: "flex", width: '100%', flexDirection: "row", justifyContent: 'space-between', gap: 1 }}>
+                
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, }}>
+                                        <Typography sx={{ fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500 }}>Select your target schema</Typography>
+                                        <Typography sx={{ fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)" }}>Choose what you would like to use it for.</Typography>
+                                    </Box>
+                
+                                </Box>
+                                <Box sx={{ display: "flex", flexDirection: "row", gap: 2 }}>
+                                    {["B2B", "B2C"].map((option) => (
+                                        <ToggleButton
+                                            key={option}
+                                            value={option}
+                                            selected={targetAudience === option}
+                                            className="form-input-label"
+                                            onClick={() => handleTargetAudienceChange(option)}
+                                            sx={{
+                                                textTransform: 'none',
+                                                border: targetAudience === option
+                                                    ? "1px solid rgba(117, 168, 218, 1)"
+                                                    : "1px solid #ccc",
+                                                color: "rgba(32, 33, 36, 1)",
+                                                backgroundColor: targetAudience === option 
+                                                    ? "rgba(246, 248, 250, 1)" 
+                                                    : "rgba(255, 255, 255, 1)",
+                                                borderRadius: "4px",
+                                                padding: '8px 12px',
+                                                ":hover": {
+                                                    borderColor: "rgba(208, 213, 221, 1)",
+                                                    backgroundColor: "rgba(236, 238, 241, 1)"
+                                                },
+                                            }}
+                                        >
+                                            {option}
+                                        </ToggleButton>
+                                    ))}
+                                </Box>
+                
+                            </Box>
                             <Box sx={{display: "flex", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
                                 <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
                                     <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500}}>Choose your data source</Typography>
@@ -505,10 +563,11 @@ const SourcesImport: React.FC = () => {
                                         variant="outlined"
                                         startIcon={<Image src="../upload-minimalistic.svg" alt="upload" width={20} height={20} />}
                                         sx={{
-                                            fontFamily: "Nunito Sans",
+                                            fontFamily: "Roboto",
+                                            fontWeight: 400,
                                             border: "1px solid rgba(208, 213, 221, 1)",
                                             borderRadius: "4px",
-                                            color: "rgba(32, 33, 36, 1)",
+                                            color: sourceMethod === 1 ? "rgba(32, 33, 36, 1)" : "rgba(112, 112, 113, 1)",
                                             textTransform: "none",
                                             fontSize: "14px",
                                             padding: "8px 12px",
@@ -531,10 +590,11 @@ const SourcesImport: React.FC = () => {
                                         variant="outlined"
                                         startIcon={<Image src="../website-icon.svg" alt="upload" width={20} height={20} />}
                                         sx={{
-                                            fontFamily: "Nunito Sans",
+                                            fontFamily: "Roboto",
+                                            fontWeight: 400,
                                             border: "1px solid rgba(208, 213, 221, 1)",
                                             borderRadius: "4px",
-                                            color: "rgba(32, 33, 36, 1)",
+                                            color: sourceMethod === 2 ? "rgba(32, 33, 36, 1)" : "rgba(112, 112, 113, 1)",
                                             textTransform: "none",
                                             fontSize: "14px",
                                             padding: "8px 12px",
@@ -565,7 +625,7 @@ const SourcesImport: React.FC = () => {
                                                     </Box>
                                     )}
                                     <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
-                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500}}>Select your Source File</Typography>
+                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500}}>Select your source file</Typography>
                                         <Typography sx={{fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Please upload a CSV file containing the list of customers who have successfully completed an order on your website.</Typography>
                                     </Box>
                                     <FormControl
@@ -889,8 +949,8 @@ const SourcesImport: React.FC = () => {
                                         <BorderLinearProgress variant="indeterminate" sx={{borderRadius: "6px"}} />
                                     </Box>}
                                     <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
-                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500}}>Select your Domain</Typography>
-                                        <Typography sx={{fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Please Select your domain.</Typography>
+                                        <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500}}>Select your domain</Typography>
+                                        <Typography sx={{fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Please select your domain.</Typography>
                                     </Box>
                                     <FormControl
                                         variant="outlined"
@@ -950,7 +1010,7 @@ const SourcesImport: React.FC = () => {
                             <Box sx={{display: sourceMethod === 2 && !pixelNotInstalled && selectedDomainId ? "flex" : "none", flexDirection: "column", gap: 2, flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px" }}>
                                 <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
                                     <Typography sx={{fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500}}>Choose your data source</Typography>
-                                    <Typography sx={{fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Please Select your event type.</Typography>
+                                    <Typography sx={{fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)"}}>Please select your event type.</Typography>
                                 </Box>
                                 <Box sx={{display: "flex",  gap: 2, "@media (max-width: 420px)": { display: "grid", gridTemplateColumns: "1fr" }}}>
                                     <Button

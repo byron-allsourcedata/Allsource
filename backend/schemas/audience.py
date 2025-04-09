@@ -21,6 +21,7 @@ class SourceIDs(BaseModel):
     sources_ids: List[str]
 
 class NewSource(BaseModel):
+    target_schema: str
     source_type: str
     source_origin: str
     source_name: str

@@ -54,7 +54,6 @@ const CreateLookalikePage: React.FC = () => {
     const [isTableVisible, setIsTableVisible] = useState(false);
     const [search, setSearch] = useState("");
     const [lookalike, setLookalikeData] = useState<LookalikeData[]>([]);
-    const [targetAudience, setTargetAudience] = useState<string | ''>('');
 
     const handleSelectRow = (row: any) => {
         setSelectedSourceId(row.id)
@@ -109,11 +108,6 @@ const CreateLookalikePage: React.FC = () => {
         setSourceName(event.target.value);
     };
 
-    const handleTargetAudienceChange = (value: string) => {
-        setTargetAudience(value);
-        setCurrentStep(2)
-    };
-
     const handleCancel = () => {
         router.push('/sources')
     };
@@ -140,7 +134,7 @@ const CreateLookalikePage: React.FC = () => {
     const handleGenerateLookalike = async () => {
         try {
             setLoading(true);
-            const response = await axiosInstance.post('/audience-lookalikes/builder', { uuid_of_source: selectedSourceId, lookalike_size: toSnakeCase(selectedLabel), lookalike_name: sourceName, target_schema: toSnakeCase(targetAudience) })
+            const response = await axiosInstance.post('/audience-lookalikes/builder', { uuid_of_source: selectedSourceId, lookalike_size: toSnakeCase(selectedLabel), lookalike_name: sourceName })
             if (response.data.status === "SUCCESS") {
                 await createLookalikeData(response.data.lookalike.id);
                 showToast('Lookalike was created successfully!');
@@ -322,52 +316,13 @@ const CreateLookalikePage: React.FC = () => {
                                     </Box>
                                 )}
                                 {currentStep >= 1 && (
-                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minWidth: '100%', flexGrow: 1, position: "relative", flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px", mt: 1, }}>
-                                    <Box sx={{ display: "flex", width: '100%', flexDirection: "row", justifyContent: 'space-between', gap: 1 }}>
-                    
-                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, }}>
-                                            <Typography sx={{ fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500 }}>Select your Target Schema</Typography>
-                                            <Typography sx={{ fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)" }}>Choose what you would like to use it for.</Typography>
-                                        </Box>
-                    
-                                    </Box>
-                                    <Box sx={{ display: "flex", flexDirection: "row", gap: 2 }}>
-                                        {["B2B", "B2C"].map((option) => (
-                                            <ToggleButton
-                                                key={option}
-                                                value={option}
-                                                selected={targetAudience === option}
-                                                className="form-input-label"
-                                                onClick={() => handleTargetAudienceChange(option)}
-                                                sx={{
-                                                    textTransform: 'none',
-                                                    border: targetAudience === option
-                                                        ? "1px solid rgba(117, 168, 218, 1)"
-                                                        : "1px solid #ccc",
-                                                    color: "rgba(32, 33, 36, 1)",
-                                                    backgroundColor: "#fff !important",
-                                                    borderRadius: "4px",
-                                                    padding: '8px 12px',
-                                                    "&:hover": {
-                                                        backgroundColor: "rgba(117, 168, 218, 0.2)"
-                                                    }
-                                                }}
-                                            >
-                                                {option}
-                                            </ToggleButton>
-                                        ))}
-                                    </Box>
-                    
-                                </Box>
-                                )}
-                                {currentStep >= 2 && (
                                     <AudienceSizeSelector
                                         onSelectSize={handleSelectSize}
                                         selectedSize={selectedSize}
                                     />
                                 )}
 
-                                {currentStep >= 3 && (
+                                {currentStep >= 2 && (
                                     <Box
                                         sx={{
                                             display: "flex",
@@ -424,7 +379,7 @@ const CreateLookalikePage: React.FC = () => {
                                     </Box>
                                 )}
                             </Box>
-                            {currentStep >= 3 && (
+                            {currentStep >= 2 && (
                                 <Box
                                     sx={{
                                         width: '100%',
