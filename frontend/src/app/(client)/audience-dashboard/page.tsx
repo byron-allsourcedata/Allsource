@@ -66,8 +66,8 @@ const AudienceDashboard: React.FC = () => {
         pixel_contacts: counts.pixel_contacts ?? 0,
         sources: counts.sources_count ?? 0,
         lookalikes: counts.lookalike_count ?? 0,
-        smart_audience: counts.smart_audience_count ?? 0,
-        data_sync: counts.data_sync_count ?? 0,
+        smart_audience: counts.smart_count ?? 0,
+        data_sync: counts.sync_count ?? 0,
       });
 
       const events = eventsRes.data;
