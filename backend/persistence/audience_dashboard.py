@@ -197,7 +197,6 @@ class DashboardAudiencePersistence:
         audience_smart = (
             self.db.query(
                 AudienceSmart.id.label('id'),
-                AudienceLookalikes.name.label('lookalike_name'),
                 AudienceSmart.created_at.label('created_at'),
                 AudienceSmart.name.label('audience_name'),
                 AudienceSmartsUseCase.name.label('use_case'),
@@ -239,7 +238,6 @@ class DashboardAudiencePersistence:
             )
             .group_by(
                 AudienceSmart.id,
-                AudienceLookalikes.name,
                 AudienceSmart.created_at,
                 AudienceSmart.name,
                 AudienceSmartsUseCase.name,

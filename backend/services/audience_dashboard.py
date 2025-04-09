@@ -132,7 +132,7 @@ class DashboardAudienceService:
         
         last_lookalikes_audience_smart = self.merge_and_sort(
             datasets=[(lookalikes, 'lookalikes', ['id', 'lookalike_size', 'lookalike_name', 'created_at', 'size']), 
-                      ([smart_audience for smart_audience in smart_audiences if smart_audience[0]], 'smart_audience', ['id', 'lookalike_name', 'source_name', 'audience_name', 'created_at']),],
+                      ([smart_audience for smart_audience in smart_audiences if smart_audience[0]], 'smart_audience', ['id', 'lookalike_name', 'audience_name', 'created_at']),],
             limit=self.LIMIT
         )
         
