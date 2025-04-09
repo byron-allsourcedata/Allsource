@@ -97,15 +97,16 @@ class AudienceSourceService:
             source_list.append({
                 'id': source[0],
                 'name': source[1],
-                'source_origin': source[2],
-                'source_type': source[3],
-                'created_at': source[5],
-                'created_by': source[4],
-                'domain': source[6],
-                'total_records': source[7],
-                'matched_records': source[8],
-                'matched_records_status': source[9],
-                'processed_records': source[10],
+                'target_schema': source[2],
+                'source_origin': source[3],
+                'source_type': source[4],
+                'created_at': source[6],
+                'created_by': source[5],
+                'domain': source[7],
+                'total_records': source[8],
+                'matched_records': source[9],
+                'matched_records_status': source[10],
+                'processed_records': source[11],
             })
 
         return source_list, count
@@ -320,6 +321,7 @@ class AudienceSourceService:
     async def create_source(self, user: User, payload: NewSource) -> SourceResponse:
         creating_data = {
             "user_id": user.get("id"),
+            "target_schema": payload.target_schema,
             "source_type": payload.source_type,
             "source_origin": payload.source_origin,
             "source_name": payload.source_name,
@@ -368,13 +370,14 @@ class AudienceSourceService:
         return None if not source else {
             'id': source[0],
             'name': source[1],
-            'source_origin': source[2],
-            'source_type': source[3],
-            'created_at': source[5],
-            'created_by': source[4],
-            'domain': source[6],
-            'total_records': source[7],
-            'matched_records': source[8],
-            'matched_records_status': source[9],
-            'processed_records': source[10],
+            'target_schema': source[2],
+            'source_origin': source[3],
+            'source_type': source[4],
+            'created_at': source[6],
+            'created_by': source[5],
+            'domain': source[7],
+            'total_records': source[8],
+            'matched_records': source[9],
+            'matched_records_status': source[10],
+            'processed_records': source[11],
         }

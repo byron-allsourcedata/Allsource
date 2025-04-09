@@ -234,10 +234,10 @@ class AudienceSmartsService:
             {
                 'id': s[0],
                 'name': s[1],
-                'source_type': s[2],
-                'source_origin': s[3],
-                'domain': s[6],
-                'matched_records': s[8],
+                'source_type': s[3],
+                'source_origin': s[4],
+                'domain': s[7],
+                'matched_records': s[9],
             }
             for s in sources
         ]
