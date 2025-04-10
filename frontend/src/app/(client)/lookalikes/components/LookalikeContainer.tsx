@@ -82,63 +82,81 @@ const truncateText = (text: string, maxLength: number) => {
 
 const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
   const { smartLookaLikeProgress } = useSSE();
-  const [progress, setProgress] = useState<number | 0>(0);
-  const [total, setTotal] = useState<number | 0>(0);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [createdData, setCreatedData] = useState<any>(tableData);
-
+  const [progress, setProgress] = useState<Record<string, number>>({});
+  const [total, setTotal] = useState<Record<string, number>>({});
+  const intervalRef = useRef<Record<string, NodeJS.Timeout>>({});
+  const [createdData, setCreatedData] = useState<any[]>(tableData);
+  const [selectedId, setSelectedId] = useState<string>('');
+  
+  // useEffect(() => {
+  //   createdData.forEach((item) => {
+  //     const progress = smartLookaLikeProgress[item.id];
+  //     if (progress) {
+  //       setProgress((prev) => ({ ...prev, [item.id]: progress.processed }));
+  //       setTotal((prev) => ({ ...prev, [item.id]: progress.total }));
+  //     }
+  //   });
+  // }, [smartLookaLikeProgress, createdData]);
+  
   useEffect(() => {
-    tableData.forEach((item) => {
-      const progress = smartLookaLikeProgress[item.id];
-      if (progress) {
-        setProgress(progress.processed);
-        setTotal(progress.total);
+    createdData.forEach((item) => {
+      if (!intervalRef.current[item.id]) {
+        console.log(`Polling started for item ${item.id}`);
+        intervalRef.current[item.id] = setInterval(() => {
+          const currentProgress = item.size_progress;
+          const currentTotal = item.size;
+  
+          if (currentProgress < currentTotal || currentProgress === 0) {
+            console.log(`Fetching data for item ${item.id}`);
+            fetchData(item.id);
+          } else {
+            console.log(`Polling stopped for item ${item.id}`);
+            clearInterval(intervalRef.current[item.id]);
+            delete intervalRef.current[item.id];
+          }
+        }, 2000);
       }
     });
-  }, [smartLookaLikeProgress]);
-
-  useEffect(() => {
-    console.log("polling lookalike");
-
-    if (!intervalRef.current) {
-      console.log("polling lookalike started");
-      intervalRef.current = setInterval(() => {
-        const hasPending = createdData?.processed_size !== createdData?.size;
-
-        if (hasPending) {
-          console.log("Fetching due to pending records");
-
-          fetchData();
-        } else {
-          console.log("No pending records, stopping interval");
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-          }
-        }
-      }, 2000);
-    }
-
+  
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-        console.log("interval cleared");
-      }
+      Object.keys(intervalRef.current).forEach((id) => {
+        clearInterval(intervalRef.current[id]);
+        delete intervalRef.current[id];
+      });
+      console.log('All intervals cleared');
     };
   }, [createdData]);
-
-  const fetchData = async () => {
+  
+  const fetchData = async (id: string) => {
     try {
       const response = await axiosInstance.get(
-        `/audience-lookalikes/get-processing-lookalikes?&id=${createdData.id}`
+        `/audience-lookalikes/get-processing-lookalikes?id=${id}`
       );
       const updatedItem = response.data;
-
-      setCreatedData(updatedItem);
+  
+      setCreatedData((prevData) =>
+        prevData.map((item) =>
+          item.id === id ? { ...item, ...updatedItem } : item
+        )
+      );
+  
+      // Update progress and total for the specific item
+      setProgress((prev) => ({
+        ...prev,
+        [id]: updatedItem.size_progress,
+      }));
+      setTotal((prev) => ({
+        ...prev,
+        [id]: updatedItem.size,
+      }));
     } catch (error) {
-      console.error("Failed to fetch data:", error);
+      console.error(`Failed to fetch data for item ${id}:`, error);
     }
+  };
+  
+  const handleRowSelect = (id: string) => {
+    setSelectedId(id);
+    console.log(`Selected ID set to ${id}`);
   };
 
   return (
@@ -279,14 +297,17 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
               </TableCell>
               <TableCell>{row.created_by}</TableCell>
               <TableCell sx={{ position: "relative" }}>
-                {progress >= total && progress !== 0 ? (
-                  progress.toLocaleString("en-US")
-                ) : (
-                  <ProgressBar
-                    progress={{ total: total, processed: progress }}
-                  />
-                )}
-              </TableCell>
+              {progress[row.id] >= total[row.id] && progress[row.id] !== undefined ? (
+                progress[row.id]?.toLocaleString("en-US")
+              ) : (
+                <ProgressBar
+                  progress={{
+                    total: total[row.id] || 0,
+                    processed: progress[row.id] || 0,
+                  }}
+                />
+              )}
+            </TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -320,11 +341,14 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
               <Box>
                 {" "}
                 Size:{" "}
-                {progress >= total ? (
-                  progress.toLocaleString("en-US")
+                {progress[row.id] >= total[row.id] && progress[row.id] !== undefined ? (
+                  progress[row.id]?.toLocaleString("en-US")
                 ) : (
                   <ProgressBar
-                    progress={{ total: total, processed: progress }}
+                    progress={{
+                      total: total[row.id] || 0,
+                      processed: progress[row.id] || 0,
+                    }}
                   />
                 )}
               </Box>
