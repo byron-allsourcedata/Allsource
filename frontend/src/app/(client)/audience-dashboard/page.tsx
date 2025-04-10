@@ -30,6 +30,14 @@ interface PixelContact {
   converted_sale: number;
 }
 
+interface CardData {
+  status: string;
+  date: string;
+  left: Record<string, string | number>;
+  right?: Record<string, string | number>;
+  tabType?: string;
+}
+
 const AudienceDashboard: React.FC = () => {
   const [values, setValues] = useState({
     pixel_contacts: 0,
@@ -44,6 +52,18 @@ const AudienceDashboard: React.FC = () => {
   const { hasNotification } = useNotification();
   const [loading, setLoading] = useState(true);
   const [activeChainIds, setActiveChainIds] = useState<string[]>([]);
+  const [chainedCards, setChainedCards] = useState<{
+    sources: CardData[];
+    lookalikes: CardData[];
+    smart_audience: CardData[];
+    data_sync: CardData[];
+  }>({
+    sources: [],
+    lookalikes: [],
+    smart_audience: [],
+    data_sync: [],
+  });
+
   const [eventCards, setEventCards] = useState<Record<string, EventCardData[]>>(
     {
       lookalikes: [],
@@ -197,6 +217,66 @@ const AudienceDashboard: React.FC = () => {
         });
       });
       setEventCards(groupedCards);
+
+      const buildChainedPairs = (cards: EventCardData[]): CardData[] => {
+        const visited = new Set<string>();
+        const result: CardData[] = [];
+
+        const cardMap = new Map<string, EventCardData>();
+        cards.forEach((card) => cardMap.set(card.id, card));
+
+        for (const card of cards) {
+          if (visited.has(card.id)) continue;
+
+          const chain = card.chain_ids?.filter((id) => cardMap.has(id)) ?? [];
+          if (chain.length <= 1) {
+            visited.add(card.id);
+            result.push({
+              status: card.status,
+              date: card.date,
+              left: card.event_info,
+              tabType: card.tabType,
+            });
+            continue;
+          }
+
+          const sortedChain = [...chain]
+            .map((id) => cardMap.get(id)!)
+            .sort(
+              (b, a) => new Date(a.date).getTime() - new Date(b.date).getTime()
+            );
+
+          const main = sortedChain[0];
+          visited.add(main.id);
+
+          for (let i = 1; i < sortedChain.length; i++) {
+            const created = sortedChain[i];
+            visited.add(created.id);
+
+            result.push({
+              status: created.status,
+              date: created.date,
+              left: main.event_info,
+              right: created.event_info,
+              tabType: created.tabType,
+            });
+          }
+        }
+
+        return result;
+      };
+
+      const sources = buildChainedPairs(groupedCards.sources);
+      const lookalikes = buildChainedPairs(groupedCards.lookalikes);
+      const smartAudience = buildChainedPairs(groupedCards.smart_audience);
+      const dataSync = buildChainedPairs(groupedCards.data_sync);
+
+      setChainedCards({
+        sources,
+        lookalikes,
+        smart_audience: smartAudience,
+        data_sync: dataSync,
+      });
     } catch (error) {
       console.error("Failed to load dashboard data", error);
     } finally {
@@ -229,6 +309,18 @@ const AudienceDashboard: React.FC = () => {
       setPixelCardActive(true);
     }
   };
+
+  const tabMap: Record<string, keyof typeof chainedCards> = {
+    Sources: "sources",
+    Lookalikes: "lookalikes",
+    "Smart Audience": "smart_audience",
+    "Data sync": "data_sync",
+  };
+
+  const currentTabData: CardData[] =
+    selectedCard && tabMap[selectedCard]
+      ? chainedCards[tabMap[selectedCard]]
+      : [];
 
   return (
     <Box>
@@ -353,50 +445,16 @@ const AudienceDashboard: React.FC = () => {
             </Box>
             {selectedCard ? (
               <Box>
-                <Grid container justifyContent="center">
-                  {Array.from({ length: 6 }).map((_, index) => (
-                    <Grid item xs={12} sm={6} key={index}>
-                      {selectedCard === "Sources" && (
-                        <LookalikeCard
-                          data={{
-                            status: "Created",
-                            date: "6:20 pm, April 2, 2025",
-                            left: {
-                              Name: "Sorce1",
-                              Type: "Customer Conversions",
-                              "Matched Records": 5967,
-                            },
-                            right: {
-                              "Lookalike Name": "My First Lookalike",
-                              "Lookalike size": "0-10% Very similar",
-                              Size: 10476,
-                            },
-                            tabType: "sources",
-                          }}
-                        />
-                      )}
-                      {selectedCard === "Lookalikes" && (
-                        <LookalikeCard
-                          data={{
-                            status: "Created Audience",
-                            date: "6:20 pm, April 2, 2025",
-                            left: {
-                              Name: "Sorce1",
-                              Type: "Customer Conversions",
-                              "Matched Records": 5967,
-                            },
-                            right: {
-                              "Lookalike Name": "My First Lookalike",
-                              "Lookalike size": "0-10% Very similar",
-                              "Active Segments": 10476,
-                            },
-                            tabType: "Lookalikes",
-                          }}
-                        />
-                      )}
-                    </Grid>
-                  ))}
+                <Grid container justifyContent="center" spacing={1}>
+                  {currentTabData.map(
+                    (card: any, index: React.Key | null | undefined) => (
+                      <Grid item xs={12} sm={6} key={index}>
+                        <LookalikeCard data={card} />
+                      </Grid>
+                    )
+                  )}
                 </Grid>
+
                 {selectedCard === "Pixel Contacts" && (
                   <Box>
                     <AudienceChart selectedDomain={selectedDomain} />

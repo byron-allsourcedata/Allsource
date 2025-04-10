@@ -12,12 +12,15 @@ interface CardData {
 
 const getStatusColor = (status: string, tabType?: string): string => {
   if (status.includes("Audience")) return "rgba(110, 193, 37, 1)";
-  if (status.includes("Lookalikes")) return "rgba(224, 176, 5, 1)";
+  if (status.includes("Lookalike")) return "rgba(224, 176, 5, 1)";
+  if (status.includes("Data")) return "rgba(5, 105, 226, 1)";
   if (tabType) {
     if (tabType.includes("Lookalikes")) return "rgba(224, 176, 5, 1)";
+    if (tabType.includes("Smart")) return "rgba(110, 193, 37, 1)";
+    if (tabType.includes("Data")) return "rgba(5, 105, 226, 1)";
+    if (tabType.includes("Source")) return "rgba(80, 82, 178, 1)";
   }
-
-  return "blue"; // default
+  return "";
 };
 
 const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
@@ -27,10 +30,8 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
   const renderSection = (sectionData: Record<string, string | number>) =>
     Object.entries(sectionData).map(([label, value]) => (
       <Box key={label} mb={1}>
-        <Typography variant="body2" color="textSecondary">
-          {label}
-        </Typography>
-        <Typography sx={{ fontWeight: 600, fontSize: "16px" }}>
+        <Typography className="dashboard-card-text">{label}</Typography>
+        <Typography className="dashboard-card-heading">
           {typeof value === "number" ? value.toLocaleString() : value}
         </Typography>
       </Box>
@@ -43,22 +44,28 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
         boxShadow: "0px 1px 4px 0px rgba(0, 0, 0, 0.25)",
         padding: "1rem 1.5rem",
         maxWidth: "100%",
+        margin: 0.25,
       }}
     >
-      <CardContent sx={{ p: 0 }}>
+      <CardContent
+        sx={{
+          p: 0,
+          "&:last-child": {
+            paddingBottom: 0,
+          },
+        }}
+      >
         <Box
           display="flex"
           justifyContent="space-between"
           alignItems="center"
-          mb={2}
+          mb={1}
         >
           <Box display="flex" alignItems="center">
             <FiberManualRecordIcon sx={{ fontSize: 12, color, mr: 1 }} />
-            <Typography sx={{ fontWeight: 600 }}>{status}</Typography>
+            <Typography className="dashboard-card-heading">{status}</Typography>
           </Box>
-          <Typography variant="body2" color="textSecondary">
-            {date}
-          </Typography>
+          <Typography className="dashboard-card-text">{date}</Typography>
         </Box>
 
         {/* Content */}
