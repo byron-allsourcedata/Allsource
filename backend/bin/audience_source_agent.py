@@ -20,8 +20,10 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
+from models.five_x_five_emails import FiveXFiveEmails
+from models.five_x_five_users_emails import FiveXFiveUsersEmails
 from models.five_x_five_users import FiveXFiveUser
-from enums import TypeOfCustomer, ProccessDataSyncResult
+from enums import TypeOfCustomer, ProccessDataSyncResult, EmailType
 from utils import get_utc_aware_date, get_valid_email_without_million
 from models.leads_visits import LeadsVisits
 from models.emails import Email
@@ -91,7 +93,7 @@ async def process_email_leads(
         "orders_amount": 0.0 if include_amount else None,
         "orders_count": 0,
         "start_date": None,
-        "five_x_five_user_id": None
+        "enrichment_user_id": None
     })
 
     logging.info(f"Start processing {len(persons)} persons for source_id {source_id}")
@@ -278,7 +280,7 @@ async def process_user_id(persons: List[PersonRow], db_session: Session, source_
     results_query = (
         db_session.query(
             LeadUser.id,
-            FiveXFiveUser
+            FiveXFiveUser.id.label("five_x_five_user_id")
         )
         .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)
         .filter(
@@ -289,8 +291,39 @@ async def process_user_id(persons: List[PersonRow], db_session: Session, source_
     )
 
     updates = []
-    for user_visit in results_query:
-        lead_id, five_x_five_user = user_visit
+    for lead_id, five_x_five_user_id in results_query:
+        email_types_priority = [EmailType.BUSINESS, EmailType.PERSONAL, EmailType.ADDITIONAL_PERSONAL]
+        email = None
+        enrichment_user_id = None
+        for email_type in email_types_priority:
+            email_link = db_session.query(FiveXFiveUsersEmails.email_id).filter_by(
+                user_id=five_x_five_user_id,
+                type=email_type.value
+            ).first()
+            if not email_link:
+                continue
+
+            email_entry = db_session.query(FiveXFiveEmails.email).filter_by(
+                id=email_link.email_id
+            ).first()
+            if not email_entry:
+                continue
+
+            email = email_entry[0]
+            enrichment_email_id = db_session.query(Email.id).filter_by(email=email).first()
+            if not enrichment_email_id:
+                continue
+
+            enrichment_user_id = db_session.query(EmailEnrichment.enrichment_user_id).filter_by(
+                email_id=enrichment_email_id.id
+            ).first()
+
+            if enrichment_user_id:
+                enrichment_user_id = enrichment_user_id[0]
+                break
+
+        if not enrichment_user_id:
+            continue
 
         first_visit = db_session.query(LeadsVisits).filter(
             LeadsVisits.lead_id == lead_id
@@ -308,13 +341,10 @@ async def process_user_id(persons: List[PersonRow], db_session: Session, source_
         last_end_datetime = datetime.combine(last_visit.end_date, last_visit.end_time)
 
         calculate_result = calculate_website_visitor_user_value(first_datetime, last_start_datetime, last_end_datetime)
-        valid_email = get_valid_email_without_million(five_x_five_user)
-        email = ""
-        if not (valid_email == ProccessDataSyncResult.INCORRECT_FORMAT.value):
-            email = valid_email
+
         updates.append({
             "source_id": source_id,
-            "five_x_five_user_id": five_x_five_user.id,
+            "enrichment_user_id": enrichment_user_id,
             "email": email,
             "start_date": calculate_result['active_start_date'],
             "end_date": calculate_result['active_end_date'],
@@ -336,6 +366,7 @@ async def process_user_id(persons: List[PersonRow], db_session: Session, source_
         db_session.commit()
 
     return len(updates)
+
 
 
 async def process_and_send_chunks(db_session: Session, source_id: str, batch_size: int, queue_name: str,

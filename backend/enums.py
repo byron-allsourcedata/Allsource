@@ -1,9 +1,13 @@
 from enum import Enum
 
-
 class BaseEnum(Enum):
     SUCCESS = 'SUCCESS'
     FAILURE = 'FAILURE'
+
+class EmailType(Enum):
+    BUSINESS = "business"
+    PERSONAL = "personal"
+    ADDITIONAL_PERSONAL = "additional_personal"
 
 class QueueName(Enum):
     AUDIENCE_SOURCE_MATCHING = 'aud_sources_matching'
