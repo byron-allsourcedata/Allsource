@@ -49,7 +49,10 @@ const MainSectionCard: React.FC<MainSectionCardProps> = ({
       .map(([label, value]) => (
         <Box key={label} mb={1}>
           <Typography className="dashboard-card-text">{label}</Typography>
-          <Typography className="dashboard-card-heading">
+          <Typography
+            className="dashboard-card-heading"
+            sx={{ textWrap: "wrap", maxWidth: "100%" }}
+          >
             {typeof value === "number" ? value.toLocaleString() : value}
           </Typography>
         </Box>
