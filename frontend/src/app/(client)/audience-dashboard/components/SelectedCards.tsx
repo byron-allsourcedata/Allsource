@@ -8,7 +8,6 @@ interface CardData {
   left: Record<string, string | number>;
   right?: Record<string, string | number>;
   tabType?: string;
-  isMainSection?: boolean | false;
 }
 
 const getStatusColor = (status: string, tabType?: string): string => {
@@ -22,7 +21,7 @@ const getStatusColor = (status: string, tabType?: string): string => {
 };
 
 const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
-  const { status, date, left, right, tabType, isMainSection } = data;
+  const { status, date, left, right, tabType } = data;
   const color = getStatusColor(status, tabType);
 
   const renderSection = (sectionData: Record<string, string | number>) =>
@@ -72,11 +71,9 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
           }}
         >
           {/* Левая колонка */}
-          {!isMainSection && (
-            <Box display="flex" flexDirection="column">
-              {renderSection(left)}
-            </Box>
-          )}
+          <Box display="flex" flexDirection="column">
+            {renderSection(left)}
+          </Box>
 
           {/* Правая колонка (если есть) */}
           {right && (

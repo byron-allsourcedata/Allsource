@@ -1,5 +1,6 @@
 import logging
 from collections import defaultdict
+from typing import Optional
 from persistence.audience_dashboard import DashboardAudiencePersistence
 
 logger = logging.getLogger(__name__)
@@ -9,18 +10,25 @@ class DashboardAudienceService:
     def __init__(self, dashboard_audience_persistence: DashboardAudiencePersistence):
         self.dashboard_persistence = dashboard_audience_persistence
         self.LIMIT = 5
-        
+
     def get_contacts_for_pixel_contacts_statistics(self, *, user: dict):
-        results = self.dashboard_persistence.get_contacts_for_pixel_contacts_statistics(user_id=user.get('id'))
-        daily_data = defaultdict(lambda: {
-            'total_leads': 0,
-            'visitors': 0,
-            'view_products': 0,
-            'abandoned_cart': 0,
-            'converted_sale': 0,
-        })
-        
-        for domain, behavior_type, count_converted_sales, lead_count in results:                    
+        user_id = user.get('id')
+        user_domains = self.dashboard_persistence.get_user_domains(user_id=user_id)
+
+        results = self.dashboard_persistence.get_contacts_for_pixel_contacts_statistics(user_id=user_id)
+
+        daily_data = {
+            domain: {
+                'total_leads': 0,
+                'visitors': 0,
+                'view_products': 0,
+                'abandoned_cart': 0,
+                'converted_sale': 0,
+            }
+            for domain in user_domains
+        }
+
+        for domain, behavior_type, count_converted_sales, lead_count in results:
             data = daily_data[domain]
             data['total_leads'] += lead_count
             data['converted_sale'] += count_converted_sales
@@ -30,11 +38,12 @@ class DashboardAudienceService:
                 data['abandoned_cart'] += lead_count
             elif behavior_type == 'visitor':
                 data['visitors'] += lead_count
+
         result_array = [
             {'domain': domain, **stats}
             for domain, stats in daily_data.items()
         ]
-        
+
         return result_array
 
     def get_audience_dashboard_data(self, *, from_date: int, to_date: int, user: dict):
@@ -149,8 +158,10 @@ class DashboardAudienceService:
             'data_sync': self.merge_data_with_chain(data_syncs, data_syncs_chain, 'id')
         }
     
-    def get_contacts_for_pixel_contacts_by_domain_id(self, *, user: dict, domain_id: int):
-        results = self.dashboard_persistence.get_contacts_for_pixel_contacts_by_domain_id(user_id=user.get('id'), domain_id=domain_id)
+    def get_contacts_for_pixel_contacts_by_domain_id(
+            self, *, user: dict, domain_id: int, from_date: Optional[int] = None,
+            to_date: Optional[int] = None) -> dict:
+        results = self.dashboard_persistence.get_contacts_for_pixel_contacts_by_domain_id(user_id=user.get('id'), domain_id=domain_id, from_date=from_date, to_date=to_date)
         daily_data = defaultdict(lambda: {
             'total_leads': 0,
             'visitors': 0,

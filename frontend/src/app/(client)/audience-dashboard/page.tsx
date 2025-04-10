@@ -39,6 +39,8 @@ const AudienceDashboard: React.FC = () => {
     data_sync: 0,
   });
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
+  const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
+  const [pixelCardActive, setPixelCardActive] = useState(false);
   const { hasNotification } = useNotification();
   const [loading, setLoading] = useState(true);
   const [activeChainIds, setActiveChainIds] = useState<string[]>([]);
@@ -209,8 +211,22 @@ const AudienceDashboard: React.FC = () => {
   const handleCardClick = (card: string) => {
     if (selectedCard === card) {
       setSelectedCard(null);
+      setPixelCardActive(false);
     } else {
       setSelectedCard(card);
+      setPixelCardActive(false);
+    }
+  };
+
+  const handlePixelCardClick = (card: string, domain: string) => {
+    if (selectedCard === card && selectedDomain === domain) {
+      setSelectedCard(null);
+      setSelectedDomain(null);
+      setPixelCardActive(false);
+    } else {
+      setSelectedCard("Pixel Contacts");
+      setSelectedDomain(domain);
+      setPixelCardActive(true);
     }
   };
 
@@ -328,7 +344,12 @@ const AudienceDashboard: React.FC = () => {
                 "@media (max-width: 900px)": { mt: 0, mb: 0 },
               }}
             >
-              <CustomCards values={values} onCardClick={handleCardClick} />
+              <CustomCards
+                values={values}
+                onCardClick={handleCardClick}
+                selectedCard={selectedCard}
+                pixelCardActive={pixelCardActive}
+              />
             </Box>
             {selectedCard ? (
               <Box>
@@ -370,7 +391,6 @@ const AudienceDashboard: React.FC = () => {
                               "Active Segments": 10476,
                             },
                             tabType: "Lookalikes",
-                            isMainSection: true,
                           }}
                         />
                       )}
@@ -379,7 +399,7 @@ const AudienceDashboard: React.FC = () => {
                 </Grid>
                 {selectedCard === "Pixel Contacts" && (
                   <Box>
-                    <AudienceChart />
+                    <AudienceChart selectedDomain={selectedDomain} />
                   </Box>
                 )}
               </Box>
@@ -388,20 +408,29 @@ const AudienceDashboard: React.FC = () => {
                 <Grid container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}>
                   <Grid item xs={12} md={2.4}>
                     {pixelContacts.map((contact, index) => (
-                      <PixelCard
-                        key={index}
-                        data={{
-                          domain: contact.domain,
-                          date: "last 24h",
-                          contacts_collected: contact.total_leads,
-                          visitor: contact.visitors,
-                          view_product: contact.view_products,
-                          abandoned_cart: contact.abandoned_cart,
-                          converted_sale: contact.converted_sale,
-                        }}
-                      />
+                      <Box key={index} mt={1}>
+                        <PixelCard
+                          key={index}
+                          data={{
+                            domain: contact.domain,
+                            date: "last 24h",
+                            contacts_collected: contact.total_leads,
+                            visitor: contact.visitors,
+                            view_product: contact.view_products,
+                            abandoned_cart: contact.abandoned_cart,
+                            converted_sale: contact.converted_sale,
+                          }}
+                          onClick={() =>
+                            handlePixelCardClick(
+                              "Pixel Contacts",
+                              contact.domain
+                            )
+                          }
+                        />
+                      </Box>
                     ))}
                   </Grid>
+
                   <Grid item xs={12} md={2.4}>
                     {eventCards.sources.map((card, index) => (
                       <Box key={index} mt={1}>
