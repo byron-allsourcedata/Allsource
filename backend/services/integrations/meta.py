@@ -12,7 +12,7 @@ import os
 from faker import Faker
 from services.integrations.commonIntegration import get_valid_email, get_valid_phone, get_valid_location
 from datetime import datetime, timedelta
-from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, DataSyncType
+from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, DataSyncType, IntegrationLimit
 from facebook_business.adobjects.adaccount import AdAccount
 from facebook_business.api import FacebookAdsApi
 from fastapi import HTTPException
@@ -92,7 +92,8 @@ class MetaIntegrationsService:
             'full_name': user.get('full_name'),
             'expire_access_token': access_token.get('expires_in'),
             'last_access_token_update': datetime.now(),
-            'service_name': SourcePlatformEnum.META.value
+            'service_name': SourcePlatformEnum.META.value,
+            'limit': IntegrationLimit.META.value
         }
 
         if common_integration:
@@ -203,8 +204,8 @@ class MetaIntegrationsService:
             credentials.error_message = 'Connection Error'
             self.integrations_persisntece.db.commit()
             return
-        audience_lists = [self.__mapped_meta_list(audience) for audience in response_audience.json().get('data')]
-        campaign_lists = [self.__mapped_meta_list(campaign) for campaign in response_campaign.json().get('data')]
+        audience_lists = [self.__mapped_meta_list(audience) for audience in response_audience.json().get('data')] if response_audience else []
+        campaign_lists = [self.__mapped_meta_list(campaign) for campaign in response_campaign.json().get('data')] if response_campaign else []
         return {
             'audience_lists': audience_lists,
             'campaign_lists': campaign_lists
@@ -328,19 +329,17 @@ class MetaIntegrationsService:
         return sync
         
     async def process_data_sync(self, user_integration, integration_data_sync, enrichment_users: EnrichmentUser):
-        profile = self.__create_user(custom_audience_id=integration_data_sync.list_id, access_token=user_integration.access_token, enrichment_users=enrichment_users)
+        result = self.__create_user(custom_audience_id=integration_data_sync.list_id, access_token=user_integration.access_token, enrichment_users=enrichment_users)
         
-        if profile.get('error', {}).get('type') == 'OAuthException':
+        if result.get('error',{}).get('type') == 'OAuthException':
             return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
-
+        
         return ProccessDataSyncResult.SUCCESS.value
 
     def __create_user(self, custom_audience_id: str, access_token: str, enrichment_users: EnrichmentUser):
         profiles = []
         for enrichment_user in enrichment_users:
             profile = self.__hash_mapped_meta_user(enrichment_user)
-            if profile in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-                continue
             profiles.append(profile)
         
         payload = {
@@ -364,10 +363,7 @@ class MetaIntegrationsService:
 
     def __hash_mapped_meta_user(self, enrichment_user: EnrichmentUser):
         emails_list = [e.email.email for e in enrichment_user.emails_enrichment]
-        first_email = get_valid_email(emails_list, self.million_verifier_integrations)
-
-        if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-            return first_email
+        first_email = get_valid_email(emails_list)
         
         # first_phone = get_valid_phone(five_x_five_user)
         # address_parts = get_valid_location(five_x_five_user)

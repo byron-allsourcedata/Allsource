@@ -6,7 +6,7 @@ import { showErrorToast } from '@/components/ToastNotification';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 
 type KlaviyoList = {
-    list_id: string
+    id: string
     list_name: string
 }
 
@@ -87,7 +87,7 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({ setIs
             }
         } else if (isKlaviyoList(value)) {
             setSelectedOptionMailchimp({
-                list_id: value.list_id,
+                id: value.id,
                 list_name: value.list_name
             });
             setIsDropdownValid(true);
@@ -156,7 +156,6 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({ setIs
 
     const handleSave = async () => {
         let valid = true;
-        
         if (newListName.trim() === '') {
             setListNameError(true);
             valid = false;
@@ -389,7 +388,7 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({ setIs
                     )}
 
                     {klaviyoList && klaviyoList.map((klaviyo) => (
-                        <MenuItem key={klaviyo.list_id} onClick={() => handleSelectOptionMailchimp(klaviyo)} sx={{
+                        <MenuItem key={klaviyo.id} onClick={() => handleSelectOptionMailchimp(klaviyo)} sx={{
                             '&:hover': {
                                 background: 'rgba(80, 82, 178, 0.10)'
                             }

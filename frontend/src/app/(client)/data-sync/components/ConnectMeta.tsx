@@ -84,12 +84,6 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
     const handleInputChange = (e: any) => {
         const { name, value } = e.target;
         const numericValue = (name === 'bidAmount' || name === 'dailyBudget') ? Number(value) : value;
-        if (
-            (name === 'bidAmount' && (isNaN(numericValue) || numericValue < 1 || numericValue > 918)) ||
-            (name === 'dailyBudget' && (isNaN(numericValue) || numericValue < 100 || numericValue > 1000000000))
-        ) {
-            return;
-        }
         setFormValues((prevValues) => ({
             ...prevValues,
             [name]: numericValue,
@@ -102,6 +96,16 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
     }, [formValues]);
 
     const handleSaveCampaign = () => {
+        if (formValues.bidAmount < 1 || formValues.bidAmount > 918) {
+            showErrorToast('bid Amount must be greater than 1 and less than 918')
+            return
+        }
+
+        if (formValues.dailyBudget < 100 || formValues.dailyBudget > 1000000000){
+            showErrorToast('the daily Budget must be more than 100 and less than 1000000000')
+            return
+        }
+
         if (isChecked) {
             const newKlaviyoList = { id: '-1', list_name: formValues.campaignName }
             setSelectedOptionCampaign(newKlaviyoList);
@@ -1424,6 +1428,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
                                                                                 variant="outlined"
                                                                                 name="bidAmount"
                                                                                 type="number"
+                                                                                onKeyDown={(e) => e.stopPropagation()}
                                                                                 value={formValues.bidAmount}
                                                                                 onChange={handleInputChange}
                                                                                 fullWidth
@@ -1437,6 +1442,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
                                                                                 variant="outlined"
                                                                                 name="dailyBudget"
                                                                                 type="number"
+                                                                                onKeyDown={(e) => e.stopPropagation()}
                                                                                 value={formValues.dailyBudget}
                                                                                 onChange={handleInputChange}
                                                                                 fullWidth

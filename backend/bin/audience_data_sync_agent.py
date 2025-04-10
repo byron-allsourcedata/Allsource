@@ -114,19 +114,21 @@ def update_users_integrations(session, status, integration_data_sync_id, service
                 })
         session.commit()
         
-def update_data_sync_imported_leads(session, status, data_sync_imported_id, integration_data_sync: IntegrationUserSync, user_integration: UserIntegration):
-    session.query(AudienceDataSyncImportedPersons).filter(AudienceDataSyncImportedPersons.id == data_sync_imported_id).update({
-            'status': status
-            })
+def update_data_sync_imported_leads(session, status: str, integration_data_sync: IntegrationUserSync, user_integration: UserIntegration, enrichment_user_ids):
+    session.query(AudienceDataSyncImportedPersons)\
+        .filter(AudienceDataSyncImportedPersons.enrichment_user_id.in_(enrichment_user_ids))\
+        .update({'status': status}, synchronize_session=False)
+
     session.flush()
-    if status == ProccessDataSyncResult.SUCCESS.value:
-        integration_data_sync.last_sync_date = get_utc_aware_date()
-        if integration_data_sync.sync_status == False:
-            integration_data_sync.sync_status = True
-            
-        if user_integration.is_failed == True:
-            user_integration.is_failed = False
-            user_integration.error_message = None
+
+        
+    integration_data_sync.last_sync_date = get_utc_aware_date()
+    if integration_data_sync.sync_status == False:
+        integration_data_sync.sync_status = True
+        
+    if user_integration.is_failed == True:
+        user_integration.is_failed = False
+        user_integration.error_message = None
         
     session.commit()
     
@@ -153,24 +155,21 @@ async def send_error_msg(user_id: int, service_name: str, notification_persisten
 async def ensure_integration(message: IncomingMessage, integration_service: IntegrationService, session: Session, notification_persistence: NotificationPersistence):
     try:
         message_body = json.loads(message.body)
-        data_sync_id = message_body.get('data_sync_id')
+        data_sync_id = message_body['data_sync_id']
         enrichment_user_ids = []
-        data_sync_imported_id = None
-        service_name = None
 
         for enrichment_users in message_body.get('arr_enrichment_users'):
-            data_sync_imported_id = enrichment_users.get('data_sync_imported_id')
             enrichment_user_id = enrichment_users.get('enrichment_user_id')
             enrichment_user_ids.append(enrichment_user_id)
 
-            if not check_correct_data_sync(enrichment_user_id, data_sync_imported_id, session):
+            if not check_correct_data_sync(enrichment_user_id, enrichment_users['data_sync_imported_id'], session):
                 logging.warning(f"Data sync not correct for user {enrichment_user_id}")
-                await message.ack()
+                # await message.ack()
                 return
 
         logging.info(f"Data sync id: {data_sync_id}")
         logging.info(f"Lead User ids: {len(enrichment_user_ids)}")
-
+        
         enrichment_users, user_integration, integration_data_sync = get_lead_attributes(
             session, enrichment_user_ids, data_sync_id
         )
@@ -179,7 +178,9 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
             'meta': integration_service.meta,
             'google_ads': integration_service.google_ads,
             'hubspot': integration_service.hubspot,
-            's3': integration_service.s3
+            's3': integration_service.s3,
+            'sales_force': integration_service.sales_force,
+            'mailchimp': integration_service.mailchimp
         }
         service_name = user_integration.service_name
         service = service_map.get(service_name)
@@ -191,7 +192,7 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
                 logging.info(f"Result {result}")
             except BaseException as e:
                 logging.error(f"Error processing data sync: {e}", exc_info=True)
-                await message.ack()
+                # await message.ack()
                 raise
 
             import_status = DataSyncImportedStatus.SENT.value
@@ -199,11 +200,7 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
                 case ProccessDataSyncResult.INCORRECT_FORMAT.value:
                     logging.debug(f"incorrect_format: {service_name}")
                     import_status = DataSyncImportedStatus.INCORRECT_FORMAT.value
-                    
-                case ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value:
-                    logging.debug(f"incorrect_format: {service_name}")
-                    import_status = DataSyncImportedStatus.VERIFY_EMAIL_FAILED.value
-                    
+                                        
                 case ProccessDataSyncResult.SUCCESS.value:
                     logging.debug(f"success: {service_name}")
                     import_status = DataSyncImportedStatus.SUCCESS.value
@@ -219,10 +216,10 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
                     await send_error_msg(user_integration.user_id, service_name, notification_persistence, NotificationTitles.AUTHENTICATION_INTEGRATION_FAILED.value)
                 
             if import_status != DataSyncImportedStatus.SENT.value:
-                update_data_sync_imported_leads(session, import_status, data_sync_imported_id, integration_data_sync, user_integration)
+                update_data_sync_imported_leads(session=session, status=import_status, integration_data_sync=integration_data_sync, user_integration=user_integration, enrichment_user_ids=enrichment_user_ids)
                 
             logging.info(f"Processed message for service: {service_name}")
-            await message.ack()
+            # await message.ack()
             return
         else:
             logging.error(f"Invalid service name: {service_name}")

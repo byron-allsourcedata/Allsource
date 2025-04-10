@@ -22,7 +22,7 @@ from schemas.integrations.google_ads import GoogleAdsProfile
 from fastapi import HTTPException
 from datetime import datetime, timedelta
 from utils import extract_first_email
-from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, DataSyncType
+from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, DataSyncType, IntegrationLimit
 import httpx
 from utils import format_phone_number
 from typing import List
@@ -77,7 +77,8 @@ class GoogleAdsIntegrationsService:
         integration_data = {
             'access_token': access_token,
             'full_name': user.get('full_name'),
-            'service_name': SourcePlatformEnum.GOOGLE_ADS.value
+            'service_name': SourcePlatformEnum.GOOGLE_ADS.value,
+            'limit': IntegrationLimit.GOOGLE_ADS.value
         }
 
         if common_integration:
@@ -157,8 +158,6 @@ class GoogleAdsIntegrationsService:
         profiles = []
         for enrichment_user in enrichment_users:
             result = self.__mapped_googleads_profile(enrichment_user)
-            if result in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-                continue
             profiles.append(result)
         
         list_response = self.__add_profile_to_list(access_token=user_integration.access_token, customer_id=data_sync.customer_id, user_list_id=data_sync.list_id, profiles=profiles)
@@ -248,9 +247,9 @@ class GoogleAdsIntegrationsService:
     
     def __mapped_googleads_profile(self, enrichment_user: EnrichmentUser) -> GoogleAdsProfile:
         emails_list = [e.email.email for e in enrichment_user.emails_enrichment]
-        first_email = get_valid_email(emails_list, self.million_verifier_integrations)
+        first_email = get_valid_email(emails_list)
 
-        if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
+        if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value):
             return first_email
         
         # first_phone = get_valid_phone(five_x_five_user)

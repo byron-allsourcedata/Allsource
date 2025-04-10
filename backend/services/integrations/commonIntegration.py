@@ -13,20 +13,9 @@ EMAIL_LAST_SEEN_EXAMPLE:  Dict[str, str] = {
     'personal_emails': 'personal_emails_last_seen',
 }
 
-def get_valid_email(
-    emails_list: List[str],
-    email_verifier: MillionVerifierIntegrationsService) -> str:
-    
-    verity = 0
-    # emails_list = extract_first_email(emails_list)
+def get_valid_email(emails_list: List[str]) -> str:
     for email in emails_list:
         return email
-        if email_verifier.is_email_verify(email=email):
-            return email
-        verity += 1
-
-    if verity > 0:
-        return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
     return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
 def get_valid_phone(user: EnrichmentUser) -> Optional[str]:

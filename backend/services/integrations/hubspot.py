@@ -1,17 +1,19 @@
 import logging
-
+import re
+import json
 from pydantic import EmailStr
 
-from enums import SourcePlatformEnum, IntegrationsStatus, ProccessDataSyncResult, DataSyncType
+from enums import SourcePlatformEnum, IntegrationsStatus, ProccessDataSyncResult, DataSyncType, IntegrationLimit
 from persistence.domains import UserDomainsPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
 import httpx
 import os
+from faker import Faker
 from datetime import datetime, timedelta
 from fastapi import HTTPException
-
+from models.enrichment_users import EnrichmentUser
 from typing import List
 
 from schemas.integrations.hubspot import HubspotProfile
@@ -72,7 +74,8 @@ class HubspotIntegrationsService:
         integration_data = {
             'access_token': api_key,
             'full_name': user.get('full_name'),
-            'service_name': SourcePlatformEnum.HUBSPOT.value
+            'service_name': SourcePlatformEnum.HUBSPOT.value,
+            'limit': IntegrationLimit.HUBSPOT.value
         }
 
         if common_integration:
@@ -156,104 +159,127 @@ class HubspotIntegrationsService:
 
         return sync
 
-    async def process_data_sync(self, five_x_five_user, user_integration, data_sync, lead_user):
-        profile = self.__create_profile(five_x_five_user, user_integration.access_token, data_sync.data_map)
+    async def process_data_sync(self, user_integration, data_sync, enrichment_users: EnrichmentUser):
+        profiles = []
+        for enrichment_user in enrichment_users:
+            profile = self.__mapped_profile(enrichment_user, data_sync.data_map)
+            profiles.append(profile)
+        
+        list_response = self.__create_profiles(user_integration.access_token, profiles)
+        return list_response
 
-        if profile in (
-                ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
-                ProccessDataSyncResult.INCORRECT_FORMAT.value,
-                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
-        ):
-            return profile
+    def __create_profiles(self, access_token, profiles_list):
+        emails = [p.get("email") for p in profiles_list if p.get("email")]
+        search_payload = {
+            "filterGroups": [{
+                "filters": [{
+                    "propertyName": "email",
+                    "operator": "IN",
+                    "values": emails
+                }]
+            }],
+            "properties": ["email"]
+        }
+        search_resp = self.__handle_request(
+            url="https://api.hubapi.com/crm/v3/objects/contacts/search",
+            method="POST",
+            access_token=access_token,
+            json=search_payload
+        )
+        if search_resp.status_code != 200:
+            logging.error("Search failed: %s", search_resp.text)
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        existing = {
+            item["properties"]["email"]: item["id"]
+            for item in search_resp.json().get("results", [])
+        }
+
+        to_create = []
+        to_update = []
+        for props in profiles_list:
+            clean_props = {k: v for k, v in props.items() if v is not None and k != "email"}
+            email = props.get("email")
+            if email in existing:
+                to_update.append({
+                    "id": existing[email],
+                    "properties": clean_props
+                })
+            else:
+                to_create.append({
+                    "properties": clean_props
+                })
+                
+        if to_create:
+            create_resp = self.__handle_request(
+                url="https://api.hubapi.com/crm/v3/objects/contacts/batch/create",
+                method="POST",
+                access_token=access_token,
+                json={"inputs": to_create}
+            )
+            
+            if create_resp.status_code not in (200, 201):
+                logging.error("Batch create failed: %s", create_resp.text)
+                return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        if to_update:
+            update_resp = self.__handle_request(
+                url="https://api.hubapi.com/crm/v3/objects/contacts/batch/update",
+                method="POST",
+                access_token=access_token,
+                json={"inputs": to_update}
+            )
+            
+            if update_resp.status_code not in (200, 201):
+                logging.error("Batch update failed: %s", update_resp.text)
+                return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
         return ProccessDataSyncResult.SUCCESS.value
 
-    def __create_profile(self, five_x_five_user, access_token, data_map):
-        profile = self.__mapped_profile(five_x_five_user)
+    
+    def __mapped_profile(self, enrichment_user: EnrichmentUser, data_map: dict) -> dict:
+        properties = self.__map_properties(enrichment_user, data_map) if data_map else {}
+        emails_list = [e.email.email for e in enrichment_user.emails_enrichment]
+        first_email = get_valid_email(emails_list)
 
-        if isinstance(profile, str):
-            return profile
+        fake = Faker()
 
-        email = profile.email
-        if not email:
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+        first_phone = fake.phone_number()
+        address_parts = fake.address()
+        city_state_zip = address_parts.split("\n")[-1]
 
-        properties = self.__map_properties(five_x_five_user, data_map) if data_map else {}
-        json_data = {
-            "properties": {
-                "email": profile.email,
-                "firstname": profile.firstname,
-                "lastname": profile.lastname,
-                "phone": profile.phone,
-                "city": profile.city,
-                "gender": profile.gender,
-                "twitterhandle": profile.twitterhandle,
+        match = re.match(r'^(.*?)(?:, ([A-Z]{2}) (\d{5}))?$', city_state_zip)
 
-                # "address": profile.address,
-                # "state": profile.state,
-                # "zip": profile.zip,
-                # "company": profile.company,
-                # "jobtitle": profile.jobtitle,
-                # "website": profile.website,
-                # "lifecyclestage": profile.lifecyclestage,
-                # "industry": profile.industry,
-                # "annualrevenue": profile.annualrevenue,
-                # "hs_linkedin_url": profile.hs_linkedin_url,
-                **properties
-            }
+        if match:
+            city = match.group(1).strip()
+            state = match.group(2) if match.group(2) else ''
+            zip_code = match.group(3) if match.group(3) else ''
+        else:
+            city, state, zip_code = '', '', ''
+            
+        gender = fake.passport_gender()
+        first_name = fake.first_name()
+        last_name = fake.last_name()
+
+        return {
+            'email': first_email,
+            'phone': first_phone,
+            'lifecyclestage': None,
+            'twitterhandle': None,
+            'address': address_parts,
+            'city': city,
+            'state': state,
+            'zip': zip_code,
+            'firstname': first_name,
+            'lastname': last_name,
+            'company': None,
+            'website': None,
+            'jobtitle': None,
+            'industry': None,
+            'annualrevenue': None,
+            'linkedin_url': None,
+            'gender': gender,
         }
-
-        json_data["properties"] = {k: v for k, v in json_data["properties"].items() if v is not None}
-
-        response = self.__handle_request(
-            url="https://api.hubapi.com/crm/v3/objects/contacts",
-            method="POST",
-            access_token=access_token,
-            json=json_data
-        )
-
-        if response.status_code not in (200, 201):
-            if response.status_code in (403, 401):
-                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
-            if response.status_code == 400:
-                return ProccessDataSyncResult.INCORRECT_FORMAT.value
-            logging.error("Error response: %s", response.text)
-            return None
-
-        return response.json()
-
-    def __mapped_profile(self, five_x_five_user) -> HubspotProfile:
-        first_email = get_valid_email(
-            five_x_five_user,
-            self.million_verifier_integrations
-        )
-
-        if first_email in (
-        ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-            return first_email
-
-        first_phone = get_valid_phone(five_x_five_user)
-        location = get_valid_location(five_x_five_user)
-
-        return HubspotProfile(
-            email=first_email,
-            phone=first_phone,
-            lifecyclestage=None,
-            twitterhandle=None,
-            address=location[0],
-            city=location[1],
-            state=location[2],
-            zip=location[3],
-            firstname=getattr(five_x_five_user, 'first_name', None),
-            lastname=getattr(five_x_five_user, 'last_name', None),
-            company=getattr(five_x_five_user, 'company_name', None),
-            website=getattr(five_x_five_user, 'company_domain', None),
-            jobtitle=getattr(five_x_five_user, 'job_title', None),
-            industry=getattr(five_x_five_user, 'primary_industry', None),
-            annualrevenue=getattr(five_x_five_user, 'company_revenue', None),
-            hs_linkedin_url=getattr(five_x_five_user, 'linkedin_url', None),
-            gender=getattr(five_x_five_user, 'gender', None)
-        )
 
 
     def __map_properties(self, five_x_five_user, data_map: List[DataMap]) -> dict:
