@@ -1111,7 +1111,7 @@ const SourcesImport: React.FC = () => {
                                     </Button>
                                 </Box>
                                 <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
-                                    <Typography sx={{fontFamily: "Roboto", fontSize: "14px", color: "rgba(32, 33, 36, 1)"}}>Matched Leads</Typography> 
+                                    <Typography sx={{fontFamily: "Roboto", fontSize: "14px", color: "rgba(32, 33, 36, 1)"}}>Total Leads</Typography> 
                                     <Typography className='second-sub-title' sx={{ fontFamily: "Nunino Sans", fontWeight: 600, fontSize: "16px", color: "rgba(32, 33, 36, 1)"}}>
                                         {eventType.some(id => [1, 2, 3, 4].includes(id)) ? matchedLeads : totalLeads }
                                     </Typography>

@@ -11,8 +11,7 @@ class AudienceSourcesMatchedPerson(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, unique=True, nullable=False, server_default="gen_random_uuid()")
     source_id = Column(UUID(as_uuid=True), ForeignKey(AudienceSource.id, ondelete='cascade'), nullable=False)
-    enrichment_user_id = Column(UUID, ForeignKey(EnrichmentUser.id), nullable=True)
-    five_x_five_user_id = Column(Integer, ForeignKey(FiveXFiveUser.id, ondelete='cascade'), nullable=True)
+    enrichment_user_id = Column(UUID, ForeignKey(EnrichmentUser.id), nullable=False)
     mapped_fields = Column(JSON, nullable=True)
 
     email = Column(VARCHAR(64), nullable=False)
