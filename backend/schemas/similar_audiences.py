@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Optional
 from decimal import Decimal
 
-class AudienceTransaction(BaseModel):
+class AudienceData(BaseModel):
     EmailAddress: Optional[str]
     PersonExactAge: Optional[str]
     PersonGender: Optional[str]
