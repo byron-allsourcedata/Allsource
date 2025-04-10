@@ -116,7 +116,7 @@ class AudienceSourceService:
 
         if not audience_source:
             return
-        audience_sources_matched_persons, five_x_five_persons = self.audience_sources_matched_persons_persistence.get_audience_sources_matched_persons_by_source_id(audience_source_id=source_id)
+        audience_sources_matched_persons, enrichment_persons = self.audience_sources_matched_persons_persistence.get_audience_sources_matched_persons_by_source_id(audience_source_id=source_id)
         if not audience_sources_matched_persons:
             return
         
@@ -128,24 +128,22 @@ class AudienceSourceService:
         if audience_source.source_origin == TypeOfSourceOrigin.PIXEL.value:
             logging.info(f"PIXEL source: {audience_source.source_origin}")
             writer.writerow([
-                'LastName', 'FirstName', 'EventDate', 'Recency', 'MinRecency', 'MaxRecency',
+                'Email', 'EventDate', 'Recency', 'MinRecency', 'MaxRecency',
                 'InvertedRecency', 'MinInvertedRecency', 'MaxInvertedRecency', 'ActivEndDate', 'ActivStartDate',
                 'Duration', 'Recency score', 'Page view score', 'User value score'
             ])
 
             writer.writerow([
-                '', '', '', '(reference_date - EVENT_DATE).days', 'min(Recency)', 'max(Recency)',
+                '', '(reference_date - EVENT_DATE).days', 'min(Recency)', 'max(Recency)',
                 '1 / (Recency + 1)', '1 / (MinRecency + 1)', '1 / (MaxRecency + 1)', 'max(Date)', 'min(Date)',
                 '(ActivEndDate - ActivStartDate).total_seconds()',
                 '0.5 * (InvertedRecency - min(InvertedRecency)) / (max(InvertedRecency) - min(InvertedRecency)',
                 'duration >= 2 ? 0.5 : duration >= 1 ? 0.25 : 0.0', 'RecencyScore + PageViewScore'
             ])
 
-            for matched_person, five_x_five_person in zip(audience_sources_matched_persons, five_x_five_persons):
+            for matched_person, enrichment_person in zip(audience_sources_matched_persons, enrichment_persons):
                 relevant_data = [
-                    str(five_x_five_person.last_name) if five_x_five_person and five_x_five_person.last_name else '',
-                    str(five_x_five_person.first_name) if five_x_five_person and five_x_five_person.first_name else '',
-                    str(matched_person.start_date) if matched_person.start_date else '',
+                    str(matched_person.email) if matched_person.email else '',
                     str(matched_person.recency) if matched_person.recency is not None else '',
                     str(matched_person.recency_min) if matched_person.recency_min is not None else '',
                     str(matched_person.recency_max) if matched_person.recency_max is not None else '',

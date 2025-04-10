@@ -101,7 +101,7 @@ def parse_date(date_str: str) -> str | None:
     return None
 
 
-async def parse_csv_file(*, data, source_id: str, db_session: Session, s3_session: Session, connection: Connection,
+async def parse_csv_file(*, data: Dict, source_id: str, db_session: Session, s3_session: Session, connection: Connection,
                          user_id: int):
     logging.info(f"Processing AudienceSource with ID: {source_id}")
 
