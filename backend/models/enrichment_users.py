@@ -2,6 +2,8 @@ from sqlalchemy import Column, Integer, TEXT, UUID, SmallInteger, Boolean
 from sqlalchemy.dialects.postgresql import INT4RANGE
 from sqlalchemy.inspection import inspect
 from .base import Base
+from sqlalchemy.orm import relationship
+from models.emails_enrichment import EmailEnrichment
 
 
 class EnrichmentUser(Base):
@@ -30,6 +32,8 @@ class EnrichmentUser(Base):
     state_abbr = Column(TEXT, nullable=True)
     is_traveler = Column(SmallInteger, nullable=False)
     rec_id = Column(Integer, nullable=False)
+    emails_enrichment = relationship("EmailEnrichment", back_populates="enrichment_user", cascade="all, delete-orphan")
+
 
     @classmethod
     def get_fields(self, exclude_fields=None):

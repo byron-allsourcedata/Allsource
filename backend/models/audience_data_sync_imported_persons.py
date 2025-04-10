@@ -16,5 +16,5 @@ class AudienceDataSyncImportedPersons(Base):
     enrichment_user_id = Column(UUID, ForeignKey(EnrichmentUser.id, ondelete='cascade'), nullable=False)
     
     __table_args__ = (
-        Index('data_sync_imported_leads_data_sync_id_status_idx', 'data_sync_id','status'),
+        Index('audience_data_sync_imported_persons_enrichment_user_id_data_syn', 'enrichment_user_id', 'data_sync_id'),
     )
