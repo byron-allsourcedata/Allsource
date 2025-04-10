@@ -6,6 +6,8 @@ import random
 import sys
 from decimal import Decimal
 
+from backend.services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
@@ -29,7 +31,8 @@ def read_csv_transactions(file_path: str):
 
 async def main():
     transactions = read_csv_transactions('backend/data/enrichment.csv')
-    service = SimilarAudienceService()
+    normalizer = AudienceDataNormalizationService()
+    service = SimilarAudienceService(normalizer=normalizer)
     scores = service.get_audience_feature_importance(transactions)
 
     print(scores)

@@ -1,16 +1,21 @@
-import os
-
 import pandas as pd
 from pandas import DataFrame
-from typing import List, Tuple
+from typing import List, Tuple, Annotated
 from sklearn.model_selection import train_test_split
 from catboost import CatBoostRegressor
+from fastapi import Depends
 
-from ..config.folders import Folders
-from ..schemas.similar_audiences import AudienceData, AudienceFeatureImportance
+from .audience_data_normalization import AudienceDataNormalizationService, AudienceDataNormalizationServiceDep
+from ...config.folders import Folders
+from ...schemas.similar_audiences import AudienceData, AudienceFeatureImportance
+
 
 
 class SimilarAudienceService:
+    def __init__(self, normalizer: AudienceDataNormalizationService):
+        self.normalizer = normalizer
+
+
     def get_audience_feature_importance(self, audience_data: List[AudienceData]) -> AudienceFeatureImportance:
         data, amount = self.get_transactions_with_geo(audience_data)
         feature_importance = self.train_catboost(data, amount)
@@ -39,7 +44,7 @@ class SimilarAudienceService:
     def train_catboost(self, df: DataFrame, amount: DataFrame) -> DataFrame:
         x = df
         y = amount
-        cat_features = x.select_dtypes(include='object').columns.tolist()
+        cat_features = x.select_dtypes(include=['object', 'category']).columns.tolist()
 
         x_train, x_test, y_train, y_test = train_test_split(x, y)
 
@@ -72,11 +77,16 @@ class SimilarAudienceService:
 
 
     def get_dataframe(self, audience_data: List[AudienceData]):
-        df = pd.DataFrame([t.__dict__ for t in audience_data])
-        return df
+        return self.normalizer.normalize(audience_data)
 
 
     def get_states_dataframe(self) -> DataFrame:
         path = Folders.data('uszips.csv')
         dataframe = pd.read_csv(path, usecols=["zip", "city", "state_name"], dtype={"zip": str})
         return dataframe
+
+
+def get_similar_audiences_service(normalizer: AudienceDataNormalizationServiceDep):
+    return SimilarAudienceService(normalizer=normalizer)
+
+SimilarAudienceServiceDep = Annotated[AudienceDataNormalizationService, Depends(get_similar_audiences_service)]
