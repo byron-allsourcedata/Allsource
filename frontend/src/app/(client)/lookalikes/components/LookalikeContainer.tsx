@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Table,
   TableBody,
@@ -14,6 +14,7 @@ import {
 import dayjs from "dayjs";
 import { useSSE } from "@/context/SSEContext";
 import ProgressBar from "./ProgressLoader";
+import axiosInstance from "@/axios/axiosInterceptorInstance";
 
 interface TableData {
   id: string;
@@ -83,6 +84,8 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
   const { smartLookaLikeProgress } = useSSE();
   const [progress, setProgress] = useState<number | 0>(0);
   const [total, setTotal] = useState<number | 0>(0);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [createdData, setCreatedData] = useState<any>(tableData);
 
   useEffect(() => {
     tableData.forEach((item) => {
@@ -93,6 +96,50 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
       }
     });
   }, [smartLookaLikeProgress]);
+
+  useEffect(() => {
+    console.log("polling lookalike");
+
+    if (!intervalRef.current) {
+      console.log("polling lookalike started");
+      intervalRef.current = setInterval(() => {
+        const hasPending = createdData?.processed_size !== createdData?.size;
+
+        if (hasPending) {
+          console.log("Fetching due to pending records");
+
+          fetchData();
+        } else {
+          console.log("No pending records, stopping interval");
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+        }
+      }, 2000);
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+        console.log("interval cleared");
+      }
+    };
+  }, [createdData]);
+
+  const fetchData = async () => {
+    try {
+      const response = await axiosInstance.get(
+        `/audience-lookalikes/get-processing-lookalikes?&id=${createdData.id}`
+      );
+      const updatedItem = response.data;
+
+      setCreatedData(updatedItem);
+    } catch (error) {
+      console.error("Failed to fetch data:", error);
+    }
+  };
 
   return (
     <TableContainer

@@ -20,7 +20,7 @@ from enums import DomainStatus, UserAuthorizationStatus, TeamAccessLevel
 from exceptions import InvalidToken
 from models.users import Users as User
 from persistence.audience_dashboard import DashboardAudiencePersistence
-from persistence.audience_sources_persistence import AudienceSourcesPersistence
+from persistence.audience_sources import AudienceSourcesPersistence
 from persistence.audience_smarts import AudienceSmartsPersistence
 from persistence.company_persistence import CompanyPersistence
 from persistence.audience_lookalikes import AudienceLookalikesPersistence

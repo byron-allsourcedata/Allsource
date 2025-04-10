@@ -12,6 +12,7 @@ from sqlalchemy import asc, desc, or_
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from urllib.parse import unquote
+from uuid import UUID
 
 from models.users import Users
 
@@ -185,4 +186,20 @@ class AudienceLookalikesPersistence:
             .filter(AudienceSource.user_id == user_id).order_by(AudienceSource.created_at.desc()).all()
 
         return source
+    
+    def get_processing_lookalike(self, id: UUID):
+        query = (
+            self.db.query(
+                AudienceLookalikes,
+                AudienceSource.name,
+                AudienceSource.source_type,
+                Users.full_name,
+                AudienceSource.source_origin,
+                AudienceSource.target_schema
+            )
+                .join(AudienceSource, AudienceLookalikes.source_uuid == AudienceSource.id)
+                .join(Users, Users.id == AudienceSource.created_by_user_id)
+                .filter(AudienceLookalikes.id == id)
+        ).first()
+        return dict(query._asdict()) if query else None
 

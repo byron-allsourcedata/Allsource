@@ -121,3 +121,12 @@ async def search_lookalikes(start_letter: str = Query(..., min_length=3),
                             lookalike_service: AudienceLookalikesService = Depends(get_lookalikes_service),
                             user: dict = Depends(check_user_authorization_without_pixel)):
     return lookalike_service.search_lookalikes(start_letter, user=user)
+
+
+@router.get("/get-processing-lookalike")
+def get_processing_lookalike(
+        id: str = Query(...),
+        lookalike_service: AudienceLookalikesService = Depends(get_lookalikes_service),
+):
+    
+    return lookalike_service.get_processing_lookalike(id)
