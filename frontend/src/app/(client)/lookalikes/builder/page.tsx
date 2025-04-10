@@ -152,18 +152,19 @@ const CreateLookalikePage: React.FC = () => {
   const handleGenerateLookalike = async () => {
     try {
       setLoading(true);
-      //   const response = await axiosInstance.post(
-      //     "/audience-lookalikes/builder",
-      //     {
-      //       uuid_of_source: selectedSourceId,
-      //       lookalike_size: toSnakeCase(selectedLabel),
-      //       lookalike_name: sourceName,
-      //     }
-      //   );
-      //if (response.data.status === "SUCCESS") {
-      await createLookalikeData("123");
-      //showToast("Lookalike was created successfully!");
-      // }
+      const response = await axiosInstance.post(
+        "/audience-lookalikes/builder",
+        {
+          uuid_of_source: selectedSourceId,
+          lookalike_size: toSnakeCase(selectedLabel),
+          lookalike_name: sourceName,
+        }
+      );
+      if (response.data.status === "SUCCESS") {
+        showToast("Lookalike was created successfully!");
+        createLookalikeData(response.data.lookalike.id);
+        setIsLookalikeCreated(true);
+      }
     } catch {
       showErrorToast(
         "An error occurred while creating a new lookalike. Please try again later."
