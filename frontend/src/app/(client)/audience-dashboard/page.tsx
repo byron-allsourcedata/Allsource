@@ -90,13 +90,47 @@ const AudienceDashboard: React.FC = () => {
       const normalize = (str: string) => str.toLowerCase().replace(/s$/, "");
 
       const buildStatus = (type: string, tabType: string) => {
-        return normalize(type) === normalize(tabType)
-          ? "Created"
-          : `Created ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+        const normalizedType = normalize(type);
+        const normalizedTab = normalize(tabType);
+
+        if (
+          normalizedType === normalizedTab &&
+          normalizedType === "data_sync"
+        ) {
+          return "Data Sync Finished";
+        }
+
+        if (normalizedType === normalizedTab) {
+          return "Created";
+        }
+
+        if (normalizedType === "smart_audience") {
+          return "Audience Created";
+        }
+
+        if (normalizedType === "data_sync") {
+          return "Data Sync Finished";
+        }
+
+        return `Created ${type.charAt(0).toUpperCase() + type.slice(1)}`;
       };
 
       const formatKey = (key: string): string =>
         key.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+
+      const toNormalText = (sourceType: string) => {
+        return sourceType
+          .split(",")
+          .map((item) =>
+            item
+              .split("_")
+              .map(
+                (subItem) => subItem.charAt(0).toUpperCase() + subItem.slice(1)
+              )
+              .join(" ")
+          )
+          .join(", ");
+      };
 
       const formatLookalikeSize = (value: string): string => {
         const map: Record<string, string> = {
@@ -126,7 +160,7 @@ const AudienceDashboard: React.FC = () => {
             if (key === "lookalike_size" && typeof value === "string") {
               acc["Lookalike Size"] = formatLookalikeSize(value);
             } else if (key === "source_type" && typeof value === "string") {
-              acc[formattedKey] = formatKey(value);
+              acc[formattedKey] = toNormalText(value);
             } else {
               acc[formattedKey] = value;
             }
@@ -160,7 +194,6 @@ const AudienceDashboard: React.FC = () => {
           });
         });
       });
-      console.log(groupedCards);
       setEventCards(groupedCards);
     } catch (error) {
       console.error("Failed to load dashboard data", error);
