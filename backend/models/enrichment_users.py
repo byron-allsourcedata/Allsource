@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, TEXT, UUID, SmallInteger, Boolean
 from sqlalchemy.dialects.postgresql import INT4RANGE
+from sqlalchemy.inspection import inspect
 from .base import Base
 
 
@@ -29,4 +30,18 @@ class EnrichmentUser(Base):
     state_abbr = Column(TEXT, nullable=True)
     is_traveler = Column(SmallInteger, nullable=False)
     rec_id = Column(Integer, nullable=False)
+
+    @classmethod
+    def get_fields(self, exclude_fields=None):
+        exclude_fields = set(exclude_fields or [])
+        return [
+            column.key
+            for column in inspect(self).columns
+            if column.key not in exclude_fields
+        ]
+
+    @classmethod
+    def get_headers(self, exclude_fields=None):
+        fields = self.get_fields(exclude_fields=exclude_fields)
+        return [field.replace("_", " ").title() for field in fields]
     

@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, Query, HTTPException, status
-from dependencies import get_integration_service, IntegrationService, check_domain, check_user_authorization, check_pixel_install_domain, check_user_authentication
+from dependencies import get_integration_service, get_audience_smarts_service, IntegrationService, check_domain, check_user_authorization, check_user_authentication 
 from schemas.integrations.integrations import *
-from enums import TeamAccessLevel
+from services.audience_smarts import AudienceSmartsService
+from enums import TeamAccessLevel, BaseEnum
+from starlette.responses import StreamingResponse
 
-router = APIRouter()
-
+router = APIRouter(dependencies=[Depends(check_user_authorization)])
 
 @router.get('/sync')
 async def get_sync(service_name: str | None = Query(None), integrations_users_sync_id: int | None = Query(None),
@@ -158,3 +159,16 @@ async def create_tag(tag_data: CreateListOrTags,
     with integrations_service as service:
         service = getattr(service, service_name)
         return service.create_tags(tag_data.name, domain.id, user)
+
+@router.post('/download-persons')
+def download_persons(
+        id: int = Query(...),
+        audience_smarts_service: AudienceSmartsService = Depends(get_audience_smarts_service),
+):
+    result = audience_smarts_service.download_synced_persons(
+        data_sync_id=id
+        )
+    
+    if result:
+        return StreamingResponse(result, media_type="text/csv", headers={"Content-Disposition": "attachment; filename=data.csv"})
+    return BaseEnum.FAILURE
