@@ -16,12 +16,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 
-from models.five_x_five_emails import FiveXFiveEmails
-
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
+from models.five_x_five_emails import FiveXFiveEmails
 from models.five_x_five_users_emails import FiveXFiveUsersEmails
 from models.five_x_five_users import FiveXFiveUser
 from enums import TypeOfCustomer, ProccessDataSyncResult, EmailType
