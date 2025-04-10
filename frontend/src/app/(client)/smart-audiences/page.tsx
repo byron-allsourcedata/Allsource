@@ -19,7 +19,7 @@ import CustomToolTip from '@/components/customToolTip';
 import CustomTablePagination from '@/components/CustomTablePagination';
 import { useNotification } from '@/context/NotificationContext';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
-// import ThreeDotsLoader from './components/ThreeDotsLoader';
+import ThreeDotsLoader from '../sources/components/ThreeDotsLoader';
 import ProgressBar from '../sources/components/ProgressLoader';
 import { MoreVert } from '@mui/icons-material'
 import { useSSE } from '../../../context/SSEContext';
@@ -31,6 +31,7 @@ import DateRangeIcon from '@mui/icons-material/DateRange';
 import CalendarPopup from "@/components/CustomCalendar";
 import EditIcon from '@mui/icons-material/Edit';
 import HeadsetMicOutlinedIcon from '@mui/icons-material/HeadsetMicOutlined';
+import { textAlign } from '@mui/system';
 
 interface Smarts {
     id: string
@@ -1163,9 +1164,11 @@ const SmartAudiences: React.FC = () => {
                                                                             >
                                                                                 {row.status === "unvalidated" 
                                                                                 ? <Image src="./danger_yellow.svg" alt='danger' width={20} height={20}/>
-                                                                                : row.validated_records === 0 
-                                                                                    ? "NA" 
-                                                                                    : row.active_segment_records.toLocaleString('en-US')}
+                                                                                : row.status === "n_a"
+                                                                                    ? "N/A"
+                                                                                    : row.validated_records === 0 && row.status !== "validating"
+                                                                                        ? row.active_segment_records.toLocaleString('en-US')
+                                                                                        : <Box sx={{display: "flex", justifyContent: "center"}}><ThreeDotsLoader /></Box>}
                                                                             </TableCell>
 
                                                                             {/* Created Column */}

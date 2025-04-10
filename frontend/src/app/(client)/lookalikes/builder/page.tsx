@@ -344,9 +344,9 @@ const CreateLookalikePage: React.FC = () => {
                                 </TableRow>
                               </TableHead>
                               <TableBody>
-                                {filteredData.map((row) => (
+                                {filteredData.map((row, index) => (
                                   <TableRow
-                                    key={row.name}
+                                    key={index}
                                     hover
                                     sx={{
                                       cursor: "pointer",
