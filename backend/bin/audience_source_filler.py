@@ -24,7 +24,7 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from schemas.scripts.audience_source import MessageBody, PersonRow, DataBodyFromSource
 from models.leads_users import LeadUser
-from sqlalchemy import and_, or_, func, create_engine
+from sqlalchemy import and_, or_, func, create_engine, distinct
 from enums import SourceType, LeadStatus, TypeOfCustomer
 from models.audience_sources import AudienceSource
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
@@ -40,12 +40,14 @@ SOURCE_PROCESSING_PROGRESS = "SOURCE_PROCESSING_PROGRESS"
 S3_BUCKET_NAME = "maximiz-data"
 SELECTED_ROW_COUNT = 500
 
+
 def setup_logging(level):
     logging.basicConfig(
         level=level,
         format='%(asctime)s - %(levelname)s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
+
 
 def create_sts_client(key_id, key_secret):
     return boto3.client(
@@ -54,6 +56,7 @@ def create_sts_client(key_id, key_secret):
         aws_secret_access_key=key_secret,
         region_name='us-east-2'
     )
+
 
 def assume_role(role_arn, sts_client):
     credentials = sts_client.assume_role(
@@ -70,6 +73,7 @@ def extract_amount(amount_raw: str) -> float:
         return float(match.group(0).replace(',', ''))
     else:
         return 0.0
+
 
 def parse_date(date_str: str) -> str | None:
     if not date_str:
@@ -96,7 +100,9 @@ def parse_date(date_str: str) -> str | None:
     logging.warning(f"Unknown date format: {date_str}")
     return None
 
-async def parse_csv_file(*, data, source_id: str, db_session: Session, s3_session: Session, connection: Connection, user_id: int):
+
+async def parse_csv_file(*, data, source_id: str, db_session: Session, s3_session: Session, connection: Connection,
+                         user_id: int):
     logging.info(f"Processing AudienceSource with ID: {source_id}")
 
     source = db_session.query(AudienceSource).filter_by(id=source_id).first()
@@ -186,27 +192,29 @@ async def parse_csv_file(*, data, source_id: str, db_session: Session, s3_sessio
 
         if batch_rows:
             message_body = MessageBody(
-            type='emails',
-            data=DataBodyFromSource(
-                persons=batch_rows,
-                source_id=str(source_id),
-                user_id=user_id
-            ),
-            status=status
-        )
+                type='emails',
+                data=DataBodyFromSource(
+                    persons=batch_rows,
+                    source_id=str(source_id),
+                    user_id=user_id
+                ),
+                status=status
+            )
 
-            await publish_rabbitmq_message(connection=connection, queue_name=AUDIENCE_SOURCES_MATCHING, message_body=message_body)
+            await publish_rabbitmq_message(connection=connection, queue_name=AUDIENCE_SOURCES_MATCHING,
+                                           message_body=message_body)
         send_rows += SELECTED_ROW_COUNT
 
     db_session.commit()
     return True
 
+
 def get_max_ids(db_session, domain_id, statuses):
     query = db_session.query(
         func.max(LeadUser.id),
-        func.count(FiveXFiveUser.id)
-    ).join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)\
-    .filter(
+        func.count(distinct(FiveXFiveUser.id))
+    ).join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id) \
+        .filter(
         LeadUser.domain_id == domain_id
     )
 
@@ -227,10 +235,10 @@ def get_max_ids(db_session, domain_id, statuses):
         )
     if LeadStatus.ABANDONED_CART.value in statuses or LeadStatus.CONVERTED_SALES.value in statuses:
         query = query.outerjoin(
-                    LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id
-                ).outerjoin(
-                    LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id
-                )
+            LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id
+        ).outerjoin(
+            LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id
+        )
         if LeadStatus.ABANDONED_CART.value in statuses:
             filters.append(
                 or_(
@@ -244,19 +252,19 @@ def get_max_ids(db_session, domain_id, statuses):
                     )
                 )
             )
-    if LeadStatus.CONVERTED_SALES.value in statuses:
-        filters.append(
-            or_(
-                and_(
-                    LeadUser.behavior_type != "product_added_to_cart",
-                    LeadUser.is_converted_sales == True
-                ),
-                and_(
-                    LeadUser.is_converted_sales == True,
-                    LeadsUsersAddedToCart.added_at < LeadsUsersOrdered.ordered_at
+        if LeadStatus.CONVERTED_SALES.value in statuses:
+            filters.append(
+                or_(
+                    and_(
+                        LeadUser.behavior_type != "product_added_to_cart",
+                        LeadUser.is_converted_sales == True
+                    ),
+                    and_(
+                        LeadUser.is_converted_sales == True,
+                        LeadsUsersAddedToCart.added_at < LeadsUsersOrdered.ordered_at
+                    )
                 )
             )
-        )
 
     if filters:
         query = query.filter(or_(*filters))
@@ -264,6 +272,7 @@ def get_max_ids(db_session, domain_id, statuses):
     max_id, total_count = query.one()
 
     return max_id, total_count
+
 
 async def send_pixel_contacts(*, data, source_id, db_session, connection, user_id):
     domain_id = data.get('domain_id')
@@ -286,7 +295,7 @@ async def send_pixel_contacts(*, data, source_id, db_session, connection, user_i
     if not max_id:
         return False
     current_id = -1
-    while(current_id < max_id):
+    while (current_id < max_id):
         query = (
             db_session.query(FiveXFiveUser.id, LeadUser.id)
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
@@ -296,20 +305,20 @@ async def send_pixel_contacts(*, data, source_id, db_session, connection, user_i
         filters = []
         if LeadStatus.VIEWED_PRODUCT.value in statuses:
             filters.append(and_(
-                    LeadUser.behavior_type == "viewed_product",
-                    LeadUser.is_converted_sales == False
-                ))
+                LeadUser.behavior_type == "viewed_product",
+                LeadUser.is_converted_sales == False
+            ))
         if LeadStatus.VISITOR.value in statuses:
             filters.append(and_(
-                    LeadUser.behavior_type == "visitor",
-                    LeadUser.is_converted_sales == False
-                ))
+                LeadUser.behavior_type == "visitor",
+                LeadUser.is_converted_sales == False
+            ))
         if LeadStatus.ABANDONED_CART.value in statuses or LeadStatus.CONVERTED_SALES.value in statuses:
             query = query.outerjoin(
-                        LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id
-                    ).outerjoin(
-                        LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id
-                    )
+                LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id
+            ).outerjoin(
+                LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id
+            )
             if LeadStatus.ABANDONED_CART.value in statuses:
                 filters.append(
                     or_(
@@ -323,19 +332,19 @@ async def send_pixel_contacts(*, data, source_id, db_session, connection, user_i
                         )
                     )
                 )
-        if LeadStatus.CONVERTED_SALES.value in statuses:
-            filters.append(
-                or_(
-                    and_(
-                        LeadUser.behavior_type != "product_added_to_cart",
-                        LeadUser.is_converted_sales == True
-                    ),
-                    and_(
-                        LeadUser.is_converted_sales == True,
-                        LeadsUsersAddedToCart.added_at < LeadsUsersOrdered.ordered_at
+            if LeadStatus.CONVERTED_SALES.value in statuses:
+                filters.append(
+                    or_(
+                        and_(
+                            LeadUser.behavior_type != "product_added_to_cart",
+                            LeadUser.is_converted_sales == True
+                        ),
+                        and_(
+                            LeadUser.is_converted_sales == True,
+                            LeadsUsersAddedToCart.added_at < LeadsUsersOrdered.ordered_at
+                        )
                     )
                 )
-            )
 
         if filters:
             query = query.filter(or_(*filters))
@@ -358,9 +367,11 @@ async def send_pixel_contacts(*, data, source_id, db_session, connection, user_i
             )
         )
 
-        await publish_rabbitmq_message(connection=connection, queue_name=AUDIENCE_SOURCES_MATCHING, message_body=message_body)
+        await publish_rabbitmq_message(connection=connection, queue_name=AUDIENCE_SOURCES_MATCHING,
+                                       message_body=message_body)
 
     return True
+
 
 async def aud_sources_reader(message: IncomingMessage, db_session: Session, s3_session, connection):
     try:
@@ -374,10 +385,12 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, s3_s
         user_id = data.get('user_id')
         source_id = str(data.get('source_id'))
         if type == SourceType.CSV.value:
-            await parse_csv_file(data=data, source_id=source_id, db_session=db_session, s3_session=s3_session, connection=connection, user_id=user_id)
+            await parse_csv_file(data=data, source_id=source_id, db_session=db_session, s3_session=s3_session,
+                                 connection=connection, user_id=user_id)
 
         if type == SourceType.PIXEL.value:
-            await send_pixel_contacts(data=data, source_id=source_id, db_session=db_session, connection=connection, user_id=user_id)
+            await send_pixel_contacts(data=data, source_id=source_id, db_session=db_session, connection=connection,
+                                      user_id=user_id)
 
         await message.ack()
 
@@ -385,6 +398,7 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, s3_s
         db_session.rollback()
         logging.error(f"Error processing message: {e}", exc_info=True)
         await message.ack()
+
 
 def extract_key_from_url(s3_url: str):
     parsed_url = s3_url.split("amazonaws.com/", 1)
@@ -396,13 +410,13 @@ def extract_key_from_url(s3_url: str):
 async def send_sse(connection: Connection, user_id: int, data: dict):
     try:
         await publish_rabbitmq_message(
-                    connection=connection,
-                    queue_name=f'sse_events_{str(user_id)}',
-                    message_body={
-                        "status": SOURCE_PROCESSING_PROGRESS,
-                        "data": data
-                    }
-                )
+            connection=connection,
+            queue_name=f'sse_events_{str(user_id)}',
+            message_body={
+                "status": SOURCE_PROCESSING_PROGRESS,
+                "data": data
+            }
+        )
     except Exception as e:
         logging.error(f"Error sending SSE: {e}")
 
@@ -439,7 +453,8 @@ async def main():
             name=AUDIENCE_SOURCES_READER,
             durable=True,
         )
-        await reader_queue.consume(functools.partial(aud_sources_reader, db_session=db_session, s3_session=s3_session, connection=connection))
+        await reader_queue.consume(
+            functools.partial(aud_sources_reader, db_session=db_session, s3_session=s3_session, connection=connection))
 
         await asyncio.Future()
 
@@ -455,6 +470,7 @@ async def main():
             logging.info("Closing RabbitMQ connection...")
             await rmq_connection.close()
         logging.info("Shutting down...")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
