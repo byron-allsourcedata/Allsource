@@ -261,7 +261,7 @@ class DashboardAudiencePersistence:
         data_syncs = self.db.query(
                         IntegrationUserSync.id.label('id'),
                         AudienceSmart.name.label('audience_name'),
-                        AudienceSmart.status.label('audience_status'),
+                        AudienceSmart.status.label('status'),
                         IntegrationUserSync.created_at.label('created_at'),
                         IntegrationUserSync.sent_contacts.label('synced_contacts'),
                         AudienceSmartsUseCase.name.label('destination'),

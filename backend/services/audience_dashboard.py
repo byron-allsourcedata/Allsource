@@ -147,7 +147,7 @@ class DashboardAudienceService:
         
         last_audience_smart_data_sync = self.merge_and_sort(
             datasets=[(smart_audiences, 'smart_audience', ['id', 'audience_name', 'created_at', 'use_case', 'active_segment', 'include_names', 'exclude_names']), 
-                      (data_syncs, 'data_syncs', ['id', 'audience_name', 'created_at'])],
+                      (data_syncs, 'data_syncs', ['id', 'audience_name', 'created_at', 'status'])],
             limit=self.LIMIT
         )
       

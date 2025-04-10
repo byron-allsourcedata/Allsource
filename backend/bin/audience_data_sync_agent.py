@@ -164,7 +164,7 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
 
             if not check_correct_data_sync(enrichment_user_id, enrichment_users['data_sync_imported_id'], session):
                 logging.warning(f"Data sync not correct for user {enrichment_user_id}")
-                # await message.ack()
+                await message.ack()
                 return
 
         logging.info(f"Data sync id: {data_sync_id}")
@@ -192,7 +192,7 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
                 logging.info(f"Result {result}")
             except BaseException as e:
                 logging.error(f"Error processing data sync: {e}", exc_info=True)
-                # await message.ack()
+                await message.ack()
                 raise
 
             import_status = DataSyncImportedStatus.SENT.value
@@ -219,7 +219,7 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
                 update_data_sync_imported_leads(session=session, status=import_status, integration_data_sync=integration_data_sync, user_integration=user_integration, enrichment_user_ids=enrichment_user_ids)
                 
             logging.info(f"Processed message for service: {service_name}")
-            # await message.ack()
+            await message.ack()
             return
         else:
             logging.error(f"Invalid service name: {service_name}")
