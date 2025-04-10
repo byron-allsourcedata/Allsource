@@ -732,6 +732,32 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
     }
   };
 
+  const handleDownloadPersons = async () => {
+    setIsLoading(true);
+    try {
+
+        const response = await axiosInstance.post(`/data-sync/download-persons?id=${selectedId}`, {
+            responseType: 'blob'
+        });
+
+        if (response.status === 200) {
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'data.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        } else {
+            showErrorToast(`Error downloading file`);
+        }
+    } catch {
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <>
       {isLoading && <CustomizedProgressBar />}
@@ -810,7 +836,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                     },
                     { key: "last_sync", label: "Last Sync" },
                     { key: "platform", label: "Sync" },
-                    { key: "data_sync", label: "Active segments" },
+                    { key: "data_sync", label: "Active Segments" },
                     { key: "record_synced", label: "Records Synced" },
                     { key: "sync_status", label: "Status" },
                     { key: "action", label: "Actions" },
@@ -994,7 +1020,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                       >
                         <IconButton
                           sx={{ pt: 0.25, pb: 0.25, padding: 0 }}
-                          onClick={(event) => handleClick(event, row.id)}
+                          onClick={(event) => {
+                            handleClick(event, row.id)}}
                         >
                           <MoreVertIcon />
                         </IconButton>
@@ -1025,6 +1052,24 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                 maxWidth: "160px",
               }}
             >
+              <Button
+                sx={{
+                  justifyContent: "flex-start",
+                  width: "100%",
+                  textTransform: "none",
+                  fontFamily: "Nunito Sans",
+                  fontSize: "14px",
+                  color: "rgba(32, 33, 36, 1)",
+                  fontWeight: 600,
+                  ":hover": {
+                    color: "rgba(80, 82, 178, 1)",
+                    backgroundColor: "background: rgba(80, 82, 178, 0.1)",
+                  },
+                }}
+                onClick={handleDownloadPersons}
+              >
+                Download
+              </Button>
               <Button
                 sx={{
                   justifyContent: "flex-start",

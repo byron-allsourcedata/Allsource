@@ -11,7 +11,12 @@ interface CardData {
   converted_sale: number;
 }
 
-const MainSectionCard: React.FC<{ data: CardData }> = ({ data }) => {
+type PixelCardProps = {
+  data: CardData;
+  onClick?: () => void;
+};
+
+const MainSectionCard: React.FC<PixelCardProps> = ({ data, onClick }) => {
   const {
     domain,
     date,
@@ -24,11 +29,17 @@ const MainSectionCard: React.FC<{ data: CardData }> = ({ data }) => {
 
   return (
     <Card
+      onClick={onClick}
       sx={{
+        cursor: onClick ? "pointer" : "default",
         borderRadius: 2,
         boxShadow: "0px 1px 4px 0px rgba(0, 0, 0, 0.25)",
         padding: "1rem 1.5rem",
         maxWidth: "100%",
+        "&:hover": {
+          border: `1px solid rgba(5, 105, 226, 1)`,
+          transition: "none",
+        },
       }}
     >
       <CardContent

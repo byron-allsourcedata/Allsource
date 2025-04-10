@@ -14,6 +14,7 @@ from models.leads_visits import LeadsVisits
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
 from models.leads_users import LeadUser
+from typing import Optional
 
 
 
@@ -99,7 +100,14 @@ class DashboardAudiencePersistence:
             }
         ]
         return queries
-    
+
+    def get_user_domains(self, user_id: int) -> list[str]:
+        return [
+            row[0] for row in self.db.query(UserDomains.domain)
+                .filter(UserDomains.user_id == user_id)
+                .all()
+        ]
+
     def get_contacts_for_pixel_contacts_statistics(self, *, user_id: int):
         twenty_four_hours_ago = datetime.now(timezone.utc) - timedelta(hours=24)
         return  self.db.query(
@@ -267,32 +275,41 @@ class DashboardAudiencePersistence:
                     .order_by(IntegrationUserSync.last_sync_date.desc()).limit(limit).all()
                     
         return audience_smart, data_syncs
-                         
-    def get_contacts_for_pixel_contacts_by_domain_id(self, *, user_id: int, domain_id: int):
+
+    def get_contacts_for_pixel_contacts_by_domain_id(
+            self,
+            *,
+            user_id: int,
+            domain_id: int,
+            from_date: Optional[int] = None,
+            to_date: Optional[int] = None,
+    ):
         one_year_ago = datetime.now(timezone.utc) - timedelta(days=365)
 
-        results = self.db.query(
-                func.date(LeadsVisits.start_date).label("date"),
-                LeadUser.behavior_type,
-                func.sum(
-                    case(
-                        (LeadUser.is_converted_sales == True, 1),
-                        else_=0
-                    )
-                ).label("count_converted_sales"),
-                func.count(LeadUser.id).label("count")
-            )\
-            .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)\
-            .filter(
-                LeadUser.user_id == user_id,
-                LeadsVisits.start_date >= one_year_ago,
-                LeadUser.domain_id == domain_id
-            )\
-            .group_by(
-                func.date(LeadsVisits.start_date),
-                LeadUser.behavior_type
-            )\
-            .order_by(func.date(LeadsVisits.start_date))\
-            .all()
+        query = self.db.query(
+            func.date(LeadsVisits.start_date).label("date"),
+            LeadUser.behavior_type,
+            func.sum(
+                case(
+                    (LeadUser.is_converted_sales == True, 1),
+                    else_=0
+                )
+            ).label("count_converted_sales"),
+            func.count(LeadUser.id).label("count")
+        ).join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id).filter(
+            LeadUser.user_id == user_id,
+            LeadsVisits.start_date >= one_year_ago,
+            LeadUser.domain_id == domain_id,
+        )
+
+        if from_date is not None and to_date is not None:
+            from_dt = datetime.fromtimestamp(from_date, tz=timezone.utc)
+            to_dt = datetime.fromtimestamp(to_date, tz=timezone.utc)
+            query = query.filter(LeadsVisits.start_date.between(from_dt, to_dt))
+
+        results = query.group_by(
+            func.date(LeadsVisits.start_date),
+            LeadUser.behavior_type
+        ).order_by(func.date(LeadsVisits.start_date)).all()
 
         return results

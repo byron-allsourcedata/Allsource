@@ -315,7 +315,9 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
       if (response.status === 200) {
         showToast("New Smart Audience successfully created");
         const dataString = encodeURIComponent(JSON.stringify(response.data));
-        router.push(`/smart-audiences/smart-audience-created?data=${dataString}`);
+        router.push(
+          `/smart-audiences/smart-audience-created?data=${dataString}`
+        );
       }
     } catch {
       showErrorToast("An error occurred while creating a new Smart Audience");
@@ -419,7 +421,10 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                     ? "1px solid rgba(117, 168, 218, 1)"
                     : "1px solid #ccc",
                 color: "rgba(32, 33, 36, 1)",
-                backgroundColor: "#fff !important",
+                backgroundColor:
+                  targetAudience === option
+                    ? "rgba(246, 248, 250, 1) !important"
+                    : "rgba(255, 255, 255, 1) !important",
                 borderRadius: "4px",
                 padding: "8px 12px",
                 "&:hover": {
@@ -520,7 +525,9 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                   size="small"
                   margin="none"
                   variant="outlined"
-                  value={formatNumber(AudienceSize ? AudienceSize.toString() : "0")}
+                  value={formatNumber(
+                    AudienceSize ? AudienceSize.toString() : "0"
+                  )}
                   disabled
                   sx={{
                     maxHeight: "40px",
