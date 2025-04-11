@@ -74,6 +74,7 @@ async def aud_smarts_reader(message: IncomingMessage, db_session: Session, conne
         lookalike_exclude = format_ids(data_sources["lookalike_ids"]["exclude"])
         source_include = format_ids(data_sources["source_ids"]["include"])
         source_exclude = format_ids(data_sources["source_ids"]["exclude"])
+        count = 0
         
 
         while offset < active_segment:
@@ -121,10 +122,14 @@ async def aud_smarts_reader(message: IncomingMessage, db_session: Session, conne
                 if not persons:
                     break
 
+                logging.info(f"current count {count}, common count {active_segment // SELECTED_ROW_COUNT}")
+
                 message_body = {
                     'aud_smart_id': str(aud_smart_id),
                     'user_id': user_id,
                     'need_validate': need_validate,
+                    'count_iterations': active_segment // SELECTED_ROW_COUNT,
+                    'count': count,
                     'enrichment_users_ids': [str(person_id) for person_id in persons]
                 }
                 await publish_rabbitmq_message(
@@ -135,6 +140,7 @@ async def aud_smarts_reader(message: IncomingMessage, db_session: Session, conne
                 logging.info(f"sent {len(persons)} persons")  
 
                 offset += SELECTED_ROW_COUNT
+                count += 1
 
             except IntegrityError as e:
                 logging.warning(f"SmartAudience with ID {aud_smart_id} might have been deleted. Skipping.")
