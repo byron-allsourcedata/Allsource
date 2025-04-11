@@ -5,7 +5,7 @@ from models.users import Users
 from enums import SourcePlatformEnum
 from models.users_domains import UserDomains
 from models.subscriptions import UserSubscriptions
-from models.data_sync_imported_leads import DataSyncImportedLeads
+from models.audience_data_sync_imported_persons import AudienceDataSyncImportedPersons
 from sqlalchemy import func, desc
 from models.integrations.users_domains_integrations import UserIntegration
 
@@ -186,7 +186,7 @@ class IntegrationsUserSyncPersistence:
         } for sync in syncs]
 
     def get_all_audience_sync(self, user_id: int, service_name: str = None, integrations_users_sync_id: str = None):
-        ImportedLeads = aliased(DataSyncImportedLeads)
+        ImportedLeads = aliased(AudienceDataSyncImportedPersons)
 
         query = self.db.query(
             IntegrationUserSync.id,

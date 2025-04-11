@@ -8,14 +8,35 @@ import CustomCards from "./components/CustomCards";
 import AudienceChart from "./components/AudienceChart";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import LookalikeCard from "./components/SelectedCards";
+import PixelCard from "./components/PixelCard";
+import MainSectionCard from "./components/MainSectionCards";
+import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 
-const colorMapping = {
-  pixel_contacts: "rgba(244, 87, 69, 1)",
-  sources: "rgba(80, 82, 178, 1)",
-  lookalikes: "rgba(224, 176, 5, 1)",
-  smart_audience: "rgba(144, 190, 109, 1)",
-  data_sync: "rgba(5, 115, 234, 1)",
-};
+interface EventCardData {
+  id: string;
+  chain_ids: string[];
+  status: string;
+  date: string;
+  event_info: Record<string, string | number>;
+  tabType: string;
+}
+
+interface PixelContact {
+  domain: string;
+  total_leads: number;
+  visitors: number;
+  view_products: number;
+  abandoned_cart: number;
+  converted_sale: number;
+}
+
+interface CardData {
+  status: string;
+  date: string;
+  left: Record<string, string | number>;
+  right?: Record<string, string | number>;
+  tabType?: string;
+}
 
 const AudienceDashboard: React.FC = () => {
   const [values, setValues] = useState({
@@ -26,162 +47,238 @@ const AudienceDashboard: React.FC = () => {
     data_sync: 0,
   });
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
+  const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
+  const [pixelCardActive, setPixelCardActive] = useState(false);
   const { hasNotification } = useNotification();
   const [loading, setLoading] = useState(true);
-  const [series, setSeries] = useState<
-    {
-      id: keyof typeof colorMapping;
-      label: string;
-      curve: string;
-      showMark: boolean;
-      area: boolean;
-      stackOrder: string;
-      data: number[];
-    }[]
-  >([
-    {
-      id: "pixel_contacts" as keyof typeof colorMapping,
-      label: "Pixel Contacts",
-      curve: "linear",
-      showMark: false,
-      area: false,
-      stackOrder: "ascending",
-      data: [],
-    },
-    {
-      id: "sources" as keyof typeof colorMapping,
-      label: "Sources",
-      curve: "linear",
-      showMark: false,
-      area: false,
-      stackOrder: "ascending",
-      data: [0],
-    },
-    {
-      id: "lookalikes" as keyof typeof colorMapping,
-      label: "Lookalikes",
-      curve: "linear",
-      showMark: false,
-      area: false,
-      stackOrder: "ascending",
-      data: [0],
-    },
-    {
-      id: "smart_audience" as keyof typeof colorMapping,
-      label: "Smart Audience",
-      curve: "linear",
-      showMark: false,
-      area: false,
-      stackOrder: "ascending",
-      data: [0],
-    },
-    {
-      id: "data_sync" as keyof typeof colorMapping,
-      label: "Data Sync",
-      curve: "linear",
-      showMark: false,
-      area: false,
-      stackOrder: "ascending",
-      data: [0],
-    },
-  ]);
-  const [date, setDays] = useState<string[]>([]);
+  const [activeChainIds, setActiveChainIds] = useState<string[]>([]);
+  const [chainedCards, setChainedCards] = useState<{
+    sources: CardData[];
+    lookalikes: CardData[];
+    smart_audience: CardData[];
+    data_sync: CardData[];
+  }>({
+    sources: [],
+    lookalikes: [],
+    smart_audience: [],
+    data_sync: [],
+  });
 
-  const handleCardClick = (card: string) => {
-    if (selectedCard === card) {
-      setSelectedCard(null);
-    } else {
-      setSelectedCard(card);
+  const [eventCards, setEventCards] = useState<Record<string, EventCardData[]>>(
+    {
+      lookalikes: [],
+      sources: [],
+      smart_audience: [],
+      data_sync: [],
     }
-  };
+  );
 
+  const [pixelContacts, setPixelContacts] = useState<PixelContact[]>([]);
   const fetchData = async () => {
     try {
-      setLoading(true);
-
-      const response = await axiosInterceptorInstance.get(
-        "/audience-dashboard"
-      );
-
-      setValues((prev) => ({
-        pixel_contacts:
-          response.data?.total_counts.pixel_contacts ?? prev.pixel_contacts,
-        sources: response.data?.total_counts.sources_count ?? prev.sources,
-        lookalikes:
-          response.data?.total_counts.lookalike_count ?? prev.lookalikes,
-        smart_audience:
-          response.data?.total_counts.smart_audience_count ??
-          prev.smart_audience,
-        data_sync:
-          response.data?.total_counts.data_sync_count ?? prev.data_sync,
-      }));
-      const daily_data = response.data?.daily_data;
-      console.log(daily_data);
-      const days = Object.keys(daily_data).sort(
-        (a, b) => new Date(a).getTime() - new Date(b).getTime()
-      );
-
-      const pixelContacts = days.map(
-        (day) => daily_data[day].pixel_contacts || 0
-      );
-      const sourcesData = days.map((day) => daily_data[day].sources_count || 0);
-      const lookalikesData = days.map(
-        (day) => daily_data[day].lookalike_count || 0
-      );
-      const SmartAudinceData = days.map(
-        (day) => daily_data[day].smart_count || 0
-      );
-      const dataSyncData = days.map((day) => daily_data[day].sync_count || 0);
-
-      setSeries([
-        {
-          id: "pixel_contacts",
-          label: "Pixel Contacts",
-          data: pixelContacts,
-          curve: "linear",
-          showMark: false,
-          area: false,
-          stackOrder: "ascending",
-        },
-        {
-          id: "sources",
-          label: "Sources",
-          data: sourcesData,
-          curve: "linear",
-          showMark: false,
-          area: false,
-          stackOrder: "ascending",
-        },
-        {
-          id: "lookalikes",
-          label: "Lookalikes",
-          data: lookalikesData,
-          curve: "linear",
-          showMark: false,
-          area: false,
-          stackOrder: "ascending",
-        },
-        {
-          id: "smart_audience",
-          label: "Smart Audience",
-          data: SmartAudinceData,
-          curve: "linear",
-          showMark: false,
-          area: false,
-          stackOrder: "ascending",
-        },
-        {
-          id: "data_sync",
-          label: "Data Sync",
-          data: dataSyncData,
-          curve: "linear",
-          showMark: false,
-          area: false,
-          stackOrder: "ascending",
-        },
+      const [countsRes, eventsRes] = await Promise.all([
+        axiosInterceptorInstance.get("/audience-dashboard"),
+        axiosInterceptorInstance.get("/audience-dashboard/events"),
       ]);
-      setDays(days);
+
+      const counts = countsRes.data?.total_counts ?? {};
+      const pixelContactsRaw = countsRes.data?.pixel_contacts ?? [];
+      setPixelContacts(pixelContactsRaw);
+      setValues({
+        pixel_contacts: counts.pixel_contacts ?? 0,
+        sources: counts.sources_count ?? 0,
+        lookalikes: counts.lookalike_count ?? 0,
+        smart_audience: counts.smart_count ?? 0,
+        data_sync: counts.sync_count ?? 0,
+      });
+
+      const events = eventsRes.data;
+      const categories = [
+        "lookalikes",
+        "sources",
+        "smart_audiences",
+        "data_sync",
+      ] as const;
+
+      const formatDate = (dateStr: string) =>
+        new Date(dateStr).toLocaleString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+
+      const normalize = (str: string) => str.toLowerCase().replace(/s$/, "");
+
+      const buildStatus = (type: string, tabType: string) => {
+        const normalizedType = normalize(type);
+        const normalizedTab = normalize(tabType);
+
+        if (
+          normalizedType === normalizedTab &&
+          normalizedType === "data_sync"
+        ) {
+          return "Data Sync Finished";
+        }
+
+        if (normalizedType === normalizedTab) {
+          return "Created";
+        }
+
+        if (normalizedType === "smart_audience") {
+          return "Audience Created";
+        }
+
+        if (normalizedType === "data_sync") {
+          return "Data Sync Finished";
+        }
+
+        return `Created ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+      };
+
+      const formatKey = (key: string): string =>
+        key.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+
+      const toNormalText = (sourceType: string) => {
+        return sourceType
+          .split(",")
+          .map((item) =>
+            item
+              .split("_")
+              .map(
+                (subItem) => subItem.charAt(0).toUpperCase() + subItem.slice(1)
+              )
+              .join(" ")
+          )
+          .join(", ");
+      };
+
+      const formatLookalikeSize = (value: string): string => {
+        const map: Record<string, string> = {
+          almost_identical: "Almost Identical 0–3%",
+          extremely_similar: "Extremely Similar 0–7%",
+          very_similar: "Very Similar 0–10%",
+          quite_similar: "Quite Similar 0–15%",
+          broad: "Broad 0–20%",
+        };
+
+        return map[value] ?? value;
+      };
+
+      const eventInfoBuilder = (
+        event: Record<string, any>
+      ): Record<string, string | number> => {
+        const excludeKeys = ["created_at", "type", "id", "chain_ids"];
+
+        return Object.entries(event)
+          .filter(([key]) => !excludeKeys.includes(key))
+          .filter(
+            ([, value]) => value !== null && value !== undefined && value !== ""
+          )
+          .reduce((acc, [key, value]) => {
+            const formattedKey = formatKey(key);
+
+            if (key === "lookalike_size" && typeof value === "string") {
+              acc["Lookalike Size"] = formatLookalikeSize(value);
+            } else if (key === "source_type" && typeof value === "string") {
+              acc[formattedKey] = toNormalText(value);
+            } else {
+              acc[formattedKey] = value;
+            }
+
+            return acc;
+          }, {} as Record<string, string | number>);
+      };
+
+      const groupedCards: Record<string, EventCardData[]> = {
+        lookalikes: [],
+        sources: [],
+        smart_audience: [],
+        data_sync: [],
+      };
+
+      categories.forEach((category) => {
+        const items = events[category] ?? [];
+        items.forEach((event: any) => {
+          const tabType =
+            category === "smart_audiences" ? "smart_audience" : category;
+          const type = event.type ?? tabType;
+
+          groupedCards[tabType].push({
+            id: event.id,
+            chain_ids: event.chain_ids ?? [],
+            status: formatKey(buildStatus(type, tabType)),
+            date: formatDate(event.created_at),
+            event_info: eventInfoBuilder(event),
+            tabType:
+              tabType[0].toUpperCase() + tabType.slice(1).replace("_", " "),
+          });
+        });
+      });
+      setEventCards(groupedCards);
+
+      const buildChainedPairs = (cards: EventCardData[]): CardData[] => {
+        const visited = new Set<string>();
+        const result: CardData[] = [];
+
+        const cardMap = new Map<string, EventCardData>();
+        cards.forEach((card) => cardMap.set(card.id, card));
+
+        for (const card of cards) {
+          if (visited.has(card.id)) continue;
+
+          const chain = card.chain_ids?.filter((id) => cardMap.has(id)) ?? [];
+          if (chain.length <= 1) {
+            visited.add(card.id);
+            result.push({
+              status: card.status,
+              date: card.date,
+              left: card.event_info,
+              tabType: card.tabType,
+            });
+            continue;
+          }
+
+          const sortedChain = [...chain]
+            .map((id) => cardMap.get(id)!)
+            .sort(
+              (b, a) => new Date(a.date).getTime() - new Date(b.date).getTime()
+            );
+
+          const main = sortedChain[0];
+          visited.add(main.id);
+
+          for (let i = 1; i < sortedChain.length; i++) {
+            const created = sortedChain[i];
+            visited.add(created.id);
+
+            result.push({
+              status: created.status,
+              date: created.date,
+              left: main.event_info,
+              right: created.event_info,
+              tabType: created.tabType,
+            });
+          }
+        }
+
+        return result;
+      };
+
+      const sources = buildChainedPairs(groupedCards.sources);
+      const lookalikes = buildChainedPairs(groupedCards.lookalikes);
+      const smartAudience = buildChainedPairs(groupedCards.smart_audience);
+      const dataSync = buildChainedPairs(groupedCards.data_sync);
+
+      setChainedCards({
+        sources,
+        lookalikes,
+        smart_audience: smartAudience,
+        data_sync: dataSync,
+      });
     } catch (error) {
+      console.error("Failed to load dashboard data", error);
     } finally {
       setLoading(false);
     }
@@ -190,6 +287,40 @@ const AudienceDashboard: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const handleCardClick = (card: string) => {
+    if (selectedCard === card) {
+      setSelectedCard(null);
+      setPixelCardActive(false);
+    } else {
+      setSelectedCard(card);
+      setPixelCardActive(false);
+    }
+  };
+
+  const handlePixelCardClick = (card: string, domain: string) => {
+    if (selectedCard === card && selectedDomain === domain) {
+      setSelectedCard(null);
+      setSelectedDomain(null);
+      setPixelCardActive(false);
+    } else {
+      setSelectedCard("Pixel Contacts");
+      setSelectedDomain(domain);
+      setPixelCardActive(true);
+    }
+  };
+
+  const tabMap: Record<string, keyof typeof chainedCards> = {
+    Sources: "sources",
+    Lookalikes: "lookalikes",
+    "Smart Audience": "smart_audience",
+    "Data sync": "data_sync",
+  };
+
+  const currentTabData: CardData[] =
+    selectedCard && tabMap[selectedCard]
+      ? chainedCards[tabMap[selectedCard]]
+      : [];
 
   return (
     <Box>
@@ -202,6 +333,7 @@ const AudienceDashboard: React.FC = () => {
           },
         }}
       >
+        {loading && <CustomizedProgressBar />}
         <Box
           sx={{
             display: "flex",
@@ -299,44 +431,139 @@ const AudienceDashboard: React.FC = () => {
               sx={{
                 width: "100%",
                 mt: 1,
-                ml: 0.125,
-                mb: 1,
+                pl: 0.5,
+                mb: 0,
                 "@media (max-width: 900px)": { mt: 0, mb: 0 },
               }}
             >
-              <CustomCards values={values} onCardClick={handleCardClick} />
+              <CustomCards
+                values={values}
+                onCardClick={handleCardClick}
+                selectedCard={selectedCard}
+                pixelCardActive={pixelCardActive}
+              />
             </Box>
             {selectedCard ? (
-              <Grid container justifyContent="center">
-                {Array.from({ length: 6 }).map((_, index) => (
-                  <Grid item xs={12} sm={6} key={index}>
-                    {selectedCard === "Sources" && (
-                      <LookalikeCard
-                        title={`Source Audience ${index + 1}`}
-                        description="Customer Conversions"
-                        size={Math.floor(Math.random() * 10000)}
-                        sizeLabel="Matched Records"
-                        lookalikeSize=""
-                        sourceName=""
-                        date="April 2, 2025"
-                      />
-                    )}
-                    {selectedCard === "Lookalikes" && (
-                      <LookalikeCard
-                        title={`My Lookalike ${index + 1}`}
-                        description="Similarity Match"
-                        size={Math.floor(Math.random() * 20000)}
-                        sizeLabel="Lookalike Size"
-                        lookalikeSize="Almost Identical 0-3%"
-                        sourceName="Premium Buyers"
-                        date="April 1, 2025"
-                      />
-                    )}
-                  </Grid>
-                ))}
-              </Grid>
+              <Box>
+                <Grid container justifyContent="center" spacing={1}>
+                  {currentTabData.map(
+                    (card: any, index: React.Key | null | undefined) => (
+                      <Grid item xs={12} sm={6} key={index}>
+                        <LookalikeCard data={card} />
+                      </Grid>
+                    )
+                  )}
+                </Grid>
+
+                {selectedCard === "Pixel Contacts" && (
+                  <Box>
+                    <AudienceChart selectedDomain={selectedDomain} />
+                  </Box>
+                )}
+              </Box>
             ) : (
-              <AudienceChart data={series} days={date} loading={loading} />
+              <Box sx={{ width: "100%", mb: 2, pl: 0.5 }}>
+                <Grid container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}>
+                  <Grid item xs={12} md={2.4}>
+                    {pixelContacts.map((contact, index) => (
+                      <Box key={index} mt={1}>
+                        <PixelCard
+                          key={index}
+                          data={{
+                            domain: contact.domain,
+                            date: "last 24h",
+                            contacts_collected: contact.total_leads,
+                            visitor: contact.visitors,
+                            view_product: contact.view_products,
+                            abandoned_cart: contact.abandoned_cart,
+                            converted_sale: contact.converted_sale,
+                          }}
+                          onClick={() =>
+                            handlePixelCardClick(
+                              "Pixel Contacts",
+                              contact.domain
+                            )
+                          }
+                        />
+                      </Box>
+                    ))}
+                  </Grid>
+
+                  <Grid item xs={12} md={2.4}>
+                    {eventCards.sources.map((card, index) => (
+                      <Box key={index} mt={1}>
+                        <MainSectionCard
+                          key={card.id}
+                          data={card}
+                          highlighted={activeChainIds.includes(card.id)}
+                          onClick={() => {
+                            if (activeChainIds.includes(card.id)) {
+                              setActiveChainIds([]);
+                            } else {
+                              setActiveChainIds(card.chain_ids);
+                            }
+                          }}
+                        />
+                      </Box>
+                    ))}
+                  </Grid>
+
+                  <Grid item xs={12} md={2.4}>
+                    {eventCards.lookalikes.map((card, index) => (
+                      <Box key={index} mt={1}>
+                        <MainSectionCard
+                          key={card.id}
+                          data={card}
+                          highlighted={activeChainIds.includes(card.id)}
+                          onClick={() => {
+                            if (activeChainIds.includes(card.id)) {
+                              setActiveChainIds([]);
+                            } else {
+                              setActiveChainIds(card.chain_ids);
+                            }
+                          }}
+                        />
+                      </Box>
+                    ))}
+                  </Grid>
+                  <Grid item xs={12} md={2.4}>
+                    {eventCards.smart_audience.map((card, index) => (
+                      <Box key={index} mt={1}>
+                        <MainSectionCard
+                          key={card.id}
+                          data={card}
+                          highlighted={activeChainIds.includes(card.id)}
+                          onClick={() => {
+                            if (activeChainIds.includes(card.id)) {
+                              setActiveChainIds([]);
+                            } else {
+                              setActiveChainIds(card.chain_ids);
+                            }
+                          }}
+                        />
+                      </Box>
+                    ))}
+                  </Grid>
+                  <Grid item xs={12} md={2.4}>
+                    {eventCards.data_sync.map((card, index) => (
+                      <Box key={index} mt={1}>
+                        <MainSectionCard
+                          key={card.id}
+                          data={card}
+                          highlighted={activeChainIds.includes(card.id)}
+                          onClick={() => {
+                            if (activeChainIds.includes(card.id)) {
+                              setActiveChainIds([]);
+                            } else {
+                              setActiveChainIds(card.chain_ids);
+                            }
+                          }}
+                        />
+                      </Box>
+                    ))}
+                  </Grid>
+                </Grid>
+              </Box>
             )}
           </Box>
         </Box>

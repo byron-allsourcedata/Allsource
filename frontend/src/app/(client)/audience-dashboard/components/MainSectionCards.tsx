@@ -3,11 +3,18 @@ import { Card, CardContent, Typography, Box } from "@mui/material";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 
 interface CardData {
+  id: string;
+  chain_ids: string[];
   status: string;
   date: string;
-  left: Record<string, string | number>;
-  right?: Record<string, string | number>;
-  tabType?: string;
+  event_info: Record<string, string | number>;
+  tabType: string;
+}
+
+interface MainSectionCardProps {
+  data: CardData;
+  onClick?: () => void;
+  highlighted?: boolean;
 }
 
 const getStatusColor = (status: string, tabType?: string): string => {
@@ -23,28 +30,49 @@ const getStatusColor = (status: string, tabType?: string): string => {
   return "";
 };
 
-const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
-  const { status, date, left, right, tabType } = data;
+const MainSectionCard: React.FC<MainSectionCardProps> = ({
+  data,
+  onClick,
+  highlighted = false,
+}) => {
+  const { status, date, event_info, tabType } = data;
   const color = getStatusColor(status, tabType);
 
   const renderSection = (sectionData: Record<string, string | number>) =>
-    Object.entries(sectionData).map(([label, value]) => (
-      <Box key={label} mb={1}>
-        <Typography className="dashboard-card-text">{label}</Typography>
-        <Typography className="dashboard-card-heading">
-          {typeof value === "number" ? value.toLocaleString() : value}
-        </Typography>
-      </Box>
-    ));
+    Object.entries(sectionData)
+      .filter(([key, value]) => {
+        if (["id", "chain_ids"].includes(key)) return false;
+        if (typeof value === "number") return true;
+        if (typeof value === "string") return value.trim() !== "";
+        return false;
+      })
+      .map(([label, value]) => (
+        <Box key={label} mb={1}>
+          <Typography className="dashboard-card-text">{label}</Typography>
+          <Typography
+            className="dashboard-card-heading"
+            sx={{ textWrap: "wrap", maxWidth: "100%" }}
+          >
+            {typeof value === "number" ? value.toLocaleString() : value}
+          </Typography>
+        </Box>
+      ));
 
   return (
     <Card
+      onClick={onClick}
       sx={{
         borderRadius: 2,
         boxShadow: "0px 1px 4px 0px rgba(0, 0, 0, 0.25)",
         padding: "1rem 1.5rem",
         maxWidth: "100%",
-        margin: 0.25,
+        border: highlighted ? `2px solid rgba(5, 105, 226, 1)` : "transparent",
+        transition: "border 0.2s ease",
+        cursor: "pointer",
+        "&:hover": {
+          border: `1px solid rgba(5, 105, 226, 1)`,
+          transition: "none",
+        },
       }}
     >
       <CardContent
@@ -59,13 +87,27 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
           display="flex"
           justifyContent="space-between"
           alignItems="center"
-          mb={1}
+          flexDirection="column"
+          mb={2}
+          gap={2}
         >
-          <Box display="flex" alignItems="center">
+          <Box
+            width="100%"
+            display="flex"
+            alignItems="end"
+            justifyContent="end"
+          >
+            <Typography className="dashboard-card-text">{date}</Typography>
+          </Box>
+          <Box
+            width="100%"
+            display="flex"
+            alignItems="center"
+            justifyContent="start"
+          >
             <FiberManualRecordIcon sx={{ fontSize: 12, color, mr: 1 }} />
             <Typography className="dashboard-card-heading">{status}</Typography>
           </Box>
-          <Typography className="dashboard-card-text">{date}</Typography>
         </Box>
 
         {/* Content */}
@@ -79,19 +121,12 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
         >
           {/* Левая колонка */}
           <Box display="flex" flexDirection="column">
-            {renderSection(left)}
+            {renderSection(event_info)}
           </Box>
-
-          {/* Правая колонка (если есть) */}
-          {right && (
-            <Box display="flex" flexDirection="column">
-              {renderSection(right)}
-            </Box>
-          )}
         </Box>
       </CardContent>
     </Card>
   );
 };
 
-export default InfoCard;
+export default MainSectionCard;

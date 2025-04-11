@@ -189,51 +189,51 @@ interface CustomCardsProps {
     data_sync: number;
   };
   onCardClick: (card: string) => void;
+  selectedCard: string | null;
+  pixelCardActive?: boolean;
 }
 
-const CustomCards: React.FC<CustomCardsProps> = ({ values, onCardClick }) => {
-  const [activeCard, setActiveCard] = React.useState<string | null>(null);
-
-  const handleCardClick = (cardName: string) => {
-    setActiveCard(cardName === activeCard ? null : cardName);
-    onCardClick(cardName);
-  };
-
+const CustomCards: React.FC<CustomCardsProps> = ({
+  values,
+  onCardClick,
+  selectedCard,
+  pixelCardActive,
+}) => {
   return (
-    <Grid container spacing={{ xs: 1, sm: 1.5, md: 2, lg: 4 }}>
+    <Grid container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}>
       <Grid item xs={12} md={2.4}>
         <PixelContactsCard
           value={values.pixel_contacts}
-          onClick={() => handleCardClick("Pixel Contacts")}
-          isActive={activeCard === "Pixel Contacts"}
+          onClick={() => onCardClick("Pixel Contacts")}
+          isActive={selectedCard === "Pixel Contacts" || pixelCardActive}
         />
       </Grid>
       <Grid item xs={12} md={2.4}>
         <SourcesCard
           value={values.sources}
-          onClick={() => handleCardClick("Sources")}
-          isActive={activeCard === "Sources"}
+          onClick={() => onCardClick("Sources")}
+          isActive={selectedCard === "Sources"}
         />
       </Grid>
       <Grid item xs={12} md={2.4}>
         <LookalikesCard
           value={values.lookalikes}
-          onClick={() => handleCardClick("Lookalikes")}
-          isActive={activeCard === "Lookalikes"}
+          onClick={() => onCardClick("Lookalikes")}
+          isActive={selectedCard === "Lookalikes"}
         />
       </Grid>
       <Grid item xs={12} md={2.4}>
         <SmartAudienceCard
           value={values.smart_audience}
-          onClick={() => handleCardClick("Smart Audience")}
-          isActive={activeCard === "Smart Audience"}
+          onClick={() => onCardClick("Smart Audience")}
+          isActive={selectedCard === "Smart Audience"}
         />
       </Grid>
       <Grid item xs={12} md={2.4}>
         <DataSyncCard
           value={values.data_sync}
-          onClick={() => handleCardClick("Data sync")}
-          isActive={activeCard === "Data sync"}
+          onClick={() => onCardClick("Data sync")}
+          isActive={selectedCard === "Data sync"}
         />
       </Grid>
     </Grid>

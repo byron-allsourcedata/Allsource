@@ -135,10 +135,17 @@ class SmartAudienceSyncCreate(BaseModel):
     smart_audience_id: UUID
     customer_id: Optional[str] = None
     list_id: Optional[str] = None
+    campaign: Optional[Campaign] = None
     sent_contacts: int
     list_name: Optional[str] = None
     data_map: Optional[List[DataMap]] = None
 
+class CreateCampaign(BaseModel):                
+    campaign_name: str
+    campaign_objective: Optional[str] = None
+    bid_amount: Optional[str] = None
+    daily_budget: Optional[str] = None
+    ad_account_id: Optional[str] = None
 
 class CreateListOrTags(BaseModel):
     name: str

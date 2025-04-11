@@ -8,6 +8,7 @@ from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.audience_sources_persistence import AudienceSourcesPersistence
 from schemas.audience import SmartsAudienceObjectResponse, DataSourcesFormat, DataSourcesResponse, SmartsResponse
 from persistence.audience_smarts import AudienceSmartsPersistence
+from models.enrichment_users import EnrichmentUser
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from models.users import User
 from enums import AudienceSmartDataSource, QueueName
@@ -234,10 +235,10 @@ class AudienceSmartsService:
             {
                 'id': s[0],
                 'name': s[1],
-                'source_type': s[2],
-                'source_origin': s[3],
-                'domain': s[6],
-                'matched_records': s[8],
+                'source_type': s[3],
+                'source_origin': s[4],
+                'domain': s[7],
+                'matched_records': s[9],
             }
             for s in sources
         ]
@@ -260,6 +261,32 @@ class AudienceSmartsService:
 
         output.seek(0)
         return output
+    
+
+    def download_synced_persons(self, data_sync_id):
+        exclude_fields = {"id", "state_abbr", "cid", "lat", "lon", "rec_id"}
+        
+        fields = EnrichmentUser.get_fields(exclude_fields=exclude_fields)
+        headers = EnrichmentUser.get_headers(exclude_fields=exclude_fields)
+        
+        persons = self.audience_smarts_persistence.get_synced_persons_by_smart_aud_id(data_sync_id, fields)
+
+        fields.insert(0, "email")
+        headers.insert(0, "Email")
+        fields.insert(-1, "state")
+        headers.insert(-1, "State")
+
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(headers)
+        
+        for lead in persons:
+            relevant_data = [getattr(lead, field, "") for field in fields]
+            writer.writerow(relevant_data)
+
+        output.seek(0)
+        return output
+
 
     def get_processing_source(self, id: str) -> Optional[SmartsResponse]:
         smart_source = self.audience_smarts_persistence.get_processing_sources(id)

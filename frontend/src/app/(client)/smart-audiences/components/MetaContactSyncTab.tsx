@@ -8,12 +8,12 @@ import CloseIcon from '@mui/icons-material/Close';
 import { showErrorToast } from '@/components/ToastNotification';
 
 interface MetaAuidece {
-    list_id: string
+    id: string
     list_name: string
 }
 
 interface MetaCampaign {
-    list_id: string
+    id: string
     list_name: string
 }
 
@@ -25,7 +25,7 @@ interface FormValues {
 }
 
 type KlaviyoList = {
-    list_id: string
+    id: string
     list_name: string
 }
 
@@ -37,6 +37,8 @@ interface adAccount {
 interface MetaContactSyncTabProps {
     setIsLoading: (state: boolean) => void
     setSelectedOptionMeta: (state: MetaAuidece | null) => void
+    setSelectedOptionCampaignMeta: (state: MetaCampaign | null) => void
+    selectedOptionCampaignMeta: MetaCampaign | null
     selectedOptionMeta: MetaAuidece | null
     adAccountsMeta: adAccount[]
     optionAdAccountMeta: adAccount | null
@@ -95,14 +97,13 @@ const styles = {
     },
 }
 
-const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, setSelectedOptionMeta, selectedOptionMeta, adAccountsMeta, optionAdAccountMeta, setOptionAdAccountMeta }) => {
+const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, selectedOptionCampaignMeta, setSelectedOptionCampaignMeta, setSelectedOptionMeta, selectedOptionMeta, adAccountsMeta, optionAdAccountMeta, setOptionAdAccountMeta }) => {
     const [anchorElMeta, setAnchorElMeta] = useState<null | HTMLElement>(null);
     const [anchorElAdAccountMeta, setAnchorElAdAccountMeta] = useState<null | HTMLElement>(null);
     const [isDropdownOpenAdAccountMeta, setIsDropdownOpenAdAccountMeta] = useState(false);
     const [metaAudienceList, setMetaAudience] = useState<MetaAuidece[]>([])
     const [metaCampaign, setMetaCampaign] = useState<MetaCampaign[]>([])
     const [anchorElCampaignMeta, setAnchorElCampaignMeta] = useState<null | HTMLElement>(null);
-    const [selectedOptionCampaignMeta, setSelectedOptionCampaignMeta] = useState<MetaCampaign | null>(null);
     const [isDropdownOpenCampaignMeta, setIsDropdownOpenCampaignMeta] = useState<boolean>(false);
     const [showCreateFormCampaignMeta, setShowCreateFormCampaignMeta] = useState<boolean>(false);
     const [isShrunkCampaignMeta, setIsShrunkCampaignMeta] = useState<boolean>(false);
@@ -114,6 +115,8 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
     const textFieldRefAdAccountMeta = useRef<HTMLDivElement>(null);
     const [isCheckedMeta, setIsCheckedMeta] = useState(false);
     const textFieldRefMeta = useRef<HTMLDivElement>(null);
+    const [errorMessage, setErrorMessage] = useState('');
+    const [errorMessage2, setErrorMessage2] = useState('');
     const [formValues, setFormValues] = useState<FormValues>({
         campaignName: '',
         campaignObjective: '',
@@ -177,7 +180,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
             }
         } else if (isKlaviyoList(value)) {
             setSelectedOptionCampaignMeta({
-                list_id: value.list_id,
+                id: value.id,
                 list_name: value.list_name
             });
             setInputValueCampaignMeta(value.list_name)
@@ -188,8 +191,16 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
     };
 
     const handleSaveCampaignMeta = () => {
+        if (formValues.bidAmount < 1 || formValues.bidAmount > 918) {
+            return
+        }
+
+        if (formValues.dailyBudget < 100 || formValues.dailyBudget > 1000000000){
+            return
+        }
+
         if (isCheckedMeta) {
-            const newKlaviyoList = { list_id: '-1', list_name: formValues.campaignName }
+            const newKlaviyoList = { id: '-1', list_name: formValues.campaignName }
             setSelectedOptionCampaignMeta(newKlaviyoList);
             if (isKlaviyoList(newKlaviyoList)) {
                 setIsDropdownValid(true);
@@ -237,7 +248,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
             }
         } else if (isKlaviyoList(value)) {
             setSelectedOptionMeta({
-                list_id: value.list_id,
+                id: value.id,
                 list_name: value.list_name
             });
             setInputValueMeta(value.list_name)
@@ -251,17 +262,21 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
 
     const handleInputChangeMeta = (e: any) => {
         const { name, value } = e.target;
-        const numericValue = (name === 'bidAmount' || name === 'dailyBudget') ? Number(value) : value;
-        if (
-            (name === 'bidAmount' && (isNaN(numericValue) || numericValue < 1 || numericValue > 918)) ||
-            (name === 'dailyBudget' && (isNaN(numericValue) || numericValue < 100 || numericValue > 1000000000))
-        ) {
-            return;
-        }
+        setErrorMessage('');
+        setErrorMessage2('');
         setFormValues((prevValues) => ({
             ...prevValues,
-            [name]: numericValue,
+            [name]: value,
         }));
+
+        if (formValues.bidAmount < 1 || formValues.bidAmount > 918) {
+            setErrorMessage('bid Amount must be greater than 1 and less than 918')
+        }
+
+        if (formValues.dailyBudget < 100 || formValues.dailyBudget > 1000000000){
+            setErrorMessage2('the daily Budget must be more than 100 and less than 1000000000')
+        }
+
     };
 
     const handleClickAdAccountMeta = (event: React.MouseEvent<HTMLInputElement>) => {
@@ -281,6 +296,39 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
     }
 
     const createNewListMeta = async (name: string) => {
+        try {
+            setIsLoading(true)
+            const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
+                name: name,
+                ad_account_id: optionAdAccountMeta?.id
+            }, {
+                params: {
+                    service_name: "meta"
+                }
+            });
+
+            if (newListResponse.status === 201 && newListResponse.data.terms_link && !newListResponse.data.terms_accepted) {
+                showErrorToast('User has not accepted the Custom Audience Terms.')
+                window.open(newListResponse.data.terms_link, '_blank');
+                return
+            }
+            if (newListResponse.status !== 201) {
+                showErrorToast('Failed to create a new tags')
+            }
+            else {
+                const data = newListResponse.data
+                setSelectedOptionMeta(data)
+                setInputValueMeta(name)
+                setIsDropdownValid(true)
+            }
+        } catch  {
+        } finally {
+            setIsLoading(false)
+        }
+    };
+    
+
+    const createNewCampaign = async (name: string) => {
         try {
             setIsLoading(true)
             const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
@@ -648,7 +696,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
 
                     {/* Show static options */}
                     {metaAudienceList && metaAudienceList.map((klaviyo) => (
-                        <MenuItem key={klaviyo.list_id} onClick={() => handleSelectOptionMeta(klaviyo)} sx={{
+                        <MenuItem key={klaviyo.id} onClick={() => handleSelectOptionMeta(klaviyo)} sx={{
                             '&:hover': {
                                 background: 'rgba(80, 82, 178, 0.10)'
                             }
@@ -833,9 +881,12 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                                             variant="outlined"
                                             name="bidAmount"
                                             type="number"
+                                            onKeyDown={(e) => e.stopPropagation()}
                                             value={formValues.bidAmount}
                                             onChange={handleInputChangeMeta}
                                             fullWidth
+                                            error={Boolean(errorMessage)}
+                                            helperText={errorMessage}
                                             margin="normal"
                                             InputProps={{
                                                 startAdornment: <InputAdornment position="start">$</InputAdornment>,
@@ -851,9 +902,12 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                                             variant="outlined"
                                             name="dailyBudget"
                                             type="number"
+                                            onKeyDown={(e) => e.stopPropagation()}
                                             value={formValues.dailyBudget}
                                             onChange={handleInputChangeMeta}
                                             fullWidth
+                                            error={Boolean(errorMessage2)}
+                                            helperText={errorMessage2}
                                             margin="normal"
                                             InputProps={{
                                                 startAdornment: <InputAdornment position="start">$</InputAdornment>,
@@ -904,7 +958,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                         {/* Show static options */}
                         {metaCampaign && metaCampaign.map((klaviyo, option) => (
                             <MenuItem
-                                key={klaviyo.list_id}
+                                key={klaviyo.id}
                                 onClick={() => handleSelectOptionCampaignMeta(klaviyo)}
                                 sx={{
                                     '&:hover': {

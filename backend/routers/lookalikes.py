@@ -13,7 +13,6 @@ class LookalikeCreateRequest(BaseModel):
     uuid_of_source: str
     lookalike_size: str
     lookalike_name: str
-    target_schema: str
 
 
 class UpdateLookalikeRequest(BaseModel):
@@ -86,7 +85,6 @@ async def create_lookalike(
         uuid_of_source=request.uuid_of_source,
         lookalike_size=request.lookalike_size,
         lookalike_name=request.lookalike_name,
-        target_schema=request.target_schema,
         created_by_user_id=user_id
     )
     if result['status'] == 'SUCCESS':

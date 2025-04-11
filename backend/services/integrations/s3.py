@@ -3,10 +3,19 @@ from typing import List
 from fastapi import HTTPException
 import httpx
 import os
-from datetime import datetime, timedelta
+import re
+import csv
+import logging
+import tempfile
+from datetime import datetime, timezone
 from utils import format_phone_number
-from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
+from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, IntegrationLimit, DataSyncType
 from models.five_x_five_users import FiveXFiveUser
+from models.enrichment_users import EnrichmentUser
+from uuid import UUID
+import uuid
+from faker import Faker
+from services.integrations.commonIntegration import get_valid_email, get_valid_phone, get_valid_location
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from schemas.integrations.sendlane import SendlaneContact, SendlaneSender
 from schemas.integrations.integrations import DataMap, IntegrationCredentials, ListFromIntegration
@@ -64,7 +73,8 @@ class S3IntegrationService:
         integration_data = {
             'access_token': json.dumps({"secret_id": secret_id, "secret_key": secret_key}),
             'full_name': user.get('full_name'),
-            'service_name': SourcePlatformEnum.S3.value
+            'service_name': SourcePlatformEnum.S3.value,
+            'limit': IntegrationLimit.S3.value
         }
 
         if common_integration:
@@ -153,11 +163,33 @@ class S3IntegrationService:
             'created_by': created_by,
         })
         return sync
+    
+    def get_smart_credentials(self, user_id: int):
+        credential = self.integrations_persisntece.get_smart_credentials_for_service(user_id=user_id, service_name=SourcePlatformEnum.S3.value)
+        return credential
+    
+    def create_smart_audience_sync(self, smart_audience_id: UUID, sent_contacts: int, created_by: str, user: dict, data_map: List[DataMap] = []):
+        credentials = self.get_smart_credentials(user_id=user.get('id'))
+        sync = self.sync_persistence.create_sync({
+            'integration_id': credentials.id,
+            'sent_contacts': sent_contacts,
+            'sync_type': DataSyncType.AUDIENCE.value,
+            'smart_audience_id': smart_audience_id,
+            'data_map': data_map,
+            'created_by': created_by,
+        })
+        return sync
 
-    async def process_data_sync(self, five_x_five_user, user_integration, integration_data_sync, lead_user):
-        profile = self.__create_contact(five_x_five_user, user_integration.access_token, integration_data_sync.list_name)
-        if profile in (ProccessDataSyncResult.AUTHENTICATION_FAILED.value, ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-            return profile
+    async def process_data_sync(self, user_integration, integration_data_sync, enrichment_users: EnrichmentUser):
+        profiles = []
+        for enrichment_user in enrichment_users:
+            profile = self.__mapped_s3_contact(enrichment_user, integration_data_sync.data_map)
+            profiles.append(profile)
+        
+        list_response = self.__send_contacts(access_token=user_integration.access_token, bucket_name=integration_data_sync.list_name, profiles=profiles)
+        
+        if list_response == ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
+            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
             
         return ProccessDataSyncResult.SUCCESS.value
     
@@ -170,90 +202,84 @@ class S3IntegrationService:
                     
         try:
             s3_client.upload_file(file_path, bucket_name, object_key)
-            print(f"Файл {file_path} успешно загружен в бакет {bucket_name} под именем {object_key}.")
-        except ClientError as e:
-            print("Ошибка при загрузке файла:", e)
-            raise HTTPException(status_code=400, detail="Ошибка загрузки файла в S3")
+            return ProccessDataSyncResult.SUCCESS.value
+        except Exception as e:
+            logging.error(e)
+            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
         
-    
+    def generate_object_key(self, prefix="data", extension="csv"):
+        date_str = datetime.now(timezone.utc).strftime("%Y/%m/%d")
+        unique_id = uuid.uuid4().hex[:8]
+        return f"{prefix}/{date_str}/upload_{unique_id}.{extension}"
 
-    def __create_contact(self, five_x_five_user, access_token, bucket_name: str):
-        profile = self.__mapped_sendlane_contact(five_x_five_user)
-        if profile in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-            return profile
-        
-        json = {
-            'contacts': [{
-                **profile.model_dump()
-            }]
-        }
+    def __send_contacts(self, access_token: str, bucket_name: str, profiles: list[dict]):
         parsed_data = json.loads(access_token)
         secret_id = parsed_data["secret_id"]
         secret_key = parsed_data["secret_key"]
+
+        headers = profiles[0].keys() if profiles else []
         
-        # with tempfile.NamedTemporaryFile(mode="w", newline="", suffix=".csv", delete=False, encoding="utf-8") as temp_csv:
-        #     writer = csv.DictWriter(temp_csv, fieldnames=headers)
-        #     writer.writeheader()
-        #     for row in data:
-        #         writer.writerow(row)
-        #     temp_file_path = temp_csv.name
-            
-        # self.upload_file_to_bucket(secret_id=secret_id, secret_key=secret_key, file_path, object_key='data/2025/report.csv', bucket_name=bucket_name)
-            
-        # if response.status_code == 401:
-        #     return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
-        # if response.status_code == 202:
-        #     return response
+        with tempfile.NamedTemporaryFile(mode="w", newline="", suffix=".csv", delete=False, encoding="utf-8") as temp_csv:
+            writer = csv.DictWriter(temp_csv, fieldnames=headers)
+            writer.writeheader()
+            for row in profiles:
+                writer.writerow(row)
+            temp_file_path = temp_csv.name
+
+        result = self.upload_file_to_bucket(
+            secret_id=secret_id,
+            secret_key=secret_key,
+            file_path=temp_file_path,
+            object_key=self.generate_object_key(),
+            bucket_name=bucket_name
+        )
+
+        return result
     
-    def __mapped_sendlane_contact(self, five_x_five_user: FiveXFiveUser):
-        email_fields = [
-            'business_email', 
-            'personal_emails', 
-            'additional_personal_emails',
-        ]
-        
-        def get_valid_email(user) -> str:
-            thirty_days_ago = datetime.now() - timedelta(days=30)
-            thirty_days_ago_str = thirty_days_ago.strftime('%Y-%m-%d %H:%M:%S')
-            verity = 0
-            for field in email_fields:
-                email = getattr(user, field, None)
-                if email:
-                    emails = extract_first_email(email)
-                    for e in emails:
-                        if e and field == 'business_email' and five_x_five_user.business_email_last_seen:
-                            if five_x_five_user.business_email_last_seen.strftime('%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
-                                return e.strip()
-                        if e and field == 'personal_emails' and five_x_five_user.personal_emails_last_seen:
-                            personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime('%Y-%m-%d %H:%M:%S')
-                            if personal_emails_last_seen_str > thirty_days_ago_str:
-                                return e.strip()
-                        if e and self.million_verifier_integrations.is_email_verify(email=e.strip()):
-                            return e.strip()
-                        verity += 1
-            if verity > 0:
-                return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+    def __map_properties(self, enrichment_user: EnrichmentUser, data_map: List[DataMap]) -> dict:
+        properties = {}
+        for mapping in data_map:
+            five_x_five_field = mapping.get("type")
+            new_field = mapping.get("value")
+            value_field = getattr(enrichment_user, five_x_five_field, None)
 
-        first_email = get_valid_email(five_x_five_user)
-        
-        if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-            return first_email
-        
-        first_phone = (
-            getattr(five_x_five_user, 'mobile_phone') or 
-            getattr(five_x_five_user, 'personal_phone') or 
-            getattr(five_x_five_user, 'direct_number') or 
-            getattr(five_x_five_user, 'company_phone', None)
-        )
+            if value_field is not None:
+                properties[new_field] = value_field.isoformat() if isinstance(value_field, datetime) else value_field
 
-        if first_email:
-            first_email = first_email.split(',')[-1].strip()
-        first_phone = format_phone_number(first_phone)
-        phone_number = validate_and_format_phone(first_phone)
-        return SendlaneContact(
-            email=first_email,
-            first_name=five_x_five_user.first_name or None,
-            last_name=five_x_five_user.last_name or None,
-            phone=phone_number.split(', ')[-1] if phone_number else None
-        )
+        return properties
+    
+    def __mapped_s3_contact(self, enrichment_user: EnrichmentUser, data_map):
+        properties = self.__map_properties(enrichment_user, data_map) if data_map else {}
+        emails_list = [e.email.email for e in enrichment_user.emails_enrichment]
+        first_email = get_valid_email(emails_list)
+        fake = Faker()
+
+        first_phone = fake.phone_number()
+        address_parts = fake.address()
+        city_state_zip = address_parts.split("\n")[-1]
+
+        match = re.match(r'^(.*?)(?:, ([A-Z]{2}) (\d{5}))?$', city_state_zip)
+
+        if match:
+            city = match.group(1).strip()
+            state = match.group(2) if match.group(2) else ''
+            zip_code = match.group(3) if match.group(3) else ''
+        else:
+            city, state, zip_code = '', '', ''
+            
+        gender = fake.passport_gender()
+        first_name = fake.first_name()
+        last_name = fake.last_name()
+        
+        
+        return {
+            'email': first_email,
+            'first_name': first_name,
+            'last_name': last_name,
+            'phone': first_phone,
+            'gender': gender,
+            'city': city,
+            'state': state,
+            'zip_code': zip_code,
+            **properties
+        }

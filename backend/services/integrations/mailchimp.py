@@ -7,10 +7,15 @@ from schemas.integrations.integrations import *
 from schemas.integrations.klaviyo import *
 import hashlib
 import os
+from faker import Faker
+import re
+import logging
+from services.integrations.commonIntegration import get_valid_email, get_valid_phone, get_valid_location
+from models.enrichment_users import EnrichmentUser
 from fastapi import HTTPException
 from datetime import datetime, timedelta
 from schemas.integrations.mailchimp import MailchimpProfile
-from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, DataSyncType
+from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, DataSyncType, IntegrationLimit
 import json
 from utils import format_phone_number
 from utils import extract_first_email, validate_and_format_phone
@@ -158,7 +163,8 @@ class MailchimpIntegrationsService:
             'access_token': api_key,
             'data_center': server,
             'full_name': user.get('full_name'),
-            'service_name': SourcePlatformEnum.MAILCHIMP.value
+            'service_name': SourcePlatformEnum.MAILCHIMP.value,
+            'limit': IntegrationLimit.MAILCHIMP.value
         }
 
         if common_integration:
@@ -215,81 +221,67 @@ class MailchimpIntegrationsService:
         })
         return sync
 
-    async def process_data_sync(self, five_x_five_user, access_token, integration_data_sync, lead_user):
-        profile = self.__create_profile(five_x_five_user, access_token, integration_data_sync)
-        if profile in (
-        ProccessDataSyncResult.AUTHENTICATION_FAILED.value, ProccessDataSyncResult.INCORRECT_FORMAT.value,
-        ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value, ProccessDataSyncResult.LIST_NOT_EXISTS.value):
+    async def process_data_sync(self, access_token: str, integration_data_sync, enrichment_users: EnrichmentUser):
+        profiles = []
+        for enrichment_user in enrichment_users:
+            profile = self.__mapped_member_into_list(enrichment_user, integration_data_sync.data_map)
+            profiles.append(profile)
+            
+        
+        profile = self.__create_profile(access_token, integration_data_sync, profiles)
+        if profile in (ProccessDataSyncResult.AUTHENTICATION_FAILED.value, ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.LIST_NOT_EXISTS.value):
             return profile
 
         return ProccessDataSyncResult.SUCCESS.value
+    
+    def sync_contacts_bulk(self, list_id: str, profiles_list: list):
+        operations = []
+        for profile in profiles_list:
+            email = profile.get("email_address")
+            subscriber_hash = hashlib.md5(email.lower().encode()).hexdigest()
 
-    def __create_profile(self, five_x_five_user, user_integration, integration_data_sync):
-        profile = self.__mapped_member_into_list(five_x_five_user)
-        if profile in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-            return profile
-        if integration_data_sync.data_map:
-            properties = self.__map_properties(five_x_five_user, integration_data_sync.data_map)
-        else:
-            properties = {}
+            props = {k: v for k, v in profile.items() if v is not None}
+            props["email_address"] = email
 
+            operations.append({
+                "method": "PUT",
+                "path": f"/lists/{list_id}/members/{subscriber_hash}",
+                "operation_id": subscriber_hash,
+                "body": json.dumps(props)
+            })
+
+        try:
+            batch = self.client.batches.start({
+                "operations": operations
+            })
+        except ApiClientError as error:
+            logging.error("Batch operation failed: %s", error.text)
+            ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+        
+        return ProccessDataSyncResult.SUCCESS.value
+
+    def __create_profile(self, user_integration, integration_data_sync, profiles: EnrichmentUser):
         self.client.set_config({
             'api_key': user_integration.access_token,
             'server': user_integration.data_center
         })
-        phone_number = validate_and_format_phone(profile.phone_number)
-        json_data = {
-            'email_address': profile.email,
-            'status': profile.status,
-            'email_type': profile.email_type,
-            "merge_fields": {
-                "FNAME": profile.first_name,
-                "LNAME": profile.last_name,
-                'PHONE': phone_number.split(', ')[-1] if phone_number else 'N/A',
-                'COMPANY': profile.company_name or 'N/A',
-                "ADDRESS": {
-                    "addr1": profile.location['address'] or 'N/A',
-                    "city": profile.location['city'] or 'N/A',
-                    "state": profile.location['region'] or 'N/A',
-                    "zip": profile.location['zip'] or 'N/A',
-                },
-                **properties
-            },
-        }
+        
         try:
             existing_fields = self.client.lists.get_list_merge_fields(integration_data_sync.list_id)
             existing_field_names = [field['name'] for field in existing_fields['merge_fields']]
-            if "Time on site" not in existing_field_names:
+            if "estimated_household_income_code" not in existing_field_names:
                 self.client.lists.add_list_merge_field(integration_data_sync.list_id, {
-                    "name": "Time on site",
+                    "name": "estimated_household_income_code",
                     "type": "number",
-                    "tag": "TIMEONSITE"
+                    "tag": "EstimatedHouseholdIncomeCode"
                 })
 
-            if "URL Visited" not in existing_field_names:
-                self.client.lists.add_list_merge_field(integration_data_sync.list_id, {
-                    "name": "URL Visited",
-                    "type": "number",
-                    "tag": "URLVISITED"
-                })
         except ApiClientError as error:
             if error.status_code == 404:
                 return ProccessDataSyncResult.LIST_NOT_EXISTS.value
         try:
-            response = self.client.lists.add_list_member(integration_data_sync.list_id, json_data)
+            response = self.sync_contacts_bulk(integration_data_sync.list_id, profiles)
         except ApiClientError as error:
-            if error.status_code == 400:
-                try:
-                    subscriber_hash = hashlib.md5(profile.email.lower().encode()).hexdigest()
-                    response = self.client.lists.update_list_member(integration_data_sync.list_id, subscriber_hash,
-                                                                    json_data)
-                except ApiClientError as update_error:
-                    return f"Update failed: {update_error.text}"
-                return response
-
-            if error.status_code == 403:
-                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
-
             raise error
 
         return response
@@ -311,73 +303,56 @@ class MailchimpIntegrationsService:
     def __mapped_list(self, list):
         return ListFromIntegration(id=list['id'], list_name=list['name'])
 
-    def __mapped_member_into_list(self, five_x_five_user: FiveXFiveUser):
-        email_fields = [
-            'business_email',
-            'personal_emails',
-            'additional_personal_emails',
-        ]
+    def __mapped_member_into_list(self, enrichment_user: EnrichmentUser, data_map: dict):
+        emails_list = [e.email.email for e in enrichment_user.emails_enrichment]
+        first_email = get_valid_email(emails_list)
 
-        def get_valid_email(user) -> str:
-            thirty_days_ago = datetime.now() - timedelta(days=30)
-            thirty_days_ago_str = thirty_days_ago.strftime('%Y-%m-%d %H:%M:%S')
-            verity = 0
-            for field in email_fields:
-                email = getattr(user, field, None)
-                if email:
-                    emails = extract_first_email(email)
-                    for e in emails:
-                        if e and field == 'business_email' and five_x_five_user.business_email_last_seen:
-                            if five_x_five_user.business_email_last_seen.strftime(
-                                    '%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
-                                return e.strip()
-                        if e and field == 'personal_emails' and five_x_five_user.personal_emails_last_seen:
-                            personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime(
-                                '%Y-%m-%d %H:%M:%S')
-                            if personal_emails_last_seen_str > thirty_days_ago_str:
-                                return e.strip()
-                        if e and self.million_verifier_integrations.is_email_verify(email=e.strip()):
-                            return e.strip()
-                        verity += 1
-            if verity > 0:
-                return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
-
-        first_email = get_valid_email(five_x_five_user)
-
-        if first_email in (
-        ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
+        if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value):
             return first_email
+        
+        if data_map:
+            properties = self.__map_properties(enrichment_user, data_map)
+        else:
+            properties = {}
+            
+        fake = Faker()
 
-        first_phone = (
-                getattr(five_x_five_user, 'mobile_phone') or
-                getattr(five_x_five_user, 'personal_phone') or
-                getattr(five_x_five_user, 'direct_number') or
-                getattr(five_x_five_user, 'company_phone', None)
-        )
+        first_phone = fake.phone_number()
+        address_parts = fake.address()
+        city_state_zip = address_parts.split("\n")[-1]
 
-        location = {
-            "address": getattr(five_x_five_user, 'personal_address') or getattr(five_x_five_user, 'company_address',
-                                                                                None),
-            "city": getattr(five_x_five_user, 'personal_city') or getattr(five_x_five_user, 'company_city', None),
-            "region": getattr(five_x_five_user, 'personal_state') or getattr(five_x_five_user, 'company_state', None),
-            "zip": getattr(five_x_five_user, 'personal_zip') or getattr(five_x_five_user, 'company_zip', None),
+        match = re.match(r'^(.*?)(?:, ([A-Z]{2}) (\d{5}))?$', city_state_zip)
+
+        if match:
+            city = match.group(1).strip()
+            state = match.group(2) if match.group(2) else ''
+            zip_code = match.group(3) if match.group(3) else ''
+        else:
+            city, state, zip_code = '', '', ''
+            
+        gender = fake.passport_gender()
+        first_name = fake.first_name()
+        last_name = fake.last_name()
+        
+        json_data = {
+            'email_address': first_email,
+            'status': 'subscribed',
+            'email_type': 'text',
+            "merge_fields": {
+                "FNAME": first_name,
+                "LNAME": last_name,
+                'PHONE': first_phone if first_phone else 'N/A',
+                'COMPANY': 'N/A',
+                "ADDRESS": {
+                    "addr1": address_parts or 'N/A',
+                    "city": city or 'N/A',
+                    "state": state or 'N/A',
+                    "zip": zip_code or 'N/A',
+                },
+                # **properties
+            },
         }
-        time_on_site, url_visited = self.leads_persistence.get_visit_stats(five_x_five_user.id)
-        return MailchimpProfile(
-            email=first_email,
-            phone_number=format_phone_number(first_phone),
-            first_name=getattr(five_x_five_user, 'first_name', None),
-            last_name=getattr(five_x_five_user, 'last_name', None),
-            organization=getattr(five_x_five_user, 'company_name', None),
-            location=location,
-            job_title=getattr(five_x_five_user, 'job_title', None),
-            company_name=getattr(five_x_five_user, 'company_name', None),
-            status='subscribed',
-            email_type='text',
-            time_on_site=time_on_site,
-            url_visited=url_visited
-        )
+        return json_data
 
     def __map_properties(self, five_x_five_user: FiveXFiveUser, data_map: List[DataMap]) -> dict:
         properties = {}
