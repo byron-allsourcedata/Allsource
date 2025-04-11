@@ -116,6 +116,7 @@ class AudienceSmartsService:
     async def start_scripts_for_matching(self, 
             aud_smart_id: UUID, 
             user_id: int, 
+            need_validate: bool, 
             data_sources: dict, 
             active_segment_records: int
         ):
@@ -126,6 +127,7 @@ class AudienceSmartsService:
         data = {
             'aud_smart_id': str(aud_smart_id),
             'user_id': user_id,
+            'need_validate': need_validate,
             'data_sources': self.transform_datasource(data_sources),
             "active_segment": active_segment_records
         }
@@ -156,12 +158,13 @@ class AudienceSmartsService:
             contacts_to_validate: Optional[int] = None,
     ) -> SmartsResponse:
 
-
+        need_validate = False
         if is_validate_skip:
             status = AudienceSmartStatuses.UNVALIDATED.value
         elif not contacts_to_validate:
             status = AudienceSmartStatuses.N_A.value
         else:
+            need_validate = True
             status = AudienceSmartStatuses.VALIDATING.value
 
 
@@ -176,7 +179,7 @@ class AudienceSmartsService:
             total_records=total_records,
             status=status
         )
-        await self.start_scripts_for_matching(created_data.id, user.get("id"), data_sources, active_segment_records)
+        await self.start_scripts_for_matching(created_data.id, user.get("id"), need_validate, data_sources, active_segment_records)
 
         return SmartsResponse(
             id=created_data.id, name=created_data.name, use_case_alias=use_case_alias, created_by=user.get('full_name'),

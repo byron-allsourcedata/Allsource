@@ -14,6 +14,7 @@ interface SSEContextType {
   sourceProgress: Record<string, { total: number; processed: number, matched: number }>
   smartLookaLikeProgress: Record<string, { total: number; processed: number }>
   smartAudienceProgress: Record<string, { processed: number }>
+  validationProgress: Record<string, { total: number }>
 }
 
 interface SSEProviderProps {
@@ -30,6 +31,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   const [sourceProgress, setSourceProgress] = useState<Record<string, { total: number; processed: number, matched: number }>>({});
   const [smartLookaLikeProgress, setLookaLikeProgress] = useState<Record<string, { total: number; processed: number }>>({});
   const [smartAudienceProgress, setSmartAudienceProgress] = useState<Record<string, { processed: number }>>({});
+  const [validationProgress, setValidationProgress] = useState<Record<string, { total: number }>>({});
 
   const updateLookalikeProgress = (lookalike_id: string, total: number, processed: number) => {
     setLookaLikeProgress((prev) => ({
@@ -49,6 +51,13 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
     setSourceProgress((prev) => ({
       ...prev,
       [source_id]: { total, processed, matched },
+    }));
+  };
+
+  const updateValidationProgress = (smart_audience_id: string, total: number) => {
+    setValidationProgress((prev) => ({
+      ...prev,
+      [smart_audience_id]: { total },
     }));
   };
 
@@ -107,6 +116,15 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
 
           updateSourceProgress(source_id, total, processed, matched);
         }
+        else if (data.status == 'AUDIENCE_VALIDATION_PROGRESS') {
+          const { total, smart_audience_id } = data.data;
+          if (!smart_audience_id) {
+            console.error("smart_audience_id is undefined");
+            return;
+          }
+
+          updateValidationProgress(smart_audience_id, total);
+        }
         else if (data.status == 'AUDIENCE_LOOKALIKES_PROGRESS') {
           const { lookalike_id, total, processed } = data.data;
           if (!lookalike_id) {
@@ -148,7 +166,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   }, [url]);
 
   return (
-    <SSEContext.Provider value={{ data, newNotification, NotificationData, sourceProgress, smartLookaLikeProgress, smartAudienceProgress }}>
+    <SSEContext.Provider value={{ data, newNotification, NotificationData, sourceProgress, smartLookaLikeProgress, smartAudienceProgress, validationProgress }}>
       {children}
     </SSEContext.Provider>
   );
