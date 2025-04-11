@@ -45,6 +45,7 @@ async def aud_smarts_reader(message: IncomingMessage, db_session: Session, conne
         aud_smart_id = str(data.get('aud_smart_id'))
         data_sources = data.get('data_sources')
         active_segment = data.get('active_segment')
+        need_validate = data.get('need_validate')
 
         offset = 0
 
@@ -121,6 +122,7 @@ async def aud_smarts_reader(message: IncomingMessage, db_session: Session, conne
                 message_body = {
                     'aud_smart_id': str(aud_smart_id),
                     'user_id': user_id,
+                    'need_validate': need_validate,
                     'enrichment_users_ids': [str(person_id) for person_id in persons]
                 }
                 await publish_rabbitmq_message(

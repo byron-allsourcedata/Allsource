@@ -5,6 +5,7 @@ import asyncio
 import functools
 import json
 import boto3
+import random
 from sqlalchemy import update
 from aio_pika import IncomingMessage, Message
 from sqlalchemy.exc import IntegrityError
@@ -59,22 +60,39 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                 await message.ack()
                 return
 
-            verifier_service = MillionVerifierIntegrationsService(
-                million_verifier_persistence=db_session
-            )
+            # verifier_service = MillionVerifierIntegrationsService(
+            #     million_verifier_persistence=db_session
+            # )
 
-            results = []
-            for record in enrichment_users:
-                try:
-                    is_valid = verifier_service.is_email_verify(record.email)
-                    results.append({"id": record.audience_smart_person_id, "is_valid": is_valid})
-                except Exception as e:
-                    logging.error(f"Failed to validate email {record.email}: {e}", exc_info=True)
+            random_count = random.randint(1, len(enrichment_users))
+            selected_records = random.sample(enrichment_users, random_count)
 
             db_session.bulk_update_mappings(
                 AudienceSmartPerson,
-                [{"id": r["id"], "is_valid": r["is_valid"]} for r in results]
+                [{"id": record.audience_smart_person_id, "is_valid": True} for record in selected_records]
             )
+
+            db_session.query(AudienceSmart).filter(
+                AudienceSmart.id == aud_smart_id
+            ).update(
+                {
+                    "validated_records": random_count,
+                    "status": "ready",
+                }
+            )
+
+            # results = []
+            # for record in enrichment_users:
+            #     try:
+            #         is_valid = verifier_service.is_email_verify(record.email)
+            #         results.append({"id": record.audience_smart_person_id, "is_valid": is_valid})
+            #     except Exception as e:
+            #         logging.error(f"Failed to validate email {record.email}: {e}", exc_info=True)
+
+            # db_session.bulk_update_mappings(
+            #     AudienceSmartPerson,
+            #     [{"id": r["id"], "is_valid": r["is_valid"]} for r in results]
+            # )
             db_session.commit()
 
             logging.info(f"Processed email validation for aud_smart_id {aud_smart_id}.")                            

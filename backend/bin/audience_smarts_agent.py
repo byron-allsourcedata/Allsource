@@ -55,7 +55,8 @@ async def aud_smarts_matching(message: IncomingMessage, db_session: Session, con
         user_id = message_body.get("user_id")
         aud_smart_id = message_body.get("aud_smart_id")
         enrichment_users_ids = message_body.get("enrichment_users_ids") or []
-        final_insert = enrichment_users_ids < SELECTED_ROW_COUNT
+        need_validate = message_body.get("need_validate")
+        final_insert = len(enrichment_users_ids) < SELECTED_ROW_COUNT
 
         try:
             bulk_data = [
@@ -84,7 +85,7 @@ async def aud_smarts_matching(message: IncomingMessage, db_session: Session, con
             await send_sse(connection, user_id, {"smart_audience_id": aud_smart_id, "processed": processed_records_value})
             logging.info(f"sent {len(enrichment_users_ids)} persons")
 
-            if final_insert:
+            if final_insert and need_validate:
                 message_body = {
                     'aud_smart_id': str(aud_smart_id),
                     'user_id': user_id
