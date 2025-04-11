@@ -149,6 +149,8 @@ class DashboardAudiencePersistence:
         lookalikes = self.db.query(
             AudienceLookalikes.id.label('id'),
             AudienceSource.name.label('source_name'),
+            AudienceSource.source_type.label('source_type'),
+            AudienceSource.matched_records.label('matched_records'),
             AudienceLookalikes.name.label('lookalike_name'),
             AudienceLookalikes.created_date.label('created_at'),
             AudienceLookalikes.lookalike_size.label('lookalike_size'),
@@ -207,6 +209,9 @@ class DashboardAudiencePersistence:
                 AudienceSmart.id.label('id'),
                 AudienceSmart.created_at.label('created_at'),
                 AudienceSmart.name.label('audience_name'),
+                AudienceLookalikes.name.label('lookalike_name'),
+                AudienceLookalikes.lookalike_size.label('lookalike_size'),
+                AudienceLookalikes.size.label('size'),
                 AudienceSmartsUseCase.name.label('use_case'),
                 AudienceSmart.active_segment_records.label('active_segment'),
                 func.string_agg(
@@ -250,6 +255,9 @@ class DashboardAudiencePersistence:
                 AudienceSmart.name,
                 AudienceSmartsUseCase.name,
                 AudienceSmart.active_segment_records,
+                AudienceLookalikes.name,
+                AudienceLookalikes.lookalike_size,
+                AudienceLookalikes.size
             )
             .order_by(
                 AudienceSmart.created_at.desc()

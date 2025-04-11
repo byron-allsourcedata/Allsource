@@ -109,10 +109,10 @@ class DashboardAudienceService:
         sorted_combined = sorted(combined, key=lambda x: x.get('created_at'), reverse=True)
         return sorted_combined[:limit]
     
-    def merge_data_with_chain(self, data, chains, data_id_field):
+    def merge_data_with_chain(self, data, chains):
         result = []
         for row in data:
-            data_id = row.get(data_id_field) if isinstance(row, dict) else getattr(row, data_id_field, None)
+            data_id = row.get('id') if isinstance(row, dict) else getattr(row, 'id', None)
             if isinstance(row, dict):
                 row_data = row
             elif hasattr(row, '_asdict'):
@@ -130,7 +130,7 @@ class DashboardAudienceService:
     def get_events(self, *, user: dict):
         data_syncs_chain = self.calculate_chain_data_sync(user_id=user.get('id'))
         sources, lookalikes = self.dashboard_persistence.get_last_sources_and_lookalikes(user_id=user.get('id'), limit=self.LIMIT)
-        last_sources_lookalikes = self.merge_and_sort(
+        last_sources = self.merge_and_sort(
             datasets=[
                 (sources, 'source', ['id', 'source_name', 'created_at', 'source_type', 'matched_records']),
                 ([lookalike for lookalike in lookalikes if lookalike[0]], 'lookalike', ['id', 'source_name', 'lookalike_name', 'created_at'])
@@ -139,23 +139,55 @@ class DashboardAudienceService:
         )
         smart_audiences, data_syncs = self.dashboard_persistence.get_last_smart_audiences_and_data_syncs(user_id=user.get('id'), limit=self.LIMIT)
         
-        last_lookalikes_audience_smart = self.merge_and_sort(
+        last_lookalikes = self.merge_and_sort(
             datasets=[(lookalikes, 'lookalikes', ['id', 'lookalike_size', 'lookalike_name', 'created_at', 'size']), 
                       ([smart_audience for smart_audience in smart_audiences if smart_audience[0]], 'smart_audience', ['id', 'lookalike_name', 'audience_name', 'created_at']),],
             limit=self.LIMIT
         )
         
-        last_audience_smart_data_sync = self.merge_and_sort(
+        last_audience_smart = self.merge_and_sort(
             datasets=[(smart_audiences, 'smart_audience', ['id', 'audience_name', 'created_at', 'use_case', 'active_segment', 'include_names', 'exclude_names']), 
                       (data_syncs, 'data_syncs', ['id', 'audience_name', 'created_at', 'status'])],
             limit=self.LIMIT
         )
-      
+        
         return {
-            'sources': self.merge_data_with_chain(last_sources_lookalikes, data_syncs_chain, 'id'),
-            'lookalikes': self.merge_data_with_chain(last_lookalikes_audience_smart, data_syncs_chain, 'id'),
-            'smart_audiences': self.merge_data_with_chain(last_audience_smart_data_sync, data_syncs_chain, 'id'),
-            'data_sync': self.merge_data_with_chain(data_syncs, data_syncs_chain, 'id')
+            'short_info': {
+                'sources': self.merge_data_with_chain(last_sources, data_syncs_chain),
+                'lookalikes': self.merge_data_with_chain(last_lookalikes, data_syncs_chain),
+                'smart_audiences': self.merge_data_with_chain(last_audience_smart, data_syncs_chain),
+                'data_sync': self.merge_data_with_chain(data_syncs, data_syncs_chain)
+            },
+            'full_info':{
+                'sources': self.merge_and_sort(
+                                datasets=[
+                                    (sources, 'source', ['source_name', 'created_at', 'source_type', 'matched_records']),
+                                    ([lookalike for lookalike in lookalikes if lookalike[0]], 'lookalike', ['source_name', 'source_type', 'matched_records', 'lookalike_name', 'created_at', 'lookalike_size', 'size'])
+                                ],
+                                limit=self.LIMIT
+                            ),
+                           
+                'lookalikes': self.merge_and_sort(
+                                    datasets=[(lookalikes, 'lookalikes', ['lookalike_size', 'lookalike_name', 'created_at', 'size']), 
+                                            ([smart_audience for smart_audience in smart_audiences if smart_audience[0]], 'smart_audience', ['lookalike_name', 'lookalike_size', 'size', 'audience_name', 'use_case', 'active_segment', 'created_at']),],
+                                    limit=self.LIMIT
+                                ),
+                
+                'smart_audiences': self.merge_and_sort(
+                                        datasets=[(data_syncs, 'data_syncs', ['audience_name', 'created_at', 'status', 'synced_contacts', 'destination']), 
+                                                ([smart_audience for smart_audience in smart_audiences if smart_audience[0]], 'smart_audience', ['audience_name', 'use_case', 'active_segment', 'created_at', 'include', 'exclude']),],
+                                        limit=self.LIMIT
+                                    ),
+                
+                'data_sync': [{
+                            'id': sync.id,
+                            'audience_name': sync.audience_name,
+                            'status': sync.status,
+                            'created_at': sync.created_at,
+                            'synced_contacts': sync.synced_contacts,
+                            'destination': sync.destination
+                        } for sync in data_syncs]
+            }
         }
     
     def get_contacts_for_pixel_contacts_by_domain_id(
