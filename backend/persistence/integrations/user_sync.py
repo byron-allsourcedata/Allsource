@@ -234,7 +234,7 @@ class IntegrationsUserSyncPersistence:
                     'list_id': sync.list_id,
                     'active_segment': sync.sent_contacts,
                     'records_synced': sync.no_of_contacts,
-                    'is_progress': sync.imported_count <= sync.sent_contacts if sync.sent_contacts else False
+                    'is_progress': sync.imported_count < sync.sent_contacts if sync.sent_contacts else False
                 }
 
         syncs = query.order_by(desc(IntegrationUserSync.created_at)).all()
@@ -254,7 +254,7 @@ class IntegrationsUserSyncPersistence:
             'list_id': sync.list_id,
             'active_segments': sync.sent_contacts,
             'records_synced': sync.no_of_contacts,
-            'is_progress': sync.imported_count <= sync.sent_contacts if sync.sent_contacts else False
+            'is_progress': sync.imported_count < sync.sent_contacts if sync.sent_contacts else False
         } for sync in syncs]
 
     def get_data_sync_filter_by(self, **filter_by):
