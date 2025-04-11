@@ -173,11 +173,12 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, conn
 
         audience_feature_importance = similar_audience_service.get_audience_feature_importance(audience_data_list)
 
-        fun_dict = audience_feature_importance.__dict__
-        for key in fun_dict.keys():
-            fun_dict[key] = round(fun_dict[key] * 1000) / 1000
+        audience_feature_dict = audience_feature_importance.__dict__
+        for key in audience_feature_dict.keys():
+            audience_feature_dict[key] = round(audience_feature_dict[key] * 1000) / 1000
+        sorted_dict = dict(sorted(audience_feature_dict.items(), key=lambda item: item[1], reverse=True))
+        audience_lookalike.significant_fields = sorted_dict
 
-        audience_lookalike.significant_fields = fun_dict
         db_session.commit()
         await message.ack()
     except BaseException as e:
