@@ -1254,7 +1254,7 @@ const SmartAudiences: React.FC = () => {
                                                                                             width: '100%', maxWidth: 360, boxShadow: 'none'
                                                                                         }}
                                                                                     >
-                                                                                        <ListItemButton disabled={(selectedRowData?.status === "synced")} 
+                                                                                        <ListItemButton disabled={!(selectedRowData?.status === "ready" || selectedRowData?.status === "n_a")} 
                                                                                                         sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} 
                                                                                                         onClick={() => {
                                                                                                             handleCloseMorePopover()
@@ -1262,7 +1262,7 @@ const SmartAudiences: React.FC = () => {
                                                                                                         }}>
                                                                                             <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Sync" />
                                                                                         </ListItemButton>
-                                                                                        <ListItemButton disabled={(selectedRowData?.active_segment_records !== selectedRowData?.processed_active_segment_records || selectedRowData?.status === "unvalidated")} 
+                                                                                        <ListItemButton disabled={(selectedRowData?.active_segment_records !== selectedRowData?.processed_active_segment_records || selectedRowData?.status === "unvalidated" || selectedRowData?.status === "validating")} 
                                                                                                         sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} 
                                                                                                         onClick={() => {
                                                                                                             setIsDownloadAction(true)
