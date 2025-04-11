@@ -85,10 +85,10 @@ class AudienceDataNormalizationService:
 
 
     def fill_unknowns(self, df: DataFrame):
-        for cat in self.cat_columns:
-            df.loc[:, cat] = df[cat].fillna('U')
+        # for cat in self.cat_columns:
+        #     df.loc[:, cat] = df[cat].fillna('U')
 
-        df['PersonExactAge'] = df['PersonExactAge'].fillna(df['PersonExactAge'].median())
+        # df['PersonExactAge'] = df['PersonExactAge'].fillna(df['PersonExactAge'].median())
         df['NumberOfChildren'] = df['NumberOfChildren'].fillna(0)
         df['LengthOfResidenceYears'] = df['LengthOfResidenceYears'].fillna(0)
 

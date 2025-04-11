@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, ForeignKey, UUID
 from sqlalchemy.orm import relationship
-from models.emails import Email
+from .emails import Email
 from .base import Base
 
 
