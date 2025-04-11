@@ -121,27 +121,29 @@ const AudienceDashboard: React.FC = () => {
 
       const normalize = (str: string) => str.toLowerCase().replace(/s$/, "");
 
-      const buildStatus = (type: string, tabType: string) => {
+      const buildStatus = (
+        type: string,
+        tabType: string,
+        status?: string
+      ): string => {
         const normalizedType = normalize(type);
         const normalizedTab = normalize(tabType);
 
+        if (normalizedType === "data_sync") {
+          if (status === "data_syncing") return "Data Syncing";
+          if (status === "synced") return "Data Sync Finished";
+          return "Data Sync Finished";
+        }
+
         if (
           normalizedType === normalizedTab &&
-          normalizedType === "data_sync"
+          normalizedType === "smart_audience"
         ) {
-          return "Data Sync Finished";
+          return "Audience Created";
         }
 
         if (normalizedType === normalizedTab) {
           return "Created";
-        }
-
-        if (normalizedType === "smart_audience") {
-          return "Audience Created";
-        }
-
-        if (normalizedType === "data_sync") {
-          return "Data Sync Finished";
         }
 
         return `Created ${type.charAt(0).toUpperCase() + type.slice(1)}`;
@@ -179,7 +181,7 @@ const AudienceDashboard: React.FC = () => {
       const eventInfoBuilder = (
         event: Record<string, any>
       ): Record<string, string | number> => {
-        const excludeKeys = ["created_at", "type", "id", "chain_ids"];
+        const excludeKeys = ["created_at", "type", "id", "chain_ids", "status"];
 
         return Object.entries(event)
           .filter(([key]) => !excludeKeys.includes(key))
@@ -218,7 +220,7 @@ const AudienceDashboard: React.FC = () => {
           groupedCards[tabType].push({
             id: event.id,
             chain_ids: event.chain_ids ?? [],
-            status: formatKey(buildStatus(type, tabType)),
+            status: formatKey(buildStatus(type, tabType, event.status)),
             date: formatDate(event.created_at),
             event_info: eventInfoBuilder(event),
             tabType:
