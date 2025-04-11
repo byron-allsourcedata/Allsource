@@ -36,7 +36,7 @@ interface AudiencePopupProps {
 }
 
 type KlaviyoList = {
-    list_id: string
+    id: string
     list_name: string
 }
 
@@ -70,7 +70,12 @@ interface CustomRow {
 }
 
 interface MetaAuidece {
-    list_id: string
+    id: string
+    list_name: string
+}
+
+interface MetaCampaign {
+    id: string
     list_name: string
 }
 
@@ -111,7 +116,9 @@ type ArrayMapping = {
     mailchimp: CustomRow[];
     default: CustomRow[]
     meta: CustomRow[]
-    CSV: CustomRow[]
+    CSV: CustomRow[],
+    s3: CustomRow[],
+    google_ads: CustomRow[]
 };
 
 const styles = {
@@ -189,9 +196,9 @@ const integrationsImage = [
 ];
 
 const customFieldsList: Row[] = [
-    { id: 1, type: 'Gender', value: 'gender' },
-    { id: 2, type: 'Cid', value: 'cid' },
-    { id: 3, type: 'Age', value: 'age' },
+    { id: 1, type: 'Cid', value: 'cid' },
+    { id: 2, type: 'Age', value: 'age' },
+    { id: 3, type: 'Gender', value: 'gender' },
     { id: 4, type: 'Estimated household income code', value: 'estimated_household_income_code' },
     { id: 5, type: 'Estimated current home value code', value: 'estimated_current_home_value_code' },
     { id: 6, type: 'Homeowner status', value: 'homeowner_status' },
@@ -208,17 +215,13 @@ const customFieldsList: Row[] = [
     { id: 17, type: 'Occupation group code', value: 'occupation_group_code' },
     { id: 18, type: 'Is book reader', value: 'is_book_reader' },
     { id: 19, type: 'Is online purchaser', value: 'is_online_purchaser' },
-    { id: 20, type: 'State abbr', value: 'state_abbr' },
+    { id: 20, type: 'Is book reader', value: 'is_book_reader' },
     { id: 21, type: 'Is traveler', value: 'is_traveler' },
     { id: 22, type: 'Rec id', value: 'rec_id' },
 ]
 
 const defaultRows: Row[] = [
-    { id: 1, type: 'Email', value: 'email' },
-    { id: 2, type: 'Personal Phone', value: 'personal_phone' },
-    { id: 3, type: 'First name', value: 'first_name' },
-    { id: 4, type: 'Last name', value: 'last_name' },
-    { id: 4, type: 'Address', value: 'address' }
+    { id: 1, type: 'Email', value: 'email' }
 ];
 
 const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrationsList: integ = [], id, activeSegmentRecords = 0, isDownloadAction, setIsPageLoading }) => {
@@ -393,8 +396,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
             }
 
             if (activeService === "mailchimp") {
-                if (selectedOptionMailchimp?.list_id && selectedOptionMailchimp?.list_name) {
-                    requestObj.list_id = String(selectedOptionMailchimp?.list_id),
+                if (selectedOptionMailchimp?.id && selectedOptionMailchimp?.list_name) {
+                    requestObj.list_id = String(selectedOptionMailchimp?.id),
                         requestObj.list_name = selectedOptionMailchimp?.list_name
                 }
                 else {
@@ -404,10 +407,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
             }
 
             if (activeService === "meta") {
-                if (optionAdAccountMeta?.id && selectedOptionMeta?.list_name && selectedOptionMeta?.list_id) {
+                if (optionAdAccountMeta?.id && selectedOptionMeta?.list_name && selectedOptionMeta?.id) {
                     requestObj.customer_id = String(optionAdAccountMeta?.id)
-                    requestObj.list_id = String(selectedOptionMeta?.list_id),
-                        requestObj.list_name = selectedOptionMeta?.list_name
+                    requestObj.list_id = String(selectedOptionMeta?.id),
+                    requestObj.list_name = selectedOptionMeta?.list_name
                 }
                 else {
                     showErrorToast("You have selected incorrect data!")
@@ -476,6 +479,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         }
 
         if (activeService === "sales_force") {
+            setRows(defaultRows)
+            setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
+        }
+        if (activeService === "s3") {
             setRows(defaultRows)
             setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
         }
@@ -687,7 +694,9 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         mailchimp: customFieldsList,
         CSV: customFieldsList,
         default: customFieldsList,
-        meta: customFieldsList
+        meta: customFieldsList,
+        s3: customFieldsList,
+        google_ads: customFieldsList
     };
 
     const handleAddIntegration = async (service_name: string) => {
@@ -738,6 +747,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
     ///Meta 
 
     const [selectedOptionMeta, setSelectedOptionMeta] = useState<MetaAuidece | null>(null);
+    const [selectedOptionCampaignMeta, setSelectedOptionCampaignMeta] = useState<MetaCampaign | null>(null);
     const [optionAdAccountMeta, setOptionAdAccountMeta] = useState<adAccount | null>(null)
     const [adAccountsMeta, setAdAccountsMeta] = useState<adAccount[]>([])
 
@@ -1007,6 +1017,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                             {activeService === "meta" &&
                                                 <MetaContactSyncTab
                                                     setIsLoading={setIsLoading}
+                                                    setSelectedOptionCampaignMeta={setSelectedOptionCampaignMeta}
+                                                    selectedOptionCampaignMeta={selectedOptionCampaignMeta}
                                                     selectedOptionMeta={selectedOptionMeta}
                                                     setSelectedOptionMeta={setSelectedOptionMeta}
                                                     adAccountsMeta={adAccountsMeta}
@@ -1076,7 +1088,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                         <Grid item xs="auto" sm={1}>&nbsp;</Grid>
                                     </Grid>
 
-                                    {defaultRows.map((row, index) => (
+                                    {rows.map((row, index) => (
                                         <Box key={row.id} sx={{ mb: 2 }}>
                                             <Grid container spacing={2} alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' } }}>
                                                 {/* Left Input Field */}
@@ -1361,16 +1373,15 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                                                             }
                                                         }}
                                                     >
-
-                                                        {arrayWithCustomFields[activeService as keyof ArrayMapping ?? "default"].map((item: CustomRow) => (
-                                                            <MenuItem
-                                                                key={item.value}
-                                                                value={item.value}
-                                                                disabled={customFields.some(f => f.type === item.value)}
-                                                            >
-                                                                {item.type}
-                                                            </MenuItem>
-                                                        ))}
+                                                    {arrayWithCustomFields[activeService as keyof ArrayMapping ?? "default"]?.map((item: CustomRow) => (
+                                                        <MenuItem
+                                                            key={item.value}
+                                                            value={item.value}
+                                                            disabled={customFields.some(f => f.type === item.value)}
+                                                        >
+                                                            {item.type}
+                                                        </MenuItem>
+                                                    ))}
                                                     </TextField>
                                                 </Grid>
                                                 <Grid item xs="auto" sm={1} mb={2} container justifyContent="center">

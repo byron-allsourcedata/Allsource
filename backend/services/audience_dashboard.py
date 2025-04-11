@@ -1,5 +1,6 @@
 import logging
 from collections import defaultdict
+from typing import Optional
 from persistence.audience_dashboard import DashboardAudiencePersistence
 
 logger = logging.getLogger(__name__)
@@ -9,18 +10,25 @@ class DashboardAudienceService:
     def __init__(self, dashboard_audience_persistence: DashboardAudiencePersistence):
         self.dashboard_persistence = dashboard_audience_persistence
         self.LIMIT = 5
-        
+
     def get_contacts_for_pixel_contacts_statistics(self, *, user: dict):
-        results = self.dashboard_persistence.get_contacts_for_pixel_contacts_statistics(user_id=user.get('id'))
-        daily_data = defaultdict(lambda: {
-            'total_leads': 0,
-            'visitors': 0,
-            'view_products': 0,
-            'abandoned_cart': 0,
-            'converted_sale': 0,
-        })
-        
-        for domain, behavior_type, count_converted_sales, lead_count in results:                    
+        user_id = user.get('id')
+        user_domains = self.dashboard_persistence.get_user_domains(user_id=user_id)
+
+        results = self.dashboard_persistence.get_contacts_for_pixel_contacts_statistics(user_id=user_id)
+
+        daily_data = {
+            domain: {
+                'total_leads': 0,
+                'visitors': 0,
+                'view_products': 0,
+                'abandoned_cart': 0,
+                'converted_sale': 0,
+            }
+            for domain in user_domains
+        }
+
+        for domain, behavior_type, count_converted_sales, lead_count in results:
             data = daily_data[domain]
             data['total_leads'] += lead_count
             data['converted_sale'] += count_converted_sales
@@ -30,11 +38,12 @@ class DashboardAudienceService:
                 data['abandoned_cart'] += lead_count
             elif behavior_type == 'visitor':
                 data['visitors'] += lead_count
+
         result_array = [
             {'domain': domain, **stats}
             for domain, stats in daily_data.items()
         ]
-        
+
         return result_array
 
     def get_audience_dashboard_data(self, *, from_date: int, to_date: int, user: dict):
@@ -103,15 +112,19 @@ class DashboardAudienceService:
     def merge_data_with_chain(self, data, chains, data_id_field):
         result = []
         for row in data:
-            data_id = getattr(row, data_id_field, None)
+            data_id = row.get(data_id_field) if isinstance(row, dict) else getattr(row, data_id_field, None)
+            if isinstance(row, dict):
+                row_data = row
+            elif hasattr(row, '_asdict'):
+                row_data = row._asdict()
+            else:
+                row_data = {col: getattr(row, col) for col in dir(row)
+                            if not col.startswith("_") and not callable(getattr(row, col))}
+                
             matching_chain = next((chain for chain in chains if data_id in chain), None)
-            row_data = row._asdict() if hasattr(row, '_asdict') else dict(row)
             if matching_chain:
                 row_data['chain_ids'] = matching_chain
-                result.append(row_data)
-            else:
-                result.append(row_data)
-
+            result.append(row_data)
         return result
 
     def get_events(self, *, user: dict):
@@ -125,18 +138,19 @@ class DashboardAudienceService:
             limit=self.LIMIT
         )
         smart_audiences, data_syncs = self.dashboard_persistence.get_last_smart_audiences_and_data_syncs(user_id=user.get('id'), limit=self.LIMIT)
+        
         last_lookalikes_audience_smart = self.merge_and_sort(
             datasets=[(lookalikes, 'lookalikes', ['id', 'lookalike_size', 'lookalike_name', 'created_at', 'size']), 
-                      ([smart_audience for smart_audience in smart_audiences if smart_audience[0]], 'smart_audience', ['id', 'lookalike_name', 'source_name', 'audience_name', 'created_at']),],
+                      ([smart_audience for smart_audience in smart_audiences if smart_audience[0]], 'smart_audience', ['id', 'lookalike_name', 'audience_name', 'created_at']),],
             limit=self.LIMIT
         )
         
         last_audience_smart_data_sync = self.merge_and_sort(
             datasets=[(smart_audiences, 'smart_audience', ['id', 'audience_name', 'created_at', 'use_case', 'active_segment', 'include_names', 'exclude_names']), 
-                      (data_syncs, 'data_syncs', ['id', 'audience_name', 'created_at'])],
+                      (data_syncs, 'data_syncs', ['id', 'audience_name', 'created_at', 'status'])],
             limit=self.LIMIT
         )
-                        
+      
         return {
             'sources': self.merge_data_with_chain(last_sources_lookalikes, data_syncs_chain, 'id'),
             'lookalikes': self.merge_data_with_chain(last_lookalikes_audience_smart, data_syncs_chain, 'id'),
@@ -144,8 +158,10 @@ class DashboardAudienceService:
             'data_sync': self.merge_data_with_chain(data_syncs, data_syncs_chain, 'id')
         }
     
-    def get_contacts_for_pixel_contacts_by_domain_id(self, *, user: dict, domain_id: int):
-        results = self.dashboard_persistence.get_contacts_for_pixel_contacts_by_domain_id(user_id=user.get('id'), domain_id=domain_id)
+    def get_contacts_for_pixel_contacts_by_domain_id(
+            self, *, user: dict, domain_id: int, from_date: Optional[int] = None,
+            to_date: Optional[int] = None) -> dict:
+        results = self.dashboard_persistence.get_contacts_for_pixel_contacts_by_domain_id(user_id=user.get('id'), domain_id=domain_id, from_date=from_date, to_date=to_date)
         daily_data = defaultdict(lambda: {
             'total_leads': 0,
             'visitors': 0,

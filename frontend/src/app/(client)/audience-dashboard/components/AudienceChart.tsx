@@ -20,7 +20,9 @@ import { LineChart, BarChart } from "@mui/x-charts";
 import dayjs from "dayjs";
 import Image from "next/image";
 import { showErrorToast } from "@/components/ToastNotification";
+import { DateRangeIcon } from "@mui/x-date-pickers/icons";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
+import CalendarPopup from "@/components/CustomCalendar";
 
 const CustomIcon = () => (
   <Image src="/arrow_down.svg" alt="arrow down" width={16} height={16} />
@@ -45,8 +47,23 @@ interface Domain {
   enable: boolean;
 }
 
-const AudienceChart = ({}: {}) => {
+interface AudienceChartProps {
+  selectedDomain?: string | null;
+}
+
+const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
   const [loading, setLoading] = useState(true);
+  const [formattedDates, setFormattedDates] = useState<string>("");
+  const [selectedDateLabel, setSelectedDateLabel] = useState<string>("");
+  const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(
+    null
+  );
+  const isCalendarOpen = Boolean(calendarAnchorEl);
+  const [appliedDates, setAppliedDates] = useState<{
+    start: Date | null;
+    end: Date | null;
+  }>({ start: null, end: null });
+
   // Domain
   const [domains, setDomains] = useState<any[]>([]);
   const [currentDomain, setCurrentDomain] = useState<string>("");
@@ -329,19 +346,74 @@ const AudienceChart = ({}: {}) => {
     setDropdownEl(null);
   };
 
+  const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setCalendarAnchorEl(event.currentTarget);
+  };
+
+  const handleCalendarClose = () => {
+    setCalendarAnchorEl(null);
+  };
+
+  const handleDateChange = (dates: {
+    start: Date | null;
+    end: Date | null;
+  }) => {
+    const { start, end } = dates;
+    if (start && end) {
+      const formattedStart = dayjs(start).format("MMM D");
+      const formattedEnd = dayjs(end).format("MMM D, YYYY");
+
+      setFormattedDates(`${formattedStart} - ${formattedEnd}`);
+    } else if (start) {
+      const formattedStart = dayjs(start).format("MMM D, YYYY");
+      setFormattedDates(formattedStart);
+    } else if (end) {
+      const formattedEnd = dayjs(end).format("MMM D, YYYY");
+      setFormattedDates(formattedEnd);
+    } else {
+      setFormattedDates("");
+    }
+  };
+
+  const handleDateLabelChange = (label: string) => {
+    setSelectedDateLabel(label);
+  };
+
+  const handleApply = (dates: { start: Date | null; end: Date | null }) => {
+    if (dates.start && dates.end) {
+      setAppliedDates(dates);
+      setCalendarAnchorEl(null);
+
+      handleCalendarClose();
+    } else {
+      setAppliedDates({ start: null, end: null });
+    }
+  };
+
   useEffect(() => {
     const savedMe = sessionStorage.getItem("me");
     const savedDomains = savedMe ? JSON.parse(savedMe).domains || [] : [];
-    const savedCurrentDomain = sessionStorage.getItem("current_domain") || "";
-
     setDomains(savedDomains);
-    setCurrentDomain(savedCurrentDomain);
+
+    const savedCurrentDomain = sessionStorage.getItem("current_domain") || "";
+    if (selectedDomain) {
+      setCurrentDomain(selectedDomain);
+    } else {
+      setCurrentDomain(savedCurrentDomain);
+    }
   }, []);
+
+  useEffect(() => {
+    if (selectedDomain) {
+      setCurrentDomain(selectedDomain);
+      sessionStorage.setItem("current_domain", selectedDomain);
+    }
+  }, [selectedDomain]);
 
   const currentDomainID = useMemo(() => {
     const found = domains.find((d) => d.domain === currentDomain);
     return found?.id || null;
-  }, [domains, currentDomain]);
+  }, [domains, currentDomain, selectedDomain]);
 
   useEffect(() => {
     if (!currentDomainID) return;
@@ -349,9 +421,16 @@ const AudienceChart = ({}: {}) => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        const params: Record<string, number> = {};
+
+        if (appliedDates.start && appliedDates.end) {
+          params.from_date = Math.floor(appliedDates.start.getTime() / 1000);
+          params.to_date = Math.floor(appliedDates.end.getTime() / 1000);
+        }
 
         const response = await axiosInterceptorInstance.get(
-          `/audience-dashboard/pixel-contacts/${currentDomainID}`
+          `/audience-dashboard/pixel-contacts/${currentDomainID}`,
+          { params }
         );
 
         const { daily_data } = response.data;
@@ -428,103 +507,189 @@ const AudienceChart = ({}: {}) => {
     };
 
     fetchData();
-  }, [currentDomainID]);
+  }, [currentDomainID, selectedDomain, appliedDates]);
 
   return (
     <Box>
-      <Button
-        aria-controls={dropdownOpen ? "account-dropdown" : undefined}
-        aria-haspopup="true"
-        aria-expanded={dropdownOpen ? "true" : undefined}
-        onClick={handleDropdownClick}
+      <Box
         sx={{
-          textTransform: "none",
-          color: "rgba(128, 128, 128, 1)",
-          border: "1px solid rgba(184, 184, 184, 1)",
-          borderRadius: "3.27px",
-          padding: "7px",
-          minWidth: "150px",
+          width: "100%",
+          alignItems: "start",
+          display: "flex",
+          flexDirection: "row",
           mb: 1.5,
         }}
-      >
-        <Typography
-          className="second-sub-title"
-          sx={{
-            marginRight: "0.5em",
-            letterSpacing: "-0.02em",
-            textAlign: "left",
-            color: "rgba(98, 98, 98, 1) !important",
-          }}
-        >
-          {currentDomain}
-        </Typography>
-        <ExpandMoreIcon sx={{ width: "20px", height: "20px" }} />
-      </Button>
-      <Menu
-        id="account-dropdown"
-        variant="menu"
-        anchorEl={dropdownEl}
-        open={dropdownOpen}
-        onClose={handleDropdownClose}
-        sx={{ "& .MuiMenu-list": { padding: "2px" } }}
       >
         <Box
           sx={{
             display: "flex",
-            justifyContent: "flex-end",
+            justifyContent: "start",
+            alignItems: "start",
             width: "100%",
-            marginTop: "0.5rem",
           }}
         >
-          <span
-            style={{
-              border: "1px solid #CDCDCD",
-              marginBottom: "0.5rem",
-              width: "100%",
-            }}
-          ></span>
-        </Box>
-        {domains.map((domain) => (
-          <MenuItem
-            key={domain.id}
-            onClick={() => {
-              handleSetDomain(domain.domain, domain.id);
-            }}
+          <Button
+            aria-controls={dropdownOpen ? "account-dropdown" : undefined}
+            aria-haspopup="true"
+            aria-expanded={dropdownOpen ? "true" : undefined}
+            onClick={handleDropdownClick}
             sx={{
-              "&:hover .delete-icon": {
-                opacity: 1,
+              textTransform: "none",
+              color: "rgba(128, 128, 128, 1)",
+              border: "1px solid rgba(184, 184, 184, 1)",
+              borderRadius: "3.2704px",
+              padding: "9.5px 4px 9.5px 12px",
+            }}
+          >
+            <Typography
+              className="second-sub-title"
+              sx={{
+                marginRight: "0.5em",
+                letterSpacing: "-0.02em",
+                textAlign: "left",
+                color: "rgba(98, 98, 98, 1) !important",
+              }}
+            >
+              {currentDomain}
+            </Typography>
+            <ExpandMoreIcon sx={{ width: "20px", height: "20px" }} />
+          </Button>
+          <Menu
+            id="account-dropdown"
+            variant="menu"
+            anchorEl={dropdownEl}
+            open={dropdownOpen}
+            onClose={handleDropdownClose}
+            sx={{ "& .MuiMenu-list": { padding: "2px" } }}
+          >
+            {domains.map((domain) => (
+              <MenuItem
+                key={domain.id}
+                onClick={() => {
+                  handleSetDomain(domain.domain, domain.id);
+                }}
+                sx={{
+                  "&:hover .delete-icon": {
+                    opacity: 1,
+                  },
+                  "& .delete-icon": {
+                    opacity: 0,
+                    transition: "opacity 0.3s ease",
+                  },
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    cursor: domain.enable ? "pointer" : "not-allowed",
+                    width: "20rem",
+                    // color: domain.enable ? 'inherit' : 'rgba(32,  33, 36, 0.3) !important'
+                  }}
+                >
+                  <Typography
+                    className="second-sub-title"
+                    sx={{
+                      color: domain.enable
+                        ? "inherit"
+                        : "rgba(32, 33, 36, 0.3) !important",
+                    }}
+                  >
+                    {domain.domain.replace("https://", "")}
+                  </Typography>
+                </Box>
+              </MenuItem>
+            ))}
+          </Menu>
+        </Box>
+
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "flex-end",
+            alignItems: "center",
+            width: "100%",
+            gap: 1,
+            "@media (max-width: 37.5rem)": {
+              display: "none",
+            },
+          }}
+        >
+          {/* Calendary picker*/}
+          <Typography className="second-sub-title">
+            {selectedDateLabel ? selectedDateLabel : ""}
+          </Typography>
+          <Button
+            aria-controls={isCalendarOpen ? "calendar-popup" : undefined}
+            aria-haspopup="true"
+            aria-expanded={isCalendarOpen ? "true" : undefined}
+            onClick={handleCalendarClick}
+            sx={{
+              textTransform: "none",
+              color: formattedDates
+                ? "rgba(80, 82, 178, 1)"
+                : "rgba(128, 128, 128, 1)",
+              border: formattedDates
+                ? ".0938rem solid rgba(80, 82, 178, 1)"
+                : ".0938rem solid rgba(184, 184, 184, 1)",
+              borderRadius: ".25rem",
+              padding: ".5rem",
+              minWidth: "auto",
+              "@media (max-width: 56.25rem)": {
+                border: "none",
+                padding: 0,
               },
-              "& .delete-icon": {
-                opacity: 0,
-                transition: "opacity 0.3s ease",
+              "&:hover": {
+                border: ".0938rem solid rgba(80, 82, 178, 1)",
+                "& .MuiSvgIcon-root": {
+                  color: "rgba(80, 82, 178, 1)",
+                },
               },
             }}
           >
-            <Box
+            <DateRangeIcon
+              fontSize="medium"
               sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                cursor: domain.enable ? "pointer" : "not-allowed",
-                width: "20rem",
-                // color: domain.enable ? 'inherit' : 'rgba(32,  33, 36, 0.3) !important'
+                color: formattedDates
+                  ? "rgba(80, 82, 178, 1)"
+                  : "rgba(128, 128, 128, 1)",
+              }}
+            />
+            <Typography
+              variant="body1"
+              sx={{
+                fontFamily: "Roboto",
+                fontSize: ".875rem",
+                fontWeight: "400",
+                color: "rgba(32, 33, 36, 1)",
+                lineHeight: "1.225rem",
+                textAlign: "left",
+                whiteSpace: "nowrap",
               }}
             >
-              <Typography
-                className="second-sub-title"
-                sx={{
-                  color: domain.enable
-                    ? "inherit"
-                    : "rgba(32, 33, 36, 0.3) !important",
-                }}
-              >
-                {domain.domain.replace("https://", "")}
-              </Typography>
-            </Box>
-          </MenuItem>
-        ))}
-      </Menu>
-      <Box sx={{ mb: 2, boxShadow: "0px 2px 10px 0px rgba(0, 0, 0, 0.1)" }}>
+              {formattedDates}
+            </Typography>
+            {formattedDates && (
+              <Box sx={{ pl: 2, display: "flex", alignItems: "center" }}>
+                <Image
+                  src="/arrow_down.svg"
+                  alt="arrow down"
+                  width={16}
+                  height={16}
+                />
+              </Box>
+            )}
+          </Button>
+        </Box>
+      </Box>
+
+      <Box
+        sx={{
+          mb: 2,
+          boxShadow: "0px 2px 10px 0px rgba(0, 0, 0, 0.1)",
+        }}
+      >
         <Card variant="outlined" sx={{ width: "100%" }}>
           <CardContent sx={{ paddingLeft: 0 }}>
             <Stack
@@ -560,7 +725,7 @@ const AudienceChart = ({}: {}) => {
                       ml: 5.5,
                       height: "20px",
                       borderRadius: "4px",
-                      border: `1.5px solid ${
+                      border: `1.5008px solid ${
                         chartType === "line"
                           ? "rgba(80, 82, 178, 1)"
                           : "rgba(115, 115, 115, 1)"
@@ -583,7 +748,7 @@ const AudienceChart = ({}: {}) => {
                       width: "20px",
                       height: "20px",
                       borderRadius: "4px",
-                      border: `1.5px solid ${
+                      border: `1.5008px solid ${
                         chartType === "bar"
                           ? "rgba(80, 82, 178, 1)"
                           : "rgba(115, 115, 115, 1)"
@@ -891,6 +1056,14 @@ const AudienceChart = ({}: {}) => {
           </CardContent>
         </Card>
       </Box>
+      <CalendarPopup
+        anchorEl={calendarAnchorEl}
+        open={isCalendarOpen}
+        onClose={handleCalendarClose}
+        onDateChange={handleDateChange}
+        onDateLabelChange={handleDateLabelChange}
+        onApply={handleApply}
+      />
     </Box>
   );
 };

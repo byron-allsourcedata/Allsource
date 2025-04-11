@@ -1,9 +1,13 @@
 from enum import Enum
 
-
 class BaseEnum(Enum):
     SUCCESS = 'SUCCESS'
     FAILURE = 'FAILURE'
+
+class EmailType(Enum):
+    BUSINESS = "business"
+    PERSONAL = "personal"
+    ADDITIONAL_PERSONAL = "additional_personal"
 
 class QueueName(Enum):
     AUDIENCE_SOURCE_MATCHING = 'aud_sources_matching'
@@ -34,6 +38,15 @@ class TypeOfSourceOrigin(Enum):
 class DataSyncType(Enum):
     AUDIENCE = 'audience'
     PIXEL = 'pixel'
+
+class IntegrationLimit(Enum):
+    MAILCHIMP = 10000
+    SALESFORCE = 10000
+    BING_ADS = 100000
+    GOOGLE_ADS = 5000
+    META = 10000
+    HUBSPOT = 100
+    S3 = 10000
 
 class BusinessType(Enum):
     D2C = 'd2c'

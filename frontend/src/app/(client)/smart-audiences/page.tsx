@@ -19,7 +19,7 @@ import CustomToolTip from '@/components/customToolTip';
 import CustomTablePagination from '@/components/CustomTablePagination';
 import { useNotification } from '@/context/NotificationContext';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
-// import ThreeDotsLoader from './components/ThreeDotsLoader';
+import ThreeDotsLoader from '../sources/components/ThreeDotsLoader';
 import ProgressBar from '../sources/components/ProgressLoader';
 import { MoreVert } from '@mui/icons-material'
 import { useSSE } from '../../../context/SSEContext';
@@ -31,6 +31,7 @@ import DateRangeIcon from '@mui/icons-material/DateRange';
 import CalendarPopup from "@/components/CustomCalendar";
 import EditIcon from '@mui/icons-material/Edit';
 import HeadsetMicOutlinedIcon from '@mui/icons-material/HeadsetMicOutlined';
+import { textAlign } from '@mui/system';
 
 interface Smarts {
     id: string
@@ -1163,9 +1164,11 @@ const SmartAudiences: React.FC = () => {
                                                                             >
                                                                                 {row.status === "unvalidated" 
                                                                                 ? <Image src="./danger_yellow.svg" alt='danger' width={20} height={20}/>
-                                                                                : row.validated_records === 0 
-                                                                                    ? "NA" 
-                                                                                    : row.active_segment_records.toLocaleString('en-US')}
+                                                                                : row.status === "n_a"
+                                                                                    ? "N/A"
+                                                                                    : row.validated_records === 0 && row.status !== "validating"
+                                                                                        ? row.active_segment_records.toLocaleString('en-US')
+                                                                                        : <Box sx={{display: "flex", justifyContent: "center"}}><ThreeDotsLoader /></Box>}
                                                                             </TableCell>
 
                                                                             {/* Created Column */}
@@ -1251,7 +1254,7 @@ const SmartAudiences: React.FC = () => {
                                                                                             width: '100%', maxWidth: 360, boxShadow: 'none'
                                                                                         }}
                                                                                     >
-                                                                                        <ListItemButton disabled={(selectedRowData?.status === "synced")} 
+                                                                                        <ListItemButton disabled={!(selectedRowData?.status === "ready" || selectedRowData?.status === "n_a")} 
                                                                                                         sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} 
                                                                                                         onClick={() => {
                                                                                                             handleCloseMorePopover()
@@ -1259,7 +1262,7 @@ const SmartAudiences: React.FC = () => {
                                                                                                         }}>
                                                                                             <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Sync" />
                                                                                         </ListItemButton>
-                                                                                        <ListItemButton disabled={(selectedRowData?.active_segment_records !== selectedRowData?.processed_active_segment_records || selectedRowData?.status === "unvalidated")} 
+                                                                                        <ListItemButton disabled={(selectedRowData?.active_segment_records !== selectedRowData?.processed_active_segment_records || selectedRowData?.status === "unvalidated" || selectedRowData?.status === "validating")} 
                                                                                                         sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} 
                                                                                                         onClick={() => {
                                                                                                             setIsDownloadAction(true)

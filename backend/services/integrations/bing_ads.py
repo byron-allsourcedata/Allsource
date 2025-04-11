@@ -9,7 +9,7 @@ from schemas.integrations.sales_force import SalesForceProfile
 from fastapi import HTTPException
 from datetime import datetime, timedelta
 from utils import extract_first_email
-from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
+from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, IntegrationLimit
 import httpx
 import json
 from utils import format_phone_number
@@ -60,7 +60,8 @@ class BingAdsIntegrationsService:
         integration_data = {
             'access_token': api_key,
             'full_name': user.get('full_name'),
-            'service_name': SourcePlatformEnum.BING_ADS.value
+            'service_name': SourcePlatformEnum.BING_ADS.value,
+            'limit': IntegrationLimit.BING_ADS.value
         }
 
         if common_integration:
