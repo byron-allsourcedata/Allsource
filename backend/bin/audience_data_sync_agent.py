@@ -163,12 +163,16 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
             enrichment_user_ids.append(enrichment_user_id)
 
             if not check_correct_data_sync(enrichment_user_id, enrichment_users['data_sync_imported_id'], session):
-                logging.warning(f"Data sync not correct for user {enrichment_user_id}")
-                await message.ack()
-                return
+                logging.debug(f"Data sync not correct for user {enrichment_user_id}")
+                continue
+            
+        if not enrichment_user_ids:
+            logging.warning(f"Data sync not correct")
+            await message.ack()
+            return
 
         logging.info(f"Data sync id: {data_sync_id}")
-        logging.info(f"Lead User ids: {len(enrichment_user_ids)}")
+        logging.info(f"Lead Users count: {len(enrichment_user_ids)}")
         
         enrichment_users, user_integration, integration_data_sync = get_lead_attributes(
             session, enrichment_user_ids, data_sync_id

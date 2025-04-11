@@ -27,7 +27,6 @@ from dependencies import (PlansPersistence)
 load_dotenv()
 
 AUDIENCE_DATA_SYNC_PERSONS = 'audience_data_sync_persons'
-BATCH_SIZE = 500
 LONG_SLEEP = 60 * 10
 SHORT_SLEEP = 10
 
@@ -191,21 +190,17 @@ async def process_user_integrations(rmq_connection, session, subscription_servic
             continue
         
         imported_count = update_data_sync_integration(session=session, data_sync_id=data_sync.id, data_sync=data_sync, last_sync_date=False)
-        
         if (data_sync.sent_contacts - imported_count) == 0:
             logging.info(f"Skip, Integration sent_contacts == imported_count")
             continue
         
-        # if user_integrations[i].service_name != 's3' and user_integrations[i].user_id != 681:
-        #     continue
-        
         limit = user_integrations[i].limit
-        
         data_sync_limit = min(limit, data_sync.sent_contacts - imported_count)
         
         encrhment_users = get_previous_imported_encrhment_users(session=session, data_sync_id=data_sync.id, data_sync_limit=data_sync_limit, service_name=user_integrations[i].service_name)
         logging.info(f"Re imported leads= {len(encrhment_users)}")
-        if BATCH_SIZE - len(encrhment_users) > 0:
+        query_limit = data_sync_limit - len(encrhment_users)
+        if query_limit > 0 and query_limit <= data_sync_limit:
             additional_leads = fetch_enrichment_users_by_data_sync(session=session, data_sync_id=data_sync.id, limit=data_sync_limit - len(encrhment_users), last_sent_enrichment_id=data_sync.last_sent_enrichment_id)
             encrhment_users.extend(additional_leads)
 
@@ -213,7 +208,7 @@ async def process_user_integrations(rmq_connection, session, subscription_servic
             logging.info(f"encrhment_users empty")
             continue
         
-        logging.debug(f"encrhment_users len = {len(encrhment_users)}")
+        logging.info(f"encrhment_users len = {len(encrhment_users)}")
         encrhment_users = sorted(encrhment_users, key=lambda x: x.id)
         await send_leads_to_rmq(session, rmq_connection, encrhment_users, data_sync, user_integrations[i].service_name)
         last_encrichment_id = encrhment_users[-1].id
@@ -268,7 +263,7 @@ async def main():
                     db=db_session,
                 )
                 await process_user_integrations(rmq_connection, db_session, subscription_service)
-                logging.info("Processing completed. Sleeping for 10 minutes...")
+                logging.info("Processing completed. Sleeping for 10 sec...")
             else:
                 logging.info("Queue is not empty. Skipping processing.")
                 
