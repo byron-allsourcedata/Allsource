@@ -54,16 +54,23 @@ def fetch_data_syncs(session):
 
     return user_integrations, data_syncs
 
+def get_no_of_imported_success_contacts(session, data_sync_id):
+    return session.query(AudienceDataSyncImportedPersons).filter(
+        AudienceDataSyncImportedPersons.status == DataSyncImportedStatus.SUCCESS.value, 
+        AudienceDataSyncImportedPersons.data_sync_id == data_sync_id
+    ).count()
+    
 def get_no_of_imported_contacts(session, data_sync_id):
     return session.query(AudienceDataSyncImportedPersons).filter(
-        AudienceDataSyncImportedPersons.status == ProccessDataSyncResult.SUCCESS.value, 
+        AudienceDataSyncImportedPersons.status != DataSyncImportedStatus.SENT.value, 
         AudienceDataSyncImportedPersons.data_sync_id == data_sync_id
     ).count()
 
 def update_data_sync_integration(session, data_sync_id, data_sync: IntegrationUserSync, last_sync_date=True):
+    no_of_success_contacts = get_no_of_imported_success_contacts(session=session, data_sync_id=data_sync_id)
     no_of_contacts = get_no_of_imported_contacts(session=session, data_sync_id=data_sync_id)
     update_data = {
-        'no_of_contacts': no_of_contacts
+        'no_of_contacts': no_of_success_contacts
     }
     if last_sync_date:
         update_data['last_sync_date'] = get_utc_aware_date()
@@ -188,6 +195,9 @@ async def process_user_integrations(rmq_connection, session, subscription_servic
         if (data_sync.sent_contacts - imported_count) == 0:
             logging.info(f"Skip, Integration sent_contacts == imported_count")
             continue
+        
+        # if user_integrations[i].service_name != 's3' and user_integrations[i].user_id != 681:
+        #     continue
         
         limit = user_integrations[i].limit
         
