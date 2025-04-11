@@ -110,8 +110,8 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
                 {dayjs(row.created_date).format("MMM D, YYYY")}
               </TableCell>
               <TableCell>{row.created_by}</TableCell>
-              <TableCell>{row.number_of_customers}</TableCell>
-              <TableCell>{row.matched_records}</TableCell>
+              <TableCell>{row.number_of_customers.toLocaleString("en-US")}</TableCell>
+              <TableCell>{row.matched_records.toLocaleString("en-US")}</TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -138,8 +138,8 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
               <Box> Type: {row.type}</Box>
               <Box> Created Date: {row.created_date}</Box>
               <Box> Created By: {row.created_by}</Box>
-              <Box> Number of Customers: {row.number_of_customers}</Box>
-              <Box> Matched Records: {row.matched_records}</Box>
+              <Box> Number of Customers: {row.number_of_customers.toLocaleString("en-US")}</Box>
+              <Box> Matched Records: {row.matched_records.toLocaleString("en-US")}</Box>
             </Box>
           </Box>
         ))}
