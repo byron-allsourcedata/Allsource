@@ -117,7 +117,7 @@ const getUseCaseStyle = (status: string) => {
 const SmartAudiences: React.FC = () => {
     const router = useRouter();
     const { hasNotification } = useNotification();
-    const { smartAudienceProgress } = useSSE();
+    const { smartAudienceProgress, validationProgress } = useSSE();
     const [data, setData] = useState<Smarts[]>([]);
     const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
     const [selectedRowData, setSelectedRowData] = useState<Smarts>();
@@ -958,6 +958,7 @@ const SmartAudiences: React.FC = () => {
                                                             <TableBody>
                                                                 {data.map((row: Smarts, index) => {
                                                                     const progress = smartAudienceProgress[row.id];
+                                                                    const progressValidation = validationProgress[row.id];
                                                                     return (
                                                                         <TableRow
                                                                             key={row.id}
@@ -1162,15 +1163,16 @@ const SmartAudiences: React.FC = () => {
                                                                             <TableCell
                                                                                 sx={{ ...smartAudiences.table_array, position: 'relative', textAlign: "center" }}
                                                                             >
-                                                                                {row.status === "unvalidated" 
+                                                                            {row.status === "unvalidated" 
                                                                                 ? <Image src="./danger_yellow.svg" alt='danger' width={20} height={20}/>
                                                                                 : row.status === "n_a"
                                                                                     ? "N/A"
-                                                                                    : row.validated_records === 0 && row.status !== "validating"
-                                                                                        ? row.active_segment_records.toLocaleString('en-US')
-                                                                                        : <Box sx={{display: "flex", justifyContent: "center"}}><ThreeDotsLoader /></Box>}
+                                                                                    : row.validated_records === 0 && row.status === "validating" && !progressValidation?.total
+                                                                                        ? <Box sx={{display: "flex", justifyContent: "center"}}><ThreeDotsLoader /></Box> 
+                                                                                        : progressValidation?.total > row.validated_records
+                                                                                            ? progressValidation?.total.toLocaleString('en-US')
+                                                                                            : row.validated_records.toLocaleString('en-US')}
                                                                             </TableCell>
-
                                                                             {/* Created Column */}
                                                                             <TableCell
                                                                                 sx={{ ...smartAudiences.table_array, position: 'relative'}}
@@ -1206,7 +1208,11 @@ const SmartAudiences: React.FC = () => {
                                                                                     <Typography component="div" sx={{
                                                                                         width: "100px",
                                                                                         margin: 0,
-                                                                                        background: getStatusStyle(preRenderStatus(row.status.charAt(0).toUpperCase() + row.status.slice(1))).background,
+                                                                                        background: getStatusStyle(
+                                                                                            progressValidation?.total 
+                                                                                            ? "Ready"
+                                                                                            : preRenderStatus(row.status.charAt(0).toUpperCase() + row.status.slice(1))
+                                                                                        ).background,
                                                                                         padding: '3px 8px',
                                                                                         borderRadius: '2px',
                                                                                         fontFamily: 'Roboto',
@@ -1214,9 +1220,16 @@ const SmartAudiences: React.FC = () => {
                                                                                         fontWeight: '400',
                                                                                         lineHeight: '16px',
                                                                                         textAlign: "center",
-                                                                                        color: getStatusStyle(preRenderStatus(row.status.charAt(0).toUpperCase() + row.status.slice(1))).color,
+                                                                                        color: getStatusStyle(
+                                                                                            progressValidation?.total 
+                                                                                            ? "Ready"
+                                                                                            : preRenderStatus(row.status.charAt(0).toUpperCase() + row.status.slice(1))
+                                                                                        ).color,
                                                                                     }}>
-                                                                                        {preRenderStatus(row.status.charAt(0).toUpperCase() + row.status.slice(1))}
+                                                                                        {progressValidation?.total 
+                                                                                            ? "Ready"
+                                                                                            : preRenderStatus(row.status.charAt(0).toUpperCase() + row.status.slice(1))
+                                                                                            }
                                                                                     </Typography>
                                                                                 </Box>
                                                                             </TableCell>
