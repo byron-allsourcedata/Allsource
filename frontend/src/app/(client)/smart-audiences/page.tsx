@@ -593,10 +593,17 @@ const SmartAudiences: React.FC = () => {
     };
 
     const preRenderStatus = (status: string) => {
-        if (status === "N_a") {
+        if (status === "N A") {
             return "Ready"
         }
         return status
+    }
+
+    const setStatus = (status: string) => {
+        return status
+          .split("_")
+          .map((subItem) => subItem.charAt(0).toUpperCase() + subItem.slice(1))
+          .join(" ")
     }
 
 
@@ -1220,7 +1227,7 @@ const SmartAudiences: React.FC = () => {
                                                                                         background: getStatusStyle(
                                                                                             progressValidation?.total 
                                                                                             ? "Ready"
-                                                                                            : preRenderStatus(row.status.charAt(0).toUpperCase() + row.status.slice(1))
+                                                                                            : preRenderStatus(setStatus(row.status))
                                                                                         ).background,
                                                                                         padding: '3px 8px',
                                                                                         borderRadius: '2px',
@@ -1232,12 +1239,12 @@ const SmartAudiences: React.FC = () => {
                                                                                         color: getStatusStyle(
                                                                                             progressValidation?.total 
                                                                                             ? "Ready"
-                                                                                            : preRenderStatus(row.status.charAt(0).toUpperCase() + row.status.slice(1))
+                                                                                            : preRenderStatus(setStatus(row.status))
                                                                                         ).color,
                                                                                     }}>
                                                                                         {progressValidation?.total 
                                                                                             ? "Ready"
-                                                                                            : preRenderStatus(row.status.charAt(0).toUpperCase() + row.status.slice(1))
+                                                                                            : preRenderStatus(setStatus(row.status))
                                                                                             }
                                                                                     </Typography>
                                                                                 </Box>
