@@ -46,8 +46,9 @@ const SourcesList: React.FC = () => {
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const isOpenFullName = Boolean(anchorElFullName);
 
-    const { smartAudienceProgress } = useSSE();
+    const { smartAudienceProgress, validationProgress } = useSSE();
     const progress = smartAudienceProgress[createdData.id];
+    const progressValidation = validationProgress[createdData.id];
 
     const handleClosePopoverFullName = () => {
         setAnchorElFullName(null);
@@ -190,29 +191,6 @@ const SourcesList: React.FC = () => {
                                     gap: '8px'
                                 }
                             }}>
-                                {/* <Button
-                                    variant="contained"
-                                    // disabled={ (createdData?.processed_total_records === 0) || (createdData?.processed_total_records !== createdData?.total_records) }
-                                    disabled={true}
-                                    onClick={() => router.push(`/lookalikes/${createdData?.id}/builder`)}
-                                    className='second-sub-title'
-                                    sx={{
-                                        backgroundColor: 'rgba(80, 82, 178, 1)',
-                                        textTransform: 'none',
-                                        padding: '10px 24px',
-                                        color: '#fff !important',
-                                        ":hover": {
-                                            backgroundColor: "rgba(62, 64, 142, 1)"},
-                                        ":active": {
-                                            backgroundColor: "rgba(80, 82, 178, 1)"},
-                                        ":disabled": {
-                                            backgroundColor: "rgba(80, 82, 178, 1)",
-                                            opacity: 0.6,
-                                        },
-                                    }}
-                                >
-                                    Sync
-                                </Button> */}
                         </Box>
                     </Box>
                     <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -293,13 +271,15 @@ const SourcesList: React.FC = () => {
                                             Validations
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
-                                        {createdData?.status === "unvalidated" 
+                                        {createdData.status === "unvalidated" 
                                             ? <Image src="./danger_yellow.svg" alt='danger' width={20} height={20}/>
-                                            : createdData?.status === "n_a"
+                                            : createdData.status === "n_a"
                                                 ? "N/A"
-                                                : createdData?.validated_records === 0 && createdData?.status !== "validating"
-                                                    ? createdData?.active_segment_records.toLocaleString('en-US')
-                                                    : <Box sx={{display: "flex", justifyContent: "center"}}><ThreeDotsLoader /></Box>}
+                                                : createdData.validated_records === 0 && createdData.status === "validating" && !progressValidation?.total
+                                                    ? <Box sx={{display: "flex", justifyContent: "center"}}><ThreeDotsLoader /></Box> 
+                                                    : progressValidation?.total > createdData.validated_records
+                                                        ? progressValidation?.total.toLocaleString('en-US')
+                                                        : createdData.validated_records.toLocaleString('en-US')}
                                         </Typography>
                                     </Box>
 
@@ -351,12 +331,14 @@ const SourcesList: React.FC = () => {
                                             Status
                                         </Typography>
                                         {createdData && (
-                                        <Typography
-                                            component="div"
-                                            sx={{
+                                            <Typography component="div" sx={{
                                                 width: "100px",
                                                 margin: 0,
-                                                background: getStatusStyle(preRenderStatus(createdData.status.charAt(0).toUpperCase() + createdData.status.slice(1))).background,
+                                                background: getStatusStyle(
+                                                    progressValidation?.total 
+                                                    ? "Ready"
+                                                    : preRenderStatus(createdData.status.charAt(0).toUpperCase() + createdData.status.slice(1))
+                                                ).background,
                                                 padding: '3px 8px',
                                                 borderRadius: '2px',
                                                 fontFamily: 'Roboto',
@@ -364,11 +346,17 @@ const SourcesList: React.FC = () => {
                                                 fontWeight: '400',
                                                 lineHeight: '16px',
                                                 textAlign: "center",
-                                                color: getStatusStyle(preRenderStatus(createdData.status.charAt(0).toUpperCase() + createdData.status.slice(1))).color,
-                                            }}
-                                        >
-                                            {preRenderStatus(createdData.status.charAt(0).toUpperCase() + createdData.status.slice(1))}
-                                        </Typography>
+                                                color: getStatusStyle(
+                                                    progressValidation?.total 
+                                                    ? "Ready"
+                                                    : preRenderStatus(createdData.status.charAt(0).toUpperCase() + createdData.status.slice(1))
+                                                ).color,
+                                            }}>
+                                                {progressValidation?.total 
+                                                    ? "Ready"
+                                                    : preRenderStatus(createdData.status.charAt(0).toUpperCase() + createdData.status.slice(1))
+                                                    }
+                                            </Typography>
                                     )}
                                     </Box>
                                     {/* need chnage < on !== */}

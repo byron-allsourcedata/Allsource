@@ -27,6 +27,7 @@ from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 load_dotenv()
 
 AUDIENCE_EMAIL_VALIDATION = 'aud_email_validation'
+AUDIENCE_VALIDATION_PROGRESS = 'AUDIENCE_VALIDATION_PROGRESS'
 
 def setup_logging(level):
     logging.basicConfig(
@@ -34,6 +35,20 @@ def setup_logging(level):
         format='%(asctime)s - %(levelname)s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
+
+async def send_sse(connection, user_id: int, data: dict):
+    try:
+        logging.info(f"send client throught SSE: {data, user_id}")
+        await publish_rabbitmq_message(
+            connection=connection,
+            queue_name=f'sse_events_{str(user_id)}',
+            message_body={
+                "status": AUDIENCE_VALIDATION_PROGRESS,
+                "data": data
+            }
+        )
+    except Exception as e:
+        logging.error(f"Error sending SSE: {e}")
 
 async def aud_email_validation(message: IncomingMessage, db_session: Session, connection):
     try:
@@ -54,6 +69,7 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                 .filter(AudienceSmartPerson.smart_audience_id == aud_smart_id)
                 .all()
             )
+            
 
             if not enrichment_users:
                 logging.info(f"No enrichment users found for aud_smart_id {aud_smart_id}.")
@@ -66,6 +82,8 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
 
             random_count = random.randint(1, len(enrichment_users))
             selected_records = random.sample(enrichment_users, random_count)
+            
+            logging.info(f"Randomly selected {random_count} person.")
 
             db_session.bulk_update_mappings(
                 AudienceSmartPerson,
@@ -80,6 +98,9 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                     "status": "ready",
                 }
             )
+
+            await send_sse(connection, user_id, {"smart_audience_id": aud_smart_id, "total": random_count})
+            logging.info(f"sent sse with total count")
 
             # results = []
             # for record in enrichment_users:

@@ -47,6 +47,8 @@ async def aud_smarts_reader(message: IncomingMessage, db_session: Session, conne
         active_segment = data.get('active_segment')
         need_validate = data.get('need_validate')
 
+        logging.info(f"For smart audience with {aud_smart_id} need_validate = {need_validate}")
+
         offset = 0
 
         AudienceLALP = aliased(AudienceLookALikePerson)
