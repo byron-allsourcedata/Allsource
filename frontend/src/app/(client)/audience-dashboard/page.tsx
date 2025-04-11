@@ -21,6 +21,15 @@ interface EventCardData {
   tabType: string;
 }
 
+interface FullEventCardData {
+  id: string;
+  status: string;
+  date: string;
+  left_info: Record<string, string | number>;
+  right_info?: Record<string, string | number>;
+  tabType: string;
+}
+
 interface PixelContact {
   domain: string;
   total_leads: number;
@@ -92,7 +101,8 @@ const AudienceDashboard: React.FC = () => {
         data_sync: counts.sync_count ?? 0,
       });
 
-      const events = eventsRes.data;
+      const events = eventsRes.data.short_info;
+      const events_cards = eventsRes.data.full_info;
       const categories = [
         "lookalikes",
         "sources",
@@ -218,58 +228,164 @@ const AudienceDashboard: React.FC = () => {
       });
       setEventCards(groupedCards);
 
-      const buildChainedPairs = (cards: EventCardData[]): CardData[] => {
-        const visited = new Set<string>();
-        const result: CardData[] = [];
+      const fullEventInfoBuilder = (
+        event: Record<string, any>,
+        tabType: string
+      ): {
+        left: Record<string, string | number>;
+        right?: Record<string, string | number>;
+      } => {
+        const excludeKeys = ["created_at", "type", "id", "chain_ids", "status"];
 
-        const cardMap = new Map<string, EventCardData>();
-        cards.forEach((card) => cardMap.set(card.id, card));
+        const leftInfo: Record<string, string | number> = {};
+        const rightInfo: Record<string, string | number> = {};
 
-        for (const card of cards) {
-          if (visited.has(card.id)) continue;
+        const isMainType = (event.type || tabType) === tabType;
 
-          const chain = card.chain_ids?.filter((id) => cardMap.has(id)) ?? [];
-          if (chain.length <= 1) {
-            visited.add(card.id);
-            result.push({
-              status: card.status,
-              date: card.date,
-              left: card.event_info,
-              tabType: card.tabType,
+        if (tabType === "lookalikes") {
+          if (isMainType) {
+            Object.entries(event).forEach(([key, value]) => {
+              if (!excludeKeys.includes(key)) {
+                const formattedKey = formatKey(key);
+                if (key === "lookalike_size") {
+                  leftInfo[formattedKey] = formatLookalikeSize(value);
+                } else if (
+                  value !== null &&
+                  value !== undefined &&
+                  value !== ""
+                ) {
+                  leftInfo[formattedKey] = value;
+                }
+              }
             });
-            continue;
+          } else {
+            // Если это не lookalike (например, smart_audience созданный из lookalike)
+            // То lookalike данные слева, остальное справа
+            if (event.lookalike_name)
+              leftInfo["Lookalike Name"] = event.lookalike_name;
+            if (event.lookalike_size)
+              leftInfo["Lookalike Size"] = formatLookalikeSize(
+                event.lookalike_size
+              );
+            if (event.size) leftInfo["Size"] = event.size;
+
+            // Правая часть - данные созданного ресурса
+            if (event.audience_name)
+              rightInfo["Audience Name"] = event.audience_name;
+            if (event.use_case) rightInfo["Use Case"] = event.use_case;
+            if (event.active_segment)
+              rightInfo["Active Segment"] = event.active_segment;
           }
-
-          const sortedChain = [...chain]
-            .map((id) => cardMap.get(id)!)
-            .sort(
-              (b, a) => new Date(a.date).getTime() - new Date(b.date).getTime()
-            );
-
-          const main = sortedChain[0];
-          visited.add(main.id);
-
-          for (let i = 1; i < sortedChain.length; i++) {
-            const created = sortedChain[i];
-            visited.add(created.id);
-
-            result.push({
-              status: created.status,
-              date: created.date,
-              left: main.event_info,
-              right: created.event_info,
-              tabType: created.tabType,
+        } else if (tabType === "smart_audience") {
+          if (isMainType) {
+            // Для smart_audience на своей вкладке - все данные слева
+            Object.entries(event).forEach(([key, value]) => {
+              if (!excludeKeys.includes(key)) {
+                const formattedKey = formatKey(key);
+                if (value !== null && value !== undefined && value !== "") {
+                  leftInfo[formattedKey] = value;
+                }
+              }
             });
+          } else {
+            if (event.audience_name)
+              leftInfo["Audience Name"] = event.audience_name;
+            if (event.destination) leftInfo["Destination"] = event.destination;
+            if (event.synced_contacts)
+              rightInfo["Synced contacts"] = event.synced_contacts;
           }
+        } else if (tabType === "sources") {
+          if (isMainType) {
+            Object.entries(event).forEach(([key, value]) => {
+              if (!excludeKeys.includes(key)) {
+                const formattedKey = formatKey(key);
+                if (value !== null && value !== undefined && value !== "") {
+                  leftInfo[formattedKey] = value;
+                }
+              }
+            });
+          } else {
+            if (event.source_name) leftInfo["Source Name"] = event.source_name;
+            if (event.source_type) leftInfo["Source Type"] = event.source_type;
+            if (event.matched_records)
+              leftInfo["Matched Records"] = event.matched_records;
+
+            if (event.lookalike_name)
+              rightInfo["Lookalike Name"] = event.lookalike_name;
+            if (event.lookalike_size)
+              rightInfo["Lookalike Size"] = formatLookalikeSize(
+                event.lookalike_size
+              );
+            if (event.size) rightInfo["Size"] = event.size;
+          }
+        } else {
+          Object.entries(event).forEach(([key, value]) => {
+            if (!excludeKeys.includes(key)) {
+              const formattedKey = formatKey(key);
+              if (key === "lookalike_size") {
+                leftInfo[formattedKey] = formatLookalikeSize(value);
+              } else if (
+                value !== null &&
+                value !== undefined &&
+                value !== ""
+              ) {
+                leftInfo[formattedKey] = value;
+              }
+            }
+          });
         }
 
-        return result;
+        return {
+          left: leftInfo,
+          ...(Object.keys(rightInfo).length > 0 ? { right: rightInfo } : {}),
+        };
       };
 
-      const sources = buildChainedPairs(groupedCards.sources);
-      const lookalikes = buildChainedPairs(groupedCards.lookalikes);
-      const smartAudience = buildChainedPairs(groupedCards.smart_audience);
-      const dataSync = buildChainedPairs(groupedCards.data_sync);
+      const groupedSelectedCards: Record<string, FullEventCardData[]> = {
+        lookalikes: [],
+        sources: [],
+        smart_audience: [],
+        data_sync: [],
+      };
+
+      // В цикле где создаются карточки, передаем tabType в builder
+      categories.forEach((category) => {
+        const items = events_cards[category] ?? [];
+        items.forEach((event: any) => {
+          const tabType =
+            category === "smart_audiences" ? "smart_audience" : category;
+          const type = event.type ?? tabType;
+
+          const { left, right } = fullEventInfoBuilder(event, tabType);
+
+          groupedSelectedCards[tabType].push({
+            id: event.id,
+            status: formatKey(buildStatus(type, tabType)),
+            date: formatDate(event.created_at),
+            left_info: left,
+            right_info: right,
+            tabType:
+              tabType[0].toUpperCase() + tabType.slice(1).replace("_", " "),
+          });
+        });
+      });
+
+      const buildChainedPairs = (cards: FullEventCardData[]): CardData[] => {
+        return cards.map((card) => ({
+          status: card.status,
+          date: card.date,
+          left: card.left_info,
+          right: card.right_info,
+          tabType: card.tabType,
+        }));
+      };
+
+      const sources = buildChainedPairs(groupedSelectedCards.sources);
+      const lookalikes = buildChainedPairs(groupedSelectedCards.lookalikes);
+      const smartAudience = buildChainedPairs(
+        groupedSelectedCards.smart_audience
+      );
+      const dataSync = buildChainedPairs(groupedSelectedCards.data_sync);
 
       setChainedCards({
         sources,
@@ -445,7 +561,12 @@ const AudienceDashboard: React.FC = () => {
             </Box>
             {selectedCard ? (
               <Box>
-                <Grid container justifyContent="center" spacing={1}>
+                <Grid
+                  container
+                  justifyContent="center"
+                  spacing={1}
+                  sx={{ mb: 2 }}
+                >
                   {currentTabData.map(
                     (card: any, index: React.Key | null | undefined) => (
                       <Grid item xs={12} sm={6} key={index}>
