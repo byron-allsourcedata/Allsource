@@ -128,6 +128,8 @@ class AudienceLookalikesPersistence:
             "name": lookalike.name,
             "source": sources.source_origin,
             "source_type": sources.source_type,
+            "size": lookalike.size,
+            "size_progress": lookalike.processed_size,
             "lookalike_size": lookalike.lookalike_size,
             "created_date": lookalike.created_date,
             "created_by": created_by,
@@ -190,7 +192,11 @@ class AudienceLookalikesPersistence:
     def get_processing_lookalike(self, id: UUID):
         query = (
             self.db.query(
-                AudienceLookalikes,
+                AudienceLookalikes.id,
+                AudienceLookalikes.name,
+                AudienceLookalikes.size,
+                AudienceLookalikes.processed_size,
+                AudienceLookalikes.lookalike_size,
                 AudienceSource.name,
                 AudienceSource.source_type,
                 Users.full_name,
@@ -201,5 +207,6 @@ class AudienceLookalikesPersistence:
                 .join(Users, Users.id == AudienceSource.created_by_user_id)
                 .filter(AudienceLookalikes.id == id)
         ).first()
+
         return dict(query._asdict()) if query else None
 

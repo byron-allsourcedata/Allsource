@@ -19,6 +19,8 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 interface TableData {
   id: string;
   lookalike_name: string;
+  size_progress: number;
+  size: number;
   source: string;
   type: string;
   source_target_schema: string;
@@ -133,6 +135,8 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
         `/audience-lookalikes/get-processing-lookalikes?id=${id}`
       );
       const updatedItem = response.data;
+
+      console.log(updatedItem)
   
       setCreatedData((prevData) =>
         prevData.map((item) =>
@@ -140,10 +144,9 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
         )
       );
   
-      // Update progress and total for the specific item
       setProgress((prev) => ({
         ...prev,
-        [id]: updatedItem.size_progress,
+        [id]: updatedItem.processed_size,
       }));
       setTotal((prev) => ({
         ...prev,
@@ -154,10 +157,6 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
     }
   };
   
-  const handleRowSelect = (id: string) => {
-    setSelectedId(id);
-    console.log(`Selected ID set to ${id}`);
-  };
 
   return (
     <TableContainer
