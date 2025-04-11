@@ -542,7 +542,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
               <TableCell
                 sx={{ ...lookalikesStyles.table_array, position: "relative" }}
               >
-                {row.size}
+                {row.size.toLocaleString("en-US")}
               </TableCell>
               {isDebug && (
                 <TableCell

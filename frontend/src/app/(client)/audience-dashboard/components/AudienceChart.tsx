@@ -18,11 +18,14 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { ShowChart, BarChart as IconBarChart } from "@mui/icons-material";
 import { LineChart, BarChart } from "@mui/x-charts";
 import dayjs from "dayjs";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import Image from "next/image";
 import { showErrorToast } from "@/components/ToastNotification";
 import { DateRangeIcon } from "@mui/x-date-pickers/icons";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import CalendarPopup from "@/components/CustomCalendar";
+
+dayjs.extend(isSameOrBefore);
 
 const CustomIcon = () => (
   <Image src="/arrow_down.svg" alt="arrow down" width={16} height={16} />
@@ -54,15 +57,23 @@ interface AudienceChartProps {
 const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
   const [loading, setLoading] = useState(true);
   const [formattedDates, setFormattedDates] = useState<string>("");
-  const [selectedDateLabel, setSelectedDateLabel] = useState<string>("");
+  const [selectedDateLabel, setSelectedDateLabel] =
+    useState<string>("Last year");
   const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(
     null
   );
   const isCalendarOpen = Boolean(calendarAnchorEl);
+  const today = new Date();
+  const oneYearAgo = new Date();
+  oneYearAgo.setFullYear(today.getFullYear() - 1);
+
   const [appliedDates, setAppliedDates] = useState<{
     start: Date | null;
     end: Date | null;
-  }>({ start: null, end: null });
+  }>({
+    start: oneYearAgo,
+    end: today,
+  });
 
   // Domain
   const [domains, setDomains] = useState<any[]>([]);
@@ -334,7 +345,6 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
   const handleSetDomain = async (domain: string, domain_id: number) => {
     sessionStorage.setItem("current_domain", domain);
     setCurrentDomain(domain.replace("https://", ""));
-    console.log(domain_id);
     setDropdownEl(null);
   };
 
@@ -434,20 +444,46 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
         );
 
         const { daily_data } = response.data;
-        const days = Object.keys(daily_data).sort(
+
+        // Получаем и сортируем дни с бэкенда
+        const availableDays = Object.keys(daily_data).sort(
           (a, b) => new Date(a).getTime() - new Date(b).getTime()
         );
 
-        const revenueData = days.map((day) => daily_data[day].total_leads || 0);
-        const visitorsData = days.map((day) => daily_data[day].visitors || 0);
-        const viewedProductData = days.map(
-          (day) => daily_data[day].view_products || 0
+        const lastAvailableDay = availableDays[availableDays.length - 1];
+        const lastData = daily_data[lastAvailableDay] || {};
+
+        const extendedDays: string[] = [...availableDays];
+
+        // Добавляем только forward-заполнение от последней доступной даты до appliedDates.end
+        const end = dayjs(appliedDates.end);
+        let current = dayjs(lastAvailableDay).add(1, "day");
+
+        while (current.isSameOrBefore(end)) {
+          const dateStr = current.format("YYYY-MM-DD");
+          daily_data[dateStr] = lastData; // дублируем последнее значение
+          extendedDays.push(dateStr);
+          current = current.add(1, "day");
+        }
+
+        // Генерация данных
+        const getMetric = (day: string, key: string): number =>
+          daily_data[day]?.[key] ?? 0;
+
+        const revenueData = extendedDays.map((day) =>
+          getMetric(day, "total_leads")
         );
-        const abandonedCartData = days.map(
-          (day) => daily_data[day].abandoned_cart || 0
+        const visitorsData = extendedDays.map((day) =>
+          getMetric(day, "visitors")
         );
-        const convertedSaleData = days.map(
-          (day) => daily_data[day].converted_sale || 0
+        const viewedProductData = extendedDays.map((day) =>
+          getMetric(day, "view_products")
+        );
+        const abandonedCartData = extendedDays.map((day) =>
+          getMetric(day, "abandoned_cart")
+        );
+        const convertedSaleData = extendedDays.map((day) =>
+          getMetric(day, "converted_sale")
         );
 
         setSeries([
@@ -498,7 +534,7 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
           },
         ]);
 
-        setDays(days);
+        setDays(extendedDays);
       } catch (err) {
         console.error("Ошибка загрузки данных:", err);
       } finally {
@@ -627,12 +663,14 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
             onClick={handleCalendarClick}
             sx={{
               textTransform: "none",
-              color: formattedDates
-                ? "rgba(80, 82, 178, 1)"
-                : "rgba(128, 128, 128, 1)",
-              border: formattedDates
-                ? ".0938rem solid rgba(80, 82, 178, 1)"
-                : ".0938rem solid rgba(184, 184, 184, 1)",
+              color:
+                formattedDates || selectedDateLabel
+                  ? "rgba(80, 82, 178, 1)"
+                  : "rgba(128, 128, 128, 1)",
+              border:
+                formattedDates || selectedDateLabel
+                  ? ".0938rem solid rgba(80, 82, 178, 1)"
+                  : ".0938rem solid rgba(184, 184, 184, 1)",
               borderRadius: ".25rem",
               padding: ".5rem",
               minWidth: "auto",
@@ -651,9 +689,10 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
             <DateRangeIcon
               fontSize="medium"
               sx={{
-                color: formattedDates
-                  ? "rgba(80, 82, 178, 1)"
-                  : "rgba(128, 128, 128, 1)",
+                color:
+                  formattedDates || selectedDateLabel
+                    ? "rgba(80, 82, 178, 1)"
+                    : "rgba(128, 128, 128, 1)",
               }}
             />
             <Typography
