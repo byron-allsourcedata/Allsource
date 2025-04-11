@@ -892,6 +892,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
 
                                                         if (a.service_name === 'CSV') return -1;
                                                         if (b.service_name === 'CSV') return 1;
+                                                        if (a.service_name === 's3') return -1;
+                                                        if (b.service_name === 's3') return 1;
                                                         if (isIntegratedA && !isIntegratedB) return -1;
                                                         if (!isIntegratedA && isIntegratedB) return 1;
                                                         return 0;
