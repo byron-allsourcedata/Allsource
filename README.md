@@ -25,4 +25,11 @@ To get started with the project, you will need to install several dependencies.
    cd maximiz/backend/
    uvicorn app.main:app --uds ../dev_backend.sock
    ```
-   
+
+## Launching scripts
+
+run from maximiz (project root) 
+
+```bash
+python3 -m backend.bin.check_catboost
+```

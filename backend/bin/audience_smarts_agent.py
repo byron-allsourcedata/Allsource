@@ -24,7 +24,6 @@ load_dotenv()
 AUDIENCE_SMARTS_AGENT = 'aud_smarts_agent'
 AUDIENCE_EMAIL_VALIDATION = 'aud_email_validation'
 AUDIENCE_SMARTS_PROGRESS = "AUDIENCE_SMARTS_PROGRESS"
-SELECTED_ROW_COUNT = 1000
 
 def setup_logging(level):
     logging.basicConfig(
@@ -56,7 +55,8 @@ async def aud_smarts_matching(message: IncomingMessage, db_session: Session, con
         aud_smart_id = message_body.get("aud_smart_id")
         enrichment_users_ids = message_body.get("enrichment_users_ids") or []
         need_validate = message_body.get("need_validate")
-        final_insert = len(enrichment_users_ids) < SELECTED_ROW_COUNT
+        count_iterations = message_body.get("count_iterations")
+        count = message_body.get("count")
 
         try:
             bulk_data = [
@@ -85,7 +85,7 @@ async def aud_smarts_matching(message: IncomingMessage, db_session: Session, con
             await send_sse(connection, user_id, {"smart_audience_id": aud_smart_id, "processed": processed_records_value})
             logging.info(f"sent {len(enrichment_users_ids)} persons")
 
-            if final_insert and need_validate:
+            if count_iterations == count and need_validate:
                 message_body = {
                     'aud_smart_id': str(aud_smart_id),
                     'user_id': user_id

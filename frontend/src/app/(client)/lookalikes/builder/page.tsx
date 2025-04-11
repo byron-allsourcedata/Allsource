@@ -373,7 +373,7 @@ const CreateLookalikePage: React.FC = () => {
                                       className="black-table-header"
                                       sx={{ flex: 1, textAlign: "right" }}
                                     >
-                                      {row.matched_records}
+                                      {row.matched_records.toLocaleString("en-US")}
                                     </TableCell>
                                   </TableRow>
                                 ))}
