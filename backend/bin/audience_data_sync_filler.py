@@ -179,9 +179,6 @@ async def process_user_integrations(rmq_connection, session, subscription_servic
             logging.info(f"Skip, subscription is not active for user {user_integrations[i].user_id}")
             continue
         
-        # if user_integrations[i].service_name != 'mailchimp' or user_integrations[i].user_id != 681:
-        #     continue
-        
         if (data_sync.sync_status == False or user_integrations[i].is_failed == True or data_sync.is_active == False):
             logging.info(f"Skip, Integration is failed {user_integrations[i].is_failed}, Data sync status {data_sync.sync_status}")
             continue
@@ -193,7 +190,6 @@ async def process_user_integrations(rmq_connection, session, subscription_servic
             continue
         
         limit = user_integrations[i].limit
-        # limit = 10
         
         data_sync_limit = min(limit, data_sync.sent_contacts - imported_count)
         

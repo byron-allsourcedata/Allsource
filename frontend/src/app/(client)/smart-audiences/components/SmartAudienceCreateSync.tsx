@@ -118,7 +118,8 @@ type ArrayMapping = {
     meta: CustomRow[]
     CSV: CustomRow[],
     s3: CustomRow[],
-    google_ads: CustomRow[]
+    google_ads: CustomRow[],
+    sales_force: CustomRow[]
 };
 
 const styles = {
@@ -696,7 +697,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
         default: customFieldsList,
         meta: customFieldsList,
         s3: customFieldsList,
-        google_ads: customFieldsList
+        google_ads: customFieldsList,
+        sales_force: customFieldsList
     };
 
     const handleAddIntegration = async (service_name: string) => {

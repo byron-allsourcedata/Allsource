@@ -1,7 +1,9 @@
 import os
 import re
 import csv
+import logging
 import io
+import hashlib
 from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
@@ -123,41 +125,56 @@ class SalesForceIntegrationsService:
         if not records:
             return ""
         output = io.StringIO()
-        writer = csv.DictWriter(output, fieldnames=records[0].keys())
+        writer = csv.DictWriter(output, fieldnames=records[0].keys(), lineterminator='\n')
         writer.writeheader()
         for rec in records:
             writer.writerow(rec)
         return output.getvalue()
     
-    def bulk_upsert_leads(self, profiles: list[dict], external_id_field: str, instance_url: str, access_token: str) -> str:
-        job_payload = {
-            "object": "Lead",
-            "operation": "upsert",
-            "externalIdFieldName": external_id_field,
-            "contentType": "CSV"
-        }
-        base_url = f"{instance_url}/services/data/v59.0/jobs/ingest"
-        headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
-        job_resp = self.__handle_request(method='POST', url=base_url, json=job_payload, headers=headers)
+    def generate_external_id(self, profile: dict) -> str:
+        unique_value = profile.get('email')
+        if not unique_value:
+            unique_value = str(profile)
+            
+        return hashlib.md5(unique_value.encode('utf-8')).hexdigest()
+
+    def bulk_upsert_leads(self, profiles: list[dict], instance_url: str, access_token: str) -> str:
+        try:
+            for profile in profiles:
+                profile['External_Contact_ID__c'] = profile.get('Email')
+                    
+            job_payload = {
+                "object": "Lead",
+                "operation": "upsert",
+                "externalIdFieldName": 'External_Contact_ID__c',
+                "contentType": "CSV"
+            }
+            base_url = f"{instance_url}/services/data/v59.0/jobs/ingest"
+            headers = {
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json"
+            }
+            job_resp = self.__handle_request(method='POST', url=base_url, json=job_payload, headers=headers)
+            job_resp.raise_for_status()
+            job_id = job_resp.json()['id']
+
+            csv_data = self._to_csv(profiles)
+            upload_headers = {
+                'Authorization': headers['Authorization'],
+                'Content-Type': 'text/csv'
+            }
+            upload_url = f"{base_url}/{job_id}/batches"
+            upload_resp = self.__handle_request(method='PUT', url=upload_url, data=csv_data, headers=upload_headers)
+            upload_resp.raise_for_status()
+            close_url = f"{base_url}/{job_id}"
+            close_payload = {"state": "UploadComplete"}
+            close_resp = self.__handle_request(method='PATCH', url=close_url, json=close_payload, headers=headers)
+            close_resp.raise_for_status()
+        except Exception as e:
+            logging.error(e)
+            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
         
-        job_resp.raise_for_status()
-        job_id = job_resp.json()['id']
-
-        csv_data = self._to_csv(profiles)
-        upload_headers = {
-            'Authorization': self.headers['Authorization'],
-            'Content-Type': 'text/csv'
-        }
-        upload_url = f"{base_url}/{job_id}/batches"
-        upload_resp = self.__handle_request(method='PUT', url=upload_url, data=csv_data, headers=upload_headers)
-        upload_resp.raise_for_status()
-
-        # 3. Закрыть job (начать обработку)
-        close_url = f"{base_url}/{job_id}"
-        close_resp = self.__handle_request(method='PATCH', url=close_url, json={"state": "UploadComplete"}, headers=headers)
-        close_resp.raise_for_status()
-
-        return job_id
+        return ProccessDataSyncResult.SUCCESS.value
     
     def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
         client_id = os.getenv("SALES_FORCE_TOKEN")
@@ -205,23 +222,32 @@ class SalesForceIntegrationsService:
             'created_by': created_by,
         })
         return sync
+    
+    def get_failed_results(self, job_id: str, instance_url: str, access_token: str) -> str:
+        url = f"{instance_url}/services/data/v59.0/jobs/ingest/{job_id}/failedResults"
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+        }
+        response = self.__handle_request(method='GET', url=url, headers=headers)
+        response.raise_for_status()
+        return response.text
 
     async def process_data_sync(self, user_integration, data_sync, enrichment_users: EnrichmentUser):
         profiles = []
-        profile_results = {}
+        access_token = self.get_access_token(user_integration.access_token)
+        if not access_token:
+            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+        
         for enrichment_user in enrichment_users:
-            profile = self.__mapped_sales_force_profile(enrichment_users, data_sync.data_map)
-            if profile in (ProccessDataSyncResult.INCORRECT_FORMAT.value):
-                profile_results[enrichment_user.id] = False
-                continue
-            profile_results[enrichment_user.id] = True
+            profile = self.__mapped_sales_force_profile(enrichment_user, data_sync.data_map)
             profiles.append(profile)
             
-        response_result = self.bulk_upsert_leads(profiles=profiles, external_id_field='', instance_url=user_integration.instance_url, access_token=user_integration.access_token)
+        response_result = self.bulk_upsert_leads(profiles=profiles, instance_url=user_integration.instance_url, access_token=access_token)
         if response_result in (ProccessDataSyncResult.AUTHENTICATION_FAILED.value, ProccessDataSyncResult.INCORRECT_FORMAT.value):
-            return profile, None
+            return profile
             
-        return ProccessDataSyncResult.SUCCESS.value, profile_results
+        return ProccessDataSyncResult.SUCCESS.value
                 
     def set_suppression(self, suppression: bool, domain_id: int, user: dict):
             credential = self.get_credentials(domain_id, user.get('id'))
@@ -245,12 +271,24 @@ class SalesForceIntegrationsService:
             raise HTTPException(status_code=400, detail={'status': "Profiles from Klaviyo could not be retrieved"})
         return [self.__mapped_profile_from_klaviyo(profile) for profile in response.json().get('data')]
     
+    def __map_properties(self, enrichment_user: EnrichmentUser, data_map: List[DataMap]) -> dict:
+        properties = {}
+        for mapping in data_map:
+            five_x_five_field = mapping.get("type")  
+            new_field = mapping.get("value")  
+            value_field = getattr(enrichment_user, five_x_five_field, None)
+            
+            if value_field is not None: 
+                properties[new_field] = value_field.isoformat() if isinstance(value_field, datetime) else value_field
+            else:
+                properties[new_field] = None
+            
+        return properties
+    
     def __mapped_sales_force_profile(self, enrichment_user: EnrichmentUser, data_map: dict) -> dict:
+        emails_list = [e.email.email for e in enrichment_user.emails_enrichment]
         properties = self.__map_properties(enrichment_user, data_map) if data_map else {}
-        first_email = get_valid_email(enrichment_user)
-        
-        if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value):
-            return first_email
+        first_email = get_valid_email(emails_list)
         
         fake = Faker()
 
@@ -267,7 +305,7 @@ class SalesForceIntegrationsService:
         else:
             city, state, zip_code = '', '', ''
             
-        gender = fake.passport_gender()
+        company_name = fake.company()
         first_name = fake.first_name()
         last_name = fake.last_name()
         
@@ -282,8 +320,27 @@ class SalesForceIntegrationsService:
             'City': city,
             'State': state,
             'Country': 'USA',
-            **properties,
-            'Gender': gender
+            'Company': company_name,
+            'Age__c': properties.get('Age', None),
+            'Gender__c': properties.get('Gender', None),
+            'Estimated_Household_Income_Code__c': properties.get('Estimated household income code', None),
+            'Estimated_Current_Home_Value_Code__c': properties.get('Estimated current home value code', None),
+            'Homeowner_Status__c': properties.get('Homeowner status', None),
+            'Has_Children__c': properties.get('Has children', None),
+            'Number_of_Children__c': properties.get('Number of children', None),
+            'Credit_Rating__c': properties.get('Credit rating', None),
+            'Net_Worth_Code__c': properties.get('Net worth code', None),
+            'Zip_Code__c': properties.get('Zipcode 5', None),
+            'Latitude__c': properties.get('Lat', None),
+            'Longitude__c': properties.get('Lon', None),
+            'Has_Credit_Card__c': properties.get('Has credit card', None),
+            'Length_of_Residence_Years__c': properties.get('Length of residence years', None),
+            'Marital_Status__c': properties.get('Marital status', None),
+            'Occupation_Group_Code__c': properties.get('Occupation group code', None),
+            'Is_Book_Reader__c': properties.get('Is book reader', None),
+            'Is_Online_Purchaser__c': properties.get('Is online purchaser', None),
+            'Is_Traveler__c': properties.get('Is traveler', None),
+            'Rec_Id__c': properties.get('Rec id', None)
         }
         
         json_data = {k: v for k, v in json_data.items() if v is not None}
