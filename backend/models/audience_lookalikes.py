@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, TIMESTAMP, VARCHAR, ForeignKey, JSON, UUID, Index
 from .base import Base
 from models.audience_sources import AudienceSource
+from models.users import Users
 
 class AudienceLookalikes(Base):
     __tablename__ = 'audience_lookalikes'
