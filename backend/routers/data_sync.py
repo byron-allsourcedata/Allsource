@@ -75,6 +75,7 @@ def create_smart_audience_sync(
     data: SmartAudienceSyncCreate, 
     service_name: str = Query(...),
     integration_service: IntegrationService = Depends(get_integration_service),
+    audience_smarts_service: AudienceSmartsService = Depends(get_audience_smarts_service),
     user=Depends(check_user_authorization)
 ):
     if user.get('team_member'):
@@ -86,6 +87,7 @@ def create_smart_audience_sync(
             )
     data = {k: v for k, v in data.model_dump().items() if v}
     with integration_service as service:
+        count_updated = audience_smarts_service.set_data_syncing_status(data['smart_audience_id'])
         service = getattr(service, service_name.lower())
         service.create_smart_audience_sync(
             **data,

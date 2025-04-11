@@ -28,6 +28,7 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 interface AudiencePopupProps {
     open: boolean;
     onClose: () => void;
+    updateSmartAudStatus: (id: string) => void;
     integrationsList?: string[];
     id?: string
     activeSegmentRecords?: number
@@ -225,7 +226,7 @@ const defaultRows: Row[] = [
     { id: 1, type: 'Email', value: 'email' }
 ];
 
-const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrationsList: integ = [], id, activeSegmentRecords = 0, isDownloadAction, setIsPageLoading }) => {
+const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSmartAudStatus, integrationsList: integ = [], id, activeSegmentRecords = 0, isDownloadAction, setIsPageLoading }) => {
     const { triggerSync } = useIntegrationContext();
     const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
     const [integrationsCredentials, setIntegrationsCredentials] = useState<IntegrationsCredentials[]>([])
@@ -440,6 +441,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, integrat
                 handleClosePopup();
                 showToast('Data sync created successfully');
                 triggerSync();
+                if (id) { updateSmartAudStatus(id) }
             }
         } catch {
         } finally {

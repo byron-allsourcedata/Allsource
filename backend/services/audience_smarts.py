@@ -96,6 +96,10 @@ class AudienceSmartsService:
     def update_audience_smart(self, id: UUID, new_name: str) -> bool:
         count_updated = self.audience_smarts_persistence.update_audience_smart(id, new_name)
         return count_updated > 0
+
+    def set_data_syncing_status(self, id: UUID) -> bool:
+        count_updated = self.audience_smarts_persistence.set_data_syncing_status(id, AudienceSmartStatuses.DATA_SYNCING.value)
+        return count_updated > 0
     
 
     def transform_datasource(self, raw_data: dict) -> DataSourcesFormat:

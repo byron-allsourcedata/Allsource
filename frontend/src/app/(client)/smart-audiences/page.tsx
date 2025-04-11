@@ -446,6 +446,15 @@ const SmartAudiences: React.FC = () => {
         setIsEditPopoverOpen(true);
     };
 
+    const updateSmartAudStatus = (id: string) => {
+        setData((prevState) =>
+            prevState.map((aud) =>
+                aud.id === id ? { ...aud, status: "Data Syncing" } : aud
+            )
+        );
+    };
+    
+
     const handleCloseEditPopover = () => {
         setIsEditPopoverOpen(false);
         setEditPopoverAnchorEl(null);
@@ -1414,6 +1423,7 @@ const SmartAudiences: React.FC = () => {
                                         onClose={handleDataSyncPopupClose}
                                         integrationsList={selectedRowData?.integrations}
                                         isDownloadAction={isDownloadAction}
+                                        updateSmartAudStatus={updateSmartAudStatus}
                                         setIsPageLoading={setLoading}
                                     />
                                     <FilterPopup open={filterPopupOpen}

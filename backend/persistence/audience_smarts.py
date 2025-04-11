@@ -288,6 +288,13 @@ class AudienceSmartsPersistence:
         self.db.commit()
         return updated_count
 
+    def set_data_syncing_status(self, id, status) -> int:
+        updated_count = self.db.query(AudienceSmart).filter(
+            AudienceSmart.id == id
+        ).update({AudienceSmart.status: status}, synchronize_session=False)
+        self.db.commit()
+        return updated_count
+
 
     def get_persons_by_smart_aud_id(self, smart_audience_id, sent_contacts, fields):
         query = (
