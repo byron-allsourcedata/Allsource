@@ -245,7 +245,7 @@ async def main():
         f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}", pool_pre_ping=True
     )
     Session = sessionmaker(bind=engine)
-    sleep_interval = LONG_SLEEP    
+    sleep_interval = SHORT_SLEEP    
     while True:
         db_session = None
         rabbitmq_connection = None
@@ -270,7 +270,6 @@ async def main():
                 await process_user_integrations(rmq_connection, db_session, subscription_service)
                 logging.info("Processing completed. Sleeping for 10 minutes...")
             else:
-                sleep_interval = SHORT_SLEEP
                 logging.info("Queue is not empty. Skipping processing.")
                 
         except Exception as err:
