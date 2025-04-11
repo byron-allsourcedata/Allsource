@@ -168,13 +168,14 @@ class S3IntegrationService:
         credential = self.integrations_persisntece.get_smart_credentials_for_service(user_id=user_id, service_name=SourcePlatformEnum.S3.value)
         return credential
     
-    def create_smart_audience_sync(self, smart_audience_id: UUID, sent_contacts: int, created_by: str, user: dict, data_map: List[DataMap] = []):
+    def create_smart_audience_sync(self, smart_audience_id: UUID, sent_contacts: int, created_by: str, user: dict, list_name: str = None, data_map: List[DataMap] = []):
         credentials = self.get_smart_credentials(user_id=user.get('id'))
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'sent_contacts': sent_contacts,
             'sync_type': DataSyncType.AUDIENCE.value,
             'smart_audience_id': smart_audience_id,
+            'list_name': list_name,
             'data_map': data_map,
             'created_by': created_by,
         })

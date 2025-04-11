@@ -22,8 +22,10 @@ import IntegrationBox from './IntegrationBox';
 import GoogleAdsContactSyncTab from './GoogleAdsContactSyncTab';
 import MailchimpContactSyncTab from './MailchimpContactSyncTab';
 import MetaContactSyncTab from './MetaContactSyncTab'
+import S3ContactSyncTab from './S3ContactSyncTab'
 import { styled } from '@mui/material/styles';
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import { AxiosError } from 'axios';
 
 interface AudiencePopupProps {
     open: boolean;
@@ -408,6 +410,16 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                 }
             }
 
+            if (activeService === "s3") {
+                if (selectedOptionS3) {
+                    requestObj.list_name = selectedOptionS3
+                }
+                else {
+                    showErrorToast("You have selected incorrect data!")
+                    return
+                }
+            }
+
             if (activeService === "meta") {
                 if (optionAdAccountMeta?.id && selectedOptionMeta?.list_name && selectedOptionMeta?.id) {
                     requestObj.customer_id = String(optionAdAccountMeta?.id)
@@ -453,6 +465,13 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
         if (activeService === "mailchimp") {
             setContactSyncTab(true)
             getList()
+            setRows(defaultRows)
+            setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
+        }
+
+        if (activeService === "s3") {
+            setContactSyncTab(true)
+            getS3List()
             setRows(defaultRows)
             setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
         }
@@ -748,6 +767,35 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
 
     }
 
+    ///S3
+    const [s3List, setS3List] = useState<string[]>([])
+    const [selectedOptionS3, setSelectedOptions3] = useState<string | null>(null);
+
+    const getS3List = async () => {
+        try {
+            setIsLoading(true)
+            const response = await axiosInstance.get('/integrations/sync/list/', {
+                params: {
+                    service_name: 's3'
+                }
+            })
+            setS3List(response.data)
+            setIsLoading(false)
+        } catch (error) {
+            if (error instanceof AxiosError) {
+                if (error.response?.status === 400) {
+                    if (error.response.data.status === 'CREDENTIALS_MISSING') {
+                        showErrorToast(error.response.data.message);
+                    } else if (error.response.data.status === 'CREDENTIALS_INCOMPLETE') {
+                        showErrorToast(error.response.data.message);
+                    } else {
+                        showErrorToast(error.response.data.message);
+                    }
+                }
+            }
+        }
+    }
+
     ///Meta 
 
     const [selectedOptionMeta, setSelectedOptionMeta] = useState<MetaAuidece | null>(null);
@@ -1017,6 +1065,14 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                     setSelectedOptionMailchimp={setSelectedOptionMailchimp}
                                                     klaviyoList={klaviyoList}
                                                     setIsloading={setIsLoading}
+                                                />
+                                            }
+
+                                            {activeService === "s3" &&
+                                                <S3ContactSyncTab
+                                                    setSelectedOptions3={setSelectedOptions3}
+                                                    selectedOptions3={selectedOptionS3}
+                                                    s3List={s3List}
                                                 />
                                             }
 
