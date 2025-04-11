@@ -294,10 +294,12 @@ const SourcesList: React.FC = () => {
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
                                         {createdData?.status === "unvalidated" 
-                                        ? <Image src="./danger_yellow.svg" alt='danger' width={20} height={20}/>
-                                        : createdData?.validated_records === 0 
-                                            ? "NA" 
-                                            : createdData?.active_segment_records.toLocaleString('en-US')}
+                                            ? <Image src="./danger_yellow.svg" alt='danger' width={20} height={20}/>
+                                            : createdData?.status === "n_a"
+                                                ? "N/A"
+                                                : createdData?.validated_records === 0 && createdData?.status !== "validating"
+                                                    ? createdData?.active_segment_records.toLocaleString('en-US')
+                                                    : <Box sx={{display: "flex", justifyContent: "center"}}><ThreeDotsLoader /></Box>}
                                         </Typography>
                                     </Box>
 
