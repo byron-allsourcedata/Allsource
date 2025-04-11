@@ -22,15 +22,15 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
-from ..schemas.similar_audiences import AudienceData
-from ..services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService
-from ..models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
-from ..services.similar_audiences import SimilarAudienceService
-from ..models.enrichment_users import EnrichmentUser
+from schemas.similar_audiences import AudienceData
+from services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService
+from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
+from services.similar_audiences import SimilarAudienceService
+from models.enrichment_users import EnrichmentUser
 from sqlalchemy import func, create_engine
-from ..models.audience_lookalikes_persons import AudienceLookalikes
+from models.audience_lookalikes_persons import AudienceLookalikes
 import random
-from ..config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 load_dotenv()
 

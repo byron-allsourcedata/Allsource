@@ -5,10 +5,9 @@ from sklearn.model_selection import train_test_split
 from catboost import CatBoostRegressor
 from fastapi import Depends
 
-from .audience_data_normalization import AudienceDataNormalizationService, AudienceDataNormalizationServiceDep
-from ...config.folders import Folders
-from ...schemas.similar_audiences import AudienceData, AudienceFeatureImportance
-
+from schemas.similar_audiences import AudienceData, AudienceFeatureImportance
+from services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService, \
+    AudienceDataNormalizationServiceDep
 
 
 class SimilarAudienceService:

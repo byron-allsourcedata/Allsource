@@ -3,7 +3,7 @@ from sqlalchemy.dialects.postgresql import INT4RANGE
 from sqlalchemy.inspection import inspect
 from .base import Base
 from sqlalchemy.orm import relationship
-from .emails_enrichment import EmailEnrichment
+from models.emails_enrichment import EmailEnrichment
 
 
 class EnrichmentUser(Base):

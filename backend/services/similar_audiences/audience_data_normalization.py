@@ -1,12 +1,10 @@
 import string
-from typing import List, Annotated, Tuple
-
 import pandas as pd
+from typing import List, Annotated, Tuple
 from pandas import DataFrame
-
-from backend.config.folders import Folders
-from backend.schemas.similar_audiences import AudienceData
 from fastapi import Depends
+from config.folders import Folders
+from schemas.similar_audiences import AudienceData
 
 letter_to_number = {
     ch: (None if ch == 'U' else i + 1)
