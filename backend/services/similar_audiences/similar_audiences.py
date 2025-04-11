@@ -28,11 +28,18 @@ class SimilarAudienceService:
 
         df_with_geo = df.merge(df_geo, how='left', left_on='ZipCode5', right_on='zip')
         df_with_geo['state_city'] = df_with_geo['state_name'] + '|' + df_with_geo['city']
+
+        cat_indicator_columns = [name + 'IsMissing' for name in [
+            'PersonGender', 'HasChildren', 'HomeownerStatus', 'MaritalStatus',
+            'HasCreditCard', 'OccupationGroupCode', 'IsBookReader',
+            'IsOnlinePurchaser', 'IsTraveler'
+        ]]
+
         df_final = df_with_geo[
             ['PersonExactAge', 'PersonGender', 'EstimatedHouseholdIncomeCode', 'EstimatedCurrentHomeValueCode',
              'HomeownerStatus', 'HasChildren', 'NumberOfChildren', 'CreditRating', 'NetWorthCode', 'HasCreditCard',
              'LengthOfResidenceYears', 'MaritalStatus', 'OccupationGroupCode', 'IsBookReader', 'IsOnlinePurchaser',
-             'IsTraveler', 'state_name', 'state_city']]
+             'IsTraveler', 'state_name', 'state_city'] + cat_indicator_columns]
         df_final.loc[:, 'state_name'] = df_final['state_name'].fillna('unknown')
         df_final.loc[:, 'state_city'] = df_final['state_city'].fillna('unknown')
 
@@ -44,6 +51,7 @@ class SimilarAudienceService:
     def train_catboost(self, df: DataFrame, amount: DataFrame) -> DataFrame:
         x = df
         y = amount
+
         cat_features = x.select_dtypes(include=['object', 'category']).columns.tolist()
 
         x_train, x_test, y_train, y_test = train_test_split(x, y)

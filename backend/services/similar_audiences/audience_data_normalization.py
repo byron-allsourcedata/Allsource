@@ -49,6 +49,7 @@ class AudienceDataNormalizationService:
 
         for name in cat_columns:
             df[name] = df[name].astype('category')
+            df[name + 'IsMissing'] = (df[name] == 'U').astype('int64')
 
         df['EstimatedHouseholdIncomeCode'] = df['EstimatedHouseholdIncomeCode'].map(letter_to_number).astype('Int64')
         df['EstimatedCurrentHomeValueCode'] = df['EstimatedCurrentHomeValueCode'].map(letter_to_number).astype('Int64')
